@@ -186,15 +186,15 @@ public class ChangeLog {
      * items we have.
      */
     public void push() {
-        Iterator iter = addedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).push();
-        }
-        iter = modifiedStates();
+        Iterator iter = modifiedStates();
         while (iter.hasNext()) {
             ((ItemState) iter.next()).push();
         }
         iter = deletedStates();
+        while (iter.hasNext()) {
+            ((ItemState) iter.next()).push();
+        }
+        iter = addedStates();
         while (iter.hasNext()) {
             ((ItemState) iter.next()).push();
         }
@@ -205,13 +205,7 @@ public class ChangeLog {
      * internal states and notify listeners.
      */
     public void persisted() {
-        Iterator iter = addedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            state.setStatus(ItemState.STATUS_EXISTING);
-            state.notifyStateCreated();
-        }
-        iter = modifiedStates();
+        Iterator iter = modifiedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             state.setStatus(ItemState.STATUS_EXISTING);
@@ -223,6 +217,12 @@ public class ChangeLog {
             state.setStatus(ItemState.STATUS_EXISTING_REMOVED);
             state.notifyStateDestroyed();
             state.discard();
+        }
+        iter = addedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            state.setStatus(ItemState.STATUS_EXISTING);
+            state.notifyStateCreated();
         }
     }
 
@@ -244,11 +244,7 @@ public class ChangeLog {
      * @param parent parent manager that will hold current data
      */
     public void undo(ItemStateManager parent) {
-        Iterator iter = addedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).discard();
-        }
-        iter = modifiedStates();
+        Iterator iter = modifiedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             try {
@@ -267,6 +263,10 @@ public class ChangeLog {
             } catch (ItemStateException e) {
                 state.discard();
             }
+        }
+        iter = addedStates();
+        while (iter.hasNext()) {
+            ((ItemState) iter.next()).discard();
         }
         reset();
     }

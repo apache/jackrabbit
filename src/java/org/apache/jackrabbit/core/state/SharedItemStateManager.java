@@ -431,12 +431,6 @@ public class SharedItemStateManager extends ItemStateCache
          * respective shared item and add the shared items to a
          * new change log.
          */
-        iter = local.addedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            state.connect(createInstance(state));
-            shared.added(state.getOverlayedState());
-        }
         iter = local.modifiedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
@@ -448,6 +442,12 @@ public class SharedItemStateManager extends ItemStateCache
             ItemState state = (ItemState) iter.next();
             state.connect(getItemState(state.getId()));
             shared.deleted(state.getOverlayedState());
+        }
+        iter = local.addedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            state.connect(createInstance(state));
+            shared.added(state.getOverlayedState());
         }
 
         /* prepare the events */
