@@ -25,7 +25,7 @@ import javax.jcr.version.OnParentVersionAction;
 /**
  * An <code>ItemDef</code> ...
  */
-abstract class ChildItemDef implements Cloneable {
+public abstract class ChildItemDef implements Cloneable {
 
     // '*' denoting residual child item definition
     protected static final QName ANY_NAME =
