@@ -15,170 +15,145 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.index.Term;
 import org.apache.jackrabbit.core.search.PathQueryNode;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.*;
-
-import java.io.IOException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 
 /**
- *
+ * Implements a query for a path with a match type.
  */
-class PathQuery extends Query {
+class PathQuery extends BooleanQuery {
 
     /**
      * The path to query
      */
-    private final String path;
+    private final Path path;
 
+    /**
+     * The path type.
+     * The path <code>type</code> must be one of:
+     * <ul>
+     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_EXACT}</li>
+     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_CHILDREN}</li>
+     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_DESCENDANT_SELF}</li>
+     * </ul>
+     */
     private final int type;
 
     private final int index;
+
+    private final NamespaceResolver nsMappings;
 
     /**
      * Creates a <code>PathQuery</code> for a <code>path</code> and a path
      * <code>type</code>. The query does not care about a specific index.
      * <p/>
-     * The path <code>type</code> must be one of:
-     * <ul>
-     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_EXACT}</li>
+     * The path <code>type</code> must be one of: <ul> <li>{@link
+     * org.apache.jackrabbit.core.search.PathQueryNode#TYPE_EXACT}</li>
      * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_CHILDREN}</li>
-     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_DESCENDANT}</li>
+     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_DESCENDANT_SELF}</li>
      * </ul>
      *
-     * @param path the base path
-     * @param type the path type.
+     * @param path     the base path
+     * @param resolver namespace resolver to resolve <code>path</code>.
+     * @param type     the path type.
      * @throws NullPointerException     if path is null.
      * @throws IllegalArgumentException if type is not one of the defined types
      *                                  in {@link org.apache.jackrabbit.core.search.PathQueryNode}.
      */
-    PathQuery(String path, int type) {
+    PathQuery(Path path, NamespaceResolver resolver, int type) {
         if (path == null) {
             throw new NullPointerException("path");
         }
-        if (type < PathQueryNode.TYPE_EXACT || type > PathQueryNode.TYPE_DESCENDANT) {
+        if (type < PathQueryNode.TYPE_EXACT || type > PathQueryNode.TYPE_DESCENDANT_SELF) {
             throw new IllegalArgumentException("type: " + type);
         }
         this.path = path;
+        this.nsMappings = resolver;
         this.type = type;
         index = -1;
+        populateQuery();
     }
 
     /**
      * Creates a <code>PathQuery</code> for a <code>path</code>, a path
      * <code>type</code> and a position index for the last location step.
      * <p/>
-     * The path <code>type</code> must be one of:
-     * <ul>
-     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_EXACT}</li>
+     * The path <code>type</code> must be one of: <ul> <li>{@link
+     * org.apache.jackrabbit.core.search.PathQueryNode#TYPE_EXACT}</li>
      * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_CHILDREN}</li>
-     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_DESCENDANT}</li>
+     * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_DESCENDANT_SELF}</li>
      * </ul>
      *
-     * @param path  the base path
-     * @param type  the path type.
-     * @param index position index of the last location step.
+     * @param path     the base path
+     * @param type     the path type.
+     * @param index    position index of the last location step.
+     * @param resolver namespace resolver to resolve <code>path</code>.
      * @throws NullPointerException     if path is null.
      * @throws IllegalArgumentException if type is not one of the defined types
-     *                                  in {@link org.apache.jackrabbit.core.search.PathQueryNode}. Or if
-     *                                  <code>index</code> &lt; 1.
+     *                                  in {@link org.apache.jackrabbit.core.search.PathQueryNode}.
+     *                                  Or if <code>index</code> &lt; 1.
      */
-    PathQuery(String path, int type, int index) {
+    PathQuery(Path path, NamespaceResolver resolver, int type, int index) {
         if (path == null) {
             throw new NullPointerException("path");
         }
-        if (type < PathQueryNode.TYPE_EXACT || type > PathQueryNode.TYPE_DESCENDANT) {
+        if (type < PathQueryNode.TYPE_EXACT || type > PathQueryNode.TYPE_DESCENDANT_SELF) {
             throw new IllegalArgumentException("type: " + type);
         }
         if (index < 1) {
             throw new IllegalArgumentException("index: " + index);
         }
         this.path = path;
+        this.nsMappings = resolver;
         this.type = type;
         this.index = index;
+        populateQuery();
     }
 
     /**
-     * Creates a new
-     *
-     * @param searcher
-     * @return
+     * Populates this <code>BooleanQuery</code> with clauses according
+     * to the path and match type.
      */
-    protected Weight createWeight(Searcher searcher) {
-        return new PathQueryWeight(searcher);
-    }
-
-    public String toString(String field) {
-        return "";
-    }
-
-    private class PathQueryWeight implements Weight {
-
-        private final Searcher searcher;
-        private float value;
-        private float idf;
-        private float queryNorm;
-        private float queryWeight;
-
-
-        public PathQueryWeight(Searcher searcher) {
-            this.searcher = searcher;
-        }
-
-        public Query getQuery() {
-            return PathQuery.this;
-        }
-
-        public float getValue() {
-            return value;
-        }
-
-        public float sumOfSquaredWeights() throws IOException {
-            idf = searcher.getSimilarity().idf(searcher.maxDoc(), searcher.maxDoc()); // compute idf
-            queryWeight = idf * getBoost();             // compute query weight
-            return queryWeight * queryWeight;           // square it
-        }
-
-        public void normalize(float norm) {
-            this.queryNorm = norm;
-            queryWeight *= queryNorm;                   // normalize query weight
-            value = queryWeight * idf;                  // idf for document
-        }
-
-        public Scorer scorer(IndexReader reader) throws IOException {
-            return new PathQueryScorer(this, reader, searcher.getSimilarity());
-        }
-
-        public Explanation explain(IndexReader reader, int doc) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    private class PathQueryScorer extends Scorer {
-
-        private final Weight weight;
-
-        private final IndexReader reader;
-
-        private final float score;
-
-        protected PathQueryScorer(Weight weight,
-                                  IndexReader reader,
-                                  Similarity similarity) {
-            super(similarity);
-            this.weight = weight;
-            this.reader = reader;
-            score = similarity.tf(1) * weight.getValue();
-        }
-
-        public void score(HitCollector hc, int maxDoc) throws IOException {
-            TermDocs docs = reader.termDocs();
-            //hc.collect();
-        }
-
-        public Explanation explain(int doc) throws IOException {
-            throw new UnsupportedOperationException();
+    private void populateQuery() {
+        try {
+            if (type == PathQueryNode.TYPE_EXACT) {
+                Term t = new Term(FieldNames.PATH, path.toJCRPath(nsMappings));
+                add(new TermQuery(t), true, false);
+            } else if (type == PathQueryNode.TYPE_CHILDREN) {
+                if (path.denotesRoot()) {
+                    // get all nodes on level 1
+                    add(new TermQuery(new Term(FieldNames.LEVEL, String.valueOf(1))),
+                            true, false);
+                } else {
+                    Term t = new Term(FieldNames.ANCESTORS,
+                            path.toJCRPath(nsMappings));
+                    add(new TermQuery(t), true, false);
+                    int level = path.getAncestorCount() + 1;
+                    add(new TermQuery(new Term(FieldNames.LEVEL, String.valueOf(level))),
+                            true, false);
+                }
+            } else {
+                if (path.denotesRoot()) {
+                    // no restrictions
+                } else {
+                    String jcrPath = path.toJCRPath(nsMappings);
+                    // descendant or self
+                    Term t = new Term(FieldNames.PATH, jcrPath);
+                    // self
+                    add(new TermQuery(t), false, false);
+                    // or nodes with ancestors = self
+                    t = new Term(FieldNames.ANCESTORS, jcrPath);
+                    add(new TermQuery(t), false, false);
+                }
+            }
+        } catch (NoPrefixDeclaredException e) {
+            // will never happen, this.nsMappings dynamically adds unknown
+            // uri->prefix mappings
         }
     }
 }

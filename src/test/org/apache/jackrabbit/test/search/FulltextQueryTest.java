@@ -30,7 +30,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// TEXTSEARCH \"fox\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"fox\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -47,7 +47,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// TEXTSEARCH \"fox test\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"fox test\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -64,7 +64,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// TEXTSEARCH \"text 'fox jumps'\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"text 'fox jumps'\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -81,7 +81,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         superuser.getRootNode().save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// TEXTSEARCH \"text 'fox jumps' -other\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"text 'fox jumps' -other\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -98,7 +98,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// TEXTSEARCH \"'fox jumps' test OR other\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"'fox jumps' test OR other\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2);
@@ -115,7 +115,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// TEXTSEARCH \"'fox juMps' Test OR otheR\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"'fox juMps' Test OR otheR\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2);

@@ -16,8 +16,8 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 /**
- * Defines field names that are used internally to store UUID, Path, etc
- * in the search index.
+ * Defines field names that are used internally to store UUID, Path, etc in the
+ * search index.
  */
 public class FieldNames {
 
@@ -26,4 +26,10 @@ public class FieldNames {
     public static final String PATH = "_:Path";
 
     public static final String FULLTEXT = "_:FULLTEXT";
+
+    public static final String ANCESTORS = "_:ANCESTORS";
+
+    public static final String LABEL = "_:LABEL";
+
+    public static final String LEVEL = "_:LEVEL";
 }

@@ -35,12 +35,12 @@ public class SelectClauseTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "//";
+        String jcrql = "SELECT myvalue FROM * LOCATION " + TEST_ROOT + "//";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "// WHERE yourvalue = \"foo\"";
+        jcrql = "SELECT myvalue FROM * LOCATION " + TEST_ROOT + "// WHERE yourvalue = \"foo\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 0);
@@ -62,12 +62,12 @@ public class SelectClauseTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "//";
+        String jcrql = "SELECT myvalue FROM * LOCATION " + TEST_ROOT + "//";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2, 2);
 
-        jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "// WHERE yourvalue = \"foo\"";
+        jcrql = "SELECT myvalue FROM * LOCATION " + TEST_ROOT + "// WHERE yourvalue = \"foo\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 0, 0);
@@ -77,7 +77,7 @@ public class SelectClauseTest extends AbstractQueryTest {
         result = q.execute();
         checkResult(result, 2, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE myvalue LIKE \"*\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE myvalue LIKE \"*\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2, 4);
@@ -93,7 +93,7 @@ public class SelectClauseTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "/node";
+        String jcrql = "SELECT myvalue FROM * LOCATION " + TEST_ROOT + "/node";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2, 2);

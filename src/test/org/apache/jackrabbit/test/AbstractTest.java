@@ -22,7 +22,9 @@ import javax.jcr.Session;
  */
 public abstract class AbstractTest extends JUnitTest {
 
-    protected static final String TEST_ROOT = "testroot";
+    protected static final String TEST_PATH = "testroot";
+
+    protected static final String TEST_ROOT = "/" + TEST_PATH;
 
     protected static final String JCR_PRIMARY_TYPE = "jcr:primaryType";
 
@@ -45,12 +47,12 @@ public abstract class AbstractTest extends JUnitTest {
     protected void setUp() throws Exception {
         superuser = helper.getSuperuserSession();
         Node root = superuser.getRootNode();
-        if (root.hasNode(TEST_ROOT)) {
+        if (root.hasNode(TEST_PATH)) {
             // remove test root
-            root.remove(TEST_ROOT);
+            root.remove(TEST_PATH);
             root.save();
         }
-        testRoot = root.addNode(TEST_ROOT, NT_UNSTRUCTURED);
+        testRoot = root.addNode(TEST_PATH, NT_UNSTRUCTURED);
         root.save();
     }
 
@@ -59,8 +61,8 @@ public abstract class AbstractTest extends JUnitTest {
             // do a 'rollback'
             superuser.refresh(false);
             Node root = superuser.getRootNode();
-            if (root.hasNode(TEST_ROOT)) {
-                root.remove(TEST_ROOT);
+            if (root.hasNode(TEST_PATH)) {
+                root.remove(TEST_PATH);
                 root.save();
             }
             superuser.logout();

@@ -15,34 +15,41 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.search.NamespaceMappings;
-import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
-import java.util.Calendar;
-import java.util.Iterator;
+import javax.jcr.NamespaceException;
+import javax.jcr.PathNotFoundException;
 import java.util.List;
+import java.util.Iterator;
+import java.util.Calendar;
 
 /**
+ *
  */
 public class NodeIndexer {
 
     private final NodeState node;
     private final ItemStateProvider stateProvider;
-    private final String path;
+    private final Path path;
     private final NamespaceMappings mappings;
 
     private NodeIndexer(NodeState node,
                         ItemStateProvider stateMgr,
-                        String path,
+                        Path path,
                         NamespaceMappings mappings) {
         this.node = node;
         this.stateProvider = stateMgr;
@@ -52,7 +59,7 @@ public class NodeIndexer {
 
     public static Document createDocument(NodeState node,
                                           ItemStateProvider stateMgr,
-                                          String path,
+                                          Path path,
                                           NamespaceMappings mappings) {
         NodeIndexer indexer = new NodeIndexer(node, stateMgr, path, mappings);
         return indexer.createDoc();
@@ -64,8 +71,33 @@ public class NodeIndexer {
         // special fields
         // UUID
         doc.add(new Field(FieldNames.UUID, node.getUUID(), true, true, false));
-        // Path
-        doc.add(new Field(FieldNames.PATH, path, true, true, false));
+        try {
+            // Path
+            doc.add(new Field(FieldNames.PATH, path.toJCRPath(mappings), true, true, false));
+            Path p = null;
+            if (path.denotesRoot()) {
+                p = path;
+            } else {
+                p = path.getAncestor(1);
+            }
+            // Ancestors
+            while (!p.denotesRoot()) {
+                doc.add(new Field(FieldNames.ANCESTORS, p.toJCRPath(mappings),
+                        false, true, false));
+                p = p.getAncestor(1);
+            }
+            // Label
+            doc.add(new Field(FieldNames.LABEL, path.getNameElement().toJCRName(mappings),
+                    false, true, false));
+            // hierarchy level
+            doc.add(new Field(FieldNames.LEVEL, String.valueOf(path.getAncestorCount()),
+                    false, true, false));
+        } catch (NoPrefixDeclaredException e) {
+            // will never happen, because this.mappings will dynamically add
+            // unknown uri<->prefix mappings
+        } catch (PathNotFoundException e) {
+            // will never happen because we check for root
+        }
 
         List props = node.getPropertyEntries();
         for (Iterator it = props.iterator(); it.hasNext();) {

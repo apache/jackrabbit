@@ -67,21 +67,23 @@ public class SearchManager implements SynchronousEventListener {
         nsMappings = new NamespaceMappings(new File(indexPath, "ns_mappings.properties"));
     }
 
-    public void addNode(NodeState node, String path) throws IOException {
+    public void addNode(NodeState node, Path path) throws IOException {
         // FIXME rather throw RepositoryException?
         log.debug("add node to index: " + path);
         Document doc = NodeIndexer.createDocument(node, stateProvider, path, nsMappings);
         index.addDocument(doc);
     }
 
-    public void updateNode(NodeState node, String path) throws IOException {
+    public void updateNode(NodeState node, Path path) throws IOException {
         log.debug("update index for node: " + path);
         deleteNode(path, node.getUUID());
         addNode(node, path);
     }
 
-    public void deleteNode(String path, String uuid) throws IOException {
-        log.debug("remove node from index: " + path);
+    public void deleteNode(Path path, String uuid) throws IOException {
+        if (log.isDebugEnabled()) {
+            log.debug("remove node from index: " + path.toString());
+        }
         index.removeDocument(new Term(FieldNames.UUID, uuid));
     }
 
@@ -157,15 +159,15 @@ public class SearchManager implements SynchronousEventListener {
                     path = getIndexlessPath(path);
 
                     ItemId id = new NodeId(e.getChildUUID());
-                    addNode((NodeState) stateProvider.getItemState(id),
-                            path.toJCRPath(nsMappings));
+                    addNode((NodeState) stateProvider.getItemState(id), path);
+
 
                 } else if (type == EventType.CHILD_NODE_REMOVED) {
 
                     Path path = Path.create(e.getNodePath() + ((e.getNodePath().length() > 1) ? "/" : "") + e.getChildName(),
                             session.getNamespaceResolver(),
                             true);
-                    deleteNode(path.toJCRPath(nsMappings), e.getChildUUID());
+                    deleteNode(path, e.getChildUUID());
 
                 } else if (type == EventType.PROPERTY_ADDED
                         || type == EventType.PROPERTY_CHANGED
@@ -177,8 +179,6 @@ public class SearchManager implements SynchronousEventListener {
                     modified.add(path);
                 }
             } catch (MalformedPathException e) {
-                log.error("error indexing node.", e);
-            } catch (NoPrefixDeclaredException e) {
                 log.error("error indexing node.", e);
             } catch (ItemStateException e) {
                 log.error("error indexing node.", e);
@@ -194,10 +194,7 @@ public class SearchManager implements SynchronousEventListener {
                 Path path = (Path) it.next();
                 ItemId id = hmgr.resolvePath(path);
                 path = getIndexlessPath(path);
-                updateNode((NodeState) stateProvider.getItemState(id),
-                        path.toJCRPath(nsMappings));
-            } catch (NoPrefixDeclaredException e) {
-                log.error("error indexing node.", e);
+                updateNode((NodeState) stateProvider.getItemState(id), path);
             } catch (ItemStateException e) {
                 log.error("error indexing node.", e);
             } catch (RepositoryException e) {
@@ -211,9 +208,9 @@ public class SearchManager implements SynchronousEventListener {
     //-----------------------< internal >---------------------------------------
 
     /**
-     * Returns a <code>Path</code>, which contains the same sequence of
-     * path elements as <code>p</code>, but has cut off any existing indexes
-     * on the path elements.
+     * Returns a <code>Path</code>, which contains the same sequence of path
+     * elements as <code>p</code>, but has cut off any existing indexes on the
+     * path elements.
      *
      * @param p the source path, possibly containing indexed path elements.
      * @return a <code>Path</code> without indexed path elements.

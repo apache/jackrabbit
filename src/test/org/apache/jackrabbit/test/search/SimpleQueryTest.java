@@ -32,7 +32,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "/foo WHERE bla=\"bla\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "/foo WHERE bla=\"bla\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -46,7 +46,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         superuser.getRootNode().save();
 
-        String jcrql = "SELECT * FROM nt:bla LOCATION /" + TEST_ROOT + "// WHERE bla=\"bla\"";
+        String jcrql = "SELECT * FROM nt:bla LOCATION " + TEST_ROOT + "// WHERE bla=\"bla\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 0);
@@ -60,7 +60,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM nt:unstructured LOCATION /" + TEST_ROOT + "// WHERE bla=\"bla\"";
+        String jcrql = "SELECT * FROM nt:unstructured LOCATION " + TEST_ROOT + "// WHERE bla=\"bla\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2);
@@ -74,7 +74,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM nt:unstructured LOCATION /" + TEST_ROOT + "//";
+        String jcrql = "SELECT * FROM nt:unstructured LOCATION " + TEST_ROOT + "/*";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2);
@@ -93,12 +93,12 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE birth > 1976-01-01T00:00:00.000+01:00";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE birth > 1976-01-01T00:00:00.000+01:00";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE birth > 1975-01-01T00:00:00.000+01:00";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE birth > 1975-01-01T00:00:00.000+01:00";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
@@ -114,17 +114,17 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value > 0.1e-0";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value > 0.1e-0";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value > -0.1";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value > -0.1";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value > -1.5";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value > -1.5";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 3);
@@ -140,17 +140,17 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value > 0";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value > 0";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value > -1";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value > -1";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value > -2";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value > -2";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 3);
@@ -166,27 +166,27 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"ping\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"ping\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"?ing\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"?ing\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"*ing\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"*ing\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 3);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"_ing\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"_ing\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"%ing\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"%ing\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 3);
@@ -202,27 +202,27 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"ping\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"ping\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"p?ng\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"p?ng\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"p*ng\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"p*ng\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 3);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"p_ng\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"p_ng\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"p%ng\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"p%ng\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 3);
@@ -238,27 +238,27 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"bli\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"bli\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"bl?\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"bl?\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"bl*\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"bl*\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 3);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"bl_\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"bl_\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"bl%\"";
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"bl%\"";
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 3);
@@ -276,22 +276,22 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"foo\\?bar\""; // matches node3
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"foo\\?bar\""; // matches node3
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"foo?bar\"";    // matches node3 and node4
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"foo?bar\"";    // matches node3 and node4
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"foo*bar\"";  // matches all nodes
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"foo*bar\"";  // matches all nodes
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 4);
 
-        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value LIKE \"foo\\\\\\?bar\"";  // matches node1
+        jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value LIKE \"foo\\\\\\?bar\"";  // matches node1
         q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         result = q.execute();
         checkResult(result, 1);
@@ -308,7 +308,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRoot.save();
 
-        String jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE value <> \"bar\"";
+        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// WHERE value <> \"bar\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2);

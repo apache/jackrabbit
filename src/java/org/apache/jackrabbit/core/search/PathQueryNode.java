@@ -31,9 +31,9 @@ public class PathQueryNode extends QueryNode {
     public static final int TYPE_CHILDREN = 2;
 
     /**
-     * Match descendant nodes of path
+     * Match descendant nodes or self of path
      */
-    public static final int TYPE_DESCENDANT = 3;
+    public static final int TYPE_DESCENDANT_SELF = 3;
 
     /**
      * The base path
@@ -60,12 +60,12 @@ public class PathQueryNode extends QueryNode {
      *
      * @param parent this parent node of this query node.
      * @param path   the base path.
-     * @param type   one of {@link #TYPE_CHILDREN}, {@link #TYPE_DESCENDANT},
+     * @param type   one of {@link #TYPE_CHILDREN}, {@link #TYPE_DESCENDANT_SELF},
      *               {@link #TYPE_EXACT}
      */
     public PathQueryNode(QueryNode parent, String path, int type) {
         super(parent);
-        if (type < TYPE_EXACT || type > TYPE_DESCENDANT) {
+        if (type < TYPE_EXACT || type > TYPE_DESCENDANT_SELF) {
             throw new IllegalArgumentException(String.valueOf(type));
         }
         this.path = path;
@@ -121,8 +121,8 @@ public class PathQueryNode extends QueryNode {
     /**
      * Returns the type of this <code>PathQueryNode</code>.
      *
-     * @return one of {@link #TYPE_CHILDREN}, {@link #TYPE_DESCENDANT}, {@link
-     *         #TYPE_EXACT}
+     * @return one of {@link #TYPE_CHILDREN}, {@link #TYPE_DESCENDANT_SELF},
+     *         {@link #TYPE_EXACT}
      */
     public int getType() {
         return type;
@@ -130,8 +130,8 @@ public class PathQueryNode extends QueryNode {
 
     /**
      * Returns <code>true</code> if the path contains an index. E.g. a location
-     * step in XPath has a position predicate. If the path does not contain
-     * any indexes <code>false</code> is returned.
+     * step in XPath has a position predicate. If the path does not contain any
+     * indexes <code>false</code> is returned.
      *
      * @return <code>true</code> if the path contains an indexed location step.
      */
@@ -150,7 +150,7 @@ public class PathQueryNode extends QueryNode {
         jcrql.append(path);
         if (type == TYPE_CHILDREN) {
             jcrql.append("/*");
-        } else if (type == TYPE_DESCENDANT) {
+        } else if (type == TYPE_DESCENDANT_SELF) {
             jcrql.append("//");
         }
         return jcrql.toString();

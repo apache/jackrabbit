@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.search.lucene;
 import org.apache.jackrabbit.core.search.PathQueryNode;
 
 /**
+ * 
  */
 public class PathFilter {
 
@@ -30,7 +31,7 @@ public class PathFilter {
 
         switch (type) {
             case PathQueryNode.TYPE_CHILDREN:
-            case PathQueryNode.TYPE_DESCENDANT:
+            case PathQueryNode.TYPE_DESCENDANT_SELF:
                 if (path.length() > 1) {
                     this.basePath = path + "/";
                 } else {
@@ -53,7 +54,7 @@ public class PathFilter {
         switch (type) {
             case PathQueryNode.TYPE_CHILDREN:
                 return (path.indexOf('/', basePath.length()) == -1);
-            case PathQueryNode.TYPE_DESCENDANT:
+            case PathQueryNode.TYPE_DESCENDANT_SELF:
                 return path.length() > basePath.length();
             case PathQueryNode.TYPE_EXACT:
                 return path.length() == basePath.length();

@@ -17,6 +17,7 @@ package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.search.*;
 import org.apache.log4j.Logger;
@@ -224,15 +225,23 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(PathQueryNode node, Object data) {
-        String path = node.getPath();
+        PathQuery pathQuery = null;
         try {
-            path = nsMappings.translatePropertyName(node.getPath(),
-                    session.getNamespaceResolver());
+            // FIXME what about relative path?
+            Path p = Path.create(node.getPath(),
+                    session.getNamespaceResolver(), false);
+            pathQuery = new PathQuery(p, nsMappings, node.getType());
         } catch (MalformedPathException e) {
             exceptions.add(e);
         }
-        PathFilter filter = new PathFilter(path, node.getType());
-        return new PathFilterQuery((Query) data, new PackageFilter(filter));
+        if (pathQuery != null && pathQuery.getClauses().length > 0) {
+            BooleanQuery combined = new BooleanQuery();
+            combined.add(pathQuery, true, false);
+            combined.add((Query) data, true, false);
+            return combined;
+        } else {
+            return data;
+        }
     }
 
     public Object visit(RelationQueryNode node, Object data) {

@@ -192,7 +192,7 @@ public abstract class AbstractObservationTest extends AbstractTest {
             paths.add(path);
         }
         for (int i = 0; i < relPaths.length; i++) {
-            String expected = "/" + TEST_ROOT + "/" + relPaths[i];
+            String expected = TEST_ROOT + "/" + relPaths[i];
             assertTrue("Path " + expected + " not found in events.",
                     paths.contains(expected));
         }
