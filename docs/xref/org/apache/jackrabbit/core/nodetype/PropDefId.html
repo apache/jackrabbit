@@ -48,7 +48,7 @@
 <a name="39" href="#39">39</a>  
 <a name="40" href="#40">40</a>  	sb.append(def.getDeclaringNodeType().toString());
 <a name="41" href="#41">41</a>  	sb.append('/');
-<a name="42" href="#42">42</a>  	<strong>if</strong> (def.getName() == <strong>null</strong>) {
+<a name="42" href="#42">42</a>  	<strong>if</strong> (def.definesResidual()) {
 <a name="43" href="#43">43</a>  	    sb.append('*');
 <a name="44" href="#44">44</a>  	} <strong>else</strong> {
 <a name="45" href="#45">45</a>  	    sb.append(def.getName().toString());

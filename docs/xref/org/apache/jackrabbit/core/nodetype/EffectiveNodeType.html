@@ -117,23 +117,23 @@
 <a name="108" href="#108">108</a> 
 <a name="109" href="#109">109</a> 	ChildNodeDef[] cnda = ntd.getChildNodeDefs();
 <a name="110" href="#110">110</a> 	<strong>for</strong> (<strong>int</strong> i = 0; i &lt; cnda.length; i++) {
-<a name="111" href="#111">111</a> 	    QName name = cnda[i].getName();
-<a name="112" href="#112">112</a> 	    <strong>if</strong> (name == <strong>null</strong>) {
-<a name="113" href="#113">113</a> 		<em class="comment">// residual node definition</em>
-<a name="114" href="#114">114</a> 		ent.unnamedItemDefs.add(cnda[i]);
-<a name="115" href="#115">115</a> 	    } <strong>else</strong> {
-<a name="116" href="#116">116</a> 		<em class="comment">// named node definition</em>
+<a name="111" href="#111">111</a> 	    <strong>if</strong> (cnda[i].definesResidual()) {
+<a name="112" href="#112">112</a> 		<em class="comment">// residual node definition</em>
+<a name="113" href="#113">113</a> 		ent.unnamedItemDefs.add(cnda[i]);
+<a name="114" href="#114">114</a> 	    } <strong>else</strong> {
+<a name="115" href="#115">115</a> 		<em class="comment">// named node definition</em>
+<a name="116" href="#116">116</a> 		QName name = cnda[i].getName();
 <a name="117" href="#117">117</a> 		ent.namedItemDefs.put(name, cnda[i]);
 <a name="118" href="#118">118</a> 	    }
 <a name="119" href="#119">119</a> 	}
 <a name="120" href="#120">120</a> 	PropDef[] pda = ntd.getPropertyDefs();
 <a name="121" href="#121">121</a> 	<strong>for</strong> (<strong>int</strong> i = 0; i &lt; pda.length; i++) {
-<a name="122" href="#122">122</a> 	    QName name = pda[i].getName();
-<a name="123" href="#123">123</a> 	    <strong>if</strong> (name == <strong>null</strong>) {
-<a name="124" href="#124">124</a> 		<em class="comment">// residual property definition</em>
-<a name="125" href="#125">125</a> 		ent.unnamedItemDefs.add(pda[i]);
-<a name="126" href="#126">126</a> 	    } <strong>else</strong> {
-<a name="127" href="#127">127</a> 		<em class="comment">// named property definition</em>
+<a name="122" href="#122">122</a> 	    <strong>if</strong> (pda[i].definesResidual()) {
+<a name="123" href="#123">123</a> 		<em class="comment">// residual property definition</em>
+<a name="124" href="#124">124</a> 		ent.unnamedItemDefs.add(pda[i]);
+<a name="125" href="#125">125</a> 	    } <strong>else</strong> {
+<a name="126" href="#126">126</a> 		<em class="comment">// named property definition</em>
+<a name="127" href="#127">127</a> 		QName name = pda[i].getName();
 <a name="128" href="#128">128</a> 		ent.namedItemDefs.put(name, pda[i]);
 <a name="129" href="#129">129</a> 	    }
 <a name="130" href="#130">130</a> 	}

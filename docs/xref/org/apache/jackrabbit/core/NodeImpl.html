@@ -2406,600 +2406,594 @@
 <a name="2397" href="#2397">2397</a> 	    <em class="comment">// thus determining the result of a merge is non-trivial.</em>
 <a name="2398" href="#2398">2398</a> 	    <strong>if</strong> (bestEffort) {
 <a name="2399" href="#2399">2399</a> 		<em class="comment">// add 'offending' version to jcr:mergeFailed property</em>
-<a name="2400" href="#2400">2400</a> 		<strong>if</strong> (hasProperty(ItemImpl.PROPNAME_MERGE_FAILED)) {
-<a name="2401" href="#2401">2401</a> 		    Value[] values = getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues();
-<a name="2402" href="#2402">2402</a> 		    Value[] <strong>new</strong>Values = <strong>new</strong> Value[values.length + 1];
-<a name="2403" href="#2403">2403</a> 		    System.arraycopy(values, 0, newValues, 0, values.length);
-<a name="2404" href="#2404">2404</a> 		    <strong>new</strong>Values[values.length] = <strong>new</strong> ReferenceValue(vp);
-<a name="2405" href="#2405">2405</a> 		    setProperty(ItemImpl.PROPNAME_MERGE_FAILED, newValues);
-<a name="2406" href="#2406">2406</a> 		} <strong>else</strong> {
-<a name="2407" href="#2407">2407</a> 		    Value[] <strong>new</strong>Values = <strong>new</strong> Value[1];
-<a name="2408" href="#2408">2408</a> 		    <strong>new</strong>Values[0] = <strong>new</strong> ReferenceValue(vp);
-<a name="2409" href="#2409">2409</a> 		    setProperty(ItemImpl.PROPNAME_MERGE_FAILED, newValues);
-<a name="2410" href="#2410">2410</a> 		}
-<a name="2411" href="#2411">2411</a> 		<strong>return</strong> <strong>null</strong>;
-<a name="2412" href="#2412">2412</a> 	    } <strong>else</strong> {
-<a name="2413" href="#2413">2413</a> 		String msg = <span class="string">"Unable to merge nodes. Violating versions. "</span> + safeGetJCRPath();
-<a name="2414" href="#2414">2414</a> 		log.debug(msg);
-<a name="2415" href="#2415">2415</a> 		<strong>throw</strong> <strong>new</strong> MergeException(msg);
-<a name="2416" href="#2416">2416</a> 	    }
-<a name="2417" href="#2417">2417</a> 	}
-<a name="2418" href="#2418">2418</a>     }
-<a name="2419" href="#2419">2419</a> 
-<a name="2420" href="#2420">2420</a>     <em>/**<em>*</em></em>
-<a name="2421" href="#2421">2421</a> <em>     * @see Node#isCheckedOut()</em>
-<a name="2422" href="#2422">2422</a> <em>     */</em>
-<a name="2423" href="#2423">2423</a>     <strong>public</strong> <strong>boolean</strong> isCheckedOut()
-<a name="2424" href="#2424">2424</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
-<a name="2425" href="#2425">2425</a> 	checkVersionable();
-<a name="2426" href="#2426">2426</a> 	<strong>return</strong> getProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT).getBoolean();
-<a name="2427" href="#2427">2427</a>     }
-<a name="2428" href="#2428">2428</a> 
-<a name="2429" href="#2429">2429</a>     <em>/**<em>*</em></em>
-<a name="2430" href="#2430">2430</a> <em>     * Same as {@link #isCheckedOut()} but without UnsupportedException.</em>
-<a name="2431" href="#2431">2431</a> <em>     */</em>
-<a name="2432" href="#2432">2432</a>     <strong>public</strong> <strong>boolean</strong> safeIsCheckedOut() throws RepositoryException {
-<a name="2433" href="#2433">2433</a> 	<em class="comment">// what if this node is not versionable but has OPV==Copy?</em>
-<a name="2434" href="#2434">2434</a> 	<em class="comment">// do we need to search ancestors for a verionable node?</em>
-<a name="2435" href="#2435">2435</a> 	<strong>return</strong> hasProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT)
-<a name="2436" href="#2436">2436</a> 		? getProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT).getBoolean()
-<a name="2437" href="#2437">2437</a> 		: <strong>true</strong>;
-<a name="2438" href="#2438">2438</a>     }
-<a name="2439" href="#2439">2439</a> 
-<a name="2440" href="#2440">2440</a>     <em>/**<em>*</em></em>
-<a name="2441" href="#2441">2441</a> <em>     * @see Node#restore(String)</em>
-<a name="2442" href="#2442">2442</a> <em>     */</em>
-<a name="2443" href="#2443">2443</a>     <strong>public</strong> <strong>void</strong> restore(String versionName)
-<a name="2444" href="#2444">2444</a> 	    throws VersionException, UnsupportedRepositoryOperationException,
-<a name="2445" href="#2445">2445</a> 	    RepositoryException {
+<a name="2400" href="#2400">2400</a> 		List values = hasProperty(ItemImpl.PROPNAME_MERGE_FAILED)
+<a name="2401" href="#2401">2401</a> 			? Arrays.asList(getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues())
+<a name="2402" href="#2402">2402</a> 			: <strong>new</strong> ArrayList();
+<a name="2403" href="#2403">2403</a> 		values.add(<strong>new</strong> ReferenceValue(vp));
+<a name="2404" href="#2404">2404</a> 		setProperty(ItemImpl.PROPNAME_MERGE_FAILED, (Value[]) values.toArray(<strong>new</strong> Value[values.size()]));
+<a name="2405" href="#2405">2405</a> 		<strong>return</strong> <strong>null</strong>;
+<a name="2406" href="#2406">2406</a> 	    } <strong>else</strong> {
+<a name="2407" href="#2407">2407</a> 		String msg = <span class="string">"Unable to merge nodes. Violating versions. "</span> + safeGetJCRPath();
+<a name="2408" href="#2408">2408</a> 		log.debug(msg);
+<a name="2409" href="#2409">2409</a> 		<strong>throw</strong> <strong>new</strong> MergeException(msg);
+<a name="2410" href="#2410">2410</a> 	    }
+<a name="2411" href="#2411">2411</a> 	}
+<a name="2412" href="#2412">2412</a>     }
+<a name="2413" href="#2413">2413</a> 
+<a name="2414" href="#2414">2414</a>     <em>/**<em>*</em></em>
+<a name="2415" href="#2415">2415</a> <em>     * @see Node#isCheckedOut()</em>
+<a name="2416" href="#2416">2416</a> <em>     */</em>
+<a name="2417" href="#2417">2417</a>     <strong>public</strong> <strong>boolean</strong> isCheckedOut()
+<a name="2418" href="#2418">2418</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="2419" href="#2419">2419</a> 	checkVersionable();
+<a name="2420" href="#2420">2420</a> 	<strong>return</strong> getProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT).getBoolean();
+<a name="2421" href="#2421">2421</a>     }
+<a name="2422" href="#2422">2422</a> 
+<a name="2423" href="#2423">2423</a>     <em>/**<em>*</em></em>
+<a name="2424" href="#2424">2424</a> <em>     * Same as {@link #isCheckedOut()} but without UnsupportedException.</em>
+<a name="2425" href="#2425">2425</a> <em>     */</em>
+<a name="2426" href="#2426">2426</a>     <strong>public</strong> <strong>boolean</strong> safeIsCheckedOut() throws RepositoryException {
+<a name="2427" href="#2427">2427</a> 	<em class="comment">// what if this node is not versionable but has OPV==Copy?</em>
+<a name="2428" href="#2428">2428</a> 	<em class="comment">// do we need to search ancestors for a verionable node?</em>
+<a name="2429" href="#2429">2429</a> 	<strong>return</strong> hasProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT)
+<a name="2430" href="#2430">2430</a> 		? getProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT).getBoolean()
+<a name="2431" href="#2431">2431</a> 		: <strong>true</strong>;
+<a name="2432" href="#2432">2432</a>     }
+<a name="2433" href="#2433">2433</a> 
+<a name="2434" href="#2434">2434</a>     <em>/**<em>*</em></em>
+<a name="2435" href="#2435">2435</a> <em>     * @see Node#restore(String)</em>
+<a name="2436" href="#2436">2436</a> <em>     */</em>
+<a name="2437" href="#2437">2437</a>     <strong>public</strong> <strong>void</strong> restore(String versionName)
+<a name="2438" href="#2438">2438</a> 	    throws VersionException, UnsupportedRepositoryOperationException,
+<a name="2439" href="#2439">2439</a> 	    RepositoryException {
+<a name="2440" href="#2440">2440</a> 
+<a name="2441" href="#2441">2441</a> 	<strong>if</strong> (!isCheckedOut()) {
+<a name="2442" href="#2442">2442</a> 	    String msg = <span class="string">"Unable to restore version. Node is not checked-out "</span> + safeGetJCRPath();
+<a name="2443" href="#2443">2443</a> 	    log.debug(msg);
+<a name="2444" href="#2444">2444</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(msg);
+<a name="2445" href="#2445">2445</a> 	}
 <a name="2446" href="#2446">2446</a> 
-<a name="2447" href="#2447">2447</a> 	<strong>if</strong> (!isCheckedOut()) {
-<a name="2448" href="#2448">2448</a> 	    String msg = <span class="string">"Unable to restore version. Node is not checked-out "</span> + safeGetJCRPath();
-<a name="2449" href="#2449">2449</a> 	    log.debug(msg);
-<a name="2450" href="#2450">2450</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(msg);
-<a name="2451" href="#2451">2451</a> 	}
+<a name="2447" href="#2447">2447</a> 	GenericVersionSelector gvs = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/version/GenericVersionSelector.html">GenericVersionSelector</a>();
+<a name="2448" href="#2448">2448</a> 	gvs.setName(versionName);
+<a name="2449" href="#2449">2449</a> 	internalRestore((VersionImpl) getVersionHistory().getVersion(versionName), gvs);
+<a name="2450" href="#2450">2450</a> 	save();
+<a name="2451" href="#2451">2451</a>     }
 <a name="2452" href="#2452">2452</a> 
-<a name="2453" href="#2453">2453</a> 	GenericVersionSelector gvs = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/version/GenericVersionSelector.html">GenericVersionSelector</a>();
-<a name="2454" href="#2454">2454</a> 	gvs.setName(versionName);
-<a name="2455" href="#2455">2455</a> 	internalRestore((VersionImpl) getVersionHistory().getVersion(versionName), gvs);
-<a name="2456" href="#2456">2456</a> 	save();
-<a name="2457" href="#2457">2457</a>     }
+<a name="2453" href="#2453">2453</a>     <em>/**<em>*</em></em>
+<a name="2454" href="#2454">2454</a> <em>     * @see Node#restore(Version)</em>
+<a name="2455" href="#2455">2455</a> <em>     */</em>
+<a name="2456" href="#2456">2456</a>     <strong>public</strong> <strong>void</strong> restore(Version version)
+<a name="2457" href="#2457">2457</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
 <a name="2458" href="#2458">2458</a> 
-<a name="2459" href="#2459">2459</a>     <em>/**<em>*</em></em>
-<a name="2460" href="#2460">2460</a> <em>     * @see Node#restore(Version)</em>
-<a name="2461" href="#2461">2461</a> <em>     */</em>
-<a name="2462" href="#2462">2462</a>     <strong>public</strong> <strong>void</strong> restore(Version version)
-<a name="2463" href="#2463">2463</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="2459" href="#2459">2459</a> 	<strong>if</strong> (!isCheckedOut()) {
+<a name="2460" href="#2460">2460</a> 	    String msg = <span class="string">"Unable to restore version. Node is not checked-out "</span> + safeGetJCRPath();
+<a name="2461" href="#2461">2461</a> 	    log.debug(msg);
+<a name="2462" href="#2462">2462</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(msg);
+<a name="2463" href="#2463">2463</a> 	}
 <a name="2464" href="#2464">2464</a> 
-<a name="2465" href="#2465">2465</a> 	<strong>if</strong> (!isCheckedOut()) {
-<a name="2466" href="#2466">2466</a> 	    String msg = <span class="string">"Unable to restore version. Node is not checked-out "</span> + safeGetJCRPath();
-<a name="2467" href="#2467">2467</a> 	    log.debug(msg);
-<a name="2468" href="#2468">2468</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(msg);
-<a name="2469" href="#2469">2469</a> 	}
-<a name="2470" href="#2470">2470</a> 
-<a name="2471" href="#2471">2471</a> 	<em class="comment">// check if 'own' version</em>
-<a name="2472" href="#2472">2472</a> 	<strong>if</strong> (!version.getParent().getUUID().equals(getVersionHistory().getUUID())) {
-<a name="2473" href="#2473">2473</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(<span class="string">"Unable to restore version. Not same version history."</span>);
-<a name="2474" href="#2474">2474</a> 	}
-<a name="2475" href="#2475">2475</a> 	internalRestore((VersionImpl) version, <strong>new</strong> GenericVersionSelector(version.getCreated()));
-<a name="2476" href="#2476">2476</a> 	save();
-<a name="2477" href="#2477">2477</a>     }
-<a name="2478" href="#2478">2478</a> 
-<a name="2479" href="#2479">2479</a> 
-<a name="2480" href="#2480">2480</a>     <em>/**<em>*</em></em>
-<a name="2481" href="#2481">2481</a> <em>     * @see Node#restore(Version, String)</em>
-<a name="2482" href="#2482">2482</a> <em>     */</em>
-<a name="2483" href="#2483">2483</a>     <strong>public</strong> <strong>void</strong> restore(Version version, String relPath)
-<a name="2484" href="#2484">2484</a> 	    throws PathNotFoundException, ItemExistsException,
-<a name="2485" href="#2485">2485</a> 	    ConstraintViolationException, UnsupportedRepositoryOperationException,
-<a name="2486" href="#2486">2486</a> 	    RepositoryException {
-<a name="2487" href="#2487">2487</a> 
-<a name="2488" href="#2488">2488</a> 	<em class="comment">// if node exists, do a 'normal' restore</em>
-<a name="2489" href="#2489">2489</a> 	<strong>if</strong> (hasNode(relPath)) {
-<a name="2490" href="#2490">2490</a> 	    getNode(relPath).restore(version);
-<a name="2491" href="#2491">2491</a> 	}
-<a name="2492" href="#2492">2492</a> 
-<a name="2493" href="#2493">2493</a> 	<em class="comment">// recreate node from frozen state</em>
-<a name="2494" href="#2494">2494</a> 	NodeImpl node = addNode(relPath, (VersionImpl) version);
-<a name="2495" href="#2495">2495</a> 	<strong>if</strong> (!node.isCheckedOut()) {
-<a name="2496" href="#2496">2496</a> 	    String msg = <span class="string">"Unable to restore version. Node is not checked-out "</span> + node.safeGetJCRPath();
-<a name="2497" href="#2497">2497</a> 	    log.debug(msg);
-<a name="2498" href="#2498">2498</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(msg);
-<a name="2499" href="#2499">2499</a> 	}
-<a name="2500" href="#2500">2500</a> 
-<a name="2501" href="#2501">2501</a> 	node.internalRestore((VersionImpl) version, <strong>new</strong> GenericVersionSelector(version.getCreated()));
-<a name="2502" href="#2502">2502</a> 	node.getParent().save();
-<a name="2503" href="#2503">2503</a> 
-<a name="2504" href="#2504">2504</a>     }
+<a name="2465" href="#2465">2465</a> 	<em class="comment">// check if 'own' version</em>
+<a name="2466" href="#2466">2466</a> 	<strong>if</strong> (!version.getParent().getUUID().equals(getVersionHistory().getUUID())) {
+<a name="2467" href="#2467">2467</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(<span class="string">"Unable to restore version. Not same version history."</span>);
+<a name="2468" href="#2468">2468</a> 	}
+<a name="2469" href="#2469">2469</a> 	internalRestore((VersionImpl) version, <strong>new</strong> GenericVersionSelector(version.getCreated()));
+<a name="2470" href="#2470">2470</a> 	save();
+<a name="2471" href="#2471">2471</a>     }
+<a name="2472" href="#2472">2472</a> 
+<a name="2473" href="#2473">2473</a> 
+<a name="2474" href="#2474">2474</a>     <em>/**<em>*</em></em>
+<a name="2475" href="#2475">2475</a> <em>     * @see Node#restore(Version, String)</em>
+<a name="2476" href="#2476">2476</a> <em>     */</em>
+<a name="2477" href="#2477">2477</a>     <strong>public</strong> <strong>void</strong> restore(Version version, String relPath)
+<a name="2478" href="#2478">2478</a> 	    throws PathNotFoundException, ItemExistsException,
+<a name="2479" href="#2479">2479</a> 	    ConstraintViolationException, UnsupportedRepositoryOperationException,
+<a name="2480" href="#2480">2480</a> 	    RepositoryException {
+<a name="2481" href="#2481">2481</a> 
+<a name="2482" href="#2482">2482</a> 	<em class="comment">// if node exists, do a 'normal' restore</em>
+<a name="2483" href="#2483">2483</a> 	<strong>if</strong> (hasNode(relPath)) {
+<a name="2484" href="#2484">2484</a> 	    getNode(relPath).restore(version);
+<a name="2485" href="#2485">2485</a> 	}
+<a name="2486" href="#2486">2486</a> 
+<a name="2487" href="#2487">2487</a> 	<em class="comment">// recreate node from frozen state</em>
+<a name="2488" href="#2488">2488</a> 	NodeImpl node = addNode(relPath, (VersionImpl) version);
+<a name="2489" href="#2489">2489</a> 	<strong>if</strong> (!node.isCheckedOut()) {
+<a name="2490" href="#2490">2490</a> 	    String msg = <span class="string">"Unable to restore version. Node is not checked-out "</span> + node.safeGetJCRPath();
+<a name="2491" href="#2491">2491</a> 	    log.debug(msg);
+<a name="2492" href="#2492">2492</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(msg);
+<a name="2493" href="#2493">2493</a> 	}
+<a name="2494" href="#2494">2494</a> 
+<a name="2495" href="#2495">2495</a> 	node.internalRestore((VersionImpl) version, <strong>new</strong> GenericVersionSelector(version.getCreated()));
+<a name="2496" href="#2496">2496</a> 	node.getParent().save();
+<a name="2497" href="#2497">2497</a> 
+<a name="2498" href="#2498">2498</a>     }
+<a name="2499" href="#2499">2499</a> 
+<a name="2500" href="#2500">2500</a>     <em>/**<em>*</em></em>
+<a name="2501" href="#2501">2501</a> <em>     * @see Node#restoreByLabel(String)</em>
+<a name="2502" href="#2502">2502</a> <em>     */</em>
+<a name="2503" href="#2503">2503</a>     <strong>public</strong> <strong>void</strong> restoreByLabel(String versionLabel)
+<a name="2504" href="#2504">2504</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
 <a name="2505" href="#2505">2505</a> 
-<a name="2506" href="#2506">2506</a>     <em>/**<em>*</em></em>
-<a name="2507" href="#2507">2507</a> <em>     * @see Node#restoreByLabel(String)</em>
-<a name="2508" href="#2508">2508</a> <em>     */</em>
-<a name="2509" href="#2509">2509</a>     <strong>public</strong> <strong>void</strong> restoreByLabel(String versionLabel)
-<a name="2510" href="#2510">2510</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="2506" href="#2506">2506</a> 	<strong>if</strong> (!isCheckedOut()) {
+<a name="2507" href="#2507">2507</a> 	    String msg = <span class="string">"Unable to restore version. Node is not checked-out "</span> + safeGetJCRPath();
+<a name="2508" href="#2508">2508</a> 	    log.debug(msg);
+<a name="2509" href="#2509">2509</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(msg);
+<a name="2510" href="#2510">2510</a> 	}
 <a name="2511" href="#2511">2511</a> 
-<a name="2512" href="#2512">2512</a> 	<strong>if</strong> (!isCheckedOut()) {
-<a name="2513" href="#2513">2513</a> 	    String msg = <span class="string">"Unable to restore version. Node is not checked-out "</span> + safeGetJCRPath();
-<a name="2514" href="#2514">2514</a> 	    log.debug(msg);
-<a name="2515" href="#2515">2515</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(msg);
-<a name="2516" href="#2516">2516</a> 	}
-<a name="2517" href="#2517">2517</a> 
-<a name="2518" href="#2518">2518</a> 	VersionImpl v = (VersionImpl) getVersionHistory().getVersionByLabel(versionLabel);
-<a name="2519" href="#2519">2519</a> 	<strong>if</strong> (v == <strong>null</strong>) {
-<a name="2520" href="#2520">2520</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(<span class="string">"No version for label "</span> + versionLabel + <span class="string">" found."</span>);
-<a name="2521" href="#2521">2521</a> 	}
-<a name="2522" href="#2522">2522</a> 	internalRestore(v, <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/version/GenericVersionSelector.html">GenericVersionSelector</a>(versionLabel));
-<a name="2523" href="#2523">2523</a> 	save();
-<a name="2524" href="#2524">2524</a>     }
-<a name="2525" href="#2525">2525</a> 
-<a name="2526" href="#2526">2526</a>     <em>/**<em>*</em></em>
-<a name="2527" href="#2527">2527</a> <em>     * Creates a new node at &lt;code>relPath&lt;/code> of the node type, uuid and</em>
-<a name="2528" href="#2528">2528</a> <em>     * eventual mixin types stored in the frozen node. The same as</em>
-<a name="2529" href="#2529">2529</a> <em>     * &lt;code>{@link #addNode(String relPath)}&lt;/code> except that the primary</em>
-<a name="2530" href="#2530">2530</a> <em>     * node type type, the uuid and evt. mixin type of the new node is</em>
-<a name="2531" href="#2531">2531</a> <em>     * explictly specified in the nt:frozen node.</em>
-<a name="2532" href="#2532">2532</a> <em>     * &lt;p/></em>
-<a name="2533" href="#2533">2533</a> <em>     *</em>
-<a name="2534" href="#2534">2534</a> <em>     * @param relPath The path of the new &lt;code>Node&lt;/code> that is to be created,</em>
-<a name="2535" href="#2535">2535</a> <em>     *                the last item of this pathwill be the name of the new &lt;code>Node&lt;/code>.</em>
-<a name="2536" href="#2536">2536</a> <em>     * @param frozen  The frozen node that contains the creation information</em>
-<a name="2537" href="#2537">2537</a> <em>     * @return The node that was added.</em>
-<a name="2538" href="#2538">2538</a> <em>     * @throws ItemExistsException          If an item at the</em>
-<a name="2539" href="#2539">2539</a> <em>     *                                      specified path already exists(and same-name siblings are not allowed).</em>
-<a name="2540" href="#2540">2540</a> <em>     * @throws PathNotFoundException        If specified path implies intermediary</em>
-<a name="2541" href="#2541">2541</a> <em>     *                                      &lt;code>Node&lt;/code>s that do not exist.</em>
-<a name="2542" href="#2542">2542</a> <em>     * @throws NoSuchNodeTypeException      If the specified &lt;code>nodeTypeName&lt;/code></em>
-<a name="2543" href="#2543">2543</a> <em>     *                                      is not recognized.</em>
-<a name="2544" href="#2544">2544</a> <em>     * @throws ConstraintViolationException If an attempt is made to add a node as the</em>
-<a name="2545" href="#2545">2545</a> <em>     *                                      child of a &lt;code>Property&lt;/code></em>
-<a name="2546" href="#2546">2546</a> <em>     * @throws RepositoryException          if another error occurs.</em>
-<a name="2547" href="#2547">2547</a> <em>     */</em>
-<a name="2548" href="#2548">2548</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/NodeImpl.html">NodeImpl</a> addNode(String relPath, <a href="../../../../org/apache/jackrabbit/core/version/FrozenNode.html">FrozenNode</a> frozen)
-<a name="2549" href="#2549">2549</a> 	    throws ItemExistsException, PathNotFoundException,
-<a name="2550" href="#2550">2550</a> 	    ConstraintViolationException, NoSuchNodeTypeException,
-<a name="2551" href="#2551">2551</a> 	    RepositoryException {
-<a name="2552" href="#2552">2552</a> 
-<a name="2553" href="#2553">2553</a> 	<em class="comment">// get frozen node type</em>
-<a name="2554" href="#2554">2554</a> 	NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-<a name="2555" href="#2555">2555</a> 	String ntName = frozen.getProperty(VersionImpl.PROPNAME_FROZEN_PRIMARY_TYPE).getString();
-<a name="2556" href="#2556">2556</a> 	NodeTypeImpl nt = (NodeTypeImpl) ntMgr.getNodeType(ntName);
-<a name="2557" href="#2557">2557</a> 
-<a name="2558" href="#2558">2558</a> 	<em class="comment">// get frozen uuid</em>
-<a name="2559" href="#2559">2559</a> 	String uuid = frozen.hasProperty(VersionImpl.PROPNAME_FROZEN_UUID)
-<a name="2560" href="#2560">2560</a> 		? frozen.getProperty(VersionImpl.PROPNAME_FROZEN_UUID).getString()
-<a name="2561" href="#2561">2561</a> 		: <strong>null</strong>;
-<a name="2562" href="#2562">2562</a> 
-<a name="2563" href="#2563">2563</a> 	<em class="comment">// get frozen mixin</em>
-<a name="2564" href="#2564">2564</a> 	NodeImpl node = internalAddNode(relPath, nt, uuid);
-<a name="2565" href="#2565">2565</a> 
-<a name="2566" href="#2566">2566</a> 	<em class="comment">// todo: also respect mixing types on creation?</em>
-<a name="2567" href="#2567">2567</a> 	<strong>if</strong> (frozen.hasProperty(VersionImpl.PROPNAME_FROZEN_MIXIN_TYPES)) {
-<a name="2568" href="#2568">2568</a> 	    Value[] mxNames = frozen.getProperty(VersionImpl.PROPNAME_FROZEN_MIXIN_TYPES).getValues();
-<a name="2569" href="#2569">2569</a> 	    <strong>for</strong> (<strong>int</strong> i = 0; i &lt; mxNames.length; i++) {
-<a name="2570" href="#2570">2570</a> 		node.addMixin(mxNames[i].getString());
-<a name="2571" href="#2571">2571</a> 	    }
-<a name="2572" href="#2572">2572</a> 	}
-<a name="2573" href="#2573">2573</a> 	<strong>return</strong> node;
-<a name="2574" href="#2574">2574</a>     }
-<a name="2575" href="#2575">2575</a> 
-<a name="2576" href="#2576">2576</a>     <em>/**<em>*</em></em>
-<a name="2577" href="#2577">2577</a> <em>     * Internal method to restore a version.</em>
-<a name="2578" href="#2578">2578</a> <em>     *</em>
-<a name="2579" href="#2579">2579</a> <em>     * @param version</em>
-<a name="2580" href="#2580">2580</a> <em>     * @param vsel    the version selector that will select the correct version for</em>
-<a name="2581" href="#2581">2581</a> <em>     *                OPV=Version childnodes.</em>
-<a name="2582" href="#2582">2582</a> <em>     * @throws UnsupportedRepositoryOperationException</em>
-<a name="2583" href="#2583">2583</a> <em>     *</em>
-<a name="2584" href="#2584">2584</a> <em>     * @throws RepositoryException</em>
-<a name="2585" href="#2585">2585</a> <em>     */</em>
-<a name="2586" href="#2586">2586</a>     <strong>private</strong> <strong>void</strong> internalRestore(<a href="../../../../org/apache/jackrabbit/core/version/VersionImpl.html">VersionImpl</a> version, <a href="../../../../org/apache/jackrabbit/core/version/VersionSelector.html">VersionSelector</a> vsel)
-<a name="2587" href="#2587">2587</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
-<a name="2588" href="#2588">2588</a> 
-<a name="2589" href="#2589">2589</a> 	<em class="comment">// 1. The child node and properties of N will be changed, removed or</em>
-<a name="2590" href="#2590">2590</a> 	<em class="comment">//    added to, depending on their corresponding copies in V and their</em>
-<a name="2591" href="#2591">2591</a> 	<em class="comment">//    own OnParentVersion attributes (see 7.2.8, below, for details).</em>
-<a name="2592" href="#2592">2592</a> 	restoreFrozenState(version, vsel);
+<a name="2512" href="#2512">2512</a> 	VersionImpl v = (VersionImpl) getVersionHistory().getVersionByLabel(versionLabel);
+<a name="2513" href="#2513">2513</a> 	<strong>if</strong> (v == <strong>null</strong>) {
+<a name="2514" href="#2514">2514</a> 	    <strong>throw</strong> <strong>new</strong> VersionException(<span class="string">"No version for label "</span> + versionLabel + <span class="string">" found."</span>);
+<a name="2515" href="#2515">2515</a> 	}
+<a name="2516" href="#2516">2516</a> 	internalRestore(v, <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/version/GenericVersionSelector.html">GenericVersionSelector</a>(versionLabel));
+<a name="2517" href="#2517">2517</a> 	save();
+<a name="2518" href="#2518">2518</a>     }
+<a name="2519" href="#2519">2519</a> 
+<a name="2520" href="#2520">2520</a>     <em>/**<em>*</em></em>
+<a name="2521" href="#2521">2521</a> <em>     * Creates a new node at &lt;code>relPath&lt;/code> of the node type, uuid and</em>
+<a name="2522" href="#2522">2522</a> <em>     * eventual mixin types stored in the frozen node. The same as</em>
+<a name="2523" href="#2523">2523</a> <em>     * &lt;code>{@link #addNode(String relPath)}&lt;/code> except that the primary</em>
+<a name="2524" href="#2524">2524</a> <em>     * node type type, the uuid and evt. mixin type of the new node is</em>
+<a name="2525" href="#2525">2525</a> <em>     * explictly specified in the nt:frozen node.</em>
+<a name="2526" href="#2526">2526</a> <em>     * &lt;p/></em>
+<a name="2527" href="#2527">2527</a> <em>     *</em>
+<a name="2528" href="#2528">2528</a> <em>     * @param relPath The path of the new &lt;code>Node&lt;/code> that is to be created,</em>
+<a name="2529" href="#2529">2529</a> <em>     *                the last item of this pathwill be the name of the new &lt;code>Node&lt;/code>.</em>
+<a name="2530" href="#2530">2530</a> <em>     * @param frozen  The frozen node that contains the creation information</em>
+<a name="2531" href="#2531">2531</a> <em>     * @return The node that was added.</em>
+<a name="2532" href="#2532">2532</a> <em>     * @throws ItemExistsException          If an item at the</em>
+<a name="2533" href="#2533">2533</a> <em>     *                                      specified path already exists(and same-name siblings are not allowed).</em>
+<a name="2534" href="#2534">2534</a> <em>     * @throws PathNotFoundException        If specified path implies intermediary</em>
+<a name="2535" href="#2535">2535</a> <em>     *                                      &lt;code>Node&lt;/code>s that do not exist.</em>
+<a name="2536" href="#2536">2536</a> <em>     * @throws NoSuchNodeTypeException      If the specified &lt;code>nodeTypeName&lt;/code></em>
+<a name="2537" href="#2537">2537</a> <em>     *                                      is not recognized.</em>
+<a name="2538" href="#2538">2538</a> <em>     * @throws ConstraintViolationException If an attempt is made to add a node as the</em>
+<a name="2539" href="#2539">2539</a> <em>     *                                      child of a &lt;code>Property&lt;/code></em>
+<a name="2540" href="#2540">2540</a> <em>     * @throws RepositoryException          if another error occurs.</em>
+<a name="2541" href="#2541">2541</a> <em>     */</em>
+<a name="2542" href="#2542">2542</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/NodeImpl.html">NodeImpl</a> addNode(String relPath, <a href="../../../../org/apache/jackrabbit/core/version/FrozenNode.html">FrozenNode</a> frozen)
+<a name="2543" href="#2543">2543</a> 	    throws ItemExistsException, PathNotFoundException,
+<a name="2544" href="#2544">2544</a> 	    ConstraintViolationException, NoSuchNodeTypeException,
+<a name="2545" href="#2545">2545</a> 	    RepositoryException {
+<a name="2546" href="#2546">2546</a> 
+<a name="2547" href="#2547">2547</a> 	<em class="comment">// get frozen node type</em>
+<a name="2548" href="#2548">2548</a> 	NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+<a name="2549" href="#2549">2549</a> 	String ntName = frozen.getProperty(VersionImpl.PROPNAME_FROZEN_PRIMARY_TYPE).getString();
+<a name="2550" href="#2550">2550</a> 	NodeTypeImpl nt = (NodeTypeImpl) ntMgr.getNodeType(ntName);
+<a name="2551" href="#2551">2551</a> 
+<a name="2552" href="#2552">2552</a> 	<em class="comment">// get frozen uuid</em>
+<a name="2553" href="#2553">2553</a> 	String uuid = frozen.hasProperty(VersionImpl.PROPNAME_FROZEN_UUID)
+<a name="2554" href="#2554">2554</a> 		? frozen.getProperty(VersionImpl.PROPNAME_FROZEN_UUID).getString()
+<a name="2555" href="#2555">2555</a> 		: <strong>null</strong>;
+<a name="2556" href="#2556">2556</a> 
+<a name="2557" href="#2557">2557</a> 	<em class="comment">// get frozen mixin</em>
+<a name="2558" href="#2558">2558</a> 	NodeImpl node = internalAddNode(relPath, nt, uuid);
+<a name="2559" href="#2559">2559</a> 
+<a name="2560" href="#2560">2560</a> 	<em class="comment">// todo: also respect mixing types on creation?</em>
+<a name="2561" href="#2561">2561</a> 	<strong>if</strong> (frozen.hasProperty(VersionImpl.PROPNAME_FROZEN_MIXIN_TYPES)) {
+<a name="2562" href="#2562">2562</a> 	    Value[] mxNames = frozen.getProperty(VersionImpl.PROPNAME_FROZEN_MIXIN_TYPES).getValues();
+<a name="2563" href="#2563">2563</a> 	    <strong>for</strong> (<strong>int</strong> i = 0; i &lt; mxNames.length; i++) {
+<a name="2564" href="#2564">2564</a> 		node.addMixin(mxNames[i].getString());
+<a name="2565" href="#2565">2565</a> 	    }
+<a name="2566" href="#2566">2566</a> 	}
+<a name="2567" href="#2567">2567</a> 	<strong>return</strong> node;
+<a name="2568" href="#2568">2568</a>     }
+<a name="2569" href="#2569">2569</a> 
+<a name="2570" href="#2570">2570</a>     <em>/**<em>*</em></em>
+<a name="2571" href="#2571">2571</a> <em>     * Internal method to restore a version.</em>
+<a name="2572" href="#2572">2572</a> <em>     *</em>
+<a name="2573" href="#2573">2573</a> <em>     * @param version</em>
+<a name="2574" href="#2574">2574</a> <em>     * @param vsel    the version selector that will select the correct version for</em>
+<a name="2575" href="#2575">2575</a> <em>     *                OPV=Version childnodes.</em>
+<a name="2576" href="#2576">2576</a> <em>     * @throws UnsupportedRepositoryOperationException</em>
+<a name="2577" href="#2577">2577</a> <em>     *</em>
+<a name="2578" href="#2578">2578</a> <em>     * @throws RepositoryException</em>
+<a name="2579" href="#2579">2579</a> <em>     */</em>
+<a name="2580" href="#2580">2580</a>     <strong>private</strong> <strong>void</strong> internalRestore(<a href="../../../../org/apache/jackrabbit/core/version/VersionImpl.html">VersionImpl</a> version, <a href="../../../../org/apache/jackrabbit/core/version/VersionSelector.html">VersionSelector</a> vsel)
+<a name="2581" href="#2581">2581</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="2582" href="#2582">2582</a> 
+<a name="2583" href="#2583">2583</a> 	<em class="comment">// 1. The child node and properties of N will be changed, removed or</em>
+<a name="2584" href="#2584">2584</a> 	<em class="comment">//    added to, depending on their corresponding copies in V and their</em>
+<a name="2585" href="#2585">2585</a> 	<em class="comment">//    own OnParentVersion attributes (see 7.2.8, below, for details).</em>
+<a name="2586" href="#2586">2586</a> 	restoreFrozenState(version, vsel);
+<a name="2587" href="#2587">2587</a> 
+<a name="2588" href="#2588">2588</a> 	<em class="comment">// 2. N’s jcr:baseVersion property will be changed to point to V.</em>
+<a name="2589" href="#2589">2589</a> 	internalSetProperty(VersionImpl.PROPNAME_BASE_VERSION, InternalValue.create(<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/util/uuid/UUID.html">UUID</a>(version.getUUID())));
+<a name="2590" href="#2590">2590</a> 
+<a name="2591" href="#2591">2591</a> 	<em class="comment">// 3. N’s jcr:isCheckedOut property is set to false.</em>
+<a name="2592" href="#2592">2592</a> 	internalSetProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT, InternalValue.create(false));
 <a name="2593" href="#2593">2593</a> 
-<a name="2594" href="#2594">2594</a> 	<em class="comment">// 2. N’s jcr:baseVersion property will be changed to point to V.</em>
-<a name="2595" href="#2595">2595</a> 	internalSetProperty(VersionImpl.PROPNAME_BASE_VERSION, InternalValue.create(<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/util/uuid/UUID.html">UUID</a>(version.getUUID())));
-<a name="2596" href="#2596">2596</a> 
-<a name="2597" href="#2597">2597</a> 	<em class="comment">// 3. N’s jcr:isCheckedOut property is set to false.</em>
-<a name="2598" href="#2598">2598</a> 	internalSetProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT, InternalValue.create(false));
-<a name="2599" href="#2599">2599</a> 
-<a name="2600" href="#2600">2600</a> 	<em class="comment">// 4. N's jcr:predecessor property is set to null</em>
-<a name="2601" href="#2601">2601</a> 	internalSetProperty(VersionImpl.PROPNAME_PREDECESSORS, <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/InternalValue.html">InternalValue</a>[0]);
-<a name="2602" href="#2602">2602</a>     }
-<a name="2603" href="#2603">2603</a> 
-<a name="2604" href="#2604">2604</a>     <em>/**<em>*</em></em>
-<a name="2605" href="#2605">2605</a> <em>     * Little helper to retrieve the opv value for a property. depends on the</em>
-<a name="2606" href="#2606">2606</a> <em>     * implementaion. if nt:frozen is used, need to lookup prop def.</em>
-<a name="2607" href="#2607">2607</a> <em>     *</em>
-<a name="2608" href="#2608">2608</a> <em>     * @param name</em>
-<a name="2609" href="#2609">2609</a> <em>     * @param type</em>
-<a name="2610" href="#2610">2610</a> <em>     * @param multiValued</em>
-<a name="2611" href="#2611">2611</a> <em>     * @return</em>
-<a name="2612" href="#2612">2612</a> <em>     * @throws RepositoryException</em>
-<a name="2613" href="#2613">2613</a> <em>     */</em>
-<a name="2614" href="#2614">2614</a>     <strong>private</strong> <strong>int</strong> guessOPV(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name, <strong>int</strong> type, <strong>boolean</strong> multiValued) throws RepositoryException {
-<a name="2615" href="#2615">2615</a> 	PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
-<a name="2616" href="#2616">2616</a> 	<strong>return</strong> def.getOnParentVersion();
-<a name="2617" href="#2617">2617</a>     }
-<a name="2618" href="#2618">2618</a> 
-<a name="2619" href="#2619">2619</a>     <em>/**<em>*</em></em>
-<a name="2620" href="#2620">2620</a> <em>     * Creates the frozen state from a node</em>
-<a name="2621" href="#2621">2621</a> <em>     *</em>
-<a name="2622" href="#2622">2622</a> <em>     * @param freeze</em>
-<a name="2623" href="#2623">2623</a> <em>     * @throws RepositoryException</em>
-<a name="2624" href="#2624">2624</a> <em>     */</em>
-<a name="2625" href="#2625">2625</a>     <strong>void</strong> restoreFrozenState(<a href="../../../../org/apache/jackrabbit/core/version/FrozenNode.html">FrozenNode</a> freeze, <a href="../../../../org/apache/jackrabbit/core/version/VersionSelector.html">VersionSelector</a> vsel)
-<a name="2626" href="#2626">2626</a> 	    throws RepositoryException {
-<a name="2627" href="#2627">2627</a> 	PropertyIterator piter = freeze.getProperties();
-<a name="2628" href="#2628">2628</a> 	<strong>while</strong> (piter.hasNext()) {
-<a name="2629" href="#2629">2629</a> 	    PropertyImpl prop = (PropertyImpl) piter.nextProperty();
-<a name="2630" href="#2630">2630</a> 	    <em class="comment">// check for special property</em>
-<a name="2631" href="#2631">2631</a> 	    <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_FROZEN_UUID)) {
-<a name="2632" href="#2632">2632</a> 		<em class="comment">// check if uuid is the same as 'this' one.</em>
-<a name="2633" href="#2633">2633</a> 		<strong>if</strong> (!isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-<a name="2634" href="#2634">2634</a> 		    <strong>throw</strong> <strong>new</strong> ItemExistsException(<span class="string">"Unable to restore version of "</span> + safeGetJCRPath() + <span class="string">". Not referenceable."</span>);
-<a name="2635" href="#2635">2635</a> 		}
-<a name="2636" href="#2636">2636</a> 		<strong>if</strong> (!prop.getString().equals(<strong>this</strong>.getUUID())) {
-<a name="2637" href="#2637">2637</a> 		    <strong>throw</strong> <strong>new</strong> ItemExistsException(<span class="string">"Unable to restore version of "</span> + safeGetJCRPath() + <span class="string">". UUID changed."</span>);
+<a name="2594" href="#2594">2594</a> 	<em class="comment">// 4. N's jcr:predecessor property is set to null</em>
+<a name="2595" href="#2595">2595</a> 	internalSetProperty(VersionImpl.PROPNAME_PREDECESSORS, <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/InternalValue.html">InternalValue</a>[0]);
+<a name="2596" href="#2596">2596</a>     }
+<a name="2597" href="#2597">2597</a> 
+<a name="2598" href="#2598">2598</a>     <em>/**<em>*</em></em>
+<a name="2599" href="#2599">2599</a> <em>     * Little helper to retrieve the opv value for a property. depends on the</em>
+<a name="2600" href="#2600">2600</a> <em>     * implementaion. if nt:frozen is used, need to lookup prop def.</em>
+<a name="2601" href="#2601">2601</a> <em>     *</em>
+<a name="2602" href="#2602">2602</a> <em>     * @param name</em>
+<a name="2603" href="#2603">2603</a> <em>     * @param type</em>
+<a name="2604" href="#2604">2604</a> <em>     * @param multiValued</em>
+<a name="2605" href="#2605">2605</a> <em>     * @return</em>
+<a name="2606" href="#2606">2606</a> <em>     * @throws RepositoryException</em>
+<a name="2607" href="#2607">2607</a> <em>     */</em>
+<a name="2608" href="#2608">2608</a>     <strong>private</strong> <strong>int</strong> guessOPV(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name, <strong>int</strong> type, <strong>boolean</strong> multiValued) throws RepositoryException {
+<a name="2609" href="#2609">2609</a> 	PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
+<a name="2610" href="#2610">2610</a> 	<strong>return</strong> def.getOnParentVersion();
+<a name="2611" href="#2611">2611</a>     }
+<a name="2612" href="#2612">2612</a> 
+<a name="2613" href="#2613">2613</a>     <em>/**<em>*</em></em>
+<a name="2614" href="#2614">2614</a> <em>     * Creates the frozen state from a node</em>
+<a name="2615" href="#2615">2615</a> <em>     *</em>
+<a name="2616" href="#2616">2616</a> <em>     * @param freeze</em>
+<a name="2617" href="#2617">2617</a> <em>     * @throws RepositoryException</em>
+<a name="2618" href="#2618">2618</a> <em>     */</em>
+<a name="2619" href="#2619">2619</a>     <strong>void</strong> restoreFrozenState(<a href="../../../../org/apache/jackrabbit/core/version/FrozenNode.html">FrozenNode</a> freeze, <a href="../../../../org/apache/jackrabbit/core/version/VersionSelector.html">VersionSelector</a> vsel)
+<a name="2620" href="#2620">2620</a> 	    throws RepositoryException {
+<a name="2621" href="#2621">2621</a> 	PropertyIterator piter = freeze.getProperties();
+<a name="2622" href="#2622">2622</a> 	<strong>while</strong> (piter.hasNext()) {
+<a name="2623" href="#2623">2623</a> 	    PropertyImpl prop = (PropertyImpl) piter.nextProperty();
+<a name="2624" href="#2624">2624</a> 	    <em class="comment">// check for special property</em>
+<a name="2625" href="#2625">2625</a> 	    <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_FROZEN_UUID)) {
+<a name="2626" href="#2626">2626</a> 		<em class="comment">// check if uuid is the same as 'this' one.</em>
+<a name="2627" href="#2627">2627</a> 		<strong>if</strong> (!isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+<a name="2628" href="#2628">2628</a> 		    <strong>throw</strong> <strong>new</strong> ItemExistsException(<span class="string">"Unable to restore version of "</span> + safeGetJCRPath() + <span class="string">". Not referenceable."</span>);
+<a name="2629" href="#2629">2629</a> 		}
+<a name="2630" href="#2630">2630</a> 		<strong>if</strong> (!prop.getString().equals(<strong>this</strong>.getUUID())) {
+<a name="2631" href="#2631">2631</a> 		    <strong>throw</strong> <strong>new</strong> ItemExistsException(<span class="string">"Unable to restore version of "</span> + safeGetJCRPath() + <span class="string">". UUID changed."</span>);
+<a name="2632" href="#2632">2632</a> 		}
+<a name="2633" href="#2633">2633</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_FROZEN_PRIMARY_TYPE)) {
+<a name="2634" href="#2634">2634</a> 		<em class="comment">// check if primaryType is the same as 'this' one.</em>
+<a name="2635" href="#2635">2635</a> 		<strong>if</strong> (!prop.getString().equals(<strong>this</strong>.getPrimaryNodeType().getName())) {
+<a name="2636" href="#2636">2636</a> 		    <em class="comment">// todo: check with spec what should happen here</em>
+<a name="2637" href="#2637">2637</a> 		    <strong>throw</strong> <strong>new</strong> ItemExistsException(<span class="string">"Unable to restore version of "</span> + safeGetJCRPath() + <span class="string">". PrimaryType changed."</span>);
 <a name="2638" href="#2638">2638</a> 		}
-<a name="2639" href="#2639">2639</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_FROZEN_PRIMARY_TYPE)) {
-<a name="2640" href="#2640">2640</a> 		<em class="comment">// check if primaryType is the same as 'this' one.</em>
-<a name="2641" href="#2641">2641</a> 		<strong>if</strong> (!prop.getString().equals(<strong>this</strong>.getPrimaryNodeType().getName())) {
-<a name="2642" href="#2642">2642</a> 		    <em class="comment">// todo: check with spec what should happen here</em>
-<a name="2643" href="#2643">2643</a> 		    <strong>throw</strong> <strong>new</strong> ItemExistsException(<span class="string">"Unable to restore version of "</span> + safeGetJCRPath() + <span class="string">". PrimaryType changed."</span>);
-<a name="2644" href="#2644">2644</a> 		}
-<a name="2645" href="#2645">2645</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_FROZEN_MIXIN_TYPES)) {
-<a name="2646" href="#2646">2646</a> 		<em class="comment">// add mixins</em>
-<a name="2647" href="#2647">2647</a> 		Value[] values = prop.getValues();
-<a name="2648" href="#2648">2648</a> 		NodeType[] mixins = getMixinNodeTypes();
-<a name="2649" href="#2649">2649</a> 		<strong>for</strong> (<strong>int</strong> i = 0; i &lt; values.length; i++) {
-<a name="2650" href="#2650">2650</a> 		    String name = values[i].getString();
-<a name="2651" href="#2651">2651</a> 		    <strong>boolean</strong> found = false;
-<a name="2652" href="#2652">2652</a> 		    <strong>for</strong> (<strong>int</strong> j = 0; j &lt; mixins.length; j++) {
-<a name="2653" href="#2653">2653</a> 			<strong>if</strong> (name.equals(mixins[j].getName())) {
-<a name="2654" href="#2654">2654</a> 			    <em class="comment">// clear</em>
-<a name="2655" href="#2655">2655</a> 			    mixins[j] = <strong>null</strong>;
-<a name="2656" href="#2656">2656</a> 			    found = <strong>true</strong>;
-<a name="2657" href="#2657">2657</a> 			    <strong>break</strong>;
-<a name="2658" href="#2658">2658</a> 			}
-<a name="2659" href="#2659">2659</a> 		    }
-<a name="2660" href="#2660">2660</a> 		    <strong>if</strong> (!found) {
-<a name="2661" href="#2661">2661</a> 			addMixin(name);
+<a name="2639" href="#2639">2639</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_FROZEN_MIXIN_TYPES)) {
+<a name="2640" href="#2640">2640</a> 		<em class="comment">// add mixins</em>
+<a name="2641" href="#2641">2641</a> 		Value[] values = prop.getValues();
+<a name="2642" href="#2642">2642</a> 		NodeType[] mixins = getMixinNodeTypes();
+<a name="2643" href="#2643">2643</a> 		<strong>for</strong> (<strong>int</strong> i = 0; i &lt; values.length; i++) {
+<a name="2644" href="#2644">2644</a> 		    String name = values[i].getString();
+<a name="2645" href="#2645">2645</a> 		    <strong>boolean</strong> found = false;
+<a name="2646" href="#2646">2646</a> 		    <strong>for</strong> (<strong>int</strong> j = 0; j &lt; mixins.length; j++) {
+<a name="2647" href="#2647">2647</a> 			<strong>if</strong> (name.equals(mixins[j].getName())) {
+<a name="2648" href="#2648">2648</a> 			    <em class="comment">// clear</em>
+<a name="2649" href="#2649">2649</a> 			    mixins[j] = <strong>null</strong>;
+<a name="2650" href="#2650">2650</a> 			    found = <strong>true</strong>;
+<a name="2651" href="#2651">2651</a> 			    <strong>break</strong>;
+<a name="2652" href="#2652">2652</a> 			}
+<a name="2653" href="#2653">2653</a> 		    }
+<a name="2654" href="#2654">2654</a> 		    <strong>if</strong> (!found) {
+<a name="2655" href="#2655">2655</a> 			addMixin(name);
+<a name="2656" href="#2656">2656</a> 		    }
+<a name="2657" href="#2657">2657</a> 		}
+<a name="2658" href="#2658">2658</a> 		<em class="comment">// remove additional</em>
+<a name="2659" href="#2659">2659</a> 		<strong>for</strong> (<strong>int</strong> i = 0; i &lt; mixins.length; i++) {
+<a name="2660" href="#2660">2660</a> 		    <strong>if</strong> (mixins[i] != <strong>null</strong>) {
+<a name="2661" href="#2661">2661</a> 			removeMixin(mixins[i].getName());
 <a name="2662" href="#2662">2662</a> 		    }
 <a name="2663" href="#2663">2663</a> 		}
-<a name="2664" href="#2664">2664</a> 		<em class="comment">// remove additional</em>
-<a name="2665" href="#2665">2665</a> 		<strong>for</strong> (<strong>int</strong> i = 0; i &lt; mixins.length; i++) {
-<a name="2666" href="#2666">2666</a> 		    <strong>if</strong> (mixins[i] != <strong>null</strong>) {
-<a name="2667" href="#2667">2667</a> 			removeMixin(mixins[i].getName());
-<a name="2668" href="#2668">2668</a> 		    }
-<a name="2669" href="#2669">2669</a> 		}
-<a name="2670" href="#2670">2670</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_SUCCESSORS)) {
+<a name="2664" href="#2664">2664</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_SUCCESSORS)) {
+<a name="2665" href="#2665">2665</a> 		<em class="comment">// ignore</em>
+<a name="2666" href="#2666">2666</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_CREATED)) {
+<a name="2667" href="#2667">2667</a> 		<em class="comment">// ignore</em>
+<a name="2668" href="#2668">2668</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_VERSION_LABELS)) {
+<a name="2669" href="#2669">2669</a> 		<em class="comment">// ignore</em>
+<a name="2670" href="#2670">2670</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_VERSION_HISTORY)) {
 <a name="2671" href="#2671">2671</a> 		<em class="comment">// ignore</em>
-<a name="2672" href="#2672">2672</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_CREATED)) {
+<a name="2672" href="#2672">2672</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_PRIMARYTYPE)) {
 <a name="2673" href="#2673">2673</a> 		<em class="comment">// ignore</em>
-<a name="2674" href="#2674">2674</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_VERSION_LABELS)) {
+<a name="2674" href="#2674">2674</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_MIXINTYPES)) {
 <a name="2675" href="#2675">2675</a> 		<em class="comment">// ignore</em>
-<a name="2676" href="#2676">2676</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_VERSION_HISTORY)) {
+<a name="2676" href="#2676">2676</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_UUID)) {
 <a name="2677" href="#2677">2677</a> 		<em class="comment">// ignore</em>
-<a name="2678" href="#2678">2678</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_PRIMARYTYPE)) {
-<a name="2679" href="#2679">2679</a> 		<em class="comment">// ignore</em>
-<a name="2680" href="#2680">2680</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_MIXINTYPES)) {
-<a name="2681" href="#2681">2681</a> 		<em class="comment">// ignore</em>
-<a name="2682" href="#2682">2682</a> 	    } <strong>else</strong> <strong>if</strong> (prop.getQName().equals(VersionImpl.PROPNAME_UUID)) {
-<a name="2683" href="#2683">2683</a> 		<em class="comment">// ignore</em>
-<a name="2684" href="#2684">2684</a> 	    } <strong>else</strong> {
-<a name="2685" href="#2685">2685</a> 		<em class="comment">// normal property</em>
-<a name="2686" href="#2686">2686</a> 		<strong>int</strong> type = PropertyType.UNDEFINED;
-<a name="2687" href="#2687">2687</a> 		<strong>if</strong> (prop.getDefinition().isMultiple()) {
-<a name="2688" href="#2688">2688</a> 		    Value[] values = prop.getValues();
-<a name="2689" href="#2689">2689</a> 		    <strong>if</strong> (values.length != 0) {
-<a name="2690" href="#2690">2690</a> 			type = values[0].getType();
-<a name="2691" href="#2691">2691</a> 		    }
-<a name="2692" href="#2692">2692</a> 		} <strong>else</strong> {
-<a name="2693" href="#2693">2693</a> 		    type = prop.getValue().getType();
-<a name="2694" href="#2694">2694</a> 		}
-<a name="2695" href="#2695">2695</a> 		<strong>int</strong> opv = guessOPV(prop.getQName(), type, prop.getDefinition().isMultiple());
-<a name="2696" href="#2696">2696</a> 		<strong>switch</strong> (opv) {
-<a name="2697" href="#2697">2697</a> 		    <strong>case</strong> OnParentVersionAction.ABORT:
-<a name="2698" href="#2698">2698</a> 			<strong>throw</strong> <strong>new</strong> RepositoryException(<span class="string">"Checkin aborted due to OPV in "</span> + prop.safeGetJCRPath());
-<a name="2699" href="#2699">2699</a> 		    <strong>case</strong> OnParentVersionAction.COMPUTE:
-<a name="2700" href="#2700">2700</a> 		    <strong>case</strong> OnParentVersionAction.IGNORE:
-<a name="2701" href="#2701">2701</a> 		    <strong>case</strong> OnParentVersionAction.INITIALIZE:
-<a name="2702" href="#2702">2702</a> 			<strong>break</strong>;
-<a name="2703" href="#2703">2703</a> 		    <strong>case</strong> OnParentVersionAction.VERSION:
-<a name="2704" href="#2704">2704</a> 		    <strong>case</strong> OnParentVersionAction.COPY:
-<a name="2705" href="#2705">2705</a> 			internalCopyPropertyFrom(prop);
-<a name="2706" href="#2706">2706</a> 			<strong>break</strong>;
-<a name="2707" href="#2707">2707</a> 		}
-<a name="2708" href="#2708">2708</a> 	    }
-<a name="2709" href="#2709">2709</a> 	}
-<a name="2710" href="#2710">2710</a> 
-<a name="2711" href="#2711">2711</a> 	<em class="comment">// iterate over the nodes</em>
-<a name="2712" href="#2712">2712</a> 	NodeIterator niter = freeze.getNodes();
-<a name="2713" href="#2713">2713</a> 	<strong>while</strong> (niter.hasNext()) {
-<a name="2714" href="#2714">2714</a> 	    NodeImpl child = (NodeImpl) niter.nextNode();
-<a name="2715" href="#2715">2715</a> 	    <strong>if</strong> (child.isNodeType(NodeTypeRegistry.NT_FROZEN)) {
-<a name="2716" href="#2716">2716</a> 		FrozenNode f = (FrozenNode) child;
-<a name="2717" href="#2717">2717</a> 		<em class="comment">// if frozen node exist, replace</em>
-<a name="2718" href="#2718">2718</a> 		<em class="comment">// todo: make work for same name siblings</em>
-<a name="2719" href="#2719">2719</a> 		<strong>if</strong> (hasNode(child.getName())) {
-<a name="2720" href="#2720">2720</a> 		    remove(child.getName());
-<a name="2721" href="#2721">2721</a> 		}
-<a name="2722" href="#2722">2722</a> 		NodeImpl n = addNode(child.getName(), f);
-<a name="2723" href="#2723">2723</a> 		n.restoreFrozenState(f, vsel);
-<a name="2724" href="#2724">2724</a> 	    } <strong>else</strong> <strong>if</strong> (child.isNodeType(NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD)) {
-<a name="2725" href="#2725">2725</a> 		<em class="comment">// check if child already exists</em>
-<a name="2726" href="#2726">2726</a> 		<strong>if</strong> (hasNode(child.getName())) {
-<a name="2727" href="#2727">2727</a> 		    <em class="comment">// do nothing</em>
-<a name="2728" href="#2728">2728</a> 		} <strong>else</strong> {
-<a name="2729" href="#2729">2729</a> 		    <em class="comment">// get desired version from version selector</em>
-<a name="2730" href="#2730">2730</a> 		    VersionHistory vh = (VersionHistory) child.getProperty(VersionImpl.PROPNAME_VERSION_HISTORY).getNode();
-<a name="2731" href="#2731">2731</a> 		    VersionImpl v = (VersionImpl) vsel.select(vh);
-<a name="2732" href="#2732">2732</a> 		    NodeImpl node = addNode(child.getName(), v);
-<a name="2733" href="#2733">2733</a> 		    node.internalRestore(v, vsel);
-<a name="2734" href="#2734">2734</a> 		}
-<a name="2735" href="#2735">2735</a> 	    }
-<a name="2736" href="#2736">2736</a> 	}
-<a name="2737" href="#2737">2737</a>     }
-<a name="2738" href="#2738">2738</a> 
-<a name="2739" href="#2739">2739</a>     <em>/**<em>*</em></em>
-<a name="2740" href="#2740">2740</a> <em>     * @see Node#getVersionHistory()</em>
-<a name="2741" href="#2741">2741</a> <em>     */</em>
-<a name="2742" href="#2742">2742</a>     <strong>public</strong> VersionHistory getVersionHistory()
-<a name="2743" href="#2743">2743</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
-<a name="2744" href="#2744">2744</a> 	checkVersionable();
-<a name="2745" href="#2745">2745</a> 	<strong>return</strong> rep.getVersionManager().getVersionHistory(<strong>this</strong>);
-<a name="2746" href="#2746">2746</a>     }
-<a name="2747" href="#2747">2747</a> 
-<a name="2748" href="#2748">2748</a>     <em>/**<em>*</em></em>
-<a name="2749" href="#2749">2749</a> <em>     * @see Node#getBaseVersion()</em>
-<a name="2750" href="#2750">2750</a> <em>     */</em>
-<a name="2751" href="#2751">2751</a>     <strong>public</strong> Version getBaseVersion()
-<a name="2752" href="#2752">2752</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
-<a name="2753" href="#2753">2753</a> 	checkVersionable();
-<a name="2754" href="#2754">2754</a> 	<strong>return</strong> rep.getVersionManager().getBaseVersion(<strong>this</strong>);
-<a name="2755" href="#2755">2755</a>     }
-<a name="2756" href="#2756">2756</a> 
-<a name="2757" href="#2757">2757</a>     <em>/**<em>*</em></em>
-<a name="2758" href="#2758">2758</a> <em>     * Copies a property to this node</em>
-<a name="2759" href="#2759">2759</a> <em>     *</em>
-<a name="2760" href="#2760">2760</a> <em>     * @param prop</em>
-<a name="2761" href="#2761">2761</a> <em>     * @throws RepositoryException</em>
-<a name="2762" href="#2762">2762</a> <em>     */</em>
-<a name="2763" href="#2763">2763</a>     <strong>protected</strong> <strong>void</strong> internalCopyPropertyFrom(<a href="../../../../org/apache/jackrabbit/core/PropertyImpl.html">PropertyImpl</a> prop) throws RepositoryException {
-<a name="2764" href="#2764">2764</a> 	<strong>if</strong> (prop.getDefinition().isMultiple()) {
-<a name="2765" href="#2765">2765</a> 	    Value[] values = prop.getValues();
-<a name="2766" href="#2766">2766</a> 	    InternalValue[] ivalues = <strong>new</strong> InternalValue[values.length];
-<a name="2767" href="#2767">2767</a> 	    <strong>for</strong> (<strong>int</strong> i = 0; i &lt; values.length; i++) {
-<a name="2768" href="#2768">2768</a> 		ivalues[i] = InternalValue.create(values[i], session.getNamespaceResolver());
-<a name="2769" href="#2769">2769</a> 	    }
-<a name="2770" href="#2770">2770</a> 	    internalSetProperty(prop.getQName(), ivalues);
-<a name="2771" href="#2771">2771</a> 	} <strong>else</strong> {
-<a name="2772" href="#2772">2772</a> 	    InternalValue value = InternalValue.create(prop.getValue(), session.getNamespaceResolver());
-<a name="2773" href="#2773">2773</a> 	    internalSetProperty(prop.getQName(), value);
-<a name="2774" href="#2774">2774</a> 	}
-<a name="2775" href="#2775">2775</a>     }
-<a name="2776" href="#2776">2776</a> 
-<a name="2777" href="#2777">2777</a> 
-<a name="2778" href="#2778">2778</a>     <em class="comment">//----------------------------------------------------&lt; locking support >---</em>
-<a name="2779" href="#2779">2779</a>     <em>/**<em>*</em></em>
-<a name="2780" href="#2780">2780</a> <em>     * Checks if this node is lockable, i.e. has 'mix:lockable'.</em>
-<a name="2781" href="#2781">2781</a> <em>     *</em>
-<a name="2782" href="#2782">2782</a> <em>     * @throws UnsupportedRepositoryOperationException</em>
-<a name="2783" href="#2783">2783</a> <em>     *          if this node is not lockable</em>
-<a name="2784" href="#2784">2784</a> <em>     */</em>
-<a name="2785" href="#2785">2785</a>     <strong>private</strong> <strong>void</strong> checkLockable()
-<a name="2786" href="#2786">2786</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
-<a name="2787" href="#2787">2787</a> 	<strong>if</strong> (!isNodeType(NodeTypeRegistry.MIX_LOCKABLE)) {
-<a name="2788" href="#2788">2788</a> 	    String msg = <span class="string">"Unable to perform locking operation on non lockable node: "</span> + safeGetJCRPath();
-<a name="2789" href="#2789">2789</a> 	    log.debug(msg);
-<a name="2790" href="#2790">2790</a> 	    <strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException(msg);
-<a name="2791" href="#2791">2791</a> 	}
-<a name="2792" href="#2792">2792</a>     }
-<a name="2793" href="#2793">2793</a> 
-<a name="2794" href="#2794">2794</a>     <em>/**<em>*</em></em>
-<a name="2795" href="#2795">2795</a> <em>     * @see Node#lock(boolean, boolean)</em>
-<a name="2796" href="#2796">2796</a> <em>     */</em>
-<a name="2797" href="#2797">2797</a>     <strong>public</strong> Lock lock(<strong>boolean</strong> isDeep, <strong>boolean</strong> isSessionScoped)
-<a name="2798" href="#2798">2798</a> 	    throws UnsupportedRepositoryOperationException, LockException,
-<a name="2799" href="#2799">2799</a> 	    AccessDeniedException, RepositoryException {
-<a name="2800" href="#2800">2800</a> 	checkLockable();
-<a name="2801" href="#2801">2801</a> 
-<a name="2802" href="#2802">2802</a> 	<em class="comment">// @todo implement locking support</em>
-<a name="2803" href="#2803">2803</a> 	<strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException();
-<a name="2804" href="#2804">2804</a>     }
-<a name="2805" href="#2805">2805</a> 
-<a name="2806" href="#2806">2806</a>     <em>/**<em>*</em></em>
-<a name="2807" href="#2807">2807</a> <em>     * @see Node#getLock()</em>
-<a name="2808" href="#2808">2808</a> <em>     */</em>
-<a name="2809" href="#2809">2809</a>     <strong>public</strong> Lock getLock()
-<a name="2810" href="#2810">2810</a> 	    throws UnsupportedRepositoryOperationException, LockException,
-<a name="2811" href="#2811">2811</a> 	    AccessDeniedException, RepositoryException {
-<a name="2812" href="#2812">2812</a> 	checkLockable();
-<a name="2813" href="#2813">2813</a> 
-<a name="2814" href="#2814">2814</a> 	<em class="comment">// @todo implement locking support</em>
-<a name="2815" href="#2815">2815</a> 	<strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException();
-<a name="2816" href="#2816">2816</a>     }
-<a name="2817" href="#2817">2817</a> 
-<a name="2818" href="#2818">2818</a>     <em>/**<em>*</em></em>
-<a name="2819" href="#2819">2819</a> <em>     * @see Node#unlock()</em>
-<a name="2820" href="#2820">2820</a> <em>     */</em>
-<a name="2821" href="#2821">2821</a>     <strong>public</strong> <strong>void</strong> unlock()
-<a name="2822" href="#2822">2822</a> 	    throws UnsupportedRepositoryOperationException, LockException,
-<a name="2823" href="#2823">2823</a> 	    AccessDeniedException, RepositoryException {
-<a name="2824" href="#2824">2824</a> 	checkLockable();
-<a name="2825" href="#2825">2825</a> 
-<a name="2826" href="#2826">2826</a> 	<em class="comment">// @todo implement locking support</em>
-<a name="2827" href="#2827">2827</a> 	<strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException();
-<a name="2828" href="#2828">2828</a>     }
-<a name="2829" href="#2829">2829</a> 
-<a name="2830" href="#2830">2830</a>     <em>/**<em>*</em></em>
-<a name="2831" href="#2831">2831</a> <em>     * @see Node#holdsLock()</em>
-<a name="2832" href="#2832">2832</a> <em>     */</em>
-<a name="2833" href="#2833">2833</a>     <strong>public</strong> <strong>boolean</strong> holdsLock() throws RepositoryException {
-<a name="2834" href="#2834">2834</a> 	<em class="comment">// @todo implement locking support</em>
-<a name="2835" href="#2835">2835</a> 	<strong>return</strong> false;
-<a name="2836" href="#2836">2836</a>     }
-<a name="2837" href="#2837">2837</a> 
-<a name="2838" href="#2838">2838</a>     <em>/**<em>*</em></em>
-<a name="2839" href="#2839">2839</a> <em>     * @see Node#isLocked()</em>
-<a name="2840" href="#2840">2840</a> <em>     */</em>
-<a name="2841" href="#2841">2841</a>     <strong>public</strong> <strong>boolean</strong> isLocked() throws RepositoryException {
-<a name="2842" href="#2842">2842</a> 	<em class="comment">// @todo implement locking support</em>
-<a name="2843" href="#2843">2843</a> 	<strong>return</strong> false;
-<a name="2844" href="#2844">2844</a>     }
-<a name="2845" href="#2845">2845</a> }
-<a name="2846" href="#2846">2846</a> 
-<a name="2847" href="#2847">2847</a> <em>/**<em>*</em></em>
-<a name="2848" href="#2848">2848</a> <em> * &lt;code>ChildrenCollectorFilter&lt;/code> is a utility class</em>
-<a name="2849" href="#2849">2849</a> <em> * which can be used to 'collect' child items of a</em>
-<a name="2850" href="#2850">2850</a> <em> * node whose names match a certain pattern. It implements the</em>
-<a name="2851" href="#2851">2851</a> <em> * &lt;code>ItemVisitor&lt;/code> interface.</em>
-<a name="2852" href="#2852">2852</a> <em> *</em>
-<a name="2853" href="#2853">2853</a> <em> * @author Stefan Guggisberg</em>
-<a name="2854" href="#2854">2854</a> <em> */</em>
-<a name="2855" href="#2855">2855</a> <strong>class</strong> ChildrenCollectorFilter <strong>extends</strong> TraversingItemVisitor.Default {
-<a name="2856" href="#2856">2856</a>     <strong>static</strong> <strong>final</strong> <strong>char</strong> WILDCARD_CHAR = '*';
-<a name="2857" href="#2857">2857</a>     <strong>static</strong> <strong>final</strong> String OR = <span class="string">"|"</span>;
-<a name="2858" href="#2858">2858</a> 
-<a name="2859" href="#2859">2859</a>     <strong>private</strong> <strong>final</strong> Collection children;
-<a name="2860" href="#2860">2860</a>     <strong>private</strong> <strong>final</strong> <strong>boolean</strong> collectNodes;
-<a name="2861" href="#2861">2861</a>     <strong>private</strong> <strong>final</strong> <strong>boolean</strong> collectProperties;
-<a name="2862" href="#2862">2862</a>     <strong>private</strong> <strong>final</strong> String namePattern;
-<a name="2863" href="#2863">2863</a> 
-<a name="2864" href="#2864">2864</a>     <em>/**<em>*</em></em>
-<a name="2865" href="#2865">2865</a> <em>     * Constructs a &lt;code>ChildrenCollectorFilter&lt;/code></em>
-<a name="2866" href="#2866">2866</a> <em>     *</em>
-<a name="2867" href="#2867">2867</a> <em>     * @param namePattern       the pattern which should be applied to the names</em>
-<a name="2868" href="#2868">2868</a> <em>     *                          of the children</em>
-<a name="2869" href="#2869">2869</a> <em>     * @param children          where the matching children should be added</em>
-<a name="2870" href="#2870">2870</a> <em>     * @param collectNodes      true, if child nodes should be collected; otherwise false</em>
-<a name="2871" href="#2871">2871</a> <em>     * @param collectProperties true, if child properties should be collected; otherwise false</em>
-<a name="2872" href="#2872">2872</a> <em>     * @param maxLevel          umber of hierarchy levels to traverse</em>
-<a name="2873" href="#2873">2873</a> <em>     *                          (e.g. 1 for direct children only, 2 for children and their children, and so on)</em>
-<a name="2874" href="#2874">2874</a> <em>     */</em>
-<a name="2875" href="#2875">2875</a>     ChildrenCollectorFilter(String namePattern, Collection children, <strong>boolean</strong> collectNodes, <strong>boolean</strong> collectProperties, <strong>int</strong> maxLevel) {
-<a name="2876" href="#2876">2876</a> 	<strong>super</strong>(false, maxLevel);
-<a name="2877" href="#2877">2877</a> 	<strong>this</strong>.namePattern = namePattern;
-<a name="2878" href="#2878">2878</a> 	<strong>this</strong>.children = children;
-<a name="2879" href="#2879">2879</a> 	<strong>this</strong>.collectNodes = collectNodes;
-<a name="2880" href="#2880">2880</a> 	<strong>this</strong>.collectProperties = collectProperties;
-<a name="2881" href="#2881">2881</a>     }
-<a name="2882" href="#2882">2882</a> 
-<a name="2883" href="#2883">2883</a>     <em>/**<em>*</em></em>
-<a name="2884" href="#2884">2884</a> <em>     * @see TraversingItemVisitor#entering(Node, int)</em>
-<a name="2885" href="#2885">2885</a> <em>     */</em>
-<a name="2886" href="#2886">2886</a>     <strong>protected</strong> <strong>void</strong> entering(Node node, <strong>int</strong> level)
-<a name="2887" href="#2887">2887</a> 	    throws RepositoryException {
-<a name="2888" href="#2888">2888</a> 	<strong>if</strong> (level > 0 &amp;&amp; collectNodes) {
-<a name="2889" href="#2889">2889</a> 	    <strong>if</strong> (matches(node.getName(), namePattern)) {
-<a name="2890" href="#2890">2890</a> 		children.add(node);
-<a name="2891" href="#2891">2891</a> 	    }
-<a name="2892" href="#2892">2892</a> 	}
-<a name="2893" href="#2893">2893</a>     }
-<a name="2894" href="#2894">2894</a> 
-<a name="2895" href="#2895">2895</a>     <em>/**<em>*</em></em>
-<a name="2896" href="#2896">2896</a> <em>     * @see TraversingItemVisitor#entering(Property, int)</em>
-<a name="2897" href="#2897">2897</a> <em>     */</em>
-<a name="2898" href="#2898">2898</a>     <strong>protected</strong> <strong>void</strong> entering(Property property, <strong>int</strong> level)
-<a name="2899" href="#2899">2899</a> 	    throws RepositoryException {
-<a name="2900" href="#2900">2900</a> 	<strong>if</strong> (level > 0 &amp;&amp; collectProperties) {
-<a name="2901" href="#2901">2901</a> 	    <strong>if</strong> (matches(property.getName(), namePattern)) {
-<a name="2902" href="#2902">2902</a> 		children.add(property);
-<a name="2903" href="#2903">2903</a> 	    }
-<a name="2904" href="#2904">2904</a> 	}
-<a name="2905" href="#2905">2905</a>     }
-<a name="2906" href="#2906">2906</a> 
-<a name="2907" href="#2907">2907</a>     <em>/**<em>*</em></em>
-<a name="2908" href="#2908">2908</a> <em>     * Applies the name pattern against the specified name.</em>
+<a name="2678" href="#2678">2678</a> 	    } <strong>else</strong> {
+<a name="2679" href="#2679">2679</a> 		<em class="comment">// normal property</em>
+<a name="2680" href="#2680">2680</a> 		<strong>int</strong> type = PropertyType.UNDEFINED;
+<a name="2681" href="#2681">2681</a> 		<strong>if</strong> (prop.getDefinition().isMultiple()) {
+<a name="2682" href="#2682">2682</a> 		    Value[] values = prop.getValues();
+<a name="2683" href="#2683">2683</a> 		    <strong>if</strong> (values.length != 0) {
+<a name="2684" href="#2684">2684</a> 			type = values[0].getType();
+<a name="2685" href="#2685">2685</a> 		    }
+<a name="2686" href="#2686">2686</a> 		} <strong>else</strong> {
+<a name="2687" href="#2687">2687</a> 		    type = prop.getValue().getType();
+<a name="2688" href="#2688">2688</a> 		}
+<a name="2689" href="#2689">2689</a> 		<strong>int</strong> opv = guessOPV(prop.getQName(), type, prop.getDefinition().isMultiple());
+<a name="2690" href="#2690">2690</a> 		<strong>switch</strong> (opv) {
+<a name="2691" href="#2691">2691</a> 		    <strong>case</strong> OnParentVersionAction.ABORT:
+<a name="2692" href="#2692">2692</a> 			<strong>throw</strong> <strong>new</strong> RepositoryException(<span class="string">"Checkin aborted due to OPV in "</span> + prop.safeGetJCRPath());
+<a name="2693" href="#2693">2693</a> 		    <strong>case</strong> OnParentVersionAction.COMPUTE:
+<a name="2694" href="#2694">2694</a> 		    <strong>case</strong> OnParentVersionAction.IGNORE:
+<a name="2695" href="#2695">2695</a> 		    <strong>case</strong> OnParentVersionAction.INITIALIZE:
+<a name="2696" href="#2696">2696</a> 			<strong>break</strong>;
+<a name="2697" href="#2697">2697</a> 		    <strong>case</strong> OnParentVersionAction.VERSION:
+<a name="2698" href="#2698">2698</a> 		    <strong>case</strong> OnParentVersionAction.COPY:
+<a name="2699" href="#2699">2699</a> 			internalCopyPropertyFrom(prop);
+<a name="2700" href="#2700">2700</a> 			<strong>break</strong>;
+<a name="2701" href="#2701">2701</a> 		}
+<a name="2702" href="#2702">2702</a> 	    }
+<a name="2703" href="#2703">2703</a> 	}
+<a name="2704" href="#2704">2704</a> 
+<a name="2705" href="#2705">2705</a> 	<em class="comment">// iterate over the nodes</em>
+<a name="2706" href="#2706">2706</a> 	NodeIterator niter = freeze.getNodes();
+<a name="2707" href="#2707">2707</a> 	<strong>while</strong> (niter.hasNext()) {
+<a name="2708" href="#2708">2708</a> 	    NodeImpl child = (NodeImpl) niter.nextNode();
+<a name="2709" href="#2709">2709</a> 	    <strong>if</strong> (child.isNodeType(NodeTypeRegistry.NT_FROZEN)) {
+<a name="2710" href="#2710">2710</a> 		FrozenNode f = (FrozenNode) child;
+<a name="2711" href="#2711">2711</a> 		<em class="comment">// if frozen node exist, replace</em>
+<a name="2712" href="#2712">2712</a> 		<em class="comment">// todo: make work for same name siblings</em>
+<a name="2713" href="#2713">2713</a> 		<strong>if</strong> (hasNode(child.getName())) {
+<a name="2714" href="#2714">2714</a> 		    remove(child.getName());
+<a name="2715" href="#2715">2715</a> 		}
+<a name="2716" href="#2716">2716</a> 		NodeImpl n = addNode(child.getName(), f);
+<a name="2717" href="#2717">2717</a> 		n.restoreFrozenState(f, vsel);
+<a name="2718" href="#2718">2718</a> 	    } <strong>else</strong> <strong>if</strong> (child.isNodeType(NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD)) {
+<a name="2719" href="#2719">2719</a> 		<em class="comment">// check if child already exists</em>
+<a name="2720" href="#2720">2720</a> 		<strong>if</strong> (hasNode(child.getName())) {
+<a name="2721" href="#2721">2721</a> 		    <em class="comment">// do nothing</em>
+<a name="2722" href="#2722">2722</a> 		} <strong>else</strong> {
+<a name="2723" href="#2723">2723</a> 		    <em class="comment">// get desired version from version selector</em>
+<a name="2724" href="#2724">2724</a> 		    VersionHistory vh = (VersionHistory) child.getProperty(VersionImpl.PROPNAME_VERSION_HISTORY).getNode();
+<a name="2725" href="#2725">2725</a> 		    VersionImpl v = (VersionImpl) vsel.select(vh);
+<a name="2726" href="#2726">2726</a> 		    NodeImpl node = addNode(child.getName(), v);
+<a name="2727" href="#2727">2727</a> 		    node.internalRestore(v, vsel);
+<a name="2728" href="#2728">2728</a> 		}
+<a name="2729" href="#2729">2729</a> 	    }
+<a name="2730" href="#2730">2730</a> 	}
+<a name="2731" href="#2731">2731</a>     }
+<a name="2732" href="#2732">2732</a> 
+<a name="2733" href="#2733">2733</a>     <em>/**<em>*</em></em>
+<a name="2734" href="#2734">2734</a> <em>     * @see Node#getVersionHistory()</em>
+<a name="2735" href="#2735">2735</a> <em>     */</em>
+<a name="2736" href="#2736">2736</a>     <strong>public</strong> VersionHistory getVersionHistory()
+<a name="2737" href="#2737">2737</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="2738" href="#2738">2738</a> 	checkVersionable();
+<a name="2739" href="#2739">2739</a> 	<strong>return</strong> rep.getVersionManager().getVersionHistory(<strong>this</strong>);
+<a name="2740" href="#2740">2740</a>     }
+<a name="2741" href="#2741">2741</a> 
+<a name="2742" href="#2742">2742</a>     <em>/**<em>*</em></em>
+<a name="2743" href="#2743">2743</a> <em>     * @see Node#getBaseVersion()</em>
+<a name="2744" href="#2744">2744</a> <em>     */</em>
+<a name="2745" href="#2745">2745</a>     <strong>public</strong> Version getBaseVersion()
+<a name="2746" href="#2746">2746</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="2747" href="#2747">2747</a> 	checkVersionable();
+<a name="2748" href="#2748">2748</a> 	<strong>return</strong> rep.getVersionManager().getBaseVersion(<strong>this</strong>);
+<a name="2749" href="#2749">2749</a>     }
+<a name="2750" href="#2750">2750</a> 
+<a name="2751" href="#2751">2751</a>     <em>/**<em>*</em></em>
+<a name="2752" href="#2752">2752</a> <em>     * Copies a property to this node</em>
+<a name="2753" href="#2753">2753</a> <em>     *</em>
+<a name="2754" href="#2754">2754</a> <em>     * @param prop</em>
+<a name="2755" href="#2755">2755</a> <em>     * @throws RepositoryException</em>
+<a name="2756" href="#2756">2756</a> <em>     */</em>
+<a name="2757" href="#2757">2757</a>     <strong>protected</strong> <strong>void</strong> internalCopyPropertyFrom(<a href="../../../../org/apache/jackrabbit/core/PropertyImpl.html">PropertyImpl</a> prop) throws RepositoryException {
+<a name="2758" href="#2758">2758</a> 	<strong>if</strong> (prop.getDefinition().isMultiple()) {
+<a name="2759" href="#2759">2759</a> 	    Value[] values = prop.getValues();
+<a name="2760" href="#2760">2760</a> 	    InternalValue[] ivalues = <strong>new</strong> InternalValue[values.length];
+<a name="2761" href="#2761">2761</a> 	    <strong>for</strong> (<strong>int</strong> i = 0; i &lt; values.length; i++) {
+<a name="2762" href="#2762">2762</a> 		ivalues[i] = InternalValue.create(values[i], session.getNamespaceResolver());
+<a name="2763" href="#2763">2763</a> 	    }
+<a name="2764" href="#2764">2764</a> 	    internalSetProperty(prop.getQName(), ivalues);
+<a name="2765" href="#2765">2765</a> 	} <strong>else</strong> {
+<a name="2766" href="#2766">2766</a> 	    InternalValue value = InternalValue.create(prop.getValue(), session.getNamespaceResolver());
+<a name="2767" href="#2767">2767</a> 	    internalSetProperty(prop.getQName(), value);
+<a name="2768" href="#2768">2768</a> 	}
+<a name="2769" href="#2769">2769</a>     }
+<a name="2770" href="#2770">2770</a> 
+<a name="2771" href="#2771">2771</a> 
+<a name="2772" href="#2772">2772</a>     <em class="comment">//----------------------------------------------------&lt; locking support >---</em>
+<a name="2773" href="#2773">2773</a>     <em>/**<em>*</em></em>
+<a name="2774" href="#2774">2774</a> <em>     * Checks if this node is lockable, i.e. has 'mix:lockable'.</em>
+<a name="2775" href="#2775">2775</a> <em>     *</em>
+<a name="2776" href="#2776">2776</a> <em>     * @throws UnsupportedRepositoryOperationException</em>
+<a name="2777" href="#2777">2777</a> <em>     *          if this node is not lockable</em>
+<a name="2778" href="#2778">2778</a> <em>     */</em>
+<a name="2779" href="#2779">2779</a>     <strong>private</strong> <strong>void</strong> checkLockable()
+<a name="2780" href="#2780">2780</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="2781" href="#2781">2781</a> 	<strong>if</strong> (!isNodeType(NodeTypeRegistry.MIX_LOCKABLE)) {
+<a name="2782" href="#2782">2782</a> 	    String msg = <span class="string">"Unable to perform locking operation on non lockable node: "</span> + safeGetJCRPath();
+<a name="2783" href="#2783">2783</a> 	    log.debug(msg);
+<a name="2784" href="#2784">2784</a> 	    <strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException(msg);
+<a name="2785" href="#2785">2785</a> 	}
+<a name="2786" href="#2786">2786</a>     }
+<a name="2787" href="#2787">2787</a> 
+<a name="2788" href="#2788">2788</a>     <em>/**<em>*</em></em>
+<a name="2789" href="#2789">2789</a> <em>     * @see Node#lock(boolean, boolean)</em>
+<a name="2790" href="#2790">2790</a> <em>     */</em>
+<a name="2791" href="#2791">2791</a>     <strong>public</strong> Lock lock(<strong>boolean</strong> isDeep, <strong>boolean</strong> isSessionScoped)
+<a name="2792" href="#2792">2792</a> 	    throws UnsupportedRepositoryOperationException, LockException,
+<a name="2793" href="#2793">2793</a> 	    AccessDeniedException, RepositoryException {
+<a name="2794" href="#2794">2794</a> 	checkLockable();
+<a name="2795" href="#2795">2795</a> 
+<a name="2796" href="#2796">2796</a> 	<em class="comment">// @todo implement locking support</em>
+<a name="2797" href="#2797">2797</a> 	<strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException();
+<a name="2798" href="#2798">2798</a>     }
+<a name="2799" href="#2799">2799</a> 
+<a name="2800" href="#2800">2800</a>     <em>/**<em>*</em></em>
+<a name="2801" href="#2801">2801</a> <em>     * @see Node#getLock()</em>
+<a name="2802" href="#2802">2802</a> <em>     */</em>
+<a name="2803" href="#2803">2803</a>     <strong>public</strong> Lock getLock()
+<a name="2804" href="#2804">2804</a> 	    throws UnsupportedRepositoryOperationException, LockException,
+<a name="2805" href="#2805">2805</a> 	    AccessDeniedException, RepositoryException {
+<a name="2806" href="#2806">2806</a> 	checkLockable();
+<a name="2807" href="#2807">2807</a> 
+<a name="2808" href="#2808">2808</a> 	<em class="comment">// @todo implement locking support</em>
+<a name="2809" href="#2809">2809</a> 	<strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException();
+<a name="2810" href="#2810">2810</a>     }
+<a name="2811" href="#2811">2811</a> 
+<a name="2812" href="#2812">2812</a>     <em>/**<em>*</em></em>
+<a name="2813" href="#2813">2813</a> <em>     * @see Node#unlock()</em>
+<a name="2814" href="#2814">2814</a> <em>     */</em>
+<a name="2815" href="#2815">2815</a>     <strong>public</strong> <strong>void</strong> unlock()
+<a name="2816" href="#2816">2816</a> 	    throws UnsupportedRepositoryOperationException, LockException,
+<a name="2817" href="#2817">2817</a> 	    AccessDeniedException, RepositoryException {
+<a name="2818" href="#2818">2818</a> 	checkLockable();
+<a name="2819" href="#2819">2819</a> 
+<a name="2820" href="#2820">2820</a> 	<em class="comment">// @todo implement locking support</em>
+<a name="2821" href="#2821">2821</a> 	<strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException();
+<a name="2822" href="#2822">2822</a>     }
+<a name="2823" href="#2823">2823</a> 
+<a name="2824" href="#2824">2824</a>     <em>/**<em>*</em></em>
+<a name="2825" href="#2825">2825</a> <em>     * @see Node#holdsLock()</em>
+<a name="2826" href="#2826">2826</a> <em>     */</em>
+<a name="2827" href="#2827">2827</a>     <strong>public</strong> <strong>boolean</strong> holdsLock() throws RepositoryException {
+<a name="2828" href="#2828">2828</a> 	<em class="comment">// @todo implement locking support</em>
+<a name="2829" href="#2829">2829</a> 	<strong>return</strong> false;
+<a name="2830" href="#2830">2830</a>     }
+<a name="2831" href="#2831">2831</a> 
+<a name="2832" href="#2832">2832</a>     <em>/**<em>*</em></em>
+<a name="2833" href="#2833">2833</a> <em>     * @see Node#isLocked()</em>
+<a name="2834" href="#2834">2834</a> <em>     */</em>
+<a name="2835" href="#2835">2835</a>     <strong>public</strong> <strong>boolean</strong> isLocked() throws RepositoryException {
+<a name="2836" href="#2836">2836</a> 	<em class="comment">// @todo implement locking support</em>
+<a name="2837" href="#2837">2837</a> 	<strong>return</strong> false;
+<a name="2838" href="#2838">2838</a>     }
+<a name="2839" href="#2839">2839</a> }
+<a name="2840" href="#2840">2840</a> 
+<a name="2841" href="#2841">2841</a> <em>/**<em>*</em></em>
+<a name="2842" href="#2842">2842</a> <em> * &lt;code>ChildrenCollectorFilter&lt;/code> is a utility class</em>
+<a name="2843" href="#2843">2843</a> <em> * which can be used to 'collect' child items of a</em>
+<a name="2844" href="#2844">2844</a> <em> * node whose names match a certain pattern. It implements the</em>
+<a name="2845" href="#2845">2845</a> <em> * &lt;code>ItemVisitor&lt;/code> interface.</em>
+<a name="2846" href="#2846">2846</a> <em> *</em>
+<a name="2847" href="#2847">2847</a> <em> * @author Stefan Guggisberg</em>
+<a name="2848" href="#2848">2848</a> <em> */</em>
+<a name="2849" href="#2849">2849</a> <strong>class</strong> ChildrenCollectorFilter <strong>extends</strong> TraversingItemVisitor.Default {
+<a name="2850" href="#2850">2850</a>     <strong>static</strong> <strong>final</strong> <strong>char</strong> WILDCARD_CHAR = '*';
+<a name="2851" href="#2851">2851</a>     <strong>static</strong> <strong>final</strong> String OR = <span class="string">"|"</span>;
+<a name="2852" href="#2852">2852</a> 
+<a name="2853" href="#2853">2853</a>     <strong>private</strong> <strong>final</strong> Collection children;
+<a name="2854" href="#2854">2854</a>     <strong>private</strong> <strong>final</strong> <strong>boolean</strong> collectNodes;
+<a name="2855" href="#2855">2855</a>     <strong>private</strong> <strong>final</strong> <strong>boolean</strong> collectProperties;
+<a name="2856" href="#2856">2856</a>     <strong>private</strong> <strong>final</strong> String namePattern;
+<a name="2857" href="#2857">2857</a> 
+<a name="2858" href="#2858">2858</a>     <em>/**<em>*</em></em>
+<a name="2859" href="#2859">2859</a> <em>     * Constructs a &lt;code>ChildrenCollectorFilter&lt;/code></em>
+<a name="2860" href="#2860">2860</a> <em>     *</em>
+<a name="2861" href="#2861">2861</a> <em>     * @param namePattern       the pattern which should be applied to the names</em>
+<a name="2862" href="#2862">2862</a> <em>     *                          of the children</em>
+<a name="2863" href="#2863">2863</a> <em>     * @param children          where the matching children should be added</em>
+<a name="2864" href="#2864">2864</a> <em>     * @param collectNodes      true, if child nodes should be collected; otherwise false</em>
+<a name="2865" href="#2865">2865</a> <em>     * @param collectProperties true, if child properties should be collected; otherwise false</em>
+<a name="2866" href="#2866">2866</a> <em>     * @param maxLevel          umber of hierarchy levels to traverse</em>
+<a name="2867" href="#2867">2867</a> <em>     *                          (e.g. 1 for direct children only, 2 for children and their children, and so on)</em>
+<a name="2868" href="#2868">2868</a> <em>     */</em>
+<a name="2869" href="#2869">2869</a>     ChildrenCollectorFilter(String namePattern, Collection children, <strong>boolean</strong> collectNodes, <strong>boolean</strong> collectProperties, <strong>int</strong> maxLevel) {
+<a name="2870" href="#2870">2870</a> 	<strong>super</strong>(false, maxLevel);
+<a name="2871" href="#2871">2871</a> 	<strong>this</strong>.namePattern = namePattern;
+<a name="2872" href="#2872">2872</a> 	<strong>this</strong>.children = children;
+<a name="2873" href="#2873">2873</a> 	<strong>this</strong>.collectNodes = collectNodes;
+<a name="2874" href="#2874">2874</a> 	<strong>this</strong>.collectProperties = collectProperties;
+<a name="2875" href="#2875">2875</a>     }
+<a name="2876" href="#2876">2876</a> 
+<a name="2877" href="#2877">2877</a>     <em>/**<em>*</em></em>
+<a name="2878" href="#2878">2878</a> <em>     * @see TraversingItemVisitor#entering(Node, int)</em>
+<a name="2879" href="#2879">2879</a> <em>     */</em>
+<a name="2880" href="#2880">2880</a>     <strong>protected</strong> <strong>void</strong> entering(Node node, <strong>int</strong> level)
+<a name="2881" href="#2881">2881</a> 	    throws RepositoryException {
+<a name="2882" href="#2882">2882</a> 	<strong>if</strong> (level > 0 &amp;&amp; collectNodes) {
+<a name="2883" href="#2883">2883</a> 	    <strong>if</strong> (matches(node.getName(), namePattern)) {
+<a name="2884" href="#2884">2884</a> 		children.add(node);
+<a name="2885" href="#2885">2885</a> 	    }
+<a name="2886" href="#2886">2886</a> 	}
+<a name="2887" href="#2887">2887</a>     }
+<a name="2888" href="#2888">2888</a> 
+<a name="2889" href="#2889">2889</a>     <em>/**<em>*</em></em>
+<a name="2890" href="#2890">2890</a> <em>     * @see TraversingItemVisitor#entering(Property, int)</em>
+<a name="2891" href="#2891">2891</a> <em>     */</em>
+<a name="2892" href="#2892">2892</a>     <strong>protected</strong> <strong>void</strong> entering(Property property, <strong>int</strong> level)
+<a name="2893" href="#2893">2893</a> 	    throws RepositoryException {
+<a name="2894" href="#2894">2894</a> 	<strong>if</strong> (level > 0 &amp;&amp; collectProperties) {
+<a name="2895" href="#2895">2895</a> 	    <strong>if</strong> (matches(property.getName(), namePattern)) {
+<a name="2896" href="#2896">2896</a> 		children.add(property);
+<a name="2897" href="#2897">2897</a> 	    }
+<a name="2898" href="#2898">2898</a> 	}
+<a name="2899" href="#2899">2899</a>     }
+<a name="2900" href="#2900">2900</a> 
+<a name="2901" href="#2901">2901</a>     <em>/**<em>*</em></em>
+<a name="2902" href="#2902">2902</a> <em>     * Applies the name pattern against the specified name.</em>
+<a name="2903" href="#2903">2903</a> <em>     * &lt;p/></em>
+<a name="2904" href="#2904">2904</a> <em>     * The pattern may be a full name or a partial name with one or more</em>
+<a name="2905" href="#2905">2905</a> <em>     * wildcard characters ("*"), or a disjunction (using the "|" character</em>
+<a name="2906" href="#2906">2906</a> <em>     * to represent logical &lt;i>OR&lt;/i>) of these. For example,</em>
+<a name="2907" href="#2907">2907</a> <em>     * &lt;p/></em>
+<a name="2908" href="#2908">2908</a> <em>     * &lt;code>"jcr:*|foo:bar"&lt;/code></em>
 <a name="2909" href="#2909">2909</a> <em>     * &lt;p/></em>
-<a name="2910" href="#2910">2910</a> <em>     * The pattern may be a full name or a partial name with one or more</em>
-<a name="2911" href="#2911">2911</a> <em>     * wildcard characters ("*"), or a disjunction (using the "|" character</em>
-<a name="2912" href="#2912">2912</a> <em>     * to represent logical &lt;i>OR&lt;/i>) of these. For example,</em>
-<a name="2913" href="#2913">2913</a> <em>     * &lt;p/></em>
-<a name="2914" href="#2914">2914</a> <em>     * &lt;code>"jcr:*|foo:bar"&lt;/code></em>
-<a name="2915" href="#2915">2915</a> <em>     * &lt;p/></em>
-<a name="2916" href="#2916">2916</a> <em>     * would match</em>
-<a name="2917" href="#2917">2917</a> <em>     * &lt;p/></em>
-<a name="2918" href="#2918">2918</a> <em>     * &lt;code>"foo:bar"&lt;/code>, but also &lt;code>"jcr:whatever"&lt;/code>.</em>
-<a name="2919" href="#2919">2919</a> <em>     *</em>
-<a name="2920" href="#2920">2920</a> <em>     * @param name the name to test the pattern with</em>
-<a name="2921" href="#2921">2921</a> <em>     * @return true if the specified name matches the pattern</em>
-<a name="2922" href="#2922">2922</a> <em>     */</em>
-<a name="2923" href="#2923">2923</a>     <strong>static</strong> <strong>boolean</strong> matches(String name, String pattern) {
-<a name="2924" href="#2924">2924</a> 	<em class="comment">// split pattern</em>
-<a name="2925" href="#2925">2925</a> 	StringTokenizer st = <strong>new</strong> StringTokenizer(pattern, OR, false);
-<a name="2926" href="#2926">2926</a> 	<strong>while</strong> (st.hasMoreTokens()) {
-<a name="2927" href="#2927">2927</a> 	    <strong>if</strong> (internalMatches(name, st.nextToken(), 0, 0)) {
-<a name="2928" href="#2928">2928</a> 		<strong>return</strong> <strong>true</strong>;
-<a name="2929" href="#2929">2929</a> 	    }
-<a name="2930" href="#2930">2930</a> 	}
-<a name="2931" href="#2931">2931</a> 	<strong>return</strong> false;
-<a name="2932" href="#2932">2932</a>     }
-<a name="2933" href="#2933">2933</a> 
-<a name="2934" href="#2934">2934</a>     <em>/**<em>*</em></em>
-<a name="2935" href="#2935">2935</a> <em>     * Internal helper used to recursively match the pattern</em>
-<a name="2936" href="#2936">2936</a> <em>     *</em>
-<a name="2937" href="#2937">2937</a> <em>     * @param s       The string to be tested</em>
-<a name="2938" href="#2938">2938</a> <em>     * @param pattern The pattern</em>
-<a name="2939" href="#2939">2939</a> <em>     * @param sOff    offset within &lt;code>s&lt;/code></em>
-<a name="2940" href="#2940">2940</a> <em>     * @param pOff    offset within &lt;code>pattern&lt;/code>.</em>
-<a name="2941" href="#2941">2941</a> <em>     * @return true if &lt;code>s&lt;/code> matched pattern, else false.</em>
-<a name="2942" href="#2942">2942</a> <em>     */</em>
-<a name="2943" href="#2943">2943</a>     <strong>private</strong> <strong>static</strong> <strong>boolean</strong> <strong>int</strong>ernalMatches(String s, String pattern, <strong>int</strong> sOff, <strong>int</strong> pOff) {
-<a name="2944" href="#2944">2944</a> 	<strong>int</strong> pLen = pattern.length();
-<a name="2945" href="#2945">2945</a> 	<strong>int</strong> sLen = s.length();
-<a name="2946" href="#2946">2946</a> 
-<a name="2947" href="#2947">2947</a> 	<strong>for</strong> (;;) {
-<a name="2948" href="#2948">2948</a> 	    <strong>if</strong> (pOff >= pLen) {
-<a name="2949" href="#2949">2949</a> 		<strong>if</strong> (sOff >= sLen) {
+<a name="2910" href="#2910">2910</a> <em>     * would match</em>
+<a name="2911" href="#2911">2911</a> <em>     * &lt;p/></em>
+<a name="2912" href="#2912">2912</a> <em>     * &lt;code>"foo:bar"&lt;/code>, but also &lt;code>"jcr:whatever"&lt;/code>.</em>
+<a name="2913" href="#2913">2913</a> <em>     *</em>
+<a name="2914" href="#2914">2914</a> <em>     * @param name the name to test the pattern with</em>
+<a name="2915" href="#2915">2915</a> <em>     * @return true if the specified name matches the pattern</em>
+<a name="2916" href="#2916">2916</a> <em>     */</em>
+<a name="2917" href="#2917">2917</a>     <strong>static</strong> <strong>boolean</strong> matches(String name, String pattern) {
+<a name="2918" href="#2918">2918</a> 	<em class="comment">// split pattern</em>
+<a name="2919" href="#2919">2919</a> 	StringTokenizer st = <strong>new</strong> StringTokenizer(pattern, OR, false);
+<a name="2920" href="#2920">2920</a> 	<strong>while</strong> (st.hasMoreTokens()) {
+<a name="2921" href="#2921">2921</a> 	    <strong>if</strong> (internalMatches(name, st.nextToken(), 0, 0)) {
+<a name="2922" href="#2922">2922</a> 		<strong>return</strong> <strong>true</strong>;
+<a name="2923" href="#2923">2923</a> 	    }
+<a name="2924" href="#2924">2924</a> 	}
+<a name="2925" href="#2925">2925</a> 	<strong>return</strong> false;
+<a name="2926" href="#2926">2926</a>     }
+<a name="2927" href="#2927">2927</a> 
+<a name="2928" href="#2928">2928</a>     <em>/**<em>*</em></em>
+<a name="2929" href="#2929">2929</a> <em>     * Internal helper used to recursively match the pattern</em>
+<a name="2930" href="#2930">2930</a> <em>     *</em>
+<a name="2931" href="#2931">2931</a> <em>     * @param s       The string to be tested</em>
+<a name="2932" href="#2932">2932</a> <em>     * @param pattern The pattern</em>
+<a name="2933" href="#2933">2933</a> <em>     * @param sOff    offset within &lt;code>s&lt;/code></em>
+<a name="2934" href="#2934">2934</a> <em>     * @param pOff    offset within &lt;code>pattern&lt;/code>.</em>
+<a name="2935" href="#2935">2935</a> <em>     * @return true if &lt;code>s&lt;/code> matched pattern, else false.</em>
+<a name="2936" href="#2936">2936</a> <em>     */</em>
+<a name="2937" href="#2937">2937</a>     <strong>private</strong> <strong>static</strong> <strong>boolean</strong> <strong>int</strong>ernalMatches(String s, String pattern, <strong>int</strong> sOff, <strong>int</strong> pOff) {
+<a name="2938" href="#2938">2938</a> 	<strong>int</strong> pLen = pattern.length();
+<a name="2939" href="#2939">2939</a> 	<strong>int</strong> sLen = s.length();
+<a name="2940" href="#2940">2940</a> 
+<a name="2941" href="#2941">2941</a> 	<strong>for</strong> (;;) {
+<a name="2942" href="#2942">2942</a> 	    <strong>if</strong> (pOff >= pLen) {
+<a name="2943" href="#2943">2943</a> 		<strong>if</strong> (sOff >= sLen) {
+<a name="2944" href="#2944">2944</a> 		    <strong>return</strong> <strong>true</strong>;
+<a name="2945" href="#2945">2945</a> 		} <strong>else</strong> <strong>if</strong> (s.charAt(sOff) == '[') {
+<a name="2946" href="#2946">2946</a> 		    <em class="comment">// check for subscript notation (e.g. "whatever[1]")</em>
+<a name="2947" href="#2947">2947</a> 
+<a name="2948" href="#2948">2948</a> 		    <em class="comment">// the entire pattern matched up to the subscript:</em>
+<a name="2949" href="#2949">2949</a> 		    <em class="comment">// -> ignore the subscript</em>
 <a name="2950" href="#2950">2950</a> 		    <strong>return</strong> <strong>true</strong>;
-<a name="2951" href="#2951">2951</a> 		} <strong>else</strong> <strong>if</strong> (s.charAt(sOff) == '[') {
-<a name="2952" href="#2952">2952</a> 		    <em class="comment">// check for subscript notation (e.g. "whatever[1]")</em>
-<a name="2953" href="#2953">2953</a> 
-<a name="2954" href="#2954">2954</a> 		    <em class="comment">// the entire pattern matched up to the subscript:</em>
-<a name="2955" href="#2955">2955</a> 		    <em class="comment">// -> ignore the subscript</em>
-<a name="2956" href="#2956">2956</a> 		    <strong>return</strong> <strong>true</strong>;
-<a name="2957" href="#2957">2957</a> 		} <strong>else</strong> {
-<a name="2958" href="#2958">2958</a> 		    <strong>return</strong> false;
-<a name="2959" href="#2959">2959</a> 		}
-<a name="2960" href="#2960">2960</a> 	    }
-<a name="2961" href="#2961">2961</a> 	    <strong>if</strong> (sOff >= sLen &amp;&amp; pattern.charAt(pOff) != WILDCARD_CHAR) {
-<a name="2962" href="#2962">2962</a> 		<strong>return</strong> false;
-<a name="2963" href="#2963">2963</a> 	    }
-<a name="2964" href="#2964">2964</a> 
-<a name="2965" href="#2965">2965</a> 	    <em class="comment">// check for a '*' as the next pattern char;</em>
-<a name="2966" href="#2966">2966</a> 	    <em class="comment">// this is handled by a recursive call for</em>
-<a name="2967" href="#2967">2967</a> 	    <em class="comment">// each postfix of the name.</em>
-<a name="2968" href="#2968">2968</a> 	    <strong>if</strong> (pattern.charAt(pOff) == WILDCARD_CHAR) {
-<a name="2969" href="#2969">2969</a> 		<strong>if</strong> (++pOff >= pLen) {
-<a name="2970" href="#2970">2970</a> 		    <strong>return</strong> <strong>true</strong>;
-<a name="2971" href="#2971">2971</a> 		}
-<a name="2972" href="#2972">2972</a> 
-<a name="2973" href="#2973">2973</a> 		<strong>for</strong> (;;) {
-<a name="2974" href="#2974">2974</a> 		    <strong>if</strong> (internalMatches(s, pattern, sOff, pOff)) {
-<a name="2975" href="#2975">2975</a> 			<strong>return</strong> <strong>true</strong>;
-<a name="2976" href="#2976">2976</a> 		    }
-<a name="2977" href="#2977">2977</a> 		    <strong>if</strong> (sOff >= sLen) {
-<a name="2978" href="#2978">2978</a> 			<strong>return</strong> false;
-<a name="2979" href="#2979">2979</a> 		    }
-<a name="2980" href="#2980">2980</a> 		    sOff++;
+<a name="2951" href="#2951">2951</a> 		} <strong>else</strong> {
+<a name="2952" href="#2952">2952</a> 		    <strong>return</strong> false;
+<a name="2953" href="#2953">2953</a> 		}
+<a name="2954" href="#2954">2954</a> 	    }
+<a name="2955" href="#2955">2955</a> 	    <strong>if</strong> (sOff >= sLen &amp;&amp; pattern.charAt(pOff) != WILDCARD_CHAR) {
+<a name="2956" href="#2956">2956</a> 		<strong>return</strong> false;
+<a name="2957" href="#2957">2957</a> 	    }
+<a name="2958" href="#2958">2958</a> 
+<a name="2959" href="#2959">2959</a> 	    <em class="comment">// check for a '*' as the next pattern char;</em>
+<a name="2960" href="#2960">2960</a> 	    <em class="comment">// this is handled by a recursive call for</em>
+<a name="2961" href="#2961">2961</a> 	    <em class="comment">// each postfix of the name.</em>
+<a name="2962" href="#2962">2962</a> 	    <strong>if</strong> (pattern.charAt(pOff) == WILDCARD_CHAR) {
+<a name="2963" href="#2963">2963</a> 		<strong>if</strong> (++pOff >= pLen) {
+<a name="2964" href="#2964">2964</a> 		    <strong>return</strong> <strong>true</strong>;
+<a name="2965" href="#2965">2965</a> 		}
+<a name="2966" href="#2966">2966</a> 
+<a name="2967" href="#2967">2967</a> 		<strong>for</strong> (;;) {
+<a name="2968" href="#2968">2968</a> 		    <strong>if</strong> (internalMatches(s, pattern, sOff, pOff)) {
+<a name="2969" href="#2969">2969</a> 			<strong>return</strong> <strong>true</strong>;
+<a name="2970" href="#2970">2970</a> 		    }
+<a name="2971" href="#2971">2971</a> 		    <strong>if</strong> (sOff >= sLen) {
+<a name="2972" href="#2972">2972</a> 			<strong>return</strong> false;
+<a name="2973" href="#2973">2973</a> 		    }
+<a name="2974" href="#2974">2974</a> 		    sOff++;
+<a name="2975" href="#2975">2975</a> 		}
+<a name="2976" href="#2976">2976</a> 	    }
+<a name="2977" href="#2977">2977</a> 
+<a name="2978" href="#2978">2978</a> 	    <strong>if</strong> (pOff &lt; pLen &amp;&amp; sOff &lt; sLen) {
+<a name="2979" href="#2979">2979</a> 		<strong>if</strong> (pattern.charAt(pOff) != s.charAt(sOff)) {
+<a name="2980" href="#2980">2980</a> 		    <strong>return</strong> false;
 <a name="2981" href="#2981">2981</a> 		}
 <a name="2982" href="#2982">2982</a> 	    }
-<a name="2983" href="#2983">2983</a> 
-<a name="2984" href="#2984">2984</a> 	    <strong>if</strong> (pOff &lt; pLen &amp;&amp; sOff &lt; sLen) {
-<a name="2985" href="#2985">2985</a> 		<strong>if</strong> (pattern.charAt(pOff) != s.charAt(sOff)) {
-<a name="2986" href="#2986">2986</a> 		    <strong>return</strong> false;
-<a name="2987" href="#2987">2987</a> 		}
-<a name="2988" href="#2988">2988</a> 	    }
-<a name="2989" href="#2989">2989</a> 	    pOff++;
-<a name="2990" href="#2990">2990</a> 	    sOff++;
-<a name="2991" href="#2991">2991</a> 	}
-<a name="2992" href="#2992">2992</a>     }
-<a name="2993" href="#2993">2993</a> }
+<a name="2983" href="#2983">2983</a> 	    pOff++;
+<a name="2984" href="#2984">2984</a> 	    sOff++;
+<a name="2985" href="#2985">2985</a> 	}
+<a name="2986" href="#2986">2986</a>     }
+<a name="2987" href="#2987">2987</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>

@@ -125,340 +125,350 @@
 <a name="116" href="#116">116</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String WORKSPACE_STORE_ELEMENT = <span class="string">"WorkspaceStore"</span>;
 <a name="117" href="#117">117</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String BLOB_STORE_ELEMENT = <span class="string">"BLOBStore"</span>;
 <a name="118" href="#118">118</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String DYNAMIC_WORKSPACE_ELEMENT = <span class="string">"DynamicWorkspace"</span>;
-<a name="119" href="#119">119</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String PARAM_ELEMENT = <span class="string">"param"</span>;
-<a name="120" href="#120">120</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String CLASS_ATTRIB = <span class="string">"class"</span>;
-<a name="121" href="#121">121</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String NAME_ATTRIB = <span class="string">"name"</span>;
-<a name="122" href="#122">122</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String VALUE_ATTRIB = <span class="string">"value"</span>;
-<a name="123" href="#123">123</a> 
-<a name="124" href="#124">124</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String FACTORY_HOME_VARIABLE = <span class="string">"${factory.home}"</span>;
+<a name="119" href="#119">119</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String SEARCH_INDEX_ELEMENT = <span class="string">"SearchIndex"</span>;
+<a name="120" href="#120">120</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String PATH_ATTRIB = <span class="string">"path"</span>;
+<a name="121" href="#121">121</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String PARAM_ELEMENT = <span class="string">"param"</span>;
+<a name="122" href="#122">122</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String CLASS_ATTRIB = <span class="string">"class"</span>;
+<a name="123" href="#123">123</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String NAME_ATTRIB = <span class="string">"name"</span>;
+<a name="124" href="#124">124</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String VALUE_ATTRIB = <span class="string">"value"</span>;
 <a name="125" href="#125">125</a> 
-<a name="126" href="#126">126</a>     <em>/**<em>*</em></em>
-<a name="127" href="#127">127</a> <em>     * factory home dir; default location of config.xml</em>
-<a name="128" href="#128">128</a> <em>     */</em>
-<a name="129" href="#129">129</a>     <strong>private</strong> String factoryHomeDir;
-<a name="130" href="#130">130</a> 
-<a name="131" href="#131">131</a>     <strong>private</strong> <strong>final</strong> String configId;
-<a name="132" href="#132">132</a>     <strong>private</strong> Document config;
-<a name="133" href="#133">133</a> 
-<a name="134" href="#134">134</a>     <em class="comment">// map of repository names and repository instances</em>
-<a name="135" href="#135">135</a>     <strong>private</strong> <strong>final</strong> HashMap reps = <strong>new</strong> HashMap();
-<a name="136" href="#136">136</a> 
-<a name="137" href="#137">137</a>     <em>/**<em>*</em></em>
-<a name="138" href="#138">138</a> <em>     * private constructor.</em>
-<a name="139" href="#139">139</a> <em>     *</em>
-<a name="140" href="#140">140</a> <em>     * @param is</em>
-<a name="141" href="#141">141</a> <em>     * @param factoryHomeDir</em>
-<a name="142" href="#142">142</a> <em>     * @throws RepositoryException</em>
-<a name="143" href="#143">143</a> <em>     */</em>
-<a name="144" href="#144">144</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a>(InputSource is, String factoryHomeDir) throws RepositoryException {
-<a name="145" href="#145">145</a> 	configId = is.getSystemId() == <strong>null</strong> ? <span class="string">"[???]"</span> : is.getSystemId();
-<a name="146" href="#146">146</a> 	<strong>this</strong>.factoryHomeDir = factoryHomeDir;
-<a name="147" href="#147">147</a> 	init(is);
-<a name="148" href="#148">148</a>     }
-<a name="149" href="#149">149</a> 
-<a name="150" href="#150">150</a>     <em>/**<em>*</em></em>
-<a name="151" href="#151">151</a> <em>     * Initializes repository factory.</em>
-<a name="152" href="#152">152</a> <em>     *</em>
-<a name="153" href="#153">153</a> <em>     * @throws RepositoryException</em>
-<a name="154" href="#154">154</a> <em>     */</em>
-<a name="155" href="#155">155</a>     <strong>private</strong> <strong>void</strong> init(InputSource is) throws RepositoryException {
-<a name="156" href="#156">156</a> 	<strong>try</strong> {
-<a name="157" href="#157">157</a> 	    SAXBuilder parser = <strong>new</strong> SAXBuilder();
-<a name="158" href="#158">158</a> 	    config = parser.build(is);
-<a name="159" href="#159">159</a> 	} <strong>catch</strong> (Exception e) {
-<a name="160" href="#160">160</a> 	    String msg = <span class="string">"error while parsing config file "</span> + is.getSystemId();
-<a name="161" href="#161">161</a> 	    log.error(msg, e);
-<a name="162" href="#162">162</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, e);
-<a name="163" href="#163">163</a> 	}
-<a name="164" href="#164">164</a>     }
-<a name="165" href="#165">165</a> 
-<a name="166" href="#166">166</a>     <em>/**<em>*</em></em>
-<a name="167" href="#167">167</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance.</em>
-<a name="168" href="#168">168</a> <em>     * The configuration is loaded from the file located at the path stored in</em>
-<a name="169" href="#169">169</a> <em>     * the system property &lt;b>&lt;code>"Repository.factory.config"&lt;/code>&lt;/b>.</em>
-<a name="170" href="#170">170</a> <em>     * If this system property is not set then the path &lt;code>./config.xml&lt;/code></em>
-<a name="171" href="#171">171</a> <em>     * is tried.</em>
-<a name="172" href="#172">172</a> <em>     *</em>
-<a name="173" href="#173">173</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
-<a name="174" href="#174">174</a> <em>     * @throws RepositoryException If an error occurs</em>
-<a name="175" href="#175">175</a> <em>     */</em>
-<a name="176" href="#176">176</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create() throws RepositoryException {
-<a name="177" href="#177">177</a> 	<em class="comment">// no factory home dir specified, use cwd</em>
-<a name="178" href="#178">178</a> 	String factoryHomeDir = System.getProperty(<span class="string">"user.dir"</span>);
-<a name="179" href="#179">179</a> 
-<a name="180" href="#180">180</a> 	String configPath = System.getProperty(REPOSITORY_CONFIG_SYSTEM_PROPERTY);
-<a name="181" href="#181">181</a> 	<strong>if</strong> (configPath == <strong>null</strong>) {
-<a name="182" href="#182">182</a> 	    configPath = factoryHomeDir + File.separator + DEFAULT_CONFIG_FILE;
-<a name="183" href="#183">183</a> 	}
-<a name="184" href="#184">184</a> 
-<a name="185" href="#185">185</a> 	<strong>return</strong> create(configPath, factoryHomeDir);
-<a name="186" href="#186">186</a>     }
-<a name="187" href="#187">187</a> 
-<a name="188" href="#188">188</a>     <em>/**<em>*</em></em>
-<a name="189" href="#189">189</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance. The configuration</em>
-<a name="190" href="#190">190</a> <em>     * is read from the specified input source.</em>
-<a name="191" href="#191">191</a> <em>     *</em>
-<a name="192" href="#192">192</a> <em>     * @param configFilePath path to the configuration file</em>
-<a name="193" href="#193">193</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
-<a name="194" href="#194">194</a> <em>     * @throws RepositoryException If an error occurs</em>
-<a name="195" href="#195">195</a> <em>     */</em>
-<a name="196" href="#196">196</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create(String configFilePath) throws RepositoryException {
-<a name="197" href="#197">197</a> 	<em class="comment">// no factory home dir specified, use cwd</em>
-<a name="198" href="#198">198</a> 	String factoryHomeDir = System.getProperty(<span class="string">"user.dir"</span>);
-<a name="199" href="#199">199</a> 	<strong>return</strong> create(configFilePath, factoryHomeDir);
-<a name="200" href="#200">200</a>     }
-<a name="201" href="#201">201</a> 
-<a name="202" href="#202">202</a>     <em>/**<em>*</em></em>
-<a name="203" href="#203">203</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance. The configuration</em>
-<a name="204" href="#204">204</a> <em>     * is read from the specified input source.</em>
-<a name="205" href="#205">205</a> <em>     *</em>
-<a name="206" href="#206">206</a> <em>     * @param configFilePath path to the configuration file</em>
-<a name="207" href="#207">207</a> <em>     * @param factoryHomeDir factory home directory</em>
-<a name="208" href="#208">208</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
-<a name="209" href="#209">209</a> <em>     * @throws RepositoryException If an error occurs</em>
-<a name="210" href="#210">210</a> <em>     */</em>
-<a name="211" href="#211">211</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create(String configFilePath, String factoryHomeDir) throws RepositoryException {
-<a name="212" href="#212">212</a> 	<strong>try</strong> {
-<a name="213" href="#213">213</a> 	    File config = <strong>new</strong> File(configFilePath);
-<a name="214" href="#214">214</a> 	    InputSource is = <strong>new</strong> InputSource(<strong>new</strong> FileReader(config));
-<a name="215" href="#215">215</a> 	    is.setSystemId(config.toURI().toString());
-<a name="216" href="#216">216</a> 	    <strong>return</strong> <strong>new</strong> RepositoryFactory(is, factoryHomeDir);
-<a name="217" href="#217">217</a> 	} <strong>catch</strong> (IOException ioe) {
-<a name="218" href="#218">218</a> 	    String msg = <span class="string">"error while reading config file "</span> + configFilePath;
-<a name="219" href="#219">219</a> 	    log.error(msg, ioe);
-<a name="220" href="#220">220</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ioe);
-<a name="221" href="#221">221</a> 	}
-<a name="222" href="#222">222</a>     }
-<a name="223" href="#223">223</a> 
-<a name="224" href="#224">224</a>     <em>/**<em>*</em></em>
-<a name="225" href="#225">225</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance. The configuration</em>
-<a name="226" href="#226">226</a> <em>     * is read from the specified input source.</em>
-<a name="227" href="#227">227</a> <em>     *</em>
-<a name="228" href="#228">228</a> <em>     * @param is &lt;code>InputSource&lt;/code> where the configuration is read from</em>
-<a name="229" href="#229">229</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
-<a name="230" href="#230">230</a> <em>     * @throws RepositoryException If an error occurs</em>
-<a name="231" href="#231">231</a> <em>     */</em>
-<a name="232" href="#232">232</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create(InputSource is) throws RepositoryException {
-<a name="233" href="#233">233</a> 	<em class="comment">// no factory home dir specified, use cwd</em>
-<a name="234" href="#234">234</a> 	String factoryHomeDir = System.getProperty(<span class="string">"user.dir"</span>);
-<a name="235" href="#235">235</a> 	<strong>return</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a>(is, factoryHomeDir);
-<a name="236" href="#236">236</a>     }
-<a name="237" href="#237">237</a> 
-<a name="238" href="#238">238</a>     <em>/**<em>*</em></em>
-<a name="239" href="#239">239</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance. The configuration</em>
-<a name="240" href="#240">240</a> <em>     * is read from the specified input source.</em>
-<a name="241" href="#241">241</a> <em>     *</em>
-<a name="242" href="#242">242</a> <em>     * @param is             &lt;code>InputSource&lt;/code> where the configuration is read from</em>
-<a name="243" href="#243">243</a> <em>     * @param factoryHomeDir factory home directory</em>
-<a name="244" href="#244">244</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
-<a name="245" href="#245">245</a> <em>     * @throws RepositoryException If an error occurs</em>
-<a name="246" href="#246">246</a> <em>     */</em>
-<a name="247" href="#247">247</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create(InputSource is, String factoryHomeDir) throws RepositoryException {
-<a name="248" href="#248">248</a> 	<strong>return</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a>(is, factoryHomeDir);
-<a name="249" href="#249">249</a>     }
-<a name="250" href="#250">250</a> 
-<a name="251" href="#251">251</a>     <em>/**<em>*</em></em>
-<a name="252" href="#252">252</a> <em>     * @param name</em>
-<a name="253" href="#253">253</a> <em>     * @return</em>
-<a name="254" href="#254">254</a> <em>     * @throws RepositoryException</em>
-<a name="255" href="#255">255</a> <em>     */</em>
-<a name="256" href="#256">256</a>     <strong>public</strong> <strong>synchronized</strong> Repository getRepository(String name) throws RepositoryException {
-<a name="257" href="#257">257</a> 	<strong>if</strong> (reps.containsKey(name)) {
-<a name="258" href="#258">258</a> 	    <strong>return</strong> (Repository) reps.get(name);
-<a name="259" href="#259">259</a> 	}
-<a name="260" href="#260">260</a> 	Element repConfig = getRepositoryConfig(name);
-<a name="261" href="#261">261</a> 
-<a name="262" href="#262">262</a> 	<em class="comment">// read repository store config</em>
-<a name="263" href="#263">263</a> 	<em class="comment">// (we know this element must exist since the XML has been checked</em>
-<a name="264" href="#264">264</a> 	<em class="comment">// against the DTD)</em>
-<a name="265" href="#265">265</a> 	Element fsConfig = repConfig.getChild(REPOSITORY_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
-<a name="266" href="#266">266</a> 	FileSystem fsRepStore = createFileSystem(fsConfig);
-<a name="267" href="#267">267</a> 
-<a name="268" href="#268">268</a> 	<em class="comment">// read definitions of stable workspaces</em>
-<a name="269" href="#269">269</a> 	List wspList = repConfig.getChildren(STABLE_WORKSPACE_ELEMENT);
-<a name="270" href="#270">270</a> 	Iterator iter = wspList.iterator();
-<a name="271" href="#271">271</a> 	ArrayList list = <strong>new</strong> ArrayList();
-<a name="272" href="#272">272</a> 	<strong>while</strong> (iter.hasNext()) {
-<a name="273" href="#273">273</a> 	    Element wspConfig = (Element) iter.next();
-<a name="274" href="#274">274</a> 	    StableWorkspaceDef wspDef = createStableWspDef(wspConfig);
-<a name="275" href="#275">275</a> 	    list.add(wspDef);
-<a name="276" href="#276">276</a> 	}
-<a name="277" href="#277">277</a> 	StableWorkspaceDef[] wspDefs = (StableWorkspaceDef[]) list.toArray(<strong>new</strong> StableWorkspaceDef[list.size()]);
-<a name="278" href="#278">278</a> 
-<a name="279" href="#279">279</a> 	Repository rep = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryImpl.html">RepositoryImpl</a>(fsRepStore, wspDefs);
-<a name="280" href="#280">280</a> 	reps.put(name, rep);
-<a name="281" href="#281">281</a> 	<strong>return</strong> rep;
-<a name="282" href="#282">282</a>     }
-<a name="283" href="#283">283</a> 
-<a name="284" href="#284">284</a>     <em>/**<em>*</em></em>
-<a name="285" href="#285">285</a> <em>     * @param name</em>
-<a name="286" href="#286">286</a> <em>     * @return</em>
-<a name="287" href="#287">287</a> <em>     * @throws RepositoryException</em>
-<a name="288" href="#288">288</a> <em>     */</em>
-<a name="289" href="#289">289</a>     <strong>private</strong> Element getRepositoryConfig(String name) throws RepositoryException {
-<a name="290" href="#290">290</a> 	List repList = config.getRootElement().getChildren(REPOSITORY_ELEMENT);
-<a name="291" href="#291">291</a> 	Element repConfig = <strong>null</strong>;
-<a name="292" href="#292">292</a> 	Iterator iter = repList.iterator();
-<a name="293" href="#293">293</a> 	<strong>while</strong> (iter.hasNext()) {
-<a name="294" href="#294">294</a> 	    repConfig = (Element) iter.next();
-<a name="295" href="#295">295</a> 	    String n = repConfig.getAttributeValue(NAME_ATTRIB);
-<a name="296" href="#296">296</a> 	    <strong>if</strong> (n.equals(name)) {
-<a name="297" href="#297">297</a> 		<strong>return</strong> repConfig;
-<a name="298" href="#298">298</a> 	    }
-<a name="299" href="#299">299</a> 	}
-<a name="300" href="#300">300</a> 	String msg = <span class="string">"The repository "</span> + name + <span class="string">" was not found in the config file "</span> + configId;
-<a name="301" href="#301">301</a> 	log.error(msg);
-<a name="302" href="#302">302</a> 	<strong>throw</strong> <strong>new</strong> RepositoryException(msg);
-<a name="303" href="#303">303</a>     }
-<a name="304" href="#304">304</a> 
-<a name="305" href="#305">305</a>     <em>/**<em>*</em></em>
-<a name="306" href="#306">306</a> <em>     * @param stableWspConfig</em>
-<a name="307" href="#307">307</a> <em>     * @return</em>
-<a name="308" href="#308">308</a> <em>     * @throws RepositoryException</em>
-<a name="309" href="#309">309</a> <em>     */</em>
-<a name="310" href="#310">310</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/StableWorkspaceDef.html">StableWorkspaceDef</a> createStableWspDef(Element stableWspConfig) throws RepositoryException {
-<a name="311" href="#311">311</a> 	String name = stableWspConfig.getAttributeValue(NAME_ATTRIB);
-<a name="312" href="#312">312</a> 	<em class="comment">// we know this element must exist since the XML has been checked</em>
-<a name="313" href="#313">313</a> 	<em class="comment">// against the DTD</em>
-<a name="314" href="#314">314</a> 
-<a name="315" href="#315">315</a> 	<em class="comment">// FQN of class implementing PersistenceManager interface</em>
-<a name="316" href="#316">316</a> 	String persistenceManagerClassName = stableWspConfig.getChild(PERSISTENCE_MANAGER_ELEMENT).getAttributeValue(CLASS_ATTRIB);
-<a name="317" href="#317">317</a> 
-<a name="318" href="#318">318</a> 	<em class="comment">// read the PersistenceManager properties from the</em>
-<a name="319" href="#319">319</a> 	<em class="comment">// param elements in the config</em>
-<a name="320" href="#320">320</a> 	HashMap persistenceManagerParams = <strong>new</strong> HashMap();
-<a name="321" href="#321">321</a> 	List paramList = stableWspConfig.getChild(PERSISTENCE_MANAGER_ELEMENT).getChildren(PARAM_ELEMENT);
-<a name="322" href="#322">322</a> 	<strong>for</strong> (Iterator i = paramList.iterator(); i.hasNext();) {
-<a name="323" href="#323">323</a> 	    Element param = (Element) i.next();
-<a name="324" href="#324">324</a> 	    String paramName = param.getAttributeValue(NAME_ATTRIB);
-<a name="325" href="#325">325</a> 	    String paramValue = param.getAttributeValue(VALUE_ATTRIB);
-<a name="326" href="#326">326</a> 	    persistenceManagerParams.put(paramName, paramValue);
-<a name="327" href="#327">327</a> 	}
-<a name="328" href="#328">328</a> 
-<a name="329" href="#329">329</a> 	<em class="comment">// main workspace store (mandatory)</em>
-<a name="330" href="#330">330</a> 	Element fsConfig = stableWspConfig.getChild(WORKSPACE_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
-<a name="331" href="#331">331</a> 	FileSystem wspStore = createFileSystem(fsConfig);
-<a name="332" href="#332">332</a> 
-<a name="333" href="#333">333</a> 	<em class="comment">// blob store is optional</em>
-<a name="334" href="#334">334</a> 	FileSystem blobStore = <strong>null</strong>;
-<a name="335" href="#335">335</a> 	<strong>if</strong> (stableWspConfig.getChild(BLOB_STORE_ELEMENT) != <strong>null</strong>) {
-<a name="336" href="#336">336</a> 	    fsConfig = stableWspConfig.getChild(BLOB_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
-<a name="337" href="#337">337</a> 	    blobStore = createFileSystem(fsConfig);
-<a name="338" href="#338">338</a> 	}
-<a name="339" href="#339">339</a> 
-<a name="340" href="#340">340</a> 	<em class="comment">// read config of dynamic workspaces</em>
-<a name="341" href="#341">341</a> 	List wspList = stableWspConfig.getChildren(DYNAMIC_WORKSPACE_ELEMENT);
-<a name="342" href="#342">342</a> 	Iterator iter = wspList.iterator();
-<a name="343" href="#343">343</a> 	ArrayList list = <strong>new</strong> ArrayList();
-<a name="344" href="#344">344</a> 	<strong>while</strong> (iter.hasNext()) {
-<a name="345" href="#345">345</a> 	    Element wspConfig = (Element) iter.next();
-<a name="346" href="#346">346</a> 	    DynamicWorkspaceDef wspDef = createDynWspDef(wspConfig, name);
-<a name="347" href="#347">347</a> 	    list.add(wspDef);
-<a name="348" href="#348">348</a> 	}
-<a name="349" href="#349">349</a> 	DynamicWorkspaceDef[] wspDefs = (DynamicWorkspaceDef[]) list.toArray(<strong>new</strong> DynamicWorkspaceDef[list.size()]);
-<a name="350" href="#350">350</a> 
-<a name="351" href="#351">351</a> 	<strong>return</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/StableWorkspaceDef.html">StableWorkspaceDef</a>(name, wspStore, blobStore,
-<a name="352" href="#352">352</a> 		persistenceManagerClassName, persistenceManagerParams, wspDefs);
-<a name="353" href="#353">353</a>     }
-<a name="354" href="#354">354</a> 
-<a name="355" href="#355">355</a>     <em>/**<em>*</em></em>
-<a name="356" href="#356">356</a> <em>     * @param dynWspConfig</em>
-<a name="357" href="#357">357</a> <em>     * @return</em>
-<a name="358" href="#358">358</a> <em>     * @throws RepositoryException</em>
-<a name="359" href="#359">359</a> <em>     */</em>
-<a name="360" href="#360">360</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/DynamicWorkspaceDef.html">DynamicWorkspaceDef</a> createDynWspDef(Element dynWspConfig, String stableWspName) throws RepositoryException {
-<a name="361" href="#361">361</a> 	String name = dynWspConfig.getAttributeValue(NAME_ATTRIB);
-<a name="362" href="#362">362</a> 	<em class="comment">// we know this element must exist since the XML has been checked</em>
-<a name="363" href="#363">363</a> 	<em class="comment">// against the DTD</em>
+<a name="126" href="#126">126</a>     <strong>private</strong> <strong>static</strong> <strong>final</strong> String FACTORY_HOME_VARIABLE = <span class="string">"${factory.home}"</span>;
+<a name="127" href="#127">127</a> 
+<a name="128" href="#128">128</a>     <em>/**<em>*</em></em>
+<a name="129" href="#129">129</a> <em>     * factory home dir; default location of config.xml</em>
+<a name="130" href="#130">130</a> <em>     */</em>
+<a name="131" href="#131">131</a>     <strong>private</strong> String factoryHomeDir;
+<a name="132" href="#132">132</a> 
+<a name="133" href="#133">133</a>     <strong>private</strong> <strong>final</strong> String configId;
+<a name="134" href="#134">134</a>     <strong>private</strong> Document config;
+<a name="135" href="#135">135</a> 
+<a name="136" href="#136">136</a>     <em class="comment">// map of repository names and repository instances</em>
+<a name="137" href="#137">137</a>     <strong>private</strong> <strong>final</strong> HashMap reps = <strong>new</strong> HashMap();
+<a name="138" href="#138">138</a> 
+<a name="139" href="#139">139</a>     <em>/**<em>*</em></em>
+<a name="140" href="#140">140</a> <em>     * private constructor.</em>
+<a name="141" href="#141">141</a> <em>     *</em>
+<a name="142" href="#142">142</a> <em>     * @param is</em>
+<a name="143" href="#143">143</a> <em>     * @param factoryHomeDir</em>
+<a name="144" href="#144">144</a> <em>     * @throws RepositoryException</em>
+<a name="145" href="#145">145</a> <em>     */</em>
+<a name="146" href="#146">146</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a>(InputSource is, String factoryHomeDir) throws RepositoryException {
+<a name="147" href="#147">147</a> 	configId = is.getSystemId() == <strong>null</strong> ? <span class="string">"[???]"</span> : is.getSystemId();
+<a name="148" href="#148">148</a> 	<strong>this</strong>.factoryHomeDir = factoryHomeDir;
+<a name="149" href="#149">149</a> 	init(is);
+<a name="150" href="#150">150</a>     }
+<a name="151" href="#151">151</a> 
+<a name="152" href="#152">152</a>     <em>/**<em>*</em></em>
+<a name="153" href="#153">153</a> <em>     * Initializes repository factory.</em>
+<a name="154" href="#154">154</a> <em>     *</em>
+<a name="155" href="#155">155</a> <em>     * @throws RepositoryException</em>
+<a name="156" href="#156">156</a> <em>     */</em>
+<a name="157" href="#157">157</a>     <strong>private</strong> <strong>void</strong> init(InputSource is) throws RepositoryException {
+<a name="158" href="#158">158</a> 	<strong>try</strong> {
+<a name="159" href="#159">159</a> 	    SAXBuilder parser = <strong>new</strong> SAXBuilder();
+<a name="160" href="#160">160</a> 	    config = parser.build(is);
+<a name="161" href="#161">161</a> 	} <strong>catch</strong> (Exception e) {
+<a name="162" href="#162">162</a> 	    String msg = <span class="string">"error while parsing config file "</span> + is.getSystemId();
+<a name="163" href="#163">163</a> 	    log.error(msg, e);
+<a name="164" href="#164">164</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, e);
+<a name="165" href="#165">165</a> 	}
+<a name="166" href="#166">166</a>     }
+<a name="167" href="#167">167</a> 
+<a name="168" href="#168">168</a>     <em>/**<em>*</em></em>
+<a name="169" href="#169">169</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance.</em>
+<a name="170" href="#170">170</a> <em>     * The configuration is loaded from the file located at the path stored in</em>
+<a name="171" href="#171">171</a> <em>     * the system property &lt;b>&lt;code>"Repository.factory.config"&lt;/code>&lt;/b>.</em>
+<a name="172" href="#172">172</a> <em>     * If this system property is not set then the path &lt;code>./config.xml&lt;/code></em>
+<a name="173" href="#173">173</a> <em>     * is tried.</em>
+<a name="174" href="#174">174</a> <em>     *</em>
+<a name="175" href="#175">175</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
+<a name="176" href="#176">176</a> <em>     * @throws RepositoryException If an error occurs</em>
+<a name="177" href="#177">177</a> <em>     */</em>
+<a name="178" href="#178">178</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create() throws RepositoryException {
+<a name="179" href="#179">179</a> 	<em class="comment">// no factory home dir specified, use cwd</em>
+<a name="180" href="#180">180</a> 	String factoryHomeDir = System.getProperty(<span class="string">"user.dir"</span>);
+<a name="181" href="#181">181</a> 
+<a name="182" href="#182">182</a> 	String configPath = System.getProperty(REPOSITORY_CONFIG_SYSTEM_PROPERTY);
+<a name="183" href="#183">183</a> 	<strong>if</strong> (configPath == <strong>null</strong>) {
+<a name="184" href="#184">184</a> 	    configPath = factoryHomeDir + File.separator + DEFAULT_CONFIG_FILE;
+<a name="185" href="#185">185</a> 	}
+<a name="186" href="#186">186</a> 
+<a name="187" href="#187">187</a> 	<strong>return</strong> create(configPath, factoryHomeDir);
+<a name="188" href="#188">188</a>     }
+<a name="189" href="#189">189</a> 
+<a name="190" href="#190">190</a>     <em>/**<em>*</em></em>
+<a name="191" href="#191">191</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance. The configuration</em>
+<a name="192" href="#192">192</a> <em>     * is read from the specified input source.</em>
+<a name="193" href="#193">193</a> <em>     *</em>
+<a name="194" href="#194">194</a> <em>     * @param configFilePath path to the configuration file</em>
+<a name="195" href="#195">195</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
+<a name="196" href="#196">196</a> <em>     * @throws RepositoryException If an error occurs</em>
+<a name="197" href="#197">197</a> <em>     */</em>
+<a name="198" href="#198">198</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create(String configFilePath) throws RepositoryException {
+<a name="199" href="#199">199</a> 	<em class="comment">// no factory home dir specified, use cwd</em>
+<a name="200" href="#200">200</a> 	String factoryHomeDir = System.getProperty(<span class="string">"user.dir"</span>);
+<a name="201" href="#201">201</a> 	<strong>return</strong> create(configFilePath, factoryHomeDir);
+<a name="202" href="#202">202</a>     }
+<a name="203" href="#203">203</a> 
+<a name="204" href="#204">204</a>     <em>/**<em>*</em></em>
+<a name="205" href="#205">205</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance. The configuration</em>
+<a name="206" href="#206">206</a> <em>     * is read from the specified input source.</em>
+<a name="207" href="#207">207</a> <em>     *</em>
+<a name="208" href="#208">208</a> <em>     * @param configFilePath path to the configuration file</em>
+<a name="209" href="#209">209</a> <em>     * @param factoryHomeDir factory home directory</em>
+<a name="210" href="#210">210</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
+<a name="211" href="#211">211</a> <em>     * @throws RepositoryException If an error occurs</em>
+<a name="212" href="#212">212</a> <em>     */</em>
+<a name="213" href="#213">213</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create(String configFilePath, String factoryHomeDir) throws RepositoryException {
+<a name="214" href="#214">214</a> 	<strong>try</strong> {
+<a name="215" href="#215">215</a> 	    File config = <strong>new</strong> File(configFilePath);
+<a name="216" href="#216">216</a> 	    InputSource is = <strong>new</strong> InputSource(<strong>new</strong> FileReader(config));
+<a name="217" href="#217">217</a> 	    is.setSystemId(config.toURI().toString());
+<a name="218" href="#218">218</a> 	    <strong>return</strong> <strong>new</strong> RepositoryFactory(is, factoryHomeDir);
+<a name="219" href="#219">219</a> 	} <strong>catch</strong> (IOException ioe) {
+<a name="220" href="#220">220</a> 	    String msg = <span class="string">"error while reading config file "</span> + configFilePath;
+<a name="221" href="#221">221</a> 	    log.error(msg, ioe);
+<a name="222" href="#222">222</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ioe);
+<a name="223" href="#223">223</a> 	}
+<a name="224" href="#224">224</a>     }
+<a name="225" href="#225">225</a> 
+<a name="226" href="#226">226</a>     <em>/**<em>*</em></em>
+<a name="227" href="#227">227</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance. The configuration</em>
+<a name="228" href="#228">228</a> <em>     * is read from the specified input source.</em>
+<a name="229" href="#229">229</a> <em>     *</em>
+<a name="230" href="#230">230</a> <em>     * @param is &lt;code>InputSource&lt;/code> where the configuration is read from</em>
+<a name="231" href="#231">231</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
+<a name="232" href="#232">232</a> <em>     * @throws RepositoryException If an error occurs</em>
+<a name="233" href="#233">233</a> <em>     */</em>
+<a name="234" href="#234">234</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create(InputSource is) throws RepositoryException {
+<a name="235" href="#235">235</a> 	<em class="comment">// no factory home dir specified, use cwd</em>
+<a name="236" href="#236">236</a> 	String factoryHomeDir = System.getProperty(<span class="string">"user.dir"</span>);
+<a name="237" href="#237">237</a> 	<strong>return</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a>(is, factoryHomeDir);
+<a name="238" href="#238">238</a>     }
+<a name="239" href="#239">239</a> 
+<a name="240" href="#240">240</a>     <em>/**<em>*</em></em>
+<a name="241" href="#241">241</a> <em>     * Creates a new &lt;code>RepositoryFactory&lt;/code> instance. The configuration</em>
+<a name="242" href="#242">242</a> <em>     * is read from the specified input source.</em>
+<a name="243" href="#243">243</a> <em>     *</em>
+<a name="244" href="#244">244</a> <em>     * @param is             &lt;code>InputSource&lt;/code> where the configuration is read from</em>
+<a name="245" href="#245">245</a> <em>     * @param factoryHomeDir factory home directory</em>
+<a name="246" href="#246">246</a> <em>     * @return a new &lt;code>RepositoryFactory&lt;/code> instance</em>
+<a name="247" href="#247">247</a> <em>     * @throws RepositoryException If an error occurs</em>
+<a name="248" href="#248">248</a> <em>     */</em>
+<a name="249" href="#249">249</a>     <strong>public</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a> create(InputSource is, String factoryHomeDir) throws RepositoryException {
+<a name="250" href="#250">250</a> 	<strong>return</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryFactory.html">RepositoryFactory</a>(is, factoryHomeDir);
+<a name="251" href="#251">251</a>     }
+<a name="252" href="#252">252</a> 
+<a name="253" href="#253">253</a>     <em>/**<em>*</em></em>
+<a name="254" href="#254">254</a> <em>     * @param name</em>
+<a name="255" href="#255">255</a> <em>     * @return</em>
+<a name="256" href="#256">256</a> <em>     * @throws RepositoryException</em>
+<a name="257" href="#257">257</a> <em>     */</em>
+<a name="258" href="#258">258</a>     <strong>public</strong> <strong>synchronized</strong> Repository getRepository(String name) throws RepositoryException {
+<a name="259" href="#259">259</a> 	<strong>if</strong> (reps.containsKey(name)) {
+<a name="260" href="#260">260</a> 	    <strong>return</strong> (Repository) reps.get(name);
+<a name="261" href="#261">261</a> 	}
+<a name="262" href="#262">262</a> 	Element repConfig = getRepositoryConfig(name);
+<a name="263" href="#263">263</a> 
+<a name="264" href="#264">264</a> 	<em class="comment">// read repository store config</em>
+<a name="265" href="#265">265</a> 	<em class="comment">// (we know this element must exist since the XML has been checked</em>
+<a name="266" href="#266">266</a> 	<em class="comment">// against the DTD)</em>
+<a name="267" href="#267">267</a> 	Element fsConfig = repConfig.getChild(REPOSITORY_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
+<a name="268" href="#268">268</a> 	FileSystem fsRepStore = createFileSystem(fsConfig);
+<a name="269" href="#269">269</a> 
+<a name="270" href="#270">270</a> 	<em class="comment">// read definitions of stable workspaces</em>
+<a name="271" href="#271">271</a> 	List wspList = repConfig.getChildren(STABLE_WORKSPACE_ELEMENT);
+<a name="272" href="#272">272</a> 	Iterator iter = wspList.iterator();
+<a name="273" href="#273">273</a> 	ArrayList list = <strong>new</strong> ArrayList();
+<a name="274" href="#274">274</a> 	<strong>while</strong> (iter.hasNext()) {
+<a name="275" href="#275">275</a> 	    Element wspConfig = (Element) iter.next();
+<a name="276" href="#276">276</a> 	    StableWorkspaceDef wspDef = createStableWspDef(wspConfig);
+<a name="277" href="#277">277</a> 	    list.add(wspDef);
+<a name="278" href="#278">278</a> 	}
+<a name="279" href="#279">279</a> 	StableWorkspaceDef[] wspDefs = (StableWorkspaceDef[]) list.toArray(<strong>new</strong> StableWorkspaceDef[list.size()]);
+<a name="280" href="#280">280</a> 
+<a name="281" href="#281">281</a> 	Repository rep = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryImpl.html">RepositoryImpl</a>(fsRepStore, wspDefs);
+<a name="282" href="#282">282</a> 	reps.put(name, rep);
+<a name="283" href="#283">283</a> 	<strong>return</strong> rep;
+<a name="284" href="#284">284</a>     }
+<a name="285" href="#285">285</a> 
+<a name="286" href="#286">286</a>     <em>/**<em>*</em></em>
+<a name="287" href="#287">287</a> <em>     * @param name</em>
+<a name="288" href="#288">288</a> <em>     * @return</em>
+<a name="289" href="#289">289</a> <em>     * @throws RepositoryException</em>
+<a name="290" href="#290">290</a> <em>     */</em>
+<a name="291" href="#291">291</a>     <strong>private</strong> Element getRepositoryConfig(String name) throws RepositoryException {
+<a name="292" href="#292">292</a> 	List repList = config.getRootElement().getChildren(REPOSITORY_ELEMENT);
+<a name="293" href="#293">293</a> 	Element repConfig = <strong>null</strong>;
+<a name="294" href="#294">294</a> 	Iterator iter = repList.iterator();
+<a name="295" href="#295">295</a> 	<strong>while</strong> (iter.hasNext()) {
+<a name="296" href="#296">296</a> 	    repConfig = (Element) iter.next();
+<a name="297" href="#297">297</a> 	    String n = repConfig.getAttributeValue(NAME_ATTRIB);
+<a name="298" href="#298">298</a> 	    <strong>if</strong> (n.equals(name)) {
+<a name="299" href="#299">299</a> 		<strong>return</strong> repConfig;
+<a name="300" href="#300">300</a> 	    }
+<a name="301" href="#301">301</a> 	}
+<a name="302" href="#302">302</a> 	String msg = <span class="string">"The repository "</span> + name + <span class="string">" was not found in the config file "</span> + configId;
+<a name="303" href="#303">303</a> 	log.error(msg);
+<a name="304" href="#304">304</a> 	<strong>throw</strong> <strong>new</strong> RepositoryException(msg);
+<a name="305" href="#305">305</a>     }
+<a name="306" href="#306">306</a> 
+<a name="307" href="#307">307</a>     <em>/**<em>*</em></em>
+<a name="308" href="#308">308</a> <em>     * @param stableWspConfig</em>
+<a name="309" href="#309">309</a> <em>     * @return</em>
+<a name="310" href="#310">310</a> <em>     * @throws RepositoryException</em>
+<a name="311" href="#311">311</a> <em>     */</em>
+<a name="312" href="#312">312</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/StableWorkspaceDef.html">StableWorkspaceDef</a> createStableWspDef(Element stableWspConfig) throws RepositoryException {
+<a name="313" href="#313">313</a> 	String name = stableWspConfig.getAttributeValue(NAME_ATTRIB);
+<a name="314" href="#314">314</a> 	<em class="comment">// we know this element must exist since the XML has been checked</em>
+<a name="315" href="#315">315</a> 	<em class="comment">// against the DTD</em>
+<a name="316" href="#316">316</a> 
+<a name="317" href="#317">317</a> 	<em class="comment">// FQN of class implementing PersistenceManager interface</em>
+<a name="318" href="#318">318</a> 	String persistenceManagerClassName = stableWspConfig.getChild(PERSISTENCE_MANAGER_ELEMENT).getAttributeValue(CLASS_ATTRIB);
+<a name="319" href="#319">319</a> 
+<a name="320" href="#320">320</a> 	<em class="comment">// read the PersistenceManager properties from the</em>
+<a name="321" href="#321">321</a> 	<em class="comment">// param elements in the config</em>
+<a name="322" href="#322">322</a> 	HashMap persistenceManagerParams = <strong>new</strong> HashMap();
+<a name="323" href="#323">323</a> 	List paramList = stableWspConfig.getChild(PERSISTENCE_MANAGER_ELEMENT).getChildren(PARAM_ELEMENT);
+<a name="324" href="#324">324</a> 	<strong>for</strong> (Iterator i = paramList.iterator(); i.hasNext();) {
+<a name="325" href="#325">325</a> 	    Element param = (Element) i.next();
+<a name="326" href="#326">326</a> 	    String paramName = param.getAttributeValue(NAME_ATTRIB);
+<a name="327" href="#327">327</a> 	    String paramValue = param.getAttributeValue(VALUE_ATTRIB);
+<a name="328" href="#328">328</a> 	    persistenceManagerParams.put(paramName, paramValue);
+<a name="329" href="#329">329</a> 	}
+<a name="330" href="#330">330</a> 
+<a name="331" href="#331">331</a> 	<em class="comment">// main workspace store (mandatory)</em>
+<a name="332" href="#332">332</a> 	Element fsConfig = stableWspConfig.getChild(WORKSPACE_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
+<a name="333" href="#333">333</a> 	FileSystem wspStore = createFileSystem(fsConfig);
+<a name="334" href="#334">334</a> 
+<a name="335" href="#335">335</a> 	<em class="comment">// blob store is optional</em>
+<a name="336" href="#336">336</a> 	FileSystem blobStore = <strong>null</strong>;
+<a name="337" href="#337">337</a> 	<strong>if</strong> (stableWspConfig.getChild(BLOB_STORE_ELEMENT) != <strong>null</strong>) {
+<a name="338" href="#338">338</a> 	    fsConfig = stableWspConfig.getChild(BLOB_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
+<a name="339" href="#339">339</a> 	    blobStore = createFileSystem(fsConfig);
+<a name="340" href="#340">340</a> 	}
+<a name="341" href="#341">341</a> 
+<a name="342" href="#342">342</a> 	<em class="comment">// read config of dynamic workspaces</em>
+<a name="343" href="#343">343</a> 	List wspList = stableWspConfig.getChildren(DYNAMIC_WORKSPACE_ELEMENT);
+<a name="344" href="#344">344</a> 	Iterator iter = wspList.iterator();
+<a name="345" href="#345">345</a> 	ArrayList list = <strong>new</strong> ArrayList();
+<a name="346" href="#346">346</a> 	<strong>while</strong> (iter.hasNext()) {
+<a name="347" href="#347">347</a> 	    Element wspConfig = (Element) iter.next();
+<a name="348" href="#348">348</a> 	    DynamicWorkspaceDef wspDef = createDynWspDef(wspConfig, name);
+<a name="349" href="#349">349</a> 	    list.add(wspDef);
+<a name="350" href="#350">350</a> 	}
+<a name="351" href="#351">351</a> 	DynamicWorkspaceDef[] wspDefs = (DynamicWorkspaceDef[]) list.toArray(<strong>new</strong> DynamicWorkspaceDef[list.size()]);
+<a name="352" href="#352">352</a> 
+<a name="353" href="#353">353</a> 	<em class="comment">// read config of search index (optional)</em>
+<a name="354" href="#354">354</a> 	String searchIndexPath = <strong>null</strong>;
+<a name="355" href="#355">355</a> 	<strong>if</strong> (stableWspConfig.getChild(SEARCH_INDEX_ELEMENT) != <strong>null</strong>) {
+<a name="356" href="#356">356</a> 	    searchIndexPath = stableWspConfig.getChild(SEARCH_INDEX_ELEMENT).getAttributeValue(PATH_ATTRIB);
+<a name="357" href="#357">357</a> 	    searchIndexPath = searchIndexPath.replaceAll(<span class="string">"&#47;&#47;$&#47;&#47;{factory&#47;&#47;.home&#47;&#47;}"</span>, factoryHomeDir.replace('&#47;&#47;', '/'));
+<a name="358" href="#358">358</a> 	}
+<a name="359" href="#359">359</a> 
+<a name="360" href="#360">360</a> 	<strong>return</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/StableWorkspaceDef.html">StableWorkspaceDef</a>(name, wspStore, blobStore,
+<a name="361" href="#361">361</a> 		persistenceManagerClassName, persistenceManagerParams, wspDefs,
+<a name="362" href="#362">362</a> 		searchIndexPath);
+<a name="363" href="#363">363</a>     }
 <a name="364" href="#364">364</a> 
-<a name="365" href="#365">365</a> 	<em class="comment">// FQN of class implementing PersistenceManager interface</em>
-<a name="366" href="#366">366</a> 	String persistenceManagerClassName = dynWspConfig.getChild(PERSISTENCE_MANAGER_ELEMENT).getAttributeValue(CLASS_ATTRIB);
-<a name="367" href="#367">367</a> 
-<a name="368" href="#368">368</a> 	<em class="comment">// read the PersistenceManager properties from the</em>
-<a name="369" href="#369">369</a> 	<em class="comment">// param elements in the config</em>
-<a name="370" href="#370">370</a> 	HashMap persistenceManagerParams = <strong>new</strong> HashMap();
-<a name="371" href="#371">371</a> 	List paramList = dynWspConfig.getChild(PERSISTENCE_MANAGER_ELEMENT).getChildren(PARAM_ELEMENT);
-<a name="372" href="#372">372</a> 	<strong>for</strong> (Iterator i = paramList.iterator(); i.hasNext();) {
-<a name="373" href="#373">373</a> 	    Element param = (Element) i.next();
-<a name="374" href="#374">374</a> 	    String paramName = param.getAttributeValue(NAME_ATTRIB);
-<a name="375" href="#375">375</a> 	    String paramValue = param.getAttributeValue(VALUE_ATTRIB);
-<a name="376" href="#376">376</a> 	    persistenceManagerParams.put(paramName, paramValue);
-<a name="377" href="#377">377</a> 	}
-<a name="378" href="#378">378</a> 
-<a name="379" href="#379">379</a> 	<em class="comment">// main workspace store (mandatory)</em>
-<a name="380" href="#380">380</a> 	Element fsConfig = dynWspConfig.getChild(WORKSPACE_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
-<a name="381" href="#381">381</a> 	FileSystem wspStore = createFileSystem(fsConfig);
-<a name="382" href="#382">382</a> 
-<a name="383" href="#383">383</a> 	<em class="comment">// blob store is optional</em>
-<a name="384" href="#384">384</a> 	FileSystem blobStore = <strong>null</strong>;
-<a name="385" href="#385">385</a> 	<strong>if</strong> (dynWspConfig.getChild(BLOB_STORE_ELEMENT) != <strong>null</strong>) {
-<a name="386" href="#386">386</a> 	    fsConfig = dynWspConfig.getChild(BLOB_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
-<a name="387" href="#387">387</a> 	    blobStore = createFileSystem(fsConfig);
-<a name="388" href="#388">388</a> 	}
-<a name="389" href="#389">389</a> 
-<a name="390" href="#390">390</a> 	<strong>return</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/DynamicWorkspaceDef.html">DynamicWorkspaceDef</a>(name, wspStore, blobStore,
-<a name="391" href="#391">391</a> 		persistenceManagerClassName, persistenceManagerParams, stableWspName);
-<a name="392" href="#392">392</a>     }
-<a name="393" href="#393">393</a> 
-<a name="394" href="#394">394</a>     <em>/**<em>*</em></em>
-<a name="395" href="#395">395</a> <em>     * @param fsConfig</em>
-<a name="396" href="#396">396</a> <em>     * @return</em>
-<a name="397" href="#397">397</a> <em>     * @throws RepositoryException</em>
-<a name="398" href="#398">398</a> <em>     */</em>
-<a name="399" href="#399">399</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/fs/FileSystem.html">FileSystem</a> createFileSystem(Element fsConfig) throws RepositoryException {
-<a name="400" href="#400">400</a> 	FileSystem fs;
-<a name="401" href="#401">401</a> 	String className = <span class="string">""</span>;
-<a name="402" href="#402">402</a> 	<strong>try</strong> {
-<a name="403" href="#403">403</a> 	    <em class="comment">// Create the file system object</em>
-<a name="404" href="#404">404</a> 	    className = fsConfig.getAttributeValue(CLASS_ATTRIB);
-<a name="405" href="#405">405</a> 	    Class c = Class.forName(className);
-<a name="406" href="#406">406</a> 	    fs = (FileSystem) c.newInstance();
-<a name="407" href="#407">407</a> 
-<a name="408" href="#408">408</a> 	    <em class="comment">// Set the properties of the file system object from the</em>
-<a name="409" href="#409">409</a> 	    <em class="comment">// param elements in the config</em>
-<a name="410" href="#410">410</a> 	    BeanMap bm = <strong>new</strong> BeanMap(fs);
-<a name="411" href="#411">411</a> 	    List paramList = fsConfig.getChildren(PARAM_ELEMENT);
-<a name="412" href="#412">412</a> 	    <strong>for</strong> (Iterator i = paramList.iterator(); i.hasNext();) {
-<a name="413" href="#413">413</a> 		Element param = (Element) i.next();
-<a name="414" href="#414">414</a> 		String paramName = param.getAttributeValue(NAME_ATTRIB);
-<a name="415" href="#415">415</a> 		String paramValue = param.getAttributeValue(VALUE_ATTRIB);
-<a name="416" href="#416">416</a> 		<em class="comment">// @todo FIXME need a cleaner way to specify/configure root of abstract file system</em>
-<a name="417" href="#417">417</a> 		<strong>int</strong> pos;
-<a name="418" href="#418">418</a> 		<strong>int</strong> lastPos = 0;
-<a name="419" href="#419">419</a> 		StringBuffer sb = <strong>new</strong> StringBuffer(paramValue.length());
-<a name="420" href="#420">420</a> 		<strong>while</strong> ((pos = paramValue.indexOf(FACTORY_HOME_VARIABLE, lastPos)) != -1) {
-<a name="421" href="#421">421</a> 		    sb.append(paramValue.substring(lastPos, pos));
-<a name="422" href="#422">422</a> 		    sb.append(factoryHomeDir);
-<a name="423" href="#423">423</a> 		    lastPos = pos + FACTORY_HOME_VARIABLE.length();
-<a name="424" href="#424">424</a> 		}
-<a name="425" href="#425">425</a> 		<strong>if</strong> (lastPos &lt; paramValue.length()) {
-<a name="426" href="#426">426</a> 		    sb.append(paramValue.substring(lastPos));
-<a name="427" href="#427">427</a> 		}
-<a name="428" href="#428">428</a> 		bm.put(paramName, sb.toString());
-<a name="429" href="#429">429</a> 	    }
-<a name="430" href="#430">430</a> 	    fs.init();
-<a name="431" href="#431">431</a> 	} <strong>catch</strong> (Exception e) {
-<a name="432" href="#432">432</a> 	    String msg = <span class="string">"Cannot instantiate implementing class "</span> + className;
-<a name="433" href="#433">433</a> 	    log.error(msg, e);
-<a name="434" href="#434">434</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, e);
-<a name="435" href="#435">435</a> 	}
-<a name="436" href="#436">436</a> 	<strong>return</strong> fs;
-<a name="437" href="#437">437</a>     }
-<a name="438" href="#438">438</a> 
-<a name="439" href="#439">439</a>     <em>/**<em>*</em></em>
-<a name="440" href="#440">440</a> <em>     * Shuts down the repositories</em>
-<a name="441" href="#441">441</a> <em>     */</em>
-<a name="442" href="#442">442</a>     <strong>public</strong> <strong>synchronized</strong> <strong>void</strong> shutdown() {
-<a name="443" href="#443">443</a> 	Iterator iter = reps.keySet().iterator();
-<a name="444" href="#444">444</a> 	<strong>while</strong> (iter.hasNext()) {
-<a name="445" href="#445">445</a> 	    String name = (String) iter.next();
-<a name="446" href="#446">446</a> 	    RepositoryImpl rep = (RepositoryImpl) reps.get(name);
-<a name="447" href="#447">447</a> 	    log.info(<span class="string">"Shutting down: "</span> + name);
-<a name="448" href="#448">448</a> 	    rep.shutdown();
-<a name="449" href="#449">449</a> 	}
-<a name="450" href="#450">450</a> 	reps.clear();
-<a name="451" href="#451">451</a>     }
-<a name="452" href="#452">452</a> }
+<a name="365" href="#365">365</a>     <em>/**<em>*</em></em>
+<a name="366" href="#366">366</a> <em>     * @param dynWspConfig</em>
+<a name="367" href="#367">367</a> <em>     * @return</em>
+<a name="368" href="#368">368</a> <em>     * @throws RepositoryException</em>
+<a name="369" href="#369">369</a> <em>     */</em>
+<a name="370" href="#370">370</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/DynamicWorkspaceDef.html">DynamicWorkspaceDef</a> createDynWspDef(Element dynWspConfig, String stableWspName) throws RepositoryException {
+<a name="371" href="#371">371</a> 	String name = dynWspConfig.getAttributeValue(NAME_ATTRIB);
+<a name="372" href="#372">372</a> 	<em class="comment">// we know this element must exist since the XML has been checked</em>
+<a name="373" href="#373">373</a> 	<em class="comment">// against the DTD</em>
+<a name="374" href="#374">374</a> 
+<a name="375" href="#375">375</a> 	<em class="comment">// FQN of class implementing PersistenceManager interface</em>
+<a name="376" href="#376">376</a> 	String persistenceManagerClassName = dynWspConfig.getChild(PERSISTENCE_MANAGER_ELEMENT).getAttributeValue(CLASS_ATTRIB);
+<a name="377" href="#377">377</a> 
+<a name="378" href="#378">378</a> 	<em class="comment">// read the PersistenceManager properties from the</em>
+<a name="379" href="#379">379</a> 	<em class="comment">// param elements in the config</em>
+<a name="380" href="#380">380</a> 	HashMap persistenceManagerParams = <strong>new</strong> HashMap();
+<a name="381" href="#381">381</a> 	List paramList = dynWspConfig.getChild(PERSISTENCE_MANAGER_ELEMENT).getChildren(PARAM_ELEMENT);
+<a name="382" href="#382">382</a> 	<strong>for</strong> (Iterator i = paramList.iterator(); i.hasNext();) {
+<a name="383" href="#383">383</a> 	    Element param = (Element) i.next();
+<a name="384" href="#384">384</a> 	    String paramName = param.getAttributeValue(NAME_ATTRIB);
+<a name="385" href="#385">385</a> 	    String paramValue = param.getAttributeValue(VALUE_ATTRIB);
+<a name="386" href="#386">386</a> 	    persistenceManagerParams.put(paramName, paramValue);
+<a name="387" href="#387">387</a> 	}
+<a name="388" href="#388">388</a> 
+<a name="389" href="#389">389</a> 	<em class="comment">// main workspace store (mandatory)</em>
+<a name="390" href="#390">390</a> 	Element fsConfig = dynWspConfig.getChild(WORKSPACE_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
+<a name="391" href="#391">391</a> 	FileSystem wspStore = createFileSystem(fsConfig);
+<a name="392" href="#392">392</a> 
+<a name="393" href="#393">393</a> 	<em class="comment">// blob store is optional</em>
+<a name="394" href="#394">394</a> 	FileSystem blobStore = <strong>null</strong>;
+<a name="395" href="#395">395</a> 	<strong>if</strong> (dynWspConfig.getChild(BLOB_STORE_ELEMENT) != <strong>null</strong>) {
+<a name="396" href="#396">396</a> 	    fsConfig = dynWspConfig.getChild(BLOB_STORE_ELEMENT).getChild(FILE_SYSTEM_ELEMENT);
+<a name="397" href="#397">397</a> 	    blobStore = createFileSystem(fsConfig);
+<a name="398" href="#398">398</a> 	}
+<a name="399" href="#399">399</a> 
+<a name="400" href="#400">400</a> 	<strong>return</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/DynamicWorkspaceDef.html">DynamicWorkspaceDef</a>(name, wspStore, blobStore,
+<a name="401" href="#401">401</a> 		persistenceManagerClassName, persistenceManagerParams, stableWspName);
+<a name="402" href="#402">402</a>     }
+<a name="403" href="#403">403</a> 
+<a name="404" href="#404">404</a>     <em>/**<em>*</em></em>
+<a name="405" href="#405">405</a> <em>     * @param fsConfig</em>
+<a name="406" href="#406">406</a> <em>     * @return</em>
+<a name="407" href="#407">407</a> <em>     * @throws RepositoryException</em>
+<a name="408" href="#408">408</a> <em>     */</em>
+<a name="409" href="#409">409</a>     <strong>private</strong> <a href="../../../../org/apache/jackrabbit/core/fs/FileSystem.html">FileSystem</a> createFileSystem(Element fsConfig) throws RepositoryException {
+<a name="410" href="#410">410</a> 	FileSystem fs;
+<a name="411" href="#411">411</a> 	String className = <span class="string">""</span>;
+<a name="412" href="#412">412</a> 	<strong>try</strong> {
+<a name="413" href="#413">413</a> 	    <em class="comment">// Create the file system object</em>
+<a name="414" href="#414">414</a> 	    className = fsConfig.getAttributeValue(CLASS_ATTRIB);
+<a name="415" href="#415">415</a> 	    Class c = Class.forName(className);
+<a name="416" href="#416">416</a> 	    fs = (FileSystem) c.newInstance();
+<a name="417" href="#417">417</a> 
+<a name="418" href="#418">418</a> 	    <em class="comment">// Set the properties of the file system object from the</em>
+<a name="419" href="#419">419</a> 	    <em class="comment">// param elements in the config</em>
+<a name="420" href="#420">420</a> 	    BeanMap bm = <strong>new</strong> BeanMap(fs);
+<a name="421" href="#421">421</a> 	    List paramList = fsConfig.getChildren(PARAM_ELEMENT);
+<a name="422" href="#422">422</a> 	    <strong>for</strong> (Iterator i = paramList.iterator(); i.hasNext();) {
+<a name="423" href="#423">423</a> 		Element param = (Element) i.next();
+<a name="424" href="#424">424</a> 		String paramName = param.getAttributeValue(NAME_ATTRIB);
+<a name="425" href="#425">425</a> 		String paramValue = param.getAttributeValue(VALUE_ATTRIB);
+<a name="426" href="#426">426</a> 		<em class="comment">// @todo FIXME need a cleaner way to specify/configure root of abstract file system</em>
+<a name="427" href="#427">427</a> 		<strong>int</strong> pos;
+<a name="428" href="#428">428</a> 		<strong>int</strong> lastPos = 0;
+<a name="429" href="#429">429</a> 		StringBuffer sb = <strong>new</strong> StringBuffer(paramValue.length());
+<a name="430" href="#430">430</a> 		<strong>while</strong> ((pos = paramValue.indexOf(FACTORY_HOME_VARIABLE, lastPos)) != -1) {
+<a name="431" href="#431">431</a> 		    sb.append(paramValue.substring(lastPos, pos));
+<a name="432" href="#432">432</a> 		    sb.append(factoryHomeDir);
+<a name="433" href="#433">433</a> 		    lastPos = pos + FACTORY_HOME_VARIABLE.length();
+<a name="434" href="#434">434</a> 		}
+<a name="435" href="#435">435</a> 		<strong>if</strong> (lastPos &lt; paramValue.length()) {
+<a name="436" href="#436">436</a> 		    sb.append(paramValue.substring(lastPos));
+<a name="437" href="#437">437</a> 		}
+<a name="438" href="#438">438</a> 		bm.put(paramName, sb.toString());
+<a name="439" href="#439">439</a> 	    }
+<a name="440" href="#440">440</a> 	    fs.init();
+<a name="441" href="#441">441</a> 	} <strong>catch</strong> (Exception e) {
+<a name="442" href="#442">442</a> 	    String msg = <span class="string">"Cannot instantiate implementing class "</span> + className;
+<a name="443" href="#443">443</a> 	    log.error(msg, e);
+<a name="444" href="#444">444</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, e);
+<a name="445" href="#445">445</a> 	}
+<a name="446" href="#446">446</a> 	<strong>return</strong> fs;
+<a name="447" href="#447">447</a>     }
+<a name="448" href="#448">448</a> 
+<a name="449" href="#449">449</a>     <em>/**<em>*</em></em>
+<a name="450" href="#450">450</a> <em>     * Shuts down the repositories</em>
+<a name="451" href="#451">451</a> <em>     */</em>
+<a name="452" href="#452">452</a>     <strong>public</strong> <strong>synchronized</strong> <strong>void</strong> shutdown() {
+<a name="453" href="#453">453</a> 	Iterator iter = reps.keySet().iterator();
+<a name="454" href="#454">454</a> 	<strong>while</strong> (iter.hasNext()) {
+<a name="455" href="#455">455</a> 	    String name = (String) iter.next();
+<a name="456" href="#456">456</a> 	    RepositoryImpl rep = (RepositoryImpl) reps.get(name);
+<a name="457" href="#457">457</a> 	    log.info(<span class="string">"Shutting down: "</span> + name);
+<a name="458" href="#458">458</a> 	    rep.shutdown();
+<a name="459" href="#459">459</a> 	}
+<a name="460" href="#460">460</a> 	reps.clear();
+<a name="461" href="#461">461</a>     }
+<a name="462" href="#462">462</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>

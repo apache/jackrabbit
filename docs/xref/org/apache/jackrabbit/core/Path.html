@@ -541,327 +541,357 @@
 <a name="532" href="#532">532</a> 	    queue.addFirst(<strong>new</strong> PathElement(nameSpaceURI, localName, index));
 <a name="533" href="#533">533</a> 	}
 <a name="534" href="#534">534</a> 
-<a name="535" href="#535">535</a> 	<strong>public</strong> <strong>void</strong> addLast(String nameSpaceURI, String localName) {
-<a name="536" href="#536">536</a> 	    queue.addLast(<strong>new</strong> PathElement(nameSpaceURI, localName));
+<a name="535" href="#535">535</a> 	<strong>public</strong> <strong>void</strong> addFirst(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name) {
+<a name="536" href="#536">536</a> 	    queue.addFirst(<strong>new</strong> PathElement(name));
 <a name="537" href="#537">537</a> 	}
 <a name="538" href="#538">538</a> 
-<a name="539" href="#539">539</a> 	<strong>public</strong> <strong>void</strong> addLast(String nameSpaceURI, String localName, <strong>int</strong> index) {
-<a name="540" href="#540">540</a> 	    queue.addLast(<strong>new</strong> PathElement(nameSpaceURI, localName, index));
+<a name="539" href="#539">539</a> 	<strong>public</strong> <strong>void</strong> addFirst(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name, <strong>int</strong> index) {
+<a name="540" href="#540">540</a> 	    queue.addFirst(<strong>new</strong> PathElement(name, index));
 <a name="541" href="#541">541</a> 	}
 <a name="542" href="#542">542</a> 
-<a name="543" href="#543">543</a> 	<strong>public</strong> <a href="../../../../org/apache/jackrabbit/core/Path.html">Path</a> getPath() throws MalformedPathException {
-<a name="544" href="#544">544</a> 	    PathElement[] elements = (PathElement[]) queue.toArray(<strong>new</strong> PathElement[queue.size()]);
-<a name="545" href="#545">545</a> 	    <em class="comment">// validate path</em>
-<a name="546" href="#546">546</a> 	    <strong>if</strong> (elements.length == 0) {
-<a name="547" href="#547">547</a> 		<strong>throw</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/MalformedPathException.html">MalformedPathException</a>(<span class="string">"empty path"</span>);
-<a name="548" href="#548">548</a> 	    }
-<a name="549" href="#549">549</a> 	    <strong>for</strong> (<strong>int</strong> i = 1; i &lt; elements.length; i++) {
-<a name="550" href="#550">550</a> 		<strong>if</strong> (elements[i].denotesRoot()) {
-<a name="551" href="#551">551</a> 		    <strong>throw</strong> <strong>new</strong> MalformedPathException(<span class="string">"path contains invalid root element(s)"</span>);
-<a name="552" href="#552">552</a> 		}
-<a name="553" href="#553">553</a> 		String localName = elements[i].getName().getLocalName();
-<a name="554" href="#554">554</a> 		Matcher matcher = PATH_ELEMENT_PATTERN.matcher(localName);
-<a name="555" href="#555">555</a> 		<strong>if</strong> (!matcher.matches()) {
-<a name="556" href="#556">556</a> 		    <em class="comment">// illegal syntax for path element</em>
-<a name="557" href="#557">557</a> 		    <strong>throw</strong> <strong>new</strong> MalformedPathException(localName + <span class="string">"' is not a legal path element"</span>);
-<a name="558" href="#558">558</a> 		}
-<a name="559" href="#559">559</a> 	    }
-<a name="560" href="#560">560</a> 	    <strong>return</strong> <strong>new</strong> Path(elements);
-<a name="561" href="#561">561</a> 	}
-<a name="562" href="#562">562</a> 
-<a name="563" href="#563">563</a> 	<strong>public</strong> Object clone() {
-<a name="564" href="#564">564</a> 	    PathBuilder clone = <strong>new</strong> PathBuilder();
-<a name="565" href="#565">565</a> 	    clone.queue.addAll(queue);
-<a name="566" href="#566">566</a> 	    <strong>return</strong> clone;
-<a name="567" href="#567">567</a> 	}
-<a name="568" href="#568">568</a>     }
-<a name="569" href="#569">569</a> 
-<a name="570" href="#570">570</a>     <strong>public</strong> <strong>static</strong> <strong>class</strong> RootElement <strong>extends</strong> PathElement {
-<a name="571" href="#571">571</a> 	<em class="comment">// use a literal that is an illegal name character to avoid collisions</em>
-<a name="572" href="#572">572</a> 	<strong>static</strong> <strong>final</strong> String LITERAL = <span class="string">"*"</span>;
-<a name="573" href="#573">573</a> 
-<a name="574" href="#574">574</a> 	<strong>private</strong> RootElement() {
-<a name="575" href="#575">575</a> 	    <strong>super</strong>(NamespaceRegistryImpl.NS_DEFAULT_URI, <span class="string">""</span>);
-<a name="576" href="#576">576</a> 	}
-<a name="577" href="#577">577</a> 
-<a name="578" href="#578">578</a> 	<em class="comment">// PathElement override</em>
-<a name="579" href="#579">579</a> 	<strong>public</strong> <strong>boolean</strong> denotesRoot() {
-<a name="580" href="#580">580</a> 	    <strong>return</strong> <strong>true</strong>;
-<a name="581" href="#581">581</a> 	}
-<a name="582" href="#582">582</a> 
-<a name="583" href="#583">583</a> 	<em class="comment">// PathElement override</em>
-<a name="584" href="#584">584</a> 	<strong>public</strong> String toJCRName(<a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver) throws NoPrefixDeclaredException {
-<a name="585" href="#585">585</a> 	    <strong>return</strong> <span class="string">""</span>;
-<a name="586" href="#586">586</a> 	}
-<a name="587" href="#587">587</a> 
-<a name="588" href="#588">588</a> 	<em class="comment">// Object override</em>
-<a name="589" href="#589">589</a> 	<strong>public</strong> String toString() {
-<a name="590" href="#590">590</a> 	    <strong>return</strong> LITERAL;
-<a name="591" href="#591">591</a> 	}
-<a name="592" href="#592">592</a>     }
+<a name="543" href="#543">543</a> 	<strong>public</strong> <strong>void</strong> addLast(String nameSpaceURI, String localName) {
+<a name="544" href="#544">544</a> 	    queue.addLast(<strong>new</strong> PathElement(nameSpaceURI, localName));
+<a name="545" href="#545">545</a> 	}
+<a name="546" href="#546">546</a> 
+<a name="547" href="#547">547</a> 	<strong>public</strong> <strong>void</strong> addLast(String nameSpaceURI, String localName, <strong>int</strong> index) {
+<a name="548" href="#548">548</a> 	    queue.addLast(<strong>new</strong> PathElement(nameSpaceURI, localName, index));
+<a name="549" href="#549">549</a> 	}
+<a name="550" href="#550">550</a> 
+<a name="551" href="#551">551</a> 	<strong>public</strong> <strong>void</strong> addLast(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name) {
+<a name="552" href="#552">552</a> 	    queue.addLast(<strong>new</strong> PathElement(name));
+<a name="553" href="#553">553</a> 	}
+<a name="554" href="#554">554</a> 
+<a name="555" href="#555">555</a> 	<strong>public</strong> <strong>void</strong> addLast(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name, <strong>int</strong> index) {
+<a name="556" href="#556">556</a> 	    queue.addLast(<strong>new</strong> PathElement(name, index));
+<a name="557" href="#557">557</a> 	}
+<a name="558" href="#558">558</a> 
+<a name="559" href="#559">559</a> 	<strong>public</strong> <a href="../../../../org/apache/jackrabbit/core/Path.html">Path</a> getPath() throws MalformedPathException {
+<a name="560" href="#560">560</a> 	    PathElement[] elements = (PathElement[]) queue.toArray(<strong>new</strong> PathElement[queue.size()]);
+<a name="561" href="#561">561</a> 	    <em class="comment">// validate path</em>
+<a name="562" href="#562">562</a> 	    <strong>if</strong> (elements.length == 0) {
+<a name="563" href="#563">563</a> 		<strong>throw</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/MalformedPathException.html">MalformedPathException</a>(<span class="string">"empty path"</span>);
+<a name="564" href="#564">564</a> 	    }
+<a name="565" href="#565">565</a> 	    <strong>for</strong> (<strong>int</strong> i = 1; i &lt; elements.length; i++) {
+<a name="566" href="#566">566</a> 		<strong>if</strong> (elements[i].denotesRoot()) {
+<a name="567" href="#567">567</a> 		    <strong>throw</strong> <strong>new</strong> MalformedPathException(<span class="string">"path contains invalid root element(s)"</span>);
+<a name="568" href="#568">568</a> 		}
+<a name="569" href="#569">569</a> 		String localName = elements[i].getName().getLocalName();
+<a name="570" href="#570">570</a> 		Matcher matcher = PATH_ELEMENT_PATTERN.matcher(localName);
+<a name="571" href="#571">571</a> 		<strong>if</strong> (!matcher.matches()) {
+<a name="572" href="#572">572</a> 		    <em class="comment">// illegal syntax for path element</em>
+<a name="573" href="#573">573</a> 		    <strong>throw</strong> <strong>new</strong> MalformedPathException(localName + <span class="string">"' is not a legal path element"</span>);
+<a name="574" href="#574">574</a> 		}
+<a name="575" href="#575">575</a> 	    }
+<a name="576" href="#576">576</a> 	    <strong>return</strong> <strong>new</strong> Path(elements);
+<a name="577" href="#577">577</a> 	}
+<a name="578" href="#578">578</a> 
+<a name="579" href="#579">579</a> 	<strong>public</strong> Object clone() {
+<a name="580" href="#580">580</a> 	    PathBuilder clone = <strong>new</strong> PathBuilder();
+<a name="581" href="#581">581</a> 	    clone.queue.addAll(queue);
+<a name="582" href="#582">582</a> 	    <strong>return</strong> clone;
+<a name="583" href="#583">583</a> 	}
+<a name="584" href="#584">584</a>     }
+<a name="585" href="#585">585</a> 
+<a name="586" href="#586">586</a>     <strong>public</strong> <strong>static</strong> <strong>class</strong> RootElement <strong>extends</strong> PathElement {
+<a name="587" href="#587">587</a> 	<em class="comment">// use a literal that is an illegal name character to avoid collisions</em>
+<a name="588" href="#588">588</a> 	<strong>static</strong> <strong>final</strong> String LITERAL = <span class="string">"*"</span>;
+<a name="589" href="#589">589</a> 
+<a name="590" href="#590">590</a> 	<strong>private</strong> RootElement() {
+<a name="591" href="#591">591</a> 	    <strong>super</strong>(NamespaceRegistryImpl.NS_DEFAULT_URI, <span class="string">""</span>);
+<a name="592" href="#592">592</a> 	}
 <a name="593" href="#593">593</a> 
-<a name="594" href="#594">594</a>     <strong>public</strong> <strong>static</strong> <strong>class</strong> CurrentElement <strong>extends</strong> PathElement {
-<a name="595" href="#595">595</a> 	<strong>static</strong> <strong>final</strong> String LITERAL = <span class="string">"."</span>;
-<a name="596" href="#596">596</a> 
-<a name="597" href="#597">597</a> 	<strong>private</strong> CurrentElement() {
-<a name="598" href="#598">598</a> 	    <strong>super</strong>(NamespaceRegistryImpl.NS_DEFAULT_URI, LITERAL);
-<a name="599" href="#599">599</a> 	}
-<a name="600" href="#600">600</a> 
-<a name="601" href="#601">601</a> 	<em class="comment">// PathElement override</em>
-<a name="602" href="#602">602</a> 	<strong>public</strong> String toJCRName(<a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver) throws NoPrefixDeclaredException {
-<a name="603" href="#603">603</a> 	    <strong>return</strong> LITERAL;
-<a name="604" href="#604">604</a> 	}
-<a name="605" href="#605">605</a> 
-<a name="606" href="#606">606</a> 	<em class="comment">// Object override</em>
-<a name="607" href="#607">607</a> 	<strong>public</strong> String toString() {
-<a name="608" href="#608">608</a> 	    <strong>return</strong> LITERAL;
-<a name="609" href="#609">609</a> 	}
-<a name="610" href="#610">610</a>     }
-<a name="611" href="#611">611</a> 
-<a name="612" href="#612">612</a>     <strong>public</strong> <strong>static</strong> <strong>class</strong> ParentElement <strong>extends</strong> PathElement {
-<a name="613" href="#613">613</a> 	<strong>static</strong> <strong>final</strong> String LITERAL = <span class="string">".."</span>;
-<a name="614" href="#614">614</a> 
-<a name="615" href="#615">615</a> 	<strong>private</strong> ParentElement() {
-<a name="616" href="#616">616</a> 	    <strong>super</strong>(NamespaceRegistryImpl.NS_DEFAULT_URI, LITERAL);
-<a name="617" href="#617">617</a> 	}
-<a name="618" href="#618">618</a> 
-<a name="619" href="#619">619</a> 	<em class="comment">// PathElement override</em>
-<a name="620" href="#620">620</a> 	<strong>public</strong> String toJCRName(<a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver) throws NoPrefixDeclaredException {
-<a name="621" href="#621">621</a> 	    <strong>return</strong> LITERAL;
-<a name="622" href="#622">622</a> 	}
-<a name="623" href="#623">623</a> 
-<a name="624" href="#624">624</a> 	<em class="comment">// Object override</em>
-<a name="625" href="#625">625</a> 	<strong>public</strong> String toString() {
-<a name="626" href="#626">626</a> 	    <strong>return</strong> LITERAL;
-<a name="627" href="#627">627</a> 	}
-<a name="628" href="#628">628</a>     }
-<a name="629" href="#629">629</a> 
-<a name="630" href="#630">630</a>     <strong>public</strong> <strong>static</strong> <strong>class</strong> PathElement {
-<a name="631" href="#631">631</a> 
-<a name="632" href="#632">632</a> 	<strong>private</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name;
-<a name="633" href="#633">633</a> 
-<a name="634" href="#634">634</a> 	<em>/**<em>*</em></em>
-<a name="635" href="#635">635</a> <em>	 * 1-based index; 0 if not explicitly specified (which is equivalent to</em>
-<a name="636" href="#636">636</a> <em>	 * specifying 1)</em>
-<a name="637" href="#637">637</a> <em>	 */</em>
-<a name="638" href="#638">638</a> 	<strong>private</strong> <strong>final</strong> <strong>int</strong> index;
+<a name="594" href="#594">594</a> 	<em class="comment">// PathElement override</em>
+<a name="595" href="#595">595</a> 	<strong>public</strong> <strong>boolean</strong> denotesRoot() {
+<a name="596" href="#596">596</a> 	    <strong>return</strong> <strong>true</strong>;
+<a name="597" href="#597">597</a> 	}
+<a name="598" href="#598">598</a> 
+<a name="599" href="#599">599</a> 	<em class="comment">// PathElement override</em>
+<a name="600" href="#600">600</a> 	<strong>public</strong> String toJCRName(<a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver) throws NoPrefixDeclaredException {
+<a name="601" href="#601">601</a> 	    <strong>return</strong> <span class="string">""</span>;
+<a name="602" href="#602">602</a> 	}
+<a name="603" href="#603">603</a> 
+<a name="604" href="#604">604</a> 	<em class="comment">// Object override</em>
+<a name="605" href="#605">605</a> 	<strong>public</strong> String toString() {
+<a name="606" href="#606">606</a> 	    <strong>return</strong> LITERAL;
+<a name="607" href="#607">607</a> 	}
+<a name="608" href="#608">608</a>     }
+<a name="609" href="#609">609</a> 
+<a name="610" href="#610">610</a>     <strong>public</strong> <strong>static</strong> <strong>class</strong> CurrentElement <strong>extends</strong> PathElement {
+<a name="611" href="#611">611</a> 	<strong>static</strong> <strong>final</strong> String LITERAL = <span class="string">"."</span>;
+<a name="612" href="#612">612</a> 
+<a name="613" href="#613">613</a> 	<strong>private</strong> CurrentElement() {
+<a name="614" href="#614">614</a> 	    <strong>super</strong>(NamespaceRegistryImpl.NS_DEFAULT_URI, LITERAL);
+<a name="615" href="#615">615</a> 	}
+<a name="616" href="#616">616</a> 
+<a name="617" href="#617">617</a> 	<em class="comment">// PathElement override</em>
+<a name="618" href="#618">618</a> 	<strong>public</strong> String toJCRName(<a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver) throws NoPrefixDeclaredException {
+<a name="619" href="#619">619</a> 	    <strong>return</strong> LITERAL;
+<a name="620" href="#620">620</a> 	}
+<a name="621" href="#621">621</a> 
+<a name="622" href="#622">622</a> 	<em class="comment">// Object override</em>
+<a name="623" href="#623">623</a> 	<strong>public</strong> String toString() {
+<a name="624" href="#624">624</a> 	    <strong>return</strong> LITERAL;
+<a name="625" href="#625">625</a> 	}
+<a name="626" href="#626">626</a>     }
+<a name="627" href="#627">627</a> 
+<a name="628" href="#628">628</a>     <strong>public</strong> <strong>static</strong> <strong>class</strong> ParentElement <strong>extends</strong> PathElement {
+<a name="629" href="#629">629</a> 	<strong>static</strong> <strong>final</strong> String LITERAL = <span class="string">".."</span>;
+<a name="630" href="#630">630</a> 
+<a name="631" href="#631">631</a> 	<strong>private</strong> ParentElement() {
+<a name="632" href="#632">632</a> 	    <strong>super</strong>(NamespaceRegistryImpl.NS_DEFAULT_URI, LITERAL);
+<a name="633" href="#633">633</a> 	}
+<a name="634" href="#634">634</a> 
+<a name="635" href="#635">635</a> 	<em class="comment">// PathElement override</em>
+<a name="636" href="#636">636</a> 	<strong>public</strong> String toJCRName(<a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver) throws NoPrefixDeclaredException {
+<a name="637" href="#637">637</a> 	    <strong>return</strong> LITERAL;
+<a name="638" href="#638">638</a> 	}
 <a name="639" href="#639">639</a> 
-<a name="640" href="#640">640</a> 	<strong>private</strong> PathElement(String namespaceURI, String localName) {
-<a name="641" href="#641">641</a> 	    name = <strong>new</strong> QName(namespaceURI, localName);
-<a name="642" href="#642">642</a> 	    <strong>this</strong>.index = 0;
+<a name="640" href="#640">640</a> 	<em class="comment">// Object override</em>
+<a name="641" href="#641">641</a> 	<strong>public</strong> String toString() {
+<a name="642" href="#642">642</a> 	    <strong>return</strong> LITERAL;
 <a name="643" href="#643">643</a> 	}
-<a name="644" href="#644">644</a> 
-<a name="645" href="#645">645</a> 	<strong>private</strong> PathElement(String namespaceURI, String localName, <strong>int</strong> index) {
-<a name="646" href="#646">646</a> 	    name = <strong>new</strong> QName(namespaceURI, localName);
-<a name="647" href="#647">647</a> 	    <strong>if</strong> (index &lt; 1) {
-<a name="648" href="#648">648</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"index is 1-based"</span>);
-<a name="649" href="#649">649</a> 	    }
-<a name="650" href="#650">650</a> 	    <strong>this</strong>.index = index;
-<a name="651" href="#651">651</a> 	}
-<a name="652" href="#652">652</a> 
-<a name="653" href="#653">653</a> 	<em>/**<em>*</em></em>
-<a name="654" href="#654">654</a> <em>	 * Returns the name of this path element.</em>
-<a name="655" href="#655">655</a> <em>	 *</em>
-<a name="656" href="#656">656</a> <em>	 * @return the name</em>
-<a name="657" href="#657">657</a> <em>	 */</em>
-<a name="658" href="#658">658</a> 	<strong>public</strong> <a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> getName() {
-<a name="659" href="#659">659</a> 	    <strong>return</strong> name;
-<a name="660" href="#660">660</a> 	}
-<a name="661" href="#661">661</a> 
-<a name="662" href="#662">662</a> 	<em>/**<em>*</em></em>
-<a name="663" href="#663">663</a> <em>	 * Returns the 1-based index or 0 if no index was specified (which is</em>
-<a name="664" href="#664">664</a> <em>	 * equivalent to specifying 1).</em>
-<a name="665" href="#665">665</a> <em>	 *</em>
-<a name="666" href="#666">666</a> <em>	 * @return Returns the 1-based index or 0 if no index was specified.</em>
-<a name="667" href="#667">667</a> <em>	 */</em>
-<a name="668" href="#668">668</a> 	<strong>public</strong> <strong>int</strong> getIndex() {
-<a name="669" href="#669">669</a> 	    <strong>return</strong> index;
+<a name="644" href="#644">644</a>     }
+<a name="645" href="#645">645</a> 
+<a name="646" href="#646">646</a>     <strong>public</strong> <strong>static</strong> <strong>class</strong> PathElement {
+<a name="647" href="#647">647</a> 
+<a name="648" href="#648">648</a> 	<strong>private</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name;
+<a name="649" href="#649">649</a> 
+<a name="650" href="#650">650</a> 	<em>/**<em>*</em></em>
+<a name="651" href="#651">651</a> <em>	 * 1-based index; 0 if not explicitly specified (which is equivalent to</em>
+<a name="652" href="#652">652</a> <em>	 * specifying 1)</em>
+<a name="653" href="#653">653</a> <em>	 */</em>
+<a name="654" href="#654">654</a> 	<strong>private</strong> <strong>final</strong> <strong>int</strong> index;
+<a name="655" href="#655">655</a> 
+<a name="656" href="#656">656</a> 	<strong>private</strong> PathElement(String namespaceURI, String localName) {
+<a name="657" href="#657">657</a> 	    <strong>this</strong>(<strong>new</strong> QName(namespaceURI, localName));
+<a name="658" href="#658">658</a> 	}
+<a name="659" href="#659">659</a> 
+<a name="660" href="#660">660</a> 	<strong>private</strong> PathElement(String namespaceURI, String localName, <strong>int</strong> index) {
+<a name="661" href="#661">661</a> 	    <strong>this</strong>(<strong>new</strong> QName(namespaceURI, localName), index);
+<a name="662" href="#662">662</a> 	}
+<a name="663" href="#663">663</a> 
+<a name="664" href="#664">664</a> 	<strong>private</strong> PathElement(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name) {
+<a name="665" href="#665">665</a> 	    <strong>if</strong> (name == <strong>null</strong>) {
+<a name="666" href="#666">666</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"name must not be null"</span>);
+<a name="667" href="#667">667</a> 	    }
+<a name="668" href="#668">668</a> 	    <strong>this</strong>.name = name;
+<a name="669" href="#669">669</a> 	    <strong>this</strong>.index = 0;
 <a name="670" href="#670">670</a> 	}
 <a name="671" href="#671">671</a> 
-<a name="672" href="#672">672</a> 	<strong>public</strong> <strong>boolean</strong> denotesRoot() {
-<a name="673" href="#673">673</a> 	    <strong>return</strong> false;
-<a name="674" href="#674">674</a> 	}
-<a name="675" href="#675">675</a> 
-<a name="676" href="#676">676</a> 	<strong>public</strong> String toJCRName(<a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver) throws NoPrefixDeclaredException {
-<a name="677" href="#677">677</a> 	    StringBuffer sb = <strong>new</strong> StringBuffer();
-<a name="678" href="#678">678</a> 	    <em class="comment">// name</em>
-<a name="679" href="#679">679</a> 	    sb.append(name.toJCRName(resolver));
-<a name="680" href="#680">680</a> 	    <em class="comment">// index</em>
-<a name="681" href="#681">681</a> 	    <strong>int</strong> index = getIndex();
-<a name="682" href="#682">682</a> 	    <em>/**<em>* FIXME the [1] subscript should only be suppressed if the item</em></em>
-<a name="683" href="#683">683</a> <em>	     * in question can't have same-name siblings.</em>
-<a name="684" href="#684">684</a> <em>	     */</em>
-<a name="685" href="#685">685</a> 	    <em class="comment">//if (index > 0) {</em>
-<a name="686" href="#686">686</a> 	    <strong>if</strong> (index > 1) {
-<a name="687" href="#687">687</a> 		sb.append('[');
-<a name="688" href="#688">688</a> 		sb.append(index);
-<a name="689" href="#689">689</a> 		sb.append(']');
-<a name="690" href="#690">690</a> 	    }
-<a name="691" href="#691">691</a> 	    <strong>return</strong> sb.toString();
-<a name="692" href="#692">692</a> 	}
-<a name="693" href="#693">693</a> 
-<a name="694" href="#694">694</a> 	<strong>public</strong> String toString() {
-<a name="695" href="#695">695</a> 	    StringBuffer sb = <strong>new</strong> StringBuffer();
-<a name="696" href="#696">696</a> 	    <em class="comment">// name</em>
-<a name="697" href="#697">697</a> 	    sb.append(name.toString());
-<a name="698" href="#698">698</a> 	    <em class="comment">// index</em>
-<a name="699" href="#699">699</a> 	    <strong>int</strong> index = getIndex();
-<a name="700" href="#700">700</a> 	    <strong>if</strong> (index > 0) {
-<a name="701" href="#701">701</a> 		sb.append('[');
-<a name="702" href="#702">702</a> 		sb.append(index);
-<a name="703" href="#703">703</a> 		sb.append(']');
-<a name="704" href="#704">704</a> 	    }
-<a name="705" href="#705">705</a> 	    <strong>return</strong> sb.toString();
-<a name="706" href="#706">706</a> 	}
-<a name="707" href="#707">707</a> 
-<a name="708" href="#708">708</a> 	<strong>public</strong> <strong>static</strong> PathElement fromString(String s) {
-<a name="709" href="#709">709</a> 	    <strong>if</strong> (s == <strong>null</strong>) {
-<a name="710" href="#710">710</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"null PathElement literal"</span>);
-<a name="711" href="#711">711</a> 	    }
-<a name="712" href="#712">712</a> 	    <strong>if</strong> (s.equals(RootElement.LITERAL)) {
-<a name="713" href="#713">713</a> 		<strong>return</strong> ROOT_ELEMENT;
-<a name="714" href="#714">714</a> 	    } <strong>else</strong> <strong>if</strong> (s.equals(CurrentElement.LITERAL)) {
-<a name="715" href="#715">715</a> 		<strong>return</strong> CURRENT_ELEMENT;
-<a name="716" href="#716">716</a> 	    } <strong>else</strong> <strong>if</strong> (s.equals(ParentElement.LITERAL)) {
-<a name="717" href="#717">717</a> 		<strong>return</strong> PARENT_ELEMENT;
-<a name="718" href="#718">718</a> 	    }
-<a name="719" href="#719">719</a> 
-<a name="720" href="#720">720</a> 	    <strong>int</strong> pos = s.indexOf('[');
-<a name="721" href="#721">721</a> 	    <strong>if</strong> (pos == -1) {
-<a name="722" href="#722">722</a> 		QName name = QName.valueOf(s);
-<a name="723" href="#723">723</a> 		<strong>return</strong> <strong>new</strong> PathElement(name.getNamespaceURI(), name.getLocalName());
-<a name="724" href="#724">724</a> 	    }
-<a name="725" href="#725">725</a> 	    QName name = QName.valueOf(s.substring(0, pos));
-<a name="726" href="#726">726</a> 	    <strong>int</strong> pos1 = s.indexOf(']');
-<a name="727" href="#727">727</a> 	    <strong>if</strong> (pos1 == -1) {
-<a name="728" href="#728">728</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"invalid PathElement literal: "</span> + s + <span class="string">" (missing ']')"</span>);
-<a name="729" href="#729">729</a> 	    }
-<a name="730" href="#730">730</a> 	    <strong>try</strong> {
-<a name="731" href="#731">731</a> 		<strong>int</strong> index = Integer.valueOf(s.substring(pos + 1, pos1)).<strong>int</strong>Value();
-<a name="732" href="#732">732</a> 		<strong>if</strong> (index &lt; 1) {
-<a name="733" href="#733">733</a> 		    <strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"invalid PathElement literal: "</span> + s + <span class="string">" (index is 1-based)"</span>);
-<a name="734" href="#734">734</a> 		}
-<a name="735" href="#735">735</a> 		<strong>return</strong> <strong>new</strong> PathElement(name.getNamespaceURI(), name.getLocalName(), index);
-<a name="736" href="#736">736</a> 	    } <strong>catch</strong> (Throwable t) {
-<a name="737" href="#737">737</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"invalid PathElement literal: "</span> + s + <span class="string">" ("</span> + t.getMessage() + <span class="string">")"</span>);
-<a name="738" href="#738">738</a> 	    }
-<a name="739" href="#739">739</a> 	}
-<a name="740" href="#740">740</a> 
-<a name="741" href="#741">741</a> 	<strong>public</strong> <strong>int</strong> hashCode() {
-<a name="742" href="#742">742</a> 	    <em class="comment">// @todo treat index==0 as index==1?</em>
-<a name="743" href="#743">743</a> 	    <strong>return</strong> 73 * index + name.hashCode();
-<a name="744" href="#744">744</a> 	}
-<a name="745" href="#745">745</a> 
-<a name="746" href="#746">746</a> 	<strong>public</strong> <strong>boolean</strong> equals(Object obj) {
-<a name="747" href="#747">747</a> 	    <strong>if</strong> (<strong>this</strong> == obj) {
-<a name="748" href="#748">748</a> 		<strong>return</strong> <strong>true</strong>;
-<a name="749" href="#749">749</a> 	    }
-<a name="750" href="#750">750</a> 	    <strong>if</strong> (obj instanceof PathElement) {
-<a name="751" href="#751">751</a> 		PathElement other = (PathElement) obj;
-<a name="752" href="#752">752</a> 		<strong>return</strong> name.equals(other.name)
-<a name="753" href="#753">753</a> 			<em class="comment">// @todo treat index==0 as index==1?</em>
-<a name="754" href="#754">754</a> 			&amp;&amp; index == other.index;
-<a name="755" href="#755">755</a> 	    }
-<a name="756" href="#756">756</a> 	    <strong>return</strong> false;
-<a name="757" href="#757">757</a> 	}
-<a name="758" href="#758">758</a>     }
-<a name="759" href="#759">759</a> 
-<a name="760" href="#760">760</a>     <em class="comment">//-------------------------------------------------------&lt; implementation ></em>
-<a name="761" href="#761">761</a>     <strong>private</strong> <strong>static</strong> PathElement[] parse(String jcrPath, PathElement[] master, <a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver)
-<a name="762" href="#762">762</a> 	    throws MalformedPathException {
-<a name="763" href="#763">763</a> 	<em class="comment">// shortcut</em>
-<a name="764" href="#764">764</a> 	<strong>if</strong> (jcrPath.equals(<span class="string">"/"</span>)) {
-<a name="765" href="#765">765</a> 	    <strong>return</strong> <strong>new</strong> PathElement[]{ROOT_ELEMENT};
-<a name="766" href="#766">766</a> 	}
-<a name="767" href="#767">767</a> 
-<a name="768" href="#768">768</a> 	<em class="comment">// split path into path elements</em>
-<a name="769" href="#769">769</a> 	String[] elems = jcrPath.split(<span class="string">"/"</span>, -1);
-<a name="770" href="#770">770</a> 	<strong>if</strong> (elems.length == 0) {
-<a name="771" href="#771">771</a> 	    <strong>throw</strong> <strong>new</strong> MalformedPathException(<span class="string">"empty path"</span>);
-<a name="772" href="#772">772</a> 	}
-<a name="773" href="#773">773</a> 
-<a name="774" href="#774">774</a> 	ArrayList list = <strong>new</strong> ArrayList();
-<a name="775" href="#775">775</a> 	<strong>if</strong> (master != <strong>null</strong>) {
-<a name="776" href="#776">776</a> 	    <em class="comment">// a master path was specified; the 'path' argument is assumed</em>
-<a name="777" href="#777">777</a> 	    <em class="comment">// to be a relative path</em>
-<a name="778" href="#778">778</a> 	    <strong>for</strong> (<strong>int</strong> i = 0; i &lt; master.length; i++) {
-<a name="779" href="#779">779</a> 		list.add(master[i]);
-<a name="780" href="#780">780</a> 	    }
-<a name="781" href="#781">781</a> 	}
-<a name="782" href="#782">782</a> 
-<a name="783" href="#783">783</a> 	<strong>for</strong> (<strong>int</strong> i = 0; i &lt; elems.length; i++) {
-<a name="784" href="#784">784</a> 	    <em class="comment">// validate &amp; parse path element</em>
-<a name="785" href="#785">785</a> 	    String prefix;
-<a name="786" href="#786">786</a> 	    String localName;
-<a name="787" href="#787">787</a> 	    <strong>int</strong> index;
-<a name="788" href="#788">788</a> 
-<a name="789" href="#789">789</a> 	    String elem = elems[i];
-<a name="790" href="#790">790</a> 	    <strong>if</strong> (i == 0 &amp;&amp; elem.length() == 0) {
-<a name="791" href="#791">791</a> 		<em class="comment">// path is absolute, i.e. the first element is the root element</em>
-<a name="792" href="#792">792</a> 		<strong>if</strong> (!list.isEmpty()) {
-<a name="793" href="#793">793</a> 		    <strong>throw</strong> <strong>new</strong> MalformedPathException(<span class="string">"'"</span> + jcrPath + <span class="string">"' is not a relative path"</span>);
-<a name="794" href="#794">794</a> 		}
-<a name="795" href="#795">795</a> 		list.add(ROOT_ELEMENT);
-<a name="796" href="#796">796</a> 		<strong>continue</strong>;
-<a name="797" href="#797">797</a> 	    }
-<a name="798" href="#798">798</a> 	    Matcher matcher = PATH_ELEMENT_PATTERN.matcher(elem);
-<a name="799" href="#799">799</a> 	    <strong>if</strong> (matcher.matches()) {
-<a name="800" href="#800">800</a> 		<strong>if</strong> (matcher.group(1) != <strong>null</strong>) {
-<a name="801" href="#801">801</a> 		    <em class="comment">// group 1 is .</em>
-<a name="802" href="#802">802</a> 		    list.add(CURRENT_ELEMENT);
-<a name="803" href="#803">803</a> 		} <strong>else</strong> <strong>if</strong> (matcher.group(2) != <strong>null</strong>) {
-<a name="804" href="#804">804</a> 		    <em class="comment">// group 2 is ..</em>
-<a name="805" href="#805">805</a> 		    list.add(PARENT_ELEMENT);
-<a name="806" href="#806">806</a> 		} <strong>else</strong> {
-<a name="807" href="#807">807</a> 		    <em class="comment">// element is a name</em>
-<a name="808" href="#808">808</a> 
-<a name="809" href="#809">809</a> 		    <em class="comment">// check for prefix (group 3)</em>
-<a name="810" href="#810">810</a> 		    <strong>if</strong> (matcher.group(3) != <strong>null</strong>) {
-<a name="811" href="#811">811</a> 			<em class="comment">// prefix specified</em>
-<a name="812" href="#812">812</a> 			<em class="comment">// group 4 is namespace prefix excl. delimiter (colon)</em>
-<a name="813" href="#813">813</a> 			prefix = matcher.group(4);
-<a name="814" href="#814">814</a> 		    } <strong>else</strong> {
-<a name="815" href="#815">815</a> 			<em class="comment">// no prefix specified</em>
-<a name="816" href="#816">816</a> 			prefix = <span class="string">""</span>;
-<a name="817" href="#817">817</a> 		    }
+<a name="672" href="#672">672</a> 	<strong>private</strong> PathElement(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name, <strong>int</strong> index) {
+<a name="673" href="#673">673</a> 	    <strong>if</strong> (name == <strong>null</strong>) {
+<a name="674" href="#674">674</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"name must not be null"</span>);
+<a name="675" href="#675">675</a> 	    }
+<a name="676" href="#676">676</a> 	    <strong>if</strong> (index &lt; 1) {
+<a name="677" href="#677">677</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"index is 1-based"</span>);
+<a name="678" href="#678">678</a> 	    }
+<a name="679" href="#679">679</a> 	    <strong>this</strong>.index = index;
+<a name="680" href="#680">680</a> 	    <strong>this</strong>.name = name;
+<a name="681" href="#681">681</a> 	}
+<a name="682" href="#682">682</a> 
+<a name="683" href="#683">683</a> 	<em>/**<em>*</em></em>
+<a name="684" href="#684">684</a> <em>	 * Returns the name of this path element.</em>
+<a name="685" href="#685">685</a> <em>	 *</em>
+<a name="686" href="#686">686</a> <em>	 * @return the name</em>
+<a name="687" href="#687">687</a> <em>	 */</em>
+<a name="688" href="#688">688</a> 	<strong>public</strong> <a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> getName() {
+<a name="689" href="#689">689</a> 	    <strong>return</strong> name;
+<a name="690" href="#690">690</a> 	}
+<a name="691" href="#691">691</a> 
+<a name="692" href="#692">692</a> 	<em>/**<em>*</em></em>
+<a name="693" href="#693">693</a> <em>	 * Returns the 1-based index or 0 if no index was specified (which is</em>
+<a name="694" href="#694">694</a> <em>	 * equivalent to specifying 1).</em>
+<a name="695" href="#695">695</a> <em>	 *</em>
+<a name="696" href="#696">696</a> <em>	 * @return Returns the 1-based index or 0 if no index was specified.</em>
+<a name="697" href="#697">697</a> <em>	 */</em>
+<a name="698" href="#698">698</a> 	<strong>public</strong> <strong>int</strong> getIndex() {
+<a name="699" href="#699">699</a> 	    <strong>return</strong> index;
+<a name="700" href="#700">700</a> 	}
+<a name="701" href="#701">701</a> 
+<a name="702" href="#702">702</a> 	<strong>public</strong> <strong>boolean</strong> denotesRoot() {
+<a name="703" href="#703">703</a> 	    <strong>return</strong> false;
+<a name="704" href="#704">704</a> 	}
+<a name="705" href="#705">705</a> 
+<a name="706" href="#706">706</a> 	<strong>public</strong> String toJCRName(<a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver) throws NoPrefixDeclaredException {
+<a name="707" href="#707">707</a> 	    StringBuffer sb = <strong>new</strong> StringBuffer();
+<a name="708" href="#708">708</a> 	    <em class="comment">// name</em>
+<a name="709" href="#709">709</a> 	    sb.append(name.toJCRName(resolver));
+<a name="710" href="#710">710</a> 	    <em class="comment">// index</em>
+<a name="711" href="#711">711</a> 	    <strong>int</strong> index = getIndex();
+<a name="712" href="#712">712</a> 	    <em>/**<em>* FIXME the [1] subscript should only be suppressed if the item</em></em>
+<a name="713" href="#713">713</a> <em>	     * in question can't have same-name siblings.</em>
+<a name="714" href="#714">714</a> <em>	     */</em>
+<a name="715" href="#715">715</a> 	    <em class="comment">//if (index > 0) {</em>
+<a name="716" href="#716">716</a> 	    <strong>if</strong> (index > 1) {
+<a name="717" href="#717">717</a> 		sb.append('[');
+<a name="718" href="#718">718</a> 		sb.append(index);
+<a name="719" href="#719">719</a> 		sb.append(']');
+<a name="720" href="#720">720</a> 	    }
+<a name="721" href="#721">721</a> 	    <strong>return</strong> sb.toString();
+<a name="722" href="#722">722</a> 	}
+<a name="723" href="#723">723</a> 
+<a name="724" href="#724">724</a> 	<strong>public</strong> String toString() {
+<a name="725" href="#725">725</a> 	    StringBuffer sb = <strong>new</strong> StringBuffer();
+<a name="726" href="#726">726</a> 	    <em class="comment">// name</em>
+<a name="727" href="#727">727</a> 	    sb.append(name.toString());
+<a name="728" href="#728">728</a> 	    <em class="comment">// index</em>
+<a name="729" href="#729">729</a> 	    <strong>int</strong> index = getIndex();
+<a name="730" href="#730">730</a> 	    <strong>if</strong> (index > 0) {
+<a name="731" href="#731">731</a> 		sb.append('[');
+<a name="732" href="#732">732</a> 		sb.append(index);
+<a name="733" href="#733">733</a> 		sb.append(']');
+<a name="734" href="#734">734</a> 	    }
+<a name="735" href="#735">735</a> 	    <strong>return</strong> sb.toString();
+<a name="736" href="#736">736</a> 	}
+<a name="737" href="#737">737</a> 
+<a name="738" href="#738">738</a> 	<strong>public</strong> <strong>static</strong> PathElement fromString(String s) {
+<a name="739" href="#739">739</a> 	    <strong>if</strong> (s == <strong>null</strong>) {
+<a name="740" href="#740">740</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"null PathElement literal"</span>);
+<a name="741" href="#741">741</a> 	    }
+<a name="742" href="#742">742</a> 	    <strong>if</strong> (s.equals(RootElement.LITERAL)) {
+<a name="743" href="#743">743</a> 		<strong>return</strong> ROOT_ELEMENT;
+<a name="744" href="#744">744</a> 	    } <strong>else</strong> <strong>if</strong> (s.equals(CurrentElement.LITERAL)) {
+<a name="745" href="#745">745</a> 		<strong>return</strong> CURRENT_ELEMENT;
+<a name="746" href="#746">746</a> 	    } <strong>else</strong> <strong>if</strong> (s.equals(ParentElement.LITERAL)) {
+<a name="747" href="#747">747</a> 		<strong>return</strong> PARENT_ELEMENT;
+<a name="748" href="#748">748</a> 	    }
+<a name="749" href="#749">749</a> 
+<a name="750" href="#750">750</a> 	    <strong>int</strong> pos = s.indexOf('[');
+<a name="751" href="#751">751</a> 	    <strong>if</strong> (pos == -1) {
+<a name="752" href="#752">752</a> 		QName name = QName.valueOf(s);
+<a name="753" href="#753">753</a> 		<strong>return</strong> <strong>new</strong> PathElement(name.getNamespaceURI(), name.getLocalName());
+<a name="754" href="#754">754</a> 	    }
+<a name="755" href="#755">755</a> 	    QName name = QName.valueOf(s.substring(0, pos));
+<a name="756" href="#756">756</a> 	    <strong>int</strong> pos1 = s.indexOf(']');
+<a name="757" href="#757">757</a> 	    <strong>if</strong> (pos1 == -1) {
+<a name="758" href="#758">758</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"invalid PathElement literal: "</span> + s + <span class="string">" (missing ']')"</span>);
+<a name="759" href="#759">759</a> 	    }
+<a name="760" href="#760">760</a> 	    <strong>try</strong> {
+<a name="761" href="#761">761</a> 		<strong>int</strong> index = Integer.valueOf(s.substring(pos + 1, pos1)).<strong>int</strong>Value();
+<a name="762" href="#762">762</a> 		<strong>if</strong> (index &lt; 1) {
+<a name="763" href="#763">763</a> 		    <strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"invalid PathElement literal: "</span> + s + <span class="string">" (index is 1-based)"</span>);
+<a name="764" href="#764">764</a> 		}
+<a name="765" href="#765">765</a> 		<strong>return</strong> <strong>new</strong> PathElement(name.getNamespaceURI(), name.getLocalName(), index);
+<a name="766" href="#766">766</a> 	    } <strong>catch</strong> (Throwable t) {
+<a name="767" href="#767">767</a> 		<strong>throw</strong> <strong>new</strong> IllegalArgumentException(<span class="string">"invalid PathElement literal: "</span> + s + <span class="string">" ("</span> + t.getMessage() + <span class="string">")"</span>);
+<a name="768" href="#768">768</a> 	    }
+<a name="769" href="#769">769</a> 	}
+<a name="770" href="#770">770</a> 
+<a name="771" href="#771">771</a> 	<strong>public</strong> <strong>int</strong> hashCode() {
+<a name="772" href="#772">772</a> 	    <em class="comment">// @todo treat index==0 as index==1?</em>
+<a name="773" href="#773">773</a> 	    <strong>return</strong> 73 * index + name.hashCode();
+<a name="774" href="#774">774</a> 	}
+<a name="775" href="#775">775</a> 
+<a name="776" href="#776">776</a> 	<strong>public</strong> <strong>boolean</strong> equals(Object obj) {
+<a name="777" href="#777">777</a> 	    <strong>if</strong> (<strong>this</strong> == obj) {
+<a name="778" href="#778">778</a> 		<strong>return</strong> <strong>true</strong>;
+<a name="779" href="#779">779</a> 	    }
+<a name="780" href="#780">780</a> 	    <strong>if</strong> (obj instanceof PathElement) {
+<a name="781" href="#781">781</a> 		PathElement other = (PathElement) obj;
+<a name="782" href="#782">782</a> 		<strong>return</strong> name.equals(other.name)
+<a name="783" href="#783">783</a> 			<em class="comment">// @todo treat index==0 as index==1?</em>
+<a name="784" href="#784">784</a> 			&amp;&amp; index == other.index;
+<a name="785" href="#785">785</a> 	    }
+<a name="786" href="#786">786</a> 	    <strong>return</strong> false;
+<a name="787" href="#787">787</a> 	}
+<a name="788" href="#788">788</a>     }
+<a name="789" href="#789">789</a> 
+<a name="790" href="#790">790</a>     <em class="comment">//-------------------------------------------------------&lt; implementation ></em>
+<a name="791" href="#791">791</a>     <strong>private</strong> <strong>static</strong> PathElement[] parse(String jcrPath, PathElement[] master, <a href="../../../../org/apache/jackrabbit/core/NamespaceResolver.html">NamespaceResolver</a> resolver)
+<a name="792" href="#792">792</a> 	    throws MalformedPathException {
+<a name="793" href="#793">793</a> 	<em class="comment">// shortcut</em>
+<a name="794" href="#794">794</a> 	<strong>if</strong> (jcrPath.equals(<span class="string">"/"</span>)) {
+<a name="795" href="#795">795</a> 	    <strong>return</strong> <strong>new</strong> PathElement[]{ROOT_ELEMENT};
+<a name="796" href="#796">796</a> 	}
+<a name="797" href="#797">797</a> 
+<a name="798" href="#798">798</a> 	<em class="comment">// split path into path elements</em>
+<a name="799" href="#799">799</a> 	String[] elems = jcrPath.split(<span class="string">"/"</span>, -1);
+<a name="800" href="#800">800</a> 	<strong>if</strong> (elems.length == 0) {
+<a name="801" href="#801">801</a> 	    <strong>throw</strong> <strong>new</strong> MalformedPathException(<span class="string">"empty path"</span>);
+<a name="802" href="#802">802</a> 	}
+<a name="803" href="#803">803</a> 
+<a name="804" href="#804">804</a> 	ArrayList list = <strong>new</strong> ArrayList();
+<a name="805" href="#805">805</a> 	<strong>if</strong> (master != <strong>null</strong>) {
+<a name="806" href="#806">806</a> 	    <em class="comment">// a master path was specified; the 'path' argument is assumed</em>
+<a name="807" href="#807">807</a> 	    <em class="comment">// to be a relative path</em>
+<a name="808" href="#808">808</a> 	    <strong>for</strong> (<strong>int</strong> i = 0; i &lt; master.length; i++) {
+<a name="809" href="#809">809</a> 		list.add(master[i]);
+<a name="810" href="#810">810</a> 	    }
+<a name="811" href="#811">811</a> 	}
+<a name="812" href="#812">812</a> 
+<a name="813" href="#813">813</a> 	<strong>for</strong> (<strong>int</strong> i = 0; i &lt; elems.length; i++) {
+<a name="814" href="#814">814</a> 	    <em class="comment">// validate &amp; parse path element</em>
+<a name="815" href="#815">815</a> 	    String prefix;
+<a name="816" href="#816">816</a> 	    String localName;
+<a name="817" href="#817">817</a> 	    <strong>int</strong> index;
 <a name="818" href="#818">818</a> 
-<a name="819" href="#819">819</a> 		    <em class="comment">// group 5 is localName</em>
-<a name="820" href="#820">820</a> 		    localName = matcher.group(5);
-<a name="821" href="#821">821</a> 
-<a name="822" href="#822">822</a> 		    <em class="comment">// check for index (group 6)</em>
-<a name="823" href="#823">823</a> 		    <strong>if</strong> (matcher.group(6) != <strong>null</strong>) {
-<a name="824" href="#824">824</a> 			<em class="comment">// index specified</em>
-<a name="825" href="#825">825</a> 			<em class="comment">// group 7 is index excl. brackets</em>
-<a name="826" href="#826">826</a> 			index = Integer.parseInt(matcher.group(7));
-<a name="827" href="#827">827</a> 		    } <strong>else</strong> {
-<a name="828" href="#828">828</a> 			<em class="comment">// no index specified</em>
-<a name="829" href="#829">829</a> 			index = 0;
-<a name="830" href="#830">830</a> 		    }
-<a name="831" href="#831">831</a> 
-<a name="832" href="#832">832</a> 		    String nsURI;
-<a name="833" href="#833">833</a> 		    <strong>try</strong> {
-<a name="834" href="#834">834</a> 			nsURI = resolver.getURI(prefix);
-<a name="835" href="#835">835</a> 		    } <strong>catch</strong> (NamespaceException nse) {
-<a name="836" href="#836">836</a> 			<em class="comment">// unknown prefix</em>
-<a name="837" href="#837">837</a> 			<strong>throw</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/MalformedPathException.html">MalformedPathException</a>(<span class="string">"'"</span> + jcrPath + <span class="string">"' is not a valid path: '"</span> + elem + <span class="string">"' specifies an unmapped namespace prefix"</span>);
-<a name="838" href="#838">838</a> 		    }
-<a name="839" href="#839">839</a> 
-<a name="840" href="#840">840</a> 		    PathElement element;
-<a name="841" href="#841">841</a> 		    <strong>if</strong> (index == 0) {
-<a name="842" href="#842">842</a> 			element = <strong>new</strong> PathElement(nsURI, localName);
-<a name="843" href="#843">843</a> 		    } <strong>else</strong> {
-<a name="844" href="#844">844</a> 			element = <strong>new</strong> PathElement(nsURI, localName, index);
-<a name="845" href="#845">845</a> 		    }
-<a name="846" href="#846">846</a> 		    list.add(element);
-<a name="847" href="#847">847</a> 		}
-<a name="848" href="#848">848</a> 	    } <strong>else</strong> {
-<a name="849" href="#849">849</a> 		<em class="comment">// illegal syntax for path element</em>
-<a name="850" href="#850">850</a> 		<strong>throw</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/MalformedPathException.html">MalformedPathException</a>(<span class="string">"'"</span> + jcrPath + <span class="string">"' is not a valid path: '"</span> + elem + <span class="string">"' is not a legal path element"</span>);
-<a name="851" href="#851">851</a> 	    }
-<a name="852" href="#852">852</a> 	}
-<a name="853" href="#853">853</a> 	<strong>return</strong> (PathElement[]) list.toArray(<strong>new</strong> PathElement[list.size()]);
-<a name="854" href="#854">854</a>     }
-<a name="855" href="#855">855</a> }
+<a name="819" href="#819">819</a> 	    String elem = elems[i];
+<a name="820" href="#820">820</a> 	    <strong>if</strong> (i == 0 &amp;&amp; elem.length() == 0) {
+<a name="821" href="#821">821</a> 		<em class="comment">// path is absolute, i.e. the first element is the root element</em>
+<a name="822" href="#822">822</a> 		<strong>if</strong> (!list.isEmpty()) {
+<a name="823" href="#823">823</a> 		    <strong>throw</strong> <strong>new</strong> MalformedPathException(<span class="string">"'"</span> + jcrPath + <span class="string">"' is not a relative path"</span>);
+<a name="824" href="#824">824</a> 		}
+<a name="825" href="#825">825</a> 		list.add(ROOT_ELEMENT);
+<a name="826" href="#826">826</a> 		<strong>continue</strong>;
+<a name="827" href="#827">827</a> 	    }
+<a name="828" href="#828">828</a> 	    Matcher matcher = PATH_ELEMENT_PATTERN.matcher(elem);
+<a name="829" href="#829">829</a> 	    <strong>if</strong> (matcher.matches()) {
+<a name="830" href="#830">830</a> 		<strong>if</strong> (matcher.group(1) != <strong>null</strong>) {
+<a name="831" href="#831">831</a> 		    <em class="comment">// group 1 is .</em>
+<a name="832" href="#832">832</a> 		    list.add(CURRENT_ELEMENT);
+<a name="833" href="#833">833</a> 		} <strong>else</strong> <strong>if</strong> (matcher.group(2) != <strong>null</strong>) {
+<a name="834" href="#834">834</a> 		    <em class="comment">// group 2 is ..</em>
+<a name="835" href="#835">835</a> 		    list.add(PARENT_ELEMENT);
+<a name="836" href="#836">836</a> 		} <strong>else</strong> {
+<a name="837" href="#837">837</a> 		    <em class="comment">// element is a name</em>
+<a name="838" href="#838">838</a> 
+<a name="839" href="#839">839</a> 		    <em class="comment">// check for prefix (group 3)</em>
+<a name="840" href="#840">840</a> 		    <strong>if</strong> (matcher.group(3) != <strong>null</strong>) {
+<a name="841" href="#841">841</a> 			<em class="comment">// prefix specified</em>
+<a name="842" href="#842">842</a> 			<em class="comment">// group 4 is namespace prefix excl. delimiter (colon)</em>
+<a name="843" href="#843">843</a> 			prefix = matcher.group(4);
+<a name="844" href="#844">844</a> 		    } <strong>else</strong> {
+<a name="845" href="#845">845</a> 			<em class="comment">// no prefix specified</em>
+<a name="846" href="#846">846</a> 			prefix = <span class="string">""</span>;
+<a name="847" href="#847">847</a> 		    }
+<a name="848" href="#848">848</a> 
+<a name="849" href="#849">849</a> 		    <em class="comment">// group 5 is localName</em>
+<a name="850" href="#850">850</a> 		    localName = matcher.group(5);
+<a name="851" href="#851">851</a> 
+<a name="852" href="#852">852</a> 		    <em class="comment">// check for index (group 6)</em>
+<a name="853" href="#853">853</a> 		    <strong>if</strong> (matcher.group(6) != <strong>null</strong>) {
+<a name="854" href="#854">854</a> 			<em class="comment">// index specified</em>
+<a name="855" href="#855">855</a> 			<em class="comment">// group 7 is index excl. brackets</em>
+<a name="856" href="#856">856</a> 			index = Integer.parseInt(matcher.group(7));
+<a name="857" href="#857">857</a> 		    } <strong>else</strong> {
+<a name="858" href="#858">858</a> 			<em class="comment">// no index specified</em>
+<a name="859" href="#859">859</a> 			index = 0;
+<a name="860" href="#860">860</a> 		    }
+<a name="861" href="#861">861</a> 
+<a name="862" href="#862">862</a> 		    String nsURI;
+<a name="863" href="#863">863</a> 		    <strong>try</strong> {
+<a name="864" href="#864">864</a> 			nsURI = resolver.getURI(prefix);
+<a name="865" href="#865">865</a> 		    } <strong>catch</strong> (NamespaceException nse) {
+<a name="866" href="#866">866</a> 			<em class="comment">// unknown prefix</em>
+<a name="867" href="#867">867</a> 			<strong>throw</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/MalformedPathException.html">MalformedPathException</a>(<span class="string">"'"</span> + jcrPath + <span class="string">"' is not a valid path: '"</span> + elem + <span class="string">"' specifies an unmapped namespace prefix"</span>);
+<a name="868" href="#868">868</a> 		    }
+<a name="869" href="#869">869</a> 
+<a name="870" href="#870">870</a> 		    PathElement element;
+<a name="871" href="#871">871</a> 		    <strong>if</strong> (index == 0) {
+<a name="872" href="#872">872</a> 			element = <strong>new</strong> PathElement(nsURI, localName);
+<a name="873" href="#873">873</a> 		    } <strong>else</strong> {
+<a name="874" href="#874">874</a> 			element = <strong>new</strong> PathElement(nsURI, localName, index);
+<a name="875" href="#875">875</a> 		    }
+<a name="876" href="#876">876</a> 		    list.add(element);
+<a name="877" href="#877">877</a> 		}
+<a name="878" href="#878">878</a> 	    } <strong>else</strong> {
+<a name="879" href="#879">879</a> 		<em class="comment">// illegal syntax for path element</em>
+<a name="880" href="#880">880</a> 		<strong>throw</strong> <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/MalformedPathException.html">MalformedPathException</a>(<span class="string">"'"</span> + jcrPath + <span class="string">"' is not a valid path: '"</span> + elem + <span class="string">"' is not a legal path element"</span>);
+<a name="881" href="#881">881</a> 	    }
+<a name="882" href="#882">882</a> 	}
+<a name="883" href="#883">883</a> 	<strong>return</strong> (PathElement[]) list.toArray(<strong>new</strong> PathElement[list.size()]);
+<a name="884" href="#884">884</a>     }
+<a name="885" href="#885">885</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>

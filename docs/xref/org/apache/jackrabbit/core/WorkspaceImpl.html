@@ -30,959 +30,981 @@
 <a name="21" href="#21">21</a>  <strong>import</strong> org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 <a name="22" href="#22">22</a>  <strong>import</strong> org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 <a name="23" href="#23">23</a>  <strong>import</strong> org.apache.jackrabbit.core.util.uuid.UUID;
-<a name="24" href="#24">24</a>  <strong>import</strong> org.apache.xml.serialize.OutputFormat;
-<a name="25" href="#25">25</a>  <strong>import</strong> org.apache.xml.serialize.XMLSerializer;
-<a name="26" href="#26">26</a>  <strong>import</strong> org.xml.sax.ContentHandler;
-<a name="27" href="#27">27</a>  <strong>import</strong> org.xml.sax.SAXException;
-<a name="28" href="#28">28</a>  
-<a name="29" href="#29">29</a>  <strong>import</strong> javax.jcr.*;
-<a name="30" href="#30">30</a>  <strong>import</strong> javax.jcr.access.AccessDeniedException;
-<a name="31" href="#31">31</a>  <strong>import</strong> javax.jcr.access.AccessManager;
-<a name="32" href="#32">32</a>  <strong>import</strong> javax.jcr.access.Permission;
-<a name="33" href="#33">33</a>  <strong>import</strong> javax.jcr.nodetype.ConstraintViolationException;
-<a name="34" href="#34">34</a>  <strong>import</strong> javax.jcr.nodetype.NodeTypeManager;
-<a name="35" href="#35">35</a>  <strong>import</strong> javax.jcr.observation.EventListener;
-<a name="36" href="#36">36</a>  <strong>import</strong> javax.jcr.observation.EventListenerIterator;
-<a name="37" href="#37">37</a>  <strong>import</strong> javax.jcr.observation.ObservationManager;
-<a name="38" href="#38">38</a>  <strong>import</strong> javax.jcr.query.QueryManager;
-<a name="39" href="#39">39</a>  <strong>import</strong> javax.jcr.version.Version;
-<a name="40" href="#40">40</a>  <strong>import</strong> javax.jcr.version.VersionException;
-<a name="41" href="#41">41</a>  <strong>import</strong> java.io.IOException;
-<a name="42" href="#42">42</a>  <strong>import</strong> java.io.OutputStream;
-<a name="43" href="#43">43</a>  <strong>import</strong> java.io.PrintStream;
-<a name="44" href="#44">44</a>  <strong>import</strong> java.util.HashSet;
-<a name="45" href="#45">45</a>  <strong>import</strong> java.util.Iterator;
-<a name="46" href="#46">46</a>  
-<a name="47" href="#47">47</a>  <em>/**<em>*</em></em>
-<a name="48" href="#48">48</a>  <em> * A &lt;code>WorkspaceImpl&lt;/code> ...</em>
-<a name="49" href="#49">49</a>  <em> *</em>
-<a name="50" href="#50">50</a>  <em> * @author Stefan Guggisberg</em>
-<a name="51" href="#51">51</a>  <em> * @version $Revision: 1.69 $, $Date: 2004/09/06 16:42:48 $</em>
-<a name="52" href="#52">52</a>  <em> */</em>
-<a name="53" href="#53">53</a>  <strong>class</strong> <a href="../../../../org/apache/jackrabbit/core/WorkspaceImpl.html">WorkspaceImpl</a> implements Workspace {
-<a name="54" href="#54">54</a>  
-<a name="55" href="#55">55</a>      <strong>private</strong> <strong>static</strong> Logger log = Logger.getLogger(WorkspaceImpl.<strong>class</strong>);
-<a name="56" href="#56">56</a>  
-<a name="57" href="#57">57</a>      <em>/**<em>*</em></em>
-<a name="58" href="#58">58</a>  <em>     * The name of this &lt;code>Workspace&lt;/code></em>
-<a name="59" href="#59">59</a>  <em>     */</em>
-<a name="60" href="#60">60</a>      <strong>protected</strong> <strong>final</strong> String wspName;
-<a name="61" href="#61">61</a>  
-<a name="62" href="#62">62</a>      <em>/**<em>*</em></em>
-<a name="63" href="#63">63</a>  <em>     * The repository that created this workspace instance</em>
-<a name="64" href="#64">64</a>  <em>     */</em>
-<a name="65" href="#65">65</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryImpl.html">RepositoryImpl</a> rep;
-<a name="66" href="#66">66</a>  
-<a name="67" href="#67">67</a>      <em>/**<em>*</em></em>
-<a name="68" href="#68">68</a>  <em>     * The persistent state mgr associated with the workspace represented by &lt;i>this&lt;/i></em>
-<a name="69" href="#69">69</a>  <em>     * &lt;code>Workspace&lt;/code> instance.</em>
-<a name="70" href="#70">70</a>  <em>     */</em>
-<a name="71" href="#71">71</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentItemStateManager.html">PersistentItemStateManager</a> persistentStateMgr;
-<a name="72" href="#72">72</a>  
-<a name="73" href="#73">73</a>      <em>/**<em>*</em></em>
-<a name="74" href="#74">74</a>  <em>     * The reference mgr associated with the workspace represented by &lt;i>this&lt;/i></em>
-<a name="75" href="#75">75</a>  <em>     * &lt;code>Workspace&lt;/code> instance.</em>
-<a name="76" href="#76">76</a>  <em>     */</em>
-<a name="77" href="#77">77</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/state/ReferenceManager.html">ReferenceManager</a> refMgr;
-<a name="78" href="#78">78</a>  
-<a name="79" href="#79">79</a>      <em>/**<em>*</em></em>
-<a name="80" href="#80">80</a>  <em>     * The hierarchy mgr that reflects persistent state only</em>
-<a name="81" href="#81">81</a>  <em>     * (i.e. that is isolated from transient changes made through</em>
-<a name="82" href="#82">82</a>  <em>     * the session).</em>
-<a name="83" href="#83">83</a>  <em>     */</em>
-<a name="84" href="#84">84</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/HierarchyManagerImpl.html">HierarchyManagerImpl</a> hierMgr;
-<a name="85" href="#85">85</a>  
-<a name="86" href="#86">86</a>      <em>/**<em>*</em></em>
-<a name="87" href="#87">87</a>  <em>     * The &lt;code>ObservationManager&lt;/code> instance for this session.</em>
-<a name="88" href="#88">88</a>  <em>     */</em>
-<a name="89" href="#89">89</a>      <strong>protected</strong> ObservationManager obsMgr;
-<a name="90" href="#90">90</a>  
-<a name="91" href="#91">91</a>      <em>/**<em>*</em></em>
-<a name="92" href="#92">92</a>  <em>     * the session that was used to acquire this &lt;code>Workspace&lt;/code></em>
-<a name="93" href="#93">93</a>  <em>     */</em>
-<a name="94" href="#94">94</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/SessionImpl.html">SessionImpl</a> session;
-<a name="95" href="#95">95</a>  
-<a name="96" href="#96">96</a>      <em>/**<em>*</em></em>
-<a name="97" href="#97">97</a>  <em>     * Package private constructor.</em>
-<a name="98" href="#98">98</a>  <em>     *</em>
-<a name="99" href="#99">99</a>  <em>     * @param wspName</em>
-<a name="100" href="#100">100</a> <em>     * @param persistentStateMgr</em>
-<a name="101" href="#101">101</a> <em>     * @param rep</em>
-<a name="102" href="#102">102</a> <em>     * @param session</em>
-<a name="103" href="#103">103</a> <em>     */</em>
-<a name="104" href="#104">104</a>     <a href="../../../../org/apache/jackrabbit/core/WorkspaceImpl.html">WorkspaceImpl</a>(String wspName, <a href="../../../../org/apache/jackrabbit/core/state/PersistentItemStateManager.html">PersistentItemStateManager</a> persistentStateMgr,
-<a name="105" href="#105">105</a> 		  ReferenceManager refMgr, RepositoryImpl rep, SessionImpl session) {
-<a name="106" href="#106">106</a> 	<strong>this</strong>.wspName = wspName;
-<a name="107" href="#107">107</a> 	<strong>this</strong>.rep = rep;
-<a name="108" href="#108">108</a> 	<strong>this</strong>.persistentStateMgr = persistentStateMgr;
-<a name="109" href="#109">109</a> 	<strong>this</strong>.refMgr = refMgr;
-<a name="110" href="#110">110</a> 	hierMgr = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/HierarchyManagerImpl.html">HierarchyManagerImpl</a>(rep.getRootNodeUUID(), persistentStateMgr, session.getNamespaceResolver());
-<a name="111" href="#111">111</a> 	<strong>this</strong>.session = session;
-<a name="112" href="#112">112</a>     }
-<a name="113" href="#113">113</a> 
-<a name="114" href="#114">114</a>     <a href="../../../../org/apache/jackrabbit/core/RepositoryImpl.html">RepositoryImpl</a> getRepository() {
-<a name="115" href="#115">115</a> 	<strong>return</strong> rep;
-<a name="116" href="#116">116</a>     }
-<a name="117" href="#117">117</a> 
-<a name="118" href="#118">118</a>     <a href="../../../../org/apache/jackrabbit/core/state/PersistentItemStateManager.html">PersistentItemStateManager</a> getPersistentStateManager() {
-<a name="119" href="#119">119</a> 	<strong>return</strong> persistentStateMgr;
-<a name="120" href="#120">120</a>     }
-<a name="121" href="#121">121</a> 
-<a name="122" href="#122">122</a>     <a href="../../../../org/apache/jackrabbit/core/state/ReferenceManager.html">ReferenceManager</a> getReferenceManager() {
-<a name="123" href="#123">123</a> 	<strong>return</strong> refMgr;
-<a name="124" href="#124">124</a>     }
-<a name="125" href="#125">125</a> 
-<a name="126" href="#126">126</a>     <em>/**<em>*</em></em>
-<a name="127" href="#127">127</a> <em>     * Dumps the state of this &lt;code>Workspace&lt;/code> instance</em>
-<a name="128" href="#128">128</a> <em>     * (used for diagnostic purposes).</em>
-<a name="129" href="#129">129</a> <em>     *</em>
-<a name="130" href="#130">130</a> <em>     * @param ps</em>
-<a name="131" href="#131">131</a> <em>     * @throws RepositoryException</em>
-<a name="132" href="#132">132</a> <em>     */</em>
-<a name="133" href="#133">133</a>     <strong>void</strong> dump(PrintStream ps) throws RepositoryException {
-<a name="134" href="#134">134</a> 	ps.println(<span class="string">"Workspace: "</span> + wspName + <span class="string">" ("</span> + <strong>this</strong> + <span class="string">")"</span>);
-<a name="135" href="#135">135</a> 	ps.println();
-<a name="136" href="#136">136</a> 	persistentStateMgr.dump(ps);
-<a name="137" href="#137">137</a>     }
-<a name="138" href="#138">138</a> 
-<a name="139" href="#139">139</a>     <em>/**<em>*</em></em>
-<a name="140" href="#140">140</a> <em>     * Disposes this &lt;code>WorkspaceImpl&lt;/code> and frees resources.</em>
-<a name="141" href="#141">141</a> <em>     */</em>
-<a name="142" href="#142">142</a>     <strong>void</strong> dispose() {
-<a name="143" href="#143">143</a> 	<strong>try</strong> {
-<a name="144" href="#144">144</a> 	    ObservationManager om = getObservationManager();
-<a name="145" href="#145">145</a> 	    EventListenerIterator it = om.getRegisteredEventListeners();
-<a name="146" href="#146">146</a> 	    <strong>while</strong> (it.hasNext()) {
-<a name="147" href="#147">147</a> 		EventListener l = it.nextEventListener();
-<a name="148" href="#148">148</a> 		log.debug(<span class="string">"removing EventListener: "</span> + l);
-<a name="149" href="#149">149</a> 		om.removeEventListener(l);
-<a name="150" href="#150">150</a> 	    }
-<a name="151" href="#151">151</a> 	} <strong>catch</strong> (RepositoryException e) {
-<a name="152" href="#152">152</a> 	    log.error(<span class="string">"Exception while disposing Workspace:"</span>, e);
-<a name="153" href="#153">153</a> 	}
-<a name="154" href="#154">154</a>     }
-<a name="155" href="#155">155</a> 
-<a name="156" href="#156">156</a>     <em class="comment">//-----------&lt; misc. static helper methods for cross-workspace operations ></em>
-<a name="157" href="#157">157</a>     <em>/**<em>*</em></em>
-<a name="158" href="#158">158</a> <em>     * @param nodePath</em>
-<a name="159" href="#159">159</a> <em>     * @param nsResolver</em>
-<a name="160" href="#160">160</a> <em>     * @param hierMgr</em>
-<a name="161" href="#161">161</a> <em>     * @param stateMgr</em>
-<a name="162" href="#162">162</a> <em>     * @return</em>
-<a name="163" href="#163">163</a> <em>     * @throws PathNotFoundException</em>
-<a name="164" href="#164">164</a> <em>     * @throws RepositoryException</em>
-<a name="165" href="#165">165</a> <em>     */</em>
-<a name="166" href="#166">166</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> getNodeState(String nodePath,
-<a name="167" href="#167">167</a> 						      NamespaceResolver nsResolver,
-<a name="168" href="#168">168</a> 						      HierarchyManagerImpl hierMgr,
-<a name="169" href="#169">169</a> 						      PersistentItemStateManager stateMgr)
-<a name="170" href="#170">170</a> 	    throws PathNotFoundException, RepositoryException {
-<a name="171" href="#171">171</a> 	<strong>try</strong> {
-<a name="172" href="#172">172</a> 	    <strong>return</strong> getNodeState(Path.create(nodePath, nsResolver, <strong>true</strong>), hierMgr, stateMgr);
-<a name="173" href="#173">173</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
-<a name="174" href="#174">174</a> 	    String msg = <span class="string">"invalid path: "</span> + nodePath;
-<a name="175" href="#175">175</a> 	    log.error(msg, mpe);
-<a name="176" href="#176">176</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
-<a name="177" href="#177">177</a> 	}
-<a name="178" href="#178">178</a>     }
-<a name="179" href="#179">179</a> 
-<a name="180" href="#180">180</a>     <em>/**<em>*</em></em>
-<a name="181" href="#181">181</a> <em>     * @param path</em>
-<a name="182" href="#182">182</a> <em>     * @param nsResolver</em>
-<a name="183" href="#183">183</a> <em>     * @param hierMgr</em>
-<a name="184" href="#184">184</a> <em>     * @param stateMgr</em>
-<a name="185" href="#185">185</a> <em>     * @return</em>
-<a name="186" href="#186">186</a> <em>     * @throws PathNotFoundException</em>
-<a name="187" href="#187">187</a> <em>     * @throws RepositoryException</em>
-<a name="188" href="#188">188</a> <em>     */</em>
-<a name="189" href="#189">189</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> getParentNodeState(String path,
-<a name="190" href="#190">190</a> 							    NamespaceResolver nsResolver,
-<a name="191" href="#191">191</a> 							    HierarchyManagerImpl hierMgr,
-<a name="192" href="#192">192</a> 							    PersistentItemStateManager stateMgr)
-<a name="193" href="#193">193</a> 
-<a name="194" href="#194">194</a> 	    throws PathNotFoundException, RepositoryException {
-<a name="195" href="#195">195</a> 	<strong>try</strong> {
-<a name="196" href="#196">196</a> 	    <strong>return</strong> getNodeState(Path.create(path, nsResolver, <strong>true</strong>).getAncestor(1), hierMgr, stateMgr);
-<a name="197" href="#197">197</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
-<a name="198" href="#198">198</a> 	    String msg = <span class="string">"invalid path: "</span> + path;
-<a name="199" href="#199">199</a> 	    log.error(msg, mpe);
-<a name="200" href="#200">200</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
-<a name="201" href="#201">201</a> 	}
-<a name="202" href="#202">202</a>     }
-<a name="203" href="#203">203</a> 
-<a name="204" href="#204">204</a>     <em>/**<em>*</em></em>
-<a name="205" href="#205">205</a> <em>     * @param nodePath</em>
-<a name="206" href="#206">206</a> <em>     * @param hierMgr</em>
-<a name="207" href="#207">207</a> <em>     * @param stateMgr</em>
-<a name="208" href="#208">208</a> <em>     * @return</em>
-<a name="209" href="#209">209</a> <em>     * @throws PathNotFoundException</em>
-<a name="210" href="#210">210</a> <em>     * @throws RepositoryException</em>
-<a name="211" href="#211">211</a> <em>     */</em>
-<a name="212" href="#212">212</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> getNodeState(<a href="../../../../org/apache/jackrabbit/core/Path.html">Path</a> nodePath,
-<a name="213" href="#213">213</a> 						      HierarchyManagerImpl hierMgr,
-<a name="214" href="#214">214</a> 						      PersistentItemStateManager stateMgr)
-<a name="215" href="#215">215</a> 	    throws PathNotFoundException, RepositoryException {
-<a name="216" href="#216">216</a> 	<strong>try</strong> {
-<a name="217" href="#217">217</a> 	    ItemId id = hierMgr.resolvePath(nodePath);
-<a name="218" href="#218">218</a> 	    <strong>if</strong> (!id.denotesNode()) {
-<a name="219" href="#219">219</a> 		<strong>throw</strong> <strong>new</strong> PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
-<a name="220" href="#220">220</a> 	    }
-<a name="221" href="#221">221</a> 	    <strong>return</strong> getNodeState((NodeId) id, stateMgr);
-<a name="222" href="#222">222</a> 	} <strong>catch</strong> (NoSuchItemStateException nsise) {
-<a name="223" href="#223">223</a> 	    <strong>throw</strong> <strong>new</strong> PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
-<a name="224" href="#224">224</a> 	} <strong>catch</strong> (ItemStateException ise) {
-<a name="225" href="#225">225</a> 	    String msg = <span class="string">"internal error: failed to retrieve state of "</span> + hierMgr.safeGetJCRPath(nodePath);
-<a name="226" href="#226">226</a> 	    log.error(msg, ise);
-<a name="227" href="#227">227</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
-<a name="228" href="#228">228</a> 	}
-<a name="229" href="#229">229</a>     }
-<a name="230" href="#230">230</a> 
-<a name="231" href="#231">231</a>     <em>/**<em>*</em></em>
-<a name="232" href="#232">232</a> <em>     * @param id</em>
-<a name="233" href="#233">233</a> <em>     * @param stateMgr</em>
-<a name="234" href="#234">234</a> <em>     * @return</em>
-<a name="235" href="#235">235</a> <em>     * @throws NoSuchItemStateException</em>
-<a name="236" href="#236">236</a> <em>     * @throws ItemStateException</em>
-<a name="237" href="#237">237</a> <em>     */</em>
-<a name="238" href="#238">238</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> getNodeState(<a href="../../../../org/apache/jackrabbit/core/NodeId.html">NodeId</a> id,
-<a name="239" href="#239">239</a> 						      PersistentItemStateManager stateMgr)
-<a name="240" href="#240">240</a> 	    throws NoSuchItemStateException, ItemStateException {
-<a name="241" href="#241">241</a> 	<strong>return</strong> (PersistentNodeState) stateMgr.getItemState(id);
-<a name="242" href="#242">242</a>     }
-<a name="243" href="#243">243</a> 
-<a name="244" href="#244">244</a>     <em>/**<em>*</em></em>
-<a name="245" href="#245">245</a> <em>     * @param nodePath</em>
-<a name="246" href="#246">246</a> <em>     * @param nodeTypeName</em>
-<a name="247" href="#247">247</a> <em>     * @param ntReg</em>
-<a name="248" href="#248">248</a> <em>     * @param accessMgr</em>
-<a name="249" href="#249">249</a> <em>     * @param hierMgr</em>
-<a name="250" href="#250">250</a> <em>     * @param stateMgr</em>
-<a name="251" href="#251">251</a> <em>     * @throws ConstraintViolationException</em>
-<a name="252" href="#252">252</a> <em>     * @throws AccessDeniedException</em>
-<a name="253" href="#253">253</a> <em>     * @throws PathNotFoundException</em>
-<a name="254" href="#254">254</a> <em>     * @throws ItemExistsException</em>
-<a name="255" href="#255">255</a> <em>     * @throws RepositoryException</em>
-<a name="256" href="#256">256</a> <em>     */</em>
-<a name="257" href="#257">257</a>     <strong>protected</strong> <strong>static</strong> <strong>void</strong> checkAddNode(<a href="../../../../org/apache/jackrabbit/core/Path.html">Path</a> nodePath, <a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> nodeTypeName,
-<a name="258" href="#258">258</a> 				       NodeTypeRegistry ntReg,
-<a name="259" href="#259">259</a> 				       AccessManagerImpl accessMgr,
-<a name="260" href="#260">260</a> 				       HierarchyManagerImpl hierMgr,
-<a name="261" href="#261">261</a> 				       PersistentItemStateManager stateMgr)
-<a name="262" href="#262">262</a> 	    throws ConstraintViolationException, AccessDeniedException,
-<a name="263" href="#263">263</a> 	    PathNotFoundException, ItemExistsException, RepositoryException {
-<a name="264" href="#264">264</a> 
-<a name="265" href="#265">265</a> 	Path parentPath = nodePath.getAncestor(1);
-<a name="266" href="#266">266</a> 	PersistentNodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
-<a name="267" href="#267">267</a> 
-<a name="268" href="#268">268</a> 	<em class="comment">// 1. check path &amp; access rights</em>
-<a name="269" href="#269">269</a> 
-<a name="270" href="#270">270</a> 	Path.PathElement nodeName = nodePath.getNameElement();
-<a name="271" href="#271">271</a> 	<strong>try</strong> {
-<a name="272" href="#272">272</a> 	    <em class="comment">// check access rights</em>
-<a name="273" href="#273">273</a> 	    <strong>if</strong> (!accessMgr.isGranted(parentState.getId(), Permission.READ_ITEM)) {
-<a name="274" href="#274">274</a> 		<strong>throw</strong> <strong>new</strong> PathNotFoundException(hierMgr.safeGetJCRPath(parentPath));
-<a name="275" href="#275">275</a> 	    }
-<a name="276" href="#276">276</a> 	    <strong>if</strong> (!accessMgr.isGranted(parentState.getId(), Permission.ADD_NODE)) {
-<a name="277" href="#277">277</a> 		<strong>throw</strong> <strong>new</strong> AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + <span class="string">": not allowed to add child node"</span>);
-<a name="278" href="#278">278</a> 	    }
-<a name="279" href="#279">279</a> 	} <strong>catch</strong> (ItemNotFoundException infe) {
-<a name="280" href="#280">280</a> 	    String msg = <span class="string">"internal error: failed to check access rights for "</span> + hierMgr.safeGetJCRPath(parentPath);
-<a name="281" href="#281">281</a> 	    log.error(msg, infe);
-<a name="282" href="#282">282</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, infe);
-<a name="283" href="#283">283</a> 	}
-<a name="284" href="#284">284</a> 
-<a name="285" href="#285">285</a> 	<em class="comment">// 2. check node type constraints</em>
-<a name="286" href="#286">286</a> 
-<a name="287" href="#287">287</a> 	ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
-<a name="288" href="#288">288</a> 	<strong>if</strong> (parentDef.isProtected()) {
-<a name="289" href="#289">289</a> 	    <strong>throw</strong> <strong>new</strong> ConstraintViolationException(hierMgr.safeGetJCRPath(parentPath) + <span class="string">": cannot add child node to protected parent node"</span>);
-<a name="290" href="#290">290</a> 	}
-<a name="291" href="#291">291</a> 	EffectiveNodeType entParent = getEffectiveNodeType(parentState, ntReg);
-<a name="292" href="#292">292</a> 	entParent.checkAddNodeConstraints(nodeName.getName(), nodeTypeName);
-<a name="293" href="#293">293</a> 	ChildNodeDef newNodeDef = findApplicableDefinition(nodeName.getName(), nodeTypeName, parentState, ntReg);
-<a name="294" href="#294">294</a> 
-<a name="295" href="#295">295</a> 	<em class="comment">// 3. check for name collisions</em>
-<a name="296" href="#296">296</a> 
-<a name="297" href="#297">297</a> 	<strong>if</strong> (parentState.hasPropertyEntry(nodeName.getName())) {
-<a name="298" href="#298">298</a> 	    <em class="comment">// there's already a property with that name</em>
-<a name="299" href="#299">299</a> 	    <strong>throw</strong> <strong>new</strong> ItemExistsException(hierMgr.safeGetJCRPath(nodePath));
-<a name="300" href="#300">300</a> 	}
-<a name="301" href="#301">301</a> 	<strong>if</strong> (parentState.hasChildNodeEntry(nodeName.getName())) {
-<a name="302" href="#302">302</a> 	    <em class="comment">// there's already a node with that name...</em>
-<a name="303" href="#303">303</a> 
-<a name="304" href="#304">304</a> 	    <em class="comment">// get definition of existing conflicting node</em>
-<a name="305" href="#305">305</a> 	    NodeState.ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName.getName(), 1);
-<a name="306" href="#306">306</a> 	    NodeState conflictingState;
-<a name="307" href="#307">307</a> 	    NodeId conflictingId = <strong>new</strong> NodeId(entry.getUUID());
-<a name="308" href="#308">308</a> 	    <strong>try</strong> {
-<a name="309" href="#309">309</a> 		conflictingState = (NodeState) stateMgr.getItemState(conflictingId);
-<a name="310" href="#310">310</a> 	    } <strong>catch</strong> (ItemStateException ise) {
-<a name="311" href="#311">311</a> 		String msg = <span class="string">"internal error: failed to retrieve state of "</span> + hierMgr.safeGetJCRPath(conflictingId);
-<a name="312" href="#312">312</a> 		log.error(msg, ise);
-<a name="313" href="#313">313</a> 		<strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
-<a name="314" href="#314">314</a> 	    }
-<a name="315" href="#315">315</a> 	    ChildNodeDef conflictingTargetDef = ntReg.getNodeDef(conflictingState.getDefinitionId());
-<a name="316" href="#316">316</a> 	    <em class="comment">// check same-name sibling setting of both target and existing node</em>
-<a name="317" href="#317">317</a> 	    <strong>if</strong> (!conflictingTargetDef.allowSameNameSibs()
-<a name="318" href="#318">318</a> 		    || !newNodeDef.allowSameNameSibs()) {
-<a name="319" href="#319">319</a> 		<strong>throw</strong> <strong>new</strong> ItemExistsException(hierMgr.safeGetJCRPath(nodePath));
+<a name="24" href="#24">24</a>  <strong>import</strong> org.apache.jackrabbit.core.search.QueryManagerImpl;
+<a name="25" href="#25">25</a>  <strong>import</strong> org.apache.xml.serialize.OutputFormat;
+<a name="26" href="#26">26</a>  <strong>import</strong> org.apache.xml.serialize.XMLSerializer;
+<a name="27" href="#27">27</a>  <strong>import</strong> org.xml.sax.ContentHandler;
+<a name="28" href="#28">28</a>  <strong>import</strong> org.xml.sax.SAXException;
+<a name="29" href="#29">29</a>  
+<a name="30" href="#30">30</a>  <strong>import</strong> javax.jcr.*;
+<a name="31" href="#31">31</a>  <strong>import</strong> javax.jcr.access.AccessDeniedException;
+<a name="32" href="#32">32</a>  <strong>import</strong> javax.jcr.access.AccessManager;
+<a name="33" href="#33">33</a>  <strong>import</strong> javax.jcr.access.Permission;
+<a name="34" href="#34">34</a>  <strong>import</strong> javax.jcr.nodetype.ConstraintViolationException;
+<a name="35" href="#35">35</a>  <strong>import</strong> javax.jcr.nodetype.NodeTypeManager;
+<a name="36" href="#36">36</a>  <strong>import</strong> javax.jcr.observation.EventListener;
+<a name="37" href="#37">37</a>  <strong>import</strong> javax.jcr.observation.EventListenerIterator;
+<a name="38" href="#38">38</a>  <strong>import</strong> javax.jcr.observation.ObservationManager;
+<a name="39" href="#39">39</a>  <strong>import</strong> javax.jcr.query.QueryManager;
+<a name="40" href="#40">40</a>  <strong>import</strong> javax.jcr.version.Version;
+<a name="41" href="#41">41</a>  <strong>import</strong> javax.jcr.version.VersionException;
+<a name="42" href="#42">42</a>  <strong>import</strong> java.io.IOException;
+<a name="43" href="#43">43</a>  <strong>import</strong> java.io.OutputStream;
+<a name="44" href="#44">44</a>  <strong>import</strong> java.io.PrintStream;
+<a name="45" href="#45">45</a>  <strong>import</strong> java.util.HashSet;
+<a name="46" href="#46">46</a>  <strong>import</strong> java.util.Iterator;
+<a name="47" href="#47">47</a>  
+<a name="48" href="#48">48</a>  <em>/**<em>*</em></em>
+<a name="49" href="#49">49</a>  <em> * A &lt;code>WorkspaceImpl&lt;/code> ...</em>
+<a name="50" href="#50">50</a>  <em> *</em>
+<a name="51" href="#51">51</a>  <em> * @author Stefan Guggisberg</em>
+<a name="52" href="#52">52</a>  <em> * @version $Revision: 1.69 $, $Date: 2004/09/06 16:42:48 $</em>
+<a name="53" href="#53">53</a>  <em> */</em>
+<a name="54" href="#54">54</a>  <strong>class</strong> <a href="../../../../org/apache/jackrabbit/core/WorkspaceImpl.html">WorkspaceImpl</a> implements Workspace {
+<a name="55" href="#55">55</a>  
+<a name="56" href="#56">56</a>      <strong>private</strong> <strong>static</strong> Logger log = Logger.getLogger(WorkspaceImpl.<strong>class</strong>);
+<a name="57" href="#57">57</a>  
+<a name="58" href="#58">58</a>      <em>/**<em>*</em></em>
+<a name="59" href="#59">59</a>  <em>     * The name of this &lt;code>Workspace&lt;/code></em>
+<a name="60" href="#60">60</a>  <em>     */</em>
+<a name="61" href="#61">61</a>      <strong>protected</strong> <strong>final</strong> String wspName;
+<a name="62" href="#62">62</a>  
+<a name="63" href="#63">63</a>      <em>/**<em>*</em></em>
+<a name="64" href="#64">64</a>  <em>     * The repository that created this workspace instance</em>
+<a name="65" href="#65">65</a>  <em>     */</em>
+<a name="66" href="#66">66</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/RepositoryImpl.html">RepositoryImpl</a> rep;
+<a name="67" href="#67">67</a>  
+<a name="68" href="#68">68</a>      <em>/**<em>*</em></em>
+<a name="69" href="#69">69</a>  <em>     * The persistent state mgr associated with the workspace represented by &lt;i>this&lt;/i></em>
+<a name="70" href="#70">70</a>  <em>     * &lt;code>Workspace&lt;/code> instance.</em>
+<a name="71" href="#71">71</a>  <em>     */</em>
+<a name="72" href="#72">72</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentItemStateManager.html">PersistentItemStateManager</a> persistentStateMgr;
+<a name="73" href="#73">73</a>  
+<a name="74" href="#74">74</a>      <em>/**<em>*</em></em>
+<a name="75" href="#75">75</a>  <em>     * The reference mgr associated with the workspace represented by &lt;i>this&lt;/i></em>
+<a name="76" href="#76">76</a>  <em>     * &lt;code>Workspace&lt;/code> instance.</em>
+<a name="77" href="#77">77</a>  <em>     */</em>
+<a name="78" href="#78">78</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/state/ReferenceManager.html">ReferenceManager</a> refMgr;
+<a name="79" href="#79">79</a>  
+<a name="80" href="#80">80</a>      <em>/**<em>*</em></em>
+<a name="81" href="#81">81</a>  <em>     * The hierarchy mgr that reflects persistent state only</em>
+<a name="82" href="#82">82</a>  <em>     * (i.e. that is isolated from transient changes made through</em>
+<a name="83" href="#83">83</a>  <em>     * the session).</em>
+<a name="84" href="#84">84</a>  <em>     */</em>
+<a name="85" href="#85">85</a>      <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/HierarchyManagerImpl.html">HierarchyManagerImpl</a> hierMgr;
+<a name="86" href="#86">86</a>  
+<a name="87" href="#87">87</a>      <em>/**<em>*</em></em>
+<a name="88" href="#88">88</a>  <em>     * The &lt;code>ObservationManager&lt;/code> instance for this session.</em>
+<a name="89" href="#89">89</a>  <em>     */</em>
+<a name="90" href="#90">90</a>      <strong>protected</strong> ObservationManager obsMgr;
+<a name="91" href="#91">91</a>  
+<a name="92" href="#92">92</a>      <em>/**<em>*</em></em>
+<a name="93" href="#93">93</a>  <em>     * The &lt;code>QueryManager&lt;/code> for this &lt;code>Workspace&lt;/code>.</em>
+<a name="94" href="#94">94</a>  <em>     */</em>
+<a name="95" href="#95">95</a>      <strong>protected</strong> <a href="../../../../org/apache/jackrabbit/core/search/QueryManagerImpl.html">QueryManagerImpl</a> queryManager;
+<a name="96" href="#96">96</a>  
+<a name="97" href="#97">97</a>      <em>/**<em>*</em></em>
+<a name="98" href="#98">98</a>  <em>     * the session that was used to acquire this &lt;code>Workspace&lt;/code></em>
+<a name="99" href="#99">99</a>  <em>     */</em>
+<a name="100" href="#100">100</a>     <strong>protected</strong> <strong>final</strong> <a href="../../../../org/apache/jackrabbit/core/SessionImpl.html">SessionImpl</a> session;
+<a name="101" href="#101">101</a> 
+<a name="102" href="#102">102</a>     <em>/**<em>*</em></em>
+<a name="103" href="#103">103</a> <em>     * Package private constructor.</em>
+<a name="104" href="#104">104</a> <em>     *</em>
+<a name="105" href="#105">105</a> <em>     * @param wspName</em>
+<a name="106" href="#106">106</a> <em>     * @param persistentStateMgr</em>
+<a name="107" href="#107">107</a> <em>     * @param rep</em>
+<a name="108" href="#108">108</a> <em>     * @param session</em>
+<a name="109" href="#109">109</a> <em>     */</em>
+<a name="110" href="#110">110</a>     <a href="../../../../org/apache/jackrabbit/core/WorkspaceImpl.html">WorkspaceImpl</a>(String wspName, <a href="../../../../org/apache/jackrabbit/core/state/PersistentItemStateManager.html">PersistentItemStateManager</a> persistentStateMgr,
+<a name="111" href="#111">111</a> 		  ReferenceManager refMgr, RepositoryImpl rep, SessionImpl session) {
+<a name="112" href="#112">112</a> 	<strong>this</strong>.wspName = wspName;
+<a name="113" href="#113">113</a> 	<strong>this</strong>.rep = rep;
+<a name="114" href="#114">114</a> 	<strong>this</strong>.persistentStateMgr = persistentStateMgr;
+<a name="115" href="#115">115</a> 	<strong>this</strong>.refMgr = refMgr;
+<a name="116" href="#116">116</a> 	hierMgr = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/HierarchyManagerImpl.html">HierarchyManagerImpl</a>(rep.getRootNodeUUID(), persistentStateMgr, session.getNamespaceResolver());
+<a name="117" href="#117">117</a> 	<strong>this</strong>.session = session;
+<a name="118" href="#118">118</a>     }
+<a name="119" href="#119">119</a> 
+<a name="120" href="#120">120</a>     <a href="../../../../org/apache/jackrabbit/core/RepositoryImpl.html">RepositoryImpl</a> getRepository() {
+<a name="121" href="#121">121</a> 	<strong>return</strong> rep;
+<a name="122" href="#122">122</a>     }
+<a name="123" href="#123">123</a> 
+<a name="124" href="#124">124</a>     <a href="../../../../org/apache/jackrabbit/core/state/PersistentItemStateManager.html">PersistentItemStateManager</a> getPersistentStateManager() {
+<a name="125" href="#125">125</a> 	<strong>return</strong> persistentStateMgr;
+<a name="126" href="#126">126</a>     }
+<a name="127" href="#127">127</a> 
+<a name="128" href="#128">128</a>     <a href="../../../../org/apache/jackrabbit/core/state/ReferenceManager.html">ReferenceManager</a> getReferenceManager() {
+<a name="129" href="#129">129</a> 	<strong>return</strong> refMgr;
+<a name="130" href="#130">130</a>     }
+<a name="131" href="#131">131</a> 
+<a name="132" href="#132">132</a>     <em>/**<em>*</em></em>
+<a name="133" href="#133">133</a> <em>     * Dumps the state of this &lt;code>Workspace&lt;/code> instance</em>
+<a name="134" href="#134">134</a> <em>     * (used for diagnostic purposes).</em>
+<a name="135" href="#135">135</a> <em>     *</em>
+<a name="136" href="#136">136</a> <em>     * @param ps</em>
+<a name="137" href="#137">137</a> <em>     * @throws RepositoryException</em>
+<a name="138" href="#138">138</a> <em>     */</em>
+<a name="139" href="#139">139</a>     <strong>void</strong> dump(PrintStream ps) throws RepositoryException {
+<a name="140" href="#140">140</a> 	ps.println(<span class="string">"Workspace: "</span> + wspName + <span class="string">" ("</span> + <strong>this</strong> + <span class="string">")"</span>);
+<a name="141" href="#141">141</a> 	ps.println();
+<a name="142" href="#142">142</a> 	persistentStateMgr.dump(ps);
+<a name="143" href="#143">143</a>     }
+<a name="144" href="#144">144</a> 
+<a name="145" href="#145">145</a>     <em>/**<em>*</em></em>
+<a name="146" href="#146">146</a> <em>     * Disposes this &lt;code>WorkspaceImpl&lt;/code> and frees resources.</em>
+<a name="147" href="#147">147</a> <em>     */</em>
+<a name="148" href="#148">148</a>     <strong>void</strong> dispose() {
+<a name="149" href="#149">149</a> 	<strong>try</strong> {
+<a name="150" href="#150">150</a> 	    ObservationManager om = getObservationManager();
+<a name="151" href="#151">151</a> 	    EventListenerIterator it = om.getRegisteredEventListeners();
+<a name="152" href="#152">152</a> 	    <strong>while</strong> (it.hasNext()) {
+<a name="153" href="#153">153</a> 		EventListener l = it.nextEventListener();
+<a name="154" href="#154">154</a> 		log.debug(<span class="string">"removing EventListener: "</span> + l);
+<a name="155" href="#155">155</a> 		om.removeEventListener(l);
+<a name="156" href="#156">156</a> 	    }
+<a name="157" href="#157">157</a> 	} <strong>catch</strong> (RepositoryException e) {
+<a name="158" href="#158">158</a> 	    log.error(<span class="string">"Exception while disposing Workspace:"</span>, e);
+<a name="159" href="#159">159</a> 	}
+<a name="160" href="#160">160</a>     }
+<a name="161" href="#161">161</a> 
+<a name="162" href="#162">162</a>     <em class="comment">//-----------&lt; misc. static helper methods for cross-workspace operations ></em>
+<a name="163" href="#163">163</a>     <em>/**<em>*</em></em>
+<a name="164" href="#164">164</a> <em>     * @param nodePath</em>
+<a name="165" href="#165">165</a> <em>     * @param nsResolver</em>
+<a name="166" href="#166">166</a> <em>     * @param hierMgr</em>
+<a name="167" href="#167">167</a> <em>     * @param stateMgr</em>
+<a name="168" href="#168">168</a> <em>     * @return</em>
+<a name="169" href="#169">169</a> <em>     * @throws PathNotFoundException</em>
+<a name="170" href="#170">170</a> <em>     * @throws RepositoryException</em>
+<a name="171" href="#171">171</a> <em>     */</em>
+<a name="172" href="#172">172</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> getNodeState(String nodePath,
+<a name="173" href="#173">173</a> 						      NamespaceResolver nsResolver,
+<a name="174" href="#174">174</a> 						      HierarchyManagerImpl hierMgr,
+<a name="175" href="#175">175</a> 						      PersistentItemStateManager stateMgr)
+<a name="176" href="#176">176</a> 	    throws PathNotFoundException, RepositoryException {
+<a name="177" href="#177">177</a> 	<strong>try</strong> {
+<a name="178" href="#178">178</a> 	    <strong>return</strong> getNodeState(Path.create(nodePath, nsResolver, <strong>true</strong>), hierMgr, stateMgr);
+<a name="179" href="#179">179</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
+<a name="180" href="#180">180</a> 	    String msg = <span class="string">"invalid path: "</span> + nodePath;
+<a name="181" href="#181">181</a> 	    log.error(msg, mpe);
+<a name="182" href="#182">182</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
+<a name="183" href="#183">183</a> 	}
+<a name="184" href="#184">184</a>     }
+<a name="185" href="#185">185</a> 
+<a name="186" href="#186">186</a>     <em>/**<em>*</em></em>
+<a name="187" href="#187">187</a> <em>     * @param path</em>
+<a name="188" href="#188">188</a> <em>     * @param nsResolver</em>
+<a name="189" href="#189">189</a> <em>     * @param hierMgr</em>
+<a name="190" href="#190">190</a> <em>     * @param stateMgr</em>
+<a name="191" href="#191">191</a> <em>     * @return</em>
+<a name="192" href="#192">192</a> <em>     * @throws PathNotFoundException</em>
+<a name="193" href="#193">193</a> <em>     * @throws RepositoryException</em>
+<a name="194" href="#194">194</a> <em>     */</em>
+<a name="195" href="#195">195</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> getParentNodeState(String path,
+<a name="196" href="#196">196</a> 							    NamespaceResolver nsResolver,
+<a name="197" href="#197">197</a> 							    HierarchyManagerImpl hierMgr,
+<a name="198" href="#198">198</a> 							    PersistentItemStateManager stateMgr)
+<a name="199" href="#199">199</a> 
+<a name="200" href="#200">200</a> 	    throws PathNotFoundException, RepositoryException {
+<a name="201" href="#201">201</a> 	<strong>try</strong> {
+<a name="202" href="#202">202</a> 	    <strong>return</strong> getNodeState(Path.create(path, nsResolver, <strong>true</strong>).getAncestor(1), hierMgr, stateMgr);
+<a name="203" href="#203">203</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
+<a name="204" href="#204">204</a> 	    String msg = <span class="string">"invalid path: "</span> + path;
+<a name="205" href="#205">205</a> 	    log.error(msg, mpe);
+<a name="206" href="#206">206</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
+<a name="207" href="#207">207</a> 	}
+<a name="208" href="#208">208</a>     }
+<a name="209" href="#209">209</a> 
+<a name="210" href="#210">210</a>     <em>/**<em>*</em></em>
+<a name="211" href="#211">211</a> <em>     * @param nodePath</em>
+<a name="212" href="#212">212</a> <em>     * @param hierMgr</em>
+<a name="213" href="#213">213</a> <em>     * @param stateMgr</em>
+<a name="214" href="#214">214</a> <em>     * @return</em>
+<a name="215" href="#215">215</a> <em>     * @throws PathNotFoundException</em>
+<a name="216" href="#216">216</a> <em>     * @throws RepositoryException</em>
+<a name="217" href="#217">217</a> <em>     */</em>
+<a name="218" href="#218">218</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> getNodeState(<a href="../../../../org/apache/jackrabbit/core/Path.html">Path</a> nodePath,
+<a name="219" href="#219">219</a> 						      HierarchyManagerImpl hierMgr,
+<a name="220" href="#220">220</a> 						      PersistentItemStateManager stateMgr)
+<a name="221" href="#221">221</a> 	    throws PathNotFoundException, RepositoryException {
+<a name="222" href="#222">222</a> 	<strong>try</strong> {
+<a name="223" href="#223">223</a> 	    ItemId id = hierMgr.resolvePath(nodePath);
+<a name="224" href="#224">224</a> 	    <strong>if</strong> (!id.denotesNode()) {
+<a name="225" href="#225">225</a> 		<strong>throw</strong> <strong>new</strong> PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
+<a name="226" href="#226">226</a> 	    }
+<a name="227" href="#227">227</a> 	    <strong>return</strong> getNodeState((NodeId) id, stateMgr);
+<a name="228" href="#228">228</a> 	} <strong>catch</strong> (NoSuchItemStateException nsise) {
+<a name="229" href="#229">229</a> 	    <strong>throw</strong> <strong>new</strong> PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
+<a name="230" href="#230">230</a> 	} <strong>catch</strong> (ItemStateException ise) {
+<a name="231" href="#231">231</a> 	    String msg = <span class="string">"internal error: failed to retrieve state of "</span> + hierMgr.safeGetJCRPath(nodePath);
+<a name="232" href="#232">232</a> 	    log.error(msg, ise);
+<a name="233" href="#233">233</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
+<a name="234" href="#234">234</a> 	}
+<a name="235" href="#235">235</a>     }
+<a name="236" href="#236">236</a> 
+<a name="237" href="#237">237</a>     <em>/**<em>*</em></em>
+<a name="238" href="#238">238</a> <em>     * @param id</em>
+<a name="239" href="#239">239</a> <em>     * @param stateMgr</em>
+<a name="240" href="#240">240</a> <em>     * @return</em>
+<a name="241" href="#241">241</a> <em>     * @throws NoSuchItemStateException</em>
+<a name="242" href="#242">242</a> <em>     * @throws ItemStateException</em>
+<a name="243" href="#243">243</a> <em>     */</em>
+<a name="244" href="#244">244</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> getNodeState(<a href="../../../../org/apache/jackrabbit/core/NodeId.html">NodeId</a> id,
+<a name="245" href="#245">245</a> 						      PersistentItemStateManager stateMgr)
+<a name="246" href="#246">246</a> 	    throws NoSuchItemStateException, ItemStateException {
+<a name="247" href="#247">247</a> 	<strong>return</strong> (PersistentNodeState) stateMgr.getItemState(id);
+<a name="248" href="#248">248</a>     }
+<a name="249" href="#249">249</a> 
+<a name="250" href="#250">250</a>     <em>/**<em>*</em></em>
+<a name="251" href="#251">251</a> <em>     * @param nodePath</em>
+<a name="252" href="#252">252</a> <em>     * @param nodeTypeName</em>
+<a name="253" href="#253">253</a> <em>     * @param ntReg</em>
+<a name="254" href="#254">254</a> <em>     * @param accessMgr</em>
+<a name="255" href="#255">255</a> <em>     * @param hierMgr</em>
+<a name="256" href="#256">256</a> <em>     * @param stateMgr</em>
+<a name="257" href="#257">257</a> <em>     * @throws ConstraintViolationException</em>
+<a name="258" href="#258">258</a> <em>     * @throws AccessDeniedException</em>
+<a name="259" href="#259">259</a> <em>     * @throws PathNotFoundException</em>
+<a name="260" href="#260">260</a> <em>     * @throws ItemExistsException</em>
+<a name="261" href="#261">261</a> <em>     * @throws RepositoryException</em>
+<a name="262" href="#262">262</a> <em>     */</em>
+<a name="263" href="#263">263</a>     <strong>protected</strong> <strong>static</strong> <strong>void</strong> checkAddNode(<a href="../../../../org/apache/jackrabbit/core/Path.html">Path</a> nodePath, <a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> nodeTypeName,
+<a name="264" href="#264">264</a> 				       NodeTypeRegistry ntReg,
+<a name="265" href="#265">265</a> 				       AccessManagerImpl accessMgr,
+<a name="266" href="#266">266</a> 				       HierarchyManagerImpl hierMgr,
+<a name="267" href="#267">267</a> 				       PersistentItemStateManager stateMgr)
+<a name="268" href="#268">268</a> 	    throws ConstraintViolationException, AccessDeniedException,
+<a name="269" href="#269">269</a> 	    PathNotFoundException, ItemExistsException, RepositoryException {
+<a name="270" href="#270">270</a> 
+<a name="271" href="#271">271</a> 	Path parentPath = nodePath.getAncestor(1);
+<a name="272" href="#272">272</a> 	PersistentNodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
+<a name="273" href="#273">273</a> 
+<a name="274" href="#274">274</a> 	<em class="comment">// 1. check path &amp; access rights</em>
+<a name="275" href="#275">275</a> 
+<a name="276" href="#276">276</a> 	Path.PathElement nodeName = nodePath.getNameElement();
+<a name="277" href="#277">277</a> 	<strong>try</strong> {
+<a name="278" href="#278">278</a> 	    <em class="comment">// check access rights</em>
+<a name="279" href="#279">279</a> 	    <strong>if</strong> (!accessMgr.isGranted(parentState.getId(), Permission.READ_ITEM)) {
+<a name="280" href="#280">280</a> 		<strong>throw</strong> <strong>new</strong> PathNotFoundException(hierMgr.safeGetJCRPath(parentPath));
+<a name="281" href="#281">281</a> 	    }
+<a name="282" href="#282">282</a> 	    <strong>if</strong> (!accessMgr.isGranted(parentState.getId(), Permission.ADD_NODE)) {
+<a name="283" href="#283">283</a> 		<strong>throw</strong> <strong>new</strong> AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + <span class="string">": not allowed to add child node"</span>);
+<a name="284" href="#284">284</a> 	    }
+<a name="285" href="#285">285</a> 	} <strong>catch</strong> (ItemNotFoundException infe) {
+<a name="286" href="#286">286</a> 	    String msg = <span class="string">"internal error: failed to check access rights for "</span> + hierMgr.safeGetJCRPath(parentPath);
+<a name="287" href="#287">287</a> 	    log.error(msg, infe);
+<a name="288" href="#288">288</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, infe);
+<a name="289" href="#289">289</a> 	}
+<a name="290" href="#290">290</a> 
+<a name="291" href="#291">291</a> 	<em class="comment">// 2. check node type constraints</em>
+<a name="292" href="#292">292</a> 
+<a name="293" href="#293">293</a> 	ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+<a name="294" href="#294">294</a> 	<strong>if</strong> (parentDef.isProtected()) {
+<a name="295" href="#295">295</a> 	    <strong>throw</strong> <strong>new</strong> ConstraintViolationException(hierMgr.safeGetJCRPath(parentPath) + <span class="string">": cannot add child node to protected parent node"</span>);
+<a name="296" href="#296">296</a> 	}
+<a name="297" href="#297">297</a> 	EffectiveNodeType entParent = getEffectiveNodeType(parentState, ntReg);
+<a name="298" href="#298">298</a> 	entParent.checkAddNodeConstraints(nodeName.getName(), nodeTypeName);
+<a name="299" href="#299">299</a> 	ChildNodeDef newNodeDef = findApplicableDefinition(nodeName.getName(), nodeTypeName, parentState, ntReg);
+<a name="300" href="#300">300</a> 
+<a name="301" href="#301">301</a> 	<em class="comment">// 3. check for name collisions</em>
+<a name="302" href="#302">302</a> 
+<a name="303" href="#303">303</a> 	<strong>if</strong> (parentState.hasPropertyEntry(nodeName.getName())) {
+<a name="304" href="#304">304</a> 	    <em class="comment">// there's already a property with that name</em>
+<a name="305" href="#305">305</a> 	    <strong>throw</strong> <strong>new</strong> ItemExistsException(hierMgr.safeGetJCRPath(nodePath));
+<a name="306" href="#306">306</a> 	}
+<a name="307" href="#307">307</a> 	<strong>if</strong> (parentState.hasChildNodeEntry(nodeName.getName())) {
+<a name="308" href="#308">308</a> 	    <em class="comment">// there's already a node with that name...</em>
+<a name="309" href="#309">309</a> 
+<a name="310" href="#310">310</a> 	    <em class="comment">// get definition of existing conflicting node</em>
+<a name="311" href="#311">311</a> 	    NodeState.ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName.getName(), 1);
+<a name="312" href="#312">312</a> 	    NodeState conflictingState;
+<a name="313" href="#313">313</a> 	    NodeId conflictingId = <strong>new</strong> NodeId(entry.getUUID());
+<a name="314" href="#314">314</a> 	    <strong>try</strong> {
+<a name="315" href="#315">315</a> 		conflictingState = (NodeState) stateMgr.getItemState(conflictingId);
+<a name="316" href="#316">316</a> 	    } <strong>catch</strong> (ItemStateException ise) {
+<a name="317" href="#317">317</a> 		String msg = <span class="string">"internal error: failed to retrieve state of "</span> + hierMgr.safeGetJCRPath(conflictingId);
+<a name="318" href="#318">318</a> 		log.error(msg, ise);
+<a name="319" href="#319">319</a> 		<strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
 <a name="320" href="#320">320</a> 	    }
-<a name="321" href="#321">321</a> 	}
-<a name="322" href="#322">322</a>     }
-<a name="323" href="#323">323</a> 
-<a name="324" href="#324">324</a>     <em>/**<em>*</em></em>
-<a name="325" href="#325">325</a> <em>     * @param nodePath</em>
-<a name="326" href="#326">326</a> <em>     * @param ntReg</em>
-<a name="327" href="#327">327</a> <em>     * @param accessMgr</em>
-<a name="328" href="#328">328</a> <em>     * @param hierMgr</em>
-<a name="329" href="#329">329</a> <em>     * @param stateMgr</em>
-<a name="330" href="#330">330</a> <em>     * @throws ConstraintViolationException</em>
-<a name="331" href="#331">331</a> <em>     * @throws AccessDeniedException</em>
-<a name="332" href="#332">332</a> <em>     * @throws PathNotFoundException</em>
-<a name="333" href="#333">333</a> <em>     * @throws RepositoryException</em>
-<a name="334" href="#334">334</a> <em>     */</em>
-<a name="335" href="#335">335</a>     <strong>protected</strong> <strong>static</strong> <strong>void</strong> checkRemoveNode(<a href="../../../../org/apache/jackrabbit/core/Path.html">Path</a> nodePath,
-<a name="336" href="#336">336</a> 					  NodeTypeRegistry ntReg,
-<a name="337" href="#337">337</a> 					  AccessManagerImpl accessMgr,
-<a name="338" href="#338">338</a> 					  HierarchyManagerImpl hierMgr,
-<a name="339" href="#339">339</a> 					  PersistentItemStateManager stateMgr)
-<a name="340" href="#340">340</a> 	    throws ConstraintViolationException, AccessDeniedException,
-<a name="341" href="#341">341</a> 	    PathNotFoundException, RepositoryException {
-<a name="342" href="#342">342</a> 
-<a name="343" href="#343">343</a> 	PersistentNodeState targetState = getNodeState(nodePath, hierMgr, stateMgr);
-<a name="344" href="#344">344</a> 	Path parentPath = nodePath.getAncestor(1);
-<a name="345" href="#345">345</a> 	PersistentNodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
-<a name="346" href="#346">346</a> 
-<a name="347" href="#347">347</a> 	<em class="comment">// 1. check path &amp; access rights</em>
+<a name="321" href="#321">321</a> 	    ChildNodeDef conflictingTargetDef = ntReg.getNodeDef(conflictingState.getDefinitionId());
+<a name="322" href="#322">322</a> 	    <em class="comment">// check same-name sibling setting of both target and existing node</em>
+<a name="323" href="#323">323</a> 	    <strong>if</strong> (!conflictingTargetDef.allowSameNameSibs()
+<a name="324" href="#324">324</a> 		    || !newNodeDef.allowSameNameSibs()) {
+<a name="325" href="#325">325</a> 		<strong>throw</strong> <strong>new</strong> ItemExistsException(hierMgr.safeGetJCRPath(nodePath));
+<a name="326" href="#326">326</a> 	    }
+<a name="327" href="#327">327</a> 	}
+<a name="328" href="#328">328</a>     }
+<a name="329" href="#329">329</a> 
+<a name="330" href="#330">330</a>     <em>/**<em>*</em></em>
+<a name="331" href="#331">331</a> <em>     * @param nodePath</em>
+<a name="332" href="#332">332</a> <em>     * @param ntReg</em>
+<a name="333" href="#333">333</a> <em>     * @param accessMgr</em>
+<a name="334" href="#334">334</a> <em>     * @param hierMgr</em>
+<a name="335" href="#335">335</a> <em>     * @param stateMgr</em>
+<a name="336" href="#336">336</a> <em>     * @throws ConstraintViolationException</em>
+<a name="337" href="#337">337</a> <em>     * @throws AccessDeniedException</em>
+<a name="338" href="#338">338</a> <em>     * @throws PathNotFoundException</em>
+<a name="339" href="#339">339</a> <em>     * @throws RepositoryException</em>
+<a name="340" href="#340">340</a> <em>     */</em>
+<a name="341" href="#341">341</a>     <strong>protected</strong> <strong>static</strong> <strong>void</strong> checkRemoveNode(<a href="../../../../org/apache/jackrabbit/core/Path.html">Path</a> nodePath,
+<a name="342" href="#342">342</a> 					  NodeTypeRegistry ntReg,
+<a name="343" href="#343">343</a> 					  AccessManagerImpl accessMgr,
+<a name="344" href="#344">344</a> 					  HierarchyManagerImpl hierMgr,
+<a name="345" href="#345">345</a> 					  PersistentItemStateManager stateMgr)
+<a name="346" href="#346">346</a> 	    throws ConstraintViolationException, AccessDeniedException,
+<a name="347" href="#347">347</a> 	    PathNotFoundException, RepositoryException {
 <a name="348" href="#348">348</a> 
-<a name="349" href="#349">349</a> 	<strong>try</strong> {
-<a name="350" href="#350">350</a> 	    <em class="comment">// check access rights</em>
-<a name="351" href="#351">351</a> 	    <strong>if</strong> (!accessMgr.isGranted(targetState.getId(), Permission.READ_ITEM)) {
-<a name="352" href="#352">352</a> 		<strong>throw</strong> <strong>new</strong> PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
-<a name="353" href="#353">353</a> 	    }
-<a name="354" href="#354">354</a> 	    <strong>if</strong> (!accessMgr.isGranted(parentState.getId(), Permission.REMOVE_ITEM)) {
-<a name="355" href="#355">355</a> 		<strong>throw</strong> <strong>new</strong> AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + <span class="string">": not allowed to remove child node"</span>);
-<a name="356" href="#356">356</a> 	    }
-<a name="357" href="#357">357</a> 	} <strong>catch</strong> (ItemNotFoundException infe) {
-<a name="358" href="#358">358</a> 	    String msg = <span class="string">"internal error: failed to check access rights for "</span> + hierMgr.safeGetJCRPath(nodePath);
-<a name="359" href="#359">359</a> 	    log.error(msg, infe);
-<a name="360" href="#360">360</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, infe);
-<a name="361" href="#361">361</a> 	}
-<a name="362" href="#362">362</a> 
-<a name="363" href="#363">363</a> 	<em class="comment">// 2. check node type constraints</em>
-<a name="364" href="#364">364</a> 
-<a name="365" href="#365">365</a> 	ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
-<a name="366" href="#366">366</a> 	<strong>if</strong> (parentDef.isProtected()) {
-<a name="367" href="#367">367</a> 	    <strong>throw</strong> <strong>new</strong> ConstraintViolationException(hierMgr.safeGetJCRPath(parentPath) + <span class="string">": cannot remove child node of protected parent node"</span>);
-<a name="368" href="#368">368</a> 	}
-<a name="369" href="#369">369</a> 	ChildNodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
-<a name="370" href="#370">370</a> 	<strong>if</strong> (targetDef.isMandatory()) {
-<a name="371" href="#371">371</a> 	    <strong>throw</strong> <strong>new</strong> ConstraintViolationException(hierMgr.safeGetJCRPath(nodePath) + <span class="string">": cannot remove mandatory node"</span>);
-<a name="372" href="#372">372</a> 	}
-<a name="373" href="#373">373</a> 	<strong>if</strong> (targetDef.isProtected()) {
-<a name="374" href="#374">374</a> 	    <strong>throw</strong> <strong>new</strong> ConstraintViolationException(hierMgr.safeGetJCRPath(nodePath) + <span class="string">": cannot remove protected node"</span>);
-<a name="375" href="#375">375</a> 	}
-<a name="376" href="#376">376</a>     }
-<a name="377" href="#377">377</a> 
-<a name="378" href="#378">378</a>     <em>/**<em>*</em></em>
-<a name="379" href="#379">379</a> <em>     * Helper method that builds the effective (i.e. merged and resolved)</em>
-<a name="380" href="#380">380</a> <em>     * node type representation of the specified node's primary and mixin</em>
-<a name="381" href="#381">381</a> <em>     * node types.</em>
-<a name="382" href="#382">382</a> <em>     *</em>
-<a name="383" href="#383">383</a> <em>     * @param state</em>
-<a name="384" href="#384">384</a> <em>     * @param ntReg</em>
-<a name="385" href="#385">385</a> <em>     * @return the effective node type</em>
-<a name="386" href="#386">386</a> <em>     * @throws RepositoryException</em>
-<a name="387" href="#387">387</a> <em>     */</em>
-<a name="388" href="#388">388</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/nodetype/EffectiveNodeType.html">EffectiveNodeType</a> getEffectiveNodeType(<a href="../../../../org/apache/jackrabbit/core/state/NodeState.html">NodeState</a> state,
-<a name="389" href="#389">389</a> 							    NodeTypeRegistry ntReg)
-<a name="390" href="#390">390</a> 	    throws RepositoryException {
-<a name="391" href="#391">391</a> 	<em class="comment">// build effective node type of mixins &amp; primary type:</em>
-<a name="392" href="#392">392</a> 	<em class="comment">// existing mixin's</em>
-<a name="393" href="#393">393</a> 	HashSet set = <strong>new</strong> HashSet(((NodeState) state).getMixinTypeNames());
-<a name="394" href="#394">394</a> 	<em class="comment">// primary type</em>
-<a name="395" href="#395">395</a> 	set.add(state.getNodeTypeName());
-<a name="396" href="#396">396</a> 	<strong>try</strong> {
-<a name="397" href="#397">397</a> 	    <strong>return</strong> ntReg.buildEffectiveNodeType((QName[]) set.toArray(<strong>new</strong> QName[set.size()]));
-<a name="398" href="#398">398</a> 	} <strong>catch</strong> (NodeTypeConflictException ntce) {
-<a name="399" href="#399">399</a> 	    String msg = <span class="string">"internal error: failed to build effective node type for node "</span> + state.getUUID();
-<a name="400" href="#400">400</a> 	    log.error(msg, ntce);
-<a name="401" href="#401">401</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ntce);
-<a name="402" href="#402">402</a> 	}
-<a name="403" href="#403">403</a>     }
-<a name="404" href="#404">404</a> 
-<a name="405" href="#405">405</a>     <em>/**<em>*</em></em>
-<a name="406" href="#406">406</a> <em>     * Helper method that finds the applicable definition for the</em>
-<a name="407" href="#407">407</a> <em>     * a child node with the given name and node type in the parent node's</em>
-<a name="408" href="#408">408</a> <em>     * node type and mixin types.</em>
-<a name="409" href="#409">409</a> <em>     *</em>
-<a name="410" href="#410">410</a> <em>     * @param name</em>
-<a name="411" href="#411">411</a> <em>     * @param nodeTypeName</em>
-<a name="412" href="#412">412</a> <em>     * @param parentState</em>
-<a name="413" href="#413">413</a> <em>     * @param ntReg</em>
-<a name="414" href="#414">414</a> <em>     * @return a &lt;code>ChildNodeDef&lt;/code></em>
-<a name="415" href="#415">415</a> <em>     * @throws ConstraintViolationException if no applicable child node definition</em>
-<a name="416" href="#416">416</a> <em>     *                                      could be found</em>
-<a name="417" href="#417">417</a> <em>     * @throws RepositoryException          if another error occurs</em>
-<a name="418" href="#418">418</a> <em>     */</em>
-<a name="419" href="#419">419</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/nodetype/ChildNodeDef.html">ChildNodeDef</a> findApplicableDefinition(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name,
-<a name="420" href="#420">420</a> 							   QName nodeTypeName,
-<a name="421" href="#421">421</a> 							   NodeState parentState,
-<a name="422" href="#422">422</a> 							   NodeTypeRegistry ntReg)
-<a name="423" href="#423">423</a> 	    throws RepositoryException, ConstraintViolationException {
-<a name="424" href="#424">424</a> 	EffectiveNodeType entParent = getEffectiveNodeType(parentState, ntReg);
-<a name="425" href="#425">425</a> 	<strong>return</strong> entParent.getApplicableChildNodeDef(name, nodeTypeName);
-<a name="426" href="#426">426</a>     }
-<a name="427" href="#427">427</a> 
-<a name="428" href="#428">428</a>     <strong>private</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> copyNodeState(<a href="../../../../org/apache/jackrabbit/core/state/NodeState.html">NodeState</a> srcState,
-<a name="429" href="#429">429</a> 						     String parentUUID,
-<a name="430" href="#430">430</a> 						     NodeTypeRegistry ntReg,
-<a name="431" href="#431">431</a> 						     HierarchyManagerImpl srcHierMgr,
-<a name="432" href="#432">432</a> 						     PersistentItemStateManager srcStateMgr,
-<a name="433" href="#433">433</a> 						     PersistentItemStateManager destStateMgr,
-<a name="434" href="#434">434</a> 						     <strong>boolean</strong> clone)
-<a name="435" href="#435">435</a> 	    throws RepositoryException {
-<a name="436" href="#436">436</a> 	PersistentNodeState newState;
-<a name="437" href="#437">437</a> 	<strong>try</strong> {
-<a name="438" href="#438">438</a> 	    String uuid;
-<a name="439" href="#439">439</a> 	    <strong>if</strong> (clone) {
-<a name="440" href="#440">440</a> 		uuid = srcState.getUUID();
-<a name="441" href="#441">441</a> 	    } <strong>else</strong> {
-<a name="442" href="#442">442</a> 		uuid = UUID.randomUUID().toString();	<em class="comment">// create new version 4 uuid</em>
-<a name="443" href="#443">443</a> 	    }
-<a name="444" href="#444">444</a> 	    newState = destStateMgr.createNodeState(uuid, srcState.getNodeTypeName(), parentUUID);
-<a name="445" href="#445">445</a> 	    <em class="comment">// copy node state</em>
-<a name="446" href="#446">446</a> 	    <em class="comment">// @todo special handling required for nodes with special semantics (e.g. those defined by mix:versionable, et.al.)</em>
-<a name="447" href="#447">447</a> 	    <em class="comment">// FIXME delegate to 'node type instance handler'</em>
-<a name="448" href="#448">448</a> 	    newState.setMixinTypeNames(srcState.getMixinTypeNames());
-<a name="449" href="#449">449</a> 	    newState.setDefinitionId(srcState.getDefinitionId());
-<a name="450" href="#450">450</a> 	    <em class="comment">// copy child nodes</em>
-<a name="451" href="#451">451</a> 	    Iterator iter = srcState.getChildNodeEntries().iterator();
-<a name="452" href="#452">452</a> 	    <strong>while</strong> (iter.hasNext()) {
-<a name="453" href="#453">453</a> 		NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-<a name="454" href="#454">454</a> 		NodeState srcChildState = (NodeState) srcStateMgr.getItemState(<strong>new</strong> NodeId(entry.getUUID()));
-<a name="455" href="#455">455</a> 		<em class="comment">// recursive copying of child node</em>
-<a name="456" href="#456">456</a> 		PersistentNodeState newChildState = copyNodeState(srcChildState, uuid,
-<a name="457" href="#457">457</a> 			ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
-<a name="458" href="#458">458</a> 		<em class="comment">// persist new child node</em>
-<a name="459" href="#459">459</a> 		newChildState.store();
-<a name="460" href="#460">460</a> 		<em class="comment">// add new child node entry to new node</em>
-<a name="461" href="#461">461</a> 		newState.addChildNodeEntry(entry.getName(), newChildState.getUUID());
-<a name="462" href="#462">462</a> 	    }
-<a name="463" href="#463">463</a> 	    <em class="comment">// copy properties</em>
-<a name="464" href="#464">464</a> 	    iter = srcState.getPropertyEntries().iterator();
-<a name="465" href="#465">465</a> 	    <strong>while</strong> (iter.hasNext()) {
-<a name="466" href="#466">466</a> 		NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-<a name="467" href="#467">467</a> 		PropertyState srcChildState = (PropertyState) srcStateMgr.getItemState(<strong>new</strong> PropertyId(srcState.getUUID(), entry.getName()));
-<a name="468" href="#468">468</a> 		PersistentPropertyState newChildState = copyPropertyState(srcChildState, uuid, entry.getName(),
-<a name="469" href="#469">469</a> 			ntReg, srcHierMgr, srcStateMgr, destStateMgr);
-<a name="470" href="#470">470</a> 		<em class="comment">// persist new property</em>
-<a name="471" href="#471">471</a> 		newChildState.store();
-<a name="472" href="#472">472</a> 		<em class="comment">// add new property entry to new node</em>
-<a name="473" href="#473">473</a> 		newState.addPropertyEntry(entry.getName());
-<a name="474" href="#474">474</a> 	    }
-<a name="475" href="#475">475</a> 	    <strong>return</strong> newState;
-<a name="476" href="#476">476</a> 	} <strong>catch</strong> (ItemStateException ise) {
-<a name="477" href="#477">477</a> 	    String msg = <span class="string">"internal error: failed to copy state of "</span> + srcHierMgr.safeGetJCRPath(srcState.getId());
-<a name="478" href="#478">478</a> 	    log.error(msg, ise);
-<a name="479" href="#479">479</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
-<a name="480" href="#480">480</a> 	}
-<a name="481" href="#481">481</a>     }
-<a name="482" href="#482">482</a> 
-<a name="483" href="#483">483</a>     <strong>private</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentPropertyState.html">PersistentPropertyState</a> copyPropertyState(<a href="../../../../org/apache/jackrabbit/core/state/PropertyState.html">PropertyState</a> srcState,
-<a name="484" href="#484">484</a> 							     String parentUUID,
-<a name="485" href="#485">485</a> 							     QName propName,
-<a name="486" href="#486">486</a> 							     NodeTypeRegistry ntReg,
-<a name="487" href="#487">487</a> 							     HierarchyManagerImpl srcHierMgr,
-<a name="488" href="#488">488</a> 							     PersistentItemStateManager srcStateMgr,
-<a name="489" href="#489">489</a> 							     PersistentItemStateManager destStateMgr)
-<a name="490" href="#490">490</a> 	    throws RepositoryException {
-<a name="491" href="#491">491</a> 	<em class="comment">// @todo special handling required for properties with special semantics (e.g. those defined by mix:versionable, mix:lockable, et.al.)</em>
-<a name="492" href="#492">492</a> 	PersistentPropertyState newState;
-<a name="493" href="#493">493</a> 	<strong>try</strong> {
-<a name="494" href="#494">494</a> 	    newState = destStateMgr.createPropertyState(parentUUID, propName);
-<a name="495" href="#495">495</a> 	    PropDefId defId = srcState.getDefinitionId();
-<a name="496" href="#496">496</a> 	    newState.setDefinitionId(defId);
-<a name="497" href="#497">497</a> 	    newState.setType(srcState.getType());
-<a name="498" href="#498">498</a> 	    InternalValue[] values = srcState.getValues();
-<a name="499" href="#499">499</a> 	    <strong>if</strong> (values != <strong>null</strong>) {
-<a name="500" href="#500">500</a> 		InternalValue[] <strong>new</strong>Values = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/InternalValue.html">InternalValue</a>[values.length];
-<a name="501" href="#501">501</a> 		<strong>for</strong> (<strong>int</strong> i = 0; i &lt; values.length; i++) {
-<a name="502" href="#502">502</a> 		    newValues[i] = values[i] != <strong>null</strong> ? values[i].createCopy() : <strong>null</strong>;
-<a name="503" href="#503">503</a> 		}
-<a name="504" href="#504">504</a> 		newState.setValues(values);
-<a name="505" href="#505">505</a> 		<em class="comment">// FIXME delegate to 'node type instance handler'</em>
-<a name="506" href="#506">506</a> 		<strong>if</strong> (defId != <strong>null</strong>) {
-<a name="507" href="#507">507</a> 		    PropDef def = ntReg.getPropDef(defId);
-<a name="508" href="#508">508</a> 		    <strong>if</strong> (def.getDeclaringNodeType().equals(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-<a name="509" href="#509">509</a> 			<strong>if</strong> (propName.equals(ItemImpl.PROPNAME_UUID)) {
-<a name="510" href="#510">510</a> 			    <em class="comment">// set correct value of jcr:uuid property</em>
-<a name="511" href="#511">511</a> 			    <strong>new</strong>State.setValues(<strong>new</strong> InternalValue[]{InternalValue.create(parentUUID)});
-<a name="512" href="#512">512</a> 			}
-<a name="513" href="#513">513</a> 		    }
-<a name="514" href="#514">514</a> 		}
-<a name="515" href="#515">515</a> 	    }
-<a name="516" href="#516">516</a> 	    <strong>return</strong> newState;
-<a name="517" href="#517">517</a> 	} <strong>catch</strong> (ItemStateException ise) {
-<a name="518" href="#518">518</a> 	    String msg = <span class="string">"internal error: failed to copy state of "</span> + srcHierMgr.safeGetJCRPath(srcState.getId());
-<a name="519" href="#519">519</a> 	    log.error(msg, ise);
-<a name="520" href="#520">520</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
-<a name="521" href="#521">521</a> 	}
-<a name="522" href="#522">522</a>     }
-<a name="523" href="#523">523</a> 
-<a name="524" href="#524">524</a>     <strong>private</strong> <strong>static</strong> <strong>void</strong> internalCopy(String srcAbsPath,
-<a name="525" href="#525">525</a> 				     PersistentItemStateManager srcStateMgr,
-<a name="526" href="#526">526</a> 				     HierarchyManagerImpl srcHierMgr,
-<a name="527" href="#527">527</a> 				     String destAbsPath,
-<a name="528" href="#528">528</a> 				     PersistentItemStateManager destStateMgr,
-<a name="529" href="#529">529</a> 				     HierarchyManagerImpl destHierMgr,
-<a name="530" href="#530">530</a> 				     AccessManagerImpl accessMgr,
-<a name="531" href="#531">531</a> 				     NamespaceResolver nsResolver,
-<a name="532" href="#532">532</a> 				     NodeTypeRegistry ntReg,
-<a name="533" href="#533">533</a> 				     <strong>boolean</strong> clone)
-<a name="534" href="#534">534</a> 	    throws ConstraintViolationException, AccessDeniedException,
-<a name="535" href="#535">535</a> 	    PathNotFoundException, ItemExistsException, RepositoryException {
-<a name="536" href="#536">536</a> 
-<a name="537" href="#537">537</a> 	<em class="comment">// 1. check paths &amp; retrieve state</em>
-<a name="538" href="#538">538</a> 
-<a name="539" href="#539">539</a> 	Path srcPath;
-<a name="540" href="#540">540</a> 	PersistentNodeState srcState;
-<a name="541" href="#541">541</a> 	<strong>try</strong> {
-<a name="542" href="#542">542</a> 	    srcPath = Path.create(srcAbsPath, nsResolver, <strong>true</strong>);
-<a name="543" href="#543">543</a> 	    srcState = getNodeState(srcPath, srcHierMgr, srcStateMgr);
-<a name="544" href="#544">544</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
-<a name="545" href="#545">545</a> 	    String msg = <span class="string">"invalid path: "</span> + srcAbsPath;
-<a name="546" href="#546">546</a> 	    log.error(msg, mpe);
-<a name="547" href="#547">547</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
-<a name="548" href="#548">548</a> 	}
-<a name="549" href="#549">549</a> 
-<a name="550" href="#550">550</a> 	Path destPath;
-<a name="551" href="#551">551</a> 	Path.PathElement destName;
-<a name="552" href="#552">552</a> 	Path destParentPath;
-<a name="553" href="#553">553</a> 	PersistentNodeState destParentState;
-<a name="554" href="#554">554</a> 	<strong>try</strong> {
-<a name="555" href="#555">555</a> 	    destPath = Path.create(destAbsPath, nsResolver, <strong>true</strong>);
-<a name="556" href="#556">556</a> 	    destName = destPath.getNameElement();
-<a name="557" href="#557">557</a> 	    destParentPath = destPath.getAncestor(1);
-<a name="558" href="#558">558</a> 	    destParentState = getNodeState(destParentPath, destHierMgr, destStateMgr);
-<a name="559" href="#559">559</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
-<a name="560" href="#560">560</a> 	    String msg = <span class="string">"invalid path: "</span> + destAbsPath;
-<a name="561" href="#561">561</a> 	    log.error(msg, mpe);
-<a name="562" href="#562">562</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
-<a name="563" href="#563">563</a> 	}
-<a name="564" href="#564">564</a> 	<strong>int</strong> ind = destName.getIndex();
-<a name="565" href="#565">565</a> 	<strong>if</strong> (ind > 0) {
-<a name="566" href="#566">566</a> 	    <em class="comment">// subscript in name element</em>
-<a name="567" href="#567">567</a> 	    String msg = destAbsPath + <span class="string">": invalid destination path (subscript in name element is not allowed)"</span>;
-<a name="568" href="#568">568</a> 	    log.error(msg);
-<a name="569" href="#569">569</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg);
-<a name="570" href="#570">570</a> 	}
-<a name="571" href="#571">571</a> 
-<a name="572" href="#572">572</a> 	<em class="comment">// 2. check access rights &amp; node type constraints</em>
-<a name="573" href="#573">573</a> 
-<a name="574" href="#574">574</a> 	<strong>try</strong> {
-<a name="575" href="#575">575</a> 	    <em class="comment">// check read access right on source node</em>
-<a name="576" href="#576">576</a> 	    <strong>if</strong> (!accessMgr.isGranted(srcState.getId(), Permission.READ_ITEM)) {
-<a name="577" href="#577">577</a> 		<strong>throw</strong> <strong>new</strong> PathNotFoundException(srcAbsPath);
-<a name="578" href="#578">578</a> 	    }
-<a name="579" href="#579">579</a> 	} <strong>catch</strong> (ItemNotFoundException infe) {
-<a name="580" href="#580">580</a> 	    String msg = <span class="string">"internal error: failed to check access rights for "</span> + srcAbsPath;
-<a name="581" href="#581">581</a> 	    log.error(msg, infe);
-<a name="582" href="#582">582</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, infe);
-<a name="583" href="#583">583</a> 	}
-<a name="584" href="#584">584</a> 	<em class="comment">// check node type constraints</em>
-<a name="585" href="#585">585</a> 	checkAddNode(destPath, srcState.getNodeTypeName(), ntReg, accessMgr, destHierMgr, destStateMgr);
-<a name="586" href="#586">586</a> <em class="comment">/*</em>
-<a name="587" href="#587">587</a> <em class="comment">	// check if target node needs to be inserted at specific location in child node entries list</em>
-<a name="588" href="#588">588</a> <em class="comment">	boolean insertTargetEntry = false;</em>
-<a name="589" href="#589">589</a> <em class="comment">	int ind = destName.getIndex();</em>
-<a name="590" href="#590">590</a> <em class="comment">	if (ind > 0) {</em>
-<a name="591" href="#591">591</a> <em class="comment">	    // target name contains subscript:</em>
-<a name="592" href="#592">592</a> <em class="comment">	    // validate subscript</em>
-<a name="593" href="#593">593</a> <em class="comment">	    List sameNameSibs = destParentState.getChildNodeEntries(destName.getName());</em>
-<a name="594" href="#594">594</a> <em class="comment">	    if (ind > sameNameSibs.size() + 1) {</em>
-<a name="595" href="#595">595</a> <em class="comment">		String msg = "invalid subscript in name: " + destAbsPath;</em>
-<a name="596" href="#596">596</a> <em class="comment">		log.error(msg);</em>
-<a name="597" href="#597">597</a> <em class="comment">		throw new RepositoryException(msg);</em>
-<a name="598" href="#598">598</a> <em class="comment">	    }</em>
-<a name="599" href="#599">599</a> <em class="comment">	    insertTargetEntry = (ind &lt; sameNameSibs.size() + 1) ? true : false;</em>
-<a name="600" href="#600">600</a> <em class="comment">	}</em>
-<a name="601" href="#601">601</a> <em class="comment">	if (insertTargetEntry) {</em>
-<a name="602" href="#602">602</a> <em class="comment">	    // check hasOrderableChildNodes flag</em>
-<a name="603" href="#603">603</a> <em class="comment">	    if (!ntReg.getNodeTypeDef(destParentState.getNodeTypeName()).hasOrderableChildNodes()) {</em>
-<a name="604" href="#604">604</a> <em class="comment">		throw new ConstraintViolationException(destAbsPath + ": parent node's node type does not allow explicit ordering of child nodes");</em>
-<a name="605" href="#605">605</a> <em class="comment">	    }</em>
+<a name="349" href="#349">349</a> 	PersistentNodeState targetState = getNodeState(nodePath, hierMgr, stateMgr);
+<a name="350" href="#350">350</a> 	Path parentPath = nodePath.getAncestor(1);
+<a name="351" href="#351">351</a> 	PersistentNodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
+<a name="352" href="#352">352</a> 
+<a name="353" href="#353">353</a> 	<em class="comment">// 1. check path &amp; access rights</em>
+<a name="354" href="#354">354</a> 
+<a name="355" href="#355">355</a> 	<strong>try</strong> {
+<a name="356" href="#356">356</a> 	    <em class="comment">// check access rights</em>
+<a name="357" href="#357">357</a> 	    <strong>if</strong> (!accessMgr.isGranted(targetState.getId(), Permission.READ_ITEM)) {
+<a name="358" href="#358">358</a> 		<strong>throw</strong> <strong>new</strong> PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
+<a name="359" href="#359">359</a> 	    }
+<a name="360" href="#360">360</a> 	    <strong>if</strong> (!accessMgr.isGranted(parentState.getId(), Permission.REMOVE_ITEM)) {
+<a name="361" href="#361">361</a> 		<strong>throw</strong> <strong>new</strong> AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + <span class="string">": not allowed to remove child node"</span>);
+<a name="362" href="#362">362</a> 	    }
+<a name="363" href="#363">363</a> 	} <strong>catch</strong> (ItemNotFoundException infe) {
+<a name="364" href="#364">364</a> 	    String msg = <span class="string">"internal error: failed to check access rights for "</span> + hierMgr.safeGetJCRPath(nodePath);
+<a name="365" href="#365">365</a> 	    log.error(msg, infe);
+<a name="366" href="#366">366</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, infe);
+<a name="367" href="#367">367</a> 	}
+<a name="368" href="#368">368</a> 
+<a name="369" href="#369">369</a> 	<em class="comment">// 2. check node type constraints</em>
+<a name="370" href="#370">370</a> 
+<a name="371" href="#371">371</a> 	ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+<a name="372" href="#372">372</a> 	<strong>if</strong> (parentDef.isProtected()) {
+<a name="373" href="#373">373</a> 	    <strong>throw</strong> <strong>new</strong> ConstraintViolationException(hierMgr.safeGetJCRPath(parentPath) + <span class="string">": cannot remove child node of protected parent node"</span>);
+<a name="374" href="#374">374</a> 	}
+<a name="375" href="#375">375</a> 	ChildNodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
+<a name="376" href="#376">376</a> 	<strong>if</strong> (targetDef.isMandatory()) {
+<a name="377" href="#377">377</a> 	    <strong>throw</strong> <strong>new</strong> ConstraintViolationException(hierMgr.safeGetJCRPath(nodePath) + <span class="string">": cannot remove mandatory node"</span>);
+<a name="378" href="#378">378</a> 	}
+<a name="379" href="#379">379</a> 	<strong>if</strong> (targetDef.isProtected()) {
+<a name="380" href="#380">380</a> 	    <strong>throw</strong> <strong>new</strong> ConstraintViolationException(hierMgr.safeGetJCRPath(nodePath) + <span class="string">": cannot remove protected node"</span>);
+<a name="381" href="#381">381</a> 	}
+<a name="382" href="#382">382</a>     }
+<a name="383" href="#383">383</a> 
+<a name="384" href="#384">384</a>     <em>/**<em>*</em></em>
+<a name="385" href="#385">385</a> <em>     * Helper method that builds the effective (i.e. merged and resolved)</em>
+<a name="386" href="#386">386</a> <em>     * node type representation of the specified node's primary and mixin</em>
+<a name="387" href="#387">387</a> <em>     * node types.</em>
+<a name="388" href="#388">388</a> <em>     *</em>
+<a name="389" href="#389">389</a> <em>     * @param state</em>
+<a name="390" href="#390">390</a> <em>     * @param ntReg</em>
+<a name="391" href="#391">391</a> <em>     * @return the effective node type</em>
+<a name="392" href="#392">392</a> <em>     * @throws RepositoryException</em>
+<a name="393" href="#393">393</a> <em>     */</em>
+<a name="394" href="#394">394</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/nodetype/EffectiveNodeType.html">EffectiveNodeType</a> getEffectiveNodeType(<a href="../../../../org/apache/jackrabbit/core/state/NodeState.html">NodeState</a> state,
+<a name="395" href="#395">395</a> 							    NodeTypeRegistry ntReg)
+<a name="396" href="#396">396</a> 	    throws RepositoryException {
+<a name="397" href="#397">397</a> 	<em class="comment">// build effective node type of mixins &amp; primary type:</em>
+<a name="398" href="#398">398</a> 	<em class="comment">// existing mixin's</em>
+<a name="399" href="#399">399</a> 	HashSet set = <strong>new</strong> HashSet(((NodeState) state).getMixinTypeNames());
+<a name="400" href="#400">400</a> 	<em class="comment">// primary type</em>
+<a name="401" href="#401">401</a> 	set.add(state.getNodeTypeName());
+<a name="402" href="#402">402</a> 	<strong>try</strong> {
+<a name="403" href="#403">403</a> 	    <strong>return</strong> ntReg.buildEffectiveNodeType((QName[]) set.toArray(<strong>new</strong> QName[set.size()]));
+<a name="404" href="#404">404</a> 	} <strong>catch</strong> (NodeTypeConflictException ntce) {
+<a name="405" href="#405">405</a> 	    String msg = <span class="string">"internal error: failed to build effective node type for node "</span> + state.getUUID();
+<a name="406" href="#406">406</a> 	    log.error(msg, ntce);
+<a name="407" href="#407">407</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ntce);
+<a name="408" href="#408">408</a> 	}
+<a name="409" href="#409">409</a>     }
+<a name="410" href="#410">410</a> 
+<a name="411" href="#411">411</a>     <em>/**<em>*</em></em>
+<a name="412" href="#412">412</a> <em>     * Helper method that finds the applicable definition for the</em>
+<a name="413" href="#413">413</a> <em>     * a child node with the given name and node type in the parent node's</em>
+<a name="414" href="#414">414</a> <em>     * node type and mixin types.</em>
+<a name="415" href="#415">415</a> <em>     *</em>
+<a name="416" href="#416">416</a> <em>     * @param name</em>
+<a name="417" href="#417">417</a> <em>     * @param nodeTypeName</em>
+<a name="418" href="#418">418</a> <em>     * @param parentState</em>
+<a name="419" href="#419">419</a> <em>     * @param ntReg</em>
+<a name="420" href="#420">420</a> <em>     * @return a &lt;code>ChildNodeDef&lt;/code></em>
+<a name="421" href="#421">421</a> <em>     * @throws ConstraintViolationException if no applicable child node definition</em>
+<a name="422" href="#422">422</a> <em>     *                                      could be found</em>
+<a name="423" href="#423">423</a> <em>     * @throws RepositoryException          if another error occurs</em>
+<a name="424" href="#424">424</a> <em>     */</em>
+<a name="425" href="#425">425</a>     <strong>protected</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/nodetype/ChildNodeDef.html">ChildNodeDef</a> findApplicableDefinition(<a href="../../../../org/apache/jackrabbit/core/QName.html">QName</a> name,
+<a name="426" href="#426">426</a> 							   QName nodeTypeName,
+<a name="427" href="#427">427</a> 							   NodeState parentState,
+<a name="428" href="#428">428</a> 							   NodeTypeRegistry ntReg)
+<a name="429" href="#429">429</a> 	    throws RepositoryException, ConstraintViolationException {
+<a name="430" href="#430">430</a> 	EffectiveNodeType entParent = getEffectiveNodeType(parentState, ntReg);
+<a name="431" href="#431">431</a> 	<strong>return</strong> entParent.getApplicableChildNodeDef(name, nodeTypeName);
+<a name="432" href="#432">432</a>     }
+<a name="433" href="#433">433</a> 
+<a name="434" href="#434">434</a>     <strong>private</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentNodeState.html">PersistentNodeState</a> copyNodeState(<a href="../../../../org/apache/jackrabbit/core/state/NodeState.html">NodeState</a> srcState,
+<a name="435" href="#435">435</a> 						     String parentUUID,
+<a name="436" href="#436">436</a> 						     NodeTypeRegistry ntReg,
+<a name="437" href="#437">437</a> 						     HierarchyManagerImpl srcHierMgr,
+<a name="438" href="#438">438</a> 						     PersistentItemStateManager srcStateMgr,
+<a name="439" href="#439">439</a> 						     PersistentItemStateManager destStateMgr,
+<a name="440" href="#440">440</a> 						     <strong>boolean</strong> clone)
+<a name="441" href="#441">441</a> 	    throws RepositoryException {
+<a name="442" href="#442">442</a> 	PersistentNodeState newState;
+<a name="443" href="#443">443</a> 	<strong>try</strong> {
+<a name="444" href="#444">444</a> 	    String uuid;
+<a name="445" href="#445">445</a> 	    <strong>if</strong> (clone) {
+<a name="446" href="#446">446</a> 		uuid = srcState.getUUID();
+<a name="447" href="#447">447</a> 	    } <strong>else</strong> {
+<a name="448" href="#448">448</a> 		uuid = UUID.randomUUID().toString();	<em class="comment">// create new version 4 uuid</em>
+<a name="449" href="#449">449</a> 	    }
+<a name="450" href="#450">450</a> 	    newState = destStateMgr.createNodeState(uuid, srcState.getNodeTypeName(), parentUUID);
+<a name="451" href="#451">451</a> 	    <em class="comment">// copy node state</em>
+<a name="452" href="#452">452</a> 	    <em class="comment">// @todo special handling required for nodes with special semantics (e.g. those defined by mix:versionable, et.al.)</em>
+<a name="453" href="#453">453</a> 	    <em class="comment">// FIXME delegate to 'node type instance handler'</em>
+<a name="454" href="#454">454</a> 	    newState.setMixinTypeNames(srcState.getMixinTypeNames());
+<a name="455" href="#455">455</a> 	    newState.setDefinitionId(srcState.getDefinitionId());
+<a name="456" href="#456">456</a> 	    <em class="comment">// copy child nodes</em>
+<a name="457" href="#457">457</a> 	    Iterator iter = srcState.getChildNodeEntries().iterator();
+<a name="458" href="#458">458</a> 	    <strong>while</strong> (iter.hasNext()) {
+<a name="459" href="#459">459</a> 		NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+<a name="460" href="#460">460</a> 		NodeState srcChildState = (NodeState) srcStateMgr.getItemState(<strong>new</strong> NodeId(entry.getUUID()));
+<a name="461" href="#461">461</a> 		<em class="comment">// recursive copying of child node</em>
+<a name="462" href="#462">462</a> 		PersistentNodeState newChildState = copyNodeState(srcChildState, uuid,
+<a name="463" href="#463">463</a> 			ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
+<a name="464" href="#464">464</a> 		<em class="comment">// persist new child node</em>
+<a name="465" href="#465">465</a> 		newChildState.store();
+<a name="466" href="#466">466</a> 		<em class="comment">// add new child node entry to new node</em>
+<a name="467" href="#467">467</a> 		newState.addChildNodeEntry(entry.getName(), newChildState.getUUID());
+<a name="468" href="#468">468</a> 	    }
+<a name="469" href="#469">469</a> 	    <em class="comment">// copy properties</em>
+<a name="470" href="#470">470</a> 	    iter = srcState.getPropertyEntries().iterator();
+<a name="471" href="#471">471</a> 	    <strong>while</strong> (iter.hasNext()) {
+<a name="472" href="#472">472</a> 		NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
+<a name="473" href="#473">473</a> 		PropertyState srcChildState = (PropertyState) srcStateMgr.getItemState(<strong>new</strong> PropertyId(srcState.getUUID(), entry.getName()));
+<a name="474" href="#474">474</a> 		PersistentPropertyState newChildState = copyPropertyState(srcChildState, uuid, entry.getName(),
+<a name="475" href="#475">475</a> 			ntReg, srcHierMgr, srcStateMgr, destStateMgr);
+<a name="476" href="#476">476</a> 		<em class="comment">// persist new property</em>
+<a name="477" href="#477">477</a> 		newChildState.store();
+<a name="478" href="#478">478</a> 		<em class="comment">// add new property entry to new node</em>
+<a name="479" href="#479">479</a> 		newState.addPropertyEntry(entry.getName());
+<a name="480" href="#480">480</a> 	    }
+<a name="481" href="#481">481</a> 	    <strong>return</strong> newState;
+<a name="482" href="#482">482</a> 	} <strong>catch</strong> (ItemStateException ise) {
+<a name="483" href="#483">483</a> 	    String msg = <span class="string">"internal error: failed to copy state of "</span> + srcHierMgr.safeGetJCRPath(srcState.getId());
+<a name="484" href="#484">484</a> 	    log.error(msg, ise);
+<a name="485" href="#485">485</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
+<a name="486" href="#486">486</a> 	}
+<a name="487" href="#487">487</a>     }
+<a name="488" href="#488">488</a> 
+<a name="489" href="#489">489</a>     <strong>private</strong> <strong>static</strong> <a href="../../../../org/apache/jackrabbit/core/state/PersistentPropertyState.html">PersistentPropertyState</a> copyPropertyState(<a href="../../../../org/apache/jackrabbit/core/state/PropertyState.html">PropertyState</a> srcState,
+<a name="490" href="#490">490</a> 							     String parentUUID,
+<a name="491" href="#491">491</a> 							     QName propName,
+<a name="492" href="#492">492</a> 							     NodeTypeRegistry ntReg,
+<a name="493" href="#493">493</a> 							     HierarchyManagerImpl srcHierMgr,
+<a name="494" href="#494">494</a> 							     PersistentItemStateManager srcStateMgr,
+<a name="495" href="#495">495</a> 							     PersistentItemStateManager destStateMgr)
+<a name="496" href="#496">496</a> 	    throws RepositoryException {
+<a name="497" href="#497">497</a> 	<em class="comment">// @todo special handling required for properties with special semantics (e.g. those defined by mix:versionable, mix:lockable, et.al.)</em>
+<a name="498" href="#498">498</a> 	PersistentPropertyState newState;
+<a name="499" href="#499">499</a> 	<strong>try</strong> {
+<a name="500" href="#500">500</a> 	    newState = destStateMgr.createPropertyState(parentUUID, propName);
+<a name="501" href="#501">501</a> 	    PropDefId defId = srcState.getDefinitionId();
+<a name="502" href="#502">502</a> 	    newState.setDefinitionId(defId);
+<a name="503" href="#503">503</a> 	    newState.setType(srcState.getType());
+<a name="504" href="#504">504</a> 	    InternalValue[] values = srcState.getValues();
+<a name="505" href="#505">505</a> 	    <strong>if</strong> (values != <strong>null</strong>) {
+<a name="506" href="#506">506</a> 		InternalValue[] <strong>new</strong>Values = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/InternalValue.html">InternalValue</a>[values.length];
+<a name="507" href="#507">507</a> 		<strong>for</strong> (<strong>int</strong> i = 0; i &lt; values.length; i++) {
+<a name="508" href="#508">508</a> 		    newValues[i] = values[i] != <strong>null</strong> ? values[i].createCopy() : <strong>null</strong>;
+<a name="509" href="#509">509</a> 		}
+<a name="510" href="#510">510</a> 		newState.setValues(values);
+<a name="511" href="#511">511</a> 		<em class="comment">// FIXME delegate to 'node type instance handler'</em>
+<a name="512" href="#512">512</a> 		<strong>if</strong> (defId != <strong>null</strong>) {
+<a name="513" href="#513">513</a> 		    PropDef def = ntReg.getPropDef(defId);
+<a name="514" href="#514">514</a> 		    <strong>if</strong> (def.getDeclaringNodeType().equals(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+<a name="515" href="#515">515</a> 			<strong>if</strong> (propName.equals(ItemImpl.PROPNAME_UUID)) {
+<a name="516" href="#516">516</a> 			    <em class="comment">// set correct value of jcr:uuid property</em>
+<a name="517" href="#517">517</a> 			    <strong>new</strong>State.setValues(<strong>new</strong> InternalValue[]{InternalValue.create(parentUUID)});
+<a name="518" href="#518">518</a> 			}
+<a name="519" href="#519">519</a> 		    }
+<a name="520" href="#520">520</a> 		}
+<a name="521" href="#521">521</a> 	    }
+<a name="522" href="#522">522</a> 	    <strong>return</strong> newState;
+<a name="523" href="#523">523</a> 	} <strong>catch</strong> (ItemStateException ise) {
+<a name="524" href="#524">524</a> 	    String msg = <span class="string">"internal error: failed to copy state of "</span> + srcHierMgr.safeGetJCRPath(srcState.getId());
+<a name="525" href="#525">525</a> 	    log.error(msg, ise);
+<a name="526" href="#526">526</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
+<a name="527" href="#527">527</a> 	}
+<a name="528" href="#528">528</a>     }
+<a name="529" href="#529">529</a> 
+<a name="530" href="#530">530</a>     <strong>private</strong> <strong>static</strong> <strong>void</strong> internalCopy(String srcAbsPath,
+<a name="531" href="#531">531</a> 				     PersistentItemStateManager srcStateMgr,
+<a name="532" href="#532">532</a> 				     HierarchyManagerImpl srcHierMgr,
+<a name="533" href="#533">533</a> 				     String destAbsPath,
+<a name="534" href="#534">534</a> 				     PersistentItemStateManager destStateMgr,
+<a name="535" href="#535">535</a> 				     HierarchyManagerImpl destHierMgr,
+<a name="536" href="#536">536</a> 				     AccessManagerImpl accessMgr,
+<a name="537" href="#537">537</a> 				     NamespaceResolver nsResolver,
+<a name="538" href="#538">538</a> 				     NodeTypeRegistry ntReg,
+<a name="539" href="#539">539</a> 				     <strong>boolean</strong> clone)
+<a name="540" href="#540">540</a> 	    throws ConstraintViolationException, AccessDeniedException,
+<a name="541" href="#541">541</a> 	    PathNotFoundException, ItemExistsException, RepositoryException {
+<a name="542" href="#542">542</a> 
+<a name="543" href="#543">543</a> 	<em class="comment">// 1. check paths &amp; retrieve state</em>
+<a name="544" href="#544">544</a> 
+<a name="545" href="#545">545</a> 	Path srcPath;
+<a name="546" href="#546">546</a> 	PersistentNodeState srcState;
+<a name="547" href="#547">547</a> 	<strong>try</strong> {
+<a name="548" href="#548">548</a> 	    srcPath = Path.create(srcAbsPath, nsResolver, <strong>true</strong>);
+<a name="549" href="#549">549</a> 	    srcState = getNodeState(srcPath, srcHierMgr, srcStateMgr);
+<a name="550" href="#550">550</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
+<a name="551" href="#551">551</a> 	    String msg = <span class="string">"invalid path: "</span> + srcAbsPath;
+<a name="552" href="#552">552</a> 	    log.error(msg, mpe);
+<a name="553" href="#553">553</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
+<a name="554" href="#554">554</a> 	}
+<a name="555" href="#555">555</a> 
+<a name="556" href="#556">556</a> 	Path destPath;
+<a name="557" href="#557">557</a> 	Path.PathElement destName;
+<a name="558" href="#558">558</a> 	Path destParentPath;
+<a name="559" href="#559">559</a> 	PersistentNodeState destParentState;
+<a name="560" href="#560">560</a> 	<strong>try</strong> {
+<a name="561" href="#561">561</a> 	    destPath = Path.create(destAbsPath, nsResolver, <strong>true</strong>);
+<a name="562" href="#562">562</a> 	    destName = destPath.getNameElement();
+<a name="563" href="#563">563</a> 	    destParentPath = destPath.getAncestor(1);
+<a name="564" href="#564">564</a> 	    destParentState = getNodeState(destParentPath, destHierMgr, destStateMgr);
+<a name="565" href="#565">565</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
+<a name="566" href="#566">566</a> 	    String msg = <span class="string">"invalid path: "</span> + destAbsPath;
+<a name="567" href="#567">567</a> 	    log.error(msg, mpe);
+<a name="568" href="#568">568</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
+<a name="569" href="#569">569</a> 	}
+<a name="570" href="#570">570</a> 	<strong>int</strong> ind = destName.getIndex();
+<a name="571" href="#571">571</a> 	<strong>if</strong> (ind > 0) {
+<a name="572" href="#572">572</a> 	    <em class="comment">// subscript in name element</em>
+<a name="573" href="#573">573</a> 	    String msg = destAbsPath + <span class="string">": invalid destination path (subscript in name element is not allowed)"</span>;
+<a name="574" href="#574">574</a> 	    log.error(msg);
+<a name="575" href="#575">575</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg);
+<a name="576" href="#576">576</a> 	}
+<a name="577" href="#577">577</a> 
+<a name="578" href="#578">578</a> 	<em class="comment">// 2. check access rights &amp; node type constraints</em>
+<a name="579" href="#579">579</a> 
+<a name="580" href="#580">580</a> 	<strong>try</strong> {
+<a name="581" href="#581">581</a> 	    <em class="comment">// check read access right on source node</em>
+<a name="582" href="#582">582</a> 	    <strong>if</strong> (!accessMgr.isGranted(srcState.getId(), Permission.READ_ITEM)) {
+<a name="583" href="#583">583</a> 		<strong>throw</strong> <strong>new</strong> PathNotFoundException(srcAbsPath);
+<a name="584" href="#584">584</a> 	    }
+<a name="585" href="#585">585</a> 	} <strong>catch</strong> (ItemNotFoundException infe) {
+<a name="586" href="#586">586</a> 	    String msg = <span class="string">"internal error: failed to check access rights for "</span> + srcAbsPath;
+<a name="587" href="#587">587</a> 	    log.error(msg, infe);
+<a name="588" href="#588">588</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, infe);
+<a name="589" href="#589">589</a> 	}
+<a name="590" href="#590">590</a> 	<em class="comment">// check node type constraints</em>
+<a name="591" href="#591">591</a> 	checkAddNode(destPath, srcState.getNodeTypeName(), ntReg, accessMgr, destHierMgr, destStateMgr);
+<a name="592" href="#592">592</a> <em class="comment">/*</em>
+<a name="593" href="#593">593</a> <em class="comment">	// check if target node needs to be inserted at specific location in child node entries list</em>
+<a name="594" href="#594">594</a> <em class="comment">	boolean insertTargetEntry = false;</em>
+<a name="595" href="#595">595</a> <em class="comment">	int ind = destName.getIndex();</em>
+<a name="596" href="#596">596</a> <em class="comment">	if (ind > 0) {</em>
+<a name="597" href="#597">597</a> <em class="comment">	    // target name contains subscript:</em>
+<a name="598" href="#598">598</a> <em class="comment">	    // validate subscript</em>
+<a name="599" href="#599">599</a> <em class="comment">	    List sameNameSibs = destParentState.getChildNodeEntries(destName.getName());</em>
+<a name="600" href="#600">600</a> <em class="comment">	    if (ind > sameNameSibs.size() + 1) {</em>
+<a name="601" href="#601">601</a> <em class="comment">		String msg = "invalid subscript in name: " + destAbsPath;</em>
+<a name="602" href="#602">602</a> <em class="comment">		log.error(msg);</em>
+<a name="603" href="#603">603</a> <em class="comment">		throw new RepositoryException(msg);</em>
+<a name="604" href="#604">604</a> <em class="comment">	    }</em>
+<a name="605" href="#605">605</a> <em class="comment">	    insertTargetEntry = (ind &lt; sameNameSibs.size() + 1) ? true : false;</em>
 <a name="606" href="#606">606</a> <em class="comment">	}</em>
-<a name="607" href="#607">607</a> <em class="comment">*/</em>
-<a name="608" href="#608">608</a> 	<em class="comment">// 3. do copy operation (modify and persist affected states)</em>
-<a name="609" href="#609">609</a> 
-<a name="610" href="#610">610</a> 	<em class="comment">// create deep copy of source node state</em>
-<a name="611" href="#611">611</a> 	PersistentNodeState newState = copyNodeState(srcState, destParentState.getUUID(),
-<a name="612" href="#612">612</a> 		ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
-<a name="613" href="#613">613</a> 
-<a name="614" href="#614">614</a> 	<em class="comment">// add to new parent</em>
-<a name="615" href="#615">615</a> 	destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
-<a name="616" href="#616">616</a> <em class="comment">/*</em>
-<a name="617" href="#617">617</a> <em class="comment">	if (!insertTargetEntry) {</em>
-<a name="618" href="#618">618</a> <em class="comment">	    // append target entry</em>
-<a name="619" href="#619">619</a> <em class="comment">	    destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());</em>
-<a name="620" href="#620">620</a> <em class="comment">	} else {</em>
-<a name="621" href="#621">621</a> <em class="comment">	    // insert target entry at specified position</em>
-<a name="622" href="#622">622</a> <em class="comment">	    Iterator iter = new ArrayList(destParentState.getChildNodeEntries()).iterator();</em>
-<a name="623" href="#623">623</a> <em class="comment">	    destParentState.removeAllChildNodeEntries();</em>
-<a name="624" href="#624">624</a> <em class="comment">	    while (iter.hasNext()) {</em>
-<a name="625" href="#625">625</a> <em class="comment">		NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();</em>
-<a name="626" href="#626">626</a> <em class="comment">		if (entry.getName().equals(destName.getName()) &amp;&amp;</em>
-<a name="627" href="#627">627</a> <em class="comment">			entry.getIndex() == destName.getIndex()) {</em>
-<a name="628" href="#628">628</a> <em class="comment">		    destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());</em>
-<a name="629" href="#629">629</a> <em class="comment">		}</em>
-<a name="630" href="#630">630</a> <em class="comment">		destParentState.addChildNodeEntry(entry.getName(), entry.getUUID());</em>
-<a name="631" href="#631">631</a> <em class="comment">	    }</em>
-<a name="632" href="#632">632</a> <em class="comment">	}</em>
-<a name="633" href="#633">633</a> <em class="comment">*/</em>
-<a name="634" href="#634">634</a> 	<em class="comment">// change definition (id) of new node</em>
-<a name="635" href="#635">635</a> 	ChildNodeDef newNodeDef = findApplicableDefinition(destName.getName(), srcState.getNodeTypeName(), destParentState, ntReg);
-<a name="636" href="#636">636</a> 	<strong>new</strong>State.setDefinitionId(<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/nodetype/NodeDefId.html">NodeDefId</a>(<strong>new</strong>NodeDef));
-<a name="637" href="#637">637</a> 
-<a name="638" href="#638">638</a> 	<em class="comment">// persist states</em>
-<a name="639" href="#639">639</a> 	<strong>try</strong> {
-<a name="640" href="#640">640</a> 	    newState.store();
-<a name="641" href="#641">641</a> 	    destParentState.store();
-<a name="642" href="#642">642</a> 	} <strong>catch</strong> (ItemStateException ise) {
-<a name="643" href="#643">643</a> 	    String msg = <span class="string">"internal error: failed to persist state of "</span> + destAbsPath;
-<a name="644" href="#644">644</a> 	    log.error(msg, ise);
-<a name="645" href="#645">645</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
-<a name="646" href="#646">646</a> 	}
-<a name="647" href="#647">647</a>     }
-<a name="648" href="#648">648</a> 
-<a name="649" href="#649">649</a>     <em class="comment">//------------------------------------------------------------&lt; Workspace ></em>
-<a name="650" href="#650">650</a>     <em>/**<em>*</em></em>
-<a name="651" href="#651">651</a> <em>     * @see Workspace#getName</em>
-<a name="652" href="#652">652</a> <em>     */</em>
-<a name="653" href="#653">653</a>     <strong>public</strong> String getName() {
-<a name="654" href="#654">654</a> 	<strong>return</strong> wspName;
-<a name="655" href="#655">655</a>     }
-<a name="656" href="#656">656</a> 
-<a name="657" href="#657">657</a>     <em>/**<em>*</em></em>
-<a name="658" href="#658">658</a> <em>     * @see Workspace#getSession</em>
-<a name="659" href="#659">659</a> <em>     */</em>
-<a name="660" href="#660">660</a>     <strong>public</strong> Session getSession() {
-<a name="661" href="#661">661</a> 	<strong>return</strong> session;
-<a name="662" href="#662">662</a>     }
-<a name="663" href="#663">663</a> 
-<a name="664" href="#664">664</a>     <em>/**<em>*</em></em>
-<a name="665" href="#665">665</a> <em>     * @see Workspace#getNamespaceRegistry</em>
-<a name="666" href="#666">666</a> <em>     */</em>
-<a name="667" href="#667">667</a>     <strong>public</strong> NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
-<a name="668" href="#668">668</a> 	<strong>return</strong> rep.getNamespaceRegistry();
-<a name="669" href="#669">669</a>     }
-<a name="670" href="#670">670</a> 
-<a name="671" href="#671">671</a>     <em>/**<em>*</em></em>
-<a name="672" href="#672">672</a> <em>     * @see Workspace#getNodeTypeManager</em>
-<a name="673" href="#673">673</a> <em>     */</em>
-<a name="674" href="#674">674</a>     <strong>public</strong> NodeTypeManager getNodeTypeManager() throws RepositoryException {
-<a name="675" href="#675">675</a> 	<strong>return</strong> session.getNodeTypeManager();
-<a name="676" href="#676">676</a>     }
-<a name="677" href="#677">677</a> 
-<a name="678" href="#678">678</a>     <em>/**<em>*</em></em>
-<a name="679" href="#679">679</a> <em>     * @see Workspace#clone(String, String, String)</em>
-<a name="680" href="#680">680</a> <em>     */</em>
-<a name="681" href="#681">681</a>     <strong>public</strong> <strong>void</strong> clone(String srcWorkspace, String srcAbsPath, String destAbsPath)
-<a name="682" href="#682">682</a> 	    throws NoSuchWorkspaceException, ConstraintViolationException,
-<a name="683" href="#683">683</a> 	    AccessDeniedException, PathNotFoundException,
-<a name="684" href="#684">684</a> 	    ItemExistsException, RepositoryException {
-<a name="685" href="#685">685</a> 	<em class="comment">// clone (i.e. pull) subtree at srcAbsPath from srcWorkspace</em>
-<a name="686" href="#686">686</a> 	<em class="comment">// to 'this' workspace at destAbsPath</em>
-<a name="687" href="#687">687</a> 	PersistentItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
-<a name="688" href="#688">688</a> 	<em class="comment">// FIXME need to setup a hierarchy manager for source workspace</em>
-<a name="689" href="#689">689</a> 	HierarchyManagerImpl srcHierMgr = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/HierarchyManagerImpl.html">HierarchyManagerImpl</a>(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
-<a name="690" href="#690">690</a> 	<em class="comment">// do cross-workspace copy</em>
-<a name="691" href="#691">691</a> 	internalCopy(srcAbsPath, srcStateMgr, srcHierMgr,
-<a name="692" href="#692">692</a> 		destAbsPath, persistentStateMgr, hierMgr,
-<a name="693" href="#693">693</a> 		session.getAccessManager(), session.getNamespaceResolver(),
-<a name="694" href="#694">694</a> 		rep.getNodeTypeRegistry(), <strong>true</strong>);
-<a name="695" href="#695">695</a>     }
-<a name="696" href="#696">696</a> 
-<a name="697" href="#697">697</a>     <em>/**<em>*</em></em>
-<a name="698" href="#698">698</a> <em>     * @see Workspace#copy(String, String)</em>
-<a name="699" href="#699">699</a> <em>     */</em>
-<a name="700" href="#700">700</a>     <strong>public</strong> <strong>void</strong> copy(String srcAbsPath, String destAbsPath)
-<a name="701" href="#701">701</a> 	    throws ConstraintViolationException, AccessDeniedException,
-<a name="702" href="#702">702</a> 	    PathNotFoundException, ItemExistsException, RepositoryException {
-<a name="703" href="#703">703</a> 	<em class="comment">// do intra-workspace copy</em>
-<a name="704" href="#704">704</a> 	internalCopy(srcAbsPath, persistentStateMgr, hierMgr,
-<a name="705" href="#705">705</a> 		destAbsPath, persistentStateMgr, hierMgr,
-<a name="706" href="#706">706</a> 		session.getAccessManager(), session.getNamespaceResolver(),
-<a name="707" href="#707">707</a> 		rep.getNodeTypeRegistry(), false);
-<a name="708" href="#708">708</a>     }
-<a name="709" href="#709">709</a> 
-<a name="710" href="#710">710</a>     <em>/**<em>*</em></em>
-<a name="711" href="#711">711</a> <em>     * @see Workspace#move</em>
-<a name="712" href="#712">712</a> <em>     */</em>
-<a name="713" href="#713">713</a>     <strong>public</strong> <strong>void</strong> move(String srcAbsPath, String destAbsPath)
-<a name="714" href="#714">714</a> 	    throws ConstraintViolationException, AccessDeniedException,
-<a name="715" href="#715">715</a> 	    PathNotFoundException, ItemExistsException, RepositoryException {
-<a name="716" href="#716">716</a> 
-<a name="717" href="#717">717</a> 	<em class="comment">// intra-workspace move...</em>
-<a name="718" href="#718">718</a> 
-<a name="719" href="#719">719</a> 	<em class="comment">// 1. check paths &amp; retrieve state</em>
-<a name="720" href="#720">720</a> 
-<a name="721" href="#721">721</a> 	Path srcPath;
-<a name="722" href="#722">722</a> 	Path.PathElement srcName;
-<a name="723" href="#723">723</a> 	Path srcParentPath;
-<a name="724" href="#724">724</a> 	PersistentNodeState targetState;
-<a name="725" href="#725">725</a> 	PersistentNodeState srcParentState;
-<a name="726" href="#726">726</a> 	<strong>try</strong> {
-<a name="727" href="#727">727</a> 	    srcPath = Path.create(srcAbsPath, session.getNamespaceResolver(), <strong>true</strong>);
-<a name="728" href="#728">728</a> 	    srcName = srcPath.getNameElement();
-<a name="729" href="#729">729</a> 	    srcParentPath = srcPath.getAncestor(1);
-<a name="730" href="#730">730</a> 	    targetState = getNodeState(srcPath, hierMgr, persistentStateMgr);
-<a name="731" href="#731">731</a> 	    srcParentState = getNodeState(srcParentPath, hierMgr, persistentStateMgr);
-<a name="732" href="#732">732</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
-<a name="733" href="#733">733</a> 	    String msg = <span class="string">"invalid path: "</span> + srcAbsPath;
-<a name="734" href="#734">734</a> 	    log.error(msg, mpe);
-<a name="735" href="#735">735</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
-<a name="736" href="#736">736</a> 	}
-<a name="737" href="#737">737</a> 
-<a name="738" href="#738">738</a> 	Path destPath;
-<a name="739" href="#739">739</a> 	Path.PathElement destName;
-<a name="740" href="#740">740</a> 	Path destParentPath;
-<a name="741" href="#741">741</a> 	PersistentNodeState destParentState;
-<a name="742" href="#742">742</a> 	<strong>try</strong> {
-<a name="743" href="#743">743</a> 	    destPath = Path.create(destAbsPath, session.getNamespaceResolver(), <strong>true</strong>);
-<a name="744" href="#744">744</a> 	    destName = destPath.getNameElement();
-<a name="745" href="#745">745</a> 	    destParentPath = destPath.getAncestor(1);
-<a name="746" href="#746">746</a> 	    destParentState = getNodeState(destParentPath, hierMgr, persistentStateMgr);
-<a name="747" href="#747">747</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
-<a name="748" href="#748">748</a> 	    String msg = <span class="string">"invalid path: "</span> + destAbsPath;
-<a name="749" href="#749">749</a> 	    log.error(msg, mpe);
-<a name="750" href="#750">750</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
-<a name="751" href="#751">751</a> 	}
-<a name="752" href="#752">752</a> 	<strong>int</strong> ind = destName.getIndex();
-<a name="753" href="#753">753</a> 	<strong>if</strong> (ind > 0) {
-<a name="754" href="#754">754</a> 	    <em class="comment">// subscript in name element</em>
-<a name="755" href="#755">755</a> 	    String msg = destAbsPath + <span class="string">": invalid destination path (subscript in name element is not allowed)"</span>;
-<a name="756" href="#756">756</a> 	    log.error(msg);
-<a name="757" href="#757">757</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg);
-<a name="758" href="#758">758</a> 	}
-<a name="759" href="#759">759</a> 
-<a name="760" href="#760">760</a> 	<em class="comment">// 2. check node type constraints &amp; access rights</em>
-<a name="761" href="#761">761</a> 
-<a name="762" href="#762">762</a> 	checkRemoveNode(srcPath, rep.getNodeTypeRegistry(), session.getAccessManager(), hierMgr, persistentStateMgr);
-<a name="763" href="#763">763</a> 	checkAddNode(destPath, targetState.getNodeTypeName(),
-<a name="764" href="#764">764</a> 		rep.getNodeTypeRegistry(), session.getAccessManager(),
-<a name="765" href="#765">765</a> 		hierMgr, persistentStateMgr);
-<a name="766" href="#766">766</a> <em class="comment">/*</em>
-<a name="767" href="#767">767</a> <em class="comment">	// check if target node needs to be inserted at specific location in child node entries list</em>
-<a name="768" href="#768">768</a> <em class="comment">	boolean insertTargetEntry = false;</em>
-<a name="769" href="#769">769</a> <em class="comment">	int ind = destName.getIndex();</em>
-<a name="770" href="#770">770</a> <em class="comment">	if (ind > 0) {</em>
-<a name="771" href="#771">771</a> <em class="comment">	    // target name contains subscript:</em>
-<a name="772" href="#772">772</a> <em class="comment">	    // validate subscript</em>
-<a name="773" href="#773">773</a> <em class="comment">	    List sameNameSibs = destParentState.getChildNodeEntries(destName.getName());</em>
-<a name="774" href="#774">774</a> <em class="comment">	    if (ind > sameNameSibs.size() + 1) {</em>
-<a name="775" href="#775">775</a> <em class="comment">		String msg = "invalid subscript in name: " + destAbsPath;</em>
-<a name="776" href="#776">776</a> <em class="comment">		log.error(msg);</em>
-<a name="777" href="#777">777</a> <em class="comment">		throw new RepositoryException(msg);</em>
-<a name="778" href="#778">778</a> <em class="comment">	    }</em>
-<a name="779" href="#779">779</a> <em class="comment">	    insertTargetEntry = (ind &lt; sameNameSibs.size() + 1) ? true : false;</em>
-<a name="780" href="#780">780</a> <em class="comment">	}</em>
-<a name="781" href="#781">781</a> <em class="comment">	if (insertTargetEntry) {</em>
-<a name="782" href="#782">782</a> <em class="comment">	    // check hasOrderableChildNodes flag</em>
-<a name="783" href="#783">783</a> <em class="comment">	    if (!rep.getNodeTypeRegistry().getNodeTypeDef(destParentState.getNodeTypeName()).hasOrderableChildNodes()) {</em>
-<a name="784" href="#784">784</a> <em class="comment">		throw new ConstraintViolationException(destAbsPath + ": parent node's node type does not allow explicit ordering of child nodes");</em>
-<a name="785" href="#785">785</a> <em class="comment">	    }</em>
+<a name="607" href="#607">607</a> <em class="comment">	if (insertTargetEntry) {</em>
+<a name="608" href="#608">608</a> <em class="comment">	    // check hasOrderableChildNodes flag</em>
+<a name="609" href="#609">609</a> <em class="comment">	    if (!ntReg.getNodeTypeDef(destParentState.getNodeTypeName()).hasOrderableChildNodes()) {</em>
+<a name="610" href="#610">610</a> <em class="comment">		throw new ConstraintViolationException(destAbsPath + ": parent node's node type does not allow explicit ordering of child nodes");</em>
+<a name="611" href="#611">611</a> <em class="comment">	    }</em>
+<a name="612" href="#612">612</a> <em class="comment">	}</em>
+<a name="613" href="#613">613</a> <em class="comment">*/</em>
+<a name="614" href="#614">614</a> 	<em class="comment">// 3. do copy operation (modify and persist affected states)</em>
+<a name="615" href="#615">615</a> 
+<a name="616" href="#616">616</a> 	<em class="comment">// create deep copy of source node state</em>
+<a name="617" href="#617">617</a> 	PersistentNodeState newState = copyNodeState(srcState, destParentState.getUUID(),
+<a name="618" href="#618">618</a> 		ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
+<a name="619" href="#619">619</a> 
+<a name="620" href="#620">620</a> 	<em class="comment">// add to new parent</em>
+<a name="621" href="#621">621</a> 	destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
+<a name="622" href="#622">622</a> <em class="comment">/*</em>
+<a name="623" href="#623">623</a> <em class="comment">	if (!insertTargetEntry) {</em>
+<a name="624" href="#624">624</a> <em class="comment">	    // append target entry</em>
+<a name="625" href="#625">625</a> <em class="comment">	    destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());</em>
+<a name="626" href="#626">626</a> <em class="comment">	} else {</em>
+<a name="627" href="#627">627</a> <em class="comment">	    // insert target entry at specified position</em>
+<a name="628" href="#628">628</a> <em class="comment">	    Iterator iter = new ArrayList(destParentState.getChildNodeEntries()).iterator();</em>
+<a name="629" href="#629">629</a> <em class="comment">	    destParentState.removeAllChildNodeEntries();</em>
+<a name="630" href="#630">630</a> <em class="comment">	    while (iter.hasNext()) {</em>
+<a name="631" href="#631">631</a> <em class="comment">		NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();</em>
+<a name="632" href="#632">632</a> <em class="comment">		if (entry.getName().equals(destName.getName()) &amp;&amp;</em>
+<a name="633" href="#633">633</a> <em class="comment">			entry.getIndex() == destName.getIndex()) {</em>
+<a name="634" href="#634">634</a> <em class="comment">		    destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());</em>
+<a name="635" href="#635">635</a> <em class="comment">		}</em>
+<a name="636" href="#636">636</a> <em class="comment">		destParentState.addChildNodeEntry(entry.getName(), entry.getUUID());</em>
+<a name="637" href="#637">637</a> <em class="comment">	    }</em>
+<a name="638" href="#638">638</a> <em class="comment">	}</em>
+<a name="639" href="#639">639</a> <em class="comment">*/</em>
+<a name="640" href="#640">640</a> 	<em class="comment">// change definition (id) of new node</em>
+<a name="641" href="#641">641</a> 	ChildNodeDef newNodeDef = findApplicableDefinition(destName.getName(), srcState.getNodeTypeName(), destParentState, ntReg);
+<a name="642" href="#642">642</a> 	<strong>new</strong>State.setDefinitionId(<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/nodetype/NodeDefId.html">NodeDefId</a>(<strong>new</strong>NodeDef));
+<a name="643" href="#643">643</a> 
+<a name="644" href="#644">644</a> 	<em class="comment">// persist states</em>
+<a name="645" href="#645">645</a> 	<strong>try</strong> {
+<a name="646" href="#646">646</a> 	    newState.store();
+<a name="647" href="#647">647</a> 	    destParentState.store();
+<a name="648" href="#648">648</a> 	} <strong>catch</strong> (ItemStateException ise) {
+<a name="649" href="#649">649</a> 	    String msg = <span class="string">"internal error: failed to persist state of "</span> + destAbsPath;
+<a name="650" href="#650">650</a> 	    log.error(msg, ise);
+<a name="651" href="#651">651</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
+<a name="652" href="#652">652</a> 	}
+<a name="653" href="#653">653</a>     }
+<a name="654" href="#654">654</a> 
+<a name="655" href="#655">655</a>     <em class="comment">//------------------------------------------------------------&lt; Workspace ></em>
+<a name="656" href="#656">656</a>     <em>/**<em>*</em></em>
+<a name="657" href="#657">657</a> <em>     * @see Workspace#getName</em>
+<a name="658" href="#658">658</a> <em>     */</em>
+<a name="659" href="#659">659</a>     <strong>public</strong> String getName() {
+<a name="660" href="#660">660</a> 	<strong>return</strong> wspName;
+<a name="661" href="#661">661</a>     }
+<a name="662" href="#662">662</a> 
+<a name="663" href="#663">663</a>     <em>/**<em>*</em></em>
+<a name="664" href="#664">664</a> <em>     * @see Workspace#getSession</em>
+<a name="665" href="#665">665</a> <em>     */</em>
+<a name="666" href="#666">666</a>     <strong>public</strong> Session getSession() {
+<a name="667" href="#667">667</a> 	<strong>return</strong> session;
+<a name="668" href="#668">668</a>     }
+<a name="669" href="#669">669</a> 
+<a name="670" href="#670">670</a>     <em>/**<em>*</em></em>
+<a name="671" href="#671">671</a> <em>     * @see Workspace#getNamespaceRegistry</em>
+<a name="672" href="#672">672</a> <em>     */</em>
+<a name="673" href="#673">673</a>     <strong>public</strong> NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
+<a name="674" href="#674">674</a> 	<strong>return</strong> rep.getNamespaceRegistry();
+<a name="675" href="#675">675</a>     }
+<a name="676" href="#676">676</a> 
+<a name="677" href="#677">677</a>     <em>/**<em>*</em></em>
+<a name="678" href="#678">678</a> <em>     * @see Workspace#getNodeTypeManager</em>
+<a name="679" href="#679">679</a> <em>     */</em>
+<a name="680" href="#680">680</a>     <strong>public</strong> NodeTypeManager getNodeTypeManager() throws RepositoryException {
+<a name="681" href="#681">681</a> 	<strong>return</strong> session.getNodeTypeManager();
+<a name="682" href="#682">682</a>     }
+<a name="683" href="#683">683</a> 
+<a name="684" href="#684">684</a>     <em>/**<em>*</em></em>
+<a name="685" href="#685">685</a> <em>     * @see Workspace#clone(String, String, String)</em>
+<a name="686" href="#686">686</a> <em>     */</em>
+<a name="687" href="#687">687</a>     <strong>public</strong> <strong>void</strong> clone(String srcWorkspace, String srcAbsPath, String destAbsPath)
+<a name="688" href="#688">688</a> 	    throws NoSuchWorkspaceException, ConstraintViolationException,
+<a name="689" href="#689">689</a> 	    AccessDeniedException, PathNotFoundException,
+<a name="690" href="#690">690</a> 	    ItemExistsException, RepositoryException {
+<a name="691" href="#691">691</a> 	<em class="comment">// clone (i.e. pull) subtree at srcAbsPath from srcWorkspace</em>
+<a name="692" href="#692">692</a> 	<em class="comment">// to 'this' workspace at destAbsPath</em>
+<a name="693" href="#693">693</a> 	PersistentItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
+<a name="694" href="#694">694</a> 	<em class="comment">// FIXME need to setup a hierarchy manager for source workspace</em>
+<a name="695" href="#695">695</a> 	HierarchyManagerImpl srcHierMgr = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/HierarchyManagerImpl.html">HierarchyManagerImpl</a>(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
+<a name="696" href="#696">696</a> 	<em class="comment">// do cross-workspace copy</em>
+<a name="697" href="#697">697</a> 	internalCopy(srcAbsPath, srcStateMgr, srcHierMgr,
+<a name="698" href="#698">698</a> 		destAbsPath, persistentStateMgr, hierMgr,
+<a name="699" href="#699">699</a> 		session.getAccessManager(), session.getNamespaceResolver(),
+<a name="700" href="#700">700</a> 		rep.getNodeTypeRegistry(), <strong>true</strong>);
+<a name="701" href="#701">701</a>     }
+<a name="702" href="#702">702</a> 
+<a name="703" href="#703">703</a>     <em>/**<em>*</em></em>
+<a name="704" href="#704">704</a> <em>     * @see Workspace#copy(String, String)</em>
+<a name="705" href="#705">705</a> <em>     */</em>
+<a name="706" href="#706">706</a>     <strong>public</strong> <strong>void</strong> copy(String srcAbsPath, String destAbsPath)
+<a name="707" href="#707">707</a> 	    throws ConstraintViolationException, AccessDeniedException,
+<a name="708" href="#708">708</a> 	    PathNotFoundException, ItemExistsException, RepositoryException {
+<a name="709" href="#709">709</a> 	<em class="comment">// do intra-workspace copy</em>
+<a name="710" href="#710">710</a> 	internalCopy(srcAbsPath, persistentStateMgr, hierMgr,
+<a name="711" href="#711">711</a> 		destAbsPath, persistentStateMgr, hierMgr,
+<a name="712" href="#712">712</a> 		session.getAccessManager(), session.getNamespaceResolver(),
+<a name="713" href="#713">713</a> 		rep.getNodeTypeRegistry(), false);
+<a name="714" href="#714">714</a>     }
+<a name="715" href="#715">715</a> 
+<a name="716" href="#716">716</a>     <em>/**<em>*</em></em>
+<a name="717" href="#717">717</a> <em>     * @see Workspace#move</em>
+<a name="718" href="#718">718</a> <em>     */</em>
+<a name="719" href="#719">719</a>     <strong>public</strong> <strong>void</strong> move(String srcAbsPath, String destAbsPath)
+<a name="720" href="#720">720</a> 	    throws ConstraintViolationException, AccessDeniedException,
+<a name="721" href="#721">721</a> 	    PathNotFoundException, ItemExistsException, RepositoryException {
+<a name="722" href="#722">722</a> 
+<a name="723" href="#723">723</a> 	<em class="comment">// intra-workspace move...</em>
+<a name="724" href="#724">724</a> 
+<a name="725" href="#725">725</a> 	<em class="comment">// 1. check paths &amp; retrieve state</em>
+<a name="726" href="#726">726</a> 
+<a name="727" href="#727">727</a> 	Path srcPath;
+<a name="728" href="#728">728</a> 	Path.PathElement srcName;
+<a name="729" href="#729">729</a> 	Path srcParentPath;
+<a name="730" href="#730">730</a> 	PersistentNodeState targetState;
+<a name="731" href="#731">731</a> 	PersistentNodeState srcParentState;
+<a name="732" href="#732">732</a> 	<strong>try</strong> {
+<a name="733" href="#733">733</a> 	    srcPath = Path.create(srcAbsPath, session.getNamespaceResolver(), <strong>true</strong>);
+<a name="734" href="#734">734</a> 	    srcName = srcPath.getNameElement();
+<a name="735" href="#735">735</a> 	    srcParentPath = srcPath.getAncestor(1);
+<a name="736" href="#736">736</a> 	    targetState = getNodeState(srcPath, hierMgr, persistentStateMgr);
+<a name="737" href="#737">737</a> 	    srcParentState = getNodeState(srcParentPath, hierMgr, persistentStateMgr);
+<a name="738" href="#738">738</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
+<a name="739" href="#739">739</a> 	    String msg = <span class="string">"invalid path: "</span> + srcAbsPath;
+<a name="740" href="#740">740</a> 	    log.error(msg, mpe);
+<a name="741" href="#741">741</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
+<a name="742" href="#742">742</a> 	}
+<a name="743" href="#743">743</a> 
+<a name="744" href="#744">744</a> 	Path destPath;
+<a name="745" href="#745">745</a> 	Path.PathElement destName;
+<a name="746" href="#746">746</a> 	Path destParentPath;
+<a name="747" href="#747">747</a> 	PersistentNodeState destParentState;
+<a name="748" href="#748">748</a> 	<strong>try</strong> {
+<a name="749" href="#749">749</a> 	    destPath = Path.create(destAbsPath, session.getNamespaceResolver(), <strong>true</strong>);
+<a name="750" href="#750">750</a> 	    destName = destPath.getNameElement();
+<a name="751" href="#751">751</a> 	    destParentPath = destPath.getAncestor(1);
+<a name="752" href="#752">752</a> 	    destParentState = getNodeState(destParentPath, hierMgr, persistentStateMgr);
+<a name="753" href="#753">753</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
+<a name="754" href="#754">754</a> 	    String msg = <span class="string">"invalid path: "</span> + destAbsPath;
+<a name="755" href="#755">755</a> 	    log.error(msg, mpe);
+<a name="756" href="#756">756</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
+<a name="757" href="#757">757</a> 	}
+<a name="758" href="#758">758</a> 	<strong>int</strong> ind = destName.getIndex();
+<a name="759" href="#759">759</a> 	<strong>if</strong> (ind > 0) {
+<a name="760" href="#760">760</a> 	    <em class="comment">// subscript in name element</em>
+<a name="761" href="#761">761</a> 	    String msg = destAbsPath + <span class="string">": invalid destination path (subscript in name element is not allowed)"</span>;
+<a name="762" href="#762">762</a> 	    log.error(msg);
+<a name="763" href="#763">763</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg);
+<a name="764" href="#764">764</a> 	}
+<a name="765" href="#765">765</a> 
+<a name="766" href="#766">766</a> 	<em class="comment">// 2. check node type constraints &amp; access rights</em>
+<a name="767" href="#767">767</a> 
+<a name="768" href="#768">768</a> 	checkRemoveNode(srcPath, rep.getNodeTypeRegistry(), session.getAccessManager(), hierMgr, persistentStateMgr);
+<a name="769" href="#769">769</a> 	checkAddNode(destPath, targetState.getNodeTypeName(),
+<a name="770" href="#770">770</a> 		rep.getNodeTypeRegistry(), session.getAccessManager(),
+<a name="771" href="#771">771</a> 		hierMgr, persistentStateMgr);
+<a name="772" href="#772">772</a> <em class="comment">/*</em>
+<a name="773" href="#773">773</a> <em class="comment">	// check if target node needs to be inserted at specific location in child node entries list</em>
+<a name="774" href="#774">774</a> <em class="comment">	boolean insertTargetEntry = false;</em>
+<a name="775" href="#775">775</a> <em class="comment">	int ind = destName.getIndex();</em>
+<a name="776" href="#776">776</a> <em class="comment">	if (ind > 0) {</em>
+<a name="777" href="#777">777</a> <em class="comment">	    // target name contains subscript:</em>
+<a name="778" href="#778">778</a> <em class="comment">	    // validate subscript</em>
+<a name="779" href="#779">779</a> <em class="comment">	    List sameNameSibs = destParentState.getChildNodeEntries(destName.getName());</em>
+<a name="780" href="#780">780</a> <em class="comment">	    if (ind > sameNameSibs.size() + 1) {</em>
+<a name="781" href="#781">781</a> <em class="comment">		String msg = "invalid subscript in name: " + destAbsPath;</em>
+<a name="782" href="#782">782</a> <em class="comment">		log.error(msg);</em>
+<a name="783" href="#783">783</a> <em class="comment">		throw new RepositoryException(msg);</em>
+<a name="784" href="#784">784</a> <em class="comment">	    }</em>
+<a name="785" href="#785">785</a> <em class="comment">	    insertTargetEntry = (ind &lt; sameNameSibs.size() + 1) ? true : false;</em>
 <a name="786" href="#786">786</a> <em class="comment">	}</em>
-<a name="787" href="#787">787</a> <em class="comment">*/</em>
-<a name="788" href="#788">788</a> 	<em class="comment">// 3. do move operation (modify and persist affected states)</em>
-<a name="789" href="#789">789</a> 
-<a name="790" href="#790">790</a> 	<strong>boolean</strong> renameOnly = srcParentState.getUUID().equals(destParentState.getUUID());
-<a name="791" href="#791">791</a> 
-<a name="792" href="#792">792</a> 	<em class="comment">// add to new parent</em>
-<a name="793" href="#793">793</a> 	<strong>if</strong> (!renameOnly) {
-<a name="794" href="#794">794</a> 	    targetState.addParentUUID(destParentState.getUUID());
-<a name="795" href="#795">795</a> 	}
-<a name="796" href="#796">796</a> 	destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
-<a name="797" href="#797">797</a> <em class="comment">/*</em>
-<a name="798" href="#798">798</a> <em class="comment">	if (!insertTargetEntry) {</em>
-<a name="799" href="#799">799</a> <em class="comment">	    // append target entry</em>
-<a name="800" href="#800">800</a> <em class="comment">	    destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());</em>
-<a name="801" href="#801">801</a> <em class="comment">	} else {</em>
-<a name="802" href="#802">802</a> <em class="comment">	    // insert target entry at specified position</em>
-<a name="803" href="#803">803</a> <em class="comment">	    Iterator iter = new ArrayList(destParentState.getChildNodeEntries()).iterator();</em>
-<a name="804" href="#804">804</a> <em class="comment">	    destParentState.removeAllChildNodeEntries();</em>
-<a name="805" href="#805">805</a> <em class="comment">	    while (iter.hasNext()) {</em>
-<a name="806" href="#806">806</a> <em class="comment">		NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();</em>
-<a name="807" href="#807">807</a> <em class="comment">		if (entry.getName().equals(destName.getName()) &amp;&amp;</em>
-<a name="808" href="#808">808</a> <em class="comment">			entry.getIndex() == destName.getIndex()) {</em>
-<a name="809" href="#809">809</a> <em class="comment">		    destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());</em>
-<a name="810" href="#810">810</a> <em class="comment">		}</em>
-<a name="811" href="#811">811</a> <em class="comment">		destParentState.addChildNodeEntry(entry.getName(), entry.getUUID());</em>
-<a name="812" href="#812">812</a> <em class="comment">	    }</em>
-<a name="813" href="#813">813</a> <em class="comment">	}</em>
-<a name="814" href="#814">814</a> <em class="comment">*/</em>
-<a name="815" href="#815">815</a> 	<em class="comment">// change definition (id) of target node</em>
-<a name="816" href="#816">816</a> 	ChildNodeDef newTargetDef = findApplicableDefinition(destName.getName(), targetState.getNodeTypeName(), destParentState, rep.getNodeTypeRegistry());
-<a name="817" href="#817">817</a> 	targetState.setDefinitionId(<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/nodetype/NodeDefId.html">NodeDefId</a>(<strong>new</strong>TargetDef));
-<a name="818" href="#818">818</a> 
-<a name="819" href="#819">819</a> 	<em class="comment">// remove from old parent</em>
-<a name="820" href="#820">820</a> 	<strong>if</strong> (!renameOnly) {
-<a name="821" href="#821">821</a> 	    targetState.removeParentUUID(srcParentState.getUUID());
-<a name="822" href="#822">822</a> 	}
-<a name="823" href="#823">823</a> 	<strong>int</strong> srcNameIndex = srcName.getIndex() == 0 ? 1 : srcName.getIndex();
-<a name="824" href="#824">824</a> <em class="comment">/*</em>
-<a name="825" href="#825">825</a> <em class="comment">	// if the net result of the move is changing the position of a child node</em>
-<a name="826" href="#826">826</a> <em class="comment">	// among its same-same siblings, the subscript of the child node entry</em>
-<a name="827" href="#827">827</a> <em class="comment">	// to be removed might need adjustment</em>
-<a name="828" href="#828">828</a> <em class="comment">	if (renameOnly &amp;&amp; srcName.getName().equals(destName.getName()) &amp;&amp;</em>
-<a name="829" href="#829">829</a> <em class="comment">		insertTargetEntry &amp;&amp; destName.getIndex() &lt;= srcNameIndex) {</em>
-<a name="830" href="#830">830</a> <em class="comment">	    srcNameIndex++;</em>
-<a name="831" href="#831">831</a> <em class="comment">	}</em>
-<a name="832" href="#832">832</a> <em class="comment">*/</em>
-<a name="833" href="#833">833</a> 	srcParentState.removeChildNodeEntry(srcName.getName(), srcNameIndex);
-<a name="834" href="#834">834</a> 
-<a name="835" href="#835">835</a> 	<em class="comment">// persist states</em>
-<a name="836" href="#836">836</a> 	<strong>try</strong> {
-<a name="837" href="#837">837</a> 	    targetState.store();
-<a name="838" href="#838">838</a> 	    <strong>if</strong> (renameOnly) {
-<a name="839" href="#839">839</a> 		srcParentState.store();
-<a name="840" href="#840">840</a> 	    } <strong>else</strong> {
-<a name="841" href="#841">841</a> 		destParentState.store();
-<a name="842" href="#842">842</a> 		srcParentState.store();
-<a name="843" href="#843">843</a> 	    }
-<a name="844" href="#844">844</a> 	} <strong>catch</strong> (ItemStateException ise) {
-<a name="845" href="#845">845</a> 	    String msg = <span class="string">"internal error: failed to persist state of "</span> + destAbsPath;
-<a name="846" href="#846">846</a> 	    log.error(msg, ise);
-<a name="847" href="#847">847</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
-<a name="848" href="#848">848</a> 	}
-<a name="849" href="#849">849</a>     }
-<a name="850" href="#850">850</a> 
-<a name="851" href="#851">851</a>     <em>/**<em>*</em></em>
-<a name="852" href="#852">852</a> <em>     * @see Workspace#getAccessManager</em>
-<a name="853" href="#853">853</a> <em>     */</em>
-<a name="854" href="#854">854</a>     <strong>public</strong> AccessManager getAccessManager() throws UnsupportedRepositoryOperationException, RepositoryException {
-<a name="855" href="#855">855</a> 	<strong>return</strong> session.getAccessManager();
-<a name="856" href="#856">856</a>     }
-<a name="857" href="#857">857</a> 
-<a name="858" href="#858">858</a>     <em>/**<em>*</em></em>
-<a name="859" href="#859">859</a> <em>     * @see Workspace#getObservationManager</em>
-<a name="860" href="#860">860</a> <em>     */</em>
-<a name="861" href="#861">861</a>     <strong>public</strong> <strong>synchronized</strong> ObservationManager getObservationManager()
-<a name="862" href="#862">862</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
-<a name="863" href="#863">863</a> 	<strong>if</strong> (obsMgr == <strong>null</strong>) {
-<a name="864" href="#864">864</a> 	    <strong>try</strong> {
-<a name="865" href="#865">865</a> 		obsMgr = rep.getObservationManagerFactory(wspName).createObservationManager(session, session.getItemManager());
-<a name="866" href="#866">866</a> 	    } <strong>catch</strong> (NoSuchWorkspaceException nswe) {
-<a name="867" href="#867">867</a> 		<em class="comment">// should never get here</em>
-<a name="868" href="#868">868</a> 		String msg = <span class="string">"internal error: failed to instantiate observation manager"</span>;
-<a name="869" href="#869">869</a> 		log.error(msg, nswe);
-<a name="870" href="#870">870</a> 		<strong>throw</strong> <strong>new</strong> RepositoryException(msg, nswe);
-<a name="871" href="#871">871</a> 	    }
-<a name="872" href="#872">872</a> 	}
-<a name="873" href="#873">873</a> 	<strong>return</strong> obsMgr;
-<a name="874" href="#874">874</a>     }
-<a name="875" href="#875">875</a> 
-<a name="876" href="#876">876</a>     <em>/**<em>*</em></em>
-<a name="877" href="#877">877</a> <em>     * @see Workspace#getQueryManager</em>
-<a name="878" href="#878">878</a> <em>     */</em>
-<a name="879" href="#879">879</a>     <strong>public</strong> QueryManager getQueryManager() throws RepositoryException {
-<a name="880" href="#880">880</a> 	<em class="comment">// @todo implement query support</em>
-<a name="881" href="#881">881</a> 	<strong>throw</strong> <strong>new</strong> RepositoryException(<span class="string">"not yet implemented"</span>);
-<a name="882" href="#882">882</a>     }
-<a name="883" href="#883">883</a> 
-<a name="884" href="#884">884</a>     <em>/**<em>*</em></em>
-<a name="885" href="#885">885</a> <em>     * @see Workspace#restore(Version[])</em>
-<a name="886" href="#886">886</a> <em>     */</em>
-<a name="887" href="#887">887</a>     <strong>public</strong> <strong>void</strong> restore(Version[] versions) throws UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-<a name="888" href="#888">888</a> 	<em class="comment">// @todo implement versioning support</em>
-<a name="889" href="#889">889</a> 	<strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException();
-<a name="890" href="#890">890</a>     }
-<a name="891" href="#891">891</a> 
-<a name="892" href="#892">892</a>     <em>/**<em>*</em></em>
-<a name="893" href="#893">893</a> <em>     * @see Workspace#exportDocView(String, ContentHandler, boolean, boolean)</em>
-<a name="894" href="#894">894</a> <em>     */</em>
-<a name="895" href="#895">895</a>     <strong>public</strong> <strong>void</strong> exportDocView(String absPath, ContentHandler contentHandler, <strong>boolean</strong> binaryAsLink, <strong>boolean</strong> noRecurse)
-<a name="896" href="#896">896</a> 	    throws InvalidSerializedDataException, PathNotFoundException, SAXException, RepositoryException {
-<a name="897" href="#897">897</a> 	<em class="comment">// check path &amp; retrieve state</em>
-<a name="898" href="#898">898</a> 	Path path;
-<a name="899" href="#899">899</a> 	Path.PathElement name;
-<a name="900" href="#900">900</a> 	PersistentNodeState state;
-<a name="901" href="#901">901</a> 	<strong>try</strong> {
-<a name="902" href="#902">902</a> 	    path = Path.create(absPath, session.getNamespaceResolver(), <strong>true</strong>);
-<a name="903" href="#903">903</a> 	    name = path.getNameElement();
-<a name="904" href="#904">904</a> 	    state = getNodeState(path, hierMgr, persistentStateMgr);
-<a name="905" href="#905">905</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
-<a name="906" href="#906">906</a> 	    String msg = <span class="string">"invalid path: "</span> + absPath;
-<a name="907" href="#907">907</a> 	    log.error(msg, mpe);
-<a name="908" href="#908">908</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
-<a name="909" href="#909">909</a> 	}
-<a name="910" href="#910">910</a> 
-<a name="911" href="#911">911</a> 	<em class="comment">// check read access</em>
-<a name="912" href="#912">912</a> 	<strong>if</strong> (!session.getAccessManager().isGranted(state.getId(), Permission.READ_ITEM)) {
-<a name="913" href="#913">913</a> 	    <strong>throw</strong> <strong>new</strong> PathNotFoundException(absPath);
-<a name="914" href="#914">914</a> 	}
-<a name="915" href="#915">915</a> 
-<a name="916" href="#916">916</a> 	<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/xml/DocViewSAXEventGenerator.html">DocViewSAXEventGenerator</a>(state, name.getName(), noRecurse, binaryAsLink,
-<a name="917" href="#917">917</a> 		persistentStateMgr, (NamespaceRegistryImpl) rep.getNamespaceRegistry(),
-<a name="918" href="#918">918</a> 		session.getAccessManager(), hierMgr, contentHandler).serialize();
-<a name="919" href="#919">919</a>     }
-<a name="920" href="#920">920</a> 
-<a name="921" href="#921">921</a>     <em>/**<em>*</em></em>
-<a name="922" href="#922">922</a> <em>     * @see Workspace#exportDocView(String, OutputStream, boolean, boolean)</em>
-<a name="923" href="#923">923</a> <em>     */</em>
-<a name="924" href="#924">924</a>     <strong>public</strong> <strong>void</strong> exportDocView(String absPath, OutputStream out, <strong>boolean</strong> binaryAsLink, <strong>boolean</strong> noRecurse)
-<a name="925" href="#925">925</a> 	    throws InvalidSerializedDataException, IOException, PathNotFoundException, RepositoryException {
-<a name="926" href="#926">926</a> 	OutputFormat format = <strong>new</strong> OutputFormat(<span class="string">"xml"</span>, <span class="string">"UTF-8"</span>, <strong>true</strong>);
-<a name="927" href="#927">927</a> 	XMLSerializer serializer = <strong>new</strong> XMLSerializer(out, format);
-<a name="928" href="#928">928</a> 	<strong>try</strong> {
-<a name="929" href="#929">929</a> 	    exportDocView(absPath, serializer.asContentHandler(), binaryAsLink, noRecurse);
-<a name="930" href="#930">930</a> 	} <strong>catch</strong> (SAXException se) {
-<a name="931" href="#931">931</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(se);
-<a name="932" href="#932">932</a> 	}
-<a name="933" href="#933">933</a>     }
-<a name="934" href="#934">934</a> 
-<a name="935" href="#935">935</a>     <em>/**<em>*</em></em>
-<a name="936" href="#936">936</a> <em>     * @see Workspace#exportSysView(String, ContentHandler, boolean, boolean)</em>
-<a name="937" href="#937">937</a> <em>     */</em>
-<a name="938" href="#938">938</a>     <strong>public</strong> <strong>void</strong> exportSysView(String absPath, ContentHandler contentHandler, <strong>boolean</strong> binaryAsLink, <strong>boolean</strong> noRecurse)
-<a name="939" href="#939">939</a> 	    throws PathNotFoundException, SAXException, RepositoryException {
-<a name="940" href="#940">940</a> 	<em class="comment">// check path &amp; retrieve state</em>
-<a name="941" href="#941">941</a> 	Path path;
-<a name="942" href="#942">942</a> 	Path.PathElement name;
-<a name="943" href="#943">943</a> 	PersistentNodeState state;
-<a name="944" href="#944">944</a> 	<strong>try</strong> {
-<a name="945" href="#945">945</a> 	    path = Path.create(absPath, session.getNamespaceResolver(), <strong>true</strong>);
-<a name="946" href="#946">946</a> 	    name = path.getNameElement();
-<a name="947" href="#947">947</a> 	    state = getNodeState(path, hierMgr, persistentStateMgr);
-<a name="948" href="#948">948</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
-<a name="949" href="#949">949</a> 	    String msg = <span class="string">"invalid path: "</span> + absPath;
-<a name="950" href="#950">950</a> 	    log.error(msg, mpe);
-<a name="951" href="#951">951</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
-<a name="952" href="#952">952</a> 	}
-<a name="953" href="#953">953</a> 
-<a name="954" href="#954">954</a> 	<em class="comment">// check read access</em>
-<a name="955" href="#955">955</a> 	<strong>if</strong> (!session.getAccessManager().isGranted(state.getId(), Permission.READ_ITEM)) {
-<a name="956" href="#956">956</a> 	    <strong>throw</strong> <strong>new</strong> PathNotFoundException(absPath);
-<a name="957" href="#957">957</a> 	}
-<a name="958" href="#958">958</a> 
-<a name="959" href="#959">959</a> 	<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/xml/SysViewSAXEventGenerator.html">SysViewSAXEventGenerator</a>(state, name.getName(), noRecurse, binaryAsLink,
-<a name="960" href="#960">960</a> 		persistentStateMgr, (NamespaceRegistryImpl) rep.getNamespaceRegistry(),
-<a name="961" href="#961">961</a> 		session.getAccessManager(), hierMgr, contentHandler).serialize();
-<a name="962" href="#962">962</a>     }
-<a name="963" href="#963">963</a> 
-<a name="964" href="#964">964</a>     <em>/**<em>*</em></em>
-<a name="965" href="#965">965</a> <em>     * @see Workspace#exportSysView(String, OutputStream, boolean, boolean)</em>
-<a name="966" href="#966">966</a> <em>     */</em>
-<a name="967" href="#967">967</a>     <strong>public</strong> <strong>void</strong> exportSysView(String absPath, OutputStream out, <strong>boolean</strong> binaryAsLink, <strong>boolean</strong> noRecurse) throws IOException, PathNotFoundException, RepositoryException {
-<a name="968" href="#968">968</a> 	OutputFormat format = <strong>new</strong> OutputFormat(<span class="string">"xml"</span>, <span class="string">"UTF-8"</span>, <strong>true</strong>);
-<a name="969" href="#969">969</a> 	XMLSerializer serializer = <strong>new</strong> XMLSerializer(out, format);
-<a name="970" href="#970">970</a> 	<strong>try</strong> {
-<a name="971" href="#971">971</a> 	    exportSysView(absPath, serializer.asContentHandler(), binaryAsLink, noRecurse);
-<a name="972" href="#972">972</a> 	} <strong>catch</strong> (SAXException se) {
-<a name="973" href="#973">973</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(se);
+<a name="787" href="#787">787</a> <em class="comment">	if (insertTargetEntry) {</em>
+<a name="788" href="#788">788</a> <em class="comment">	    // check hasOrderableChildNodes flag</em>
+<a name="789" href="#789">789</a> <em class="comment">	    if (!rep.getNodeTypeRegistry().getNodeTypeDef(destParentState.getNodeTypeName()).hasOrderableChildNodes()) {</em>
+<a name="790" href="#790">790</a> <em class="comment">		throw new ConstraintViolationException(destAbsPath + ": parent node's node type does not allow explicit ordering of child nodes");</em>
+<a name="791" href="#791">791</a> <em class="comment">	    }</em>
+<a name="792" href="#792">792</a> <em class="comment">	}</em>
+<a name="793" href="#793">793</a> <em class="comment">*/</em>
+<a name="794" href="#794">794</a> 	<em class="comment">// 3. do move operation (modify and persist affected states)</em>
+<a name="795" href="#795">795</a> 
+<a name="796" href="#796">796</a> 	<strong>boolean</strong> renameOnly = srcParentState.getUUID().equals(destParentState.getUUID());
+<a name="797" href="#797">797</a> 
+<a name="798" href="#798">798</a> 	<em class="comment">// add to new parent</em>
+<a name="799" href="#799">799</a> 	<strong>if</strong> (!renameOnly) {
+<a name="800" href="#800">800</a> 	    targetState.addParentUUID(destParentState.getUUID());
+<a name="801" href="#801">801</a> 	}
+<a name="802" href="#802">802</a> 	destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
+<a name="803" href="#803">803</a> <em class="comment">/*</em>
+<a name="804" href="#804">804</a> <em class="comment">	if (!insertTargetEntry) {</em>
+<a name="805" href="#805">805</a> <em class="comment">	    // append target entry</em>
+<a name="806" href="#806">806</a> <em class="comment">	    destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());</em>
+<a name="807" href="#807">807</a> <em class="comment">	} else {</em>
+<a name="808" href="#808">808</a> <em class="comment">	    // insert target entry at specified position</em>
+<a name="809" href="#809">809</a> <em class="comment">	    Iterator iter = new ArrayList(destParentState.getChildNodeEntries()).iterator();</em>
+<a name="810" href="#810">810</a> <em class="comment">	    destParentState.removeAllChildNodeEntries();</em>
+<a name="811" href="#811">811</a> <em class="comment">	    while (iter.hasNext()) {</em>
+<a name="812" href="#812">812</a> <em class="comment">		NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();</em>
+<a name="813" href="#813">813</a> <em class="comment">		if (entry.getName().equals(destName.getName()) &amp;&amp;</em>
+<a name="814" href="#814">814</a> <em class="comment">			entry.getIndex() == destName.getIndex()) {</em>
+<a name="815" href="#815">815</a> <em class="comment">		    destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());</em>
+<a name="816" href="#816">816</a> <em class="comment">		}</em>
+<a name="817" href="#817">817</a> <em class="comment">		destParentState.addChildNodeEntry(entry.getName(), entry.getUUID());</em>
+<a name="818" href="#818">818</a> <em class="comment">	    }</em>
+<a name="819" href="#819">819</a> <em class="comment">	}</em>
+<a name="820" href="#820">820</a> <em class="comment">*/</em>
+<a name="821" href="#821">821</a> 	<em class="comment">// change definition (id) of target node</em>
+<a name="822" href="#822">822</a> 	ChildNodeDef newTargetDef = findApplicableDefinition(destName.getName(), targetState.getNodeTypeName(), destParentState, rep.getNodeTypeRegistry());
+<a name="823" href="#823">823</a> 	targetState.setDefinitionId(<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/nodetype/NodeDefId.html">NodeDefId</a>(<strong>new</strong>TargetDef));
+<a name="824" href="#824">824</a> 
+<a name="825" href="#825">825</a> 	<em class="comment">// remove from old parent</em>
+<a name="826" href="#826">826</a> 	<strong>if</strong> (!renameOnly) {
+<a name="827" href="#827">827</a> 	    targetState.removeParentUUID(srcParentState.getUUID());
+<a name="828" href="#828">828</a> 	}
+<a name="829" href="#829">829</a> 	<strong>int</strong> srcNameIndex = srcName.getIndex() == 0 ? 1 : srcName.getIndex();
+<a name="830" href="#830">830</a> <em class="comment">/*</em>
+<a name="831" href="#831">831</a> <em class="comment">	// if the net result of the move is changing the position of a child node</em>
+<a name="832" href="#832">832</a> <em class="comment">	// among its same-same siblings, the subscript of the child node entry</em>
+<a name="833" href="#833">833</a> <em class="comment">	// to be removed might need adjustment</em>
+<a name="834" href="#834">834</a> <em class="comment">	if (renameOnly &amp;&amp; srcName.getName().equals(destName.getName()) &amp;&amp;</em>
+<a name="835" href="#835">835</a> <em class="comment">		insertTargetEntry &amp;&amp; destName.getIndex() &lt;= srcNameIndex) {</em>
+<a name="836" href="#836">836</a> <em class="comment">	    srcNameIndex++;</em>
+<a name="837" href="#837">837</a> <em class="comment">	}</em>
+<a name="838" href="#838">838</a> <em class="comment">*/</em>
+<a name="839" href="#839">839</a> 	srcParentState.removeChildNodeEntry(srcName.getName(), srcNameIndex);
+<a name="840" href="#840">840</a> 
+<a name="841" href="#841">841</a> 	<em class="comment">// persist states</em>
+<a name="842" href="#842">842</a> 	<strong>try</strong> {
+<a name="843" href="#843">843</a> 	    targetState.store();
+<a name="844" href="#844">844</a> 	    <strong>if</strong> (renameOnly) {
+<a name="845" href="#845">845</a> 		srcParentState.store();
+<a name="846" href="#846">846</a> 	    } <strong>else</strong> {
+<a name="847" href="#847">847</a> 		destParentState.store();
+<a name="848" href="#848">848</a> 		srcParentState.store();
+<a name="849" href="#849">849</a> 	    }
+<a name="850" href="#850">850</a> 	} <strong>catch</strong> (ItemStateException ise) {
+<a name="851" href="#851">851</a> 	    String msg = <span class="string">"internal error: failed to persist state of "</span> + destAbsPath;
+<a name="852" href="#852">852</a> 	    log.error(msg, ise);
+<a name="853" href="#853">853</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, ise);
+<a name="854" href="#854">854</a> 	}
+<a name="855" href="#855">855</a>     }
+<a name="856" href="#856">856</a> 
+<a name="857" href="#857">857</a>     <em>/**<em>*</em></em>
+<a name="858" href="#858">858</a> <em>     * @see Workspace#getAccessManager</em>
+<a name="859" href="#859">859</a> <em>     */</em>
+<a name="860" href="#860">860</a>     <strong>public</strong> AccessManager getAccessManager() throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="861" href="#861">861</a> 	<strong>return</strong> session.getAccessManager();
+<a name="862" href="#862">862</a>     }
+<a name="863" href="#863">863</a> 
+<a name="864" href="#864">864</a>     <em>/**<em>*</em></em>
+<a name="865" href="#865">865</a> <em>     * @see Workspace#getObservationManager</em>
+<a name="866" href="#866">866</a> <em>     */</em>
+<a name="867" href="#867">867</a>     <strong>public</strong> <strong>synchronized</strong> ObservationManager getObservationManager()
+<a name="868" href="#868">868</a> 	    throws UnsupportedRepositoryOperationException, RepositoryException {
+<a name="869" href="#869">869</a> 	<strong>if</strong> (obsMgr == <strong>null</strong>) {
+<a name="870" href="#870">870</a> 	    <strong>try</strong> {
+<a name="871" href="#871">871</a> 		obsMgr = rep.getObservationManagerFactory(wspName).createObservationManager(session, session.getItemManager());
+<a name="872" href="#872">872</a> 	    } <strong>catch</strong> (NoSuchWorkspaceException nswe) {
+<a name="873" href="#873">873</a> 		<em class="comment">// should never get here</em>
+<a name="874" href="#874">874</a> 		String msg = <span class="string">"internal error: failed to instantiate observation manager"</span>;
+<a name="875" href="#875">875</a> 		log.error(msg, nswe);
+<a name="876" href="#876">876</a> 		<strong>throw</strong> <strong>new</strong> RepositoryException(msg, nswe);
+<a name="877" href="#877">877</a> 	    }
+<a name="878" href="#878">878</a> 	}
+<a name="879" href="#879">879</a> 	<strong>return</strong> obsMgr;
+<a name="880" href="#880">880</a>     }
+<a name="881" href="#881">881</a> 
+<a name="882" href="#882">882</a>     <em>/**<em>*</em></em>
+<a name="883" href="#883">883</a> <em>     * @see Workspace#getQueryManager</em>
+<a name="884" href="#884">884</a> <em>     */</em>
+<a name="885" href="#885">885</a>     <strong>public</strong> QueryManager getQueryManager() throws RepositoryException {
+<a name="886" href="#886">886</a> 	<strong>if</strong> (queryManager == <strong>null</strong>) {
+<a name="887" href="#887">887</a> 	    <strong>try</strong> {
+<a name="888" href="#888">888</a> 		SearchManager searchManager = rep.getSearchManager(wspName);
+<a name="889" href="#889">889</a> 		<strong>if</strong> (searchManager == <strong>null</strong>) {
+<a name="890" href="#890">890</a> 		    <strong>throw</strong> <strong>new</strong> UnsupportedOperationException(<span class="string">"No search manager configured for this workspace."</span>);
+<a name="891" href="#891">891</a> 		}
+<a name="892" href="#892">892</a> 		queryManager = <strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/search/QueryManagerImpl.html">QueryManagerImpl</a>(session, session.getItemManager(), searchManager);
+<a name="893" href="#893">893</a> 	    } <strong>catch</strong> (NoSuchWorkspaceException e) {
+<a name="894" href="#894">894</a> 		String msg = <span class="string">"internal error: failed to instantiate query manager"</span>;
+<a name="895" href="#895">895</a> 		log.error(msg, e);
+<a name="896" href="#896">896</a> 		<strong>return</strong> <strong>null</strong>;
+<a name="897" href="#897">897</a> 	    } <strong>catch</strong> (RepositoryException e) {
+<a name="898" href="#898">898</a> 		String msg = <span class="string">"internal error: failed to instantiate query manager"</span>;
+<a name="899" href="#899">899</a> 		log.error(msg, e);
+<a name="900" href="#900">900</a> 		<strong>return</strong> <strong>null</strong>;
+<a name="901" href="#901">901</a> 	    }
+<a name="902" href="#902">902</a> 	}
+<a name="903" href="#903">903</a> 	<strong>return</strong> queryManager;
+<a name="904" href="#904">904</a>     }
+<a name="905" href="#905">905</a> 
+<a name="906" href="#906">906</a>     <em>/**<em>*</em></em>
+<a name="907" href="#907">907</a> <em>     * @see Workspace#restore(Version[])</em>
+<a name="908" href="#908">908</a> <em>     */</em>
+<a name="909" href="#909">909</a>     <strong>public</strong> <strong>void</strong> restore(Version[] versions) throws UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+<a name="910" href="#910">910</a> 	<em class="comment">// @todo implement versioning support</em>
+<a name="911" href="#911">911</a> 	<strong>throw</strong> <strong>new</strong> UnsupportedRepositoryOperationException();
+<a name="912" href="#912">912</a>     }
+<a name="913" href="#913">913</a> 
+<a name="914" href="#914">914</a>     <em>/**<em>*</em></em>
+<a name="915" href="#915">915</a> <em>     * @see Workspace#exportDocView(String, ContentHandler, boolean, boolean)</em>
+<a name="916" href="#916">916</a> <em>     */</em>
+<a name="917" href="#917">917</a>     <strong>public</strong> <strong>void</strong> exportDocView(String absPath, ContentHandler contentHandler, <strong>boolean</strong> binaryAsLink, <strong>boolean</strong> noRecurse)
+<a name="918" href="#918">918</a> 	    throws InvalidSerializedDataException, PathNotFoundException, SAXException, RepositoryException {
+<a name="919" href="#919">919</a> 	<em class="comment">// check path &amp; retrieve state</em>
+<a name="920" href="#920">920</a> 	Path path;
+<a name="921" href="#921">921</a> 	Path.PathElement name;
+<a name="922" href="#922">922</a> 	PersistentNodeState state;
+<a name="923" href="#923">923</a> 	<strong>try</strong> {
+<a name="924" href="#924">924</a> 	    path = Path.create(absPath, session.getNamespaceResolver(), <strong>true</strong>);
+<a name="925" href="#925">925</a> 	    name = path.getNameElement();
+<a name="926" href="#926">926</a> 	    state = getNodeState(path, hierMgr, persistentStateMgr);
+<a name="927" href="#927">927</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
+<a name="928" href="#928">928</a> 	    String msg = <span class="string">"invalid path: "</span> + absPath;
+<a name="929" href="#929">929</a> 	    log.error(msg, mpe);
+<a name="930" href="#930">930</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
+<a name="931" href="#931">931</a> 	}
+<a name="932" href="#932">932</a> 
+<a name="933" href="#933">933</a> 	<em class="comment">// check read access</em>
+<a name="934" href="#934">934</a> 	<strong>if</strong> (!session.getAccessManager().isGranted(state.getId(), Permission.READ_ITEM)) {
+<a name="935" href="#935">935</a> 	    <strong>throw</strong> <strong>new</strong> PathNotFoundException(absPath);
+<a name="936" href="#936">936</a> 	}
+<a name="937" href="#937">937</a> 
+<a name="938" href="#938">938</a> 	<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/xml/DocViewSAXEventGenerator.html">DocViewSAXEventGenerator</a>(state, name.getName(), noRecurse, binaryAsLink,
+<a name="939" href="#939">939</a> 		persistentStateMgr, (NamespaceRegistryImpl) rep.getNamespaceRegistry(),
+<a name="940" href="#940">940</a> 		session.getAccessManager(), hierMgr, contentHandler).serialize();
+<a name="941" href="#941">941</a>     }
+<a name="942" href="#942">942</a> 
+<a name="943" href="#943">943</a>     <em>/**<em>*</em></em>
+<a name="944" href="#944">944</a> <em>     * @see Workspace#exportDocView(String, OutputStream, boolean, boolean)</em>
+<a name="945" href="#945">945</a> <em>     */</em>
+<a name="946" href="#946">946</a>     <strong>public</strong> <strong>void</strong> exportDocView(String absPath, OutputStream out, <strong>boolean</strong> binaryAsLink, <strong>boolean</strong> noRecurse)
+<a name="947" href="#947">947</a> 	    throws InvalidSerializedDataException, IOException, PathNotFoundException, RepositoryException {
+<a name="948" href="#948">948</a> 	OutputFormat format = <strong>new</strong> OutputFormat(<span class="string">"xml"</span>, <span class="string">"UTF-8"</span>, <strong>true</strong>);
+<a name="949" href="#949">949</a> 	XMLSerializer serializer = <strong>new</strong> XMLSerializer(out, format);
+<a name="950" href="#950">950</a> 	<strong>try</strong> {
+<a name="951" href="#951">951</a> 	    exportDocView(absPath, serializer.asContentHandler(), binaryAsLink, noRecurse);
+<a name="952" href="#952">952</a> 	} <strong>catch</strong> (SAXException se) {
+<a name="953" href="#953">953</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(se);
+<a name="954" href="#954">954</a> 	}
+<a name="955" href="#955">955</a>     }
+<a name="956" href="#956">956</a> 
+<a name="957" href="#957">957</a>     <em>/**<em>*</em></em>
+<a name="958" href="#958">958</a> <em>     * @see Workspace#exportSysView(String, ContentHandler, boolean, boolean)</em>
+<a name="959" href="#959">959</a> <em>     */</em>
+<a name="960" href="#960">960</a>     <strong>public</strong> <strong>void</strong> exportSysView(String absPath, ContentHandler contentHandler, <strong>boolean</strong> binaryAsLink, <strong>boolean</strong> noRecurse)
+<a name="961" href="#961">961</a> 	    throws PathNotFoundException, SAXException, RepositoryException {
+<a name="962" href="#962">962</a> 	<em class="comment">// check path &amp; retrieve state</em>
+<a name="963" href="#963">963</a> 	Path path;
+<a name="964" href="#964">964</a> 	Path.PathElement name;
+<a name="965" href="#965">965</a> 	PersistentNodeState state;
+<a name="966" href="#966">966</a> 	<strong>try</strong> {
+<a name="967" href="#967">967</a> 	    path = Path.create(absPath, session.getNamespaceResolver(), <strong>true</strong>);
+<a name="968" href="#968">968</a> 	    name = path.getNameElement();
+<a name="969" href="#969">969</a> 	    state = getNodeState(path, hierMgr, persistentStateMgr);
+<a name="970" href="#970">970</a> 	} <strong>catch</strong> (MalformedPathException mpe) {
+<a name="971" href="#971">971</a> 	    String msg = <span class="string">"invalid path: "</span> + absPath;
+<a name="972" href="#972">972</a> 	    log.error(msg, mpe);
+<a name="973" href="#973">973</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(msg, mpe);
 <a name="974" href="#974">974</a> 	}
-<a name="975" href="#975">975</a>     }
-<a name="976" href="#976">976</a> }
+<a name="975" href="#975">975</a> 
+<a name="976" href="#976">976</a> 	<em class="comment">// check read access</em>
+<a name="977" href="#977">977</a> 	<strong>if</strong> (!session.getAccessManager().isGranted(state.getId(), Permission.READ_ITEM)) {
+<a name="978" href="#978">978</a> 	    <strong>throw</strong> <strong>new</strong> PathNotFoundException(absPath);
+<a name="979" href="#979">979</a> 	}
+<a name="980" href="#980">980</a> 
+<a name="981" href="#981">981</a> 	<strong>new</strong> <a href="../../../../org/apache/jackrabbit/core/xml/SysViewSAXEventGenerator.html">SysViewSAXEventGenerator</a>(state, name.getName(), noRecurse, binaryAsLink,
+<a name="982" href="#982">982</a> 		persistentStateMgr, (NamespaceRegistryImpl) rep.getNamespaceRegistry(),
+<a name="983" href="#983">983</a> 		session.getAccessManager(), hierMgr, contentHandler).serialize();
+<a name="984" href="#984">984</a>     }
+<a name="985" href="#985">985</a> 
+<a name="986" href="#986">986</a>     <em>/**<em>*</em></em>
+<a name="987" href="#987">987</a> <em>     * @see Workspace#exportSysView(String, OutputStream, boolean, boolean)</em>
+<a name="988" href="#988">988</a> <em>     */</em>
+<a name="989" href="#989">989</a>     <strong>public</strong> <strong>void</strong> exportSysView(String absPath, OutputStream out, <strong>boolean</strong> binaryAsLink, <strong>boolean</strong> noRecurse) throws IOException, PathNotFoundException, RepositoryException {
+<a name="990" href="#990">990</a> 	OutputFormat format = <strong>new</strong> OutputFormat(<span class="string">"xml"</span>, <span class="string">"UTF-8"</span>, <strong>true</strong>);
+<a name="991" href="#991">991</a> 	XMLSerializer serializer = <strong>new</strong> XMLSerializer(out, format);
+<a name="992" href="#992">992</a> 	<strong>try</strong> {
+<a name="993" href="#993">993</a> 	    exportSysView(absPath, serializer.asContentHandler(), binaryAsLink, noRecurse);
+<a name="994" href="#994">994</a> 	} <strong>catch</strong> (SAXException se) {
+<a name="995" href="#995">995</a> 	    <strong>throw</strong> <strong>new</strong> RepositoryException(se);
+<a name="996" href="#996">996</a> 	}
+<a name="997" href="#997">997</a>     }
+<a name="998" href="#998">998</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>
