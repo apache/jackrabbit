@@ -554,10 +554,7 @@ class NodeTypeDefStore {
                     }
                 }
                 // autoCreate
-                String autoCreate = elem.getAttributeValue(AUTOCREATE_ATTRIBUTE);
-                if (autoCreate != null && autoCreate.length() > 0) {
-                    pd.setAutoCreate(Boolean.valueOf(autoCreate).booleanValue());
-                }
+		elem.setAttribute(AUTOCREATE_ATTRIBUTE, Boolean.toString(pd.isAutoCreate()));
                 // mandatory
                 elem.setAttribute(MANDATORY_ATTRIBUTE, Boolean.toString(pd.isMandatory()));
                 // onParentVersion
