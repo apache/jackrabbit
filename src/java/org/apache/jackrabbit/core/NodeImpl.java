@@ -209,8 +209,8 @@ public class NodeImpl extends ItemImpl implements Node {
             log.error(msg);
             throw new RepositoryException(msg);
         }
-        // check if versioning allows write
-        if (!safeIsCheckedOut()) {
+        // check if versioning allows write (only cheep call)
+        if (!isCheckedOut(false)) {
             String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath() + "/" + name.toString();
             log.error(msg);
             throw new VersionException(msg);
@@ -524,8 +524,8 @@ public class NodeImpl extends ItemImpl implements Node {
             // no name collision
         }
 
-        // check if versioning allows write
-        if (!safeIsCheckedOut()) {
+        // check if versioning allows write (only cheep call)
+        if (!isCheckedOut(false)) {
             String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1201,8 +1201,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException(safeGetJCRPath() + " has no child node with name " + destName);
         }
 
-        // check if versioning allows write
-        if (!safeIsCheckedOut()) {
+        // check if versioning allows write (only cheep call)
+        if (!isCheckedOut(false)) {
             String msg = safeGetJCRPath() + ": cannot change child node ordering of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1748,7 +1748,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         // check if versioning allows write
-        if (!safeIsCheckedOut()) {
+        if (!isCheckedOut(true)) {
             String msg = safeGetJCRPath() + ": cannot add a mixin node type to a checked-in node";
             log.error(msg);
             throw new ConstraintViolationException(msg);
@@ -1857,7 +1857,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         // check if versioning allows write
-        if (!safeIsCheckedOut()) {
+        if (!isCheckedOut(true)) {
             String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a checked-in node";
             log.error(msg);
             throw new ConstraintViolationException(msg);
@@ -1974,7 +1974,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         // check if versioning allows write
-        if (!safeIsCheckedOut()) {
+        if (!isCheckedOut(true)) {
             return false;
         }
 
@@ -2499,23 +2499,31 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Same as {@link javax.jcr.Node#isCheckedOut()} but if <code>inherit</code>
+     * is <code>true</code>, a non-versionable node will return the checked out
+     * state of its parent.
+     *
+     * @param inherit
+     *
      * @see Node#isCheckedOut()
      */
-    public boolean isCheckedOut()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        checkVersionable();
-        return getProperty(VersionManager.PROPNAME_IS_CHECKED_OUT).getBoolean();
+    public boolean isCheckedOut(boolean inherit) throws RepositoryException {
+        // search nearest ancestor that is versionable
+        NodeImpl node = this;
+        while (!node.hasProperty(VersionManager.PROPNAME_IS_CHECKED_OUT)) {
+            if (node.isRepositoryRoot() || !inherit) {
+                return true;
+            }
+            node = (NodeImpl) node.getParent();
+        }
+        return node.getProperty(VersionManager.PROPNAME_IS_CHECKED_OUT).getBoolean();
     }
 
     /**
-     * Same as {@link #isCheckedOut()} but without UnsupportedException.
+     * @see Node#isCheckedOut()
      */
-    public boolean safeIsCheckedOut() throws RepositoryException {
-        // what if this node is not versionable but has OPV==Copy?
-        // do we need to search ancestors for a verionable node?
-        return hasProperty(VersionManager.PROPNAME_IS_CHECKED_OUT)
-                ? getProperty(VersionManager.PROPNAME_IS_CHECKED_OUT).getBoolean()
-                : true;
+    public boolean isCheckedOut() throws RepositoryException {
+        return isCheckedOut(false);
     }
 
     /**

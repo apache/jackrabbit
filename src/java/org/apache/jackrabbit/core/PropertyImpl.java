@@ -190,7 +190,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -243,7 +243,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -533,7 +533,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -578,7 +578,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -618,7 +618,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -669,7 +669,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -713,7 +713,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -764,7 +764,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -804,7 +804,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -856,7 +856,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -896,7 +896,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             String msg = "Cannot alter the value of a property of a checked-in node " + safeGetJCRPath();
             log.error(msg);
             throw new VersionException(msg);
@@ -942,7 +942,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
