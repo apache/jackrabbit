@@ -22,6 +22,7 @@ import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDef;
 
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.SerialValue;
 
 /**
  * Remote adapter for the JCR
@@ -66,7 +67,7 @@ public class ServerPropertyDef extends ServerItemDef
 
     /** {@inheritDoc} */
     public Value[] getDefaultValues() throws RemoteException {
-        return def.getDefaultValues();
+        return SerialValue.makeSerialValueArray(def.getDefaultValues());
     }
 
     /** {@inheritDoc} */
