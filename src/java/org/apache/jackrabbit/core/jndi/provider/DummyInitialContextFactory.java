@@ -20,16 +20,31 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 import java.util.Hashtable;
+import java.util.HashMap;
 
 /**
  * <code>DummyInitialContextFactory</code> ...
  */
 public class DummyInitialContextFactory implements InitialContextFactory {
 
+    private static HashMap contexts = new HashMap();
     /**
      * @see InitialContextFactory#getInitialContext(java.util.Hashtable)
      */
     public Context getInitialContext(Hashtable environment) throws NamingException {
-        return new DummyContext(environment);
+
+	String url = (String) environment.get(Context.PROVIDER_URL);
+	if (url==null) {
+	    throw new NamingException("Unable to create context. Environment is missing a " + Context.PROVIDER_URL);
+	}
+
+	synchronized (DummyInitialContextFactory.contexts) {
+	    DummyContext ctx = (DummyContext) contexts.get(url);
+	    if (ctx==null) {
+		ctx = new DummyContext(environment);
+		contexts.put(url, ctx);
+	    }
+	    return ctx;
+	}
     }
 }

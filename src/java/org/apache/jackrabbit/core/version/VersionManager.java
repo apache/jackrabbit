@@ -104,27 +104,6 @@ public interface VersionManager {
      */
     public VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException;
 
-
-    /**
-     * Returns the base version of the given node. assuming mix:versionable
-     *
-     * @param node
-     * @return
-     * @throws RepositoryException
-     */
-    public Version getBaseVersion(NodeImpl node) throws RepositoryException;
-
-    /**
-     * Returns the version history for the given node. assuming mix:versionable
-     * and version history set in property
-     *
-     * @param node
-     * @return
-     * @throws RepositoryException
-     */
-    public VersionHistory getVersionHistory(NodeImpl node)
-            throws RepositoryException;
-
     /**
      * invokes the checkin() on the persistent version manager and remaps the
      * newly created version objects.

@@ -120,35 +120,6 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     /**
-     * Returns the base version of the given node. assuming mix:versionable
-     *
-     * @param node
-     * @return
-     * @throws RepositoryException
-     */
-    public Version getBaseVersion(NodeImpl node) throws RepositoryException {
-        String histUUID = node.getProperty(VersionManager.PROPNAME_VERSION_HISTORY).getString();
-        InternalVersionHistory history = vMgr.getVersionHistory(histUUID);
-        InternalVersion version = history.getVersion(node.getProperty(PROPNAME_BASE_VERSION).getString());
-        return version == null ? null : (Version) node.getSession().getNodeByUUID(version.getId());
-    }
-
-    /**
-     * Returns the version history for the given node. assuming mix:versionable
-     * and version history set in property
-     *
-     * @param node
-     * @return
-     * @throws RepositoryException
-     */
-    public VersionHistory getVersionHistory(NodeImpl node)
-            throws RepositoryException {
-        String histUUID = node.getProperty(VersionManager.PROPNAME_VERSION_HISTORY).getString();
-        InternalVersionHistory history = vMgr.getVersionHistory(histUUID);
-        return (VersionHistory) node.getSession().getNodeByUUID(history.getId());
-    }
-
-    /**
      * Checks if the version history with the given id exists
      *
      * @param id

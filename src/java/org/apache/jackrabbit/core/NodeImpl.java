@@ -2863,7 +2863,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public VersionHistory getVersionHistory()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         checkVersionable();
-        return session.versionMgr.getVersionHistory(this);
+        return (VersionHistory) getProperty(VersionManager.PROPNAME_VERSION_HISTORY).getNode();
     }
 
     /**
@@ -2872,7 +2872,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Version getBaseVersion()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         checkVersionable();
-        return session.versionMgr.getBaseVersion(this);
+        return (Version) getProperty(VersionManager.PROPNAME_BASE_VERSION).getNode();
     }
 
     /**
