@@ -246,7 +246,7 @@ public class RepositoryImpl implements Repository, EventListener {
         // @todo rewrite to use file system abstraction (FileSystem interface)
         try {
             File txRootDir = new File(repConfig.getHomeDir(), "tx");
-            txMgr = new TransactionManager(new File("tx"));
+            txMgr = new TransactionManager(txRootDir);
         } catch (IOException ioe) {
             String msg = "failed to initialize internal transaction manager";
             log.error(msg, ioe);
