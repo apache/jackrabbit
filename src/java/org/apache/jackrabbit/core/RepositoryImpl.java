@@ -26,10 +26,10 @@ import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.security.CredentialsCallbackHandler;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
+import org.apache.jackrabbit.core.security.CredentialsCallbackHandler;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PersistenceManager;
@@ -533,6 +533,13 @@ public class RepositoryImpl implements Repository, SessionListener,
             repStore.close();
         } catch (FileSystemException e) {
             log.error("error while closing repository filesystem", e);
+        }
+
+        try {
+            // close versioning file system
+            repConfig.getVersioningConfig().getFileSystem().close();
+        } catch (FileSystemException e) {
+            log.error("error while closing versioning filesystem", e);
         }
 
         // make sure this instance is not used anymore
