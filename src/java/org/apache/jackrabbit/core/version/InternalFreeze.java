@@ -23,11 +23,14 @@ import org.apache.jackrabbit.core.QName;
  */
 public abstract class InternalFreeze {
 
-    /** the parent 'freeze' */
+    /**
+     * the parent 'freeze'
+     */
     private final InternalFreeze parent;
 
     /**
      * Creates a new 'Freeze'
+     *
      * @param parent
      */
     protected InternalFreeze(InternalFreeze parent) {
@@ -43,10 +46,11 @@ public abstract class InternalFreeze {
 
     /**
      * returns the version manager
+     *
      * @return
      */
     public PersistentVersionManager getVersionManager() {
-        return parent==null ? null : parent.getVersionManager();
+        return parent == null ? null : parent.getVersionManager();
     }
 
     public InternalFreeze getParent() {

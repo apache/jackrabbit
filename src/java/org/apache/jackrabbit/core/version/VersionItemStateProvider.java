@@ -15,24 +15,21 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.core.virtual.VirtualNodeState;
-import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 
 /**
  * This Class implements...
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class VersionItemStateProvider implements VirtualItemStateProvider {
 
@@ -90,7 +87,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         // check version history
         try {
             InternalVersionHistory vh = vMgr.getVersionHistory(id.getUUID());
-            if (vh!=null) {
+            if (vh != null) {
                 return new VersionHistoryNodeState(this, vh, root.getUUID());
             }
         } catch (RepositoryException e) {
@@ -101,7 +98,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         // check version
         try {
             InternalVersion v = vMgr.getVersion(id.getUUID());
-            if (v!=null) {
+            if (v != null) {
                 return new VersionNodeState(this, v);
             }
         } catch (RepositoryException e) {
@@ -134,7 +131,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
 
             // handle some default prop states
             if (parent instanceof VirtualNodeState) {
-                return ((VirtualNodeState) parent).getPropertyState(id.getName())!=null;
+                return ((VirtualNodeState) parent).getPropertyState(id.getName()) != null;
             }
         } catch (ItemStateException e) {
             // ignore

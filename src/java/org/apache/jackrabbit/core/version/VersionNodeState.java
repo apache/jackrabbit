@@ -15,22 +15,19 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
 import javax.jcr.PropertyType;
 import java.util.Calendar;
 
 /**
  * This Class implements...
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class VersionNodeState extends VirtualNodeState {
 
@@ -94,7 +91,7 @@ public class VersionNodeState extends VirtualNodeState {
             state.setType(PropertyType.STRING);
             InternalVersion[] preds = v.getPredecessors();
             InternalValue[] predV = new InternalValue[preds.length];
-            for (int i=0; i<preds.length; i++) {
+            for (int i = 0; i < preds.length; i++) {
                 predV[i] = InternalValue.create(new UUID(preds[i].getId()));
             }
             state.setValues(predV);
@@ -105,7 +102,7 @@ public class VersionNodeState extends VirtualNodeState {
             state.setType(PropertyType.STRING);
             InternalVersion[] succs = v.getSuccessors();
             InternalValue[] succV = new InternalValue[succs.length];
-            for (int i=0; i<succs.length; i++) {
+            for (int i = 0; i < succs.length; i++) {
                 succV[i] = InternalValue.create(new UUID(succs[i].getId()));
             }
             state.setValues(succV);

@@ -37,6 +37,7 @@ public class VersionImpl extends NodeImpl implements Version {
 
     /**
      * creates a new version node
+     *
      * @param itemMgr
      * @param session
      * @param id
@@ -47,8 +48,8 @@ public class VersionImpl extends NodeImpl implements Version {
      * @throws RepositoryException
      */
     protected VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                       NodeState state, NodeDef definition,
-                       ItemLifeCycleListener[] listeners, InternalVersion version)
+                          NodeState state, NodeDef definition,
+                          ItemLifeCycleListener[] listeners, InternalVersion version)
             throws RepositoryException {
         super(itemMgr, session, id, state, definition, listeners);
         this.version = version;

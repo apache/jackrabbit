@@ -138,6 +138,7 @@ public class InternalVersionHistory {
 
     /**
      * returns the version manager
+     *
      * @return
      */
     public PersistentVersionManager getVersionManager() {
@@ -192,6 +193,7 @@ public class InternalVersionHistory {
 
     /**
      * Checks if the version for the given uuid exists
+     *
      * @param uuid
      * @return
      */
@@ -379,6 +381,7 @@ public class InternalVersionHistory {
 
     /**
      * Returns an iterator over all versions (not ordered yet)
+     *
      * @return
      */
     protected Iterator getVersions() {
@@ -387,6 +390,7 @@ public class InternalVersionHistory {
 
     /**
      * Returns the number of versions
+     *
      * @return
      */
     protected int getNumVersions() {

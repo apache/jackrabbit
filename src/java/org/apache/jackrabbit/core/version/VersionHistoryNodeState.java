@@ -15,18 +15,17 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
 import javax.jcr.RepositoryException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * This Class implements...
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class VersionHistoryNodeState extends VirtualNodeState {
 
@@ -34,7 +33,7 @@ public class VersionHistoryNodeState extends VirtualNodeState {
 
     public VersionHistoryNodeState(VersionItemStateProvider vm, InternalVersionHistory vh, String parentUUID) {
         super(vm, vh.getId(), NodeTypeRegistry.NT_VERSION_HISTORY, parentUUID);
-        this.vh =  vh;
+        this.vh = vh;
 
         setDefinitionId(vm.getNodeDefId(NodeTypeRegistry.NT_VERSION_HISTORY));
         // we do not initialize the childnode entry array, but rather
@@ -47,12 +46,12 @@ public class VersionHistoryNodeState extends VirtualNodeState {
 
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
         // no same name siblings
-        return index<=1 ? vh.hasVersion(name) : false;
+        return index <= 1 ? vh.hasVersion(name) : false;
     }
 
     public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
         try {
-            if (index<=1) {
+            if (index <= 1) {
                 InternalVersion v = vh.getVersion(nodeName);
                 return new ChildNodeEntry(nodeName, v.getId(), 1);
             }

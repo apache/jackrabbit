@@ -117,6 +117,7 @@ public final class InternalVersion extends InternalFreeze {
 
     /**
      * returns the version manager
+     *
      * @return
      */
     public PersistentVersionManager getVersionManager() {
@@ -314,6 +315,7 @@ public final class InternalVersion extends InternalFreeze {
 
     /**
      * checks if this is the root version.
+     *
      * @return <code>true</code> if this version is the root version;
      *         <code>false</code> otherwise.
      */

@@ -16,9 +16,9 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
@@ -28,8 +28,6 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.OnParentVersionAction;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * The InternalFrozenNode class presents the frozen node that was generated
@@ -252,7 +250,7 @@ public class InternalFrozenNode extends InternalFreeze {
             NodeType[] mixins = src.getMixinNodeTypes();
             QName[] mixinNames = new QName[mixins.length];
             for (int i = 0; i < mixins.length; i++) {
-                mixinNames[i]=((NodeTypeImpl) mixins[i]).getQName();
+                mixinNames[i] = ((NodeTypeImpl) mixins[i]).getQName();
             }
             node = parent.addNode(name, ((NodeTypeImpl) src.getPrimaryNodeType()).getQName());
             node.setMixinNodeTypes(mixinNames);

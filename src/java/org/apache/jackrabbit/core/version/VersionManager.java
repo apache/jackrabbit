@@ -16,20 +16,23 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.state.ItemStateProvider;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.nodetype.*;
-import org.apache.jackrabbit.core.virtual.*;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.version.VersionHistory;
+import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
-import java.util.Iterator;
+import javax.jcr.version.VersionHistory;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * This Class implements the session tied version manager. It is also repsonsible
@@ -151,6 +154,7 @@ public class VersionManager {
 
     /**
      * returns the node definition id for the given name
+     *
      * @param name
      * @return
      */
@@ -160,6 +164,7 @@ public class VersionManager {
 
     /**
      * returns the property definition id for the given name
+     *
      * @param name
      * @return
      */
@@ -214,6 +219,7 @@ public class VersionManager {
 
     /**
      * Checks, if the version history with the given name exists
+     *
      * @param name
      * @return
      */
@@ -225,6 +231,7 @@ public class VersionManager {
 
     /**
      * Returns the vesion history impl for the given name
+     *
      * @param name
      * @return
      * @throws RepositoryException
@@ -237,6 +244,7 @@ public class VersionManager {
 
     /**
      * Checks if the version history with the given id exists
+     *
      * @param id
      * @return
      */
@@ -246,6 +254,7 @@ public class VersionManager {
 
     /**
      * Returns the version history with the given id
+     *
      * @param id
      * @return
      * @throws RepositoryException
@@ -256,6 +265,7 @@ public class VersionManager {
 
     /**
      * Returns the number of version histories
+     *
      * @return
      * @throws RepositoryException
      */
@@ -265,6 +275,7 @@ public class VersionManager {
 
     /**
      * Returns an iterator over all {@link InternalVersionHistory}s.
+     *
      * @return
      * @throws RepositoryException
      */
@@ -274,6 +285,7 @@ public class VersionManager {
 
     /**
      * Checks if the version with the given id exists
+     *
      * @param id
      * @return
      */
@@ -283,6 +295,7 @@ public class VersionManager {
 
     /**
      * Returns the version with the given id
+     *
      * @param id
      * @return
      * @throws RepositoryException
@@ -416,27 +429,20 @@ public class VersionManager {
 
         private void add(QName nodeName, QName nt, QName parentNt)
                 throws NoSuchNodeTypeException, RepositoryException {
-            NodeDefId id = new NodeDefId(
-                ntMgr.getNodeType(parentNt).getApplicableChildNodeDef(
-                    nodeName, nt
-                ).unwrap()
-            );
+            NodeDefId id = new NodeDefId(ntMgr.getNodeType(parentNt).getApplicableChildNodeDef(nodeName, nt).unwrap());
             ids.put(nodeName, id);
         }
 
         private void add(QName propName, QName nt, int type, boolean multivalued)
                 throws NoSuchNodeTypeException, RepositoryException {
-            PropDefId id = new PropDefId(
-                ntMgr.getNodeType(nt).getApplicablePropertyDef(
-                        propName, type, multivalued
-                ).unwrap()
-            );
+            PropDefId id = new PropDefId(ntMgr.getNodeType(nt).getApplicablePropertyDef(propName, type, multivalued).unwrap());
             ids.put(propName, id);
         }
 
         public NodeDefId getNodeDefId(QName name) {
             return (NodeDefId) ids.get(name);
         }
+
         public PropDefId getPropDefId(QName name) {
             return (PropDefId) ids.get(name);
         }

@@ -15,19 +15,19 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.virtual.VirtualNodeState;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
 import javax.jcr.RepositoryException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * This Class implements...
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class HistoryRootNodeState extends VirtualNodeState {
 
@@ -45,12 +45,12 @@ public class HistoryRootNodeState extends VirtualNodeState {
     }
 
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
-        return index<=1 ? vm.hasVersionHistory(name) : false;
+        return index <= 1 ? vm.hasVersionHistory(name) : false;
     }
 
     public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
         try {
-            if (index<=1) {
+            if (index <= 1) {
                 InternalVersionHistory hist = vm.getVersionHistory(nodeName);
                 return new ChildNodeEntry(nodeName, hist.getId(), 1);
             }
@@ -80,7 +80,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
         // todo: do nicer
         try {
             ChildNodeEntry entry = getChildNodeEntry(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid), 1);
-            if (entry!=null) {
+            if (entry != null) {
                 ArrayList list = new ArrayList(1);
                 list.add(entry);
                 return list;
@@ -95,7 +95,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
         // todo: do nicer
         try {
             ChildNodeEntry entry = getChildNodeEntry(nodeName, 1);
-            if (entry!=null) {
+            if (entry != null) {
                 ArrayList list = new ArrayList(1);
                 list.add(entry);
                 return list;

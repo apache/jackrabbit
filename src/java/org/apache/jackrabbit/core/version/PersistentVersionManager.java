@@ -15,24 +15,24 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PersistentNodeState;
 import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
+import org.apache.jackrabbit.core.state.PersistentNodeState;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
-import org.apache.commons.collections.ReferenceMap;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Workspace;
-import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -106,7 +106,7 @@ public class PersistentVersionManager {
      * the version histories. key=uuid, value=version history
      */
     private Map histories = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
-    
+
     /**
      * Creates a new PersistentVersionManager.
      *
@@ -147,11 +147,12 @@ public class PersistentVersionManager {
 
     /**
      * returns the version manager
+     *
      * @return
      */
     public synchronized VersionManager getVersionManager(Workspace wsp) {
         VersionManager vm = (VersionManager) versionManagers.get(wsp.getName());
-        if (vm==null) {
+        if (vm == null) {
             vm = new VersionManager(this);
             versionManagers.put(wsp.getName(), vm);
         }
@@ -197,11 +198,11 @@ public class PersistentVersionManager {
             throws RepositoryException {
 
         InternalVersionHistory hist = (InternalVersionHistory) histories.get(histId);
-        if (hist==null) {
+        if (hist == null) {
             // we cannot used the uuid, since the persistent state do not share the same ids
             QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, histId);
             PersistentNode hNode = historyRoot.getNode(historyNodeName, 1);
-            if (hNode!=null) {
+            if (hNode != null) {
                 hist = new InternalVersionHistory(this, hNode);
                 histories.put(histId, hist);
             }
@@ -211,6 +212,7 @@ public class PersistentVersionManager {
 
     /**
      * Checks if the versionhistory for the given id exists
+     *
      * @param histId
      * @return
      */
@@ -224,13 +226,14 @@ public class PersistentVersionManager {
 
     /**
      * returns an iterator over all existing version histories
+     *
      * @return
      * @throws RepositoryException
      */
     synchronized Iterator getVersionHistories() throws RepositoryException {
         PersistentNode[] ph = historyRoot.getChildNodes();
         ArrayList list = new ArrayList(ph.length);
-        for (int i=0; i<ph.length; i++) {
+        for (int i = 0; i < ph.length; i++) {
             list.add(getVersionHistory(ph[i].getName().getLocalName()));
         }
         return list.iterator();
@@ -238,6 +241,7 @@ public class PersistentVersionManager {
 
     /**
      * returns the number of version histories
+     *
      * @return
      * @throws RepositoryException
      */
@@ -260,6 +264,7 @@ public class PersistentVersionManager {
 
     /**
      * returns the version with the given id
+     *
      * @param versionId
      * @return
      * @throws RepositoryException
@@ -269,10 +274,10 @@ public class PersistentVersionManager {
 
         // todo: implement better
         PersistentNode[] ph = historyRoot.getChildNodes();
-        for (int i=0; i<ph.length; i++) {
+        for (int i = 0; i < ph.length; i++) {
             InternalVersionHistory vh = getVersionHistory(ph[i].getName().getLocalName());
             InternalVersion v = vh.getVersion(versionId);
-            if (v!=null) {
+            if (v != null) {
                 return v;
             }
         }
@@ -281,6 +286,7 @@ public class PersistentVersionManager {
 
     /**
      * Checks if the version with the given id exists
+     *
      * @param versionId
      * @return
      */
@@ -288,7 +294,7 @@ public class PersistentVersionManager {
         // todo: implement better
         try {
             PersistentNode[] ph = historyRoot.getChildNodes();
-            for (int i=0; i<ph.length; i++) {
+            for (int i = 0; i < ph.length; i++) {
                 InternalVersionHistory vh = getVersionHistory(ph[i].getName().getLocalName());
                 if (vh.hasVersion(versionId)) {
                     return true;
@@ -302,9 +308,10 @@ public class PersistentVersionManager {
 
     /**
      * is informed by the versions if they were modified
+     *
      * @param version
      */
-    void onVersionModified(InternalVersion version)  throws RepositoryException {
+    void onVersionModified(InternalVersion version) throws RepositoryException {
         // check if version manager already generated item states
         Iterator iter = versionManagers.values().iterator();
         while (iter.hasNext()) {
@@ -314,9 +321,10 @@ public class PersistentVersionManager {
 
     /**
      * is informed by the versions if they were modified
+     *
      * @param vh
      */
-    void onVersionHistoryModified(InternalVersionHistory vh)  throws RepositoryException {
+    void onVersionHistoryModified(InternalVersionHistory vh) throws RepositoryException {
         // check if version manager already generated item states
         Iterator iter = versionManagers.values().iterator();
         while (iter.hasNext()) {

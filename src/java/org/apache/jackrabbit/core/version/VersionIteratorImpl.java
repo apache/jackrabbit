@@ -19,7 +19,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionIterator;
-import java.util.*;
+import java.util.ConcurrentModificationException;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
 
 /**
  * This Class implements a VersionIterator that iterates over a version
@@ -123,6 +125,7 @@ public class VersionIteratorImpl implements VersionIterator {
     /**
      * Adds the version 'v' to the list of versions to return and then calls
      * it self recursively with all the verions prodecessors.
+     *
      * @param v
      */
     private synchronized void addVersion(InternalVersion v) {
@@ -130,7 +133,7 @@ public class VersionIteratorImpl implements VersionIterator {
         if (!versions.contains(id)) {
             versions.add(id);
             InternalVersion[] vs = v.getSuccessors();
-            for (int i=0; i<vs.length; i++) {
+            for (int i = 0; i < vs.length; i++) {
                 addVersion(vs[i]);
             }
         }

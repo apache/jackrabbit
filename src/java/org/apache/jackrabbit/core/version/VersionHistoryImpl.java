@@ -23,9 +23,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import javax.jcr.version.VersionException;
 
 /**
  * This Class implements a version history that extends a node.
@@ -39,6 +39,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     /**
      * creates a new version history node.
+     *
      * @param itemMgr
      * @param session
      * @param id
@@ -49,9 +50,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException
      */
     protected VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                              NodeState state, NodeDef definition,
-                              ItemLifeCycleListener[] listeners,
-                              InternalVersionHistory history) throws RepositoryException {
+                                 NodeState state, NodeDef definition,
+                                 ItemLifeCycleListener[] listeners,
+                                 InternalVersionHistory history) throws RepositoryException {
         super(itemMgr, session, id, state, definition, listeners);
         this.history = history;
     }
@@ -108,7 +109,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             QName name = QName.fromJCRName(version, session.getNamespaceResolver());
             InternalVersion v = history.getVersion(name);
-            if (v==null) {
+            if (v == null) {
                 throw new VersionException("Version " + version + " does not exist in this version history.");
             }
             history.addVersionLabel(v, label, move);

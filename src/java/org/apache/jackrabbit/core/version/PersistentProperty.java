@@ -74,6 +74,7 @@ public class PersistentProperty {
 
     /**
      * returns <code>true</code> if this is a multivalue propererty
+     *
      * @return
      */
     public boolean isMultiple() {
