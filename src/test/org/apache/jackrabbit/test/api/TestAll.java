@@ -63,6 +63,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SessionReadMethodsTest.class);
         suite.addTestSuite(WorkspaceReadMethodsTest.class);
 
+        suite.addTestSuite(ExportSysViewTest.class);
+
         // level 2 tests
         suite.addTestSuite(AddNodeTest.class);
         suite.addTestSuite(NamespaceRegistryTest.class);
