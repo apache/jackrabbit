@@ -117,6 +117,16 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
+      <name>Dominique Pfister</name>
+      <id>dpfister</id>
+      <email/>
+      <organization>Day Software</organization>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
       <name>Peeter Piegaze</name>
       <id>ppiegaze</id>
       <email/>
@@ -209,27 +219,18 @@
   </developers>
   <contributors>
     <contributor>
-      <name>Felix Meschberger</name>
-      <email/>
-      <organization>Day Software</organization>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </contributor>
-    <contributor>
-      <name>Dominique Pfister</name>
-      <email/>
-      <organization>Day Software</organization>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </contributor>
-    <contributor>
       <name>Serge Huber</name>
       <email/>
       <organization/>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Felix Meschberger</name>
+      <email/>
+      <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -243,6 +244,15 @@
         <role>Java Developer</role>
       </roles>
       <timezone/>
+    </contributor>
+    <contributor>
+      <name>Angela Schreiber</name>
+      <email/>
+      <organization>Day Software</organization>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
     </contributor>
   </contributors>
   <licenses>
