@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.search.lucene;
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.search.*;
 import org.apache.log4j.Logger;
@@ -29,11 +31,14 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.RangeQuery;
 import org.apache.lucene.search.TermQuery;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Arrays;
 
 /**
  */
@@ -97,7 +102,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             String prop = props[i];
             try {
                 prop = nsMappings.translatePropertyName(prop, session.getNamespaceResolver());
-            } catch (MalformedPathException e) {
+            } catch (IllegalNameException e) {
+                exceptions.add(e);
+            } catch (UnknownPrefixException e) {
                 exceptions.add(e);
             }
             root.add(new MatchAllQuery(prop), true, false);
@@ -157,7 +164,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         try {
             field = nsMappings.translatePropertyName(node.getPropertyName(),
                     session.getNamespaceResolver());
-        } catch (MalformedPathException e) {
+        } catch (IllegalNameException e) {
+            exceptions.add(e);
+        } catch (UnknownPrefixException e) {
             exceptions.add(e);
         }
         String value = node.getValue();
@@ -166,19 +175,43 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(NodeTypeQueryNode node, Object data) {
         String field = node.getPropertyName();
-        String value = node.getValue();
+        List values = new ArrayList();
         try {
             field = nsMappings.getPrefix(NodeTypeRegistry.JCR_PRIMARY_TYPE.getNamespaceURI())
                     + ":" + NodeTypeRegistry.JCR_PRIMARY_TYPE.getLocalName();
-            value = nsMappings.translatePropertyName(node.getValue(),
-                    session.getNamespaceResolver());
-        } catch (NamespaceException e) {
-            // will never happen
-            log.error(e.toString());
-        } catch (MalformedPathException e) {
+
+            values.add(nsMappings.translatePropertyName(node.getValue(),
+                    session.getNamespaceResolver()));
+            NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
+            NodeType base = ntMgr.getNodeType(node.getValue());
+            NodeTypeIterator allTypes = ntMgr.getAllNodeTypes();
+            while (allTypes.hasNext()) {
+                NodeType nt = allTypes.nextNodeType();
+                NodeType[] superTypes = nt.getSupertypes();
+                if (Arrays.asList(superTypes).contains(base)) {
+                    values.add(nsMappings.translatePropertyName(nt.getName(),
+                            session.getNamespaceResolver()));
+                }
+            }
+        } catch (IllegalNameException e) {
+            exceptions.add(e);
+        } catch (UnknownPrefixException e) {
+            exceptions.add(e);
+        } catch (RepositoryException e) {
             exceptions.add(e);
         }
-        return new TermQuery(new Term(field, value));
+        if (values.size() == 0) {
+            // exception occured
+            return new BooleanQuery();
+        } else if (values.size() == 1) {
+            return new TermQuery(new Term(field, (String) values.get(0)));
+        } else {
+            BooleanQuery b = new BooleanQuery();
+            for (Iterator it = values.iterator(); it.hasNext();) {
+                b.add(new TermQuery(new Term(field, (String)it.next())), false, false);
+            }
+            return b;
+        }
     }
 
     public Object visit(RangeQueryNode node, Object data) {
@@ -269,7 +302,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         try {
             field = nsMappings.translatePropertyName(node.getProperty(),
                     session.getNamespaceResolver());
-        } catch (MalformedPathException e) {
+        } catch (IllegalNameException e) {
+            exceptions.add(e);
+        } catch (UnknownPrefixException e) {
             exceptions.add(e);
         }
 

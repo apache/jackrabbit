@@ -15,10 +15,11 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.log4j.Logger;
@@ -137,14 +138,14 @@ public class NamespaceMappings implements NamespaceResolver {
      * @return the translated property name
      */
     public String translatePropertyName(String name, NamespaceResolver resolver)
-            throws MalformedPathException {
-        Path path = Path.create(name, resolver, false);
+            throws IllegalNameException, UnknownPrefixException {
+        QName qName = QName.fromJCRName(name, resolver);
         try {
-            return path.toJCRPath(this);
+            return qName.toJCRName(this);
         } catch (NoPrefixDeclaredException e) {
             // should never happen actually, because we create yet unknown
             // uri mappings on the fly.
-            throw new MalformedPathException(e.toString());
+            throw new IllegalNameException("Internal error.", e);
         }
     }
 

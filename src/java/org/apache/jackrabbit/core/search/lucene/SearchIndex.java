@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
-import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.log4j.Logger;
@@ -47,23 +46,16 @@ public class SearchIndex {
 
     private final Analyzer analyzer;
 
-    private final String location;
-
     private final FIFOReadWriteLock readWriteLock = new FIFOReadWriteLock();
 
-    public SearchIndex(FileSystem fs, String location, Analyzer analyzer)
+    public SearchIndex(FileSystem fs, Analyzer analyzer)
             throws IOException {
         //volatileIndex = new VolatileIndex(analyzer);
         boolean create;
         try {
-            if (!fs.exists(location)) {
-                fs.createFolder(location);
-            }
-            FileSystem indexFS = new BasedFileSystem(fs, location);
-            create = !indexFS.exists("segments");
-            persistentIndex = new PersistentIndex(indexFS, create, analyzer);
+            create = !fs.exists("segments");
+            persistentIndex = new PersistentIndex(fs, create, analyzer);
             persistentIndex.setUseCompoundFile(true);
-            this.location = location;
             this.analyzer = analyzer;
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
@@ -120,7 +112,7 @@ public class SearchIndex {
         }
         volatileIndex.close();
         */
-        log.info("Closing index: " + location);
+        log.info("Closing search index.");
         persistentIndex.close();
     }
 

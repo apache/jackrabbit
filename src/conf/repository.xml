@@ -74,9 +74,7 @@
         the SearchIndex element specifies the locaction of the search index
         (used by the QueryManager)
     -->
-    <!ELEMENT SearchIndex EMPTY>
-    <!ATTLIST SearchIndex
-      path CDATA #REQUIRED>
+    <!ELEMENT SearchIndex (FileSystem)>
 ]>
 <!-- Example Repository Configuration File -->
 <Repository>
@@ -120,6 +118,13 @@
         <PersistenceManager class="org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager">
             <!-- <param name="someParam" value="someValue"/> -->
         </PersistenceManager>
-        <SearchIndex path="/index"/>
+        <!--
+            Search index and the file system it uses.
+        -->
+        <SearchIndex>
+            <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+                <param name="path" value="${wsp.home}/index"/>
+            </FileSystem>
+        </SearchIndex>
     </Workspace>
 </Repository>

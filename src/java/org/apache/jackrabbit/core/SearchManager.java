@@ -46,6 +46,8 @@ public class SearchManager implements SynchronousEventListener {
 
     private static final Logger log = Logger.getLogger(SearchManager.class);
 
+    private static final String NS_MAPPING_FILE = "ns_mappings.properties";
+
     private final SearchIndex index;
 
     private final ItemStateProvider stateProvider;
@@ -59,14 +61,12 @@ public class SearchManager implements SynchronousEventListener {
     public SearchManager(ItemStateProvider stateProvider,
                          HierarchyManager hmgr,
                          SessionImpl session,
-                         FileSystem fs,
-                         String indexPath) throws IOException {
+                         FileSystem fs) throws IOException {
         this.stateProvider = stateProvider;
         this.hmgr = hmgr;
         this.session = session;
-        index = new SearchIndex(fs, indexPath, new StandardAnalyzer());
-        String mapFileName = indexPath + FileSystem.SEPARATOR + "ns_mappings.properties";
-        FileSystemResource mapFile = new FileSystemResource(fs, mapFileName);
+        index = new SearchIndex(fs, new StandardAnalyzer());
+        FileSystemResource mapFile = new FileSystemResource(fs, NS_MAPPING_FILE);
         nsMappings = new NamespaceMappings(mapFile);
     }
 

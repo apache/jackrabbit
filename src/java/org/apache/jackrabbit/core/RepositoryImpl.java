@@ -488,14 +488,14 @@ public class RepositoryImpl implements Repository, EventListener {
                 = (SearchManager) wspSearchMgrs.get(workspaceName);
         if (searchMgr == null) {
             try {
-                if (wspConfig.getSearchIndexDir() == null) {
-                    // no search index location configured
+                if (wspConfig.getSearchIndexFS() == null) {
+                    // no search index configured
                     return null;
                 }
                 ItemStateProvider stateProvider = getWorkspaceStateManager(workspaceName);
                 SystemSession s = getSystemSession(workspaceName);
                 searchMgr = new SearchManager(stateProvider, s.getHierarchyManager(), s,
-                        wspConfig.getFileSystem(), wspConfig.getSearchIndexDir());
+                        wspConfig.getSearchIndexFS());
             } catch (IOException e) {
                 throw new RepositoryException("Exception opening search index.", e);
             }
