@@ -170,7 +170,7 @@
       <id>prussell</id>
       <email></email>
       <organization></organization>
-      <timezone></timezone>
+      <timezone>0</timezone>
       <roles>
         <role>Java Developer</role>
       </roles>
