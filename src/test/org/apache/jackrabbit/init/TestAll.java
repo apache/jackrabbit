@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test.api.query;
+package org.apache.jackrabbit.init;
 
 import junit.framework.TestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all testcases for the package
- * <code>javax.jcr.query</code>.
+ * Collects all test classes setting up test data in the workspace. This test
+ * data is specific to Jackrabbit and will probably not work in other
+ * implementations.
  */
 public class TestAll extends TestCase {
 
@@ -34,16 +35,9 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("javax.jcr.query tests");
+        TestSuite suite = new TestSuite("Setup data for tests");
 
-        // ADD TEST CLASSES HERE:
-        suite.addTestSuite(SaveTest.class);
-        suite.addTestSuite(SQLOrderByTest.class);
-        suite.addTestSuite(SQLQueryLevel2Test.class);
-        suite.addTestSuite(XPathPosIndexTest.class);
-        suite.addTestSuite(XPathDocOrderTest.class);
-        suite.addTestSuite(XPathOrderByTest.class);
-        suite.addTestSuite(XPathQueryLevel2Test.class);
+        suite.addTestSuite(QueryTestData.class);
 
         return suite;
     }

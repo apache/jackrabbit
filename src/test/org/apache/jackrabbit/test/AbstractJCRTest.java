@@ -151,10 +151,10 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected Session superuser;
 
     /**
-     * Flag that indicates if the current test is a level1 test, that is
-     * the workspace is read-only.
+     * Flag that indicates if the current test is a read-only test, that is
+     * no content is written to the workspace by the test.
      */
-    protected boolean isLevel1Test = false;
+    protected boolean isReadOnly = false;
 
     /**
      * The root <code>Node</code> for testing
@@ -232,10 +232,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
             }
         }
 
-        if (isLevel1Test) {
+        if (isReadOnly) {
             if (!superuser.getRootNode().hasNode(testPath)) {
                 fail("Workspace does not contain test data at: " + testRoot);
             }
+            testRootNode = superuser.getRootNode().getNode(testPath);
         } else {
             Node root = superuser.getRootNode();
             if (root.hasNode(testPath)) {
@@ -260,7 +261,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected void tearDown() throws Exception {
         if (superuser != null) {
             try {
-                if (!isLevel1Test) {
+                if (!isReadOnly) {
                     // do a 'rollback'
                     superuser.refresh(false);
                     Node root = superuser.getRootNode();

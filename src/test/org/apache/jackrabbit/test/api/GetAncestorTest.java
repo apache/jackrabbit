@@ -33,7 +33,7 @@ public class GetAncestorTest extends AbstractJCRTest {
     protected Item item;
 
     protected void setUp() throws Exception {
-        isLevel1Test = true;
+        isReadOnly = true;
         super.setUp();
         item = helper.getReadOnlySession().getRootNode();
     }

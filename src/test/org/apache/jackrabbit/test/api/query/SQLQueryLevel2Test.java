@@ -1,0 +1,180 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.test.api.query;
+
+import org.apache.jackrabbit.test.NotExecutableException;
+
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.RowIterator;
+import javax.jcr.query.Row;
+import javax.jcr.Repository;
+import javax.jcr.Value;
+
+/**
+ * Tests SQL queries on content written to the workspace by the test itself.
+ *
+ * @test
+ * @sources SQLQueryLevel2Test.java
+ * @executeClass org.apache.jackrabbit.test.api.query.SQLQueryLevel2Test
+ * @keywords level2 sql
+ */
+public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
+
+    /**
+     * Test if the optional jcr:score property for full-text search is
+     * supported.
+     * <p/>
+     * For configuration description see {@link #setUpFullTextTest()}.
+     */
+    public void testScoreColumn() throws Exception {
+        if (!hasDescriptor(Repository.QUERY_JCRSCORE)) {
+            throw new NotExecutableException("Repository does not support jcr:score");
+        }
+        setUpFullTextTest();
+        QueryResult result = execute(getFullTextStatement());
+        RowIterator rows = result.getRows();
+        // test mere existence
+        rows.nextRow().getValue(jcrScore);
+    }
+
+    /**
+     * Test full-text search of the repository.
+     * <p/>
+     * For configuration description see {@link #setUpFullTextTest()}.
+     */
+    public void testFullTextSearch() throws Exception {
+        setUpFullTextTest();
+        QueryResult result = execute(getFullTextStatement());
+
+        // must be 1
+        checkResult(result, 1);
+
+        // evaluate result
+        RowIterator itr = result.getRows();
+        while (itr.hasNext()) {
+            Row row = itr.nextRow();
+            Value value = row.getValue(propertyName1);
+            if (value != null) {
+                String fullText = value.getString();
+                if (fullText.indexOf("cat") > 0) {
+                    fail("Search Text: full text search not correct, returned prohibited text");
+                }
+            }
+        }
+    }
+
+    /**
+     * Test range evaluation of a Query.
+     * <p/>
+     * For configuration description see {@link #setUpRangeTest()}.
+     */
+    public void testRange() throws Exception {
+        setUpRangeTest();
+        QueryResult result = execute(getRangeStatement());
+
+        // should be 1
+        checkResult(result, 1);
+
+        // evaluate result
+        checkValue(result.getRows(), propertyName1, "b");
+    }
+
+    /**
+     * Test multi-value support of search.
+     * <p/>
+     * For configuration description see {@link #setUpMultiValueTest()}.
+     */
+    public void testMultiValueSearch() throws Exception {
+        setUpMultiValueTest();
+        QueryResult result = execute(getMultiValueStatement());
+
+        //should be 1
+        checkResult(result, 1);
+
+        //evaluate result
+        checkValue(result.getRows(), propertyName1, "existence");
+    }
+
+    /**
+     * Test if the optional jcr:path pseudo property is contained in the query
+     * result.
+     * <p/>
+     * For configuration description see {@link #setUpFullTextTest()}.
+     */
+    public void testPathColumn() throws Exception {
+        if (!hasDescriptor(Repository.QUERY_JCRPATH)) {
+            throw new NotExecutableException("Repository does not support jcr:path");
+        }
+        setUpFullTextTest();
+        QueryResult result = execute(getFullTextStatement());
+        RowIterator rows = result.getRows();
+        if (rows.getSize() < 1) {
+            fail("Query result did not return any nodes");
+        }
+
+        // test mere existence
+        rows.nextRow().getValue(jcrPath);
+    }
+
+    //------------------------< internal >--------------------------------------
+
+    /**
+     * @return Statement selecting a node by a phrase, and proper escaped value
+     *         and excluding with a word
+     */
+    private Statement getFullTextStatement() {
+        StringBuffer tmp = new StringBuffer("SELECT ");
+        tmp.append(jcrPath).append(", ");
+        tmp.append(jcrScore).append(", ");
+        tmp.append(propertyName1);
+        tmp.append(" FROM ").append(testNodeType);
+        tmp.append(" WHERE CONTAINS(");
+        tmp.append("'''quick brown'' AND -cat')");
+        return new Statement(tmp.toString(), Query.SQL);
+    }
+
+    /**
+     * @return Statement selecting nodes by its value contained in a multi-value
+     *         property
+     */
+    private Statement getMultiValueStatement() {
+        StringBuffer tmp = new StringBuffer("SELECT ");
+        tmp.append(propertyName1);
+        tmp.append(" FROM ").append(testNodeType);
+        tmp.append(" WHERE 'two' IN ");
+        tmp.append(propertyName2);
+        tmp.append(" AND 'existence' IN ");
+        tmp.append(propertyName1);
+        return new Statement(tmp.toString(), Query.SQL);
+    }
+
+    /**
+     * @return Statement selecting nodes by its range in {@link #propertyName1}
+     */
+    private Statement getRangeStatement() {
+        StringBuffer tmp = new StringBuffer("SELECT ");
+        tmp.append(propertyName1);
+        tmp.append(" FROM ").append(testNodeType);
+        tmp.append(" WHERE ");
+        tmp.append(propertyName1);
+        tmp.append(" <= 'b' AND ");
+        tmp.append(propertyName1);
+        tmp.append(" > 'a'");
+        return new Statement(tmp.toString(), Query.SQL);
+    }
+}
