@@ -31,7 +31,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A <code>SystemTicket</code> ...
+ * A <code>SystemSession</code> ...
  */
 class SystemSession extends SessionImpl {
 

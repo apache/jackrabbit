@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.state.TransactionListener;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -61,15 +62,30 @@ public class XASessionImpl extends SessionImpl
      * Create a new instance of this class.
      *
      * @param rep          repository
-     * @param loginContext credentials
+     * @param loginContext login context containing authenticated subject
      * @param wspConfig    workspace configuration
      * @throws RepositoryException if an error occurs
      */
-    public XASessionImpl(RepositoryImpl rep, LoginContext loginContext,
-                         WorkspaceConfig wspConfig)
+    protected XASessionImpl(RepositoryImpl rep, LoginContext loginContext,
+                            WorkspaceConfig wspConfig)
             throws RepositoryException {
 
         super(rep, loginContext, wspConfig);
+    }
+
+    /**
+     * Create a new instance of this class.
+     *
+     * @param rep       repository
+     * @param subject   authenticated subject
+     * @param wspConfig workspace configuration
+     * @throws RepositoryException if an error occurs
+     */
+    protected XASessionImpl(RepositoryImpl rep, Subject subject,
+                            WorkspaceConfig wspConfig)
+            throws RepositoryException {
+
+        super(rep, subject, wspConfig);
     }
 
     //-------------------------------------------------------------< XASession >
@@ -128,7 +144,7 @@ public class XASessionImpl extends SessionImpl
             throw new XAException(XAException.XAER_PROTO);
         }
 
-        TransactionContext tx = null;
+        TransactionContext tx;
         if (flags == TMNOFLAGS) {
             tx = (TransactionContext) txGlobal.get(xid);
             if (tx != null) {

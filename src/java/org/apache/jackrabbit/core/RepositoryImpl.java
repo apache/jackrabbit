@@ -52,6 +52,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.security.auth.login.LoginContext;
+import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,6 +64,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.security.AccessControlContext;
+import java.security.AccessController;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -83,7 +86,7 @@ public class RepositoryImpl implements Repository, SessionListener,
     private static final String PROPERTIES_RESOURCE = "rep.properties";
     private final Properties repProps;
 
-    // names of well known repository properties
+    // names of well-known repository properties
     public static final String STATS_NODE_COUNT_PROPERTY = "jcr.repository.stats.nodes.count";
     public static final String STATS_PROP_COUNT_PROPERTY = "jcr.repository.stats.properties.count";
 
@@ -666,11 +669,27 @@ public class RepositoryImpl implements Repository, SessionListener,
         if (workspaceName == null) {
             workspaceName = repConfig.getDefaultWorkspaceName();
         }
+
         WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
         if (wspInfo == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-
+/*
+        if (credentials == null) {
+            // null credentials, obtain the identity of the already-authenticated
+            // user from access control context
+            AccessControlContext acc  = AccessController.getContext();
+            Subject subject;
+            try {
+                subject = Subject.getSubject(acc);
+            } catch (SecurityException se) {
+                throw new LoginException(se.getMessage());
+            }
+            Session ses = new XASessionImpl(this, subject, wspInfo.getConfig());
+            activeSessions.put(ses, ses);
+            return ses;
+        }
+*/
         CredentialsCallbackHandler cbHandler =
                 new CredentialsCallbackHandler(credentials);
         LoginContext lc;
@@ -680,6 +699,8 @@ public class RepositoryImpl implements Repository, SessionListener,
         } catch (javax.security.auth.login.LoginException le) {
             throw new LoginException(le.getMessage());
         }
+
+        // @todo check access rights for given workspace
 
         Session ses = new XASessionImpl(this, lc, wspInfo.getConfig());
         activeSessions.put(ses, ses);

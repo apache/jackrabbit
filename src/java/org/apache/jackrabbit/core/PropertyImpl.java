@@ -139,11 +139,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         }
         ArrayList list = new ArrayList();
         // compact array (purge null entries)
-        if (values != null) {
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] != null) {
-                    list.add(values[i]);
-                }
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] != null) {
+                list.add(values[i]);
             }
         }
         values = (InternalValue[]) list.toArray(new InternalValue[list.size()]);

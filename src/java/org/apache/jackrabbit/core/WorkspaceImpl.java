@@ -923,6 +923,8 @@ public class WorkspaceImpl implements Workspace, Constants {
         // check state of this instance
         sanityCheck();
 
+        // @todo filter workspaces according to access rights
+
         return session.getWorkspaceNames();
     }
 
