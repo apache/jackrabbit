@@ -17,13 +17,13 @@ package org.apache.jackrabbit.test.observation;
 
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
-import org.apache.log4j.Logger;
 
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.PrintWriter;
 
 /**
  * Utility class for <code>Event</code> retrieval with an
@@ -42,21 +42,21 @@ public class EventResult implements EventListener {
     private Sync sync = new Mutex();
 
     /**
-     * <code>Logger</code> where log message are written.
+     * <code>PrintWriter</code> where log messages are written.
      */
-    private final Logger log;
+    private final PrintWriter log;
 
     /**
      * Creates a new <code>EventResult</code>.
      *
      * @param log log messages are written to this <code>Logger</code>.
      */
-    EventResult(Logger log) {
+    EventResult(PrintWriter log) {
         this.log = log;
         try {
             sync.acquire();
         } catch (InterruptedException e) {
-            log.error("Could not aquire sync.");
+            log.println("Could not aquire sync.");
             throw new RuntimeException("EventResult: Interrupted while aquiring sync.");
         }
     }
@@ -80,10 +80,10 @@ public class EventResult implements EventListener {
                 sync.release();
                 return events;
             } else {
-                log.error("Events not delivered within " + wait + " ms.");
+                log.println("Events not delivered within " + wait + " ms.");
             }
         } catch (InterruptedException e) {
-            log.warn("Interrupted while waiting for EventIterator.");
+            log.println("Interrupted while waiting for EventIterator.");
         }
         return new Event[0];
     }

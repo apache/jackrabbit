@@ -60,4 +60,11 @@ public class RepositoryHelper {
         }
     }
 
+    public String getProperty(String name) throws RepositoryException {
+        try {
+            return RepositoryStub.getInstance().getProperty(name);
+        } catch (RepositoryStubException e) {
+            throw new RepositoryException("Failed to obtain Repository instance.", e);
+        }
+    }
 }

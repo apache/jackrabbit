@@ -15,7 +15,7 @@
  */
 package org.apache.jackrabbit.test.observation;
 
-import org.apache.jackrabbit.test.AbstractTest;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
@@ -29,7 +29,7 @@ import java.util.Set;
  * This class implements the basic {@link #setUp} and {@link #tearDown()}
  * methods for the observation test cases.
  */
-public abstract class AbstractObservationTest extends AbstractTest {
+public abstract class AbstractObservationTest extends AbstractJCRTest {
 
     /**
      * Default wait timeout for events: 5000 ms
@@ -98,11 +98,11 @@ public abstract class AbstractObservationTest extends AbstractTest {
 
     /**
      * Checks <code>Events</code> for paths. All <code>relPaths</code> are
-     * relative to {@link #TEST_ROOT}.
+     * relative to {@link #testRoot}.
      *
      * @param events   the <code>Event</code>s.
      * @param relPaths paths to child nodes added relative to {@link
-     *                 #TEST_ROOT}.
+     *                 #testRoot}.
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
@@ -113,11 +113,11 @@ public abstract class AbstractObservationTest extends AbstractTest {
 
     /**
      * Checks <code>Events</code> for paths. All <code>relPaths</code> are
-     * relative to {@link #TEST_ROOT}.
+     * relative to {@link #testRoot}.
      *
      * @param events   the <code>Event</code>s.
      * @param relPaths paths to child nodes added relative to {@link
-     *                 #TEST_ROOT}.
+     *                 #testRoot}.
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
@@ -128,11 +128,11 @@ public abstract class AbstractObservationTest extends AbstractTest {
 
     /**
      * Checks <code>Events</code> for paths. All <code>relPaths</code> are
-     * relative to {@link #TEST_ROOT}.
+     * relative to {@link #testRoot}.
      *
      * @param events   the <code>Event</code>s.
      * @param relPaths paths to added properties relative to {@link
-     *                 #TEST_ROOT}.
+     *                 #testRoot}.
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
@@ -143,11 +143,11 @@ public abstract class AbstractObservationTest extends AbstractTest {
 
     /**
      * Checks <code>Events</code> for paths. All <code>relPaths</code> are
-     * relative to {@link #TEST_ROOT}.
+     * relative to {@link #testRoot}.
      *
      * @param events   the <code>Event</code>s.
      * @param relPaths paths to changed properties relative to {@link
-     *                 #TEST_ROOT}.
+     *                 #testRoot}.
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
@@ -158,11 +158,11 @@ public abstract class AbstractObservationTest extends AbstractTest {
 
     /**
      * Checks <code>Events</code> for paths. All <code>relPaths</code> are
-     * relative to {@link #TEST_ROOT}.
+     * relative to {@link #testRoot}.
      *
      * @param events   the <code>Event</code>s.
      * @param relPaths paths to removed properties relative to {@link
-     *                 #TEST_ROOT}.
+     *                 #testRoot}.
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
@@ -173,10 +173,10 @@ public abstract class AbstractObservationTest extends AbstractTest {
 
     /**
      * Checks <code>Events</code> for paths. All <code>relPaths</code> are
-     * relative to {@link #TEST_ROOT}.
+     * relative to {@link #testRoot}.
      *
      * @param events    the <code>Event</code>s.
-     * @param relPaths  paths to item events relative to {@link #TEST_ROOT}.
+     * @param relPaths  paths to item events relative to {@link #testRoot}.
      * @param eventType the type of event to check.
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
@@ -192,7 +192,7 @@ public abstract class AbstractObservationTest extends AbstractTest {
             paths.add(path);
         }
         for (int i = 0; i < relPaths.length; i++) {
-            String expected = TEST_ROOT + "/" + relPaths[i];
+            String expected = testRoot + "/" + relPaths[i];
             assertTrue("Path " + expected + " not found in events.",
                     paths.contains(expected));
         }

@@ -25,97 +25,97 @@ import javax.jcr.query.QueryResult;
 public class FulltextQueryTest extends AbstractQueryTest {
 
     public void testFulltextSimple() throws Exception {
-        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
-        testRoot.save();
+        testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"fox\"";
+        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"fox\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
     }
 
     public void testFulltextMultiWord() throws Exception {
-        Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"test text"});
         n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
-        n = testRoot.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"other text"});
         n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
-        testRoot.save();
+        testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"fox test\"";
+        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"fox test\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
     }
 
     public void testFulltextPhrase() throws Exception {
-        Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"test text"});
         n.setProperty("mytext", new String[]{"the quick brown jumps fox over the lazy dog."});
 
-        n = testRoot.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"other text"});
         n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
-        testRoot.save();
+        testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"text 'fox jumps'\"";
+        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"text 'fox jumps'\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
     }
 
     public void testFulltextExclude() throws Exception {
-        Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"test text"});
         n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
-        n = testRoot.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"other text"});
         n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
         superuser.getRootNode().save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"text 'fox jumps' -other\"";
+        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"text 'fox jumps' -other\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
     }
 
     public void testFulltextOr() throws Exception {
-        Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"test text"});
         n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
-        n = testRoot.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"other text"});
         n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
-        testRoot.save();
+        testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"'fox jumps' test OR other\"";
+        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"'fox jumps' test OR other\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2);
     }
 
     public void testFulltextIntercap() throws Exception {
-        Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"tEst text"});
         n.setProperty("mytext", new String[]{"The quick brown Fox jumps over the lazy dog."});
 
-        n = testRoot.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"Other text"});
         n.setProperty("mytext", new String[]{"the quick brown FOX jumPs over the lazy dog."});
 
-        testRoot.save();
+        testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + TEST_ROOT + "// TEXTSEARCH \"'fox juMps' Test OR otheR\"";
+        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"'fox juMps' Test OR otheR\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
         QueryResult result = q.execute();
         checkResult(result, 2);

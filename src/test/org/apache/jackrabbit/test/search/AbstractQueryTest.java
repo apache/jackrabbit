@@ -15,7 +15,7 @@
  */
 package org.apache.jackrabbit.test.search;
 
-import org.apache.jackrabbit.test.AbstractTest;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.*;
 import javax.jcr.query.QueryResult;
@@ -23,7 +23,7 @@ import javax.jcr.query.QueryResult;
 /**
  * Abstract base class for query test cases.
  */
-public class AbstractQueryTest extends AbstractTest {
+public class AbstractQueryTest extends AbstractJCRTest {
 
     /**
      * Checks if the <code>result</code> contains a number of <code>hits</code>.
@@ -36,13 +36,13 @@ public class AbstractQueryTest extends AbstractTest {
     protected void checkResult(QueryResult result, int hits)
             throws RepositoryException {
         int count = 0;
-        log.info("Nodes:");
+        log.println("Nodes:");
         for (NodeIterator nodes = result.getNodes(); nodes.hasNext(); count++) {
             Node n = nodes.nextNode();
-            log.info(" " + n.getPath());
+            log.println(" " + n.getPath());
         }
         if (count == 0) {
-            log.info(" NONE");
+            log.println(" NONE");
         }
         assertEquals("Wrong hit count.", hits, count);
     }
@@ -62,7 +62,7 @@ public class AbstractQueryTest extends AbstractTest {
         checkResult(result, hits);
         // now check property count
         int count = 0;
-        log.info("Properties:");
+        log.println("Properties:");
         for (PropertyIterator it = result.getProperties(); it.hasNext(); count++) {
             StringBuffer msg = new StringBuffer();
             Property p = it.nextProperty();
@@ -79,10 +79,10 @@ public class AbstractQueryTest extends AbstractTest {
                 msg.append(values[i].getString());
                 sep = " | ";
             }
-            log.info(msg);
+            log.println(msg);
         }
         if (count == 0) {
-            log.info("  NONE");
+            log.println("  NONE");
         }
         assertEquals("Wrong property count.", properties, count);
     }

@@ -29,45 +29,45 @@ public class NodeAddedTest extends AbstractObservationTest {
     public void testSingleNodeAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.CHILD_NODE_ADDED);
-        testRoot.addNode("foo", NT_UNSTRUCTURED);
-        testRoot.save();
+        testRootNode.addNode(nodeName1, testNodeType);
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[]{"foo"});
+        checkNodeAdded(events, new String[]{nodeName1});
     }
 
     public void testMultipleNodeAdded1() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.CHILD_NODE_ADDED);
-        testRoot.addNode("foo", NT_UNSTRUCTURED);
-        testRoot.addNode("bar", NT_UNSTRUCTURED);
-        testRoot.save();
+        testRootNode.addNode(nodeName1, testNodeType);
+        testRootNode.addNode(nodeName2, testNodeType);
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[]{"foo", "bar"});
+        checkNodeAdded(events, new String[]{nodeName1, nodeName2});
     }
 
     public void testMultipleNodeAdded2() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.CHILD_NODE_ADDED);
-        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-        foo.addNode("bar", NT_UNSTRUCTURED);
-        testRoot.save();
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addNode(nodeName2, testNodeType);
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[]{"foo", "foo/bar"});
+        checkNodeAdded(events, new String[]{nodeName1, nodeName1 + "/" + nodeName2});
     }
 
     public void testTransientNodeAddedRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.CHILD_NODE_ADDED);
-        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-        foo.addNode("bar", NT_UNSTRUCTURED);
-        foo.remove("bar");
-        testRoot.save();
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addNode(nodeName2, testNodeType);
+        n1.remove(nodeName2);
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[]{"foo"});
+        checkNodeAdded(events, new String[]{nodeName1});
     }
 
     /*
@@ -76,12 +76,12 @@ public class NodeAddedTest extends AbstractObservationTest {
     public void testMultiPathSameNameAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.CHILD_NODE_ADDED);
-        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-        Node bar = testRoot.addNode("bar", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node bar = testRootNode.addNode("bar", NT_UNSTRUCTURED);
         Node bla = foo.addNode("bla", NT_UNSTRUCTURED);
         bla.addMixin(MIX_REFERENCABLE);
         bar.addNode(bla, "bla");
-        testRoot.save();
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkNodeAdded(events, new String[] { "foo", "bar", "foo/bla", "bar/bla"});

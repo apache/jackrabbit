@@ -37,21 +37,33 @@ public abstract class RepositoryStub {
 
     public static final String STUB_IMPL_PROPS = "repositoryStubImpl.properties";
 
-    public static final String STUB_IMPL_SYS_PROPS = "javax.jcr.tck.properties";
+    public static final String PROP_PREFIX = "javax.jcr.tck";
 
-    public static final String PROP_STUB_IMPL_CLASS = "javax.jcr.tck.repository_stub_impl";
+    public static final String STUB_IMPL_SYS_PROPS = PROP_PREFIX + ".properties";
 
-    public static final String PROP_SUPERUSER_PWD = "javax.jcr.tck.superuser.pwd";
+    public static final String PROP_STUB_IMPL_CLASS = PROP_PREFIX + ".repository_stub_impl";
 
-    public static final String PROP_SUPERUSER_NAME = "javax.jcr.tck.superuser.name";
+    public static final String PROP_SUPERUSER_PWD = "superuser.pwd";
 
-    public static final String PROP_READONLY_PWD = "javax.jcr.tck.readonly.pwd";
+    public static final String PROP_SUPERUSER_NAME = "superuser.name";
 
-    public static final String PROP_READONLY_NAME = "javax.jcr.tck.readonly.name";
+    public static final String PROP_READONLY_PWD = "readonly.pwd";
 
-    public static final String PROP_READWRITE_PWD = "javax.jcr.tck.readwrite.pwd";
+    public static final String PROP_READONLY_NAME = "readonly.name";
 
-    public static final String PROP_READWRITE_NAME = "javax.jcr.tck.readwrite.name";
+    public static final String PROP_READWRITE_PWD = "readwrite.pwd";
+
+    public static final String PROP_READWRITE_NAME = "readwrite.name";
+
+    public static final String PROP_NODETYPE = "nodetype";
+
+    public static final String PROP_TESTROOT = "testroot";
+
+    public static final String PROP_NODE_NAME1 = "nodename1";
+
+    public static final String PROP_NODE_NAME2 = "nodename2";
+
+    public static final String PROP_NODE_NAME3 = "nodename3";
 
     protected static RepositoryStub instance;
 
@@ -213,5 +225,17 @@ public abstract class RepositoryStub {
      */
     public Credentials getReadOnlyCredentials() {
         return readonly;
+    }
+
+    /**
+     * Returns the property with the specified <code>name</code>. If a
+     * property with the given name does not exist, <code>null</code> is
+     * returned.
+     * @param name the name of the property.
+     * @return the property, or <code>null</code> if the property does not
+     * exist.
+     */
+    public String getProperty(String name) {
+        return environment.getProperty(name);
     }
 }

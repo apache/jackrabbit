@@ -19,18 +19,23 @@ import junit.framework.TestCase;
 import org.apache.log4j.Logger;
 
 /**
- *
+ * Abstract base class for any JUnit test case.
  */
-public class JUnitTest extends TestCase {
-
-    /**
-     * Helper object to access repository transparently
-     */
-    public static final RepositoryHelper helper = new RepositoryHelper();
+public abstract class JUnitTest extends TestCase {
 
     /**
      * Logger instance for test cases
      */
-    protected static final Logger log = Logger.getLogger(JUnitTest.class);
+    private static final Logger logger = Logger.getLogger(JUnitTest.class);
+
+    /**
+     * Output stream for general messages from tests.
+     */
+    protected LogPrintWriter log = new LogPrintWriter(logger);
+
+    /**
+     * Output stream for reference output from tests.
+     */
+    protected LogPrintWriter ref = new LogPrintWriter(logger);
 
 }

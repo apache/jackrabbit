@@ -29,12 +29,12 @@ public class PropertyRemovedTest extends AbstractObservationTest {
     public void testSinglePropertyRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.PROPERTY_REMOVED);
-        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
-        testRoot.save();
+        testRootNode.save();
         foo.remove("prop1");
-        testRoot.save();
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkPropertyRemoved(events, new String[]{"foo/prop1"});
@@ -43,13 +43,13 @@ public class PropertyRemovedTest extends AbstractObservationTest {
     public void testMultiPropertyRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.PROPERTY_REMOVED);
-        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
-        testRoot.save();
+        testRootNode.save();
         foo.remove("prop1");
         foo.remove("prop2");
-        testRoot.save();
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkPropertyRemoved(events, new String[]{"foo/prop1", "foo/prop2"});

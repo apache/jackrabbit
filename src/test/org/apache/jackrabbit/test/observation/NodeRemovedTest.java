@@ -29,10 +29,10 @@ public class NodeRemovedTest extends AbstractObservationTest {
     public void testSingleNodeRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.CHILD_NODE_REMOVED);
-        testRoot.addNode("foo", NT_UNSTRUCTURED);
-        testRoot.save();
-        testRoot.remove("foo");
-        testRoot.save();
+        testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        testRootNode.save();
+        testRootNode.remove("foo");
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkNodeRemoved(events, new String[]{"foo"});
@@ -41,11 +41,11 @@ public class NodeRemovedTest extends AbstractObservationTest {
     public void testMultiNodesRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.CHILD_NODE_REMOVED);
-        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.addNode("bar", NT_UNSTRUCTURED);
-        testRoot.save();
-        testRoot.remove("foo");
-        testRoot.save();
+        testRootNode.save();
+        testRootNode.remove("foo");
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkNodeRemoved(events, new String[]{"foo", "foo/bar"});
@@ -54,12 +54,12 @@ public class NodeRemovedTest extends AbstractObservationTest {
     public void testMultiNodesRemovedWithRemaining() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, EventType.CHILD_NODE_REMOVED);
-        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-        testRoot.addNode("foobar", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        testRootNode.addNode("foobar", NT_UNSTRUCTURED);
         foo.addNode("bar", NT_UNSTRUCTURED);
-        testRoot.save();
-        testRoot.remove("foo");
-        testRoot.save();
+        testRootNode.save();
+        testRootNode.remove("foo");
+        testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkNodeRemoved(events, new String[]{"foo", "foo/bar"});
