@@ -294,7 +294,7 @@ public class RepositoryConfig {
 
         // Create the workspace.xml file from the configuration template.
         try {
-            Element element = (Element) template.getChild("Workspace").clone();
+            Element element = (Element) template.clone();
             element.setAttribute("name", name);
             Document document = new Document(element);
             XMLOutputter outputter =
