@@ -27,12 +27,22 @@ import java.io.IOException;
  */
 class FileSystemInputStream extends InputStream {
 
+    /** The underlying resource. */
     private final FileSystemResource res;
 
+    /** The underlying input stream of the <code>FileSystemResource</code>. */
     private java.io.InputStream in;
 
+    /** Current position in the stream. */
     private long position;
 
+    /**
+     * Creates a new <code>FileSystemInputStream</code> based on the
+     * {@link org.apache.jackrabbit.core.fs.FileSystemResource} <code>res</code>.
+     * @param res the resource this stream is based on.
+     * @throws IOException if an error occurs creating the stream on the
+     *   resource.
+     */
     FileSystemInputStream(FileSystemResource res) throws IOException {
         this.res = res;
         try {
@@ -42,22 +52,55 @@ class FileSystemInputStream extends InputStream {
         }
     }
 
+    /**
+     * Reads <code>length</code> bytes into the array <code>b</code> starting
+     * at <code>offset</code>.
+     * @param b the byte array to write the date into.
+     * @param offset the offset where to start writing the data.
+     * @param length number of bytes to read in / write to <code>b</code>
+     * @throws IOException if an error occurs reading from the stream or
+     *   if the stream is unable to read <code>length</code> bytes.
+     */
     protected void readInternal(byte[] b, int offset, int length) throws IOException {
         checkOpen();
-        position += in.read(b, offset, length);
+        int total = 0;
+        int read;
+        while ((read = in.read(b, offset, length)) > 0) {
+            total += read;
+            offset += read;
+            length -= read;
+            position += read;
+        }
+        if (length > 0) {
+            throw new IOException("readInternal: Unable to read " + (total + length)
+                    + " bytes. Only read " + total);
+        }
     }
 
+    /**
+     * Closes this <code>FileSystemInputStream</code> and also the underlying
+     * <code>InputStream</code>.
+     * @throws IOException if an error occurs while closing the underlying
+     *  <code>InputStream</code>.
+     */
     public void close() throws IOException {
         if (in != null) {
             in.close();
         }
     }
 
+    /**
+     * Sets the current position to <code>pos</code>. The next read operation
+     * will occur at the position <code>pos</code>.
+     * @param pos the position where to seek to.
+     * @throws IOException if an error occurs while seeking, or if pos &gt;
+     *   {@link #getFilePointer()}.
+     */
     protected void seekInternal(long pos) throws IOException {
         checkOpen();
+        long skip;
         if (pos >= position) {
-            in.skip(pos - position);
-            position = pos;
+            skip = pos - position;
         } else {
             // seeking backwards
             in.close();
@@ -66,26 +109,50 @@ class FileSystemInputStream extends InputStream {
             } catch (FileSystemException e) {
                 throw new IOException(e.getMessage());
             }
-            in.skip(pos);
-            position = pos;
+            skip = pos;
         }
+        while (skip > 0) {
+            long skipped = in.skip(skip);
+            if (skipped == 0) {
+                throw new IOException("seekInternal: Unable to skip " + skip + " bytes.");
+            }
+            skip -= skipped;
+        }
+        position = pos;
     }
 
+    /**
+     * Clones this <code>FileSystemInputStream</code>.
+     * @return a clone of this <code>FileSystemInputStream</code>.
+     */
     public Object clone() {
         FileSystemInputStream clone = (FileSystemInputStream) super.clone();
         // decouple from this
         clone.in = null;
-        clone.position = 0;
         return clone;
     }
 
     //----------------------------< internal >----------------------------------
 
+    /**
+     * Opens a new <code>InputStream</code> on the underlying resource if
+     * necessary.
+     * @throws IOException if an error occurs creating a new
+     *   <code>InputStream</code>.
+     */
     private void checkOpen() throws IOException {
         if (in == null) {
             try {
                 in = res.getInputStream();
                 length = res.length();
+                long skip = position;
+                while (skip > 0) {
+                    long skipped = in.skip(skip);
+                    if (skipped == 0) {
+                        throw new IOException("checkOpen: Unable to skip " + position + " bytes.");
+                    }
+                    skip -= skipped;
+                }
             } catch (FileSystemException e) {
                 throw new IOException(e.getMessage());
             }
