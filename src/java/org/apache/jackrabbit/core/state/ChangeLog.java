@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.commons.collections.SequencedHashMap;
 
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -31,22 +31,22 @@ public class ChangeLog {
     /**
      * Added states
      */
-    private final Map addedStates = new HashMap();
+    private final Map addedStates = new SequencedHashMap();
 
     /**
      * Modified states
      */
-    private final Map modifiedStates = new HashMap();
+    private final Map modifiedStates = new SequencedHashMap();
 
     /**
      * Deleted states
      */
-    private final Map deletedStates = new HashMap();
+    private final Map deletedStates = new SequencedHashMap();
 
     /**
      * Modified references
      */
-    private final Map modifiedRefs = new HashMap();
+    private final Map modifiedRefs = new SequencedHashMap();
 
     /**
      * A state has been added
