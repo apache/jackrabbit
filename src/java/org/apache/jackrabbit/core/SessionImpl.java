@@ -168,11 +168,13 @@ public class SessionImpl implements Session {
         accessMgr = createAccessManager(credentials, hierMgr);
         versionMgr = rep.getVersionManager();
 
-        // add virtual item managers
-        try {
-            itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
-        } catch (Exception e) {
-            throw new RepositoryException("Uanbel to add virtual item state manager.", e);
+        // add virtual item managers only for normal sessions
+        if (!(this instanceof SystemSession)) {
+            try {
+                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
+            } catch (Exception e) {
+                log.error("Unable to add vmgr: " + e.toString(), e);
+            }
         }
     }
 
@@ -198,11 +200,13 @@ public class SessionImpl implements Session {
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         versionMgr = rep.getVersionManager();
 
-        // add virtual item managers
-        try {
-            itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
-        } catch (Exception e) {
-            throw new RepositoryException("Uanbel to add virtual item state manager.", e);
+        // add virtual item managers only for normal sessions
+        if (!(this instanceof SystemSession)) {
+            try {
+                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
+            } catch (Exception e) {
+                log.error("Unable to add vmgr: " + e.toString(), e);
+            }
         }
     }
 

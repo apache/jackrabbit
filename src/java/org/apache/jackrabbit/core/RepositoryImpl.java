@@ -252,6 +252,13 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
 
         ntReg = NodeTypeRegistry.create(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
+        // initialize workspaces
+        iter = wspInfos.keySet().iterator();
+        while (iter.hasNext()) {
+            String wspName = (String) iter.next();
+            initWorkspace(wspName);
+        }
+
         // init version manager
         VersioningConfig vConfig = repConfig.getVersioningConfig();
         PersistenceManager pm = createPersistenceManager(
@@ -263,13 +270,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             ntReg);
         pvMgr = new NativePVM(pm, getNodeTypeRegistry());
         vMgr = new VersionManagerImpl(pvMgr, VERSION_STORAGE_NODE_UUID);
-
-        // initialize workspaces
-        iter = wspInfos.keySet().iterator();
-        while (iter.hasNext()) {
-            String wspName = (String) iter.next();
-            initWorkspace(wspName);
-        }
 
         // finally register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
