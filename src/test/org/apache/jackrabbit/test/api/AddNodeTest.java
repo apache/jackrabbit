@@ -139,5 +139,11 @@ public class AddNodeTest extends AbstractJCRTest {
         } catch (RepositoryException e) {
             // correct.
         }
+        try {
+            testRootNode.addNode(nodeName1 + "[1]", testNodeType);
+            fail("Expected RepositoryException.");
+        } catch (RepositoryException e) {
+            // correct.
+        }
     }
 }

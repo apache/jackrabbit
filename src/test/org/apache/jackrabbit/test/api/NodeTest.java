@@ -949,7 +949,6 @@ public class NodeTest extends AbstractJCRTest {
         }
     }
 
-
     /**
      * Creates a new node, saves it uses second session to verify if node has
      * been added.
@@ -968,5 +967,71 @@ public class NodeTest extends AbstractJCRTest {
         Session testSession = helper.getReadOnlySession();
         testSession.getItem(testNode.getPath());
         testSession.logout();
+    }
+
+    /**
+     * Tests if a {@link javax.jcr.RepositoryException} is thrown when calling
+     * <code>Node.save()</code> on a newly added node
+     */
+    public void testSaveOnNewNodeRepositoryException() throws Exception {
+        // get default workspace test root node using superuser session
+        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
+
+        // create a node
+        Node newNode = defaultRootNode.addNode(nodeName1, testNodeType);
+
+        try {
+            newNode.save();
+            fail("Calling Node.save() on a newly added node should throw a RepositoryException");
+        } catch (RepositoryException success) {
+            // ok
+        }
+    }
+
+    /**
+     * Tests if the primary node type is properly stored in jcr:primaryType
+     */
+    public void testPrimaryType() throws Exception {
+        // get default workspace test root node using superuser session
+        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
+
+        Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
+        assertEquals("The primary node type is not properly stored in jcr:primaryType",testNodeType,testNode.getProperty(jcrPrimaryType).getString());
+    }
+
+    /**
+     * Tests if jcr:primaryType is protected
+     */
+    public void testPrimaryTypeProtected() throws Exception {
+        // get default workspace test root node using superuser session
+        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
+
+        Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
+        try {
+            testNode.setProperty(jcrPrimaryType,ntBase);
+            fail("Manually setting jcr:primaryType should throw a ConstraintViolationException");
+        }
+        catch (ConstraintViolationException success) {
+            // ok
+        }
+    }
+
+    /**
+     * Tests if jcr:mixinTypes is protected
+     */
+    public void testMixinTypesProtected() throws Exception {
+        // get default workspace test root node using superuser session
+        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
+
+        Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
+        testNode.addMixin(mixReferenceable);
+
+        try {
+            testNode.setProperty(jcrMixinTypes,mixLockable);
+            fail("Manually setting jcr:mixinTypes should throw a ConstraintViolationException");
+        }
+        catch (ConstraintViolationException success) {
+            // ok
+        }
     }
 }

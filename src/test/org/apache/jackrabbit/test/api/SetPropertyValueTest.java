@@ -50,6 +50,7 @@ public class SetPropertyValueTest extends AbstractJCRTest {
     private Value[] vArray2 = new Value[3];
     private Value[] vArrayMixed = new Value[3];
     private Value[] vArrayNull = new Value[3];
+    private Value[] vArrayWithNulls = new Value[5];
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -66,6 +67,9 @@ public class SetPropertyValueTest extends AbstractJCRTest {
         vArrayMixed[0] = new StringValue("abc");
         vArrayMixed[1] = new BooleanValue(true);
         vArrayMixed[2] = new LongValue(2147483650L);
+
+        vArrayWithNulls[1] = new StringValue("a");
+        vArrayWithNulls[3] = new StringValue("z");
     }
 
     /**
@@ -268,6 +272,18 @@ public class SetPropertyValueTest extends AbstractJCRTest {
         assertEquals("Node.setProperty(String, nullValueArray[]) did not set the property to an empty Value[]",
                 Arrays.asList(new Value[0]),
                 Arrays.asList(testNode.getProperty(propertyName2).getValues()));
+    }
+
+    /**
+     * Tests if <code>Node.setProperty(String, Value[])</code> correctly compacts
+     * the value array by removing all null values
+     */
+    public void testCompactValueArrayWithNulls() throws Exception {
+        testRootNode.setProperty(propertyName2, vArrayWithNulls);
+        superuser.save();
+        assertEquals("Node.setProperty(String, valueArrayWithNulls[]) did not compact the value array by removing the null values",
+                2,
+                testRootNode.getProperty(propertyName2).getValues().length);
     }
 
     /**
