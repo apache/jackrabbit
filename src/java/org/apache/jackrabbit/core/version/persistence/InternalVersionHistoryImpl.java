@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.state.UpdateOperation;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.util.Text;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -228,31 +229,49 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
      * @throws VersionException
      */
     public void removeVersion(QName versionName) throws VersionException {
-        InternalVersionImpl v = (InternalVersionImpl) getVersion(versionName);
-        if (v.equals(rootVersion)) {
-            String msg = "Removal of " + versionName + " not allowed.";
-            log.error(msg);
-            throw new VersionException(msg);
-        }
+        getVersionManager().removeVersion(this, versionName);
+    }
+
+    /**
+     * Removes the indicated version from this VersionHistory. If the specified
+     * vesion does not exist, if it specifies the root version or if it is
+     * referenced by any node e.g. as base version, a VersionException is thrown.
+     * <p/>
+     * all successors of the removed version become successors of the
+     * predecessors of the removed version and vice versa. then, the entire
+     * version node and all its subnodes are removed.
+     *
+     * @param versionName
+     * @throws VersionException
+     */
+    protected void removeVersion(UpdateOperation upd, QName versionName) throws VersionException {
 
         try {
+            InternalVersionImpl v = (InternalVersionImpl) getVersion(versionName);
+            if (v.equals(rootVersion)) {
+                String msg = "Removal of " + versionName + " not allowed.";
+                log.error(msg);
+                throw new VersionException(msg);
+            }
+
             // remove from persistance state
-            node.removeNode(versionName);
-            node.store();
+            node.removeNode(upd, v.getName());
 
             // unregister from labels
             String[] labels = v.internalGetLabels();
             for (int i = 0; i < labels.length; i++) {
                 v.internalRemoveLabel(labels[i]);
                 QName name = new QName("", Text.md5(labels[i]));
-                labelNode.removeNode(name);
+                labelNode.removeNode(upd, name);
             }
-
             // detach from the version graph
-            v.internalDetach();
+            v.internalDetach(upd);
 
             // and remove from history
             versionCache.remove(v.getId());
+
+            // store changes
+            node.store(upd);
         } catch (RepositoryException e) {
             throw new VersionException("error while storing modifications", e);
         }
@@ -262,6 +281,14 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
      * @see InternalVersionHistory#addVersionLabel(org.apache.jackrabbit.core.QName, String, boolean)
      */
     public InternalVersion addVersionLabel(QName versionName, String label, boolean move)
+            throws VersionException {
+        return getVersionManager().addVersionLabel(this, versionName, label, move);
+    }
+
+    /**
+     * @see InternalVersionHistory#addVersionLabel(org.apache.jackrabbit.core.QName, String, boolean)
+     */
+    protected InternalVersion addVersionLabel(UpdateOperation upd, QName versionName, String label, boolean move)
             throws VersionException {
 
         InternalVersion version = getVersion(versionName);
@@ -284,10 +311,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         ((InternalVersionImpl) version).internalAddLabel(label);
         QName name = new QName("", Text.md5(label));
         try {
-            PersistentNode lNode = labelNode.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
-            lNode.setPropertyValue(NativePVM.PROPNAME_NAME, InternalValue.create(label));
-            lNode.setPropertyValue(NativePVM.PROPNAME_VERSION, InternalValue.create(version.getId()));
-            labelNode.store();
+            PersistentNode lNode = labelNode.addNode(upd, name, NodeTypeRegistry.NT_UNSTRUCTURED);
+            lNode.setPropertyValue(upd, NativePVM.PROPNAME_NAME, InternalValue.create(label));
+            lNode.setPropertyValue(upd, NativePVM.PROPNAME_VERSION, InternalValue.create(version.getId()));
+            labelNode.store(upd);
         } catch (RepositoryException e) {
             throw new VersionException("Error while storing modifications", e);
         }
@@ -298,6 +325,13 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
      * @see InternalVersionHistory#removeVersionLabel(String)
      */
     public InternalVersion removeVersionLabel(String label) throws VersionException {
+        return getVersionManager().removeVersionLabel(this, label);
+    }
+
+    /**
+     * @see InternalVersionHistory#removeVersionLabel(String)
+     */
+    protected InternalVersion removeVersionLabel(UpdateOperation upd, String label) throws VersionException {
         InternalVersionImpl v = (InternalVersionImpl) labelCache.remove(label);
         if (v == null) {
             throw new VersionException("Version label " + label + " is not in version history.");
@@ -306,8 +340,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         QName name = new QName("", Text.md5(label));
 
         try {
-            labelNode.removeNode(name);
-            labelNode.store();
+            labelNode.removeNode(upd, name);
+            labelNode.store(upd);
         } catch (RepositoryException e) {
             throw new VersionException("Unable to store modifications", e);
         }
@@ -324,7 +358,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
      * @return
      * @throws RepositoryException
      */
-    protected InternalVersionImpl checkin(QName name, NodeImpl src)
+    protected InternalVersionImpl checkin(UpdateOperation upd, QName name, NodeImpl src)
             throws RepositoryException {
 
         // copy predecessors from src node
@@ -341,19 +375,19 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
 
         String versionId = UUID.randomUUID().toString();
         QName nodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, versionId);
-        PersistentNode vNode = node.addNode(nodeName, NativePVM.NT_REP_VERSION);
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_ID, InternalValue.create(versionId));
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(name));
+        PersistentNode vNode = node.addNode(upd, nodeName, NativePVM.NT_REP_VERSION);
+        vNode.setPropertyValue(upd, NativePVM.PROPNAME_VERSION_ID, InternalValue.create(versionId));
+        vNode.setPropertyValue(upd, NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(name));
 
         // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, predecessors);
+        vNode.setPropertyValue(upd, VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
+        vNode.setPropertyValues(upd, VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, predecessors);
 
         // checkin source node
-        InternalFrozenNodeImpl.checkin(vNode, VersionManager.NODENAME_FROZEN, src, false, false);
+        InternalFrozenNodeImpl.checkin(upd, vNode, VersionManager.NODENAME_FROZEN, src, false, false);
 
         // and store
-        node.store();
+        node.store(upd);
 
         // update version graph
         InternalVersionImpl version = new InternalVersionImpl(this, vNode);
@@ -400,32 +434,32 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
      * @return
      * @throws RepositoryException
      */
-    protected static InternalVersionHistoryImpl create(PersistentVersionManager vMgr, PersistentNode parent, String historyId, QName name, NodeImpl src)
+    protected static InternalVersionHistoryImpl create(UpdateOperation upd, PersistentVersionManager vMgr, PersistentNode parent, String historyId, QName name, NodeImpl src)
             throws RepositoryException {
 
         // create history node
-        PersistentNode pNode = parent.addNode(name, NativePVM.NT_REP_VERSION_HISTORY);
-        pNode.setPropertyValue(NativePVM.PROPNAME_HISTORY_ID, InternalValue.create(historyId));
+        PersistentNode pNode = parent.addNode(upd, name, NativePVM.NT_REP_VERSION_HISTORY);
+        pNode.setPropertyValue(upd, NativePVM.PROPNAME_HISTORY_ID, InternalValue.create(historyId));
 
         // create label node
-        pNode.addNode(NativePVM.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_UNSTRUCTURED);
+        pNode.addNode(upd, NativePVM.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_UNSTRUCTURED);
 
         // create root version
         String versionId = UUID.randomUUID().toString();
         QName nodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, versionId);
 
-        PersistentNode vNode = pNode.addNode(nodeName, NativePVM.NT_REP_VERSION);
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_ID, InternalValue.create(versionId));
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(VersionManager.NODENAME_ROOTVERSION));
+        PersistentNode vNode = pNode.addNode(upd, nodeName, NativePVM.NT_REP_VERSION);
+        vNode.setPropertyValue(upd, NativePVM.PROPNAME_VERSION_ID, InternalValue.create(versionId));
+        vNode.setPropertyValue(upd, NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(VersionManager.NODENAME_ROOTVERSION));
 
         // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
+        vNode.setPropertyValue(upd, VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
+        vNode.setPropertyValues(upd, VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
 
         // add also an empty frozen node to the root version
-        InternalFrozenNodeImpl.checkin(vNode, VersionManager.NODENAME_FROZEN, src, true, false);
+        InternalFrozenNodeImpl.checkin(upd, vNode, VersionManager.NODENAME_FROZEN, src, true, false);
 
-        parent.store();
+        parent.store(upd);
         return new InternalVersionHistoryImpl(vMgr, pNode);
     }
 }

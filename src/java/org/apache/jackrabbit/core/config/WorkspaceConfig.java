@@ -45,7 +45,7 @@ public class WorkspaceConfig extends AbstractConfig {
      */
     public static final String PUBLIC_ID = "-//The Apache Software Foundation//DTD Workspace//EN";
 
-    private static final String PERSISTENCE_MANAGER_ELEMENT = "PersistenceManager";
+    static final String PERSISTENCE_MANAGER_ELEMENT = "PersistenceManager";
     private static final String SEARCH_INDEX_ELEMENT = "SearchIndex";
 
     /**

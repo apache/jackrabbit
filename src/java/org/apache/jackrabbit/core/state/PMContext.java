@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.fs.FileSystem;
 
 import javax.jcr.NamespaceRegistry;
+import java.io.File;
 
 /**
  * A <code>PMContext</code> is used to provide context information for a
@@ -30,9 +31,14 @@ import javax.jcr.NamespaceRegistry;
 public class PMContext {
 
     /**
-     * workspace configuration
+     * the physcial home dir
      */
-    private final WorkspaceConfig wspConfig;
+    private final File physicalHomeDir;
+
+    /**
+     * the virtual jackrabbit filesystem
+     */
+    private final FileSystem fs;
 
     /**
      * namespace registry
@@ -52,28 +58,39 @@ public class PMContext {
     /**
      * Creates a new <code>PMContext</code>.
      *
-     * @param wspConfig    configuration of workspace
+     * @param homeDir the physical home directory
+     * @param fs the virtual jackrabbit filesystem
      * @param rootNodeUUID uuid of the root node
      * @param nsReg        namespace registry
      * @param ntReg        node type registry
      */
-    public PMContext(WorkspaceConfig wspConfig,
+    public PMContext(File homeDir,
+                     FileSystem fs,
                      String rootNodeUUID,
                      NamespaceRegistry nsReg,
                      NodeTypeRegistry ntReg) {
-        this.wspConfig = wspConfig;
+        this.physicalHomeDir = homeDir;
+        this.fs = fs;
         this.rootNodeUUID = rootNodeUUID;
         this.nsReg = nsReg;
         this.ntReg = ntReg;
     }
 
+
     /**
-     * Returns the workspace configuration
-     *
-     * @return the workspace configuration
+     * Returns the physical home directory for this persistence manager
+     * @return
      */
-    public WorkspaceConfig getWorkspaceConfig() {
-        return wspConfig;
+    public File getHomeDir() {
+        return physicalHomeDir;
+    }
+
+    /**
+     * Returns the virtual filesystem for this persistence manager
+     * @return
+     */
+    public FileSystem getFileSystem() {
+        return fs;
     }
 
     /**

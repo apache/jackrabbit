@@ -17,9 +17,11 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.version.VersionException;
 import java.util.Iterator;
 
 /**
@@ -139,4 +141,30 @@ public interface PersistentVersionManager {
      */
     public InternalVersion checkin(NodeImpl node) throws RepositoryException;
 
+    /**
+     *
+     * @param history
+     * @param versionName
+     * @throws VersionException
+     */
+    public void removeVersion(InternalVersionHistory history, QName versionName) throws VersionException;
+
+
+    /**
+     *
+     * @param versionName
+     * @param label
+     * @param move
+     * @return
+     * @throws VersionException
+     */
+    public InternalVersion addVersionLabel(InternalVersionHistory history, QName versionName, String label, boolean move) throws VersionException;
+
+    /**
+     *
+     * @param label
+     * @return
+     * @throws VersionException
+     */
+    public InternalVersion removeVersionLabel(InternalVersionHistory history, String label) throws VersionException;
 }

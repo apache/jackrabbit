@@ -55,6 +55,8 @@ public class RepositoryConfig extends AbstractConfig {
 
     private static final String WORKSPACE_ELEMENT = "Workspace";
 
+    private static final String VERSIONING_ELEMENT = "Versioning";
+
     /**
      * wellknown variables (will be replaced with their respective values
      * whereever they occur within the configuration)
@@ -92,6 +94,11 @@ public class RepositoryConfig extends AbstractConfig {
      * name of default workspace
      */
     private String defaultWspName;
+
+    /**
+     * the versioning config
+     */
+    private VersioningConfig vConfig;
 
     /**
      * private constructor.
@@ -164,6 +171,10 @@ public class RepositoryConfig extends AbstractConfig {
                 throw new RepositoryException(msg);
             }
         }
+
+        // load versioning config
+        Element vElement = config.getRootElement().getChild(VERSIONING_ELEMENT);
+        vConfig = new VersioningConfig(vElement, vars);
     }
 
     /**
@@ -257,6 +268,14 @@ public class RepositoryConfig extends AbstractConfig {
      */
     public WorkspaceConfig getWorkspaceConfig(String name) {
         return (WorkspaceConfig) wspConfigs.get(name);
+    }
+
+    /**
+     * Returns the configuration for the versioning
+     * @return
+     */
+    public VersioningConfig getVersioningConfig() {
+        return vConfig;
     }
 
     /**

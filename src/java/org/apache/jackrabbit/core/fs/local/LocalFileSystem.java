@@ -47,6 +47,10 @@ public class LocalFileSystem implements FileSystem {
         rootPath = osPath(path);
     }
 
+    public void setPath(File path) {
+        rootPath = path.getAbsolutePath();
+    }
+
     private String osPath(String genericPath) {
         if (File.separator.equals(SEPARATOR)) {
             return genericPath;

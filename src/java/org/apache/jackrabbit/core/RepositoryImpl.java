@@ -21,6 +21,7 @@ import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -93,12 +94,12 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
 
     // configuration of the repository
     private final RepositoryConfig repConfig;
+
     // the master filesystem
     private final FileSystem repStore;
+
     // sub file system where the repository stores meta data such as uuid of root node, etc.
     private final FileSystem metaDataStore;
-    // sub file system where the repository stores versions
-    private final FileSystem versionStore;
 
     /**
      * map of workspace names and <code>WorkspaceInfo<code>s.
@@ -139,18 +140,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new RepositoryException(msg, fse);
         }
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
-
-        fsRootPath = "/versions";
-        try {
-            if (!repStore.exists(fsRootPath) || !repStore.isFolder(fsRootPath)) {
-                repStore.createFolder(fsRootPath);
-            }
-        } catch (FileSystemException fse) {
-            String msg = "failed to create folder for repository version store";
-            log.error(msg, fse);
-            throw new RepositoryException(msg, fse);
-        }
-        versionStore = new BasedFileSystem(repStore, fsRootPath);
 
         FileSystemResource uuidFile = new FileSystemResource(metaDataStore, "rootUUID");
         try {
@@ -267,9 +256,15 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         }
 
         // init version manager
-        // todo: as soon as dynamic workspaces are available, base on system ws
-        SessionImpl verSession = getSystemSession(repConfig.getDefaultWorkspaceName());
-        pvMgr = new NativePVM(verSession);
+        VersioningConfig vConfig = repConfig.getVersioningConfig();
+        PersistenceManager pm = createPersistenceManager(
+            vConfig.getHomeDir(),
+            vConfig.getFileSystem(),
+            vConfig.getPersistenceManagerConfig(),
+            rootNodeUUID,
+            nsReg,
+            ntReg);
+        pvMgr = new NativePVM(pm, getNodeTypeRegistry());
         vMgr = new VersionManagerImpl(pvMgr);
 
         // finally register shutdown hook
@@ -622,6 +617,45 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         return ((NodeImpl) session.getRootNode()).getNode(SYSTEM_ROOT_NAME);
     }
 
+    /**
+     * Returns the workspace persistence manager
+     *
+     * @return the workspace persistence manager
+     * @throws RepositoryException if the persistence manager could not be instantiated/initialized
+     */
+    public static PersistenceManager createPersistenceManager(File homeDir, 
+                                                              FileSystem fs, 
+                                                              PersistenceManagerConfig pmConfig,
+                                                              String rootNodeUUID,
+                                                              NamespaceRegistry nsReg,
+                                                              NodeTypeRegistry ntReg)
+            throws RepositoryException {
+        String className = pmConfig.getClassName();
+        Map params = pmConfig.getParameters();
+        try {
+            Class c = Class.forName(className);
+            PersistenceManager persistMgr = (PersistenceManager) c.newInstance();
+            /**
+             * set the properties of the persistence manager object
+             * from the param map
+             */
+            BeanMap bm = new BeanMap(persistMgr);
+            Iterator iter = params.keySet().iterator();
+            while (iter.hasNext()) {
+                Object name = iter.next();
+                Object value = params.get(name);
+                bm.put(name, value);
+            }
+            PMContext ctx = new PMContext(homeDir, fs, rootNodeUUID, nsReg, ntReg);
+            persistMgr.init(ctx);
+            return persistMgr;
+        } catch (Exception e) {
+            log.error("Cannot instantiate implementing class " + className, e);
+            throw new RepositoryException("Cannot instantiate implementing class " + className, e);
+        }
+    }
+
+
     //-----------------------------------------------------------< Repository >
     /**
      * @see Repository#login(Credentials, String)
@@ -792,32 +826,16 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
          * @return the workspace persistence manager
          * @throws RepositoryException if the persistence manager could not be instantiated/initialized
          */
-        synchronized PersistenceManager getPersistenceManager() throws RepositoryException {
+        synchronized PersistenceManager getPersistenceManager(PersistenceManagerConfig pmConfig) 
+                throws RepositoryException {
             if (persistMgr == null) {
-                PersistenceManagerConfig pmConfig = config.getPersistenceManagerConfig();
-                String className = pmConfig.getClassName();
-                Map params = pmConfig.getParameters();
-                try {
-                    Class c = Class.forName(className);
-                    persistMgr = (PersistenceManager) c.newInstance();
-                    /**
-                     * set the properties of the persistence manager object
-                     * from the param map
-                     */
-                    BeanMap bm = new BeanMap(persistMgr);
-                    Iterator iter = params.keySet().iterator();
-                    while (iter.hasNext()) {
-                        Object name = iter.next();
-                        Object value = params.get(name);
-                        bm.put(name, value);
-                    }
-                    PMContext ctx = new PMContext(config, rootNodeUUID, nsReg, ntReg);
-                    persistMgr.init(ctx);
-                } catch (Exception e) {
-                    persistMgr = null;
-                    log.error("Cannot instantiate implementing class " + className, e);
-                    throw new RepositoryException("Cannot instantiate implementing class " + className, e);
-                }
+                persistMgr = RepositoryImpl.createPersistenceManager(
+                        new File(config.getHomeDir()),
+                        config.getFileSystem(),
+                        pmConfig,
+                        rootNodeUUID,
+                        nsReg,
+                        ntReg);
             }
             return persistMgr;
         }
@@ -846,7 +864,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             if (itemStateMgr == null) {
                 // create item state manager
                 try {
-                    itemStateMgr = new SharedItemStateManager(getPersistenceManager(), rootNodeUUID, ntReg);
+                    itemStateMgr = new SharedItemStateManager(getPersistenceManager(config.getPersistenceManagerConfig()), rootNodeUUID, ntReg);
                 } catch (ItemStateException ise) {
                     String msg = "failed to instantiate persistent item state manager";
                     log.error(msg, ise);

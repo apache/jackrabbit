@@ -317,14 +317,14 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         stateStore = new HashMap(initialCapacity, loadFactor);
         refsStore = new HashMap(initialCapacity, loadFactor);
 
-        wspFS = context.getWorkspaceConfig().getFileSystem();
+        wspFS = context.getFileSystem();
         
         /**
          * store blob's in local file system in a sub directory
          * of the workspace home directory
          */
         LocalFileSystem blobFS = new LocalFileSystem();
-        blobFS.setPath(context.getWorkspaceConfig().getHomeDir() + "/blobs");
+        blobFS.setPath(new File(context.getHomeDir(), "blobs"));
         blobFS.init();
         this.blobFS = blobFS;
 

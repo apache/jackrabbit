@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.version.persistence;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.UpdateOperation;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.*;
 
@@ -201,12 +202,12 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      *
      * @throws RepositoryException
      */
-    private void storePredecessors() throws RepositoryException {
+    private void storePredecessors(UpdateOperation upd) throws RepositoryException {
         InternalValue[] values = new InternalValue[predecessors.size()];
         for (int i = 0; i < values.length; i++) {
             values[i] = InternalValue.create(new UUID(((InternalVersion) predecessors.get(i)).getId()));
         }
-        node.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, values);
+        node.setPropertyValues(upd, VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, values);
     }
 
     /**
@@ -214,18 +215,18 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      *
      * @throws RepositoryException
      */
-    void internalDetach() throws RepositoryException {
+    void internalDetach(UpdateOperation upd) throws RepositoryException {
         // detach this from all successors
         InternalVersionImpl[] succ = (InternalVersionImpl[]) getSuccessors();
         for (int i = 0; i < succ.length; i++) {
-            succ[i].internalDetachPredecessor(this);
+            succ[i].internalDetachPredecessor(upd, this);
         }
 
         // clear properties
         successors.clear();
         predecessors.clear();
         labelCache = null;
-        storePredecessors();
+        storePredecessors(upd);
     }
 
     /**
@@ -236,7 +237,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      *
      * @param v the successor to detach
      */
-    private void internalDetachPredecessor(InternalVersion v) throws RepositoryException {
+    private void internalDetachPredecessor(UpdateOperation upd, InternalVersion v) throws RepositoryException {
         // remove 'v' from predecessor list
         for (int i = 0; i < predecessors.size(); i++) {
             if (predecessors.get(i).equals(v)) {
@@ -247,7 +248,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
         // attach v's successors
         predecessors.clear();
         predecessors.addAll(Arrays.asList(v.getPredecessors()));
-        storePredecessors();
+        storePredecessors(upd);
     }
 
     /**

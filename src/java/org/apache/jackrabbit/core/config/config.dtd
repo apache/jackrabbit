@@ -37,7 +37,7 @@
         no workspace yet and for creating additional workspaces through
         the api
 -->
-<!ELEMENT Repository (FileSystem,Workspaces,Workspace)>
+<!ELEMENT Repository (FileSystem,Workspaces,Workspace,Versioning)>
 
 <!--
     a virtual file system
@@ -90,3 +90,12 @@
     (used by the QueryManager)
 -->
 <!ELEMENT SearchIndex (param*,FileSystem)>
+
+<!--
+the Versioning element specifies the location and persistence manager
+that is used to store versions
+    -->
+<!ELEMENT Versioning (FileSystem, PersistenceManager)>
+<!ATTLIST Versioning
+rootPath CDATA #REQUIRED
+>
