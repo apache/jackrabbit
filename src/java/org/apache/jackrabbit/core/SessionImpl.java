@@ -15,6 +15,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
@@ -37,9 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.security.AccessControlException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -57,6 +56,11 @@ public class SessionImpl implements Session {
     public static final String SET_PROPERTY_ACTION = "set_property";
 
     /**
+     * flag indicating whether this session is alive
+     */
+    protected boolean alive;
+
+    /**
      * the repository that issued this session
      */
     protected final RepositoryImpl rep;
@@ -65,6 +69,7 @@ public class SessionImpl implements Session {
      * the user ID that was used to acquire this session
      */
     protected final String userId;
+
     /**
      * the attibutes of this session
      */
@@ -111,6 +116,11 @@ public class SessionImpl implements Session {
     protected final VersionManager versionMgr;
 
     /**
+     * Listeners (weak references)
+     */
+    protected final Map listeners = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+
+    /**
      * Protected constructor.
      *
      * @param rep
@@ -120,6 +130,7 @@ public class SessionImpl implements Session {
     protected SessionImpl(RepositoryImpl rep, Credentials credentials,
                           WorkspaceConfig wspConfig)
             throws RepositoryException {
+        alive = true;
         this.rep = rep;
         if (credentials instanceof SimpleCredentials) {
             SimpleCredentials sc = (SimpleCredentials) credentials;
@@ -168,6 +179,7 @@ public class SessionImpl implements Session {
      */
     protected SessionImpl(RepositoryImpl rep, String userId, WorkspaceConfig wspConfig)
             throws RepositoryException {
+        alive = true;
         this.rep = rep;
         this.userId = userId;
         nsMappings = new TransientNamespaceMappings(rep.getNamespaceRegistry());
@@ -218,6 +230,20 @@ public class SessionImpl implements Session {
     protected AccessManagerImpl createAccessManager(Credentials credentials,
                                                     HierarchyManager hierMgr) {
         return new AccessManagerImpl(credentials, hierMgr);
+    }
+
+    /**
+     * Performs a sanity check on this session.
+     *
+     * @throws RepositoryException if this session has been rendered invalid
+     *                             for some reason (e.g. if this session has
+     *                             been closed explicitly or if it has expired)
+     */
+    protected void sanityCheck() throws RepositoryException {
+        // check session status
+        if (!alive) {
+            throw new RepositoryException("this session has been closed");
+        }
     }
 
     /**
@@ -307,12 +333,59 @@ public class SessionImpl implements Session {
         return rep.getWorkspaceNames();
     }
 
+    /**
+     * Notify the listeners that this session has been closed.
+     */
+    protected void notifyLoggedOut() {
+        // copy listeners to array to avoid ConcurrentModificationException
+        SessionListener[] la = new SessionListener[listeners.size()];
+        Iterator iter = listeners.values().iterator();
+        int cnt = 0;
+        while (iter.hasNext()) {
+            la[cnt++] = (SessionListener) iter.next();
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].loggedOut(this);
+            }
+        }
+    }
+
+    /**
+     * Add a <code>SessionListener</code>
+     *
+     * @param listener the new listener to be informed on modifications
+     */
+    public void addListener(SessionListener listener) {
+        if (!listeners.containsKey(listener)) {
+            listeners.put(listener, listener);
+        }
+    }
+
+    /**
+     * Remove a <code>SessionListener</code>
+     *
+     * @param listener an existing listener
+     */
+    public void removeListener(SessionListener listener) {
+        listeners.remove(listener);
+    }
+
     //--------------------------------------------------------------< Session >
     /**
      * @see Session#checkPermission(String, String)
      */
     public void checkPermission(String absPath, String actions)
             throws AccessControlException {
+        // check sanity of this session
+        try {
+            sanityCheck();
+        } catch (RepositoryException re) {
+            String msg = "failed to check READ permission on " + absPath;
+            log.warn(msg, re);
+            throw new AccessControlException(READ_ACTION);
+        }
+
         // build the set of actions to be checked
         String[] strings = actions.split(",");
         HashSet set = new HashSet();
@@ -461,6 +534,9 @@ public class SessionImpl implements Session {
      */
     public Session impersonate(Credentials otherCredentials)
             throws LoginException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         // @todo reimplement impersonate(Credentials) correctly
 
         // check if the credentials of this session allow to 'impersonate'
@@ -483,6 +559,9 @@ public class SessionImpl implements Session {
      * @see Session#getRootNode
      */
     public Node getRootNode() throws RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         return getItemManager().getRootNode();
     }
 
@@ -490,6 +569,9 @@ public class SessionImpl implements Session {
      * @see Session#getNodeByUUID(String)
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         try {
             NodeImpl node = (NodeImpl) getItemManager().getItem(new NodeId(uuid));
             if (node.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
@@ -507,6 +589,9 @@ public class SessionImpl implements Session {
      * @see Session#getItem(String)
      */
     public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         try {
             return getItemManager().getItem(Path.create(absPath, getNamespaceResolver(), true));
         } catch (AccessDeniedException ade) {
@@ -523,6 +608,9 @@ public class SessionImpl implements Session {
      */
     public boolean itemExists(String absPath) {
         try {
+            // check sanity of this session
+            sanityCheck();
+
             getItemManager().getItem(Path.create(absPath, getNamespaceResolver(), true));
             return true;
         } catch (RepositoryException re) {
@@ -539,6 +627,9 @@ public class SessionImpl implements Session {
     public void save() throws AccessDeniedException, LockException,
             ConstraintViolationException, InvalidItemStateException,
             RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         getItemManager().getRootNode().save();
     }
 
@@ -546,9 +637,12 @@ public class SessionImpl implements Session {
      * @see Session#refresh(boolean)
      */
     public void refresh(boolean keepChanges) throws RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         if (!keepChanges) {
             // optimization
-            getItemStateManager().disposeAllTransientItemStates();
+            itemStateMgr.disposeAllTransientItemStates();
             return;
         }
         getItemManager().getRootNode().refresh(keepChanges);
@@ -558,7 +652,10 @@ public class SessionImpl implements Session {
      * @see Session#hasPendingChanges
      */
     public boolean hasPendingChanges() throws RepositoryException {
-        return getItemStateManager().hasAnyTransientItemStates();
+        // check sanity of this session
+        sanityCheck();
+
+        return itemStateMgr.hasAnyTransientItemStates();
     }
 
     /**
@@ -567,6 +664,8 @@ public class SessionImpl implements Session {
     public void move(String srcAbsPath, String destAbsPath)
             throws ItemExistsException, PathNotFoundException,
             ConstraintViolationException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
 
         // check paths & get node instances
 
@@ -683,6 +782,9 @@ public class SessionImpl implements Session {
      * @see Session#getImportContentHandler(String)
      */
     public ContentHandler getImportContentHandler(String parentAbsPath) throws PathNotFoundException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         Item item = null;
         try {
             item = getItemManager().getItem(Path.create(parentAbsPath, getNamespaceResolver(), true));
@@ -709,23 +811,14 @@ public class SessionImpl implements Session {
             throws IOException, PathNotFoundException, ItemExistsException,
             ConstraintViolationException, InvalidSerializedDataException,
             RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         ImportHandler handler = (ImportHandler) getImportContentHandler(parentAbsPath);
         try {
             XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-/*
-	    parser.setFeature("http://xml.org/sax/features/validation", true);
-	    parser.setFeature("http://apache.org/xml/features/validation/schema", true);
-	    parser.setFeature("http://apache.org/xml/features/validation/schema-full-checking", true);
-*/
             parser.setContentHandler(handler);
             parser.setErrorHandler(handler);
-/*
-	    // validate against system view schema
-	    URL urlSchema = this.class.getClassLoader().getResource("javax/jcr/systemview.xsd");
-	    parser.setProperty("http://apache.org/xml/properties/schema/external-noNamespaceSchemaLocation", urlSchema.toString());
-	    parser.setProperty("http://apache.org/xml/properties/schema/external-schemaLocation",
-		    urlSchema.toString() + " " + "http://www.jcp.org/jcr/sv/1.0");
-*/
             parser.parse(new InputSource(in));
         } catch (SAXException se) {
             // check for wrapped repository exception
@@ -743,14 +836,26 @@ public class SessionImpl implements Session {
     /**
      * @see Session#logout()
      */
-    public void logout() {
+    public synchronized void logout() {
+        if (!alive) {
+            // ignore
+            return;
+        }
+
         // discard all transient changes
-        getItemStateManager().disposeAllTransientItemStates();
-
-        // @todo invalidate session, release session-scoped locks, free resources, prepare to get gc'ed etc.
-
-        log.debug("disposing workspace...");
+        itemStateMgr.disposeAllTransientItemStates();
+        // dispose item manager
+        itemMgr.dispose();
+        // dispose workspace
         wsp.dispose();
+
+        // @todo release session-scoped locks, free resources, prepare to get gc'ed etc.
+
+        // invalidate session
+        alive = false;
+
+        // finally notify listeners that session has been closed
+        notifyLoggedOut();
     }
 
     /**

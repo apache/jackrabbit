@@ -61,6 +61,14 @@ public class PersistentItemStateManager extends ItemStateCache
         }
     }
 
+    /**
+     * Disposes this <code>PersistentItemStateManager</code> and frees resources.
+     */
+    public void dispose() {
+        // clear cache
+        evictAll();
+    }
+
     private PersistentNodeState createPersistentRootNodeState(String rootNodeUUID,
                                                               NodeTypeRegistry ntReg)
             throws ItemStateException {

@@ -83,9 +83,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     protected ItemId id;
 
     /**
-     * Listeners (soft references)
+     * Listeners (weak references)
      */
-    protected final transient Map listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.SOFT, ReferenceMap.SOFT));
+    protected final transient Map listeners =
+            Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     // the backing persistent item state (may be null)
     protected transient ItemState overlayedState;

@@ -154,6 +154,16 @@ public class WorkspaceImpl implements Workspace {
         }
     }
 
+    /**
+     * Performs a sanity check on this workspace and the associated session.
+     * @throws RepositoryException if this workspace has been rendered invalid
+     * for some reason
+     */
+    protected void sanityCheck() throws RepositoryException {
+        // check session status
+        session.sanityCheck();
+    }
+
     //-----------< misc. static helper methods for cross-workspace operations >
     /**
      * @param nodePath

@@ -227,7 +227,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 propState.setValues(genValues);
             } else if (def.getDefaultValues() != null) {
                 Value[] vals = def.getDefaultValues();
-                if (vals.length>0) {
+                if (vals.length > 0) {
                     int length = (def.isMultiple() ? vals.length : 1);
                     InternalValue[] defVals = new InternalValue[length];
                     for (int i = 0; i < length; i++) {
@@ -681,7 +681,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property internalSetProperty(QName name, InternalValue value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         int type;
         if (value == null) {
@@ -714,7 +714,7 @@ public class NodeImpl extends ItemImpl implements Node {
     protected Property internalSetProperty(QName name, InternalValue[] values)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         int type;
         if (values == null || values.length == 0) {
@@ -754,7 +754,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public NodeImpl getNode(QName name, int index) throws ItemNotFoundException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         Path nodePath;
         try {
@@ -831,7 +831,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyImpl getProperty(QName name)
             throws ItemNotFoundException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyId propId = new PropertyId(((NodeState) state).getUUID(), name);
         try {
@@ -866,7 +866,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ItemExistsException, ConstraintViolationException,
             RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         return internalAddChildNode(nodeName, null);
     }
@@ -878,7 +878,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ItemExistsException, NoSuchNodeTypeException,
             ConstraintViolationException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
         return internalAddChildNode(nodeName, nt);
@@ -897,7 +897,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyImpl setProperty(String name, QName value) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, false);
         prop.setValue(value);
@@ -917,7 +917,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyImpl setProperty(String name, QName[] values) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, true);
         prop.setValue(values);
@@ -938,7 +938,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyImpl setProperty(QName name, Value[] values)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         int type;
         if (values == null || values.length == 0) {
@@ -965,7 +965,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyImpl setProperty(QName name, Value value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         int type = (value == null) ? PropertyType.STRING : value.getType();
         PropertyImpl prop = getOrCreateProperty(name, type, false);
@@ -1014,7 +1014,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public void accept(ItemVisitor visitor) throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         visitor.visit(this);
     }
@@ -1025,7 +1025,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Node getParent()
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if root node
         NodeState thisState = (NodeState) state;
@@ -1047,7 +1047,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ItemExistsException, PathNotFoundException,
             ConstraintViolationException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         return internalAddNode(relPath, null);
     }
@@ -1060,7 +1060,7 @@ public class NodeImpl extends ItemImpl implements Node {
             NoSuchNodeTypeException, ConstraintViolationException,
             RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         NodeTypeImpl nt = (NodeTypeImpl) session.getNodeTypeManager().getNodeType(nodeTypeName);
         return internalAddNode(relPath, nt);
@@ -1196,7 +1196,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, Value[] values)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         int type;
         if (values == null || values.length == 0) {
@@ -1215,7 +1215,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, String[] values)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, true);
         prop.setValue(values);
@@ -1227,7 +1227,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, String value) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, false);
         prop.setValue(value);
@@ -1240,7 +1240,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, Value value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         int type = (value == null) ? PropertyType.STRING : value.getType();
         PropertyImpl prop = getOrCreateProperty(name, type, false);
@@ -1254,7 +1254,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, InputStream value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.BINARY, false);
         prop.setValue(value);
@@ -1267,7 +1267,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, boolean value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.BOOLEAN, false);
         prop.setValue(value);
@@ -1280,7 +1280,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, double value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.DOUBLE, false);
         prop.setValue(value);
@@ -1293,7 +1293,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, long value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.LONG, false);
         prop.setValue(value);
@@ -1306,7 +1306,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, Calendar value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.DATE, false);
         prop.setValue(value);
@@ -1319,7 +1319,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, Node value)
             throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.REFERENCE, false);
         prop.setValue(value);
@@ -1332,7 +1332,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Node getNode(String relPath)
             throws PathNotFoundException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         Path nodePath;
         try {
@@ -1361,7 +1361,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public NodeIterator getNodes() throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         /**
          * IMPORTANT:
@@ -1388,7 +1388,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyIterator getProperties() throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         /**
          * IMPORTANT:
@@ -1416,7 +1416,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property getProperty(String relPath)
             throws PathNotFoundException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         Path propPath;
         try {
@@ -1456,7 +1456,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean hasNodes() throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         /**
          * hasNodes respects the access rights
@@ -1472,7 +1472,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean hasProperties() throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         /**
          * hasProperties respects the access rights
@@ -1503,7 +1503,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean isNodeType(QName ntName) throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         if (ntName.equals(nodeType.getQName())) {
             return true;
@@ -1561,7 +1561,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws NoSuchNodeTypeException, ConstraintViolationException,
             RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!safeIsCheckedOut()) {
@@ -1682,7 +1682,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws NoSuchNodeTypeException, ConstraintViolationException,
             RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!safeIsCheckedOut()) {
@@ -1799,7 +1799,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean canAddMixin(String mixinName) throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!safeIsCheckedOut()) {
@@ -1890,7 +1890,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public NodeIterator getNodes(String namePattern) throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         ArrayList nodes = new ArrayList();
         // traverse children using a special filtering 'collector'
@@ -1903,7 +1903,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyIterator getProperties(String namePattern) throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         ArrayList properties = new ArrayList();
         // traverse children using a special filtering 'collector'
@@ -1916,7 +1916,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Item getPrimaryItem() throws ItemNotFoundException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyIterator propIter = getProperties();
         // check properties first
@@ -1956,7 +1956,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         if (!isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
             throw new UnsupportedRepositoryOperationException();
@@ -1971,7 +1971,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public String internalGetUUID() throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
         return ((NodeState) state).getUUID();
     }
 

@@ -120,7 +120,8 @@ public class NodeTypeRegistry {
     /**
      * Listeners (soft references)
      */
-    private final Map listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.SOFT, ReferenceMap.SOFT));
+    private final Map listeners =
+            Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     /**
      * Create a new <code>NodeTypeRegistry</codes>

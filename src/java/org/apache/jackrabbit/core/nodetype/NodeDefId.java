@@ -34,7 +34,7 @@ public class NodeDefId implements Serializable {
         if (def == null) {
             throw new IllegalArgumentException("ChildNodeDef argument can not be null");
         }
-        // build key (format: <declaringNodeType>/<name>/<defaultPrimaryType>/<requiredPrimaryTypes>)
+        // build key (format: <declaringNodeType>/<name>/<requiredPrimaryTypes>)
         StringBuffer sb = new StringBuffer();
 
         sb.append(def.getDeclaringNodeType().toString());
@@ -43,10 +43,6 @@ public class NodeDefId implements Serializable {
             sb.append('*');
         } else {
             sb.append(def.getName().toString());
-        }
-        sb.append('/');
-        if (def.getDefaultPrimaryType() != null) {
-            sb.append(def.getDefaultPrimaryType());
         }
         sb.append('/');
         // set of required node type names, sorted in ascending order

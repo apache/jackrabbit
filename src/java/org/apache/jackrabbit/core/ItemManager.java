@@ -69,7 +69,7 @@ public class ItemManager implements ItemLifeCycleListener {
     private Map itemCache;
 
     /**
-     * Creates a new per-workspace instance <code>ItemManager</code> instance.
+     * Creates a new per-session instance <code>ItemManager</code> instance.
      *
      * @param itemStateProvider the item state provider associated with
      *                          the new instance
@@ -84,8 +84,8 @@ public class ItemManager implements ItemLifeCycleListener {
         this.session = session;
         this.rootNodeDef = rootNodeDef;
         rootNodeId = new NodeId(rootNodeUUID);
-        // setup item cache with soft references to items
-        itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        // setup item cache with weak references to items
+        itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
     }
 
     /**
@@ -132,6 +132,13 @@ public class ItemManager implements ItemLifeCycleListener {
             ps.println(id + "\t" + item.getPath() + " (" + item + ")");
         }
         ps.println();
+    }
+
+    /**
+     * Disposes this <code>ItemManager</code> and frees resources.
+     */
+    void dispose() {
+        itemCache.clear();
     }
 
     //--------------------------------------------------< item access methods >
@@ -203,6 +210,9 @@ public class ItemManager implements ItemLifeCycleListener {
      */
     public synchronized ItemImpl getItem(ItemId id)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check sanity of session
+        session.sanityCheck();
+
         // check privileges
         if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
             // clear cache
@@ -235,6 +245,9 @@ public class ItemManager implements ItemLifeCycleListener {
      */
     synchronized boolean hasChildNodes(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check sanity of session
+        session.sanityCheck();
+
         // check privileges
         if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
             // clear cache
@@ -286,6 +299,9 @@ public class ItemManager implements ItemLifeCycleListener {
      */
     synchronized NodeIterator getChildNodes(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check sanity of session
+        session.sanityCheck();
+
         // check privileges
         if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
             // clear cache
@@ -340,6 +356,9 @@ public class ItemManager implements ItemLifeCycleListener {
      */
     synchronized boolean hasChildProperties(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check sanity of session
+        session.sanityCheck();
+
         // check privileges
         if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
             ItemImpl item = retrieveItem(parentId);
@@ -392,6 +411,9 @@ public class ItemManager implements ItemLifeCycleListener {
      */
     synchronized PropertyIterator getChildProperties(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check sanity of session
+        session.sanityCheck();
+
         // check privileges
         if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
             ItemImpl item = retrieveItem(parentId);

@@ -287,14 +287,14 @@ public class Test {
         System.out.println();
         ((WorkspaceImpl) wsp).dump(System.out);
 
-        //wsp.exportSysView("/", new FileOutputStream("d:/temp/sv_export1.xml"), false, false);
-        wsp.exportDocView("/", new FileOutputStream("d:/temp/dv_export1.xml"), false, false);
+        wsp.exportSysView("/", new FileOutputStream("d:/temp/sv_export1.xml"), false, false);
+        //wsp.exportDocView("/", new FileOutputStream("d:/temp/dv_export1.xml"), false, false);
 
         repProps = r.getProperties();
         System.out.println("repository properties:");
         System.out.println(repProps);
 
-        ((RepositoryImpl) r).shutdown();
+        //((RepositoryImpl) r).shutdown();
     }
 
     public static void importNode(File file, Node parent) throws Exception {

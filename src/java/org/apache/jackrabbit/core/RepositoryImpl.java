@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.state.tx.XASessionImpl;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.log4j.Logger;
+import org.apache.commons.collections.ReferenceMap;
 
 import javax.jcr.*;
 import javax.jcr.observation.Event;
@@ -42,7 +43,7 @@ import java.util.Properties;
 /**
  * A <code>RepositoryImpl</code> ...
  */
-public class RepositoryImpl implements Repository, EventListener {
+public class RepositoryImpl implements Repository, SessionListener, EventListener {
 
     private static Logger log = Logger.getLogger(RepositoryImpl.class);
 
@@ -94,14 +95,18 @@ public class RepositoryImpl implements Repository, EventListener {
     // map of workspace names and workspace configurations
     private final HashMap wspConfigs = new HashMap();
 
-    // map of workspace names and workspace item state managers
-    // (might be shared among multiple workspace instances representing
-    // the same named workspace, i.e. the same physical storage)
+    /**
+     * map of workspace names and workspace item state managers
+     * (might be shared among multiple workspace instances representing
+     * the same named workspace, i.e. the same physical storage)
+     */
     private final HashMap wspStateMgrs = new HashMap();
 
-    // map of workspace names and workspace reference managers
-    // (might be shared among multiple workspace instances representing
-    // the same named workspace, i.e. the same physical storage)
+    /**
+     * map of workspace names and workspace reference managers
+     * (might be shared among multiple workspace instances representing
+     * the same named workspace, i.e. the same physical storage)
+     */
     private final HashMap wspRefMgrs = new HashMap();
 
     // map of workspace names and observation managers
@@ -112,6 +117,12 @@ public class RepositoryImpl implements Repository, EventListener {
 
     // map of workspace names and system sessions
     private final HashMap wspSystemSessions = new HashMap();
+
+    /**
+     * active sessions (weak references)
+     */
+    private final ReferenceMap activeSessions =
+            new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     // misc. statistics
     private long nodesCount = 0;
@@ -274,7 +285,7 @@ public class RepositoryImpl implements Repository, EventListener {
          */
 
         // check system root node of system workspace
-        // (by now, we just create a system root node in all workspaces)
+        // (for now, we just create a system root node in all workspaces)
         Iterator wspNames = wspConfigs.keySet().iterator();
         while (wspNames.hasNext()) {
             String wspName = (String) wspNames.next();
@@ -578,25 +589,49 @@ public class RepositoryImpl implements Repository, EventListener {
             searchMgr.close();
         }
 
-        /**
-         * todo close sessions, close item state mgr's, free resources, etc.
-         */
+        // close active user sessions
+        for (Iterator it = activeSessions.values().iterator(); it.hasNext();) {
+            SessionImpl session = (SessionImpl) it.next();
+            session.removeListener(this);
+            session.logout();
+        }
+        activeSessions.clear();
 
+        // close system sessions
+        for (Iterator it = wspSystemSessions.values().iterator(); it.hasNext();) {
+            SessionImpl session = (SessionImpl) it.next();
+            session.removeListener(this);
+            session.logout();
+        }
+        wspSystemSessions.clear();
+
+        // dispose persistent item state  mgr's
+        for (Iterator it = wspStateMgrs.values().iterator(); it.hasNext();) {
+            PersistentItemStateManager stateMgr =
+                    (PersistentItemStateManager) it.next();
+            stateMgr.dispose();
+        }
+
+        // shutdown persistence managers & file systems
         for (Iterator it = wspConfigs.values().iterator(); it.hasNext();) {
             WorkspaceConfig wspConfig = (WorkspaceConfig) it.next();
             try {
                 // close persistence manager
                 wspConfig.getPersistenceManager().close();
             } catch (Exception e) {
-                log.error("Error while closing persistence manager of workspace " + wspConfig.getName(), e);
+                log.error("error while closing persistence manager of workspace " + wspConfig.getName(), e);
             }
             try {
                 // close workspace file system
                 wspConfig.getFileSystem().close();
             } catch (FileSystemException e) {
-                log.error("Error while closing filesystem of workspace " + wspConfig.getName(), e);
+                log.error("error while closing filesystem of workspace " + wspConfig.getName(), e);
             }
         }
+
+        /**
+         * todo further cleanup tasks, free resources, etc.
+         */
 
         // persist repository properties
         try {
@@ -609,7 +644,7 @@ public class RepositoryImpl implements Repository, EventListener {
             // close repository file system
             repStore.close();
         } catch (FileSystemException e) {
-            log.error("Error while closing repository filesystem", e);
+            log.error("error while closing repository filesystem", e);
         }
 
         // make sure this instance is not used anymore
@@ -729,11 +764,15 @@ public class RepositoryImpl implements Repository, EventListener {
         }
         if (credentials == null) {
             // anonymous login
-            return new XASessionImpl(this, ANONYMOUS_CREDENTIALS, wspConfig, txMgr);
+            SessionImpl ses = new XASessionImpl(this, ANONYMOUS_CREDENTIALS, wspConfig, txMgr);
+            activeSessions.put(ses, ses);
+            return ses;
         } else if (credentials instanceof SimpleCredentials) {
             // username/password credentials
             // @todo implement authentication/authorization
-            return new XASessionImpl(this, credentials, wspConfig, txMgr);
+            Session ses = new XASessionImpl(this, credentials, wspConfig, txMgr);
+            activeSessions.put(ses, ses);
+            return ses;
         } else {
             String msg = "login failed: incompatible credentials";
             log.error(msg);
@@ -747,6 +786,15 @@ public class RepositoryImpl implements Repository, EventListener {
     public Session login(String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
         return login(null, workspaceName);
+    }
+
+    //------------------------------------------------------< SessionListener >
+    /**
+     * @see SessionListener#loggedOut(SessionImpl)
+     */
+    public void loggedOut(SessionImpl session) {
+        // remove session from active sessions
+        activeSessions.remove(session);
     }
 
     //--------------------------------------------------------< EventListener >

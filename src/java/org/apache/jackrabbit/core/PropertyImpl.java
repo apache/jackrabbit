@@ -125,7 +125,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     protected void internalSetValue(InternalValue[] values, int type)
             throws ConstraintViolationException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check for null value
         if (values == null) {
@@ -185,7 +185,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(QName name) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -238,7 +238,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(QName[] names) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -303,7 +303,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     public InternalValue[] internalGetValues() throws RepositoryException {
 
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (!definition.isMultiple()) {
@@ -322,7 +322,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public InternalValue internalGetValue() throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -339,7 +339,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Value[] getValues() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (!definition.isMultiple()) {
@@ -360,7 +360,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Value getValue() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -383,7 +383,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public String getString() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -398,7 +398,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public InputStream getStream() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -413,7 +413,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public long getLong() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -435,7 +435,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public double getDouble() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -458,7 +458,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Calendar getDate() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -481,7 +481,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public boolean getBoolean() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -504,7 +504,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Node getNode() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -527,7 +527,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(Calendar date) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -572,7 +572,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(double number) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -612,7 +612,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(InputStream stream) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -663,7 +663,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(String string) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -707,7 +707,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(String[] strings) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -758,7 +758,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(boolean b) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -798,7 +798,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(Node target) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -850,7 +850,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(long number) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -890,7 +890,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public synchronized void setValue(Value value) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -936,7 +936,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(Value[] values) throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
@@ -989,7 +989,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public long getLength() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (definition.isMultiple()) {
@@ -1041,7 +1041,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public long[] getLengths() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         // check multi-value flag
         if (!definition.isMultiple()) {
@@ -1126,7 +1126,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void accept(ItemVisitor visitor) throws RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         visitor.visit(this);
     }
@@ -1137,7 +1137,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     public Node getParent()
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check state of this instance
-        checkItemState();
+        sanityCheck();
 
         PropertyState thisState = (PropertyState) state;
         return (Node) itemMgr.getItem(new NodeId(thisState.getParentUUID()));

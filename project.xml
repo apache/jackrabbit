@@ -249,7 +249,8 @@
     </dependency>
     <!--
       cqfs-jackrabbit and cqfs are optional runtime dependencies 
-      (an alternative FileSystem implementation)
+      (an alternative FileSystem implementation); 
+      commons-logging is a dependency of cqfs
     -->
     <dependency>
       <groupId>cqfs</groupId>
@@ -262,6 +263,10 @@
       <artifactId>cqfs</artifactId>
       <version>3.5.6</version>
       <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6.jar</url>
+    </dependency>
+    <dependency>
+      <id>commons-logging</id>
+      <version>1.0</version>
     </dependency>
   </dependencies>
 
