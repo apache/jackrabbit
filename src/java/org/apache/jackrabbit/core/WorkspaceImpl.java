@@ -216,39 +216,30 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @param nodePath
+     * @param parentId
+     * @param nodeName
      * @param nodeTypeName
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
-     * @throws PathNotFoundException
+     * @throws ItemNotFoundException
      * @throws ItemExistsException
      * @throws RepositoryException
      */
-    public void checkAddNode(Path nodePath, QName nodeTypeName)
+    public void checkAddNode(NodeId parentId, QName nodeName, QName nodeTypeName)
             throws ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException {
+            ItemNotFoundException, ItemExistsException, RepositoryException {
+
+        NodeState parentState = getNodeState(parentId);
+
+        // 1. access rights
 
         AccessManager accessMgr = session.getAccessManager();
-
-        Path parentPath = nodePath.getAncestor(1);
-        NodeState parentState = getNodeState(parentPath);
-
-        // 1. check path & access rights
-
-        Path.PathElement nodeName = nodePath.getNameElement();
-        try {
-            // check access rights
-            if (!accessMgr.isGranted(parentState.getId(), AccessManager.READ)) {
-                throw new PathNotFoundException(hierMgr.safeGetJCRPath(parentPath));
-            }
-            if (!accessMgr.isGranted(parentState.getId(), AccessManager.WRITE)) {
-                throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + ": not allowed to add child node");
-            }
-        } catch (ItemNotFoundException infe) {
-            String msg = "internal error: failed to check access rights for "
-                    + hierMgr.safeGetJCRPath(parentPath);
-            log.debug(msg);
-            throw new RepositoryException(msg, infe);
+        if (!accessMgr.isGranted(parentId, AccessManager.READ)) {
+            throw new ItemNotFoundException(hierMgr.safeGetJCRPath(parentId));
+        }
+        if (!accessMgr.isGranted(parentId, AccessManager.WRITE)) {
+            throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentId)
+                    + ": not allowed to add child node");
         }
 
         // 2. check node type constraints
@@ -256,24 +247,28 @@ public class WorkspaceImpl implements Workspace, Constants {
         NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
         ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
         if (parentDef.isProtected()) {
-            throw new ConstraintViolationException(hierMgr.safeGetJCRPath(parentPath) + ": cannot add child node to protected parent node");
+            throw new ConstraintViolationException(hierMgr.safeGetJCRPath(parentId)
+                    + ": cannot add child node to protected parent node");
         }
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-        entParent.checkAddNodeConstraints(nodeName.getName(), nodeTypeName);
+        entParent.checkAddNodeConstraints(nodeName, nodeTypeName);
         ChildNodeDef newNodeDef =
-                findApplicableDefinition(nodeName.getName(), nodeTypeName, parentState);
+                findApplicableDefinition(nodeName, nodeTypeName, parentState);
 
         // 3. check for name collisions
 
-        if (parentState.hasPropertyEntry(nodeName.getName())) {
+        if (parentState.hasPropertyEntry(nodeName)) {
             // there's already a property with that name
-            throw new ItemExistsException(hierMgr.safeGetJCRPath(nodePath));
+            throw new ItemExistsException("cannot add child node '"
+                    + nodeName.getLocalName() + "' to "
+                    + hierMgr.safeGetJCRPath(parentId)
+                    + ": colliding with same-named existing property");
         }
-        if (parentState.hasChildNodeEntry(nodeName.getName())) {
+        if (parentState.hasChildNodeEntry(nodeName)) {
             // there's already a node with that name...
 
             // get definition of existing conflicting node
-            NodeState.ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName.getName(), 1);
+            NodeState.ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName, 1);
             NodeState conflictingState;
             NodeId conflictingId = new NodeId(entry.getUUID());
             try {
@@ -284,12 +279,89 @@ public class WorkspaceImpl implements Workspace, Constants {
                 log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
-            ChildNodeDef conflictingTargetDef = ntReg.getNodeDef(conflictingState.getDefinitionId());
+            ChildNodeDef conflictingTargetDef =
+                    ntReg.getNodeDef(conflictingState.getDefinitionId());
             // check same-name sibling setting of both target and existing node
             if (!conflictingTargetDef.allowSameNameSibs()
                     || !newNodeDef.allowSameNameSibs()) {
-                throw new ItemExistsException(hierMgr.safeGetJCRPath(nodePath));
+                throw new ItemExistsException("cannot add child node '"
+                        + nodeName.getLocalName() + "' to "
+                        + hierMgr.safeGetJCRPath(parentId)
+                        + ": colliding with same-named existing node");
             }
+        }
+    }
+
+    /**
+     * @param parentPath
+     * @param nodeName
+     * @param nodeTypeName
+     * @throws ConstraintViolationException
+     * @throws AccessDeniedException
+     * @throws PathNotFoundException
+     * @throws ItemExistsException
+     * @throws RepositoryException
+     */
+    public void checkAddNode(Path parentPath, QName nodeName, QName nodeTypeName)
+            throws ConstraintViolationException, AccessDeniedException,
+            PathNotFoundException, ItemExistsException, RepositoryException {
+        NodeState parentState = getNodeState(parentPath);
+        checkAddNode((NodeId) parentState.getId(), nodeName, nodeTypeName);
+    }
+
+    /**
+     * @param nodeId
+     * @throws ConstraintViolationException
+     * @throws AccessDeniedException
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    public void checkRemoveNode(NodeId nodeId)
+            throws ConstraintViolationException, AccessDeniedException,
+            ItemNotFoundException, RepositoryException {
+
+        NodeState targetState = getNodeState(nodeId);
+        if (targetState.getParentUUID() == null) {
+            // root or orphaned node
+            throw new ConstraintViolationException("cannot remove root node");
+        }
+        NodeId parentId = new NodeId(targetState.getParentUUID());
+        NodeState parentState = getNodeState(parentId);
+
+        // 1. access rights
+
+        AccessManager accessMgr = session.getAccessManager();
+        try {
+            if (!accessMgr.isGranted(targetState.getId(), AccessManager.READ)) {
+                throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodeId));
+            }
+            if (!accessMgr.isGranted(targetState.getId(), AccessManager.REMOVE)) {
+                throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentId)
+                        + ": not allowed to remove node");
+            }
+        } catch (ItemNotFoundException infe) {
+            String msg = "internal error: failed to check access rights for "
+                    + hierMgr.safeGetJCRPath(nodeId);
+            log.debug(msg);
+            throw new RepositoryException(msg, infe);
+        }
+
+        // 2. check node type constraints
+
+        NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
+        ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+        if (parentDef.isProtected()) {
+            throw new ConstraintViolationException(hierMgr.safeGetJCRPath(parentId)
+                    + ": cannot remove child node of protected parent node");
+        }
+        ChildNodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
+        if (targetDef.isMandatory()) {
+            throw new ConstraintViolationException(hierMgr.safeGetJCRPath(nodeId)
+                    + ": cannot remove mandatory node");
+        }
+        if (targetDef.isProtected()) {
+            throw new ConstraintViolationException(hierMgr.safeGetJCRPath(nodeId)
+                    + ": cannot remove protected node");
         }
     }
 
@@ -302,44 +374,9 @@ public class WorkspaceImpl implements Workspace, Constants {
      */
     public void checkRemoveNode(Path nodePath)
             throws ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, LockException, RepositoryException {
-
-        AccessManager accessMgr = session.getAccessManager();
-
+            PathNotFoundException, RepositoryException {
         NodeState targetState = getNodeState(nodePath);
-        Path parentPath = nodePath.getAncestor(1);
-        NodeState parentState = getNodeState(parentPath);
-
-        // 1. check path & access rights
-
-        try {
-            // check access rights
-            if (!accessMgr.isGranted(targetState.getId(), AccessManager.READ)) {
-                throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
-            }
-            if (!accessMgr.isGranted(targetState.getId(), AccessManager.REMOVE)) {
-                throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + ": not allowed to remove node");
-            }
-        } catch (ItemNotFoundException infe) {
-            String msg = "internal error: failed to check access rights for " + hierMgr.safeGetJCRPath(nodePath);
-            log.debug(msg);
-            throw new RepositoryException(msg, infe);
-        }
-
-        // 2. check node type constraints
-
-        NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
-        ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
-        if (parentDef.isProtected()) {
-            throw new ConstraintViolationException(hierMgr.safeGetJCRPath(parentPath) + ": cannot remove child node of protected parent node");
-        }
-        ChildNodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
-        if (targetDef.isMandatory()) {
-            throw new ConstraintViolationException(hierMgr.safeGetJCRPath(nodePath) + ": cannot remove mandatory node");
-        }
-        if (targetDef.isProtected()) {
-            throw new ConstraintViolationException(hierMgr.safeGetJCRPath(nodePath) + ": cannot remove protected node");
-        }
+        checkRemoveNode((NodeId) targetState.getId());
     }
 
     /**
@@ -407,6 +444,26 @@ public class WorkspaceImpl implements Workspace, Constants {
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to retrieve state of "
                     + hierMgr.safeGetJCRPath(nodePath);
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+    }
+
+    /**
+     * @param id
+     * @return
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    protected NodeState getNodeState(NodeId id)
+            throws ItemNotFoundException, RepositoryException {
+        try {
+            return (NodeState) stateMgr.getItemState(id);
+        } catch (NoSuchItemStateException nsise) {
+            throw new ItemNotFoundException(hierMgr.safeGetJCRPath(id));
+        } catch (ItemStateException ise) {
+            String msg = "internal error: failed to retrieve state of "
+                    + hierMgr.safeGetJCRPath(id);
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
@@ -616,7 +673,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             throw new RepositoryException(msg, infe);
         }
         // check node type constraints
-        checkAddNode(destPath, srcState.getNodeTypeName());
+        checkAddNode(destParentPath, destName.getName(), srcState.getNodeTypeName());
 
         // 3. do copy operation (modify and persist affected states)
 
@@ -739,9 +796,10 @@ public class WorkspaceImpl implements Workspace, Constants {
         // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
 
-        // acquire session on other workspace (throws NoSuchWorkspaceException)
-        // @todo FIXME need to get session with same credentials as current
-        SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
+        // create session on other workspace for current subject
+        // (may throw NoSuchWorkspaceException and AccessDeniedException)
+        SessionImpl srcSession =
+                rep.createSession(session.getSubject(), srcWorkspace);
         WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
         // do cross-workspace copy
@@ -789,10 +847,10 @@ public class WorkspaceImpl implements Workspace, Constants {
         // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
 
-        // acquire session on other workspace (throws NoSuchWorkspaceException)
-        // @todo FIXME need to get session with same credentials as current
-        SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
-
+        // create session on other workspace for current subject
+        // (may throw NoSuchWorkspaceException and AccessDeniedException)
+        SessionImpl srcSession =
+                rep.createSession(session.getSubject(), srcWorkspace);
         WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
         // do cross-workspace copy
@@ -870,7 +928,7 @@ public class WorkspaceImpl implements Workspace, Constants {
         // 2. check node type constraints & access rights
 
         checkRemoveNode(srcPath);
-        checkAddNode(destPath, targetState.getNodeTypeName());
+        checkAddNode(destParentPath, destName.getName(), targetState.getNodeTypeName());
 
         // 3. do move operation (modify and persist affected states)
 
@@ -1069,3 +1127,4 @@ public class WorkspaceImpl implements Workspace, Constants {
         }
     }
 }
+

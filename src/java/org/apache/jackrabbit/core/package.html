@@ -41,19 +41,19 @@ subpackage <code>state</code>:
 <li>PropertyState
 <li>NodeState
 </code></ul>
-There's one <code>PersistentItemStateManager</code> for every workspace.
+There's one <code>SharedItemStateManager</code> for every workspace.
 It provides item state caching and it guarantees that there's only one
 (persistent) item state instance for any distinct item id in that workspace.
 <p/>
 Every session has its own <code>SessionItemStateManager</code> that consists
 of the session's <code>TransientItemStateManager</code> and the workspace's
-<code>PersistentItemStateManager</code>.
+<code>SharedItemStateManager</code>.
 <p/>
 Each item (i.e. <code>NodeImpl</code> and <code>PropertyImpl</code>) instance
 is holding an <code>ItemState</code> instance. When e.g. a session is modifying
 a property by changing the property's value, a new transient item state
 is created by the session's <code>TransientItemStateManager</code>. This
-transient state is actually wrapping the (old) persistent state (<i>copy on write</i>).
+transient state is actually wrapping the (old) shared state (<i>copy on write</i>).
 The <code>PropertyImpl</code>'s state is then replaced by the new transient state.
 <p/>
 Transient (i.e. unsaved) modifications are 'session-local',  i.e. they are not

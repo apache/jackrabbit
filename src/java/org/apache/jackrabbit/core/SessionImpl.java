@@ -105,15 +105,20 @@ public class SessionImpl implements Session, Constants {
     protected final RepositoryImpl rep;
 
     /**
-     * the user ID that was used to acquire this session
-     */
-    protected final String userId;
-
-    /**
      * the LoginContext of this session (can be null if this
      * session was not instantiated through a login process)
      */
     protected LoginContext loginContext;
+
+    /**
+     * the Subject of this session
+     */
+    protected final Subject subject;
+
+    /**
+     * the user ID that was used to acquire this session
+     */
+    protected final String userId;
 
     /**
      * the attibutes of this session
@@ -213,6 +218,7 @@ public class SessionImpl implements Session, Constants {
             Principal principal = (Principal) principals.iterator().next();
             userId = principal.getName();
         }
+        this.subject = subject;
         nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
         String wspName = wspConfig.getName();
@@ -304,6 +310,15 @@ public class SessionImpl implements Session, Constants {
         if (!alive) {
             throw new RepositoryException("this session has been closed");
         }
+    }
+
+    /**
+     * Returns the <code>Subject</code> associated with this session.
+     *
+     * @return the <code>Subject</code> associated with this session
+     */
+    Subject getSubject() {
+        return subject;
     }
 
     /**
@@ -1069,7 +1084,7 @@ public class SessionImpl implements Session, Constants {
         // invalidate session
         alive = false;
 
-        // logout jaas subject
+        // logout JAAS subject
         if (loginContext != null) {
             try {
                 loginContext.logout();

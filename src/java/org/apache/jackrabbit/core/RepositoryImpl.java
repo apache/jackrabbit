@@ -500,6 +500,12 @@ public class RepositoryImpl implements Repository, SessionListener,
         return wspInfo.getLockManager();
     }
 
+    /**
+     * @param workspaceName
+     * @return
+     * @throws NoSuchWorkspaceException
+     * @throws RepositoryException
+     */
     SystemSession getSystemSession(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
@@ -512,6 +518,57 @@ public class RepositoryImpl implements Repository, SessionListener,
             throw new NoSuchWorkspaceException(workspaceName);
         }
         return wspInfo.getSystemSession();
+    }
+
+
+    /**
+     * Creates a new session on the specified workspace for the
+     * authenticated subject of the given login context.
+     *
+     * @param loginContext  login context with authenticated subject
+     * @param workspaceName workspace name
+     * @return a new session
+     * @throws NoSuchWorkspaceException if the specified workspace does not exist
+     * @throws AccessDeniedException    if the subject of the given login context
+     *                                  is not granted access to the specified
+     *                                  workspace
+     * @throws RepositoryException      if another error occurs
+     */
+    SessionImpl createSession(LoginContext loginContext, String workspaceName)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            RepositoryException {
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
+            throw new NoSuchWorkspaceException(workspaceName);
+        }
+        XASessionImpl ses = new XASessionImpl(this, loginContext, wspInfo.getConfig());
+        activeSessions.put(ses, ses);
+        return ses;
+    }
+
+    /**
+     * Creates a new session on the specified workspace for the given
+     * authenticated subject.
+     *
+     * @param subject       authenticated subject
+     * @param workspaceName workspace name
+     * @return a new session
+     * @throws NoSuchWorkspaceException if the specified workspace does not exist
+     * @throws AccessDeniedException    if the subject of the given login context
+     *                                  is not granted access to the specified
+     *                                  workspace
+     * @throws RepositoryException      if another error occurs
+     */
+    SessionImpl createSession(Subject subject, String workspaceName)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            RepositoryException {
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
+            throw new NoSuchWorkspaceException(workspaceName);
+        }
+        XASessionImpl ses = new XASessionImpl(this, subject, wspInfo.getConfig());
+        activeSessions.put(ses, ses);
+        return ses;
     }
 
     /**
@@ -631,22 +688,6 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * Returns the system root node (i.e. /jcr:system)
-     *
-     * @param session
-     * @return
-     * @throws RepositoryException
-     */
-    public NodeImpl getSystemRootNode(SessionImpl session) throws RepositoryException {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
-
-        return ((NodeImpl) session.getRootNode()).getNode(JCR_SYSTEM);
-    }
-
-    /**
      * Returns the workspace persistence manager
      *
      * @return the workspace persistence manager
@@ -701,14 +742,13 @@ public class RepositoryImpl implements Repository, SessionListener,
             workspaceName = repConfig.getDefaultWorkspaceName();
         }
 
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
+        if (!wspInfos.containsKey(workspaceName)) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
 /*
         if (credentials == null) {
             // null credentials, obtain the identity of the already-authenticated
-            // user from access control context
+            // subject from access control context
             AccessControlContext acc = AccessController.getContext();
             Subject subject;
             try {
@@ -716,17 +756,16 @@ public class RepositoryImpl implements Repository, SessionListener,
             } catch (SecurityException se) {
                 throw new LoginException(se.getMessage());
             }
-            Session ses;
+            // create session
             try {
-                ses = new XASessionImpl(this, subject, wspInfo.getConfig());
+                return createSession(subject, workspaceName);
             } catch (AccessDeniedException ade) {
                 // authenticated subject is not authorized for the specified workspace
                 throw new LoginException(ade.getMessage());
             }
-            activeSessions.put(ses, ses);
-            return ses;
         }
 */
+        // login through JAAS login context
         CredentialsCallbackHandler cbHandler =
                 new CredentialsCallbackHandler(credentials);
         LoginContext lc;
@@ -737,15 +776,13 @@ public class RepositoryImpl implements Repository, SessionListener,
             throw new LoginException(le.getMessage());
         }
 
-        Session ses;
+        // create session
         try {
-            ses = new XASessionImpl(this, lc, wspInfo.getConfig());
+            return createSession(lc, workspaceName);
         } catch (AccessDeniedException ade) {
             // authenticated subject is not authorized for the specified workspace
             throw new LoginException(ade.getMessage());
         }
-        activeSessions.put(ses, ses);
-        return ses;
     }
 
     /**
@@ -791,7 +828,8 @@ public class RepositoryImpl implements Repository, SessionListener,
     /**
      * {@inheritDoc}
      */
-    public void loggingOut(SessionImpl session) {}
+    public void loggingOut(SessionImpl session) {
+    }
 
     /**
      * {@inheritDoc}

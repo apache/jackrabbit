@@ -2586,9 +2586,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // acquire session of other workspace (throws NoSuchWorkspaceException)
-        // @todo FIXME need to get session with same credentials as current
-        SessionImpl srcSession = rep.getSystemSession(workspaceName);
+        // create session on other workspace for current subject
+        // (may throw NoSuchWorkspaceException and AccessDeniedException)
+        SessionImpl srcSession =
+                rep.createSession(session.getSubject(), workspaceName);
 
         // search nearest ancestor that is referenceable
         NodeImpl m1 = this;
@@ -2742,8 +2743,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        // @todo FIXME need to get session with same credentials as current
-        SessionImpl srcSession = rep.getSystemSession(srcWorkspaceName);
+        // create session on other workspace for current subject
+        // (may throw NoSuchWorkspaceException and AccessDeniedException)
+        SessionImpl srcSession =
+                rep.createSession(session.getSubject(), srcWorkspaceName);
 
         NodeImpl srcNode = getCorrespondingNode(srcSession);
         if (srcNode == null) {
@@ -2797,8 +2800,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        // @todo FIXME need to get session with same credentials as current
-        SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
+        // create session on other workspace for current subject
+        // (may throw NoSuchWorkspaceException and AccessDeniedException)
+        SessionImpl srcSession =
+                rep.createSession(session.getSubject(), srcWorkspace);
 
         NodeImpl srcNode = doMergeTest(srcSession, bestEffort);
         if (srcNode != null) {
