@@ -16,16 +16,19 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.IteratorHelper;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.PropertyDef;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * There's one <code>ItemManager</code> instance per <code>Session</code>
@@ -155,6 +158,7 @@ public class ItemManager implements ItemLifeCycleListener {
 
     /**
      * Checks if the item with the given id exists
+     *
      * @param id
      * @return
      */

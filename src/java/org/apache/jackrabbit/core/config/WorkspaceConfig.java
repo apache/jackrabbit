@@ -113,7 +113,7 @@ public class WorkspaceConfig extends AbstractConfig {
         Element wspElem = config.getRootElement();
         // name
         wspName = wspElem.getAttributeValue(NAME_ATTRIB);
-        if (wspName==null) {
+        if (wspName == null) {
             // init with wsp home dirname
             wspName = new File(wspHomeDir).getName();
         } else {

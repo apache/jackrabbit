@@ -18,8 +18,8 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.ChildrenCollector;
-import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.apache.jackrabbit.core.util.ChildrenCollectorFilter;
+import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.*;
 import org.apache.log4j.Logger;
@@ -28,10 +28,10 @@ import javax.jcr.*;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.*;
+import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.version.OnParentVersionAction;
 import java.io.InputStream;
 import java.util.*;
 
@@ -2658,8 +2658,8 @@ public class NodeImpl extends ItemImpl implements Node {
             } else if (prop.getQName().equals(VersionManager.PROPNAME_PREDECESSORS)) {
                 continue;
             }
-            if (prop.getDefinition().getOnParentVersion()==OnParentVersionAction.COPY
-                    || prop.getDefinition().getOnParentVersion()==OnParentVersionAction.VERSION) {
+            if (prop.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY
+                    || prop.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
                 if (!propNames.contains(prop.getQName())) {
                     removeChildProperty(prop.getQName());
                 }

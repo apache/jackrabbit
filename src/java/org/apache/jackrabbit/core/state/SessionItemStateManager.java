@@ -230,7 +230,7 @@ public class SessionItemStateManager implements ItemStateProvider {
         }
 
         // check if there is a virtual state for the specified item
-        for (int i=0; i<virtualProviders.length; i++) {
+        for (int i = 0; i < virtualProviders.length; i++) {
             if (virtualProviders[i].hasItemState(id)) {
                 return virtualProviders[i].getItemState(id);
             }
