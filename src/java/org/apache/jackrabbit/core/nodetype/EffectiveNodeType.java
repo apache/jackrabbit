@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
@@ -717,7 +716,7 @@ public class EffectiveNodeType implements Cloneable {
         for (int i = 0; i < nta.length; i++) {
             if (includesNodeType(nta[i])) {
                 // redundant node type
-                log.warn("node type '" + nta[i] + "' is already contained.");
+                log.debug("node type '" + nta[i] + "' is already contained.");
                 includedCount++;
             }
         }
