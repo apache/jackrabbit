@@ -19,6 +19,7 @@
 
 <project>
 
+   <!-- Compile the RMI stubs for the JCR-RMI server classes. -->
    <postGoal name="java:compile">
       <rmic base="${maven.build.dest}" verify="true"
             includes="org/apache/jackrabbit/rmi/server/Server*.class"
