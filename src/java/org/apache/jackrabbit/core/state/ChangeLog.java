@@ -238,6 +238,25 @@ public class ChangeLog {
     }
 
     /**
+     * Disconnect all states in the change log from their overlaid
+     * states.
+     */
+    public void disconnect() {
+        Iterator iter = modifiedStates();
+        while (iter.hasNext()) {
+            ((ItemState) iter.next()).disconnect();
+        }
+        iter = deletedStates();
+        while (iter.hasNext()) {
+            ((ItemState) iter.next()).disconnect();
+        }
+        iter = addedStates();
+        while (iter.hasNext()) {
+            ((ItemState) iter.next()).disconnect();
+        }
+    }
+
+    /**
      * Undo changes made to items in the change log. Discards
      * added items, refreshes modified and resurrects deleted
      * items.
