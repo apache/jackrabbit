@@ -1,0 +1,39 @@
+NodeTypeName
+  nt:unstructured
+Supertypes
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  true
+PrimaryItemName
+  null
+ChildNodeDef
+  Name "*"
+  RequiredPrimaryTypes [nt:base]
+  DefaultPrimaryType nt:unstructured
+  AutoCreate false
+  Mandatory false
+  OnParentVersion VERSION
+  Protected false
+  SameNameSibs true
+PropertyDef
+  Name "*"
+  RequiredType UNDEFINED
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple true
+PropertyDef
+  Name "*"
+  RequiredType UNDEFINED
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple false

@@ -1,0 +1,70 @@
+NodeTypeName
+  nt:frozenNode
+Supertypes
+  nt:base
+  mix:referenceable
+IsMixin
+  false
+HasOrderableChildNodes
+  true
+PrimaryItemName
+  null
+ChildNodeDef
+  Name "*"
+  RequiredPrimaryTypes [nt:base]
+  DefaultPrimaryType null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  SameNameSibs true
+PropertyDef
+  Name jcr:frozenMixinTypes
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  Multiple true
+PropertyDef
+  Name jcr:frozenPrimaryType
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  Multiple false
+PropertyDef
+  Name jcr:frozenUuid
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  Multiple false
+PropertyDef
+  Name "*"
+  RequiredType UNDEFINED
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  Multiple false
+PropertyDef
+  Name "*"
+  RequiredType UNDEFINED
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  Multiple true

@@ -1,0 +1,51 @@
+NodeTypeName
+  nt:resource
+Supertypes
+  nt:base
+  mix:referenceable
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  jcr:data
+PropertyDef
+  Name jcr:data
+  RequiredType BINARY
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:encoding
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:lastModified
+  RequiredType DATE
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion IGNORE
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:mimetype
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false

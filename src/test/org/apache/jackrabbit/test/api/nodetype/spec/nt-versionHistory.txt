@@ -1,0 +1,38 @@
+NodeTypeName
+  nt:versionHistory
+Supertypes
+  nt:base
+  mix:referenceable
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+ChildNodeDef
+  Name jcr:rootVersion
+  RequiredPrimaryTypes [nt:version]
+  DefaultPrimaryType nt:version
+  AutoCreate true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  SameNameSibs false
+ChildNodeDef
+  Name jcr:versionLabels
+  RequiredPrimaryTypes [nt:versionLabels]
+  DefaultPrimaryType nt:versionLabels
+  AutoCreate true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  SameNameSibs false
+ChildNodeDef
+  Name "*"
+  RequiredPrimaryTypes [nt:version]
+  DefaultPrimaryType nt:version
+  AutoCreate false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  SameNameSibs false

@@ -16,30 +16,27 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.jdom.input.SAXBuilder;
-import org.jdom.Element;
-import org.jdom.Document;
-import org.jdom.JDOMException;
-import org.jdom.filter.Filter;
-import org.jdom.filter.ContentFilter;
-
-import javax.jcr.version.OnParentVersionAction;
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.PropertyDef;
-import javax.jcr.nodetype.NodeDef;
-import javax.jcr.nodetype.NodeTypeIterator;
-import java.io.InputStream;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Comparator;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.nodetype.ItemDef;
+import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.version.OnParentVersionAction;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * <code>PredefinedNodeTypeTest</code> tests if the implemented predefined node
@@ -51,35 +48,6 @@ import java.util.List;
  * @keywords level1
  */
 public class PredefinedNodeTypeTest extends AbstractJCRTest {
-
-    private static final String NODETYPE_ELEMENT = "nodeType";
-    private static final String NAME_ATTRIBUTE = "name";
-    private static final String ISMIXIN_ATTRIBUTE = "isMixin";
-    private static final String ORDERABLECHILDNODES_ATTRIBUTE = "hasOrderableChildNodes";
-    private static final String PRIMARYITEMNAME_ATTRIBUTE = "primaryItemName";
-    private static final String SUPERTYPES_ELEMENT = "supertypes";
-    private static final String SUPERTYPE_ELEMENT = "supertype";
-    private static final String PROPERTYDEF_ELEMENT = "propertyDef";
-    private static final String REQUIREDTYPE_ATTRIBUTE = "requiredType";
-    private static final String VALUECONSTRAINTS_ELEMENT = "valueConstraints";
-    private static final String VALUECONSTRAINT_ELEMENT = "valueConstraint";
-    private static final String DEFAULTVALUES_ELEMENT = "defaultValues";
-    private static final String DEFAULTVALUE_ELEMENT = "defaultValue";
-    private static final String AUTOCREATE_ATTRIBUTE = "autoCreate";
-    private static final String MANDATORY_ATTRIBUTE = "mandatory";
-    private static final String PROTECTED_ATTRIBUTE = "protected";
-    private static final String MULTIPLE_ATTRIBUTE = "multiple";
-    private static final String SAMENAMESIBS_ATTRIBUTE = "sameNameSibs";
-    private static final String ONPARENTVERSION_ATTRIBUTE = "onParentVersion";
-    private static final String CHILDNODEDEF_ELEMENT = "childNodeDef";
-    private static final String REQUIREDPRIMARYTYPES_ELEMENT = "requiredPrimaryTypes";
-    private static final String REQUIREDPRIMARYTYPE_ELEMENT = "requiredPrimaryType";
-    private static final String DEFAULTPRIMARYTYPE_ATTRIBUTE = "defaultPrimaryType";
-
-    private static final String WILDCARD = "*";
-
-    private static final String PREDEFINED_NODETYPES_RESOURCE_PATH =
-            "org/apache/jackrabbit/test/api/nodetype/predefined_nodetypes.xml";
 
     /**
      * The NodeTypeManager of the session
@@ -112,676 +80,324 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         super.tearDown();
     }
 
-
-    /**
-     * Tests if the mandatory node type <code>nt:base</code> is supported
-     */
-    public void testNTBaseSupport()
-            throws RepositoryException {
-
-        try {
-            manager.getNodeType(ntBase);
-        } catch (NoSuchNodeTypeException e) {
-            fail("Node type nt:base must be supported.");
-        }
-    }
-
     /**
      * Tests if all primary node types are subtypes of node type <code>nt:base</code>
      */
     public void testIfPrimaryNodeTypesAreSubtypesOfNTBase()
-            throws NoSuchNodeTypeException, RepositoryException {
-
+            throws RepositoryException {
         NodeTypeIterator types = manager.getPrimaryNodeTypes();
-
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            NodeType superTypes[] = type.getSupertypes();
-            if (!type.getName().equals(ntBase)) {
-                boolean isSubOfNTBase = false;
-                for (int i = 0; i < superTypes.length; i++) {
-                    if (superTypes[i].getName().equals(ntBase)) {
-                        isSubOfNTBase = true;
-                    }
-                }
-                assertTrue("All primary node types must be subtypes of nt:base",
-                           isSubOfNTBase);
+            assertTrue("Primary node type " + type.getName() +
+                    " must inherit nt:base",
+                    type.isNodeType("nt:base"));
+        }
+    }
+
+    /** Test for the predefined mix:lockable node type. */
+    public void testLockable() {
+        testPredefinedNodeType("mix:lockable");
+    }
+
+    /** Test for the predefined mix:referenceable node type. */
+    public void testReferenceable() {
+        testPredefinedNodeType("mix:referenceable");
+    }
+
+    /** Test for the predefined mix:versionable node type. */
+    public void testVersionable() {
+        testPredefinedNodeType("mix:versionable");
+    }
+
+    /** Test for the predefined nt:base node type. */
+    public void testBase() {
+        testPredefinedNodeType("nt:base");
+    }
+
+    /** Test for the predefined nt:unstructured node type. */
+    public void testUnstructured() {
+        testPredefinedNodeType("nt:unstructured");
+    }
+
+    /** Test for the predefined nt:hierarchyNode node type. */
+    public void testHierarchyNode() {
+        testPredefinedNodeType("nt:hierarchyNode");
+    }
+
+    /** Test for the predefined nt:file node type. */
+    public void testFile() {
+        testPredefinedNodeType("nt:file");
+    }
+
+    /** Test for the predefined nt:linkedFile node type. */
+    public void testLinkedFile() {
+        testPredefinedNodeType("nt:linkedFile");
+    }
+
+    /** Test for the predefined nt:folder node type. */
+    public void testFolder() {
+        testPredefinedNodeType("nt:folder");
+    }
+
+    /** Test for the predefined nt:nodeType node type. */
+    public void testNodeType() {
+        testPredefinedNodeType("nt:nodeType");
+    }
+
+    /** Test for the predefined nt:propertyDef node type. */
+    public void testPropertyDef() {
+        testPredefinedNodeType("nt:propertyDef");
+    }
+
+    /** Test for the predefined nt:childNodeDef node type. */
+    public void testChildNodeDef() {
+        testPredefinedNodeType("nt:childNodeDef");
+    }
+
+    /** Test for the predefined nt:versionHistory node type. */
+    public void testVersionHistory() {
+        testPredefinedNodeType("nt:versionHistory");
+    }
+
+    /** Test for the predefined nt:versionLabels node type. */
+    public void testVersionLabels() {
+        testPredefinedNodeType("nt:versionLabels");
+    }
+
+    /** Test for the predefined nt:version node type. */
+    public void testVersion()  {
+        testPredefinedNodeType("nt:version");
+    }
+
+    /** Test for the predefined nt:frozenNode node type. */
+    public void testFrozenNode() {
+        testPredefinedNodeType("nt:frozenNode");
+    }
+
+    /** Test for the predefined nt:versionedChild node type. */
+    public void testVersionedChild() {
+        testPredefinedNodeType("nt:versionedChild");
+    }
+
+    /** Test for the predefined nt:query node type. */
+    public void testQuery() {
+        testPredefinedNodeType("nt:query");
+    }
+
+    /** Test for the predefined nt:resource node type. */
+    public void testResource() {
+        testPredefinedNodeType("nt:resource");
+    }
+
+    /**
+     * Tests that the named node type matches the JSR 170 specification.
+     * The test is performed by genererating a node type definition spec
+     * string in the format used by the JSR 170 specification, and comparing
+     * the result with a static spec file extracted from the specification
+     * itself.
+     * <p>
+     * Note that the extracted spec files are not exact copies of the node
+     * type specification in the JSR 170 document. Some formatting and
+     * ordering changes have been made to simplify the test code, but the
+     * semantics remain the same.
+     *
+     * @param name node type name
+     */
+    private void testPredefinedNodeType(String name) {
+        try {
+            StringBuffer spec = new StringBuffer();
+            String resource =
+                "org/apache/jackrabbit/test/api/nodetype/spec/"
+                + name.replace(':', '-') + ".txt";
+            Reader reader = new InputStreamReader(
+                    getClass().getClassLoader().getResourceAsStream(resource));
+            for (int ch = reader.read(); ch != -1; ch = reader.read()) {
+                spec.append((char) ch);
             }
+
+            NodeType type = manager.getNodeType(name);
+            assertEquals(
+                    "Predefined node type " + name,
+                    spec.toString(),
+                    getNodeTypeSpec(type));
+        } catch (IOException e) {
+            fail(e.getMessage());
+        } catch (RepositoryException e) {
+            fail(e.getMessage());
         }
     }
 
     /**
-     * Read and parse the xml file containing all the predefined node type
-     * definitions. If predefined node types are implemented, compare the
-     * implemented node types to the predefined.
+     * Creates and returns a spec string for the given node type definition.
+     * The returned spec string follows the node type definition format
+     * used in the JSR 170 specification.
+     *
+     * @param type node type definition
+     * @return spec string
+     * @throws RepositoryException on repository errors
      */
-    public void testPredefinedNodeTypes()
-            throws IOException, JDOMException, RepositoryException {
+    private static String getNodeTypeSpec(NodeType type)
+            throws RepositoryException {
+        StringWriter buffer = new StringWriter();
 
-        InputStream in = null;
-        in = getClass().getClassLoader().getResourceAsStream(PREDEFINED_NODETYPES_RESOURCE_PATH);
-        SAXBuilder builder = new SAXBuilder();
-        Element root = null;
-        Document doc = builder.build(in);
-        root = doc.getRootElement();
-
-        // read definitions
-        Iterator iter = root.getChildren(NODETYPE_ELEMENT).iterator();
-        while (iter.hasNext()) {
-            Element ntElem = (Element) iter.next();
-            String sntName = ntElem.getAttributeValue(NAME_ATTRIBUTE);
-            try {
-                NodeType implType = manager.getNodeType(sntName);
-                compareElement(ntElem, implType);
-            } catch (NoSuchNodeTypeException e) {
-                // the current predefined node type is not implemented: ignore
+        PrintWriter writer = new PrintWriter(buffer);
+        writer.println("NodeTypeName");
+        writer.println("  " + type.getName());
+        writer.println("Supertypes");
+        NodeType[] supertypes = type.getDeclaredSupertypes();
+        if (supertypes.length > 0) {
+            Arrays.sort(supertypes, NODE_TYPE_COMPARATOR);
+            for (int i = 0; i < supertypes.length; i++) {
+                writer.println("  " + supertypes[i].getName());
             }
+        } else {
+            writer.println("  []");
         }
+        writer.println("IsMixin");
+        writer.println("  " + type.isMixin());
+        writer.println("HasOrderableChildNodes");
+        writer.println("  " + type.hasOrderableChildNodes());
+        writer.println("PrimaryItemName");
+        writer.println("  " + type.getPrimaryItemName());
+        NodeDef[] nodes = type.getDeclaredChildNodeDefs();
+        Arrays.sort(nodes, ITEM_DEF_COMPARATOR);
+        for (int i = 0; i < nodes.length; i++) {
+            writer.print(getChildNodeDefSpec(nodes[i]));
+        }
+        PropertyDef[] properties = type.getDeclaredPropertyDefs();
+        Arrays.sort(properties, ITEM_DEF_COMPARATOR);
+        for (int i = 0; i < properties.length; i++) {
+            writer.print(getPropertyDefSpec(properties[i]));
+        }
+
+        return buffer.toString();
     }
 
-
-    //------------------------< private methods >-------------------------------
-
     /**
-     * Parse a single predefined <code>NodeType</code> and compare it to the
-     * implementation.
+     * Creates and returns a spec string for the given node definition.
+     * The returned spec string follows the child node definition format
+     * used in the JSR 170 specification.
+     *
+     * @param node child node definition
+     * @return spec string
      */
-    private void compareElement(Element ntElem, NodeType implType) {
+    private static String getChildNodeDefSpec(NodeDef node) {
+        StringWriter buffer = new StringWriter();
 
-        String sntName = ntElem.getAttributeValue(NAME_ATTRIBUTE);
-
-        // supertypes
-        NodeType implSupertypes[] = implType.getDeclaredSupertypes();
-        int supertypesCounter = 0;
-        Element typesElem = ntElem.getChild(SUPERTYPES_ELEMENT);
-        if (typesElem != null) {
-            Iterator iter = typesElem.getChildren(SUPERTYPE_ELEMENT).iterator();
-            while (iter.hasNext()) {
-                Element typeElem = (Element) iter.next();
-                Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
-                List content = typeElem.getContent(filter);
-                if (!content.isEmpty()) {
-                    String name = typeElem.getTextTrim();
-                    supertypesCounter++;
-
-                    boolean isExist = false;
-                    for (int i = 0; i < implSupertypes.length; i++) {
-                        if (implSupertypes[i].getName().equals(name)) {
-                            isExist = true;
-                            break;
-                        }
-                    }
-                    assertTrue("Implementation of node type " + sntName +
-                            " requires supertype " + name,
-                            isExist);
-                }
-            }
+        PrintWriter writer = new PrintWriter(buffer);
+        writer.println("ChildNodeDef");
+        if (node.getName().equals("*")) {
+            writer.println("  Name \"*\"");
+        } else {
+            writer.println("  Name " + node.getName());
         }
-        assertEquals("Implementation of node type " + sntName + ": " +
-                "Supertypes exceed definition: ",
-                supertypesCounter,
-                implSupertypes.length);
-
-
-        // isMixin
-        String mixin = ntElem.getAttributeValue(ISMIXIN_ATTRIBUTE);
-        boolean expectedMixin = false;
-        if (mixin != null && mixin.length() > 0) {
-            expectedMixin = Boolean.valueOf(mixin).booleanValue();
+        writer.print("  RequiredPrimaryTypes [");
+        NodeType[] types = node.getRequiredPrimaryTypes();
+        Arrays.sort(types, NODE_TYPE_COMPARATOR);
+        for (int j = 0; j < types.length; j++) {
+            writer.print(types[j].getName());
         }
-        assertEquals("Implementation of node type " + sntName + ": " +
-                "Wrong mixin value:",
-                expectedMixin,
-                implType.isMixin());
-
-
-        // orderableChildNodes
-        String orderableChildNodes = ntElem.getAttributeValue(ORDERABLECHILDNODES_ATTRIBUTE);
-        boolean expectedOrderableChildNodes = false;
-        if (orderableChildNodes != null && orderableChildNodes.length() > 0) {
-            expectedOrderableChildNodes = Boolean.valueOf(orderableChildNodes).booleanValue();
+        writer.println("]");
+        if (node.getDefaultPrimaryType() != null) {
+            writer.println("  DefaultPrimaryType "
+                    + node.getDefaultPrimaryType().getName());
+        } else {
+            writer.println("  DefaultPrimaryType null");
         }
-        assertEquals("Implementation of node type " + sntName + ": " +
-                "Wrong orderable child nodes value:",
-                expectedOrderableChildNodes,
-                implType.hasOrderableChildNodes());
+        writer.println("  AutoCreate " + node.isAutoCreate());
+        writer.println("  Mandatory " + node.isMandatory());
+        writer.println("  OnParentVersion "
+                + OnParentVersionAction.nameFromValue(node.getOnParentVersion()));
+        writer.println("  Protected " + node.isProtected());
+        writer.println("  SameNameSibs " + node.allowSameNameSibs());
 
-
-        // primaryItemName
-        String expectedPrimaryItemName = ntElem.getAttributeValue(PRIMARYITEMNAME_ATTRIBUTE);
-        if (expectedPrimaryItemName != null && expectedPrimaryItemName.length() == 0) {
-            expectedPrimaryItemName = null;
-        }
-        assertEquals("Implementation of node type " + sntName + ": " +
-                "Wrong primary item name:",
-                expectedPrimaryItemName,
-                implType.getPrimaryItemName());
-
-
-        // property definitions
-        log.println("*** property definitions ***");
-        Iterator iter = ntElem.getChildren(PROPERTYDEF_ELEMENT).iterator();
-        int propertyDefsCounter = 0;
-        PropertyDef implPropertyDefs[] = implType.getDeclaredPropertyDefs();
-        StringBuffer residualPropDefIndexes = new StringBuffer(",");
-        while (iter.hasNext()) {
-            propertyDefsCounter++;
-
-            Element elem = (Element) iter.next();
-            String propDefName = elem.getAttributeValue(NAME_ATTRIBUTE);
-            log.println("*" + propDefName);
-
-            boolean isResidual = (propDefName.equals(WILDCARD)) ? true : false;
-            boolean residualSucceed = false;
-
-            boolean isExist = false;
-
-            for (int i = 0; i < implPropertyDefs.length; i++) {
-                if (implPropertyDefs[i].getName().equals(propDefName)) {
-                    if (isResidual) {
-                        if (residualPropDefIndexes.indexOf(Integer.toString(i)) == -1) {
-                            // check if one of the residual property defs is matching
-                            // (multiple residual defs are possible)
-                            // residualPropDefIndexes is a list holding the indexes of
-                            // the implemented property defs already checked (to avoid double checking)
-                            PropertyDef implPropertyDef = implPropertyDefs[i];
-                            residualSucceed = comparePropertyDef(elem, implPropertyDef, sntName, isResidual);
-                            if (residualSucceed) {
-                                residualPropDefIndexes.append(i + ",");
-                                isExist = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        PropertyDef implPropertyDef = implPropertyDefs[i];
-                        comparePropertyDef(elem, implPropertyDef, sntName, isResidual);
-                        isExist = true;
-                        break;
-                    }
-                }
-            }
-            if (isResidual && !residualSucceed) {
-                fail("Implementation of node type " + sntName + ": " +
-                        "Residual property def does not match the definitions");
-            }
-            assertTrue("Implementation of node type " + sntName + ": " +
-                    "Property def " + propDefName + " is missing.",
-                    isExist);
-        }
-        assertEquals("Implementation of node type " + sntName + ": " +
-                "Property defs exceed definition: ",
-                propertyDefsCounter,
-                implPropertyDefs.length);
-
-
-        // child-node definitions
-        iter = ntElem.getChildren(CHILDNODEDEF_ELEMENT).iterator();
-        int childNodeDefsCounter = 0;
-        NodeDef implChildNodeDefs[] = implType.getDeclaredChildNodeDefs();
-        StringBuffer residualNodeDefIndexes = new StringBuffer(",");
-        while (iter.hasNext()) {
-            childNodeDefsCounter++;
-
-            Element elem = (Element) iter.next();
-            String nodeDefName = elem.getAttributeValue(NAME_ATTRIBUTE);
-
-            boolean isResidual = (nodeDefName.equals(WILDCARD)) ? true : false;
-            boolean residualSucceed = false;
-
-            boolean isExist = false;
-
-            for (int i = 0; i < implChildNodeDefs.length; i++) {
-                if (implChildNodeDefs[i].getName().equals(nodeDefName)) {
-                    if (isResidual) {
-                        if (residualNodeDefIndexes.indexOf(Integer.toString(i)) == -1) {
-                            // check if one of the residual child node defs is matching
-                            // (multiple residual defs are possible)
-                            // residualNodeDefIndexes is a list holding the indexes of
-                            // the implemented child node defs already checked (to avoid double checking)
-                            NodeDef implChildNodeDef = implChildNodeDefs[i];
-                            residualSucceed = compareChildNodeDef(elem, implChildNodeDef, sntName, isResidual);
-                            if (residualSucceed) {
-                                residualNodeDefIndexes.append(i + ",");
-                                isExist = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        NodeDef implChildNodeDef = implChildNodeDefs[i];
-                        compareChildNodeDef(elem, implChildNodeDef, sntName, isResidual);
-                        isExist = true;
-                        break;
-                    }
-                }
-            }
-            if (isResidual && !residualSucceed) {
-                fail("Implementation of node type " + sntName + ": " +
-                        "Residual child node def does not match the definitions");
-            }
-            assertTrue("Implementation of node type " + sntName + ": " +
-                    "Child node def " + nodeDefName + " is missing.",
-                    isExist);
-        }
-        assertEquals("Implementation of node type " + sntName + ": " +
-                "Child node defs exceed definition: ",
-                childNodeDefsCounter,
-                implChildNodeDefs.length);
+        return buffer.toString();
     }
 
-
     /**
-     * Parse a single predefined <code>PropertyDef</code> and compare it to its
-     * implementation.
+     * Creates and returns a spec string for the given property definition.
+     * The returned spec string follows the property definition format
+     * used in the JSR 170 specification.
+     *
+     * @param property property definition
+     * @return spec string
+     * @throws RepositoryException on repository errors
      */
-    private boolean comparePropertyDef(Element elem,
-                                       PropertyDef implPropertyDef,
-                                       String sntName,
-                                       boolean isResidual)
-            throws IllegalArgumentException {
+    private static String getPropertyDefSpec(PropertyDef property)
+            throws RepositoryException {
+        StringWriter buffer = new StringWriter();
 
-        String propDefName = implPropertyDef.getName();
-
-        if (isResidual) {
-            if (implPropertyDef == null) {
-                return false;
-            }
+        PrintWriter writer = new PrintWriter(buffer);
+        writer.println("PropertyDef");
+        if (property.getName().equals("*")) {
+            writer.println("  Name \"*\"");
         } else {
-            assertNotNull("Implementation of node type " + sntName +
-                    " requires property def " + propDefName,
-                    implPropertyDef);
+            writer.println("  Name " + property.getName());
         }
-
-        // requiredType
-        String expectedTypeName = elem.getAttributeValue(REQUIREDTYPE_ATTRIBUTE);
-        int expectedType = PropertyType.UNDEFINED;
-        if (expectedTypeName != null && expectedTypeName.length() > 0) {
-            expectedType = PropertyType.valueFromName(expectedTypeName);
+        String type = PropertyType.nameFromValue(property.getRequiredType());
+        writer.println("  RequiredType " + type.toUpperCase());
+        writer.print("  ValueConstraints [");
+        String[] constraints = property.getValueConstraints();
+        for (int i = 0; i < constraints.length; i++) {
+            writer.print(constraints[i]);
         }
-        if (isResidual) {
-            if (expectedType != implPropertyDef.getRequiredType()) {
-                return false;
+        writer.println("]");
+        Value[] values = property.getDefaultValues();
+        if (values != null && values.length > 0) {
+            writer.print("  DefaultValues [");
+            for (int j = 0; j < values.length; j++) {
+                writer.print(values[j].getString());
             }
+            writer.println("]");
         } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + propDefName + ": " +
-                    "Wrong required type:",
-                    PropertyType.nameFromValue(expectedType),
-                    PropertyType.nameFromValue(implPropertyDef.getRequiredType()));
+            writer.println("  DefaultValues null");
         }
+        writer.println("  AutoCreate " + property.isAutoCreate());
+        writer.println("  Mandatory " + property.isMandatory());
+        String action = OnParentVersionAction.nameFromValue(
+                property.getOnParentVersion());
+        writer.println("  OnParentVersion " + action);
+        writer.println("  Protected " + property.isProtected());
+        writer.println("  Multiple " + property.isMultiple());
 
-        // valueConstraints
-        Element constraintsElem = elem.getChild(VALUECONSTRAINTS_ELEMENT);
-        int constraintsCounter = 0;
-        String implConstraints[] = implPropertyDef.getValueConstraints();
-        if (constraintsElem != null) {
-            Iterator iter1 = constraintsElem.getChildren(VALUECONSTRAINT_ELEMENT).iterator();
-            while (iter1.hasNext()) {
-                Element constraintElem = (Element) iter1.next();
-                Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
-                List content = constraintElem.getContent(filter);
-                if (!content.isEmpty()) {
-                    constraintsCounter++;
-                    String expectedConstraint = constraintElem.getTextTrim();
-                    boolean isExist = false;
-                    for (int i = 0; i < implConstraints.length; i++) {
-                        if (implConstraints[i].equals(expectedConstraint)) {
-                            isExist = true;
-                            break;
-                        }
-                    }
-                    if (isResidual) {
-                        if (isExist == false) {
-                            return false;
-                        }
-                    } else {
-                        assertTrue("Implementation of node type " + sntName + ", " +
-                                "property def " + propDefName + ": " +
-                                "Missing value constraint.",
-                                isExist);
-                    }
-                }
-            }
-        }
-        if (isResidual) {
-            if (constraintsCounter != implConstraints.length) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + propDefName + ": " +
-                    "Value constraints exceed definition: ",
-                    constraintsCounter,
-                    implConstraints.length);
-        }
-
-
-        // defaultValues
-        Element defValuesElem = elem.getChild(DEFAULTVALUES_ELEMENT);
-        int defValuesElemCounter = 0;
-        Value implDefValues[] = implPropertyDef.getDefaultValues();
-        if (defValuesElem != null) {
-            Iterator iter1 = defValuesElem.getChildren(DEFAULTVALUE_ELEMENT).iterator();
-            while (iter1.hasNext()) {
-                Element valueElem = (Element) iter1.next();
-                Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
-                List content = valueElem.getContent(filter);
-                if (!content.isEmpty()) {
-                    String defValue = valueElem.getTextTrim();
-                    defValuesElemCounter++;
-                    boolean isExist = false;
-                    for (int i = 0; i < implDefValues.length; i++) {
-                        try {
-                            if (implDefValues[i].getString().equals(defValue)) {
-                                isExist = true;
-                                break;
-                            }
-                        } catch (ValueFormatException e) {
-                        } catch (RepositoryException e) {
-                        }
-                    }
-                    if (isResidual) {
-                        if (isExist == false) {
-                            return false;
-                        }
-                    } else {
-                        assertTrue("Implementation of node type " + sntName + ", " +
-                                "property def " + propDefName + ": " +
-                                "Missing default value.",
-                                isExist);
-                    }
-                }
-            }
-        }
-        if (isResidual) {
-            if (defValuesElemCounter != implDefValues.length) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + propDefName + ": " +
-                    "Default values exceed definition: ",
-                    defValuesElemCounter,
-                    implDefValues.length);
-        }
-
-
-        // autoCreate
-        String autoCreate = elem.getAttributeValue(AUTOCREATE_ATTRIBUTE);
-        boolean expectedAutoCreate = false;
-        if (autoCreate != null && autoCreate.length() > 0) {
-            expectedAutoCreate = Boolean.valueOf(autoCreate).booleanValue();
-        }
-        if (isResidual) {
-            if (expectedAutoCreate != implPropertyDef.isAutoCreate()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + propDefName + ": " +
-                    "Wrong auto create value:",
-                    expectedAutoCreate,
-                    implPropertyDef.isAutoCreate());
-        }
-
-        // mandatory
-        String mandatory = elem.getAttributeValue(MANDATORY_ATTRIBUTE);
-        boolean expectedMandatory = false;
-        if (mandatory != null && mandatory.length() > 0) {
-            expectedMandatory = Boolean.valueOf(mandatory).booleanValue();
-        }
-        if (isResidual) {
-            if (expectedMandatory != implPropertyDef.isMandatory()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + propDefName + ": " +
-                    "Wrong mandatory value:",
-                    expectedMandatory,
-                    implPropertyDef.isMandatory());
-        }
-
-        // onParentVersion
-        String onVersion = elem.getAttributeValue(ONPARENTVERSION_ATTRIBUTE);
-        int expectedOnParentVersion = 0;
-        if (onVersion != null && onVersion.length() > 0) {
-            expectedOnParentVersion = OnParentVersionAction.valueFromName(onVersion);
-        }
-        if (isResidual) {
-            if (expectedOnParentVersion != implPropertyDef.getOnParentVersion()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + propDefName + ": " +
-                    "Wrong onParentVersion value:",
-                    OnParentVersionAction.nameFromValue(expectedOnParentVersion),
-                    OnParentVersionAction.nameFromValue(implPropertyDef.getOnParentVersion()));
-        }
-
-        // protected
-        String writeProtected = elem.getAttributeValue(PROTECTED_ATTRIBUTE);
-        boolean expectedProtected = false;
-        if (writeProtected != null && writeProtected.length() > 0) {
-            expectedProtected = Boolean.valueOf(writeProtected).booleanValue();
-        }
-        if (isResidual) {
-            if (expectedProtected != implPropertyDef.isProtected()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + propDefName + ": " +
-                    "Wrong protected value:",
-                    expectedProtected,
-                    implPropertyDef.isProtected());
-        }
-
-        // multiple
-        String multiple = elem.getAttributeValue(MULTIPLE_ATTRIBUTE);
-        boolean expectedMultiple = false;
-        if (multiple != null && multiple.length() > 0) {
-            expectedMultiple = Boolean.valueOf(multiple).booleanValue();
-        }
-        if (isResidual) {
-            if (expectedMultiple != implPropertyDef.isMultiple()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + propDefName + ": " +
-                    "Wrong multiple value:",
-                    expectedMultiple,
-                    implPropertyDef.isMultiple());
-        }
-
-        // residual property def passed all tests
-        // (respectively any other property def did not fail;
-        // in this case the return value has no further meaning)
-        return true;
+        return buffer.toString();
     }
 
-
     /**
-     * Parse a single predefined <code>ChildNodeDef</code> and compare it to its
-     * implementation.
+     * Comparator for ordering property and node definition arrays. Item
+     * definitions are ordered by name, with the wildcard item definition
+     * ("*") ordered last.
      */
-    private boolean compareChildNodeDef(Element elem,
-                                        NodeDef implNodeDef,
-                                        String sntName,
-                                        boolean isResidual)
-            throws IllegalArgumentException {
-
-        String nodeDefName = implNodeDef.getName();
-
-        // requiredPrimaryTypes
-        Element reqTtypesElem = elem.getChild(REQUIREDPRIMARYTYPES_ELEMENT);
-        int reqTypesCounter = 0;
-        NodeType implReqTypes[] = implNodeDef.getRequiredPrimaryTypes();
-        if (reqTtypesElem != null) {
-            Iterator iter1 = reqTtypesElem.getChildren(REQUIREDPRIMARYTYPE_ELEMENT).iterator();
-            while (iter1.hasNext()) {
-                Element typeElem = (Element) iter1.next();
-                Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
-                List content = typeElem.getContent(filter);
-                if (!content.isEmpty()) {
-                    reqTypesCounter++;
-                    String expectedName = typeElem.getTextTrim();
-                    boolean isExist = false;
-                    for (int i = 0; i < implReqTypes.length; i++) {
-                        if (implReqTypes[i].getName().equals(expectedName)) {
-                            isExist = true;
-                            break;
-                        }
-                    }
-                    if (isResidual) {
-                        if (isExist == false) {
-                            return false;
-                        }
-                    } else {
-                        assertTrue("Implementation of node type " + sntName + ", " +
-                                "child node def " + nodeDefName + ": " +
-                                "Missing required primary type.",
-                                isExist);
-                    }
-                }
-            }
-        }
-        if (isResidual) {
-            if (reqTypesCounter != implReqTypes.length) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + nodeDefName + ": " +
-                    "Required primary types exceed definition: ",
-                    reqTypesCounter,
-                    implReqTypes.length);
-        }
-
-        // defaultPrimaryType
-        String defaultPrimaryType = elem.getAttributeValue(DEFAULTPRIMARYTYPE_ATTRIBUTE);
-        if (defaultPrimaryType == null || defaultPrimaryType.length() == 0) {
-            defaultPrimaryType = null;
-        }
-        NodeType implDefaultPrimaryType = implNodeDef.getDefaultPrimaryType();
-        String implDefaultPrimaryTypeName = null;
-        if (implDefaultPrimaryType != null) {
-            implDefaultPrimaryTypeName = implDefaultPrimaryType.getName();
-        }
-        if (isResidual) {
-            if (implDefaultPrimaryType == null) {
-                if (defaultPrimaryType != null) {
-                    return false;
-                }
+    private static final Comparator ITEM_DEF_COMPARATOR = new Comparator() {
+        public int compare(Object a, Object b) {
+            ItemDef ida = (ItemDef) a;
+            ItemDef idb = (ItemDef) b;
+            if (ida.getName().equals("*") && !idb.getName().equals("*")) {
+                return 1;
+            } else if (!ida.getName().equals("*") && idb.getName().equals("*")) {
+                return -1;
             } else {
-                if (!implDefaultPrimaryType.getName().equals(defaultPrimaryType)) {
-                    return false;
-                }
+                return ida.getName().compareTo(idb.getName());
             }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "child node def " + nodeDefName + ": " +
-                    "Wrong default primary type:",
-                    defaultPrimaryType,
-                    implDefaultPrimaryTypeName);
         }
+    };
 
-        // autoCreate
-        String autoCreate = elem.getAttributeValue(AUTOCREATE_ATTRIBUTE);
-        boolean expectedAutoCreate = false;
-        if (autoCreate != null && autoCreate.length() > 0) {
-            expectedAutoCreate = Boolean.valueOf(autoCreate).booleanValue();
-        }
-        if (isResidual) {
-            if (expectedAutoCreate != implNodeDef.isAutoCreate()) {
-                return false;
+    /**
+     * Comparator for ordering node type arrays. Node types are ordered by
+     * name, with all primary node types ordered before mixin node types.
+     */
+    private static final Comparator NODE_TYPE_COMPARATOR = new Comparator() {
+        public int compare(Object a, Object b) {
+            NodeType nta = (NodeType) a;
+            NodeType ntb = (NodeType) b;
+            if (nta.isMixin() && !ntb.isMixin()) {
+                return 1;
+            } else if (!nta.isMixin() && ntb.isMixin()) {
+                return -1;
+            } else {
+                return nta.getName().compareTo(ntb.getName());
             }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "child node def " + nodeDefName + ": " +
-                    "Wrong auto create value:",
-                    expectedAutoCreate,
-                    implNodeDef.isAutoCreate());
         }
-
-        // mandatory
-        String mandatory = elem.getAttributeValue(MANDATORY_ATTRIBUTE);
-        boolean expectedMandatory = false;
-        if (mandatory != null && mandatory.length() > 0) {
-            expectedMandatory = Boolean.valueOf(mandatory).booleanValue();
-        }
-        if (isResidual) {
-            if (expectedMandatory != implNodeDef.isMandatory()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "child node def " + nodeDefName + ": " +
-                    "Wrong mandatory value:",
-                    expectedMandatory,
-                    implNodeDef.isMandatory());
-        }
-
-        // onParentVersion
-        String onVersion = elem.getAttributeValue(ONPARENTVERSION_ATTRIBUTE);
-        int expectedOnParentVersion = 0;
-        if (onVersion != null && onVersion.length() > 0) {
-            expectedOnParentVersion = OnParentVersionAction.valueFromName(onVersion);
-        }
-        if (isResidual) {
-            if (expectedOnParentVersion != implNodeDef.getOnParentVersion()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "child node def " + nodeDefName + ": " +
-                    "Wrong onParentVersion value:",
-                    OnParentVersionAction.nameFromValue(expectedOnParentVersion),
-                    OnParentVersionAction.nameFromValue(implNodeDef.getOnParentVersion()));
-        }
-
-        // protected
-        String writeProtected = elem.getAttributeValue(PROTECTED_ATTRIBUTE);
-        boolean expectedProtected = false;
-        if (writeProtected != null && writeProtected.length() > 0) {
-            expectedProtected = Boolean.valueOf(writeProtected).booleanValue();
-        }
-        if (isResidual) {
-            if (expectedProtected != implNodeDef.isProtected()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "property def " + nodeDefName + ": " +
-                    "Wrong protected value:",
-                    expectedProtected,
-                    implNodeDef.isProtected());
-        }
-
-        // sameNameSibs
-        String sameNameSibs = elem.getAttributeValue(SAMENAMESIBS_ATTRIBUTE);
-        boolean expectedSameNameSibs = false;
-        if (sameNameSibs != null && sameNameSibs.length() > 0) {
-            expectedSameNameSibs = Boolean.valueOf(sameNameSibs).booleanValue();
-        }
-        if (isResidual) {
-            if (expectedSameNameSibs != implNodeDef.allowSameNameSibs()) {
-                return false;
-            }
-        } else {
-            assertEquals("Implementation of node type " + sntName + ", " +
-                    "child node def " + nodeDefName + ": " +
-                    "Wrong same name sibs value:",
-                    expectedSameNameSibs,
-                    implNodeDef.allowSameNameSibs());
-        }
-
-
-        // residual node def passed all tests
-        // (respectively any other node def did not fail;
-        // in this case the return value has no further meaning)
-        return true;
-    }
+    };
 
 }

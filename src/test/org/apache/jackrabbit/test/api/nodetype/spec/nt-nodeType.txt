@@ -1,0 +1,78 @@
+NodeTypeName
+  nt:nodeType
+Supertypes
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+ChildNodeDef
+  Name jcr:childNodeDef
+  RequiredPrimaryTypes [nt:childNodeDef]
+  DefaultPrimaryType nt:childNodeDef
+  AutoCreate false
+  Mandatory false
+  OnParentVersion VERSION
+  Protected false
+  SameNameSibs true
+ChildNodeDef
+  Name jcr:propertyDef
+  RequiredPrimaryTypes [nt:propertyDef]
+  DefaultPrimaryType nt:propertyDef
+  AutoCreate false
+  Mandatory false
+  OnParentVersion VERSION
+  Protected false
+  SameNameSibs true
+PropertyDef
+  Name jcr:hasOrderableChildNodes
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:isMixin
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:nodeTypeName
+  RequiredType NAME
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:primaryItemName
+  RequiredType NAME
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:supertypes
+  RequiredType NAME
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple true
