@@ -356,6 +356,7 @@
           <directory>src/test</directory>
           <includes>
             <include>**/*.xml</include>
+	        <include>**/*.txt</include>
           </includes>
         </resource>
       </resources>
