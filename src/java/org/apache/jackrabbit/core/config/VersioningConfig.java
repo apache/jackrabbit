@@ -32,14 +32,14 @@ public class VersioningConfig {
     private final FileSystem fs;
 
     /** The <code>PersistenceManagerConfig</code> for the versioning */
-    private final PersistenceManagerConfig pmConfig;
+    private final BeanConfig pmc;
 
-    public VersioningConfig(File homeDir, FileSystem fs, PersistenceManagerConfig pmc) {
+    public VersioningConfig(File homeDir, FileSystem fs, BeanConfig pmc) {
         this.homeDir = homeDir;
         this.fs = fs;
-        this.pmConfig = pmc;
+        this.pmc = pmc;
     }
-    
+
     /**
      * Returns the virtual file system where the workspace stores global state.
      *
@@ -55,7 +55,7 @@ public class VersioningConfig {
      * @return the <code>PersistenceManagerConfig</code> for this workspace
      */
     public PersistenceManagerConfig getPersistenceManagerConfig() {
-        return pmConfig;
+        return new PersistenceManagerConfig(pmc);
     }
 
     public File getHomeDir() {

@@ -16,7 +16,13 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
+
+import org.apache.commons.collections.BeanMap;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.jdom.Element;
 
 /**
  * Bean configuration class. BeanConfig instances contain the class name
@@ -46,6 +52,10 @@ public class BeanConfig {
         this.properties = properties;
     }
 
+    protected BeanConfig(BeanConfig config) {
+        this(config.getClassName(), config.getParameters());
+    }
+
     /**
      * Returns the class name of the configured bean.
      *
@@ -62,6 +72,21 @@ public class BeanConfig {
      */
     public Properties getParameters() {
         return properties;
+    }
+
+    public Object newInstance()
+            throws ClassNotFoundException, InstantiationException,
+            IllegalAccessException {
+        Object object = Class.forName(className).newInstance();
+        BeanMap map = new BeanMap(object);
+        Iterator iterator = map.keyIterator();
+        while (iterator.hasNext()) {
+            String name = (String) iterator.next();
+            if (properties.containsKey(name)) {
+                map.put(name, properties.getProperty(name));
+            }
+        }
+        return object;
     }
 
 }

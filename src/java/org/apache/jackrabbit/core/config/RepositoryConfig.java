@@ -32,6 +32,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Properties;
 
 /**
  * A <code>RepositoryConfig</code> ...
@@ -70,7 +71,7 @@ public class RepositoryConfig extends AbstractConfig {
     /**
      * map of variable names and their respective values
      */
-    private final HashMap vars;
+    private final Properties vars;
 
     /**
      * map of workspace names and workspace configurations
@@ -107,7 +108,7 @@ public class RepositoryConfig extends AbstractConfig {
     /**
      * configuration for the access manager
      */
-    private AccessManagerConfig amConfig;
+    private BeanConfig amConfig;
 
     /**
      * the versioning config
@@ -127,7 +128,7 @@ public class RepositoryConfig extends AbstractConfig {
         this.repHomeDir = repHomeDir;
         wspConfigs = new HashMap();
         // initialize variables
-        vars = new HashMap();
+        vars = new Properties();
         vars.put(REPOSITORY_HOME_VARIABLE, repHomeDir);
         // read config
         init(config);
@@ -140,63 +141,75 @@ public class RepositoryConfig extends AbstractConfig {
      * @throws RepositoryException
      */
     protected void init(Document config) throws RepositoryException {
-        ConfigurationParser parser = new ConfigurationParser(vars);
+        try {
+            Element root = config.getRootElement();
+            ConfigurationParser parser = new ConfigurationParser(vars);
 
-        // file system
-        Element fsConfig = config.getRootElement().getChild(FILE_SYSTEM_ELEMENT);
-        repFS = parser.createFileSystem(fsConfig);
+            // file system
+            BeanConfig fsc = parser.parseBeanConfig(root, FILE_SYSTEM_ELEMENT);
+            repFS = (FileSystem) fsc.newInstance();
 
-        // security & access manager config
-        Element secEleme = config.getRootElement().getChild(SECURITY_ELEMENT);
-        appName = secEleme.getAttributeValue(APP_NAME_ATTRIB);
-        Element amElem = secEleme.getChild(ACCESS_MANAGER_ELEMENT);
-        amConfig = parser.parseAccessManagerConfig(amElem);
+            // security & access manager config
+            Element secEleme = root.getChild(SECURITY_ELEMENT);
+            appName = secEleme.getAttributeValue(APP_NAME_ATTRIB);
+            amConfig = parser.parseBeanConfig(secEleme, ACCESS_MANAGER_ELEMENT);
 
-        // workspaces
-        Element wspsElem = config.getRootElement().getChild(WORKSPACES_ELEMENT);
-        wspConfigRootDir = parser.replaceVariables(wspsElem.getAttributeValue(ROOT_PATH_ATTRIB));
-        defaultWspName = parser.replaceVariables(wspsElem.getAttributeValue(DEFAULT_WORKSPACE_ATTRIB));
+            // workspaces
+            Element wspsElem = root.getChild(WORKSPACES_ELEMENT);
+            wspConfigRootDir = parser.replaceVariables(wspsElem.getAttributeValue(ROOT_PATH_ATTRIB));
+            defaultWspName = parser.replaceVariables(wspsElem.getAttributeValue(DEFAULT_WORKSPACE_ATTRIB));
 
-        // load wsp configs
-        File wspRoot = new File(wspConfigRootDir);
-        if (!wspRoot.exists()) {
-            wspRoot.mkdir();
-        }
-        File[] files = wspRoot.listFiles();
-        if (files == null) {
-            String msg = "invalid repsitory home directory";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-        for (int i = 0; i < files.length; i++) {
-            // check if <subfolder>/workspace.xml exists
-            File configFile = new File(files[i], WorkspaceConfig.CONFIG_FILE_NAME);
-            if (configFile.isFile()) {
-                // create workspace config
-                WorkspaceConfig wspConfig = WorkspaceConfig.create(configFile.getPath(), configFile.getParent());
-                String wspName = wspConfig.getName();
-                if (wspConfigs.containsKey(wspName)) {
-                    String msg = "duplicate workspace name: " + wspName;
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
-                }
-                wspConfigs.put(wspName, wspConfig);
+            // load wsp configs
+            File wspRoot = new File(wspConfigRootDir);
+            if (!wspRoot.exists()) {
+                wspRoot.mkdir();
             }
-        }
-        if (wspConfigs.isEmpty()) {
-            // create initial default workspace
-            createWorkspaceConfig(defaultWspName);
-        } else {
-            if (!wspConfigs.containsKey(defaultWspName)) {
-                String msg = "no configuration found for default workspace: " + defaultWspName;
+            File[] files = wspRoot.listFiles();
+            if (files == null) {
+                String msg = "invalid repsitory home directory";
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
-        }
+            for (int i = 0; i < files.length; i++) {
+                // check if <subfolder>/workspace.xml exists
+                File configFile = new File(files[i], "workspace.xml");
+                if (configFile.isFile()) {
+                    // create workspace config
+                    WorkspaceConfig wspConfig =
+                        ConfigurationParser.parseWorkspaceConfig(
+                                configFile.getPath(), configFile.getParent());
+                    String wspName = wspConfig.getName();
+                    if (wspConfigs.containsKey(wspName)) {
+                        String msg = "duplicate workspace name: " + wspName;
+                        log.debug(msg);
+                        throw new RepositoryException(msg);
+                    }
+                    wspConfigs.put(wspName, wspConfig);
+                }
+            }
+            if (wspConfigs.isEmpty()) {
+                // create initial default workspace
+                createWorkspaceConfig(defaultWspName);
+            } else {
+                if (!wspConfigs.containsKey(defaultWspName)) {
+                    String msg = "no configuration found for default workspace: " + defaultWspName;
+                    log.debug(msg);
+                    throw new RepositoryException(msg);
+                }
+            }
 
-        // load versioning config
-        Element vElement = config.getRootElement().getChild(VERSIONING_ELEMENT);
-        vConfig = parser.parseVersioningConfig(vElement);
+            // load versioning config
+            Element vElement = config.getRootElement().getChild(VERSIONING_ELEMENT);
+            vConfig = parser.parseVersioningConfig(vElement);
+        } catch (ClassNotFoundException ex) {
+            throw new RepositoryException(ex);
+        } catch (InstantiationException ex) {
+            throw new RepositoryException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RepositoryException(ex);
+        } catch (ClassCastException ex) {
+            throw new RepositoryException(ex);
+        }
     }
 
     /**
@@ -316,7 +329,7 @@ public class RepositoryConfig extends AbstractConfig {
      * @return an <code>AccessManagerConfig</code> object
      */
     public AccessManagerConfig getAccessManagerConfig() {
-        return amConfig;
+        return new AccessManagerConfig(amConfig);
     }
 
     /**
@@ -351,7 +364,7 @@ public class RepositoryConfig extends AbstractConfig {
 */
         Document doc = new Document(wspCongigElem);
         XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-        File configFile = new File(wspFolder, WorkspaceConfig.CONFIG_FILE_NAME);
+        File configFile = new File(wspFolder, "workspace.xml");
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(configFile);
@@ -371,23 +384,11 @@ public class RepositoryConfig extends AbstractConfig {
         }
 
         // create workspace config object
-        WorkspaceConfig wspConfig = WorkspaceConfig.create(configFile.getPath(), configFile.getParent());
+        WorkspaceConfig wspConfig =
+            ConfigurationParser.parseWorkspaceConfig(
+                    configFile.getPath(), configFile.getParent());
         wspConfigs.put(name, wspConfig);
         return wspConfig;
     }
 
-    //-------------------------------------------------------< EntityResolver >
-    /**
-     * @see org.xml.sax.EntityResolver#resolveEntity(String, String)
-     */
-    public InputSource resolveEntity(String publicId, String systemId)
-            throws SAXException, IOException {
-        if (publicId.equals(PUBLIC_ID)) {
-            // load dtd resource
-            return new InputSource(getClass().getClassLoader().getResourceAsStream(CONFIG_DTD_RESOURCE_PATH));
-        } else {
-            // use the default behaviour
-            return null;
-        }
-    }
 }

@@ -36,10 +36,10 @@ public class WorkspaceConfigTest extends TestCase {
     public void testWorkspaceXml() throws Exception {
         InputStream xml = getClass().getClassLoader().getResourceAsStream(
                 "org/apache/jackrabbit/core/config/workspace.xml");
-        WorkspaceConfig config =
-            WorkspaceConfig.create(new InputSource(xml), "foo");
+        WorkspaceConfig config = ConfigurationParser.parseWorkspaceConfig(
+                new InputSource(xml), "target");
 
-        assertEquals("foo", config.getHomeDir());
+        assertEquals("target", config.getHomeDir());
         assertEquals("default", config.getName());
 
         PersistenceManagerConfig pmc = config.getPersistenceManagerConfig();

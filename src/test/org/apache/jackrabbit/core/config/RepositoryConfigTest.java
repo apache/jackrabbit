@@ -38,11 +38,11 @@ public class RepositoryConfigTest extends TestCase {
         InputStream xml = getClass().getClassLoader().getResourceAsStream(
                 "org/apache/jackrabbit/core/config/repository.xml");
         RepositoryConfig config =
-            RepositoryConfig.create(new InputSource(xml), "foo");
+            RepositoryConfig.create(new InputSource(xml), "target");
 
-        assertEquals("foo", config.getHomeDir());
+        assertEquals("target", config.getHomeDir());
         assertEquals("default", config.getDefaultWorkspaceName());
-        assertEquals("foo/workspaces", config.getWorkspacesConfigRootDir());
+        assertEquals("target/workspaces", config.getWorkspacesConfigRootDir());
         assertEquals("Jackrabbit", config.getAppName());
 
         AccessManagerConfig amc = config.getAccessManagerConfig();
@@ -52,7 +52,7 @@ public class RepositoryConfigTest extends TestCase {
         assertTrue(amc.getParameters().isEmpty());
 
         VersioningConfig vc = config.getVersioningConfig();
-        assertEquals(new File("foo/version"), vc.getHomeDir());
+        assertEquals(new File("target/version"), vc.getHomeDir());
         assertEquals(
                 "org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager",
                 vc.getPersistenceManagerConfig().getClassName());

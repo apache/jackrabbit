@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.util.Properties;
-
 /**
  * A <code>AccessManagerConfig</code> represents the configuration of an
  * <code>AccessManager</code>.
@@ -26,8 +24,8 @@ import java.util.Properties;
  */
 public class AccessManagerConfig extends BeanConfig {
 
-    public AccessManagerConfig(String className, Properties properties) {
-        super(className, properties);
+    public AccessManagerConfig(BeanConfig config) {
+        super(config);
     }
 
 }

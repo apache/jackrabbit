@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.util.Properties;
 
 /**
  * A <code>PersistenceManagerConfig</code> represents the configuration of a
@@ -26,8 +25,8 @@ import java.util.Properties;
  */
 public class PersistenceManagerConfig extends BeanConfig {
 
-    public PersistenceManagerConfig(String className, Properties properties) {
-        super(className, properties);
+    public PersistenceManagerConfig(BeanConfig config) {
+        super(config);
     }
 
 }

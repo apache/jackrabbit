@@ -31,8 +31,13 @@ import org.xml.sax.SAXException;
  * <code>AbstractConfig</code> is the superclass of
  * <code>RepositoryConfig</code> and <code>WorkspaceConfig</code>.
  */
-abstract class AbstractConfig implements EntityResolver {
+abstract class AbstractConfig {
     private static Logger log = Logger.getLogger(AbstractConfig.class);
+
+    /**
+     * public id
+     */
+    public static final String PUBLIC_ID = "-//The Apache Software Foundation//DTD Workspace//EN";
 
     public static final String CONFIG_DTD_RESOURCE_PATH =
             "org/apache/jackrabbit/core/config/config.dtd";
@@ -44,7 +49,6 @@ abstract class AbstractConfig implements EntityResolver {
     protected static final String NAME_ATTRIB = "name";
     protected static final String VALUE_ATTRIB = "value";
 
-    protected final String configId;
     protected final Document config;
 
     /**
@@ -53,10 +57,20 @@ abstract class AbstractConfig implements EntityResolver {
      * @param is
      */
     protected AbstractConfig(InputSource is) throws RepositoryException {
-        configId = is.getSystemId() == null ? "[???]" : is.getSystemId();
         try {
             SAXBuilder parser = new SAXBuilder();
-            parser.setEntityResolver(this);
+            parser.setEntityResolver(new EntityResolver() {
+                public InputSource resolveEntity(String publicId, String systemId)
+                        throws SAXException, IOException {
+                    if (publicId.equals(PUBLIC_ID)) {
+                        // load dtd resource
+                        return new InputSource(getClass().getClassLoader().getResourceAsStream(CONFIG_DTD_RESOURCE_PATH));
+                    } else {
+                        // use the default behaviour
+                        return null;
+                    }
+                }
+            });
             config = parser.build(is);
         } catch (Exception e) {
             String msg = "error while parsing config file " + is.getSystemId();
@@ -65,10 +79,4 @@ abstract class AbstractConfig implements EntityResolver {
         }
     }
 
-    //-------------------------------------------------------< EntityResolver >
-    /**
-     * @see EntityResolver#resolveEntity(String, String)
-     */
-    public abstract InputSource resolveEntity(String publicId, String systemId)
-            throws SAXException, IOException;
 }
