@@ -17,8 +17,12 @@
 <project name="Jackrabbit">
     <title>Jackrabbit</title>
     <body>
-        <menu name="JCRRI">
+        <menu name="Apache Jackrabbit">
             <item name="Overview"                      href="/index.html" />
+            <item name="Architecture Documentation"    href="/arch/index.html"  collapse="true">
+            	<item name="Overview" href="arch/overview.html"/>
+            	<item name="Deployment Options" href="arch/deploy.html"/>            	
+            </item>
             <item name="API&#xA0;Documentation"        href="/apidocs/index.html" target="_blank"/>
             <item name="Layout"                        href="/layout.html"/>
             <item name="Downloads"                     href="/downloads.html"/>
