@@ -68,7 +68,7 @@ public class ServerQueryResult extends ServerObject implements RemoteQueryResult
 
         RemoteRow[] remotes = new RemoteRow[(int) iterator.getSize()];
         for (int i = 0; iterator != null && iterator.hasNext(); i++) {
-            remotes[i] = new ServerRow(iterator.nextRow(), getFactory());
+            remotes[i] = getFactory().getRemoteRow(iterator.nextRow());
         }
         return remotes;
 
