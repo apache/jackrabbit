@@ -1053,8 +1053,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         // check if protected
         if (isNode()) {
             NodeImpl node = (NodeImpl) this;
-            // check if this is the repository root node
-            if (node.isRepositoryRoot()) {
+            // check if this is the root node
+            if (node.getDepth() == 0) {
                 String msg = safeGetJCRPath() + ": cannot remove root node";
                 log.debug(msg);
                 throw new RepositoryException(msg);
@@ -1272,8 +1272,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         }
 
         if (isNode()) {
-            // check if this is the repository root node
-            if (((NodeImpl) this).isRepositoryRoot()) {
+            // check if this is the root node
+            if (((NodeImpl) this).getDepth() == 0) {
                 // optimization
                 stateMgr.disposeAllTransientItemStates();
                 return;

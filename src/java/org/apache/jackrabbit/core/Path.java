@@ -481,7 +481,7 @@ public final class Path {
      * absolute path is normalized that would result in a 'negative' path
      * (eg: /a/../../) a MalformedPathException is thrown.
      *
-     * @return a normailzed path representation of this path
+     * @return a normalized path representation of this path
      * @throws MalformedPathException if the path cannot be normalized.
      * @see #isNormalized()
      */
@@ -530,6 +530,66 @@ public final class Path {
             throw new MalformedPathException("only an absolute path can be canonicalized.");
         }
         return getNormalizedPath();
+    }
+
+    /**
+     * Computes the relative path from <code>this</code> absolute path to
+     * <code>other</code>.
+     *
+     * @param other an absolute path
+     * @return the relative path from <code>this</code> path to
+     *         <code>other</code> path
+     * @throws MalformedPathException if either <code>this</code> or
+     *                                <code>other</code> path is not absolute
+     */
+    public Path computeRelativePath(Path other) throws MalformedPathException {
+        if (other == null) {
+            throw new IllegalArgumentException("null argument");
+        }
+
+        // make sure both paths are absolute
+        if (!isAbsolute() || !other.isAbsolute()) {
+            throw new MalformedPathException("not an absolute path");
+        }
+
+        // make sure we're comparing canonical paths
+        Path p0 = getCanonicalPath();
+        Path p1 = other.getCanonicalPath();
+
+        if (p0.equals(p1)) {
+            // both paths are equal, the relative path is therefore '.'
+            PathBuilder pb = new PathBuilder();
+            pb.addLast(CURRENT_ELEMENT);
+            return pb.getPath();
+        }
+
+        // determine length of common path fragment
+        int lengthCommon = 0;
+        for (int i = 0; i < p0.elements.length && i < p1.elements.length; i++) {
+            if (!p0.elements[i].equals(p1.elements[i])) {
+                break;
+            }
+            lengthCommon++;
+        }
+
+        PathBuilder pb = new PathBuilder();
+        if (lengthCommon < p0.elements.length) {
+            /**
+             * the common path fragment is an ancestor of this path;
+             * this has to be accounted for by prepending '..' elements
+             * to the relative path
+             */
+            int tmp = p0.elements.length - lengthCommon;
+            while (tmp-- > 0) {
+                pb.addFirst(PARENT_ELEMENT);
+            }
+        }
+        // add remainder of other path
+        for (int i = lengthCommon; i < p1.elements.length; i++) {
+            pb.addLast(p1.elements[i]);
+        }
+        // we're done
+        return pb.getPath();
     }
 
     /**

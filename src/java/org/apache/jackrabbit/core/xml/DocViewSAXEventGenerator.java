@@ -111,7 +111,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
             // element name
             String elemName;
             try {
-                if (node.isRepositoryRoot()) {
+                if (node.getDepth() == 0) {
                     // root node needs a name
                     elemName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
                 } else {
@@ -214,7 +214,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
         // element name
         String elemName;
         try {
-            if (node.isRepositoryRoot()) {
+            if (node.getDepth() == 0) {
                 // root node needs a name
                 elemName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
             } else {

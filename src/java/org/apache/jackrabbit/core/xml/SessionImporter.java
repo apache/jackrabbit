@@ -124,7 +124,7 @@ public class SessionImporter implements Importer {
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
                     nodeInfo.getUUID());
         } else if (uuidBehavior == IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
-            if (conflicting.isRepositoryRoot()) {
+            if (conflicting.getDepth() == 0) {
                 String msg = "root node cannot be replaced";
                 log.debug(msg);
                 throw new RepositoryException(msg);

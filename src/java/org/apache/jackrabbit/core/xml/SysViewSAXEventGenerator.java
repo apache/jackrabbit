@@ -79,7 +79,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         // name attribute
         String nodeName;
         try {
-            if (node.isRepositoryRoot()) {
+            if (node.getDepth() == 0) {
                 // root node needs a name
                 nodeName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
             } else {

@@ -62,7 +62,6 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -872,16 +871,6 @@ public class NodeImpl extends ItemImpl implements Node {
         state = persistentState;
         // reset status
         status = STATUS_NORMAL;
-    }
-
-    /**
-     * Checks if this node is the root node.
-     * todo: is this the root node of this workspace?
-     *
-     * @return
-     */
-    public boolean isRepositoryRoot() {
-        return ((NodeState) state).getUUID().equals(rep.getRootNodeUUID());
     }
 
     /**
@@ -2525,13 +2514,18 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // search nearest ancestor that is referenceable
         NodeImpl m1 = this;
-        while (!m1.isRepositoryRoot() && !m1.isNodeType(MIX_REFERENCEABLE)) {
+        while (m1.getDepth() != 0 && !m1.isNodeType(MIX_REFERENCEABLE)) {
             m1 = (NodeImpl) m1.getParent();
         }
 
         // if root is common ancestor, corresponding path is same as ours
-        if (m1.isRepositoryRoot()) {
-            return getPath();
+        if (m1.getDepth() == 0) {
+            // check existence
+            if (!srcSession.getItemManager().itemExists(getPrimaryPath())) {
+                throw new ItemNotFoundException(safeGetJCRPath());
+            } else {
+                return getPath();
+            }
         }
 
         // get corresponding ancestor
@@ -2542,19 +2536,23 @@ public class NodeImpl extends ItemImpl implements Node {
             return m2.getPath();
         }
 
-        // calculate relative path from the referenceable ancestor to this node.
-        // please note, that this cannot be done
-        // iteratively in the 'while' loop above, since getName() does not
-        // return the relative path, but just the name (without path indices)
-        // n1.getPath() = /foo/bar/something[1]
-        // m1.getPath() = /foo
-        //      relpath = bar/something[1]
+        String relPath;
+        try {
+            Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
+            // use prefix mappings of srcSession
+            relPath = p.toJCRPath(srcSession.getNamespaceResolver());
+        } catch (BaseException be) {
+            // should never get here...
+            String msg = "internal error: failed to determine relative path";
+            log.error(msg, be);
+            throw new RepositoryException(msg, be);
+        }
 
-        // @todo: replace as soon as implemented
-        // Path relPath = m1.getPrimaryPath().getRelativePath(getPrimaryPath());
-
-        String relPath = getPath().substring(m1.getPath().length() + 1);
-        return m2.getNode(relPath).getPath();
+        if (!m2.hasNode(relPath)) {
+            throw new ItemNotFoundException();
+        } else {
+            return m2.getNode(relPath).getPath();
+        }
     }
 
     /**
@@ -3083,42 +3081,42 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param srcSession
      * @return the corresponding node or <code>null</code> if no corresponding
      *         node exists.
-     * @throws NoSuchWorkspaceException If <code>srcWorkspace</code> does not exist.
-     * @throws AccessDeniedException    If the current session does not have sufficient rights to perform the operation.
-     * @throws RepositoryException      If another error occurs.
+     * @throws RepositoryException If another error occurs.
      */
-    private NodeImpl getCorrespondingNode(Session srcSession)
+    private NodeImpl getCorrespondingNode(SessionImpl srcSession)
             throws AccessDeniedException, RepositoryException {
 
         // search nearest ancestor that is referenceable
         NodeImpl m1 = this;
-        while (!m1.isRepositoryRoot() && !m1.isNodeType(MIX_REFERENCEABLE)) {
+        while (m1.getDepth() != 0 && !m1.isNodeType(MIX_REFERENCEABLE)) {
             m1 = (NodeImpl) m1.getParent();
         }
 
         try {
-            // get corresponding ancestor
+            // get corresponding ancestor (might throw ItemNotFoundException)
             NodeImpl m2 = (NodeImpl) srcSession.getNodeByUUID(m1.getUUID());
 
-            // return path of m2, if m1 == n1
+            // return m2, if m1 == n1
             if (m1 == this) {
                 return m2;
             }
 
-            // calculate relative path from the referenceable ancestor to this node.
-            // please note, that this cannot be done
-            // iteratively in the 'while' loop above, since getName() does not
-            // return the relative path, but just the name (without path indices)
-            // n1.getPath() = /foo/bar/something[1]
-            // m1.getPath() = /foo
-            //      relpath = bar/something[1]
-
-            // @todo: replace as soon as implemented
-            // Path relPath = m1.getPrimaryPath().getRelativePath(getPrimaryPath());
-
-            String relPath = getPath().substring(m1.getPath().length() + 1);
-            return (NodeImpl) m2.getNode(relPath);
-
+            String relPath;
+            try {
+                Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
+                // use prefix mappings of srcSession
+                relPath = p.toJCRPath(srcSession.getNamespaceResolver());
+            } catch (BaseException be) {
+                // should never get here...
+                String msg = "internal error: failed to determine relative path";
+                log.error(msg, be);
+                throw new RepositoryException(msg, be);
+            }
+            if (!m2.hasNode(relPath)) {
+                return null;
+            } else {
+                return (NodeImpl) m2.getNode(relPath);
+            }
         } catch (ItemNotFoundException e) {
             return null;
         }
@@ -3137,7 +3135,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      * @throws AccessDeniedException
      */
-    private NodeImpl doMergeTest(Session srcSession, boolean bestEffort)
+    private NodeImpl doMergeTest(SessionImpl srcSession, boolean bestEffort)
             throws RepositoryException, AccessDeniedException {
 
         // If N does not have a corresponding node then the merge result for N is leave.
@@ -3219,7 +3217,7 @@ public class NodeImpl extends ItemImpl implements Node {
          */
         NodeImpl node = this;
         while (!node.hasProperty(JCR_ISCHECKEDOUT)) {
-            if (node.isRepositoryRoot()) {
+            if (node.getDepth() == 0) {
                 return true;
             }
             node = (NodeImpl) node.getParent();
