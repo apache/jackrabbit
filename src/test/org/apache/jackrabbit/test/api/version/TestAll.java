@@ -51,6 +51,8 @@ public class TestAll extends TestCase {
         //suite.addTestSuite(OnParentVersionIgnoreTest.class);
         //suite.addTestSuite(OnParentVersionInitializeTest.class);
         suite.addTestSuite(GetReferencesNodeTest.class);
+        suite.addTestSuite(GetPredecessorsTest.class);
+        suite.addTestSuite(GetCreatedTest.class);
 
         return suite;
     }

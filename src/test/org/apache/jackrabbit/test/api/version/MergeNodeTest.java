@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test.api.version;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.version.VersionException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -24,6 +26,9 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.MergeException;
+import javax.jcr.Session;
+import javax.jcr.Repository;
+import javax.jcr.lock.LockException;
 
 /**
  * <code>MergeNodeTest</code> contains tests dealing with general merge node
@@ -115,6 +120,7 @@ public class MergeNodeTest extends AbstractMergeTest {
         try {
             nodeToMerge.checkout();
             nodeToMerge.merge(workspace.getName(), false);
+            fail("Node has ambigous versions. Merge must throw a VersionException");
         } catch (VersionException e) {
             // success if the version exception thrown
         }
@@ -182,6 +188,7 @@ public class MergeNodeTest extends AbstractMergeTest {
 
         try {
             nodeToMerge.merge(workspace.getName(), true);
+            fail("Merge failed for node in earlier merge operations. Because the mergeFailedProperty is present, merge must throw a VersionException");
         } catch (VersionException e) {
             // success version exception expected
         }
@@ -192,7 +199,31 @@ public class MergeNodeTest extends AbstractMergeTest {
      * thrown.<br>
      */
     public void testMergeNodeBestEffortFalse() throws RepositoryException {
-        /// create 2 independent versions for a node and its corresponding node
+        /// create successor versions for a node
+        // so merge fails for this node
+
+        // default workspace
+        Node originalNode = testRootNode.getNode(nodeName1);
+        originalNode.checkout();
+        originalNode.checkin();
+
+        // "merge" the clonedNode with the newNode from the default workspace
+        // merge, besteffort set to false
+        try {
+            nodeToMerge.merge(workspace.getName(), false);
+            fail("bestEffort is false and any merge should throw a MergeException.");
+        } catch (MergeException e) {
+            // successful
+        }
+    }
+
+    /**
+     * A MergeVersionException is thrown if bestEffort is false and a
+     * versionable node is encountered whose corresponding node's base version
+     * is on a divergent branch from this node's base version.
+     */
+    public void testMergeNodeBestEffortFalseAmbiguousVersions() throws RepositoryException {
+        /// create 2 independent base versions for a node and its corresponding node
         // so merge fails for this node
 
         // default workspace
@@ -204,18 +235,61 @@ public class MergeNodeTest extends AbstractMergeTest {
         nodeToMerge.checkin();
 
         // "merge" the clonedNode with the newNode from the default workspace
-        // besteffort set to true to report all failures
         nodeToMerge.checkout();
 
         // merge, besteffort set to false
         try {
             nodeToMerge.merge(workspace.getName(), false);
-            fail("bestEffort is false and any merge should throw a MergeException.");
+            fail("BestEffort is false and corresponding node's version is ambiguous. Merge should throw a MergeException.");
         } catch (MergeException e) {
             // successful
         }
     }
 
+    /**
+     * Tests if a {@link LockException} is thrown when merge is called on a
+     * locked node.
+     * @throws NotExecutableException if repository does not support locking.
+     */
+    public void testMergeLocked()
+            throws NotExecutableException, RepositoryException {
+
+        Session session = testRootNode.getSession();
+
+        if (session.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+            throw new NotExecutableException("Locking is not supported.");
+        }
+
+        // try to make nodeToMerge lockable if it is not
+        if (!nodeToMerge.isNodeType(mixLockable)) {
+            if (nodeToMerge.canAddMixin(mixLockable)) {
+                nodeToMerge.addMixin(mixLockable);
+            } else {
+                throw new NotExecutableException("Node " + nodeToMerge.getName() + " is not lockable and " +
+                        "does not allow to add mix:lockable");
+            }
+        }
+        nodeToMerge.getParent().save();
+
+        // lock the node
+        // remove first slash of path to get rel path to root
+        String pathRelToRoot = nodeToMerge.getPath().substring(1);
+        // access node through another session to lock it
+        Session session2 = helper.getSuperuserSession();
+        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+        node2.lock(false, false);
+
+        try {
+            nodeToMerge.merge(workspace.getName(), false);
+            fail("merge must throw a LockException if applied on a " +
+                    "locked node");
+        } catch (LockException e) {
+            // success
+        }
+
+        node2.unlock();
+        session2.logout();
+    }
 
     /**
      * initialize a versionable node on default and second workspace
@@ -234,6 +308,8 @@ public class MergeNodeTest extends AbstractMergeTest {
         log.println("test nodes created successfully on " + workspace.getName());
 
         // clone the newly created node from src workspace into second workspace
+        // todo clone on testRootNode does not seem to work.
+        // workspaceW2.clone(workspace.getName(), testRootNode.getPath(), testRootNode.getPath(), true);
         workspaceW2.clone(workspace.getName(), topVNode.getPath(), topVNode.getPath(), true);
         log.println(topVNode.getPath() + " cloned on " + superuserW2.getWorkspace().getName() + " at " + topVNode.getPath());
 
