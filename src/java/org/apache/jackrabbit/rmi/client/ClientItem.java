@@ -100,7 +100,7 @@ public class ClientItem extends ClientObject implements Item {
     public Item getAncestor(int level) throws ItemNotFoundException,
             AccessDeniedException, RepositoryException {
         try {
-            return factory.getItem(session, remote.getAncestor(level));
+            return getItem(session, remote.getAncestor(level));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

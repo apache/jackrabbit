@@ -277,7 +277,7 @@ public class ClientNode extends ClientItem implements Node {
     public Item getPrimaryItem() throws ItemNotFoundException,
             RepositoryException {
         try {
-            return factory.getItem(session, remote.getPrimaryItem());
+            return getItem(session, remote.getPrimaryItem());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
