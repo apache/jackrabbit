@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.Constants;
 

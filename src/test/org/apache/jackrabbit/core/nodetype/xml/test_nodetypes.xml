@@ -127,24 +127,24 @@
                  requiredType="Name" autoCreate="false" mandatory="false"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
-        <valueConstraint>{test-namespace}testName</valueConstraint>
+        <valueConstraint>test:testName</valueConstraint>
       </valueConstraints>
       <defaultValues>
-        <defaultValue>{test-namespace}testName</defaultValue>
+        <defaultValue>test:testName</defaultValue>
       </defaultValues>
     </propertyDef>
     <propertyDef name="test:pathProperty"
                  requiredType="Path" autoCreate="false" mandatory="false"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
-        <valueConstraint>/{test-namespace}testPath</valueConstraint>
+        <valueConstraint>/test:testPath</valueConstraint>
       </valueConstraints>
     </propertyDef>
     <propertyDef name="test:referenceProperty"
                  requiredType="Reference" autoCreate="false" mandatory="false"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
-        <valueConstraint>{test-namespace}testType</valueConstraint>
+        <valueConstraint>test:testType</valueConstraint>
       </valueConstraints>
     </propertyDef>
     <propertyDef name="test:stringProperty"

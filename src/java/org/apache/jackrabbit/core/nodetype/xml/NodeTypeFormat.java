@@ -26,6 +26,8 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.w3c.dom.Element;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Utility class for reading and writing node type definition XML elements.
  */
@@ -52,7 +54,6 @@ class NodeTypeFormat extends CommonFormat {
 
     /** Name of the supertype element. */
     private static final String SUPERTYPE_ELEMENT = "supertype";
-
 
     /** The node type definition. */
     private final NodeTypeDef def;
@@ -89,7 +90,7 @@ class NodeTypeFormat extends CommonFormat {
     /**
      * Writes the node type definition to the XML element.
      */
-    protected void write() {
+    protected void write() throws RepositoryException {
         writeName();
         writeSupertypes();
         writeIsMixin();
@@ -242,7 +243,7 @@ class NodeTypeFormat extends CommonFormat {
     /**
      * Writes the property definitions of the node type definition.
      */
-    private void writePropertyDefinitions() {
+    private void writePropertyDefinitions() throws RepositoryException {
         PropDef[] defs = def.getPropertyDefs();
         for (int i = 0; i < defs.length; i++) {
             PropDef property = defs[i];
@@ -282,7 +283,7 @@ class NodeTypeFormat extends CommonFormat {
     /**
      * Writes the child node definitions of the node type definition.
      */
-    private void writeChildNodeDefinitions() {
+    private void writeChildNodeDefinitions() throws RepositoryException {
         ChildNodeDef[] defs = def.getChildNodeDefs();
         for (int i = 0; i < defs.length; i++) {
             ChildNodeDef node = defs[i];
