@@ -20,7 +20,7 @@
   <pomVersion>3</pomVersion>
   <id>jackrabbit</id>
   <name>Jackrabbit</name>
-  <currentVersion>0.14-dev</currentVersion>
+  <currentVersion>0.15-dev</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
     <url>http://incubator.apache.org/projects/jackrabbit.html</url>
@@ -220,7 +220,7 @@
     </dependency>
     <dependency>
       <id>jdom</id>
-      <version>b10</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>geronimo-spec</groupId>
@@ -228,9 +228,9 @@
       <version>1.0-M1</version>
     </dependency>
     <dependency>
-      <groupId>jcr-api</groupId>
+      <groupId>jsr170</groupId>
       <artifactId>jcr</artifactId>
-      <version>0.14beta</version>
+      <version>0.15</version>
     </dependency>
     <dependency>
       <id>log4j</id>
