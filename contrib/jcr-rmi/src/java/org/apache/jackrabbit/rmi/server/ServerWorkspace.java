@@ -123,7 +123,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throws RepositoryException, RemoteException {
         try {
             NodeTypeManager manager = workspace.getNodeTypeManager();
-            return factory.getRemoteNodeTypeManager(manager);
+            return getFactory().getRemoteNodeTypeManager(manager);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -134,7 +134,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throws RepositoryException, RemoteException {
         try {
             NamespaceRegistry registry = workspace.getNamespaceRegistry();
-            return factory.getRemoteNamespaceRegistry(registry);
+            return getFactory().getRemoteNamespaceRegistry(registry);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -145,7 +145,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throws RepositoryException, RemoteException {
         try {
             QueryManager queryManager = workspace.getQueryManager();
-            return factory.getRemoteQueryManager(queryManager);
+            return getFactory().getRemoteQueryManager(queryManager);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

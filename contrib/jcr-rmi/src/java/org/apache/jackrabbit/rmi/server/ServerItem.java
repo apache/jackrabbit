@@ -46,7 +46,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
 public class ServerItem extends ServerObject implements RemoteItem {
 
     /** The adapted local item. */
-    protected Item item;
+    private Item item;
 
     /**
      * Creates a remote adapter for the given local item.
@@ -113,7 +113,7 @@ public class ServerItem extends ServerObject implements RemoteItem {
     public RemoteNode getParent() throws ItemNotFoundException,
             AccessDeniedException, RepositoryException, RemoteException {
         try {
-            return factory.getRemoteNode(item.getParent());
+            return getFactory().getRemoteNode(item.getParent());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

@@ -58,7 +58,7 @@ public class ServerItemDef extends ServerObject implements RemoteItemDef {
 
     /** {@inheritDoc} */
     public RemoteNodeType getDeclaringNodeType() throws RemoteException {
-        return factory.getRemoteNodeType(def.getDeclaringNodeType());
+        return getFactory().getRemoteNodeType(def.getDeclaringNodeType());
     }
 
     /** {@inheritDoc} */

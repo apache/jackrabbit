@@ -88,7 +88,8 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public RemoteSession impersonate(Credentials credentials)
             throws LoginException, RepositoryException, RemoteException {
         try {
-            return factory.getRemoteSession(session.impersonate(credentials));
+            Session newSession = session.impersonate(credentials);
+            return getFactory().getRemoteSession(newSession);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -96,7 +97,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
 
     /** {@inheritDoc} */
     public RemoteWorkspace getWorkspace() throws RemoteException {
-        return factory.getRemoteWorkspace(session.getWorkspace());
+        return getFactory().getRemoteWorkspace(session.getWorkspace());
     }
 
     /** {@inheritDoc} */
@@ -154,7 +155,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public RemoteNode getNodeByUUID(String uuid) throws ItemNotFoundException,
             RepositoryException, RemoteException {
         try {
-            return factory.getRemoteNode(session.getNodeByUUID(uuid));
+            return getFactory().getRemoteNode(session.getNodeByUUID(uuid));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -164,7 +165,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public RemoteNode getRootNode() throws RepositoryException,
             RemoteException {
         try {
-            return factory.getRemoteNode(session.getRootNode());
+            return getFactory().getRemoteNode(session.getRootNode());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
