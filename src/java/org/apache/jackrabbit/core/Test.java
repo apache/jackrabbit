@@ -16,6 +16,8 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.jndi.RegistryHelper;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -24,10 +26,11 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.util.TraversingItemVisitor;
+import javax.naming.InitialContext;
+import javax.naming.Context;
+import javax.naming.Reference;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Properties;
+import java.util.*;
 
 public class Test {
     private static Logger log = Logger.getLogger(Test.class);
@@ -49,7 +52,25 @@ public class Test {
             // fallback to cwd
             factoryHomeDir = System.getProperty("user.dir");
         }
+/*
+        RepositoryConfig repConf = RepositoryConfig.create(configDir + "/" + "repository.xml", factoryHomeDir);
+        Collection wspConfigs = repConf.getWorkspaceConfigs();
+*/
+/*
+        // Set up the environment for creating the initial context
+        Hashtable env = new Hashtable();
+        //env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.fscontext.RefFSContextFactory");
+        //env.put(Context.PROVIDER_URL, "file:./jndi");
 
+        //env.put(Context.INITIAL_CONTEXT_FACTORY, "com.ervacon.xnam.XMLInitialContextFactory");
+        //env.put(Context.PROVIDER_URL, "d:/temp/jndi.xml");
+
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "org.codehaus.spice.jndikit.memory.StaticMemoryInitialContextFactory");
+        InitialContext ctx = new InitialContext(env);
+        RegistryHelper.registerRepository(ctx, "blah", configFile, factoryHomeDir, true);
+        Repository repo1 = (Repository) ctx.lookup("blah");
+        Repository repo2 = (Repository) ctx.lookup("blah");
+*/
         RepositoryFactory rf = RepositoryFactory.create(configFile, factoryHomeDir);
         Repository r = rf.getRepository("localfs");
         Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);

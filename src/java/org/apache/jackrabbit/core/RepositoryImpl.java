@@ -190,16 +190,16 @@ public class RepositoryImpl implements Repository, EventListener {
                     // persist uuid of the repository's root node
                     OutputStream out = uuidFile.getOutputStream();
 /*
-		    // store uuid in binary format
-		    try {
-			out.write(rootUUID.getBytes());
-		    } finally {
-			try {
-			    out.close();
-			} catch (IOException ioe) {
-			    // ignore
-			}
-		    }
+                    // store uuid in binary format
+                    try {
+                        out.write(rootUUID.getBytes());
+                    } finally {
+                        try {
+                            out.close();
+                        } catch (IOException ioe) {
+                            // ignore
+                        }
+                    }
 */
                     // store uuid in text format for better readability
                     OutputStreamWriter writer = new OutputStreamWriter(out);
@@ -454,15 +454,15 @@ public class RepositoryImpl implements Repository, EventListener {
      * @throws RepositoryException
      */
     private PersistenceManager createPersistenceManager(WorkspaceDef wspDef) throws RepositoryException {
-        PersistenceManager perstistMgr;
+        PersistenceManager persistMgr;
         String className = wspDef.getPersistenceManagerClass();
         try {
             // Create the persistence manager object
             Class c = Class.forName(className);
-            perstistMgr = (PersistenceManager) c.newInstance();
+            persistMgr = (PersistenceManager) c.newInstance();
             // set the properties of the persistence manager object from the
             // param hashmap
-            BeanMap bm = new BeanMap(perstistMgr);
+            BeanMap bm = new BeanMap(persistMgr);
             HashMap params = wspDef.getPersistenceManagerParams();
             Iterator iter = params.keySet().iterator();
             while (iter.hasNext()) {
@@ -470,12 +470,12 @@ public class RepositoryImpl implements Repository, EventListener {
                 Object value = params.get(name);
                 bm.put(name, value);
             }
-            perstistMgr.init(wspDef);
+            persistMgr.init(wspDef);
         } catch (Exception e) {
             log.error("Cannot instantiate implementing class " + className, e);
             throw new RepositoryException("Cannot instantiate implementing class " + className, e);
         }
-        return perstistMgr;
+        return persistMgr;
     }
 
     /**

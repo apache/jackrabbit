@@ -4,7 +4,6 @@ open issues, features not yet implemented, improvements, etc.
 the following list is not yet categorized/prioritized, neither 
 is it complete :(
 
-- search
 - locking
 - jta support
 - access control
@@ -12,7 +11,7 @@ is it complete :(
   files) leads to *very* slow performance in a normal filesystem;
   see next issues for solutions 
 - use jdbc as an alternative to virtual filesystem persistence layer
-- use an alternative journaling filesystem as (transactional) persistence layer 
+- use an alternative journaling store as (transactional) persistence layer 
 - provide clean abstraction for persistence grouping (nodes & properties 
   that should be stored/loaded together in the persistence layer);
   (e.g. properties are stored within .node.xml)
@@ -25,12 +24,12 @@ is it complete :(
     operation (move, remove, copy)
 - HierarchyManager: cache Path objects (key: ItemId, value: Path[]);
   update cache on hierarchy changes (move, hardlink, remove, etc) 
-- inline @todo comments: resolve/implement
 - gracefull repository shutdown:
   - shutdown repository
   - close workspaces
   - close abstract file systems (e.g. flush dirty buffers, etc.)
   - trap JVM shutdown in RepositoryFactory? (Runtime#addShutdownHook)
+- inline @todo comments: resolve/implement
 - ItemState: hide STATUS_* flags, use set* and is* methods instead
 - javaDoc, javaDoc, javaDoc
 - logging: use commons logging instead of log4j
