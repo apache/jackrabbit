@@ -15,7 +15,9 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.commons.collections.BeanMap;
 import org.apache.commons.collections.ReferenceMap;
+import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
@@ -24,10 +26,7 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PersistentItemStateManager;
-import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
-import org.apache.jackrabbit.core.state.ReferenceManager;
+import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.state.tx.TransactionManager;
 import org.apache.jackrabbit.core.state.tx.XASessionImpl;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -41,6 +40,7 @@ import javax.jcr.observation.EventListener;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -95,31 +95,10 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     // sub file system where the repository stores versions
     private final FileSystem versionStore;
 
-    // map of workspace names and workspace configurations
-    private final HashMap wspConfigs = new HashMap();
-
     /**
-     * map of workspace names and workspace item state managers
-     * (might be shared among multiple workspace instances representing
-     * the same named workspace, i.e. the same physical storage)
+     * map of workspace names and <code>WorkspaceInfo<code>s.
      */
-    private final HashMap wspStateMgrs = new HashMap();
-
-    /**
-     * map of workspace names and workspace reference managers
-     * (might be shared among multiple workspace instances representing
-     * the same named workspace, i.e. the same physical storage)
-     */
-    private final HashMap wspRefMgrs = new HashMap();
-
-    // map of workspace names and observation managers
-    private final HashMap wspObsMgrFactory = new HashMap();
-
-    // map of search managers
-    private final HashMap wspSearchMgrs = new HashMap();
-
-    // map of workspace names and system sessions
-    private final HashMap wspSystemSessions = new HashMap();
+    private final HashMap wspInfos = new HashMap();
 
     /**
      * active sessions (weak references)
@@ -271,7 +250,8 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         Iterator iter = repConfig.getWorkspaceConfigs().iterator();
         while (iter.hasNext()) {
             WorkspaceConfig config = (WorkspaceConfig) iter.next();
-            wspConfigs.put(config.getName(), config);
+            WorkspaceInfo info = new WorkspaceInfo(config);
+            wspInfos.put(config.getName(), info);
         }
 
         nsReg = new NamespaceRegistryImpl(new BasedFileSystem(repStore, "/namespaces"));
@@ -289,7 +269,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
 
         // check system root node of system workspace
         // (for now, we just create a system root node in all workspaces)
-        Iterator wspNames = wspConfigs.keySet().iterator();
+        Iterator wspNames = wspInfos.keySet().iterator();
         while (wspNames.hasNext()) {
             String wspName = (String) wspNames.next();
             NodeImpl rootNode = (NodeImpl) getSystemSession(wspName).getRootNode();
@@ -324,9 +304,9 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
 
         // get the system session for every defined workspace and
         // register as an event listener
-        iter = wspConfigs.values().iterator();
+        iter = wspInfos.values().iterator();
         while (iter.hasNext()) {
-            String wspName = ((WorkspaceConfig) iter.next()).getName();
+            String wspName = ((WorkspaceInfo) iter.next()).getName();
             Session s = getSystemSession(wspName);
             s.getWorkspace().getObservationManager().addEventListener(this,
                     Event.NODE_ADDED | Event.NODE_REMOVED
@@ -418,7 +398,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      * @return the names of all workspaces of this repository.
      */
     protected String[] getWorkspaceNames() {
-        return (String[]) wspConfigs.keySet().toArray(new String[wspConfigs.keySet().size()]);
+        return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
     }
 
     /**
@@ -429,14 +409,14 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      *                             already exists or if another error occurs
      */
     public void createWorkspace(String workspaceName) throws RepositoryException {
-        if (wspConfigs.containsKey(workspaceName)) {
+        if (wspInfos.containsKey(workspaceName)) {
             throw new RepositoryException("workspace '" + workspaceName + "' already exists.");
         }
 
         // create the workspace configuration
-        repConfig.createWorkspaceConfig(workspaceName);
-        // add new configuration to map of workspace configs
-        wspConfigs.put(workspaceName, repConfig.getWorkspaceConfig(workspaceName));
+        WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName);
+        WorkspaceInfo info = new WorkspaceInfo(config);
+        wspInfos.put(workspaceName, info);
     }
 
     PersistentItemStateProvider getWorkspaceStateManager(String workspaceName)
@@ -446,28 +426,11 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new IllegalStateException("repository instance has been shut down");
         }
 
-        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
-        if (wspConfig == null) {
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-
-        synchronized (wspStateMgrs) {
-            // get/create per named workspace (i.e. per physical storage) item state manager
-            PersistentItemStateProvider stateMgr =
-                    (PersistentItemStateProvider) wspStateMgrs.get(workspaceName);
-            if (stateMgr == null) {
-                // create state manager
-                try {
-                    stateMgr = new PersistentItemStateManager(wspConfig.getPersistenceManager(), rootNodeUUID, ntReg);
-                } catch (ItemStateException ise) {
-                    String msg = "failed to instantiate the persistent state manager";
-                    log.error(msg, ise);
-                    throw new RepositoryException(msg, ise);
-                }
-                wspStateMgrs.put(workspaceName, stateMgr);
-            }
-            return stateMgr;
-        }
+        return wspInfo.getItemStateProvider();
     }
 
     ReferenceManager getWorkspaceReferenceManager(String workspaceName)
@@ -477,22 +440,11 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new IllegalStateException("repository instance has been shut down");
         }
 
-        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
-        if (wspConfig == null) {
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-
-        synchronized (wspRefMgrs) {
-            ReferenceManager refMgr
-                    = (ReferenceManager) wspRefMgrs.get(workspaceName);
-            if (refMgr == null) {
-                // create reference mgr that uses the perstistence mgr configured
-                // in the workspace definition
-                refMgr = new ReferenceManager(wspConfig.getPersistenceManager());
-                wspRefMgrs.put(workspaceName, refMgr);
-            }
-            return refMgr;
-        }
+        return wspInfo.getReferenceManager();
     }
 
     ObservationManagerFactory getObservationManagerFactory(String workspaceName)
@@ -502,19 +454,11 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new IllegalStateException("repository instance has been shut down");
         }
 
-        if (!wspConfigs.containsKey(workspaceName)) {
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-
-        synchronized (wspObsMgrFactory) {
-            ObservationManagerFactory obsMgr
-                    = (ObservationManagerFactory) wspObsMgrFactory.get(workspaceName);
-            if (obsMgr == null) {
-                obsMgr = new ObservationManagerFactory();
-                wspObsMgrFactory.put(workspaceName, obsMgr);
-            }
-            return obsMgr;
-        }
+        return wspInfo.getObservationManagerFactory();
     }
 
     /**
@@ -537,29 +481,11 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new IllegalStateException("repository instance has been shut down");
         }
 
-        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
-        if (wspConfig == null) {
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-
-        synchronized (wspSearchMgrs) {
-            SearchManager searchMgr
-                    = (SearchManager) wspSearchMgrs.get(workspaceName);
-            if (searchMgr == null) {
-                try {
-                    if (wspConfig.getSearchConfig() == null) {
-                        // no search index configured
-                        return null;
-                    }
-                    SystemSession s = getSystemSession(workspaceName);
-                    searchMgr = new SearchManager(s, wspConfig.getSearchConfig());
-                } catch (IOException e) {
-                    throw new RepositoryException("Exception opening search index.", e);
-                }
-                wspSearchMgrs.put(workspaceName, searchMgr);
-            }
-            return searchMgr;
-        }
+        return wspInfo.getSearchManager();
     }
 
     SystemSession getSystemSession(String workspaceName)
@@ -569,20 +495,11 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new IllegalStateException("repository instance has been shut down");
         }
 
-        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
-        if (wspConfig == null) {
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-
-        synchronized (wspSystemSessions) {
-            SystemSession systemSession
-                    = (SystemSession) wspSystemSessions.get(workspaceName);
-            if (systemSession == null) {
-                systemSession = new SystemSession(this, wspConfig);
-                wspSystemSessions.put(workspaceName, systemSession);
-            }
-            return systemSession;
-        }
+        return wspInfo.getSystemSession();
     }
 
     /**
@@ -598,18 +515,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             return;
         }
 
-        // stop / dispose all ObservationManagers
-        for (Iterator it = wspObsMgrFactory.values().iterator(); it.hasNext();) {
-            ObservationManagerFactory obsMgr = (ObservationManagerFactory) it.next();
-            obsMgr.dispose();
-        }
-
-        // shutdown search managers
-        for (Iterator it = wspSearchMgrs.values().iterator(); it.hasNext();) {
-            SearchManager searchMgr = (SearchManager) it.next();
-            searchMgr.close();
-        }
-
         // close active user sessions
         for (Iterator it = activeSessions.values().iterator(); it.hasNext();) {
             SessionImpl session = (SessionImpl) it.next();
@@ -618,36 +523,10 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         }
         activeSessions.clear();
 
-        // close system sessions
-        for (Iterator it = wspSystemSessions.values().iterator(); it.hasNext();) {
-            SessionImpl session = (SessionImpl) it.next();
-            session.removeListener(this);
-            session.logout();
-        }
-        wspSystemSessions.clear();
-
-        // dispose persistent item state  mgr's
-        for (Iterator it = wspStateMgrs.values().iterator(); it.hasNext();) {
-            PersistentItemStateManager stateMgr =
-                    (PersistentItemStateManager) it.next();
-            stateMgr.dispose();
-        }
-
-        // shutdown persistence managers & file systems
-        for (Iterator it = wspConfigs.values().iterator(); it.hasNext();) {
-            WorkspaceConfig wspConfig = (WorkspaceConfig) it.next();
-            try {
-                // close persistence manager
-                wspConfig.getPersistenceManager().close();
-            } catch (Exception e) {
-                log.error("error while closing persistence manager of workspace " + wspConfig.getName(), e);
-            }
-            try {
-                // close workspace file system
-                wspConfig.getFileSystem().close();
-            } catch (FileSystemException e) {
-                log.error("error while closing filesystem of workspace " + wspConfig.getName(), e);
-            }
+        // shut down workspaces 
+        for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
+            WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
+            wspInfo.dispose();
         }
 
         /**
@@ -779,19 +658,19 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         if (workspaceName == null) {
             workspaceName = repConfig.getDefaultWorkspaceName();
         }
-        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
-        if (wspConfig == null) {
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
         if (credentials == null) {
             // anonymous login
-            SessionImpl ses = new XASessionImpl(this, ANONYMOUS_CREDENTIALS, wspConfig, txMgr);
+            SessionImpl ses = new XASessionImpl(this, ANONYMOUS_CREDENTIALS, wspInfo.getConfig(), txMgr);
             activeSessions.put(ses, ses);
             return ses;
         } else if (credentials instanceof SimpleCredentials) {
             // username/password credentials
             // @todo implement authentication/authorization
-            Session ses = new XASessionImpl(this, credentials, wspConfig, txMgr);
+            Session ses = new XASessionImpl(this, credentials, wspInfo.getConfig(), txMgr);
             activeSessions.put(ses, ses);
             return ses;
         } else {
@@ -849,6 +728,262 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
                     propsCount--;
                     repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
                 }
+            }
+        }
+    }
+
+    //--------------------------------------------------------< inner classes >
+    /**
+     * <code>WorkspaceInfo</code> holds the objects that are shared
+     * among multiple per-session <code>WorkspaceImpl</code> instances
+     * representing the same named workspace, i.e. the same physical
+     * storage.
+     */
+    class WorkspaceInfo {
+
+        /**
+         * workspace configuration
+         */
+        private final WorkspaceConfig config;
+
+        /**
+         * persistence manager
+         */
+        private PersistenceManager persistMgr;
+
+        /**
+         * item state provider
+         */
+        private PersistentItemStateManager itemStateMgr;
+
+        /**
+         * reference manager
+         */
+        private ReferenceManager refMgr;
+
+        /**
+         * system session
+         */
+        private SystemSession systemSession;
+
+        /**
+         * observation manager factory
+         */
+        private ObservationManagerFactory obsMgrFactory;
+
+        /**
+         * search manager
+         */
+        private SearchManager searchMgr;
+
+        /**
+         * Creates a new <code>WorkspaceInfo</code> based on the given
+         * <code>config</code>.
+         *
+         * @param config workspace configuration
+         */
+        WorkspaceInfo(WorkspaceConfig config) {
+            this.config = config;
+        }
+
+        /**
+         * Returns the workspace name
+         *
+         * @return the workspace name
+         */
+        String getName() {
+            return config.getName();
+        }
+
+        /**
+         * Returns the workspace file system
+         *
+         * @return the workspace file system
+         */
+        FileSystem getFileSystem() {
+            return config.getFileSystem();
+        }
+
+        /**
+         * Returns the workspace configuration
+         *
+         * @return the workspace configuration
+         */
+        WorkspaceConfig getConfig() {
+            return config;
+        }
+
+        /**
+         * Returns the workspace persistence manager
+         *
+         * @return the workspace persistence manager
+         * @throws RepositoryException if the persistence manager could not be instantiated/initialized
+         */
+        synchronized PersistenceManager getPersistenceManager() throws RepositoryException {
+            if (persistMgr == null) {
+                PersistenceManagerConfig pmConfig = config.getPersistenceManagerConfig();
+                String className = pmConfig.getClassName();
+                Map params = pmConfig.getParameters();
+                try {
+                    Class c = Class.forName(className);
+                    persistMgr = (PersistenceManager) c.newInstance();
+                    /**
+                     * set the properties of the persistence manager object
+                     * from the param map
+                     */
+                    BeanMap bm = new BeanMap(persistMgr);
+                    Iterator iter = params.keySet().iterator();
+                    while (iter.hasNext()) {
+                        Object name = iter.next();
+                        Object value = params.get(name);
+                        bm.put(name, value);
+                    }
+                    PMContext ctx = new PMContext(config, rootNodeUUID, nsReg, ntReg);
+                    persistMgr.init(ctx);
+                } catch (Exception e) {
+                    persistMgr = null;
+                    log.error("Cannot instantiate implementing class " + className, e);
+                    throw new RepositoryException("Cannot instantiate implementing class " + className, e);
+                }
+            }
+            return persistMgr;
+        }
+
+        /**
+         * Returns the system session for this workspace
+         *
+         * @return the system session for this workspace
+         * @throws RepositoryException if the system session could not be created
+         */
+        synchronized SystemSession getSystemSession() throws RepositoryException {
+            if (systemSession == null) {
+                systemSession = new SystemSession(RepositoryImpl.this, config);
+            }
+            return systemSession;
+        }
+
+        /**
+         * Returns the reference manager for this workspace
+         *
+         * @return the reference manager for this workspace
+         * @throws RepositoryException if the reference manager could not be created
+         */
+        synchronized ReferenceManager getReferenceManager()
+                throws RepositoryException {
+            if (refMgr == null) {
+                // create reference mgr that uses this workspace's perstistence mgr
+                refMgr = new ReferenceManager(getPersistenceManager());
+            }
+            return refMgr;
+        }
+
+        /**
+         * Returns the workspace item state provider
+         *
+         * @return the workspace item state provider
+         * @throws RepositoryException if the workspace item state provider could not be created
+         */
+        synchronized PersistentItemStateProvider getItemStateProvider()
+                throws RepositoryException {
+            if (itemStateMgr == null) {
+                // create item state manager
+                try {
+                    itemStateMgr = new PersistentItemStateManager(getPersistenceManager(), rootNodeUUID, ntReg);
+                } catch (ItemStateException ise) {
+                    String msg = "failed to instantiate persistent item state manager";
+                    log.error(msg, ise);
+                    throw new RepositoryException(msg, ise);
+                }
+            }
+            return itemStateMgr;
+        }
+
+        /**
+         * Returns the observation manager factory for this workspace
+         *
+         * @return the observation manager factory for this workspace
+         */
+        synchronized ObservationManagerFactory getObservationManagerFactory() {
+            if (obsMgrFactory == null) {
+                obsMgrFactory = new ObservationManagerFactory();
+            }
+            return obsMgrFactory;
+        }
+
+        /**
+         * Returns the search manager for this workspace
+         *
+         * @return the search manager for this workspace
+         * @throws RepositoryException if the search manager could not be created
+         */
+        synchronized SearchManager getSearchManager() throws RepositoryException {
+            if (searchMgr == null) {
+                if (config.getSearchConfig() == null) {
+                    // no search index configured
+                    return null;
+                }
+                try {
+                    searchMgr = new SearchManager(getSystemSession(), config.getSearchConfig());
+                } catch (IOException ioe) {
+                    String msg = "failed to instantiate search manager";
+                    log.error(msg, ioe);
+                    throw new RepositoryException(msg, ioe);
+                }
+            }
+            return searchMgr;
+        }
+
+        /**
+         * Disposes all objects this <code>WorkspaceInfo</code> is holding.
+         */
+        void dispose() {
+            // dispose observation manager factory
+            if (obsMgrFactory != null) {
+                obsMgrFactory.dispose();
+                obsMgrFactory = null;
+            }
+
+            // shutdown search managers
+            if (searchMgr != null) {
+                searchMgr.close();
+                searchMgr = null;
+            }
+
+            // close system session
+            if (systemSession != null) {
+                systemSession.removeListener(RepositoryImpl.this);
+                systemSession.logout();
+                systemSession = null;
+            }
+
+            // dispose persistent item state mgr
+            if (itemStateMgr != null) {
+                itemStateMgr.dispose();
+                itemStateMgr = null;
+            }
+
+            // close persistence manager
+            if (persistMgr != null) {
+                try {
+                    persistMgr.close();
+                } catch (Exception e) {
+                    log.error("error while closing persistence manager of workspace " + config.getName(), e);
+                }
+                persistMgr = null;
+            }
+
+            // dispose reference manager
+            if (refMgr != null) {
+                //refMgr.dispose();
+                refMgr = null;
+            }
+
+            // close workspace file system
+            try {
+                // close workspace file system
+                config.getFileSystem().close();
+            } catch (FileSystemException e) {
+                log.error("error while closing filesystem of workspace " + config.getName(), e);
             }
         }
     }

@@ -15,9 +15,7 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.commons.collections.BeanMap;
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.state.PersistenceManager;
 import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -29,8 +27,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * A <code>WorkspaceConfig</code> ...
@@ -76,12 +72,12 @@ public class WorkspaceConfig extends AbstractConfig {
     private String wspName;
 
     /**
-     * persistence manager of the workspace
+     * configuration for the persistence manager
      */
-    private PersistenceManager persistMgr;
+    private PersistenceManagerConfig pmConfig;
 
     /**
-     * configuration for the search manager.
+     * configuration for the search manager
      */
     private SearchConfig searchConfig;
 
@@ -124,45 +120,17 @@ public class WorkspaceConfig extends AbstractConfig {
         vars.put(WORKSPACE_NAME_VARIABLE, wspName);
 
         // file system
-        Element fsConfig = wspElem.getChild(FILE_SYSTEM_ELEMENT);
-        wspFS = createFileSystem(fsConfig, vars);
+        Element fsElem = wspElem.getChild(FILE_SYSTEM_ELEMENT);
+        wspFS = createFileSystem(fsElem, vars);
 
-        // search config
+        // persistence manager config
+        Element pmElem = wspElem.getChild(PERSISTENCE_MANAGER_ELEMENT);
+        pmConfig = new PersistenceManagerConfig(pmElem, vars);
+
+        // search config (optional)
         Element searchElem = wspElem.getChild(SEARCH_INDEX_ELEMENT);
         if (searchElem != null) {
             searchConfig = new SearchConfig(searchElem, vars);
-        }
-
-        // persistence manager
-        String className = wspElem.getChild(PERSISTENCE_MANAGER_ELEMENT).getAttributeValue(CLASS_ATTRIB);
-        // read the PersistenceManager properties from the
-        // param elements in the config
-        HashMap params = new HashMap();
-        List paramList = wspElem.getChild(PERSISTENCE_MANAGER_ELEMENT).getChildren(PARAM_ELEMENT);
-        for (Iterator i = paramList.iterator(); i.hasNext();) {
-            Element param = (Element) i.next();
-            String paramName = param.getAttributeValue(NAME_ATTRIB);
-            String paramValue = param.getAttributeValue(VALUE_ATTRIB);
-            // replace variables in param value
-            params.put(paramName, replaceVars(paramValue, vars));
-        }
-        // finally do create the persistence manager
-        try {
-            Class c = Class.forName(className);
-            persistMgr = (PersistenceManager) c.newInstance();
-            // set the properties of the persistence manager object from the
-            // param hashmap
-            BeanMap bm = new BeanMap(persistMgr);
-            Iterator iter = params.keySet().iterator();
-            while (iter.hasNext()) {
-                Object name = iter.next();
-                Object value = params.get(name);
-                bm.put(name, value);
-            }
-            persistMgr.init(this);
-        } catch (Exception e) {
-            log.error("Cannot instantiate implementing class " + className, e);
-            throw new RepositoryException("Cannot instantiate implementing class " + className, e);
         }
     }
 
@@ -231,19 +199,19 @@ public class WorkspaceConfig extends AbstractConfig {
     }
 
     /**
-     * Returns the workspace's persistence manager.
+     * Returns the configuration of the persistence manager.
      *
-     * @return the persistence manager
+     * @return the <code>PersistenceManagerConfig</code> for this workspace
      */
-    public PersistenceManager getPersistenceManager() {
-        return persistMgr;
+    public PersistenceManagerConfig getPersistenceManagerConfig() {
+        return pmConfig;
     }
 
     /**
      * Returns the configuration of the search manager.
      * Returns <code>null</code> if no search manager is configured.
      *
-     * @return the <code>SearchConfig</code> for this workspace.
+     * @return the <code>SearchConfig</code> for this workspace
      */
     public SearchConfig getSearchConfig() {
         return searchConfig;

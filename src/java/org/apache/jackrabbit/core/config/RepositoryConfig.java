@@ -264,8 +264,9 @@ public class RepositoryConfig extends AbstractConfig {
      * @param name workspace name
      * @throws RepositoryException if the specified name already exists or
      *                             if an error occured during the creation.
+     * @return a new <code>WorkspaceConfig</code> object.
      */
-    public void createWorkspaceConfig(String name) throws RepositoryException {
+    public synchronized WorkspaceConfig createWorkspaceConfig(String name) throws RepositoryException {
         if (wspConfigs.containsKey(name)) {
             String msg = "A workspace with the specified name alreay exists";
             log.error(msg);
@@ -311,6 +312,7 @@ public class RepositoryConfig extends AbstractConfig {
         // create workspace config object
         WorkspaceConfig wspConfig = WorkspaceConfig.create(configFile.getPath(), configFile.getParent());
         wspConfigs.put(name, wspConfig);
+        return wspConfig;
     }
 
     //------------------------------------------------------< EntityResolver >

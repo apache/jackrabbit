@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.core.state.mem;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -308,7 +307,7 @@ public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
     /**
      * @see PersistenceManager#init
      */
-    public void init(WorkspaceConfig wspConfig) throws Exception {
+    public void init(PMContext context) throws Exception {
         if (initialized) {
             throw new IllegalStateException("already initialized");
         }
@@ -316,14 +315,14 @@ public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
         stateStore = new HashMap(initialCapacity, loadFactor);
         refsStore = new HashMap(initialCapacity, loadFactor);
 
-        wspFS = wspConfig.getFileSystem();
+        wspFS = context.getWorkspaceConfig().getFileSystem();
         
         /**
          * store blob's in local file system in a sub directory
          * of the workspace home directory
          */
         LocalFileSystem blobFS = new LocalFileSystem();
-        blobFS.setPath(wspConfig.getHomeDir() + "/blobs");
+        blobFS.setPath(context.getWorkspaceConfig().getHomeDir() + "/blobs");
         blobFS.init();
         this.blobFS = blobFS;
 

@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.core.state.xml;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.fs.*;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
@@ -336,12 +335,12 @@ public class XMLPersistenceManager implements PersistenceManager {
     /**
      * @see PersistenceManager#init
      */
-    public void init(WorkspaceConfig wspConfig) throws Exception {
+    public void init(PMContext context) throws Exception {
         if (initialized) {
             throw new IllegalStateException("already initialized");
         }
 
-        FileSystem wspFS = wspConfig.getFileSystem();
+        FileSystem wspFS = context.getWorkspaceConfig().getFileSystem();
         itemStateStore = new BasedFileSystem(wspFS, "/data");
 
         //blobStore = new BasedFileSystem(wspFS, "/blobs");
@@ -351,7 +350,7 @@ public class XMLPersistenceManager implements PersistenceManager {
          * todo make blob store configurable
          */
         LocalFileSystem blobFS = new LocalFileSystem();
-        blobFS.setPath(wspConfig.getHomeDir() + "/blobs");
+        blobFS.setPath(context.getWorkspaceConfig().getHomeDir() + "/blobs");
         blobFS.init();
         blobStore = blobFS;
 
@@ -807,7 +806,7 @@ public class XMLPersistenceManager implements PersistenceManager {
                 while (iter.hasNext()) {
                     PropertyId propId = (PropertyId) iter.next();
                     writer.write("\t<" + NODEREFERENCE_ELEMENT + " "
-                    + PROPERTYID_ATTRIBUTE+ "=\"" + propId +  "\"/>\n");
+                            + PROPERTYID_ATTRIBUTE + "=\"" + propId + "\"/>\n");
                 }
                 writer.write("</" + NODEREFERENCES_ELEMENT + ">\n");
             } finally {

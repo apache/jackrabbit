@@ -25,10 +25,10 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 public interface PersistenceManager {
 
     /**
-     * @param wspConfig
+     * @param context
      * @throws Exception
      */
-    public void init(WorkspaceConfig wspConfig) throws Exception;
+    public void init(PMContext context) throws Exception;
 
     /**
      * @throws Exception

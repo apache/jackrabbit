@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.core.state.obj;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.fs.*;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
@@ -404,12 +403,12 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     /**
      * @see PersistenceManager#init
      */
-    public void init(WorkspaceConfig wspConfig) throws Exception {
+    public void init(PMContext context) throws Exception {
         if (initialized) {
             throw new IllegalStateException("already initialized");
         }
 
-        FileSystem wspFS = wspConfig.getFileSystem();
+        FileSystem wspFS = context.getWorkspaceConfig().getFileSystem();
         itemStateFS = new BasedFileSystem(wspFS, "/data");
 
         /**
@@ -417,7 +416,7 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
          * of the workspace home directory
          */
         LocalFileSystem blobFS = new LocalFileSystem();
-        blobFS.setPath(wspConfig.getHomeDir() + "/blobs");
+        blobFS.setPath(context.getWorkspaceConfig().getHomeDir() + "/blobs");
         blobFS.init();
         this.blobFS = blobFS;
 
