@@ -1071,6 +1071,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 case PropertyType.LONG:
                 case PropertyType.DOUBLE:
                     length = value.toString().length();
+                    break;
 
                 case PropertyType.NAME:
                     QName name = (QName) value.internalValue();
@@ -1082,6 +1083,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                         log.error(msg, npde);
                         throw new RepositoryException(msg, npde);
                     }
+                    break;
 
                 case PropertyType.PATH:
                     Path path = (Path) value.internalValue();
@@ -1093,10 +1095,12 @@ public class PropertyImpl extends ItemImpl implements Property {
                         log.error(msg, npde);
                         throw new RepositoryException(msg, npde);
                     }
+                    break;
 
                 case PropertyType.BINARY:
                     BLOBFileValue blob = (BLOBFileValue) value.internalValue();
                     length = blob.getLength();
+                    break;
             }
             lengths[i] = length;
         }
