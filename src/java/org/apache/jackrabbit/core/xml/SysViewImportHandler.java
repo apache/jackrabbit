@@ -249,7 +249,7 @@ class SysViewImportHandler extends DefaultHandler {
                     // jcr:uuid is the last system property; we can assume that all
                     // required system properties have been collected by now
                     if (current.node == null) {
-                        // now that we're collected all required system properties
+                        // now that we've collected all required system properties
                         // we're ready to create the node
                         createNode(current);
                     }
@@ -265,7 +265,7 @@ class SysViewImportHandler extends DefaultHandler {
                     // non-system property encountered; we can assume that all
                     // required system properties have been collected by now
                     if (current.node == null) {
-                        // now that we're collected all required system properties
+                        // now that we've collected all required system properties
                         // we're ready to create the node
                         createNode(current);
                     }
@@ -347,14 +347,14 @@ class SysViewImportHandler extends DefaultHandler {
         if (state.parent.hasNode(state.nodeName)) {
             state.node = state.parent.getNode(state.nodeName);
             NodeDef def = state.node.getDefinition();
-            if (def.isProtected()) {
+            if (def.isProtected() || def.isAutoCreate()) {
                 // @todo how to handle protected/auto-created child node?
-
-            } else if (def.isAutoCreate()) {
-                // @todo how to handle protected/auto-created child node?
-
+                state.node = (NodeImpl) state.parent.getNode(state.nodeName);
+            } else if (!def.allowSameNameSibs()) {
+                throw new ItemExistsException(state.parent.safeGetJCRPath() + "/" + state.nodeName);
             }
-        } else {
+        }
+        if (state.node == null) {
             state.node = (NodeImpl) state.parent.addNode(state.nodeName, state.primaryType);
             if (state.mixinTypes != null) {
                 for (int i = 0; i < state.mixinTypes.size(); i++) {
