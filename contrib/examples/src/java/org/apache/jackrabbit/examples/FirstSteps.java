@@ -47,7 +47,7 @@ public class FirstSteps {
     public static void main(String[] args) {
         try {
             Repository repository = getRepository();
-            SimpleCredentials creds = new SimpleCredentials("anonymous", "".toCharArray());
+            SimpleCredentials creds = new SimpleCredentials("username", "password".toCharArray());
             Session session = repository.login(creds);
             Node root = session.getRootNode();
 
