@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -30,6 +31,7 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * This Class implements a VersionManager. It more or less acts as proxy
@@ -248,7 +250,16 @@ public class VersionManagerImpl implements VersionManager, Constants, InternalVe
      * {@inheritDoc}
      */
     public void setItemReferences(InternalVersionItem item, List references) {
-        vMgr.setItemReferences(item, references);
+        // filter out version storage intern ones
+        ArrayList refs = new ArrayList();
+        Iterator iter = references.iterator();
+        while (iter.hasNext()) {
+            PropertyId id = (PropertyId) iter.next();
+            if (!vMgr.hasItem(id.getParentUUID())) {
+                refs.add(id);
+            }
+        }
+        vMgr.setItemReferences(item, refs);
     }
 
     /**
