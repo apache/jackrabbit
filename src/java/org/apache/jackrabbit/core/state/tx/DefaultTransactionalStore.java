@@ -134,6 +134,7 @@ public class DefaultTransactionalStore implements TransactionalStore {
             PersistentPropertyState to = getOrCreateState(from);
             to.setDefinitionId(from.getDefinitionId());
             to.setType(from.getType());
+            to.setMultiValued(from.isMultiValued());
             to.setValues(from.getValues());
             to.store();
         }

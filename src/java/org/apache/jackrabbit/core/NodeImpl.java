@@ -222,6 +222,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             propState = itemStateMgr.createTransientPropertyState(parentUUID, name, ItemState.STATUS_NEW);
             propState.setType(type);
+            propState.setMultiValued(def.isMultiple());
             propState.setDefinitionId(new PropDefId(def.unwrap()));
             // compute system generated values if necessary
             InternalValue[] genValues = computeSystemGeneratedPropertyValues(name, def);

@@ -431,6 +431,7 @@ class TransactionImpl implements Transaction, PlaybackListener {
                 p.getProperty("parentUUID"), this);
 
         state.setType(PropertyType.valueFromName(p.getProperty("type")));
+        state.setMultiValued(Boolean.getBoolean(p.getProperty("multiValued")));
         state.setDefinitionId(PropDefId.valueOf(p.getProperty("definitionId")));
         state.setValues(getValues(p, "values", state.getType()));
 
@@ -483,6 +484,7 @@ class TransactionImpl implements Transaction, PlaybackListener {
 
         p.setProperty("type", PropertyType.nameFromValue(state.getType()));
         p.setProperty("definitionId", state.getDefinitionId().toString());
+        p.setProperty("multiValued", Boolean.toString(state.isMultiValued()));
         setValues(p, "values", state.getValues());
 
         return store(p, "P");

@@ -73,6 +73,7 @@ public class XMLPersistenceManager implements PersistenceManager {
     private static final String PROPERTY_ELEMENT = "property";
     private static final String NAME_ATTRIBUTE = "name";
     private static final String TYPE_ATTRIBUTE = "type";
+    private static final String MULTIVALUED_ATTRIBUTE = "multiValued";
 
     private static final String VALUES_ELEMENT = "values";
     private static final String VALUE_ELEMENT = "value";
@@ -267,6 +268,10 @@ public class XMLPersistenceManager implements PersistenceManager {
             throw new ItemStateException("unexpected property-type: " + typeName, iae);
         }
         state.setType(type);
+
+        // multiValued
+        String multiValued = propElement.getAttributeValue(MULTIVALUED_ATTRIBUTE);
+        state.setMultiValued(Boolean.getBoolean(multiValued));
 
         // definition id
         String definitionId = propElement.getAttributeValue(DEFINITIONID_ATTRIBUTE);
@@ -593,6 +598,7 @@ public class XMLPersistenceManager implements PersistenceManager {
                 writer.write("<" + PROPERTY_ELEMENT + " " +
                         NAME_ATTRIBUTE + "=\"" + state.getName() + "\" " +
                         PARENTUUID_ATTRIBUTE + "=\"" + state.getParentUUID() + "\" " +
+                        MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" " +
                         DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" " +
                         TYPE_ATTRIBUTE + "=\"" + typeName + "\">\n");
                 // values

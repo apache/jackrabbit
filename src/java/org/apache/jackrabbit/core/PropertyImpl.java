@@ -98,6 +98,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             // copy state from transient state
             persistentState.setDefinitionId(transientState.getDefinitionId());
             persistentState.setType(transientState.getType());
+            persistentState.setMultiValued(transientState.isMultiValued());
             persistentState.setValues(transientState.getValues());
             // make state persistent
             persistentState.store();

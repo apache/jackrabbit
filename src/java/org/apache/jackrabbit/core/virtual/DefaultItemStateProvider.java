@@ -289,6 +289,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
                 PropertyDefImpl def = getApplicablePropertyDef(parentState, name, type, multiValued);
                 VirtualPropertyState propState = createPropertyState(parentState.getUUID(), name);
                 propState.setType(type);
+                propState.setMultiValued(multiValued);
                 propState.setDefinitionId(new PropDefId(def.unwrap()));
                 parentState.addPropertyEntry(name);
                 return propState;

@@ -36,6 +36,7 @@ public class PropertyState extends ItemState {
     protected QName name;
     protected InternalValue[] values;
     protected int type;
+    protected boolean multiValued;
 
     protected PropDefId defId;
 
@@ -63,6 +64,7 @@ public class PropertyState extends ItemState {
         this.name = name;
         type = PropertyType.UNDEFINED;
         values = new InternalValue[0];
+        multiValued = false;
     }
 
     /**
@@ -76,7 +78,8 @@ public class PropertyState extends ItemState {
         type = propState.getType();
         defId = propState.getDefinitionId();
         values = propState.getValues();
-    }    
+        multiValued = propState.isMultiValued();
+    }
 
     //-------------------------------------------------------< public methods >
     /**
@@ -109,6 +112,15 @@ public class PropertyState extends ItemState {
     }
 
     /**
+     * Sets the flag indicating whether this property is multi-valued.
+     *
+     * @param multiValued flag indicating whether this property is multi-valued
+     */
+    public void setMultiValued(boolean multiValued) {
+        this.multiValued = multiValued;
+    }
+
+    /**
      * Returns the type of this property.
      *
      * @return the type of this property.
@@ -116,6 +128,15 @@ public class PropertyState extends ItemState {
      */
     public int getType() {
         return type;
+    }
+
+    /**
+     * Returns true if this property is multi-valued, otherwise false.
+     *
+     * @return true if this property is multi-valued, otherwise false.
+     */
+    public boolean isMultiValued() {
+        return multiValued;
     }
 
     /**
@@ -160,6 +181,7 @@ public class PropertyState extends ItemState {
         // read in readObject(ObjectInputStream)
         out.writeObject(name);
         out.writeInt(type);
+        out.writeBoolean(multiValued);
         if (values == null) {
             out.writeObject(null);
         } else {
@@ -199,6 +221,7 @@ public class PropertyState extends ItemState {
         // written in writeObject(ObjectOutputStream)
         name = (QName) in.readObject();
         type = in.readInt();
+        multiValued = in.readBoolean();
         Object obj = in.readObject();
         if (obj == null) {
             values = null;

@@ -247,6 +247,8 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
         DataOutputStream out = new DataOutputStream(stream);
         // type
         out.writeInt(state.getType());
+        // multiValued
+        out.writeBoolean(state.isMultiValued());
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
         // values
@@ -292,6 +294,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
         // type
         int type = in.readInt();
         state.setType(type);
+        // multiValued
+        boolean multiValued = in.readBoolean();
+        state.setMultiValued(multiValued);
         // definitionId
         String s = in.readUTF();
         state.setDefinitionId(PropDefId.valueOf(s));

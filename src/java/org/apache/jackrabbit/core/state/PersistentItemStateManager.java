@@ -97,6 +97,7 @@ public class PersistentItemStateManager extends ItemStateCache
         PersistentPropertyState prop = createPropertyState(rootNodeUUID, propName);
         prop.setValues(new InternalValue[]{InternalValue.create(NodeTypeRegistry.NT_UNSTRUCTURED)});
         prop.setType(PropertyType.NAME);
+        prop.setMultiValued(false);
         prop.setDefinitionId(propDefId);
 
         rootState.store();

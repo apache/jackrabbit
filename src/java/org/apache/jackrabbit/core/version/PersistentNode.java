@@ -229,6 +229,7 @@ public class PersistentNode {
                 PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
                 PersistentPropertyState propState = stateMgr.createPropertyState(nodeState.getUUID(), name);
                 propState.setType(type);
+                propState.setMultiValued(multiValued);
                 propState.setDefinitionId(new PropDefId(def.unwrap()));
 
                 // need to store nodestate

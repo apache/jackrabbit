@@ -32,6 +32,7 @@ import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.OutputStream;
 import java.util.*;
 
 /**
@@ -505,11 +506,32 @@ public class NodeTypeRegistry {
                 log.error(reason);
                 throw new InvalidNodeTypeDefException(reason);
             }
-            ValueConstraint[] constraints = pd.getValueConstraints();
+            /**
+             * check default values:
+             * make sure type of value is consistent with required property type
+             */
             InternalValue[] defVals = pd.getDefaultValues();
+            if (defVals != null && defVals.length != 0) {
+                int reqType = pd.getRequiredType();
+                for (int j = 0; j < defVals.length; j++) {
+                    if (reqType == PropertyType.UNDEFINED) {
+                        reqType = defVals[j].getType();
+                    } else {
+                        if (defVals[j].getType() != reqType) {
+                            String reason = "type of default value(s) is not consistent with required property type";
+                            log.error(reason);
+                            throw new InvalidNodeTypeDefException(reason);
+                        }
+                    }
+                }
+            }
+            /**
+             * todo check that auto-created properties have have at least either default values or system generated values
+             */
+            // check that default values satisfy value constraints
+            ValueConstraint[] constraints = pd.getValueConstraints();
             if (constraints != null && constraints.length != 0
                     && defVals != null && defVals.length != 0) {
-                // check that default values satisfy value constraints
                 for (int j = 0; j < constraints.length; j++) {
                     for (int k = 0; k < defVals.length; k++) {
                         try {
@@ -873,8 +895,8 @@ public class NodeTypeRegistry {
      * <li>Aggregation of supertypes must not result in name conflicts,
      * ambiguities, etc.</li>
      * <li>Definitions of auto-created properties must specify a name</li>
-     * <li>Default values in property definitions must satisfy value constrains
-     * in the same property child-node definition</li>
+     * <li>Default values in property definitions must satisfy value constraints
+     * specified in the same property definition</li>
      * <li>Definitions of auto-created child-nodes must specify a name</li>
      * <li>Default node type in child-node definitions must exist and be
      * registered</li>
@@ -884,13 +906,13 @@ public class NodeTypeRegistry {
      * node types which would lead to infinite child node creation
      * (e.g. node type 'A' defines auto-created child node with default
      * node type 'A' ...)</li>
-     * <li>Nodetypes specified as constraints in child-node definitions
+     * <li>Node types specified as constraints in child-node definitions
      * must exist and be registered</li>
      * <li>The aggregation of the node types specified as constraints in
      * child-node definitions must not result in name conflicts, ambiguities,
      * etc.</li>
      * <li>Default node types in child-node definitions must satisfy
-     * node type constraints in the same child-node definition</li>
+     * node type constraints specified in the same child-node definition</li>
      * </ul>
      *
      * @param ntd the definition of the new node type
@@ -904,8 +926,10 @@ public class NodeTypeRegistry {
         EffectiveNodeType ent = internalRegister(ntd);
         // persist new node type definition
         customNTDefs.add(ntd);
+        OutputStream out = null;
         try {
-            customNTDefs.store(customNodeTypesResource.getOutputStream(), nsReg);
+            out = customNodeTypesResource.getOutputStream();
+            customNTDefs.store(out, nsReg);
         } catch (IOException ioe) {
             String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
             log.error(error, ioe);
@@ -914,12 +938,106 @@ public class NodeTypeRegistry {
             String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
             log.error(error, fse);
             throw new RepositoryException(error, fse);
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
         }
 
         // notify listeners
         notifyRegistered(ntd.getName());
 
         return ent;
+    }
+
+    /**
+     * Same as <code>{@link #registerNodeType(NodeTypeDef)}</code> except
+     * that a collection of <code>NodeTypeDef</code>s is registered instead of
+     * just one.
+     * <p/>
+     * This method can be used to register a set of node types that have
+     * dependencies on each other.
+     * <p/>
+     * Note that in the case an exception is thrown, some node types might have
+     * been nevertheless successfully registered.
+     *
+     * @param ntDefs a collection of <code>NodeTypeDef<code>s
+     * @throws InvalidNodeTypeDefException
+     * @throws RepositoryException
+     */
+    public synchronized void registerNodeTypes(Collection ntDefs)
+            throws InvalidNodeTypeDefException, RepositoryException {
+        // exceptions that might be thrown by internalRegister(Collection)
+        RepositoryException re = null;
+        InvalidNodeTypeDefException intde = null;
+
+        // store names of currently registered node types before proceeding
+        HashSet oldNTNames = new HashSet(registeredNTDefs.keySet());
+
+        try {
+            // validate and register new node type definitions
+            internalRegister(ntDefs);
+        } catch (RepositoryException e) {
+            // store exception so it can be re-thrown later on
+            re = e;
+        } catch (InvalidNodeTypeDefException e) {
+            // store exception so it can be re-thrown later on
+            intde = e;
+        }
+
+        /**
+         * build set of names of actually registered new node types
+         * (potentially a subset of those specified in ntDefs if an exception
+         * had been thrown)
+         */
+        HashSet newNTNames = new HashSet(registeredNTDefs.keySet());
+        newNTNames.removeAll(oldNTNames);
+
+        if (newNTNames.size() > 0) {
+            // persist new node type definitions
+            for (Iterator iter = newNTNames.iterator(); iter.hasNext(); ) {
+                QName ntName = (QName) iter.next();
+                customNTDefs.add((NodeTypeDef) registeredNTDefs.get(ntName));
+            }
+            OutputStream out = null;
+            try {
+                out = customNodeTypesResource.getOutputStream();
+                customNTDefs.store(out, nsReg);
+            } catch (IOException ioe) {
+                String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
+                log.error(error, ioe);
+                throw new RepositoryException(error, ioe);
+            } catch (FileSystemException fse) {
+                String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
+                log.error(error, fse);
+                throw new RepositoryException(error, fse);
+            } finally {
+                if (out != null) {
+                    try {
+                        out.close();
+                    } catch (IOException ioe) {
+                        // ignore
+                    }
+                }
+            }
+
+            // notify listeners
+            for (Iterator iter = newNTNames.iterator(); iter.hasNext(); ) {
+                QName ntName = (QName) iter.next();
+                notifyRegistered(ntName);
+            }
+        }
+
+        // re-throw exception as necessary
+        if (re != null) {
+            throw re;
+        } else if (intde != null) {
+            throw intde;
+        }
     }
 
     /**
@@ -969,8 +1087,10 @@ public class NodeTypeRegistry {
 
         // persist removal of node type definition
         customNTDefs.remove(name);
+        OutputStream out = null;
         try {
-            customNTDefs.store(customNodeTypesResource.getOutputStream(), nsReg);
+            out = customNodeTypesResource.getOutputStream();
+            customNTDefs.store(out, nsReg);
         } catch (IOException ioe) {
             String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
             log.error(error, ioe);
@@ -979,6 +1099,14 @@ public class NodeTypeRegistry {
             String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
             log.error(error, fse);
             throw new RepositoryException(error, fse);
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
         }
 
         // @todo remove also any node types & aggregates which have dependencies on this node type

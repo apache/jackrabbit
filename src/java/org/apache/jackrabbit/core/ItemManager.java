@@ -17,6 +17,8 @@ package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.log4j.Logger;
 
@@ -141,6 +143,38 @@ public class ItemManager implements ItemLifeCycleListener {
      */
     void dispose() {
         itemCache.clear();
+    }
+
+    private NodeDef getDefinition(NodeState state)
+            throws RepositoryException {
+        NodeDefId defId = state.getDefinitionId();
+        NodeDef def = session.getNodeTypeManager().getNodeDef(defId);
+        if (def == null) {
+            log.warn("node at " + safeGetJCRPath(state.getId()) + " has invalid definitionId (" + defId + ")");
+
+            // fallback: try finding applicable definition
+            NodeId parentId = new NodeId(state.getParentUUID());
+            NodeImpl parent = (NodeImpl) getItem(parentId);
+            NodeState parentState = (NodeState) parent.getItemState();
+            NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) parentState.getChildNodeEntries(state.getUUID()).get(0);
+            def = parent.getApplicableChildNodeDef(cne.getName(), state.getNodeTypeName());
+        }
+        return def;
+    }
+
+    private PropertyDef getDefinition(PropertyState state)
+            throws RepositoryException {
+        PropDefId defId = state.getDefinitionId();
+        PropertyDef def = session.getNodeTypeManager().getPropDef(defId);
+        if (def == null) {
+            log.warn("property at " + safeGetJCRPath(state.getId()) + " has invalid definitionId (" + defId + ")");
+
+            // fallback: try finding applicable definition
+            NodeId parentId = new NodeId(state.getParentUUID());
+            NodeImpl parent = (NodeImpl) getItem(parentId);
+            def = parent.getApplicablePropertyDef(state.getName(), state.getType(), state.isMultiValued());
+        }
+        return def;
     }
 
     //--------------------------------------------------< item access methods >
@@ -550,8 +584,7 @@ public class ItemManager implements ItemLifeCycleListener {
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
-
-        // check spezial nodes
+        // check special nodes
         if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION)) {
             return session.versionMgr.createVersionInstance(session, state, def, this, listeners);
         } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION_HISTORY)) {
@@ -565,12 +598,7 @@ public class ItemManager implements ItemLifeCycleListener {
 
     NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
         // 1. get definition of the specified node
-        NodeDef def = session.getNodeTypeManager().getNodeDef(state.getDefinitionId());
-        if (def == null) {
-            String msg = "internal error: no definition found for node " + safeGetJCRPath(state.getId());
-            log.error(msg);
-            throw new RepositoryException(msg);
-        }
+        NodeDef def = getDefinition(state);
         // 2. create instance
         return createNodeInstance(state, def);
     }
@@ -587,12 +615,7 @@ public class ItemManager implements ItemLifeCycleListener {
 
     PropertyImpl createPropertyInstance(PropertyState state) throws RepositoryException {
         // 1. get definition for the specified property
-        PropertyDef def = session.getNodeTypeManager().getPropDef(state.getDefinitionId());
-        if (def == null) {
-            String msg = "internal error: no definition found for property " + safeGetJCRPath(state.getId());
-            log.error(msg);
-            throw new RepositoryException(msg);
-        }
+        PropertyDef def = getDefinition(state);
         // 2. create instance
         return createPropertyInstance(state, def);
     }

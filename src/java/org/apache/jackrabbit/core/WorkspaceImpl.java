@@ -506,6 +506,7 @@ public class WorkspaceImpl implements Workspace {
             PropDefId defId = srcState.getDefinitionId();
             newState.setDefinitionId(defId);
             newState.setType(srcState.getType());
+            newState.setMultiValued(srcState.isMultiValued());
             InternalValue[] values = srcState.getValues();
             if (values != null) {
                 InternalValue[] newValues = new InternalValue[values.length];
