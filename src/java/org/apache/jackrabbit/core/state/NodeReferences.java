@@ -104,7 +104,7 @@ public class NodeReferences implements Serializable {
     /**
      * @param references
      */
-    public void addAllReferences(Set references) {
+    public void addAllReferences(List references) {
         references.addAll(references);
     }
 
