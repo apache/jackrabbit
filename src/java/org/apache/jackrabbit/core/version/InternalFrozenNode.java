@@ -65,4 +65,11 @@ public interface InternalFrozenNode extends InternalFreeze {
      */
     public QName[] getFrozenMixinTypes();
 
+    /**
+     * Checks if this frozen node has the frozen version history
+     * @param uuid
+     * @return
+     */
+    public boolean hasFrozenHistory(String uuid);
+
 }

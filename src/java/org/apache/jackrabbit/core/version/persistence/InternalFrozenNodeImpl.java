@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.version.InternalFreeze;
 import org.apache.jackrabbit.core.version.InternalFrozenNode;
 import org.apache.jackrabbit.core.version.InternalVersionItem;
 import org.apache.jackrabbit.core.version.PersistentVersionManager;
+import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
@@ -189,6 +190,21 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         } catch (RepositoryException e) {
             throw new VersionException("Unable to retrieve frozen child nodes", e);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasFrozenHistory(String uuid) {
+        try {
+            List entries = node.getState().getChildNodeEntries(uuid);
+            if (entries.size()>0) {
+                return getVersionManager().getItemByInternal(uuid) instanceof InternalFrozenVersionHistory;
+            }
+        } catch (RepositoryException e) {
+            // ignore
+        }
+        return false;
     }
 
     /**

@@ -37,6 +37,10 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.GenericVersionSelector;
+import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -65,12 +69,14 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.HashMap;
 
 /**
  * A <code>WorkspaceImpl</code> ...
@@ -1050,11 +1056,83 @@ public class WorkspaceImpl implements Workspace, Constants {
             VersionException, LockException, InvalidItemStateException,
             RepositoryException {
 
+        // todo: perform restore operations direct on the node states
+
         // check state of this instance
         sanityCheck();
 
-        // @todo implement Workspace#restore
-        throw new UnsupportedRepositoryOperationException();
+        // add all versions to map of versions to restore
+        final HashMap toRestore = new HashMap();
+        for (int i=0; i<versions.length; i++) {
+            VersionImpl v = (VersionImpl) versions[i];
+            VersionHistory vh = v.getContainingVersionHistory();
+            // check for collision
+            if (toRestore.containsKey(vh.getUUID())) {
+                throw new VersionException("Unable to restore. Two ore more versions have same version history.");
+            }
+            toRestore.put(vh.getUUID(), v);
+        }
+
+        // create a version selector to the set of versions
+        VersionSelector vsel = new VersionSelector() {
+            public Version select(VersionHistory versionHistory) throws RepositoryException {
+                // try to select version as specified
+                Version v = (Version) toRestore.get(versionHistory.getUUID());
+                if (v == null) {
+                    // select latest one
+                    v = GenericVersionSelector.selectByDate(versionHistory, null);
+                }
+                return v;
+            }
+        };
+
+        // check for pending changes
+        if (session.hasPendingChanges()) {
+            String msg = "Unable to restore version. Session has pending changes.";
+            log.debug(msg);
+            throw new InvalidItemStateException(msg);
+        }
+
+        try {
+            // now restore all versions that have a node in the ws
+            int numRestored = 0;
+            while (toRestore.size()>0) {
+                InternalVersion[] restored = null;
+                Iterator iter = toRestore.values().iterator();
+                while (iter.hasNext()) {
+                    VersionImpl v = (VersionImpl) iter.next();
+                    try {
+                        NodeImpl node = (NodeImpl) session.getNodeByUUID(v.getFrozenNode().getFrozenUUID());
+                        restored = node.internalRestore(v.getInternalVersion(), vsel, removeExisting);
+                        // remove restored versions from set
+                        for (int i=0; i<restored.length; i++) {
+                            toRestore.remove(restored[i].getVersionHistory().getId());
+                        }
+                        numRestored += restored.length;
+                        break;
+                    } catch (ItemNotFoundException e) {
+                        // ignore
+                    }
+                }
+                if (restored == null) {
+                    if (numRestored == 0) {
+                        throw new VersionException("Unable to restore. At least one version needs existing versionable node in workspace.");
+                    } else {
+                        throw new VersionException("Unable to restore. All versions with non existing versionable nodes need parent.");
+                    }
+                }
+            }
+        } catch (RepositoryException e) {
+            // revert session
+            try {
+                log.error("reverting changes applied during restore...");
+                session.refresh(false);
+            } catch (RepositoryException e1) {
+                // ignore this
+            }
+            throw e;
+        }
+        session.save();
     }
 
     /**

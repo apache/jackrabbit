@@ -32,6 +32,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 import java.util.Calendar;
 import java.util.List;
 
@@ -106,6 +107,15 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
+     * Returns the version history this version is contained in.
+     * @return this versions history
+     * @throws RepositoryException
+     */
+    public VersionHistory getContainingVersionHistory() throws RepositoryException {
+        return (VersionHistory) getParent();
+    }
+
+    /**
      * Returns the internal version
      *
      * @return
@@ -145,4 +155,5 @@ public class VersionImpl extends NodeImpl implements Version {
     public PropertyIterator getReferences() throws RepositoryException {
         return getReferences(true);
     }
+
 }

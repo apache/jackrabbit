@@ -2977,8 +2977,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkLock();
 
         // check if 'own' version
-        // TODO: change if Version.getContainingVersionHistory() is introduced
-        if (!version.getParent().isSame(getVersionHistory())) {
+        if (!((VersionImpl) version).getContainingVersionHistory().isSame(getVersionHistory())) {
             throw new VersionException("Unable to restore version. Not same version history.");
         }
 
@@ -3010,8 +3009,32 @@ public class NodeImpl extends ItemImpl implements Node {
         if (hasNode(relPath)) {
             getNode(relPath).restore(version, removeExisting);
         } else {
+            NodeImpl node;
+            try {
+                // check if versionable node exists
+                InternalFrozenNode fn = ((VersionImpl) version).getFrozenNode();
+                node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
+                if (removeExisting) {
+                    try {
+                        Path dstPath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
+                        // move to respective location
+                        session.move(node.getPath(), dstPath.toJCRPath(session.getNamespaceResolver()));
+                        // need to refetch ?
+                        node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
+                    } catch (MalformedPathException e) {
+                        throw new RepositoryException(e);
+                    } catch (NoPrefixDeclaredException e) {
+                        throw new RepositoryException("InternalError.", e);
+                    }
+                } else {
+                    throw new ItemExistsException("Unable to restore version. Versionable node already exists.");
+                }
+            } catch (ItemNotFoundException e) {
+                // not found, create new one
+                node = addNode(relPath, ((VersionImpl) version).getFrozenNode());
+            }
+
             // recreate node from frozen state
-            NodeImpl node = addNode(relPath, ((VersionImpl) version).getFrozenNode());
             node.internalRestore(version, new GenericVersionSelector(version.getCreated()), removeExisting);
             // session.save/revert is done in internal restore
         }
@@ -3042,7 +3065,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException("No version for label " + versionLabel + " found.");
         }
         internalRestore(v, new GenericVersionSelector(versionLabel), removeExisting);
-        save();
+        // session.save/revert is done in internal restore
     }
 
     /**
@@ -3484,7 +3507,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param removeExisting
      * @throws RepositoryException
      */
-    private void internalRestore(InternalVersion version, VersionSelector vsel,
+    protected InternalVersion[] internalRestore(InternalVersion version, VersionSelector vsel,
                                  boolean removeExisting)
             throws RepositoryException {
 
@@ -3494,7 +3517,9 @@ public class NodeImpl extends ItemImpl implements Node {
         // 1. The child node and properties of N will be changed, removed or
         //    added to, depending on their corresponding copies in V and their
         //    own OnParentVersion attributes (see 7.2.8, below, for details).
-        restoreFrozenState(version.getFrozenNode(), vsel, removeExisting);
+        HashSet restored = new HashSet();
+        restoreFrozenState(version.getFrozenNode(), vsel, restored, removeExisting);
+        restored.add(version);
 
         // 2. N's jcr:baseVersion property will be changed to point to V.
         internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(version.getId())));
@@ -3504,6 +3529,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // 3. N's jcr:isCheckedOut property is set to false.
         internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(false));
+
+        return (InternalVersion[]) restored.toArray(new InternalVersion[restored.size()]);
     }
 
     /**
@@ -3514,7 +3541,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param removeExisting
      * @throws RepositoryException
      */
-    void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel, boolean removeExisting)
+    void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel, Set restored, boolean removeExisting)
             throws RepositoryException {
 
         // check uuid
@@ -3578,19 +3605,17 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
-        // restore the frozen nodes
-        InternalFreeze[] frozenNodes = freeze.getFrozenChildNodes();
-
-        // first delete all non frozen version histories, ie. all OPV!=Version
+        // first delete all non frozen version histories
         NodeIterator iter = getNodes();
         while (iter.hasNext()) {
             NodeImpl n = (NodeImpl) iter.nextNode();
-            if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY) {
-                n.remove();
+            if (!freeze.hasFrozenHistory(n.internalGetUUID())) {
+                n.internalRemove(true);
             }
         }
 
-        // now restore the frozen ones
+        // restore the frozen nodes
+        InternalFreeze[] frozenNodes = freeze.getFrozenChildNodes();
         for (int i = 0; i < frozenNodes.length; i++) {
             InternalFreeze child = frozenNodes[i];
             if (child instanceof InternalFrozenNode) {
@@ -3599,6 +3624,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 if (f.getFrozenUUID() != null) {
                     try {
                         NodeImpl existing = (NodeImpl) session.getNodeByUUID(f.getFrozenUUID());
+                        // check if one of this restoretrees node
                         if (removeExisting) {
                             existing.remove();
                         } else {
@@ -3611,27 +3637,33 @@ public class NodeImpl extends ItemImpl implements Node {
                     }
                 }
                 NodeImpl n = addNode(f.getName(), f);
-                n.restoreFrozenState(f, vsel, removeExisting);
+                n.restoreFrozenState(f, vsel, restored, removeExisting);
 
             } else if (child instanceof InternalFrozenVersionHistory) {
                 InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
                 VersionHistoryImpl history = (VersionHistoryImpl) session.getNodeByUUID(f.getVersionHistoryId());
                 String nodeId = history.getVersionableUUID();
 
-                // check if representing vh already exists somewhere
+                // check if representing versionable already exists somewhere
                 if (itemMgr.itemExists(new NodeId(nodeId))) {
                     NodeImpl n = (NodeImpl) session.getNodeByUUID(nodeId);
-                    if (hasNode(n.getQName())) {
+                    if (n.getParent().isSame(this)) {
                         // so order at end
                         // orderBefore(n.getName(), "");
-                    } else {
+                    } else if (removeExisting) {
                         session.move(n.getPath(), getPath() + "/" + n.getName());
+                    } else {
+                        // since we delete the OPV=Copy children beforehand, all
+                        // found nodes must be outside of this tree
+                        throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: " + n.safeGetJCRPath());
                     }
                 } else {
                     // get desired version from version selector
                     InternalVersion v = ((VersionImpl) vsel.select(history)).getInternalVersion();
                     NodeImpl node = addNode(child.getName(), v.getFrozenNode());
                     node.internalRestore(v, vsel, removeExisting);
+                    // add this version to set
+                    restored.add(v);
                 }
             }
         }
