@@ -474,10 +474,11 @@ public class XMLPersistenceManager implements PersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
+        Exception e = null;
+        String propFilePath = buildPropFilePath(parentUUID, propName);
 /*
-	Exception e = null;
-	String propFilePath = buildPropFilePath(parentUUID, propName);
-	try {
+	// read property state from xml file
+        try {
 	    if (!fs.isFile(propFilePath)) {
 		throw new NoSuchItemStateException(parentUUID + "/" + propName);
 	    }
@@ -503,12 +504,8 @@ public class XMLPersistenceManager implements PersistenceManager {
 	    e = fse;
 	    // fall through
 	}
-	String msg = "failed to read property state: " + parentUUID + "/" + propName;
-	log.error(msg, e);
-	throw new ItemStateException(msg, e);
 */
-        Exception e = null;
-        String propFilePath = buildPropFilePath(parentUUID, propName);
+        // read property state from java.util.Properties file
         try {
             if (!itemStateStore.isFile(propFilePath)) {
                 throw new NoSuchItemStateException(parentUUID + "/" + propName);
@@ -531,6 +528,7 @@ public class XMLPersistenceManager implements PersistenceManager {
             e = fse;
             // fall through
         }
+
         String msg = "failed to read property state: " + parentUUID + "/" + propName;
         log.error(msg, e);
         throw new ItemStateException(msg, e);
@@ -548,6 +546,8 @@ public class XMLPersistenceManager implements PersistenceManager {
         String parentUUID = state.getParentUUID();
         QName propName = state.getName();
         String propFilePath = buildPropFilePath(parentUUID, propName);
+/*
+	// read property state from xml file
         try {
             InputStream in = itemStateStore.getInputStream(propFilePath);
             try {
@@ -568,6 +568,29 @@ public class XMLPersistenceManager implements PersistenceManager {
             e = fse;
             // fall through
         }
+*/
+        // read property state from java.util.Properties file
+        try {
+            if (!itemStateStore.isFile(propFilePath)) {
+                throw new NoSuchItemStateException(parentUUID + "/" + propName);
+            }
+            InputStream in = itemStateStore.getInputStream(propFilePath);
+            try {
+                Properties props = new Properties();
+                props.load(in);
+                readState(props, state);
+                return;
+            } finally {
+                in.close();
+            }
+        } catch (IOException ioe) {
+            e = ioe;
+            // fall through
+        } catch (FileSystemException fse) {
+            e = fse;
+            // fall through
+        }
+
         String msg = "failed to read property state: " + parentUUID + "/" + propName;
         log.error(msg, e);
         throw new ItemStateException(msg, e);
@@ -672,6 +695,7 @@ public class XMLPersistenceManager implements PersistenceManager {
             propFile.makeParentDirs();
             OutputStream os = propFile.getOutputStream();
 /*
+            // write property state to xml file
 	    Writer writer = null;
 	    try {
 		String encoding = DEFAULT_ENCODING;
@@ -765,6 +789,7 @@ public class XMLPersistenceManager implements PersistenceManager {
 		writer.close();
 	    }
 */
+            // write property state to java.util.Properties file
             Properties props = new Properties();
 
             // type
@@ -892,7 +917,7 @@ public class XMLPersistenceManager implements PersistenceManager {
                 }
             }
         }
-        // delete property xml file
+        // delete property file
         String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
         FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
         try {

@@ -16,16 +16,12 @@
 package org.apache.jackrabbit.test;
 
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
-import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.core.RepositoryImpl;
 
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.naming.Context;
-import java.util.Properties;
+import javax.naming.InitialContext;
 import java.util.Hashtable;
+import java.util.Properties;
 
 /**
  * Implements the <code>RepositoryStub</code> for the JCR Reference Implementation.
