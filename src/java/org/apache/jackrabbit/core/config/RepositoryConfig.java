@@ -22,6 +22,7 @@ import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
+import org.xml.sax.InputSource;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.jdom.Document;
 
@@ -35,7 +36,13 @@ public class RepositoryConfig {
         ConfigurationParser parser = new ConfigurationParser(new Properties());
         return parser.parseRepositoryConfig(file, home);
     }
-    
+
+    public static RepositoryConfig create(InputSource is, String home)
+            throws RepositoryException {
+        ConfigurationParser parser = new ConfigurationParser(new Properties());
+        return parser.parseRepositoryConfig(is, home);
+    }
+   
     private Document config;
     private ConfigurationParser parser;
 
