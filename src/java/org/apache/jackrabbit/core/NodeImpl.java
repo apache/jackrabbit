@@ -1,6 +1,6 @@
 /*
  * Copyright 2004-2005 The Apache Software Foundation or its licensors,
- *                     as applicable.
+  *                     as applicable.
   *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -348,8 +348,8 @@ public class NodeImpl extends ItemImpl implements Node {
             log.error(msg);
             throw new RepositoryException(msg);
         }
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath() + "/" + name.toString();
             log.error(msg);
             throw new VersionException(msg);
@@ -830,6 +830,41 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Same as {@link Node#isNodeType(String)}, but takes a <code>QName</code>
+     * instad of a <code>String</code>.
+     * @param ntName name of node type
+     * @return <code>true</code> if this node is of the specified node type;
+     *         otherwise <code>false</code>
+     */
+    public boolean isNodeType(QName ntName) throws RepositoryException {
+        // no need to perform sanity check; assume this has
+        // already been done by calling method
+
+        if (ntName.equals(nodeType.getQName())) {
+            return true;
+        }
+
+        if (nodeType.isDerivedFrom(ntName)) {
+            return true;
+        }
+
+        // check mixin types
+        Set mixinNames = ((NodeState) state).getMixinTypeNames();
+        if (mixinNames.isEmpty()) {
+            return false;
+        }
+        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+        try {
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType((QName[]) mixinNames.toArray(new QName[mixinNames.size()]));
+            return ent.includesNodeType(ntName);
+        } catch (NodeTypeConflictException ntce) {
+            String msg = "internal error: invalid mixin node type(s)";
+            log.error(msg, ntce);
+            throw new RepositoryException(msg, ntce);
+        }
+    }
+
+    /**
      * Returns the (internal) uuid of this node.
      * @return the uuid of this node
      */
@@ -1278,8 +1313,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1298,8 +1333,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1366,8 +1401,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException(safeGetJCRPath() + " has no child node with name " + destName);
         }
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot change child node ordering of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1461,8 +1496,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1501,8 +1536,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1532,8 +1567,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1563,8 +1598,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1596,8 +1631,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1627,8 +1662,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1658,8 +1693,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1689,8 +1724,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1720,8 +1755,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1751,8 +1786,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write (only cheap call)
-        if (!isCheckedOut(false)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -1974,38 +2009,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#isNodeType(String)
-     */
-    public boolean isNodeType(QName ntName) throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        if (ntName.equals(nodeType.getQName())) {
-            return true;
-        }
-
-        if (nodeType.isDerivedFrom(ntName)) {
-            return true;
-        }
-
-        // check mixin types
-        Set mixinNames = ((NodeState) state).getMixinTypeNames();
-        if (mixinNames.isEmpty()) {
-            return false;
-        }
-        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
-        try {
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType((QName[]) mixinNames.toArray(new QName[mixinNames.size()]));
-            return ent.includesNodeType(ntName);
-        } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: invalid mixin node type(s)";
-            log.error(msg, ntce);
-            throw new RepositoryException(msg, ntce);
-        }
-    }
-
-
-    /**
      * @see Node#getPrimaryNodeType()
      */
     public NodeType getPrimaryNodeType() throws RepositoryException {
@@ -2038,8 +2041,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!isCheckedOut(true)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot add a mixin node type to a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -2147,8 +2150,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!isCheckedOut(true)) {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a checked-in node";
             log.error(msg);
             throw new VersionException(msg);
@@ -2264,8 +2267,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!isCheckedOut(true)) {
+        // check checked-out status
+        if (!internalIsCheckedOut()) {
             return false;
         }
 
@@ -2544,8 +2547,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check if versionable
         checkVersionable();
 
-        // check if already checked out
-        if (isCheckedOut(false)) {
+        // check checked-out status
+        if (internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": Node is already checked-out. ignoring.";
             log.debug(msg);
             return;
@@ -2701,7 +2704,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        return isCheckedOut(true);
+        return internalIsCheckedOut();
     }
 
     /**
@@ -2980,18 +2983,20 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Same as {@link Node#isCheckedOut()} but if <code>inherit</code>
-     * is <code>true</code>, a non-versionable node will return the checked out
-     * state of its parent.
-     *
-     * @param inherit
+     * Determines the checked-out status of this node.
+     * @return a boolean
      * @see Node#isCheckedOut()
      */
-    protected boolean isCheckedOut(boolean inherit) throws RepositoryException {
+    protected boolean internalIsCheckedOut() throws RepositoryException {
         // search nearest ancestor that is versionable
+        /**
+         * FIXME should not only rely on existence of jcr:isCheckedOut property
+         * but also verify that node.isNodeType("mix:versionable")==true;
+         * this would have a negative impact on performance though...
+         */
         NodeImpl node = this;
         while (!node.hasProperty(VersionManager.PROPNAME_IS_CHECKED_OUT)) {
-            if (!inherit || node.isRepositoryRoot()) {
+            if (node.isRepositoryRoot()) {
                 return true;
             }
             node = (NodeImpl) node.getParent();

@@ -829,8 +829,8 @@ public class SessionImpl implements Session {
         }
         NodeImpl parent = (NodeImpl) item;
 
-        // check if versioning allows write (only cheap call)
-        if (!parent.isCheckedOut(false)) {
+        // verify that parent node is checked-out 
+        if (!parent.internalIsCheckedOut()) {
             String msg = parentAbsPath + ": cannot add a child to a checked-in node";
             log.error(msg);
             throw new VersionException(msg);

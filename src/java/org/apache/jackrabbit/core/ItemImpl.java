@@ -1110,8 +1110,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
         NodeImpl parentNode = (NodeImpl) getParent();
 
-        // check if versioning allows write (only cheap call)
-        if (!parentNode.isCheckedOut(false)) {
+        // verify that parent node is checked-out
+        if (!parentNode.internalIsCheckedOut()) {
             String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
             log.error(msg);
             throw new VersionException(msg);

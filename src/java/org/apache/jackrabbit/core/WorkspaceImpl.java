@@ -112,7 +112,7 @@ public class WorkspaceImpl implements Workspace {
         return rep;
     }
 
-    public LocalItemStateManager getItemStateManager() {
+    LocalItemStateManager getItemStateManager() {
         return stateMgr;
     }
 

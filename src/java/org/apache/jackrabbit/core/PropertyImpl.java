@@ -182,8 +182,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -235,8 +235,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -527,8 +527,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -574,8 +574,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -616,8 +616,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -669,8 +669,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -715,8 +715,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -768,8 +768,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -810,8 +810,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -864,8 +864,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -906,8 +906,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             String msg = "cannot set the value of a property of a checked-in node " + safeGetJCRPath();
             log.error(msg);
             throw new VersionException(msg);
@@ -954,8 +954,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
