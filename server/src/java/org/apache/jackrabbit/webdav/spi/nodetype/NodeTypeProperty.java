@@ -22,9 +22,7 @@ import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.jdom.Element;
 
 import javax.jcr.nodetype.NodeType;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * <code>NodeTypeProperty</code>...
@@ -71,8 +69,13 @@ public class NodeTypeProperty extends AbstractDavProperty {
         }
     }
 
-    public List getNodeTypeNames() {
-        ArrayList names = new ArrayList();
+    /**
+     * Return a set of nodetype names present in this property.
+     *
+     * @return set of nodetype names
+     */
+    public Set getNodeTypeNames() {
+        HashSet names = new HashSet();
         Object val = getValue();
         if (val instanceof NodeTypeElement[]) {
             NodeTypeElement[] elems = (NodeTypeElement[])val;

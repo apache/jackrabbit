@@ -39,8 +39,8 @@ import java.util.*;
  * <code>AbstractItemResource</code> covers common functionality for the various
  * resources, that represent a repository item.
  */
-abstract class AbstractItemResource extends AbstractResource implements DavResource,
-        SearchResource, DeltaVResource, ItemResourceConstants {
+abstract class AbstractItemResource extends AbstractResource implements
+    SearchResource, DeltaVResource, ItemResourceConstants {
 
     private static Logger log = Logger.getLogger(AbstractItemResource.class);
 
@@ -422,8 +422,30 @@ abstract class AbstractItemResource extends AbstractResource implements DavResou
             properties.add(new DefaultDavProperty(DeltaVConstants.CREATOR_DISPLAYNAME, null, true));
             properties.add(new DefaultDavProperty(DeltaVConstants.COMMENT, null, true));
 
+
+	    // 'workspace' property as defined by RFC 3253
+	    String workspaceHref = getWorkspaceHref();
+	    if (workspaceHref != null) {
+		properties.add(new HrefProperty(DeltaVConstants.WORKSPACE, workspaceHref, true));
+	    }
             // TODO: required supported-live-property-set
         }
+    }
+
+    /**
+     * @return href of the workspace or <code>null</code> if this resource
+     * does not represent a repository item.
+     */
+    private String getWorkspaceHref() {
+        String workspaceHref = null;
+	DavResourceLocator locator = getLocator();
+        if (locator != null && locator.getWorkspaceName() != null) {
+            workspaceHref = locator.getHref(isCollection());
+            if (locator.getResourcePath() != null) {
+                workspaceHref = workspaceHref.substring(workspaceHref.indexOf(locator.getResourcePath()));
+            }
+        }
+        return workspaceHref;
     }
 
     /**

@@ -25,7 +25,6 @@ import org.apache.jackrabbit.webdav.version.DeltaVServletRequest;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.spi.version.VersionItemCollection;
 import org.apache.jackrabbit.webdav.spi.version.VersionHistoryItemCollection;
-import org.apache.jackrabbit.webdav.spi.version.VersionControlledItemCollection;
 import org.apache.jackrabbit.webdav.spi.transaction.TxLockManagerImpl;
 
 import javax.jcr.*;
@@ -136,11 +135,12 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
         try {
             resource = createResourceForItem(locator, session);
         } catch (RepositoryException e) {
-            log.info("Creating resource for non-existing repository item...");
+            log.info("Creating resource for non-existing repository item ...");
             if (locator.isRootLocation()) {
                 resource =  new RootCollection(locator, session, this);
             } else {
-                throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to create resource for "+locator.getHref(false));
+		// todo: is this correct?
+		resource = new VersionControlledItemCollection(locator, session, this);
             }
         }
 

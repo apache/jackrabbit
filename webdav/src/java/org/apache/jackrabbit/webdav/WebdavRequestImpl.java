@@ -26,6 +26,7 @@ import org.apache.jackrabbit.webdav.observation.*;
 import org.apache.jackrabbit.webdav.version.*;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.ordering.*;
+import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.jdom.input.SAXBuilder;
 import org.jdom.JDOMException;
 import org.jdom.Document;
@@ -179,9 +180,7 @@ public class WebdavRequestImpl implements WebdavRequest {
      * @see DavServletRequest#getDepth(int)
      */
     public int getDepth(int defaultValue) {
-	String dHeader = httpRequest.getHeader(DavConstants.HEADER_DEPTH);
-	int depth = depthToInt(dHeader, defaultValue);
-	return depth;
+	return DepthHeader.parse(httpRequest.getHeader(DavConstants.HEADER_DEPTH), defaultValue).getDepth();
     }
 
     /**
@@ -245,9 +244,9 @@ public class WebdavRequestImpl implements WebdavRequest {
         Document requestDocument = null;
         // try to parse the request body
         try {
-            SAXBuilder builder = new SAXBuilder(false);
             InputStream in = httpRequest.getInputStream();
             if (in != null) {
+		SAXBuilder builder = new SAXBuilder(false);
                 requestDocument = builder.build(in);
             }
         } catch (IOException e) {
@@ -507,30 +506,8 @@ public class WebdavRequestImpl implements WebdavRequest {
 	}
 	return headerValue;
     }
-
-    /**
-     * Convert the String depth value to an integer.
-     *
-     * @param depth
-     * @param defaultValue
-     * @return integer representation of the given depth String or the given
-     * defaultValue if depth is <code>null</code> or invalid.
-     */
-    private static int depthToInt(String depth, int defaultValue) {
-        int d = defaultValue;
-        if (depth != null) {
-            if (depth.equalsIgnoreCase("infinity")) {
-                d = DavConstants.DEPTH_INFINITY;
-            } else if (depth.equals("0")) {
-                d = DavConstants.DEPTH_0;
-            } else if (depth.equals("1")) {
-                d = DavConstants.DEPTH_1;
-            }
-        }
-        return d;
-    }
-
-        //-----------------------------< TransactionDavServletRequest Interface >---
+    
+    //-----------------------------< TransactionDavServletRequest Interface >---
     /**
      *
      * @return

@@ -17,7 +17,6 @@ package org.apache.jackrabbit.webdav.spi;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.spi.version.VersionControlledItemCollection;
 
 /**
  * <code>RootItemCollection</code> represents the root node of the underlaying

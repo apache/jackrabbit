@@ -24,8 +24,6 @@ import org.apache.jackrabbit.webdav.transaction.TxLockManager;
 import org.apache.jackrabbit.webdav.spi.transaction.TxLockManagerImpl;
 import org.apache.jackrabbit.webdav.observation.*;
 import org.apache.jackrabbit.webdav.util.Text;
-import org.apache.jackrabbit.webdav.property.HrefProperty;
-import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.version.SupportedMethodSetProperty;
 import org.apache.jackrabbit.webdav.lock.*;
 import org.apache.jackrabbit.webdav.property.*;
@@ -416,27 +414,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         SubscriptionDiscovery subsDiscovery = subsMgr.getSubscriptionDiscovery(this);
         properties.add(subsDiscovery);
 
-        // 'workspace' property as defined by RFC 3253
-        String workspaceHref = getWorkspaceHref();
-        if (workspaceHref != null) {
-           properties.add(new HrefProperty(DeltaVConstants.WORKSPACE, workspaceHref, true));
-        }
         properties.add(new SupportedMethodSetProperty(getSupportedMethods().split(",\\s")));
-    }
-
-    /**
-     * @return href of the workspace or <code>null</code> if this resource
-     * does not represent a repository item.
-     */
-    private String getWorkspaceHref() {
-        String workspaceHref = null;
-        if (locator != null && locator.getWorkspaceName() != null) {
-            workspaceHref = locator.getHref(isCollection());
-            if (locator.getResourcePath() != null) {
-                workspaceHref = workspaceHref.substring(workspaceHref.indexOf(locator.getResourcePath()));
-            }
-        }
-        return workspaceHref;
     }
 
     /**

@@ -52,6 +52,7 @@ public interface DavConstants {
 
     //--------------------------------------------------------- Depth header ---
     public static final String HEADER_DEPTH = "Depth";
+    public static final String DEPTH_INFINITY_S = "infinity";
     public static final int DEPTH_INFINITY = Integer.MAX_VALUE;
     public static final int DEPTH_0 = 0;
     public static final int DEPTH_1 = 1;
