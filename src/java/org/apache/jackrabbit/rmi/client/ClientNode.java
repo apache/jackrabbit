@@ -99,7 +99,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public Node addNode(String path) throws RepositoryException {
         try {
-            return getFactory().getNode(getSession(), remote.addNode(path));
+            return getNode(getSession(), remote.addNode(path));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -109,7 +109,7 @@ public class ClientNode extends ClientItem implements Node {
     public Node addNode(String path, String type) throws RepositoryException {
         try {
             RemoteNode node = remote.addNode(path, type);
-            return getFactory().getNode(getSession(), node);
+            return getNode(getSession(), node);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -203,7 +203,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public Node getNode(String path) throws RepositoryException {
         try {
-            return getFactory().getNode(getSession(), remote.getNode(path));
+            return getNode(getSession(), remote.getNode(path));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -385,9 +385,11 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public Version checkin() throws RepositoryException {
-        // TODO Auto-generated method stub
-        // return null;
-        throw new UnsupportedRepositoryOperationException();
+        try {
+            return getFactory().getVersion(getSession(), remote.checkin());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -420,14 +422,20 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public void cancelMerge(Version version) throws RepositoryException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedRepositoryOperationException();
+        try {
+            remote.cancelMerge(version.getUUID());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public void doneMerge(Version version) throws RepositoryException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedRepositoryOperationException();
+        try {
+            remote.doneMerge(version.getUUID());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -462,15 +470,21 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public void restore(Version version, boolean removeExisting)
             throws RepositoryException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedRepositoryOperationException();
+        try {
+            remote.restoreByUUID(version.getUUID(), removeExisting);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public void restore(Version version, String path, boolean removeExisting)
             throws RepositoryException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedRepositoryOperationException();
+        try {
+            remote.restore(version.getUUID(), path, removeExisting);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -516,16 +530,20 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public VersionHistory getVersionHistory() throws RepositoryException {
-        // TODO Auto-generated method stub
-        // return null;
-        throw new UnsupportedRepositoryOperationException();
+        try {
+            return getFactory().getVersionHistory(getSession(), remote.getVersionHistory());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public Version getBaseVersion() throws RepositoryException {
-        // TODO Auto-generated method stub
-        // return null;
-        throw new UnsupportedRepositoryOperationException();
+        try {
+            return getFactory().getVersion(getSession(), remote.getBaseVersion());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */

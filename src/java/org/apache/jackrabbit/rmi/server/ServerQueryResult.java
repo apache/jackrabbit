@@ -82,7 +82,7 @@ public class ServerQueryResult extends ServerObject
         if (iterator != null) {
             RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
             for (int i = 0; iterator.hasNext(); i++) {
-                remotes[i] = getFactory().getRemoteNode(iterator.nextNode());
+                remotes[i] = getRemoteNode(iterator.nextNode());
             }
             return remotes;
         } else {

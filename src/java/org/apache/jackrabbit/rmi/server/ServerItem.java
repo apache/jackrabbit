@@ -104,7 +104,7 @@ public class ServerItem extends ServerObject implements RemoteItem {
     /** {@inheritDoc} */
     public RemoteNode getParent() throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteNode(item.getParent());
+            return getRemoteNode(item.getParent());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

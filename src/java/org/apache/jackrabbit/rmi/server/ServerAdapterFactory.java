@@ -35,6 +35,8 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
@@ -52,6 +54,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
+import org.apache.jackrabbit.rmi.remote.RemoteVersion;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
 /**
@@ -139,6 +143,23 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
         return new ServerNode(node, this);
     }
 
+    /**
+     * Creates a {@link ServerVersion ServerVersion} instance.
+     * {@inheritDoc}
+     */
+    public RemoteVersion getRemoteVersion(Version version) throws RemoteException {
+        return new ServerVersion(version, this);
+    }
+    
+    /**
+     * Creates a {@link ServerVersionHistory ServerVersionHistory} instance.
+     * {@inheritDoc}
+     */
+    public RemoteVersionHistory getRemoteVersionHistory(VersionHistory versionHistory)
+            throws RemoteException {
+        return new ServerVersionHistory(versionHistory, this);
+    }
+    
     /**
      * Creates a {@link ServerNodeType ServerNodeType} instance.
      * {@inheritDoc}

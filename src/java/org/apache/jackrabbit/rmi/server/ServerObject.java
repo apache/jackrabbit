@@ -46,7 +46,10 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -54,6 +57,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 
 /**
  * Base class for remote adapters. The purpose of this class is to
@@ -151,6 +155,9 @@ public class ServerObject extends UnicastRemoteObject {
      * method introspects the type of the local item and returns the
      * corresponding node, property, or item remote reference using the
      * remote adapter factory.
+     * <p>
+     * If the <code>item</code>, this method calls the
+     * {@link #getRemoteNode(Node)} to return the correct remote type.
      *
      * @param item local node, property, or item
      * @return remote node, property, or item reference
@@ -160,9 +167,30 @@ public class ServerObject extends UnicastRemoteObject {
         if (item instanceof Property) {
             return factory.getRemoteProperty((Property) item);
         } else if (item instanceof Node) {
-            return factory.getRemoteNode((Node) item);
+            return getRemoteNode((Node) item);
         } else {
             return factory.getRemoteItem(item);
+        }
+    }
+
+    /**
+     * Utility method for creating a remote reference for a local node.
+     * Unlike the factory method for creating remote node references, this
+     * method introspects the type of the local node and returns the
+     * corresponding node, version, or version history remote reference using
+     * the remote adapter factory.
+     *
+     * @param item local node, property, or item
+     * @return remote node, property, or item reference
+     * @throws RemoteException on RMI errors
+     */
+    protected RemoteNode getRemoteNode(Node node) throws RemoteException {
+        if (node instanceof Version) {
+            return factory.getRemoteVersion((Version) node);
+        } else if (node instanceof VersionHistory) {
+            return factory.getRemoteVersionHistory((VersionHistory) node);
+        } else {
+            return factory.getRemoteNode(node);
         }
     }
 
@@ -206,11 +234,59 @@ public class ServerObject extends UnicastRemoteObject {
         if (iterator != null) {
             RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
             for (int i = 0; iterator.hasNext(); i++) {
-                remotes[i] = factory.getRemoteNode(iterator.nextNode());
+                remotes[i] = getRemoteNode(iterator.nextNode());
             }
             return remotes;
         } else {
             return new RemoteNode[0]; // for safety
+        }
+    }
+
+    /**
+     * Utility method for creating an array of remote references for
+     * local versions. The remote references are created using the
+     * remote adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param versions local version array
+     * @return remote version array
+     * @throws RemoteException on RMI errors
+     */
+    protected RemoteVersion[] getRemoteVersionArray(Version[] versions)
+            throws RemoteException {
+        if (versions != null) {
+            RemoteVersion[] remotes = new RemoteVersion[versions.length];
+            for (int i = 0; i < remotes.length; i++) {
+                remotes[i] = factory.getRemoteVersion(versions[i]);
+            }
+            return remotes;
+        } else {
+            return new RemoteVersion[0]; // for safety
+        }
+    }
+
+    /**
+     * Utility method for creating an array of remote references for
+     * local versions. The remote references are created using the
+     * remote adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty iterator.
+     *
+     * @param iterator local version iterator
+     * @return remote version array
+     * @throws RemoteException on RMI errors
+     */
+    protected RemoteVersion[] getRemoteVersionArray(VersionIterator iterator)
+            throws RemoteException {
+        if (iterator != null) {
+            RemoteVersion[] remotes = new RemoteVersion[(int) iterator.getSize()];
+            for (int i = 0; iterator.hasNext(); i++) {
+                remotes[i] = factory.getRemoteVersion(iterator.nextVersion());
+            }
+            return remotes;
+        } else {
+            return new RemoteVersion[0]; // for safety
         }
     }
 

@@ -102,7 +102,7 @@ public class ClientItem extends ClientObject implements Item {
     /** {@inheritDoc} */
     public Node getParent() throws RepositoryException {
         try {
-            return getFactory().getNode(getSession(), remote.getParent());
+            return getNode(getSession(), remote.getParent());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

@@ -99,7 +99,7 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
             if (remotes != null) {
                 Node[] nodes = new Node[remotes.length];
                 for (int i = 0; i < nodes.length; i++) {
-                    nodes[i] = getFactory().getNode(session, remotes[i]);
+                    nodes[i] = getNode(session, remotes[i]);
                 }
                 return new ArrayNodeIterator(nodes);
             } else {

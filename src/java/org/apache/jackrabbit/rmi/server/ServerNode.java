@@ -21,8 +21,10 @@ import java.rmi.RemoteException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.lock.Lock;
+import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -30,6 +32,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
+import org.apache.jackrabbit.rmi.remote.RemoteVersion;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.Node Node} interface.
@@ -63,7 +67,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteNode addNode(String path)
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteNode(node.addNode(path));
+            return getRemoteNode(node.addNode(path));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -73,7 +77,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteNode addNode(String path, String type)
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteNode(node.addNode(path, type));
+            return getRemoteNode(node.addNode(path, type));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -219,7 +223,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteNode getNode(String path)
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteNode(node.getNode(path));
+            return getRemoteNode(node.getNode(path));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -307,6 +311,15 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
+    public RemoteVersion checkin() throws RepositoryException, RemoteException {
+        try {
+            return getFactory().getRemoteVersion(node.checkin());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
     public void checkout() throws RepositoryException, RemoteException {
         try {
             node.checkout();
@@ -345,10 +358,50 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
+    public void cancelMerge(String versionUUID)
+            throws RepositoryException, RemoteException {
+        try {
+            node.cancelMerge(getVersionByUUID(versionUUID));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
+    public void doneMerge(String versionUUID)
+            throws RepositoryException, RemoteException {
+        try {
+            node.doneMerge(getVersionByUUID(versionUUID));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
     public void restore(String version, boolean removeExisting)
             throws RepositoryException, RemoteException {
         try {
             node.restore(version, removeExisting);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
+    public void restoreByUUID(String versionUUID, boolean removeExisting)
+            throws RepositoryException, RemoteException {
+        try {
+            node.restore(getVersionByUUID(versionUUID), removeExisting);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
+    public void restore(String versionUUID, String path, boolean removeExisting)
+            throws RepositoryException, RemoteException {
+        try {
+            node.restore(getVersionByUUID(versionUUID), path, removeExisting);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -392,6 +445,26 @@ public class ServerNode extends ServerItem implements RemoteNode {
         }
     }
 
+    /** {@inheritDoc} */
+    public RemoteVersionHistory getVersionHistory()
+            throws RepositoryException, RemoteException {
+        try {
+            return getFactory().getRemoteVersionHistory(node.getVersionHistory());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
+    /** {@inheritDoc} */
+    public RemoteVersion getBaseVersion()
+            throws RepositoryException, RemoteException {
+        try {
+            return getFactory().getRemoteVersion(node.getBaseVersion());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
     /** {@inheritDoc} */
     public boolean isLocked() throws RepositoryException, RemoteException {
         try {
@@ -441,4 +514,33 @@ public class ServerNode extends ServerItem implements RemoteNode {
         }
     }
 
+    //---------- Implementation helper -----------------------------------------
+    
+    /**
+     * Returns the {@link Version} instance for the given UUID.
+     * 
+     * @param versionUUID The UUID of the version.
+     * 
+     * @return The version node.
+     * 
+     * @throws RepositoryException if an error occurrs accessing the version
+     *      node or if the UUID does not denote a version.
+     */
+    protected Version getVersionByUUID(String versionUUID)
+            throws RepositoryException {
+        
+        // get the version node by its UUID from the version history's session
+        Session session = node.getSession();
+        Node versionNode = session.getNodeByUUID(versionUUID);
+        
+        // check whether the node is a session, which it should be according
+        // to the spec (methods returning nodes should automatically return
+        // the correct type).
+        if (versionNode instanceof Version) {
+            return (Version) versionNode;
+        }
+        
+        // otherwise fail
+        throw new RepositoryException("Cannot find version " + versionUUID);
+    }
 }

@@ -136,7 +136,7 @@ public class ClientSession extends ClientObject implements Session {
     /** {@inheritDoc} */
     public Node getRootNode() throws RepositoryException {
         try {
-            return getFactory().getNode(this, remote.getRootNode());
+            return getNode(this, remote.getRootNode());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -145,7 +145,7 @@ public class ClientSession extends ClientObject implements Session {
     /** {@inheritDoc} */
     public Node getNodeByUUID(String uuid) throws RepositoryException {
         try {
-            return getFactory().getNode(this, remote.getNodeByUUID(uuid));
+            return getNode(this, remote.getNodeByUUID(uuid));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
