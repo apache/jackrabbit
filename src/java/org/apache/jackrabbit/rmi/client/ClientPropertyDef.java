@@ -44,8 +44,8 @@ public class ClientPropertyDef extends ClientItemDef implements PropertyDef {
      * @param remote remote property definition
      * @param factory local adapter factory
      */
-    public ClientPropertyDef(RemotePropertyDef remote,
-            LocalAdapterFactory factory) {
+    public ClientPropertyDef(
+            RemotePropertyDef remote, LocalAdapterFactory factory) {
         super(remote, factory);
         this.remote = remote;
     }

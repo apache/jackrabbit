@@ -19,8 +19,6 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 
 import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -51,8 +49,9 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
      */
-    public ServerRepository(Repository repository,
-            RemoteAdapterFactory factory) throws RemoteException {
+    public ServerRepository(
+            Repository repository, RemoteAdapterFactory factory)
+            throws RemoteException {
         super(factory);
         this.repository = repository;
     }
@@ -68,8 +67,7 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
     }
 
     /** {@inheritDoc} */
-    public RemoteSession login() throws LoginException,
-            NoSuchWorkspaceException, RepositoryException, RemoteException {
+    public RemoteSession login() throws RepositoryException, RemoteException {
         try {
             Session session = repository.login();
             return getFactory().getRemoteSession(session);
@@ -79,8 +77,8 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
     }
 
     /** {@inheritDoc} */
-    public RemoteSession login(String workspace) throws LoginException,
-            NoSuchWorkspaceException, RepositoryException, RemoteException {
+    public RemoteSession login(String workspace)
+            throws RepositoryException, RemoteException {
         try {
             Session session = repository.login(workspace);
             return getFactory().getRemoteSession(session);
@@ -90,8 +88,8 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
     }
 
     /** {@inheritDoc} */
-    public RemoteSession login(Credentials credentials) throws LoginException,
-            NoSuchWorkspaceException, RepositoryException, RemoteException {
+    public RemoteSession login(Credentials credentials)
+            throws RepositoryException, RemoteException {
         try {
             Session session = repository.login(credentials);
             return getFactory().getRemoteSession(session);
@@ -102,8 +100,7 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
 
     /** {@inheritDoc} */
     public RemoteSession login(Credentials credentials, String workspace)
-            throws LoginException, NoSuchWorkspaceException,
-            RepositoryException, RemoteException {
+            throws RepositoryException, RemoteException {
         try {
             Session session = repository.login(credentials, workspace);
             return getFactory().getRemoteSession(session);

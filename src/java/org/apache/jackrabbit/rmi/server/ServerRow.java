@@ -18,7 +18,6 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.Row;
@@ -41,9 +40,9 @@ public class ServerRow extends ServerObject implements RemoteRow {
     private Row row;
 
     /**
-     * Creates a remote adapter for the given local <code>Row</code>.
+     * Creates a remote adapter for the given local query row.
      *
-     * @param row local <code>Row</code>
+     * @param row local query row
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
      */
@@ -59,7 +58,8 @@ public class ServerRow extends ServerObject implements RemoteRow {
     }
 
     /** {@inheritDoc} */
-    public Value getValue(String propertyName) throws ItemNotFoundException, RepositoryException, RemoteException {
+    public Value getValue(String propertyName)
+            throws RepositoryException, RemoteException {
         return row.getValue(propertyName);
     }
 }

@@ -20,7 +20,6 @@ import java.rmi.RemoteException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
@@ -60,7 +59,7 @@ public class ServerQueryManager extends ServerObject
 
     /** {@inheritDoc} */
     public RemoteQuery createQuery(String statement, String language)
-            throws InvalidQueryException, RepositoryException, RemoteException {
+            throws RepositoryException, RemoteException {
         try {
             Query query = manager.createQuery(statement, language);
             return getFactory().getRemoteQuery(query);
@@ -71,7 +70,7 @@ public class ServerQueryManager extends ServerObject
 
     /** {@inheritDoc} */
     public RemoteQuery getQuery(String absPath)
-            throws InvalidQueryException, RepositoryException, RemoteException {
+            throws RepositoryException, RemoteException {
         try {
             Node node = null; // TODO
             return getFactory().getRemoteQuery(manager.getQuery(node));

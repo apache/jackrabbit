@@ -21,7 +21,6 @@ import java.rmi.RemoteException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 
@@ -100,7 +99,7 @@ public class ClientLock implements Lock {
     }
 
     /** {@inheritDoc} */
-    public void refresh() throws LockException, RepositoryException {
+    public void refresh() throws RepositoryException {
         try {
             remote.refresh();
         } catch (RemoteException ex) {

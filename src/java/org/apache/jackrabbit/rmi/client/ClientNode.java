@@ -20,39 +20,26 @@ import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.Calendar;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.BinaryValue;
 import javax.jcr.BooleanValue;
 import javax.jcr.DateValue;
 import javax.jcr.DoubleValue;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.LongValue;
-import javax.jcr.MergeException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.StringValue;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -82,8 +69,8 @@ public class ClientNode extends ClientItem implements Node {
      * @param remote  remote node
      * @param factory local adapter factory
      */
-    public ClientNode(Session session, RemoteNode remote,
-            LocalAdapterFactory factory) {
+    public ClientNode(
+            Session session, RemoteNode remote, LocalAdapterFactory factory) {
         super(session, remote, factory);
         this.remote = remote;
     }
@@ -109,9 +96,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public Node addNode(String path) throws ItemExistsException,
-            PathNotFoundException, ConstraintViolationException,
-            RepositoryException {
+    public Node addNode(String path) throws RepositoryException {
         try {
             return getFactory().getNode(getSession(), remote.addNode(path));
         } catch (RemoteException ex) {
@@ -120,9 +105,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public Node addNode(String path, String type) throws ItemExistsException,
-            PathNotFoundException, NoSuchNodeTypeException,
-            ConstraintViolationException, RepositoryException {
+    public Node addNode(String path, String type) throws RepositoryException {
         try {
             RemoteNode node = remote.addNode(path, type);
             return getFactory().getNode(getSession(), node);
@@ -132,10 +115,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void orderBefore(String src, String dst) throws
-            UnsupportedRepositoryOperationException,
-            ConstraintViolationException, ItemNotFoundException,
-            RepositoryException {
+    public void orderBefore(String src, String dst) throws RepositoryException {
         try {
             remote.orderBefore(src, dst);
         } catch (RemoteException ex) {
@@ -145,7 +125,7 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public Property setProperty(String name, Value value)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         try {
             RemoteProperty property =
                 remote.setProperty(name, new SerialValue(value));
@@ -157,7 +137,7 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public Property setProperty(String name, Value[] values)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         try {
             Value[] serials = SerialValue.makeSerialValueArray(values);
             RemoteProperty property = remote.setProperty(name, serials);
@@ -169,7 +149,7 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public Property setProperty(String name, String[] strings)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         Value[] values = new Value[strings.length];
         for (int i = 0; i < strings.length; i++) {
             values[i] = new StringValue(strings[i]);
@@ -179,49 +159,48 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public Property setProperty(String name, String value)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         return setProperty(name, new StringValue(value));
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, InputStream value)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         return setProperty(name, new BinaryValue(value));
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, boolean value)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         return setProperty(name, new BooleanValue(value));
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, double value)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         return setProperty(name, new DoubleValue(value));
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, long value)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         return setProperty(name, new LongValue(value));
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, Calendar value)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         return setProperty(name, new DateValue(value));
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, Node value)
-            throws ValueFormatException, RepositoryException {
+            throws RepositoryException {
         return setProperty(name, new ReferenceValue(value));
     }
 
     /** {@inheritDoc} */
-    public Node getNode(String path) throws PathNotFoundException,
-            RepositoryException {
+    public Node getNode(String path) throws RepositoryException {
         try {
             return getFactory().getNode(getSession(), remote.getNode(path));
         } catch (RemoteException ex) {
@@ -248,8 +227,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public Property getProperty(String path) throws PathNotFoundException,
-            RepositoryException {
+    public Property getProperty(String path) throws RepositoryException {
         try {
             RemoteProperty property = remote.getProperty(path);
             return getFactory().getProperty(getSession(), property);
@@ -268,8 +246,8 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public PropertyIterator getProperties(String pattern) throws
-            RepositoryException {
+    public PropertyIterator getProperties(String pattern)
+            throws RepositoryException {
         try {
             RemoteProperty[] properties = remote.getProperties(pattern);
             return getPropertyIterator(getSession(), properties);
@@ -279,8 +257,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public Item getPrimaryItem() throws ItemNotFoundException,
-            RepositoryException {
+    public Item getPrimaryItem() throws RepositoryException {
         try {
             return getItem(getSession(), remote.getPrimaryItem());
         } catch (RemoteException ex) {
@@ -289,8 +266,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public String getUUID() throws UnsupportedRepositoryOperationException,
-            RepositoryException {
+    public String getUUID() throws RepositoryException {
         try {
             return remote.getUUID();
         } catch (RemoteException ex) {
@@ -371,8 +347,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void addMixin(String name) throws NoSuchNodeTypeException,
-            ConstraintViolationException, RepositoryException {
+    public void addMixin(String name) throws RepositoryException {
         try {
             remote.addMixin(name);
         } catch (RemoteException ex) {
@@ -381,8 +356,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void removeMixin(String name) throws NoSuchNodeTypeException,
-            ConstraintViolationException, RepositoryException {
+    public void removeMixin(String name) throws RepositoryException {
         try {
             remote.removeMixin(name);
         } catch (RemoteException ex) {
@@ -409,16 +383,14 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public Version checkin() throws VersionException,
-            UnsupportedRepositoryOperationException, RepositoryException {
+    public Version checkin() throws RepositoryException {
         // TODO Auto-generated method stub
         // return null;
         throw new UnsupportedOperationException();
     }
 
     /** {@inheritDoc} */
-    public void checkout() throws UnsupportedRepositoryOperationException,
-            RepositoryException {
+    public void checkout() throws RepositoryException {
         try {
             remote.checkout();
         } catch (RemoteException ex) {
@@ -427,8 +399,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void update(String workspace) throws NoSuchWorkspaceException,
-            AccessDeniedException, RepositoryException {
+    public void update(String workspace) throws RepositoryException {
         try {
             remote.update(workspace);
         } catch (RemoteException ex) {
@@ -437,9 +408,8 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void merge(String workspace, boolean bestEffort) throws
-            UnsupportedRepositoryOperationException, NoSuchWorkspaceException,
-            AccessDeniedException, MergeException, RepositoryException {
+    public void merge(String workspace, boolean bestEffort)
+            throws RepositoryException {
         try {
             remote.merge(workspace, bestEffort);
         } catch (RemoteException ex) {
@@ -448,25 +418,20 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void cancelMerge(Version version) throws VersionException,
-            InvalidItemStateException, UnsupportedRepositoryOperationException,
-            RepositoryException {
+    public void cancelMerge(Version version) throws RepositoryException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
     /** {@inheritDoc} */
-    public void doneMerge(Version version) throws VersionException,
-            InvalidItemStateException, UnsupportedRepositoryOperationException,
-            RepositoryException {
+    public void doneMerge(Version version) throws RepositoryException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
     /** {@inheritDoc} */
-    public String getCorrespondingNodePath(String workspace) throws
-            ItemNotFoundException, NoSuchWorkspaceException,
-            AccessDeniedException, RepositoryException {
+    public String getCorrespondingNodePath(String workspace)
+            throws RepositoryException {
         try {
             return remote.getCorrespondingNodePath(workspace);
         } catch (RemoteException ex) {
@@ -484,10 +449,8 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void restore(String version, boolean removeExisting) throws
-            VersionException, ItemExistsException,
-            UnsupportedRepositoryOperationException, LockException,
-            InvalidItemStateException, RepositoryException {
+    public void restore(String version, boolean removeExisting)
+            throws RepositoryException {
         try {
             remote.restore(version, removeExisting);
         } catch (RemoteException ex) {
@@ -496,29 +459,22 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void restore(Version version, boolean removeExisting) throws
-            VersionException, ItemExistsException,
-            UnsupportedRepositoryOperationException, LockException,
-            RepositoryException {
+    public void restore(Version version, boolean removeExisting)
+            throws RepositoryException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
     /** {@inheritDoc} */
     public void restore(Version version, String path, boolean removeExisting)
-            throws PathNotFoundException, ItemExistsException,
-            VersionException, ConstraintViolationException,
-            UnsupportedRepositoryOperationException, LockException,
-            InvalidItemStateException, RepositoryException {
+            throws RepositoryException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
     /** {@inheritDoc} */
-    public void restoreByLabel(String label, boolean removeExisting) throws
-            VersionException, ItemExistsException,
-            UnsupportedRepositoryOperationException, LockException,
-            InvalidItemStateException, RepositoryException {
+    public void restoreByLabel(String label, boolean removeExisting)
+            throws RepositoryException {
         try {
             remote.restoreByLabel(label, removeExisting);
         } catch (RemoteException ex) {
@@ -528,8 +484,7 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public Property setProperty(String name, String[] strings, int type)
-            throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            throws RepositoryException {
         Value[] values = new Value[strings.length];
         for (int i = 0; i < strings.length; i++) {
             values[i] = new StringValue(strings[i]);
@@ -539,8 +494,7 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public Property setProperty(String name, Value[] values, int type)
-            throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            throws RepositoryException {
         try {
             Value[] serials = SerialValue.makeSerialValueArray(values);
             RemoteProperty property = remote.setProperty(name, serials, type);
@@ -551,8 +505,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public boolean isCheckedOut() throws
-            UnsupportedRepositoryOperationException, RepositoryException {
+    public boolean isCheckedOut() throws RepositoryException {
         try {
             return remote.isCheckedOut();
         } catch (RemoteException ex) {
@@ -561,16 +514,14 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public VersionHistory getVersionHistory()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+    public VersionHistory getVersionHistory() throws RepositoryException {
         // TODO Auto-generated method stub
         // return null;
         throw new UnsupportedOperationException();
     }
 
     /** {@inheritDoc} */
-    public Version getBaseVersion()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+    public Version getBaseVersion() throws RepositoryException {
         // TODO Auto-generated method stub
         // return null;
         throw new UnsupportedOperationException();
@@ -578,8 +529,7 @@ public class ClientNode extends ClientItem implements Node {
 
     /** {@inheritDoc} */
     public Lock lock(boolean isDeep, boolean isSessionScoped)
-            throws UnsupportedRepositoryOperationException, LockException,
-            AccessDeniedException, RepositoryException {
+            throws RepositoryException {
         try {
             RemoteLock lock = remote.lock(isDeep, isSessionScoped);
             return getFactory().getLock(this, lock);
@@ -589,8 +539,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public Lock getLock() throws UnsupportedRepositoryOperationException,
-            LockException, AccessDeniedException, RepositoryException {
+    public Lock getLock() throws RepositoryException {
         try {
             return getFactory().getLock(this, remote.getLock());
         } catch (RemoteException ex) {
@@ -599,8 +548,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void unlock() throws UnsupportedRepositoryOperationException,
-            LockException, AccessDeniedException, RepositoryException {
+    public void unlock() throws RepositoryException {
         try {
             remote.unlock();
         } catch (RemoteException ex) {

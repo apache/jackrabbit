@@ -20,23 +20,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidSerializedDataException;
-import javax.jcr.ItemExistsException;
 import javax.jcr.NamespaceRegistry;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
-import javax.jcr.query.QueryManager;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
-import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
+import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
 /**
  * Remote adapter for the JCR {@link Workspace Workspace} interface.
@@ -71,9 +64,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
 
     /** {@inheritDoc} */
     public void copy(String from, String to)
-            throws ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException,
-            RemoteException {
+            throws RepositoryException, RemoteException {
         try {
             workspace.copy(from, to);
         } catch (RepositoryException ex) {
@@ -83,9 +74,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
 
     /** {@inheritDoc} */
     public void copy(String from, String to, String workspace)
-            throws NoSuchWorkspaceException, ConstraintViolationException,
-            AccessDeniedException, PathNotFoundException, ItemExistsException,
-            RepositoryException, RemoteException {
+            throws RepositoryException, RemoteException {
         try {
             this.workspace.copy(from, to, workspace);
         } catch (RepositoryException ex) {
@@ -94,11 +83,9 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
     }
 
     /** {@inheritDoc} */
-    public void clone(String workspace, String from, String to,
-            boolean removeExisting) throws NoSuchWorkspaceException,
-            ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException,
-            RemoteException {
+    public void clone(
+            String workspace, String from, String to, boolean removeExisting)
+            throws RepositoryException, RemoteException {
         try {
             this.workspace.clone(workspace, from, to, removeExisting);
         } catch (RepositoryException ex) {
@@ -108,9 +95,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
 
     /** {@inheritDoc} */
     public void move(String from, String to)
-            throws ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException,
-            RemoteException {
+            throws RepositoryException, RemoteException {
         try {
             workspace.move(from, to);
         } catch (RepositoryException ex) {
@@ -152,8 +137,8 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
     }
 
     /** {@inheritDoc} */
-    public String[] getAccessibleWorkspaceNames() throws RepositoryException,
-            RemoteException {
+    public String[] getAccessibleWorkspaceNames()
+            throws RepositoryException, RemoteException {
         try {
             return workspace.getAccessibleWorkspaceNames();
         } catch (RepositoryException ex) {
@@ -163,11 +148,10 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
 
     /** {@inheritDoc} */
     public void importXML(String path, byte[] xml, int uuidBehaviour)
-            throws IOException, PathNotFoundException, ItemExistsException,
-            ConstraintViolationException, InvalidSerializedDataException,
-            LockException, RepositoryException, RemoteException {
+            throws IOException, RepositoryException, RemoteException {
         try {
-            workspace.importXML(path, new ByteArrayInputStream(xml), uuidBehaviour);
+            workspace.importXML(
+                    path, new ByteArrayInputStream(xml), uuidBehaviour);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

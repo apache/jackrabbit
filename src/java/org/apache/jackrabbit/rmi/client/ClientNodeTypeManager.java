@@ -19,7 +19,6 @@ package org.apache.jackrabbit.rmi.client;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -49,15 +48,14 @@ public class ClientNodeTypeManager extends ClientObject
      * @param remote remote node type manager
      * @param factory local adapter factory
      */
-    public ClientNodeTypeManager(RemoteNodeTypeManager remote,
-            LocalAdapterFactory factory) {
+    public ClientNodeTypeManager(
+            RemoteNodeTypeManager remote, LocalAdapterFactory factory) {
         super(factory);
         this.remote = remote;
     }
 
     /** {@inheritDoc} */
-    public NodeType getNodeType(String name) throws NoSuchNodeTypeException,
-            RepositoryException {
+    public NodeType getNodeType(String name) throws RepositoryException {
         try {
             return getFactory().getNodeType(remote.getNodeType(name));
         } catch (RemoteException ex) {

@@ -18,18 +18,12 @@ package org.apache.jackrabbit.rmi.client;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 
@@ -97,8 +91,7 @@ public class ClientItem extends ClientObject implements Item {
     }
 
     /** {@inheritDoc} */
-    public Item getAncestor(int level) throws ItemNotFoundException,
-            AccessDeniedException, RepositoryException {
+    public Item getAncestor(int level) throws RepositoryException {
         try {
             return getItem(getSession(), remote.getAncestor(level));
         } catch (RemoteException ex) {
@@ -107,8 +100,7 @@ public class ClientItem extends ClientObject implements Item {
     }
 
     /** {@inheritDoc} */
-    public Node getParent() throws ItemNotFoundException,
-            AccessDeniedException, RepositoryException {
+    public Node getParent() throws RepositoryException {
         try {
             return getFactory().getNode(getSession(), remote.getParent());
         } catch (RemoteException ex) {
@@ -196,9 +188,7 @@ public class ClientItem extends ClientObject implements Item {
     }
 
     /** {@inheritDoc} */
-    public void save() throws AccessDeniedException, LockException,
-            ConstraintViolationException, InvalidItemStateException,
-            ReferentialIntegrityException, RepositoryException {
+    public void save() throws RepositoryException {
         try {
             remote.save();
         } catch (RemoteException ex) {
@@ -207,8 +197,7 @@ public class ClientItem extends ClientObject implements Item {
     }
 
     /** {@inheritDoc} */
-    public void refresh(boolean keepChanges) throws InvalidItemStateException,
-            RepositoryException {
+    public void refresh(boolean keepChanges) throws RepositoryException {
         try {
             remote.refresh(keepChanges);
         } catch (RemoteException ex) {

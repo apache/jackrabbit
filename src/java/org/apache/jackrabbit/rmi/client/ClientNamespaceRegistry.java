@@ -18,7 +18,6 @@ package org.apache.jackrabbit.rmi.client;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
@@ -47,15 +46,15 @@ public class ClientNamespaceRegistry extends ClientObject implements
      * @param remote remote namespace registry
      * @param factory local adapter factory
      */
-    public ClientNamespaceRegistry(RemoteNamespaceRegistry remote,
-            LocalAdapterFactory factory) {
+    public ClientNamespaceRegistry(
+            RemoteNamespaceRegistry remote, LocalAdapterFactory factory) {
         super(factory);
         this.remote = remote;
     }
 
     /** {@inheritDoc} */
     public void registerNamespace(String prefix, String uri)
-            throws NamespaceException, RepositoryException {
+            throws RepositoryException {
         try {
             remote.registerNamespace(prefix, uri);
         } catch (RemoteException ex) {
@@ -64,8 +63,7 @@ public class ClientNamespaceRegistry extends ClientObject implements
     }
 
     /** {@inheritDoc} */
-    public void unregisterNamespace(String prefix) throws NamespaceException,
-            RepositoryException {
+    public void unregisterNamespace(String prefix) throws RepositoryException {
         try {
             remote.unregisterNamespace(prefix);
         } catch (RemoteException ex) {
@@ -92,8 +90,7 @@ public class ClientNamespaceRegistry extends ClientObject implements
     }
 
     /** {@inheritDoc} */
-    public String getURI(String prefix) throws NamespaceException,
-            RepositoryException {
+    public String getURI(String prefix) throws RepositoryException {
         try {
             return remote.getURI(prefix);
         } catch (RemoteException ex) {
@@ -102,8 +99,7 @@ public class ClientNamespaceRegistry extends ClientObject implements
     }
 
     /** {@inheritDoc} */
-    public String getPrefix(String uri) throws NamespaceException,
-            RepositoryException {
+    public String getPrefix(String uri) throws RepositoryException {
         try {
             return remote.getPrefix(uri);
         } catch (RemoteException ex) {

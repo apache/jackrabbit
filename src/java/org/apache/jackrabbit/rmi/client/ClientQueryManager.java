@@ -21,7 +21,6 @@ import java.rmi.RemoteException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
@@ -52,7 +51,8 @@ public class ClientQueryManager extends ClientObject implements QueryManager {
      * @param remote remote query manager
      * @param factory adapter factory
      */
-    public ClientQueryManager(Session session, RemoteQueryManager remote,
+    public ClientQueryManager(
+            Session session, RemoteQueryManager remote,
             LocalAdapterFactory factory) {
         super(factory);
         this.session = session;
@@ -61,7 +61,7 @@ public class ClientQueryManager extends ClientObject implements QueryManager {
 
     /** {@inheritDoc} */
     public Query createQuery(String statement, String language)
-            throws InvalidQueryException, RepositoryException {
+            throws  RepositoryException {
         try {
             RemoteQuery query = remote.createQuery(statement, language);
             return getFactory().getQuery(session, query);
@@ -71,8 +71,7 @@ public class ClientQueryManager extends ClientObject implements QueryManager {
     }
 
     /** {@inheritDoc} */
-    public Query getQuery(Node node)
-            throws InvalidQueryException, RepositoryException {
+    public Query getQuery(Node node) throws RepositoryException {
         try {
             // TODO fix this remote node dereferencing hack
             RemoteQuery query = remote.getQuery(node.getPath());

@@ -19,7 +19,6 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeTypeManager;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
@@ -58,8 +57,8 @@ public class ServerNodeTypeManager extends ServerObject
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeType getNodeType(String name) throws
-            NoSuchNodeTypeException, RepositoryException, RemoteException {
+    public RemoteNodeType getNodeType(String name)
+            throws RepositoryException, RemoteException {
         try {
             return getFactory().getRemoteNodeType(manager.getNodeType(name));
         } catch (RepositoryException ex) {
@@ -68,8 +67,8 @@ public class ServerNodeTypeManager extends ServerObject
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeType[] getAllNodeTypes() throws RepositoryException,
-            RemoteException {
+    public RemoteNodeType[] getAllNodeTypes()
+            throws RepositoryException, RemoteException {
         try {
             return getRemoteNodeTypeArray(manager.getAllNodeTypes());
         } catch (RepositoryException ex) {
@@ -78,8 +77,8 @@ public class ServerNodeTypeManager extends ServerObject
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeType[] getPrimaryNodeTypes() throws RepositoryException,
-            RemoteException {
+    public RemoteNodeType[] getPrimaryNodeTypes()
+            throws RepositoryException, RemoteException {
         try {
             return getRemoteNodeTypeArray(manager.getPrimaryNodeTypes());
         } catch (RepositoryException ex) {
@@ -88,8 +87,8 @@ public class ServerNodeTypeManager extends ServerObject
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeType[] getMixinNodeTypes() throws RepositoryException,
-            RemoteException {
+    public RemoteNodeType[] getMixinNodeTypes()
+            throws RepositoryException, RemoteException {
         try {
             return getRemoteNodeTypeArray(manager.getMixinNodeTypes());
         } catch (RepositoryException ex) {

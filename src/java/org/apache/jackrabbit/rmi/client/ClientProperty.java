@@ -33,7 +33,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.StringValue;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.PropertyDef;
 
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
@@ -61,7 +60,8 @@ public class ClientProperty extends ClientItem implements Property {
      * @param remote  remote property
      * @param factory local adapter factory
      */
-    public ClientProperty(Session session, RemoteProperty remote,
+    public ClientProperty(
+            Session session, RemoteProperty remote,
             LocalAdapterFactory factory) {
         super(session, remote, factory);
         this.remote = remote;
@@ -84,8 +84,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public boolean getBoolean() throws ValueFormatException,
-            RepositoryException {
+    public boolean getBoolean() throws RepositoryException {
         return getValue().getBoolean();
     }
 
@@ -95,7 +94,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public Calendar getDate() throws ValueFormatException, RepositoryException {
+    public Calendar getDate() throws RepositoryException {
         return getValue().getDate();
     }
 
@@ -105,7 +104,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public double getDouble() throws ValueFormatException, RepositoryException {
+    public double getDouble() throws RepositoryException {
         return getValue().getDouble();
     }
 
@@ -115,7 +114,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public long getLong() throws ValueFormatException, RepositoryException {
+    public long getLong() throws RepositoryException {
         return getValue().getLong();
     }
 
@@ -125,8 +124,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public InputStream getStream() throws ValueFormatException,
-            RepositoryException {
+    public InputStream getStream() throws RepositoryException {
         return getValue().getStream();
     }
 
@@ -136,12 +134,12 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public String getString() throws ValueFormatException, RepositoryException {
+    public String getString() throws RepositoryException {
         return getValue().getString();
     }
 
     /** {@inheritDoc} */
-    public Value getValue() throws ValueFormatException, RepositoryException {
+    public Value getValue() throws RepositoryException {
         try {
             return remote.getValue();
         } catch (RemoteException ex) {
@@ -150,7 +148,7 @@ public class ClientProperty extends ClientItem implements Property {
     }
 
     /** {@inheritDoc} */
-    public Value[] getValues() throws ValueFormatException, RepositoryException {
+    public Value[] getValues() throws RepositoryException {
         try {
             return remote.getValues();
         } catch (RemoteException ex) {
@@ -164,8 +162,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public void setValue(boolean value) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(boolean value) throws RepositoryException {
         setValue(new BooleanValue(value));
     }
 
@@ -175,8 +172,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public void setValue(Calendar value) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(Calendar value) throws RepositoryException {
         setValue(new DateValue(value));
     }
 
@@ -186,8 +182,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public void setValue(double value) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(double value) throws RepositoryException {
         setValue(new DoubleValue(value));
     }
 
@@ -197,8 +192,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public void setValue(InputStream value) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(InputStream value) throws RepositoryException {
         setValue(new BinaryValue(value));
     }
 
@@ -208,8 +202,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public void setValue(long value) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(long value) throws RepositoryException {
         setValue(new LongValue(value));
     }
 
@@ -219,8 +212,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public void setValue(Node value) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(Node value) throws RepositoryException {
         setValue(new ReferenceValue(value));
     }
 
@@ -230,8 +222,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public void setValue(String value) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(String value) throws RepositoryException {
         setValue(new StringValue(value));
     }
 
@@ -241,8 +232,7 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public void setValue(String[] strings) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(String[] strings) throws RepositoryException {
         Value[] values = new Value[strings.length];
         for (int i = 0; i < strings.length; i++) {
             values[i] = new StringValue(strings[i]);
@@ -251,8 +241,7 @@ public class ClientProperty extends ClientItem implements Property {
     }
 
     /** {@inheritDoc} */
-    public void setValue(Value value) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(Value value) throws RepositoryException {
         try {
             remote.setValue(new SerialValue(value));
         } catch (RemoteException ex) {
@@ -261,8 +250,7 @@ public class ClientProperty extends ClientItem implements Property {
     }
 
     /** {@inheritDoc} */
-    public void setValue(Value[] values) throws ValueFormatException,
-            RepositoryException {
+    public void setValue(Value[] values) throws RepositoryException {
         try {
             remote.setValue(SerialValue.makeSerialValueArray(values));
         } catch (RemoteException ex) {
@@ -277,12 +265,12 @@ public class ClientProperty extends ClientItem implements Property {
      *
      * {@inheritDoc}
      */
-    public Node getNode() throws ValueFormatException, RepositoryException {
+    public Node getNode() throws RepositoryException {
         return getSession().getNodeByUUID(getString());
     }
 
     /** {@inheritDoc} */
-    public long getLength() throws ValueFormatException, RepositoryException {
+    public long getLength() throws RepositoryException {
         try {
             return remote.getLength();
         } catch (RemoteException ex) {
@@ -291,7 +279,7 @@ public class ClientProperty extends ClientItem implements Property {
     }
 
     /** {@inheritDoc} */
-    public long[] getLengths() throws ValueFormatException, RepositoryException {
+    public long[] getLengths() throws RepositoryException {
         try {
             return remote.getLengths();
         } catch (RemoteException ex) {
@@ -316,4 +304,5 @@ public class ClientProperty extends ClientItem implements Property {
             throw new RemoteRepositoryException(ex);
         }
     }
+
 }

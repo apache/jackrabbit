@@ -97,7 +97,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * {@inheritDoc}
      */
     public RemoteNamespaceRegistry getRemoteNamespaceRegistry(
-            NamespaceRegistry registry) throws RemoteException {
+            NamespaceRegistry registry)
+            throws RemoteException {
         return new ServerNamespaceRegistry(registry, this);
     }
 
@@ -106,7 +107,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * {@inheritDoc}
      */
     public RemoteNodeTypeManager getRemoteNodeTypeManager(
-            NodeTypeManager manager) throws RemoteException {
+            NodeTypeManager manager)
+            throws RemoteException {
         return new ServerNodeTypeManager(manager, this);
     }
 

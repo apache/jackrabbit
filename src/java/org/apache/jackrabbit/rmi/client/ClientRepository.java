@@ -19,8 +19,6 @@ package org.apache.jackrabbit.rmi.client;
 import java.rmi.RemoteException;
 
 import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -74,8 +72,7 @@ public class ClientRepository extends ClientObject implements Repository {
     }
 
     /** {@inheritDoc} */
-    public Session login() throws LoginException, NoSuchWorkspaceException,
-            RepositoryException {
+    public Session login() throws RepositoryException {
         try {
             RemoteSession session = remote.login();
             return getFactory().getSession(this, session);
@@ -85,8 +82,7 @@ public class ClientRepository extends ClientObject implements Repository {
     }
 
     /** {@inheritDoc} */
-    public Session login(String workspace) throws LoginException,
-            NoSuchWorkspaceException, RepositoryException {
+    public Session login(String workspace) throws RepositoryException {
         try {
             RemoteSession session = remote.login(workspace);
             return getFactory().getSession(this, session);
@@ -96,8 +92,7 @@ public class ClientRepository extends ClientObject implements Repository {
     }
 
     /** {@inheritDoc} */
-    public Session login(Credentials credentials) throws LoginException,
-            NoSuchWorkspaceException, RepositoryException {
+    public Session login(Credentials credentials) throws RepositoryException {
         try {
             RemoteSession session = remote.login(credentials);
             return getFactory().getSession(this, session);
@@ -107,8 +102,8 @@ public class ClientRepository extends ClientObject implements Repository {
     }
 
     /** {@inheritDoc} */
-    public Session login(Credentials credentials, String workspace) throws
-            LoginException, NoSuchWorkspaceException, RepositoryException {
+    public Session login(Credentials credentials, String workspace)
+            throws RepositoryException {
         try {
             RemoteSession session = remote.login(credentials, workspace);
             return getFactory().getSession(this, session);
