@@ -58,6 +58,7 @@ public class Test {
         // set up the environment for creating the initial context
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
+        env.put(Context.PROVIDER_URL, "localhost");
         InitialContext ctx = new InitialContext(env);
 
         RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
@@ -144,7 +145,7 @@ public class Test {
             root.save();
         }
 
-        //root.setProperty("blob", new FileInputStream(new File("d:/temp/jckrabbit.zip")));
+        //root.setProperty("blob", new FileInputStream(new File("d:/temp/jackrabbit.zip")));
 
         if (root.hasProperty("blah")) {
             root.getProperty("blah").remove();
