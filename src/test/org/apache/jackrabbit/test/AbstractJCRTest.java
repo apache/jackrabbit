@@ -163,6 +163,14 @@ public abstract class AbstractJCRTest extends JUnitTest {
         if (value != null) {
             return value;
         }
+
+        // then check test class property
+        value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
+                + testClassName + "." + name);
+        if (value != null) {
+            return value;
+        }
+
         return helper.getProperty(RepositoryStub.PROP_PREFIX + "." + name);
     }
 
