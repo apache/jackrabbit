@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.util;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 /**
  * This Class provides some text related utilities
@@ -100,6 +101,53 @@ public class Text {
             res.append(hexTable[b & 15]);
         }
         return res.toString();
+    }
+
+    /**
+     * returns an array of strings decomposed of the original string, split at
+     * every occurance of 'ch'. if 2 'ch' follow each other with no intermediate
+     * characters, empty "" entries are avoided.
+     *
+     * @param str the string to decompose
+     * @param ch the character to use a split pattern
+     * @return an array of strings
+     */
+    public static String[] explode(String str, int ch) {
+        return explode(str,ch,false);
+    }
+
+    /**
+     * returns an array of strings decomposed of the original string, split at
+     * every occurance of 'ch'.
+     * @param str the string to decompose
+     * @param ch the character to use a split pattern
+     * @param respectEmpty if <code>true</code>, empty elements are generated
+     * @return an array of strings
+     */
+    public static String[] explode(String str, int ch, boolean respectEmpty) {
+        if (str == null || str.length()==0) {
+            return new String[0];
+        }
+
+        ArrayList strings = new ArrayList();
+        int pos     = 0;
+        int lastpos = 0;
+
+        // add snipples
+        while ((pos = str.indexOf(ch, lastpos)) >= 0) {
+            if (pos-lastpos>0 || respectEmpty)
+                strings.add(str.substring(lastpos, pos));
+            lastpos = pos+1;
+        }
+        // add rest
+        if (lastpos < str.length()) {
+            strings.add(str.substring(lastpos));
+        } else if (respectEmpty && lastpos==str.length()) {
+            strings.add("");
+        }
+
+        // return stringarray
+        return (String[]) strings.toArray(new String[strings.size()]);
     }
 
 }

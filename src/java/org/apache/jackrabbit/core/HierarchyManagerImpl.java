@@ -268,14 +268,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     // if the parent has more than one child node entries pointing
                     // to the same child node, always use the first one
                     NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
-                    QName name = entry.getName();
                     // add to path
-                    builder.addFirst(name.getNamespaceURI(), name.getLocalName(), entry.getIndex());
+                    builder.addFirst(entry.getName(), entry.getIndex());
                 } else {
                     PropertyState propState = (PropertyState) state;
                     QName name = propState.getName();
                     // add to path
-                    builder.addFirst(name.getNamespaceURI(), name.getLocalName());
+                    builder.addFirst(name);
                 }
                 parentUUID = parent.getParentUUID();
                 if (parentUUID != null) {
@@ -368,7 +367,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 PropertyState propState = (PropertyState) getItemState(id, includeZombies);
                 QName name = propState.getName();
                 // add to path
-                builder.addFirst(name.getNamespaceURI(), name.getLocalName());
+                builder.addFirst(name);
                 nodeId = new NodeId(propState.getParentUUID());
             } catch (NoSuchItemStateException nsise) {
                 String msg = "failed to build path of " + id;
@@ -503,12 +502,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 }
                 for (int i = 0; i < entries.size(); i++) {
                     NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(i);
-                    QName name = entry.getName();
 
                     // get a path builder clone from the tail of the queue
                     Path.PathBuilder pb = (Path.PathBuilder) queue.removeLast();
                     // add entry to path
-                    pb.addFirst(name.getNamespaceURI(), name.getLocalName(), entry.getIndex());
+                    pb.addFirst(entry.getName(), entry.getIndex());
 
                     // recurse
                     recursiveBuildPaths(new NodeId(parentUUID), pb, builders, includeZombies);

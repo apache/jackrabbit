@@ -499,8 +499,14 @@ class PathConstraint extends ValueConstraint {
             case PropertyType.PATH:
                 Path p = (Path) value.internalValue();
                 // normalize paths before comparing them
-                Path p0 = path.getNormalizedPath();
-                Path p1 = p.getNormalizedPath();
+                Path p0 = null;
+                Path p1 = null;
+                try {
+                    p0 = path.getNormalizedPath();
+                    p1 = p.getNormalizedPath();
+                } catch (MalformedPathException e) {
+                    throw new ConstraintViolationException("path not valid: " + e);
+                }
                 if (deep) {
                     try {
                         if (!p0.isAncestorOf(p1)) {

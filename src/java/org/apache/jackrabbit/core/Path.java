@@ -16,19 +16,85 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.util.Text;
+
 import javax.jcr.NamespaceException;
 import javax.jcr.PathNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
- * The <code>Path</code> utility class provides
- * misc. methods to resolve and nornalize JCR-style item paths.
+ * The <code>Path</code> utility class provides misc. methods to resolve and
+ * nornalize JCR-style item paths. <br>
+ * Each path consistnes of path elements and is immutable. it has the following
+ * properties:<br>
+ * <code>isAbsolute()</code>:<br>
+ * A path is absolute, if the first path element denotes the root element '/'.
+ * <p>
+ * <code>isRelative()</code>:<br>
+ * A path is relative, if the first path element does not denote the root element.
+ * I.e. is always the opposite of <code>isAbsolute</code>.
+ * <p>
+ * <code>isNormalized()</code>:<br>
+ * A path is normalized, if all '.' and '..' path elements are resolved as much
+ * as possible. If the path is absolute, it is normalized if it contains
+ * no such elements. for example the path '../../a' is normalized where as
+ * '../../b/../a/.' is not. Normalized path never have '.' elements.
+ * absolte normalilzed paths have no and relative normalized paths have no or
+ * only leading '..' elements.<br>
+ * <p>
+ * <code>isCanonical()</code>:<br>
+ * A path is canonical, if its absolute and normalized.
+ * <p>
+ *
+ * the external string representation of a path has the following format:
+ *
+ * <xmp>
+ *           path ::= properpath ['/']
+ *     properpath ::= abspath | relpath
+ *        abspath ::= '/' relpath
+ *        relpath ::= [relpath '/'] pathelement
+ *    pathelement ::= name ['[' number ']']
+ *         number ::= << An integer > 0 >>
+ *
+ *           name ::= [prefix ':'] simplename
+ *         prefix ::= << Any valid XML Name >>
+ *     simplename ::= nonspacestring [[string] nonspacestring]
+ *         string ::= [string] char
+ *           char ::= nonspace | space
+ * nonspacestring ::= [nonspacestring] nonspace
+ *          space ::= << ' ' (the space character) >>
+ *       nonspace ::= << Any Unicode character except
+ *                    '/', ':', '[', ']', '*',
+ *                    '''(the single quote),
+ *                    '"'(the double quote),
+ *                    any whitespace character >>
+ * </xmp>
  */
 public final class Path {
+
+    /**
+     * the 'root' element. i.e. '/'
+     */
+    private static final PathElement ROOT_ELEMENT = new RootElement();
+
+    /**
+     * the 'current' element. i.e. '.'
+     */
+    private static final PathElement CURRENT_ELEMENT = new CurrentElement();
+
+    /**
+     * the 'parent' element. i.e. '..'
+     */
+    private static final PathElement PARENT_ELEMENT = new ParentElement();
+
+    /**
+     * the root path
+     */
+    public static final Path ROOT = new Path(new PathElement[]{ROOT_ELEMENT}, true);
 
     /**
      * Pattern used to validate and parse path elements:<p>
@@ -44,127 +110,155 @@ public final class Path {
      */
     private static final Pattern PATH_ELEMENT_PATTERN = Pattern.compile("(\\.)|(\\.\\.)|(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)(\\[([1-9]\\d*)\\])?");
 
-    private static final PathElement ROOT_ELEMENT = new RootElement();
-    // .
-    private static final PathElement CURRENT_ELEMENT = new CurrentElement();
-    // ..
-    private static final PathElement PARENT_ELEMENT = new ParentElement();
-
+    /**
+     * the elements of this path
+     */
     private final PathElement[] elements;
 
-    private int hash;
+    /**
+     * flag indicating if this path is normalized
+     */
+    private final boolean isNormalized;
+
+    /**
+     * flag indicating if this path is absolute
+     */
+    private final boolean isAbsolute;
+
+    /**
+     * the cached hashcode of this path
+     */
+    private int hash = 0;
+
+    /**
+     * the cached 'toString' of this path
+     */
     private String string;
 
     /**
      * Private constructor
      *
      * @param elements
+     * @param isNormalized
      */
-    private Path(PathElement[] elements) {
+    private Path(PathElement[] elements, boolean isNormalized) {
+        if (elements==null || elements.length==0) {
+            throw new IllegalArgumentException("Empty paths are not allowed");
+        }
         this.elements = elements;
-        hash = 0;
+        this.isAbsolute = elements[0].denotesRoot();
+        this.isNormalized = isNormalized;
     }
 
-    //------------------------------------------------------< factory methods >
+    //----------------------------------------------------< factory methods >---
     /**
+     * Creates a new <code>Path</code> from the given <code>jcrPath</code>
+     * string. If <code>normalize</code> is <code>true</code>, the returned
+     * path will be normalized (or canonicalized if absolute).
+     *
      * @param jcrPath
      * @param resolver
-     * @param canonicalize
+     * @param normalize
      * @return
      * @throws MalformedPathException
      */
-    public static Path create(String jcrPath, NamespaceResolver resolver, boolean canonicalize)
+    public static Path create(String jcrPath, NamespaceResolver resolver,
+                              boolean normalize)
             throws MalformedPathException {
-        PathElement[] elements = parse(jcrPath, null, resolver);
-        if (canonicalize) {
-            return new Path(elements).getCanonicalPath();
-        } else {
-            return new Path(elements);
-        }
+        return normalize
+            ? parse(jcrPath, null, resolver).getNormalizedPath()
+            : parse(jcrPath, null, resolver);
     }
 
     /**
-     * @param master
+     * Creates a new <code>Path</code> out of the given <code>parent</code> path
+     * and a relative path string. If <code>canonicalize</code> is
+     * <code>true</code>, the returned path will be canonicalized.
+     *
+     * @param parent
      * @param relJCRPath
      * @param resolver
      * @param canonicalize
      * @return
      * @throws MalformedPathException
      */
-    public static Path create(Path master, String relJCRPath, NamespaceResolver resolver, boolean canonicalize)
+    public static Path create(Path parent, String relJCRPath,
+                              NamespaceResolver resolver, boolean canonicalize)
             throws MalformedPathException {
-        if (relJCRPath.startsWith("/")) {
-            throw new MalformedPathException("'" + relJCRPath + "' is not a relative path");
-        }
-
-        PathElement[] elements = parse(relJCRPath, master.getElements(), resolver);
-        if (canonicalize) {
-            return new Path(elements).getCanonicalPath();
-        } else {
-            return new Path(elements);
-        }
+        return canonicalize
+                ? parse(relJCRPath, parent, resolver).getCanonicalPath()
+                : parse(relJCRPath, parent, resolver);
     }
 
     /**
-     * @param master
+     * Creates a new <code>Path</code> out of the given <code>parent<code> path
+     * string and the given relative path string. If <code>normalize</code> is
+     * <code>true</code>, the returned path will be normalized (or
+     * canonicalized, if the parent path is absolute).
+     *
+     * @param parent
      * @param relPath
-     * @param canonicalize
+     * @param normalize
      * @return
      * @throws MalformedPathException
      */
-    public static Path create(Path master, Path relPath, boolean canonicalize)
+    public static Path create(Path parent, Path relPath, boolean normalize)
             throws MalformedPathException {
         if (relPath.isAbsolute()) {
             throw new MalformedPathException("relPath is not a relative path");
         }
 
-        PathBuilder pb = new PathBuilder(master.getElements());
+        PathBuilder pb = new PathBuilder(parent.getElements());
         pb.addAll(relPath.getElements());
 
-        if (canonicalize) {
-            return pb.getPath().getCanonicalPath();
-        } else {
-            return pb.getPath();
-        }
+        return normalize
+            ? pb.getPath().getNormalizedPath()
+            : pb.getPath();
     }
 
     /**
-     * @param master
+     * Creates a new <code>Path</code> out of the given <code>parent<code> path
+     * string and the give name. If <code>normalize</code> is <code>true</code>,
+     * the returned path will be normalized (or canonicalized, if the parent
+     * path is absolute).
+     *
+     * @param parent
      * @param name
-     * @param canonicalize
+     * @param normalize
      * @return
      * @throws MalformedPathException
      */
-    public static Path create(Path master, QName name, boolean canonicalize)
+    public static Path create(Path parent, QName name, boolean normalize)
             throws MalformedPathException {
-        PathBuilder pb = new PathBuilder(master.getElements());
-        pb.addLast(name.getNamespaceURI(), name.getLocalName());
+        PathBuilder pb = new PathBuilder(parent.getElements());
+        pb.addLast(name);
 
-        if (canonicalize) {
-            return pb.getPath().getCanonicalPath();
-        } else {
-            return pb.getPath();
-        }
+        return normalize
+                ? pb.getPath().getNormalizedPath()
+                : pb.getPath();
     }
 
     /**
-     * @param master
+     * Creates a new <code>Path</code> out of the given <code>parent<code> path
+     * string and the give name and index. If <code>normalize</code> is
+     * <code>true</code>, the returned path will be normalized
+     * (or canonicalized, if the parent path is absolute).
+     *
+     * @param parent
      * @param name
      * @param index
-     * @param canonicalize
+     * @param normalize
      * @return
      * @throws MalformedPathException
      */
-    public static Path create(Path master, QName name, int index, boolean canonicalize)
+    public static Path create(Path parent, QName name, int index, boolean normalize)
             throws MalformedPathException {
-        PathBuilder pb = new PathBuilder(master.getElements());
-        pb.addLast(name.getNamespaceURI(), name.getLocalName(), index);
+        PathBuilder pb = new PathBuilder(parent.getElements());
+        pb.addLast(name, index);
 
-        if (canonicalize) {
-            return pb.getPath().getCanonicalPath();
-        } else {
-            return pb.getPath();
-        }
+        return normalize
+                ? pb.getPath().getNormalizedPath()
+                : pb.getPath();
     }
 
     /**
@@ -185,7 +279,7 @@ public final class Path {
         } else {
             elem = new PathElement(name, index);
         }
-        return new Path(new PathElement[]{elem});
+        return new Path(new PathElement[]{elem}, !elem.equals(CURRENT_ELEMENT));
     }
 
     //------------------------------------------------------< utility methods >
@@ -198,25 +292,7 @@ public final class Path {
      *                                JCR-style path.
      */
     public static void checkFormat(String jcrPath) throws MalformedPathException {
-        if (jcrPath == null || jcrPath.length() == 0) {
-            throw new MalformedPathException("empty path");
-        }
-        // shortcut
-        if (jcrPath.equals("/")) {
-            return;
-        }
-
-        // split path into path elements
-        String[] elems = jcrPath.split("/", -1);
-        for (int i = jcrPath.startsWith("/") ? 1 : 0; i < elems.length; i++) {
-            // validate path element
-            String elem = elems[i];
-            Matcher matcher = PATH_ELEMENT_PATTERN.matcher(elem);
-            if (!matcher.matches()) {
-                // illegal syntax for path element
-                throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' is not a legal path element");
-            }
-        }
+        parse(jcrPath, null, null);
     }
 
     //-------------------------------------------------------< public methods >
@@ -226,7 +302,7 @@ public final class Path {
      * @return true if this path represents the root path; false otherwise.
      */
     public boolean denotesRoot() {
-        return elements.length == 1 && elements[0].denotesRoot();
+        return isAbsolute && elements.length == 1;
     }
 
     /**
@@ -235,7 +311,7 @@ public final class Path {
      * @return true if this path is absolute; false otherwise.
      */
     public boolean isAbsolute() {
-        return elements.length > 0 && elements[0].denotesRoot();
+        return isAbsolute;
     }
 
     /**
@@ -246,17 +322,7 @@ public final class Path {
      * @see #isAbsolute()
      */
     public boolean isCanonical() {
-        if (!isAbsolute()) {
-            return false;
-        }
-        // check path for any "." and ".." elements
-        for (int i = 0; i < elements.length; i++) {
-            if (elements[i].equals(CURRENT_ELEMENT)
-                    || elements[i].equals(PARENT_ELEMENT)) {
-                return false;
-            }
-        }
-        return true;
+        return isAbsolute && isNormalized;
     }
 
     /**
@@ -272,31 +338,7 @@ public final class Path {
      * @see #getNormalizedPath()
      */
     public boolean isNormalized() {
-        if (isAbsolute()) {
-            /**
-             * a normalized absolute path has to be canonical, i.e. it
-             * cannot contain any "." and ".." elements
-             */
-            return isCanonical();
-        }
-
-        // check relative path for redundant "." and ".." elements only
-        for (int i = 0; i < elements.length; i++) {
-            if (elements[i].equals(CURRENT_ELEMENT)) {
-                // "." is always redundant
-                return false;
-            }
-            if (elements[i].equals(PARENT_ELEMENT)) {
-                /**
-                 * ".." is redundant only if there's a preceeding
-                 * non-".." element
-                 */
-                if (i > 0 && !elements[i - 1].equals(PARENT_ELEMENT)) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return isNormalized;
     }
 
     /**
@@ -304,32 +346,41 @@ public final class Path {
      * involves removing/resolving redundant elements such as "." and ".." from
      * the path, e.g. "/a/./b/.." will be normalized to "/a", "../../a/b/c/.."
      * will be normalized to "../../a/b", and so on.
+     * <p>
+     * If the normalized path results in an empty path (eg: 'a/..') or if an
+     * absolute path is normalized that would result in a 'negative' path
+     * (eg: /a/../../) a MalformedPathException is thrown.
      *
      * @return a normailzed path representation of this path
      * @see #isNormalized()
+     * @throws MalformedPathException if the path cannot be normalized.
      */
-    public Path getNormalizedPath() {
+    public Path getNormalizedPath() throws MalformedPathException {
         if (isNormalized()) {
             return this;
         }
-
         LinkedList queue = new LinkedList();
+        PathElement last = null;
         for (int i = 0; i < elements.length; i++) {
             PathElement elem = elements[i];
-
-            if (elem.equals(CURRENT_ELEMENT)) {
+            if (elem.denotesCurrent()) {
                 continue;
-            } else if (elem.equals(PARENT_ELEMENT)) {
-                if (queue.size() > 0 && !queue.getLast().equals(PARENT_ELEMENT)) {
-                    queue.removeLast();
-                } else {
-                    queue.add(elem);
+            } else if (elem.denotesParent() && last!=null && !last.denotesParent()) {
+                if (last.denotesRoot()) {
+                    // the first element is the root element;
+                    // ".." would refer to the parent of root
+                    throw new MalformedPathException("Path can not be canonicalized: unresolvable '..' element");
                 }
+                queue.removeLast();
+                last = queue.isEmpty() ? null : (PathElement) queue.getLast();
             } else {
-                queue.add(elem);
+                queue.add(last=elem);
             }
         }
-        return new Path((PathElement[]) queue.toArray(new PathElement[queue.size()]));
+        if (queue.isEmpty()) {
+            throw new MalformedPathException("Path can not be normalized: would result in an empty path.");
+        }
+        return new Path((PathElement[]) queue.toArray(new PathElement[queue.size()]), true);
     }
 
     /**
@@ -348,25 +399,7 @@ public final class Path {
         if (!isAbsolute()) {
             throw new MalformedPathException("only an absolute path can be canonicalized.");
         }
-
-        LinkedList queue = new LinkedList();
-        for (int i = 0; i < elements.length; i++) {
-            PathElement elem = elements[i];
-
-            if (elem.equals(CURRENT_ELEMENT)) {
-                continue;
-            } else if (elem.equals(PARENT_ELEMENT)) {
-                if (queue.size() <= 1) {
-                    // the first element is the root element;
-                    // ".." would refer to the parent of root
-                    throw new MalformedPathException("path can not be canonicalized: unresolvable '..' element");
-                }
-                queue.removeLast();
-            } else {
-                queue.add(elem);
-            }
-        }
-        return new Path((PathElement[]) queue.toArray(new PathElement[queue.size()]));
+        return getNormalizedPath();
     }
 
     /**
@@ -383,7 +416,7 @@ public final class Path {
      * </ul>
      * <p/>
      * Note that there migth be an unexpected result if <i>this</i> path is not
-     * canonical, e.g. the ancestor of degree = 1 of the path "../.." would
+     * normalized, e.g. the ancestor of degree = 1 of the path "../.." would
      * be ".." although this is not the parent of "../..".
      *
      * @param degree the relative degree of the requested ancestor.
@@ -406,7 +439,7 @@ public final class Path {
         for (int i = 0; i < length; i++) {
             elements[i] = this.elements[i];
         }
-        return new Path(elements);
+        return new Path(elements, isNormalized);
     }
 
     /**
@@ -447,7 +480,8 @@ public final class Path {
     /**
      * Returns the depth of this path. The depth reflects the absolute or
      * relative hierarchy level this path is representing, depending on whether
-     * this path is an absolute or a relative path.
+     * this path is an absolute or a relative path. The depth also takes '.'
+     * and '..' elements into account.
      * <p/>
      * Note that the returned value might be negative if this path is not
      * canonical, e.g. the depth of "../../a" is -1.
@@ -459,9 +493,9 @@ public final class Path {
     public int getDepth() {
         int depth = 0;
         for (int i = 0; i < elements.length; i++) {
-            if (elements[i].equals(PARENT_ELEMENT)) {
+            if (elements[i].denotesParent()) {
                 depth--;
-            } else if (!elements[i].equals(CURRENT_ELEMENT)) {
+            } else if (!elements[i].denotesCurrent()) {
                 depth++;
             }
         }
@@ -490,6 +524,7 @@ public final class Path {
         // make sure we're comparing normalized paths
         Path p0 = getNormalizedPath();
         Path p1 = other.getNormalizedPath();
+
         if (p0.equals(p1)) {
             return false;
         }
@@ -517,9 +552,6 @@ public final class Path {
      * @see #getDepth()
      */
     public boolean isDescendantOf(Path other) throws MalformedPathException {
-        if (equals(other)) {
-            return false;
-        }
         if (other == null) {
             throw new IllegalArgumentException("null argument");
         }
@@ -615,14 +647,18 @@ public final class Path {
         // split into path elements
 
         // @todo find safe path separator char that does not conflict with chars in serialized QName
-        String[] elements = s.split("\t", -1);
+        String[] elements = Text.explode(s, '\t', true);
         ArrayList list = new ArrayList();
+        boolean isNormalized = true;
+        boolean leadingParent = true;
         for (int i = 0; i < elements.length; i++) {
-            String elem = elements[i];
-            list.add(PathElement.fromString(elem));
+            PathElement elem = PathElement.fromString(elements[i]);
+            list.add(elem);
+            leadingParent &= elem.denotesParent();
+            isNormalized &= !elem.denotesCurrent() && (leadingParent || !elem.denotesParent());
         }
 
-        return new Path((PathElement[]) list.toArray(new PathElement[list.size()]));
+        return new Path((PathElement[]) list.toArray(new PathElement[list.size()]), isNormalized);
     }
 
     /**
@@ -663,75 +699,134 @@ public final class Path {
 
     //--------------------------------------------------------< inner classes >
     /**
-     * package private inner class used to build a path from path elements;
+     * package protected inner class used to build a path from path elements;
      * this class does not validate the format of the path elements!
      */
     static final class PathBuilder implements Cloneable {
+
+        /**
+         * the list of path elements of the constructed path
+         */
         private final LinkedList queue;
 
+        /**
+         * flag indicating if the current path is normalized
+         */
+        boolean isNormalized = true;
+
+        /**
+         * flag indicating if the current path has leading parent '..' elements
+         */
+        boolean leadingParent = true;
+
+        /**
+         * Creates a new PathBuilder.
+         */
         PathBuilder() {
             queue = new LinkedList();
         }
 
+        /**
+         * Creates a new PathBuilder and initialized it with the given path
+         * elements.
+         *
+         * @param elements
+         */
         PathBuilder(PathElement[] elements) {
             this();
             addAll(elements);
         }
 
+        /**
+         * Adds the {@link Path#ROOT_ELEMENT}.
+         */
         void addRoot() {
-            queue.addFirst(ROOT_ELEMENT);
+            addFirst(ROOT_ELEMENT);
         }
 
+        /**
+         * Adds the given elemenets
+         * @param elements
+         */
         void addAll(PathElement[] elements) {
             for (int i = 0; i < elements.length; i++) {
-                queue.add(elements[i]);
+                addLast(elements[i]);
             }
         }
 
-        void addFirst(String nameSpaceURI, String localName) {
-            queue.addFirst(new PathElement(nameSpaceURI, localName));
+        /**
+         * Inserts the element at the beginning of the path to be built.
+         * @param elem
+         */
+        public void addFirst(PathElement elem) {
+            if (queue.isEmpty()) {
+                isNormalized &= !elem.denotesCurrent();
+                leadingParent = elem.denotesParent();
+            } else {
+                isNormalized &= !elem.denotesCurrent() && (!leadingParent || elem.denotesParent());
+                leadingParent |= elem.denotesParent();
+            }
+            queue.addFirst(elem);
         }
 
-        void addFirst(String nameSpaceURI, String localName, int index) {
-            queue.addFirst(new PathElement(nameSpaceURI, localName, index));
-        }
-
+        /**
+         * Inserts the element at the beginning of the path to be built.
+         * @param name
+         */
         void addFirst(QName name) {
-            queue.addFirst(new PathElement(name));
+            addFirst(new PathElement(name));
         }
 
+        /**
+         * Inserts the element at the beginning of the path to be built.
+         * @param name
+         * @param index
+         */
         void addFirst(QName name, int index) {
-            queue.addFirst(new PathElement(name, index));
+            addFirst(new PathElement(name, index));
         }
 
-        void addLast(String nameSpaceURI, String localName) {
-            queue.addLast(new PathElement(nameSpaceURI, localName));
+        /**
+         * Inserts the element at the end of the path to be built.
+         * @param elem
+         */
+        public void addLast(PathElement elem) {
+            queue.addLast(elem);
+            leadingParent &= elem.denotesParent();
+            isNormalized &= !elem.denotesCurrent() && (leadingParent || !elem.denotesParent());
         }
 
-        void addLast(String nameSpaceURI, String localName, int index) {
-            queue.addLast(new PathElement(nameSpaceURI, localName, index));
-        }
-
+        /**
+         * Inserts the element at the end of the path to be built.
+         * @param name
+         */
         void addLast(QName name) {
-            queue.addLast(new PathElement(name));
+            addLast(new PathElement(name));
         }
 
+        /**
+         * Inserts the element at the end of the path to be built.
+         * @param name
+         * @param index
+         */
         void addLast(QName name, int index) {
-            queue.addLast(new PathElement(name, index));
+            addLast(new PathElement(name, index));
         }
 
+        /**
+         * Assembles the built path and returns a new {@link Path}.
+         * @return
+         * @throws MalformedPathException if the internal path element queue is empty.
+         */
         Path getPath() throws MalformedPathException {
             PathElement[] elements = (PathElement[]) queue.toArray(new PathElement[queue.size()]);
             // validate path
             if (elements.length == 0) {
                 throw new MalformedPathException("empty path");
             }
-            for (int i = 1; i < elements.length; i++) {
-                if (elements[i].denotesRoot()) {
-                    throw new MalformedPathException("path contains invalid root element(s)");
-                }
-            }
-            return new Path(elements);
+
+            // no need to check the path format, assuming all names correct
+            return new Path(elements, isNormalized);
         }
 
         public Object clone() {
@@ -1044,26 +1139,42 @@ public final class Path {
     }
 
     //-------------------------------------------------------< implementation >
-    private static PathElement[] parse(String jcrPath, PathElement[] master,
-                                       NamespaceResolver resolver)
+
+    /**
+     * parses the give string an d returns an array of path elements. if
+     * <code>master</code> is not <code>null</code>, it is prepended to the
+     * returned list. If <code>resolver</code> is <code>null</code>, this
+     * method only checks the format of the string and returns <code>null</code>.
+     *
+     * @param jcrPath
+     * @param master
+     * @param resolver
+     * @return
+     * @throws MalformedPathException
+     */
+    private static Path parse(String jcrPath, Path master, NamespaceResolver resolver)
             throws MalformedPathException {
         // shortcut
         if (jcrPath.equals("/")) {
-            return new PathElement[]{ROOT_ELEMENT};
+            return ROOT;
         }
 
         // split path into path elements
-        String[] elems = jcrPath.split("/", -1);
+        String[] elems = Text.explode(jcrPath, '/', true);
         if (elems.length == 0) {
             throw new MalformedPathException("empty path");
         }
 
         ArrayList list = new ArrayList();
+        boolean isNormalized = true;
+        boolean leadingParent = true;
         if (master != null) {
+            isNormalized = master.isNormalized;
             // a master path was specified; the 'path' argument is assumed
             // to be a relative path
-            for (int i = 0; i < master.length; i++) {
-                list.add(master[i]);
+            for (int i = 0; i < master.elements.length; i++) {
+                list.add(master.elements[i]);
+                leadingParent &= master.elements[i].denotesParent();
             }
         }
 
@@ -1080,16 +1191,25 @@ public final class Path {
                     throw new MalformedPathException("'" + jcrPath + "' is not a relative path");
                 }
                 list.add(ROOT_ELEMENT);
+                leadingParent = false;
                 continue;
             }
             Matcher matcher = PATH_ELEMENT_PATTERN.matcher(elem);
             if (matcher.matches()) {
+                if (resolver==null) {
+                    // check only
+                    continue;
+                }
+
                 if (matcher.group(1) != null) {
                     // group 1 is .
                     list.add(CURRENT_ELEMENT);
+                    leadingParent = false;
+                    isNormalized = false;
                 } else if (matcher.group(2) != null) {
                     // group 2 is ..
                     list.add(PARENT_ELEMENT);
+                    isNormalized &= leadingParent;
                 } else {
                     // element is a name
 
@@ -1131,12 +1251,16 @@ public final class Path {
                         element = new PathElement(nsURI, localName, index);
                     }
                     list.add(element);
+                    leadingParent = false;
                 }
             } else {
                 // illegal syntax for path element
                 throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' is not a legal path element");
             }
         }
-        return (PathElement[]) list.toArray(new PathElement[list.size()]);
+        return resolver == null
+                ? null
+                : new Path((PathElement[]) list.toArray(new PathElement[list.size()]), isNormalized);
     }
+
 }

@@ -18,12 +18,29 @@ package org.apache.jackrabbit.core;
 
 import javax.jcr.NamespaceException;
 import java.io.Serializable;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
  * <code>QName</code> represents the qualified name of a repository item
  * (i.e. <code>Node</code> or <code>Property</code>) or a node type.
+ * <p>
+ * The external string representation is specified as follows:
+ * <xmp>
+ *           name ::= [prefix ':'] simplename
+ *         prefix ::= << Any valid XML Name >>
+ *     simplename ::= nonspacestring [[string] nonspacestring]
+ *         string ::= [string] char
+ *           char ::= nonspace | space
+ * nonspacestring ::= [nonspacestring] nonspace
+ *          space ::= << ' ' (the space character) >>
+ *       nonspace ::= << Any Unicode character except
+ *                    '/', ':', '[', ']', '*',
+ *                    '''(the single quote),
+ *                    '"'(the double quote),
+ *                    any whitespace character >>
+ * </xmp>
+ *
  */
 public class QName implements Cloneable, Comparable, Serializable {
 
@@ -44,6 +61,7 @@ public class QName implements Cloneable, Comparable, Serializable {
 
     protected final String namespaceURI;
     protected final String localName;
+
 
     /**
      * Creates a new <code>QName</code> instance with the given <code>namespaceURI</code>
@@ -75,40 +93,10 @@ public class QName implements Cloneable, Comparable, Serializable {
      */
     public static QName fromJCRName(String rawName, NamespaceResolver resolver)
             throws IllegalNameException, UnknownPrefixException {
-        if (rawName == null || rawName.length() == 0) {
-            throw new IllegalNameException("empty name");
+        if (resolver==null) {
+            throw new NullPointerException("resolver must not be null");
         }
-
-        String prefix = null;
-        String localName = null;
-
-        Matcher matcher = NAME_PATTERN.matcher(rawName);
-        if (matcher.matches()) {
-            // check for prefix (group 1)
-            if (matcher.group(1) != null) {
-                // prefix specified
-                // group 2 is namespace prefix excl. delimiter (colon)
-                prefix = matcher.group(2);
-            } else {
-                // no prefix specified
-                prefix = "";
-            }
-
-            // group 3 is localName
-            localName = matcher.group(3);
-        } else {
-            // illegal syntax for name
-            throw new IllegalNameException("'" + rawName + "' is not a valid name");
-        }
-
-        String uri;
-        try {
-            uri = resolver.getURI(prefix);
-        } catch (NamespaceException nse) {
-            throw new UnknownPrefixException(prefix);
-        }
-
-        return new QName(uri, localName);
+        return internalFromJCRName(rawName, resolver);
     }
 
     /**
@@ -156,16 +144,68 @@ public class QName implements Cloneable, Comparable, Serializable {
      *                              JCR-style name.
      */
     public static void checkFormat(String jcrName) throws IllegalNameException {
-        if (jcrName == null || jcrName.length() == 0) {
+        try {
+            internalFromJCRName(jcrName, null);
+        } catch (UnknownPrefixException e) {
+            // ignore, will never happen
+        }
+    }
+
+    /**
+     * Parses the <code>jcrName</code>, resolves the prefix using the namespace
+     * resolver and returns a new QName instance. this method is also used
+     * internally just to check the format of the given string by passing a
+     * <code>null</code> value as <code>resolver</code>
+     *
+     * @param rawName the jcr name to parse
+     * @param resolver the namespace resolver or <code>null</code>
+     * @return a new resolved QName
+     * @throws IllegalNameException
+     * @throws UnknownPrefixException
+     */
+    public static QName internalFromJCRName(String rawName, NamespaceResolver resolver)
+            throws IllegalNameException, UnknownPrefixException {
+
+        if (rawName == null || rawName.length() == 0) {
             throw new IllegalNameException("empty name");
         }
 
-        Matcher matcher = NAME_PATTERN.matcher(jcrName);
-        if (!matcher.matches()) {
+        String prefix = null;
+        String localName = null;
+
+        Matcher matcher = NAME_PATTERN.matcher(rawName);
+        if (matcher.matches()) {
+            // check for prefix (group 1)
+            if (matcher.group(1) != null) {
+                // prefix specified
+                // group 2 is namespace prefix excl. delimiter (colon)
+                prefix = matcher.group(2);
+            } else {
+                // no prefix specified
+                prefix = "";
+            }
+
+            // group 3 is localName
+            localName = matcher.group(3);
+        } else {
             // illegal syntax for name
-            throw new IllegalNameException("'" + jcrName + "' is not a valid name");
+            throw new IllegalNameException("'" + rawName + "' is not a valid name");
+        }
+
+        if (resolver==null) {
+            return null;
+        } else {
+            String uri;
+            try {
+                uri = resolver.getURI(prefix);
+            } catch (NamespaceException nse) {
+                throw new UnknownPrefixException(prefix);
+            }
+
+            return new QName(uri, localName);
         }
     }
+
 
     //-------------------------------------------------------< public methods >
     /**
@@ -230,8 +270,8 @@ public class QName implements Cloneable, Comparable, Serializable {
         }
         if (obj instanceof QName) {
             QName other = (QName) obj;
-            return namespaceURI.equals(other.namespaceURI)
-                    && localName.equals(other.localName);
+            return localName.equals(other.localName)
+                    && namespaceURI.equals(other.namespaceURI);
         }
         return false;
     }
@@ -263,4 +303,5 @@ public class QName implements Cloneable, Comparable, Serializable {
     public int compareTo(Object o) {
         return toString().compareTo(((QName) o).toString());
     }
+
 }
