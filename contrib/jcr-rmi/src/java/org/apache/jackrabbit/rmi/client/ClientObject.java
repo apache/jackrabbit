@@ -48,7 +48,7 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
 public class ClientObject {
 
     /** Local adapter factory. */
-    protected LocalAdapterFactory factory;
+    private LocalAdapterFactory factory;
 
     /**
      * Creates a basic client adapter that uses the given factory
@@ -58,6 +58,15 @@ public class ClientObject {
      */
     protected ClientObject(LocalAdapterFactory factory) {
         this.factory = factory;
+    }
+
+    /**
+     * Returns the local adapter factory used to create new adapters.
+     *
+     * @return local adapter factory
+     */
+    protected LocalAdapterFactory getFactory() {
+        return factory;
     }
 
     /**

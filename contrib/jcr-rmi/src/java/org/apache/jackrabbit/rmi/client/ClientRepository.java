@@ -78,7 +78,7 @@ public class ClientRepository extends ClientObject implements Repository {
             RepositoryException {
         try {
             RemoteSession session = remote.login();
-            return factory.getSession(this, session);
+            return getFactory().getSession(this, session);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -89,7 +89,7 @@ public class ClientRepository extends ClientObject implements Repository {
             NoSuchWorkspaceException, RepositoryException {
         try {
             RemoteSession session = remote.login(workspace);
-            return factory.getSession(this, session);
+            return getFactory().getSession(this, session);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -100,7 +100,7 @@ public class ClientRepository extends ClientObject implements Repository {
             NoSuchWorkspaceException, RepositoryException {
         try {
             RemoteSession session = remote.login(credentials);
-            return factory.getSession(this, session);
+            return getFactory().getSession(this, session);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -111,7 +111,7 @@ public class ClientRepository extends ClientObject implements Repository {
             LoginException, NoSuchWorkspaceException, RepositoryException {
         try {
             RemoteSession session = remote.login(credentials, workspace);
-            return factory.getSession(this, session);
+            return getFactory().getSession(this, session);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

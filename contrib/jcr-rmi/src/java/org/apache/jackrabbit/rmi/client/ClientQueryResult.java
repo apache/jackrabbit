@@ -79,7 +79,7 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
             RemoteRow[] remotes =  remote.getRows();
             Row[] rows = new Row[(remotes != null) ? remotes.length : 0];
             for (int i = 0; i < rows.length; i++) {
-                rows[i] = factory.getRow(remotes[i]);
+                rows[i] = getFactory().getRow(remotes[i]);
             }
             return new ArrayRowIterator(rows);
         } catch (RemoteException ex) {
@@ -93,7 +93,7 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
             RemoteNode[] remotes = remote.getNodes();
             Node[] nodes = new Node[(remotes != null) ? remotes.length : 0];
             for (int i = 0; i < nodes.length; i++) {
-                nodes[i] = factory.getNode(session, remotes[i]);
+                nodes[i] = getFactory().getNode(session, remotes[i]);
             }
             return new ArrayNodeIterator(nodes);
         } catch (RemoteException ex) {

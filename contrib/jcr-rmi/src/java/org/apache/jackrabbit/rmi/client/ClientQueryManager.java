@@ -64,7 +64,7 @@ public class ClientQueryManager extends ClientObject implements QueryManager {
             throws InvalidQueryException, RepositoryException {
         try {
             RemoteQuery query = remote.createQuery(statement, language);
-            return factory.getQuery(session, query);
+            return getFactory().getQuery(session, query);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -76,7 +76,7 @@ public class ClientQueryManager extends ClientObject implements QueryManager {
         try {
             // TODO fix this remote node dereferencing hack
             RemoteQuery query = remote.getQuery(node.getPath());
-            return factory.getQuery(session, query);
+            return getFactory().getQuery(session, query);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

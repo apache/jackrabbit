@@ -302,7 +302,7 @@ public class ClientProperty extends ClientItem implements Property {
     /** {@inheritDoc} */
     public PropertyDef getDefinition() throws RepositoryException {
         try {
-            return factory.getPropertyDef(remote.getDefinition());
+            return getFactory().getPropertyDef(remote.getDefinition());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

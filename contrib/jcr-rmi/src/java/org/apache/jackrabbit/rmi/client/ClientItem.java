@@ -110,7 +110,7 @@ public class ClientItem extends ClientObject implements Item {
     public Node getParent() throws ItemNotFoundException,
             AccessDeniedException, RepositoryException {
         try {
-            return factory.getNode(getSession(), remote.getParent());
+            return getFactory().getNode(getSession(), remote.getParent());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

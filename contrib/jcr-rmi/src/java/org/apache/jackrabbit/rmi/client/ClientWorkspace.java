@@ -40,6 +40,9 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 import org.apache.jackrabbit.rmi.xml.WorkspaceImportContentHandler;
 import org.xml.sax.ContentHandler;
@@ -132,7 +135,8 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     /** {@inheritDoc} */
     public QueryManager getQueryManager() throws RepositoryException {
         try {
-            return factory.getQueryManager(session, remote.getQueryManager());
+            RemoteQueryManager manager = remote.getQueryManager();
+            return getFactory().getQueryManager(session, manager);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -141,7 +145,8 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     /** {@inheritDoc} */
     public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
         try {
-            return factory.getNamespaceRegistry(remote.getNamespaceRegistry());
+            RemoteNamespaceRegistry registry = remote.getNamespaceRegistry();
+            return getFactory().getNamespaceRegistry(registry);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -150,7 +155,8 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     /** {@inheritDoc} */
     public NodeTypeManager getNodeTypeManager() throws RepositoryException {
         try {
-            return factory.getNodeTypeManager(remote.getNodeTypeManager());
+            RemoteNodeTypeManager manager = remote.getNodeTypeManager();
+            return getFactory().getNodeTypeManager(manager);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
