@@ -109,45 +109,78 @@ public class Text {
      * characters, empty "" entries are avoided.
      *
      * @param str the string to decompose
-     * @param ch the character to use a split pattern
+     * @param ch  the character to use a split pattern
      * @return an array of strings
      */
     public static String[] explode(String str, int ch) {
-        return explode(str,ch,false);
+        return explode(str, ch, false);
     }
 
     /**
      * returns an array of strings decomposed of the original string, split at
      * every occurance of 'ch'.
-     * @param str the string to decompose
-     * @param ch the character to use a split pattern
+     *
+     * @param str          the string to decompose
+     * @param ch           the character to use a split pattern
      * @param respectEmpty if <code>true</code>, empty elements are generated
      * @return an array of strings
      */
     public static String[] explode(String str, int ch, boolean respectEmpty) {
-        if (str == null || str.length()==0) {
+        if (str == null || str.length() == 0) {
             return new String[0];
         }
 
         ArrayList strings = new ArrayList();
-        int pos     = 0;
+        int pos = 0;
         int lastpos = 0;
 
         // add snipples
         while ((pos = str.indexOf(ch, lastpos)) >= 0) {
-            if (pos-lastpos>0 || respectEmpty)
+            if (pos - lastpos > 0 || respectEmpty) {
                 strings.add(str.substring(lastpos, pos));
-            lastpos = pos+1;
+            }
+            lastpos = pos + 1;
         }
         // add rest
         if (lastpos < str.length()) {
             strings.add(str.substring(lastpos));
-        } else if (respectEmpty && lastpos==str.length()) {
+        } else if (respectEmpty && lastpos == str.length()) {
             strings.add("");
         }
 
         // return stringarray
         return (String[]) strings.toArray(new String[strings.size()]);
+    }
+
+    /**
+     * Replaces all occurences of <code>oldString</code> in <code>text</code>
+     * with <code>newString</code>.
+     *
+     * @param text
+     * @param oldString old substring to be replaced with <code>newString</code>
+     * @param newString new substring to replace occurences of <code>oldString</code>
+     * @return a string
+     */
+    public static String replace(String text, String oldString, String newString) {
+        if (text == null || oldString == null || newString == null) {
+            throw new IllegalArgumentException("null argument");
+        }
+        int pos = text.indexOf(oldString);
+        if (pos == -1) {
+            return text;
+        }
+        int lastPos = 0;
+        StringBuffer sb = new StringBuffer(text.length());
+        while (pos != -1) {
+            sb.append(text.substring(lastPos, pos));
+            sb.append(newString);
+            lastPos = pos + oldString.length();
+            pos = text.indexOf(oldString, lastPos);
+        }
+        if (lastPos < text.length()) {
+            sb.append(text.substring(lastPos));
+        }
+        return sb.toString();
     }
 
 }

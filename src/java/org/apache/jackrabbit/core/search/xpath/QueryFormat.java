@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.search.Constants;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.util.ISO9075;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
 import javax.jcr.query.InvalidQueryException;

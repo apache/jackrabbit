@@ -17,9 +17,6 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.Base64;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
@@ -28,6 +25,7 @@ import org.xml.sax.helpers.AttributesImpl;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
@@ -39,8 +37,6 @@ import java.io.Writer;
 public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
     private static Logger log = Logger.getLogger(SysViewSAXEventGenerator.class);
-
-    protected final HierarchyManager hierMgr;
 
     /**
      * The XML elements and attributes used in serialization
@@ -60,44 +56,37 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * Constructor
      *
-     * @param nodeState      the node state which should be serialized
-     * @param nodeName       name of the node to be serialized
-     * @param noRecurse      if true, only <code>nodeState</code> and its properties will
+     * @param node           the node state which should be serialized
+     * @param noRecurse      if true, only <code>node</code> and its properties will
      *                       be serialized; otherwise the entire hierarchy starting with
-     *                       <code>nodeState</code> will be serialized.
-     * @param binaryAsLink   specifies if binary properties are turned into links
-     * @param stateProvider  item state provider for retrieving child item state
-     * @param nsReg          the namespace registry to be used for namespace declarations
-     * @param accessMgr      the access manager
-     * @param hierMgr        the hierarchy manager used to resolve paths
+     *                       <code>node</code> will be serialized.
+     * @param skipBinary     flag governing whether binary properties are to be serialized.
+     * @param session        the session to be used for resolving namespace mappings
      * @param contentHandler the content handler to feed the SAX events to
      */
-    public SysViewSAXEventGenerator(NodeState nodeState, QName nodeName,
-                                    boolean noRecurse, boolean binaryAsLink,
-                                    ItemStateManager stateProvider,
-                                    NamespaceRegistryImpl nsReg,
-                                    AccessManagerImpl accessMgr,
-                                    HierarchyManager hierMgr,
+    public SysViewSAXEventGenerator(NodeImpl node, boolean noRecurse,
+                                    boolean skipBinary,
+                                    SessionImpl session,
                                     ContentHandler contentHandler) {
-        super(nodeState, nodeName, noRecurse, binaryAsLink,
-                stateProvider, nsReg, accessMgr, contentHandler);
-        this.hierMgr = hierMgr;
+        super(node, noRecurse, skipBinary, session, contentHandler);
     }
 
     /**
-     * @see AbstractSAXEventGenerator#entering(NodeState, QName, int)
+     * @see AbstractSAXEventGenerator#entering(NodeImpl, int)
      */
-    protected void entering(NodeState state, QName name, int level)
+    protected void entering(NodeImpl node, int level)
             throws RepositoryException, SAXException {
+        QName name = node.getQName();
+
         AttributesImpl attrs = new AttributesImpl();
         // name attribute
         String nodeName;
         try {
-            if (state.getParentUUIDs().size() == 0) {
-                // use dummy name for root node
-                nodeName = NODENAME_ROOT.toJCRName(nsReg);
+            if (node.isRepositoryRoot()) {
+                // root node needs a name
+                nodeName = NODENAME_ROOT.toJCRName(session.getNamespaceResolver());
             } else {
-                nodeName = name.toJCRName(nsReg);
+                nodeName = name.toJCRName(session.getNamespaceResolver());
             }
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
@@ -105,44 +94,50 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
+
         attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, NS_SV_PREFIX + ":" + NAME_ATTRIBUTE, CDATA_TYPE, nodeName);
         // start node element
         contentHandler.startElement(NS_SV_URI, NODE_ELEMENT, NS_SV_PREFIX + ":" + NODE_ELEMENT, attrs);
     }
 
     /**
-     * @see AbstractSAXEventGenerator#enteringProperties(NodeState, QName, int)
+     * @see AbstractSAXEventGenerator#enteringProperties(NodeImpl, int)
      */
-    protected void enteringProperties(NodeState state, QName name, int level)
+    protected void enteringProperties(NodeImpl node, int level)
             throws RepositoryException, SAXException {
         // nop
     }
 
     /**
-     * @see AbstractSAXEventGenerator#leavingProperties(NodeState, QName, int)
+     * @see AbstractSAXEventGenerator#leavingProperties(NodeImpl, int)
      */
-    protected void leavingProperties(NodeState state, QName name, int level)
+    protected void leavingProperties(NodeImpl node, int level)
             throws RepositoryException, SAXException {
         // nop
     }
 
     /**
-     * @see AbstractSAXEventGenerator#leaving(NodeState, QName, int)
+     * @see AbstractSAXEventGenerator#leaving(NodeImpl, int)
      */
-    protected void leaving(NodeState state, QName name, int level)
+    protected void leaving(NodeImpl node, int level)
             throws RepositoryException, SAXException {
         // end node element
         contentHandler.endElement(NS_SV_URI, NODE_ELEMENT, NS_SV_PREFIX + ":" + NODE_ELEMENT);
     }
 
     /**
-     * @see AbstractSAXEventGenerator#entering(PropertyState, int)
+     * @see AbstractSAXEventGenerator#entering(PropertyImpl, int)
      */
-    protected void entering(PropertyState state, int level)
+    protected void entering(PropertyImpl prop, int level)
             throws RepositoryException, SAXException {
-        String name;
+        if (prop.getType() == PropertyType.BINARY && skipBinary) {
+            return;
+        }
+
+        QName name = prop.getQName();
+        String propName;
         try {
-            name = state.getName().toJCRName(nsReg);
+            propName = name.toJCRName(session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace";
@@ -151,9 +146,9 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         }
         AttributesImpl attrs = new AttributesImpl();
         // name attribute
-        attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, NS_SV_PREFIX + ":" + NAME_ATTRIBUTE, CDATA_TYPE, name);
+        attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, NS_SV_PREFIX + ":" + NAME_ATTRIBUTE, CDATA_TYPE, propName);
         // type attribute
-        int type = state.getType();
+        int type = prop.getType();
         String typeName;
         try {
             typeName = PropertyType.nameFromValue(type);
@@ -161,86 +156,80 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             // should never be getting here
             throw new RepositoryException("unexpected property-type ordinal: " + type, iae);
         }
-        if (type == PropertyType.BINARY && binaryAsLink) {
-            typeName = PropertyType.TYPENAME_PATH;
-        }
         attrs.addAttribute(NS_SV_URI, TYPE_ATTRIBUTE, NS_SV_PREFIX + ":" + TYPE_ATTRIBUTE, ENUMERATION_TYPE, typeName);
 
         // start property element
         contentHandler.startElement(NS_SV_URI, PROPERTY_ELEMENT, NS_SV_PREFIX + ":" + PROPERTY_ELEMENT, attrs);
 
         // values
-        InternalValue[] values = state.getValues();
-        if (values != null && values.length > 0) {
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] != null) {
-                    // start value element
-                    contentHandler.startElement(NS_SV_URI, VALUE_ELEMENT, NS_SV_PREFIX + ":" + VALUE_ELEMENT, new AttributesImpl());
+        boolean multiValued = prop.getDefinition().isMultiple();
+        Value[] vals;
+        if (multiValued) {
+            vals = prop.getValues();
+        } else {
+            vals = new Value[]{prop.getValue()};
+        }
+        for (int i = 0; i < vals.length; i++) {
+            Value val = vals[i];
 
-                    // characters
-                    if (type == PropertyType.BINARY) {
-                        if (binaryAsLink) {
-                            String path;
-                            try {
-                                path = hierMgr.getPath(new PropertyId(state.getParentUUID(), state.getName())).toJCRPath(nsReg);
-                            } catch (NoPrefixDeclaredException npde) {
-                                // should never get here...
-                                String msg = "internal error: encountered unregistered namespace";
-                                log.debug(msg);
-                                throw new RepositoryException(msg, npde);
-                            }
-                            char[] chars = path.toCharArray();
-                            contentHandler.characters(chars, 0, chars.length);
-                        } else {
-                            // binary data, base64 encoding required
-                            BLOBFileValue blob = (BLOBFileValue) values[i].internalValue();
-                            InputStream in = blob.getStream();
-                            Writer writer = new Writer() {
-                                public void close() /*throws IOException*/ {
-                                }
+            // start value element
+            contentHandler.startElement(NS_SV_URI, VALUE_ELEMENT, NS_SV_PREFIX + ":" + VALUE_ELEMENT, new AttributesImpl());
 
-                                public void flush() /*throws IOException*/ {
-                                }
-
-                                public void write(char[] cbuf, int off, int len) throws IOException {
-                                    try {
-                                        contentHandler.characters(cbuf, off, len);
-                                    } catch (SAXException se) {
-                                        throw new IOException(se.toString());
-                                    }
-                                }
-                            };
-                            try {
-                                Base64.encode(in, writer);
-                                in.close();
-                                writer.close();
-                            } catch (IOException ioe) {
-                                // check if the exception wraps a SAXException
-                                Throwable t = ioe.getCause();
-                                if (t != null && t instanceof SAXException) {
-                                    throw (SAXException) t;
-                                } else {
-                                    throw new SAXException(ioe);
-                                }
-                            }
-                        }
-                    } else {
-                        char[] chars = values[i].toJCRValue(nsReg).getString().toCharArray();
-                        contentHandler.characters(chars, 0, chars.length);
+            // characters
+            if (prop.getType() == PropertyType.BINARY) {
+                // binary data, base64 encoding required
+                InputStream in = val.getStream();
+                Writer writer = new Writer() {
+                    public void close() /*throws IOException*/ {
                     }
 
-                    // end value element
-                    contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT, NS_SV_PREFIX + ":" + VALUE_ELEMENT);
+                    public void flush() /*throws IOException*/ {
+                    }
+
+                    public void write(char[] cbuf, int off, int len) throws IOException {
+                        try {
+                            contentHandler.characters(cbuf, off, len);
+                        } catch (SAXException se) {
+                            throw new IOException(se.toString());
+                        }
+                    }
+                };
+                try {
+                    Base64.encode(in, writer);
+                    // no need to close our Writer implementation
+                    //writer.close();
+                } catch (IOException ioe) {
+                    // check if the exception wraps a SAXException
+                    Throwable t = ioe.getCause();
+                    if (t != null && t instanceof SAXException) {
+                        throw (SAXException) t;
+                    } else {
+                        throw new SAXException(ioe);
+                    }
+                } finally {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        // ignore
+                    }
                 }
+            } else {
+                char[] chars = val.getString().toCharArray();
+                contentHandler.characters(chars, 0, chars.length);
             }
+            // end value element
+            contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT, NS_SV_PREFIX + ":" + VALUE_ELEMENT);
         }
     }
 
     /**
-     * @see AbstractSAXEventGenerator#leaving(PropertyState, int)
+     * @see AbstractSAXEventGenerator#leaving(PropertyImpl, int)
      */
-    protected void leaving(PropertyState state, int level)
+    protected void leaving(PropertyImpl prop, int level)
             throws RepositoryException, SAXException {
+        if (prop.getType() == PropertyType.BINARY && skipBinary) {
+            return;
+        }
         contentHandler.endElement(NS_SV_URI, PROPERTY_ELEMENT, NS_SV_PREFIX + ":" + PROPERTY_ELEMENT);
     }
 }

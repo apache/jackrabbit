@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.util.ISO9075;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 

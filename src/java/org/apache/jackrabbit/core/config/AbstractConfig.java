@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.config;
 
 import org.apache.commons.collections.BeanMap;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.util.Text;
 import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -74,11 +75,11 @@ abstract class AbstractConfig implements EntityResolver {
      * Creates a {@link org.apache.jackrabbit.core.fs.FileSystem} instance
      * based on the config <code>fsConfig</code>.
      *
-     * @param fsConfig a {@link #FILE_SYSTEM_ELEMENT}.
+     * @param fsConfig  a {@link #FILE_SYSTEM_ELEMENT}.
      * @param variables values of variables to be replaced in config.
      * @return a {@link org.apache.jackrabbit.core.fs.FileSystem} instance.
      * @throws RepositoryException if an error occurs while creating the
-     *  {@link org.apache.jackrabbit.core.fs.FileSystem}.
+     *                             {@link org.apache.jackrabbit.core.fs.FileSystem}.
      */
     static FileSystem createFileSystem(Element fsConfig, Map variables)
             throws RepositoryException {
@@ -126,18 +127,7 @@ abstract class AbstractConfig implements EntityResolver {
         while (iter.hasNext()) {
             String varName = (String) iter.next();
             String varValue = (String) vars.get(varName);
-            int pos;
-            int lastPos = 0;
-            StringBuffer sb = new StringBuffer(s.length());
-            while ((pos = s.indexOf(varName, lastPos)) != -1) {
-                sb.append(s.substring(lastPos, pos));
-                sb.append(varValue);
-                lastPos = pos + varName.length();
-            }
-            if (lastPos < s.length()) {
-                sb.append(s.substring(lastPos));
-            }
-            s = sb.toString();
+            s = Text.replace(s, varName, varValue);
         }
         return s;
     }

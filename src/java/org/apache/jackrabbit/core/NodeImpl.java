@@ -832,7 +832,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @return
      */
-    protected boolean isRepositoryRoot() {
+    public boolean isRepositoryRoot() {
         return ((NodeState) state).getUUID().equals(rep.getRootNodeUUID());
     }
 

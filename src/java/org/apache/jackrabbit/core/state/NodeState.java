@@ -777,6 +777,7 @@ public class NodeState extends ItemState {
 
         private int hash = 0;
 
+        // @todo constructor should not be public!
         public PropertyEntry(QName propName) {
             super(propName);
         }
@@ -816,6 +817,7 @@ public class NodeState extends ItemState {
         private int index; // 1-based index for same-name siblings
         private String uuid;
 
+        // @todo constructor should not be public!
         public ChildNodeEntry(QName nodeName, String uuid, int index) {
             super(nodeName);
 

@@ -20,15 +20,17 @@ import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.log4j.Logger;
+import org.apache.xerces.util.XMLChar;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
-import org.apache.xerces.util.XMLChar;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -36,13 +38,13 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.*;
-import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.security.AccessControlException;
 import java.util.*;
 
@@ -349,8 +351,8 @@ public class SessionImpl implements Session {
      * @param workspaceName name of the new workspace
      * @throws AccessDeniedException if the current session is not allowed to
      *                               create the workspace
-     * @throws RepositoryException if a workspace with the given name
-     *                             already exists or if another error occurs
+     * @throws RepositoryException   if a workspace with the given name
+     *                               already exists or if another error occurs
      */
     protected void createWorkspace(String workspaceName)
             throws AccessDeniedException, RepositoryException {
@@ -813,7 +815,7 @@ public class SessionImpl implements Session {
         // check sanity of this session
         sanityCheck();
 
-        Item item = null;
+        Item item;
         try {
             item = getItemManager().getItem(Path.create(parentAbsPath, getNamespaceResolver(), true));
         } catch (MalformedPathException mpe) {
@@ -886,32 +888,13 @@ public class SessionImpl implements Session {
         // check sanity of this session
         sanityCheck();
 
-        // @todo implement Session#exportDocView(String, ContentHandler, boolean, boolean)
-        throw new RepositoryException("not yet implemented");
-/*
-        // check path & retrieve state
-        Path path;
-        Path.PathElement name;
-        NodeState state;
-        try {
-            path = Path.create(absPath, session.getNamespaceResolver(), true);
-            name = path.getNameElement();
-            state = getNodeState(path, hierMgr, stateMgr);
-        } catch (MalformedPathException mpe) {
-            String msg = "invalid path: " + absPath;
-            log.debug(msg);
-            throw new RepositoryException(msg, mpe);
-        }
-
-        // check read access
-        if (!session.getAccessManager().isGranted(state.getId(), AccessManager.READ)) {
+        Item item = getItem(absPath);
+        if (!item.isNode()) {
+            // there's a property, though not a node at the specified path
             throw new PathNotFoundException(absPath);
         }
-
-        new DocViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
-                stateMgr, rep.getNamespaceRegistry(),
-                session.getAccessManager(), hierMgr, contentHandler).serialize();
-*/
+        new DocViewSAXEventGenerator((NodeImpl) item, noRecurse, skipBinary,
+                this, contentHandler).serialize();
     }
 
     /**
@@ -920,7 +903,7 @@ public class SessionImpl implements Session {
     public void exportDocView(String absPath, OutputStream out,
                               boolean skipBinary, boolean noRecurse)
             throws InvalidSerializedDataException, IOException,
-            PathNotFoundException,  RepositoryException {
+            PathNotFoundException, RepositoryException {
         OutputFormat format = new OutputFormat("xml", "UTF-8", true);
         XMLSerializer serializer = new XMLSerializer(out, format);
         try {
@@ -939,33 +922,13 @@ public class SessionImpl implements Session {
         // check sanity of this session
         sanityCheck();
 
-        // @todo implement Session#exportSysView(String, ContentHandler, boolean, boolean)
-        throw new RepositoryException("not yet implemented");
-/*
-        // check path & retrieve state
-        Path path;
-        Path.PathElement name;
-        NodeState state;
-        try {
-            path = Path.create(absPath, session.getNamespaceResolver(), true);
-            name = path.getNameElement();
-            state = getNodeState(path, hierMgr, stateMgr);
-        } catch (MalformedPathException mpe) {
-            String msg = "invalid path: " + absPath;
-            log.debug(msg);
-            throw new RepositoryException(msg, mpe);
-        }
-
-        // check read access
-        if (!session.getAccessManager().isGranted(state.getId(), AccessManager.READ)) {
+        Item item = getItem(absPath);
+        if (!item.isNode()) {
+            // there's a property, though not a node at the specified path
             throw new PathNotFoundException(absPath);
         }
-
-        new SysViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
-                stateMgr, rep.getNamespaceRegistry(),
-                session.getAccessManager(), hierMgr, contentHandler).serialize();
-    }
-*/
+        new SysViewSAXEventGenerator((NodeImpl) item, noRecurse, skipBinary,
+                this, contentHandler).serialize();
     }
 
     /**
