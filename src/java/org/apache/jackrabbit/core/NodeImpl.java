@@ -2442,6 +2442,9 @@ public class NodeImpl extends ItemImpl implements Node {
             return false;
         }
 
+        // check lock status
+        checkLock();
+
         QName ntName;
         try {
             ntName = QName.fromJCRName(mixinName, session.getNamespaceResolver());
