@@ -24,6 +24,7 @@
     <param name="maxMergeDocs" value="10000" />
     <param name="mergeFactor" value="10" />
     <param name="redoSize" value="1000"/>
+    <param name="bufferSize" value="10"/>
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
       <param name="path" value="${wsp.home}/index" />
     </FileSystem>
