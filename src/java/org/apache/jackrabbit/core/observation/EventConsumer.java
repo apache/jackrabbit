@@ -141,7 +141,7 @@ class EventConsumer {
                 ItemId targetId;
                 if (state.getChildUUID() == null) {
                     // target is a property
-                    targetId = new PropertyId(state.getParentUUID(), state.getChildItemQName());
+                    targetId = new PropertyId(state.getParentUUID(), state.getChildRelPath().getElements()[0].getName());
                 } else {
                     // target is a node
                     targetId = new NodeId(state.getChildUUID());
@@ -176,7 +176,7 @@ class EventConsumer {
                 ItemId targetId;
                 if (state.getChildUUID() == null) {
                     // target is a property
-                    targetId = new PropertyId(state.getParentUUID(), state.getChildItemQName());
+                    targetId = new PropertyId(state.getParentUUID(), state.getChildRelPath().getElements()[0].getName());
                 } else {
                     // target is a node
                     targetId = new NodeId(state.getChildUUID());

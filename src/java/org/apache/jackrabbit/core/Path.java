@@ -166,6 +166,26 @@ public final class Path {
         }
     }
 
+    /**
+     * Creates a relative path based on a {@link QName} and an index.
+     * @param name single {@link QName} for this relative path.
+     * @param index index of the sinlge name element.
+     * @return the relative path created from <code>name</code>.
+     * @exception IllegalArgumentException if <code>index</code> is negative.
+     */
+    public static Path create(QName name, int index) {
+        if (index < 0) {
+            throw new IllegalArgumentException("index must not be negative: " + index);
+        }
+        PathElement elem;
+        if (index < 1) {
+            elem = new PathElement(name);
+        } else {
+            elem = new PathElement(name, index);
+        }
+        return new Path(new PathElement[]{elem});
+    }
+
     //------------------------------------------------------< utility methods >
     /**
      * Checks if <code>jcrPath</code> is a valid JCR-style absolute or relative

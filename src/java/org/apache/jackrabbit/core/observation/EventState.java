@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 
 import javax.jcr.Session;
@@ -51,9 +50,10 @@ class EventState {
     private final String childUUID;
 
     /**
-     * The qualified name of the child item associated with this event.
+     * The relative path of the child item associated with this event.
+     * This is basically the name of the item with an optional index.
      */
-    private final QName childName;
+    private final Path childRelPath;
 
     /**
      * The node type of the parent node.
@@ -87,7 +87,7 @@ class EventState {
      *                   If the event type is one of: <code>PROPERTY_ADDED</code>,
      *                   <code>PROPERTY_CHANGED</code> or <code>PROPERTY_REMOVED</code>
      *                   this parameter must be <code>null</code>.
-     * @param childName  the qualified name of the child item associated with
+     * @param childPath  the relative path of the child item associated with
      *                   this event.
      * @param nodeType   the node type of the parent node.
      * @param session    the {@link javax.jcr.Session} that caused this event.
@@ -96,7 +96,7 @@ class EventState {
                        String parentUUID,
                        Path parentPath,
                        String childUUID,
-                       QName childName,
+                       Path childPath,
                        NodeTypeImpl nodeType,
                        Session session) {
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
@@ -113,7 +113,7 @@ class EventState {
         this.parentUUID = parentUUID;
         this.parentPath = parentPath;
         this.childUUID = childUUID;
-        this.childName = childName;
+        this.childRelPath = childPath;
         this.nodeType = nodeType;
         this.session = session;
     }
@@ -129,7 +129,7 @@ class EventState {
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
      * @param childUUID  the uuid of the child node associated with this event.
-     * @param childName  the qualified name of the child node that was added.
+     * @param childPath  the relative path of the child node that was added.
      * @param nodeType   the node type of the parent node.
      * @param session    the session that added the node.
      * @return an <code>EventState</code> instance.
@@ -137,14 +137,14 @@ class EventState {
     public static EventState childNodeAdded(String parentUUID,
                                             Path parentPath,
                                             String childUUID,
-                                            QName childName,
+                                            Path childPath,
                                             NodeTypeImpl nodeType,
                                             Session session) {
         return new EventState(Event.NODE_ADDED,
                 parentUUID,
                 parentPath,
                 childUUID,
-                childName,
+                childPath,
                 nodeType,
                 session);
     }
@@ -158,7 +158,7 @@ class EventState {
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
      * @param childUUID  the uuid of the child node associated with this event.
-     * @param childName  the qualified name of the child node that was removed.
+     * @param childPath  the relative path of the child node that was removed.
      * @param nodeType   the node type of the parent node.
      * @param session    the session that removed the node.
      * @return an <code>EventState</code> instance.
@@ -166,14 +166,14 @@ class EventState {
     public static EventState childNodeRemoved(String parentUUID,
                                               Path parentPath,
                                               String childUUID,
-                                              QName childName,
+                                              Path childPath,
                                               NodeTypeImpl nodeType,
                                               Session session) {
         return new EventState(Event.NODE_REMOVED,
                 parentUUID,
                 parentPath,
                 childUUID,
-                childName,
+                childPath,
                 nodeType,
                 session);
     }
@@ -186,21 +186,21 @@ class EventState {
      *                   this <code>EventState</code>.
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
-     * @param childName  the qualified name of the property that was added.
+     * @param childPath  the relative path of the property that was added.
      * @param nodeType   the node type of the parent node.
      * @param session    the session that added the property.
      * @return an <code>EventState</code> instance.
      */
     public static EventState propertyAdded(String parentUUID,
                                            Path parentPath,
-                                           QName childName,
+                                           Path childPath,
                                            NodeTypeImpl nodeType,
                                            Session session) {
         return new EventState(Event.PROPERTY_ADDED,
                 parentUUID,
                 parentPath,
                 null,
-                childName,
+                childPath,
                 nodeType,
                 session);
     }
@@ -213,21 +213,21 @@ class EventState {
      *                   this <code>EventState</code>.
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
-     * @param childName  the qualified name of the property that was removed.
+     * @param childPath  the relative path of the property that was removed.
      * @param nodeType   the node type of the parent node.
      * @param session    the session that removed the property.
      * @return an <code>EventState</code> instance.
      */
     public static EventState propertyRemoved(String parentUUID,
                                              Path parentPath,
-                                             QName childName,
+                                             Path childPath,
                                              NodeTypeImpl nodeType,
                                              Session session) {
         return new EventState(Event.PROPERTY_REMOVED,
                 parentUUID,
                 parentPath,
                 null,
-                childName,
+                childPath,
                 nodeType,
                 session);
     }
@@ -240,21 +240,21 @@ class EventState {
      *                   this <code>EventState</code>.
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
-     * @param childName  the qualified name of the property that changed.
+     * @param childPath  the relative path of the property that changed.
      * @param nodeType   the node type of the parent node.
      * @param session    the session that changed the property.
      * @return an <code>EventState</code> instance.
      */
     public static EventState propertyChanged(String parentUUID,
                                              Path parentPath,
-                                             QName childName,
+                                             Path childPath,
                                              NodeTypeImpl nodeType,
                                              Session session) {
         return new EventState(Event.PROPERTY_CHANGED,
                 parentUUID,
                 parentPath,
                 null,
-                childName,
+                childPath,
                 nodeType,
                 session);
     }
@@ -296,13 +296,13 @@ class EventState {
     }
 
     /**
-     * Returns the {@link QName} of the
+     * Returns the relative {@link Path} of the child
      * {@link javax.jcr.Item} associated with this event.
      *
-     * @return the <code>QName</code> associated with this event.
+     * @return the <code>Path</code> associated with this event.
      */
-    public QName getChildItemQName() {
-        return childName;
+    public Path getChildRelPath() {
+        return childRelPath;
     }
 
     /**
@@ -342,7 +342,7 @@ class EventState {
             StringBuffer sb = new StringBuffer();
             sb.append("EventState: ").append(valueOf(type));
             sb.append(", Parent: ").append(parentUUID);
-            sb.append(", Child: ").append(childName);
+            sb.append(", Child: ").append(childRelPath);
             sb.append(", UserId: ").append(session.getUserId());
             stringValue = sb.toString();
         }
@@ -360,7 +360,7 @@ class EventState {
             h = 37;
             h = 37 * h + (int) type;
             h = 37 * h + parentUUID.hashCode();
-            h = 37 * h + childName.hashCode();
+            h = 37 * h + childRelPath.hashCode();
             h = 37 * h + session.hashCode();
             hashCode = h;
         }
@@ -383,7 +383,7 @@ class EventState {
             EventState other = (EventState) obj;
             return this.type == other.type
                     && this.parentUUID.equals(other.parentUUID)
-                    && this.childName.equals(other.childName)
+                    && this.childRelPath.equals(other.childRelPath)
                     && this.session.equals(other.session);
         }
         return false;

@@ -120,7 +120,7 @@ public final class EventStateCollection {
                     NodeState.PropertyEntry prop = (NodeState.PropertyEntry) it.next();
                     events.add(EventState.propertyAdded(currentNode.getUUID(),
                             parentPath,
-                            prop.getName(),
+                            Path.create(prop.getName(), 0),
                             nodeType,
                             session));
                 }
@@ -131,7 +131,7 @@ public final class EventStateCollection {
                     NodeState.PropertyEntry prop = (NodeState.PropertyEntry) it.next();
                     events.add(EventState.propertyRemoved(currentNode.getUUID(),
                             parentPath,
-                            prop.getName(),
+                            Path.create(prop.getName(), 0),
                             nodeType,
                             session));
                 }
@@ -143,7 +143,7 @@ public final class EventStateCollection {
                     events.add(EventState.childNodeAdded(currentNode.getUUID(),
                             parentPath,
                             child.getUUID(),
-                            child.getName(),
+                            Path.create(child.getName(), child.getIndex()),
                             nodeType,
                             session));
                 }
@@ -155,7 +155,7 @@ public final class EventStateCollection {
                     events.add(EventState.childNodeRemoved(currentNode.getUUID(),
                             parentPath,
                             child.getUUID(),
-                            child.getName(),
+                            Path.create(child.getName(), child.getIndex()),
                             nodeType,
                             session));
                 }
@@ -168,7 +168,7 @@ public final class EventStateCollection {
                         Path parentPath = hmgr.getPath(parentId);
                         events.add(EventState.propertyChanged(state.getParentUUID(),
                                 parentPath,
-                                ((PropertyState) state).getName(),
+                                Path.create(((PropertyState) state).getName(), 0),
                                 session.getNodeTypeManager().getNodeType(parentState.getNodeTypeName()),
                                 session));
                     } catch (ItemStateException e) {
@@ -194,7 +194,7 @@ public final class EventStateCollection {
                         events.add(EventState.childNodeRemoved(currentNode.getUUID(),
                                 parentPaths[i],
                                 child.getUUID(),
-                                child.getName(),
+                                Path.create(child.getName(), child.getIndex()),
                                 nodeType,
                                 session));
                     }
