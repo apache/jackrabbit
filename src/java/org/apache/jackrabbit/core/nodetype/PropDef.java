@@ -27,7 +27,7 @@ public class PropDef extends ChildItemDef {
 
     private int requiredType = PropertyType.UNDEFINED;
     private ValueConstraint[] valueConstraints = new ValueConstraint[0];
-    private InternalValue[] defaultValues = null;
+    private InternalValue[] defaultValues = new InternalValue[0];
     private boolean multiple = false;
 
     /**
@@ -62,14 +62,16 @@ public class PropDef extends ChildItemDef {
      * @param valueConstraints
      */
     public void setValueConstraints(ValueConstraint valueConstraints[]) {
-        this.valueConstraints = valueConstraints;
+        this.valueConstraints =
+                (valueConstraints == null) ? new ValueConstraint[0] : valueConstraints;
     }
 
     /**
      * @param defaultValues
      */
     public void setDefaultValues(InternalValue[] defaultValues) {
-        this.defaultValues = defaultValues;
+        this.defaultValues =
+                (defaultValues == null) ? new InternalValue[0] : defaultValues;
     }
 
     /**

@@ -346,7 +346,7 @@ public class NodeTypeRegistry {
         }
         registeredNTDefs.put(name, ntd);
 
-        // store poperty & child node definitions of new node type by id
+        // store property & child node definitions of new node type by id
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
             PropDef def = pda[i];
@@ -374,8 +374,16 @@ public class NodeTypeRegistry {
 
         NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
         registeredNTDefs.remove(name);
-        // remove all affected effective node types from aggregates cache
+        /**
+         * remove all affected effective node types from aggregates cache
+         * (collect keys first to prevent ConcurrentModificationException)
+         */
         Iterator iter = entCache.keys();
+        ArrayList keys = new ArrayList();
+        while (iter.hasNext()) {
+            keys.add(iter.next());
+        }
+        iter = keys.iterator();
         while (iter.hasNext()) {
             WeightedKey k = (WeightedKey) iter.next();
             EffectiveNodeType ent = (EffectiveNodeType) entCache.get(k);
@@ -384,7 +392,7 @@ public class NodeTypeRegistry {
             }
         }
 
-        // remove poperty & child node definitions
+        // remove property & child node definitions
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
             PropDefId id = new PropDefId(pda[i]);
@@ -512,12 +520,6 @@ public class NodeTypeRegistry {
         QName name = ntd.getName();
         if (name == null) {
             String msg = "no name specified";
-            log.error(msg);
-            throw new InvalidNodeTypeDefException(msg);
-        }
-
-        if (registeredNTDefs.containsKey(name)) {
-            String msg = name + " already exists";
             log.error(msg);
             throw new InvalidNodeTypeDefException(msg);
         }
@@ -1292,6 +1294,9 @@ public class NodeTypeRegistry {
          */
         NodeTypeDef ntdOld = (NodeTypeDef) registeredNTDefs.get(name);
         NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
+        if (!diff.isModified()) {
+            throw new RepositoryException(name.toString() + ": not modified");
+        }
         if (diff.isTrivial()) {
             /**
              * the change is trivial and has no effect on current content
