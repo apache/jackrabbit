@@ -556,16 +556,16 @@ public class RepositoryImpl implements Repository, EventListener {
         for (Iterator it = wspConfigs.values().iterator(); it.hasNext();) {
             WorkspaceConfig wspConfig = (WorkspaceConfig) it.next();
             try {
-                // close workspace file system
-                wspConfig.getFileSystem().close();
-            } catch (FileSystemException e) {
-                log.error("Error while closing filesystem of workspace " + wspConfig.getName(), e);
-            }
-            try {
                 // close persistence manager
                 wspConfig.getPersistenceManager().close();
             } catch (Exception e) {
                 log.error("Error while closing persistence manager of workspace " + wspConfig.getName(), e);
+            }
+            try {
+                // close workspace file system
+                wspConfig.getFileSystem().close();
+            } catch (FileSystemException e) {
+                log.error("Error while closing filesystem of workspace " + wspConfig.getName(), e);
             }
         }
 
