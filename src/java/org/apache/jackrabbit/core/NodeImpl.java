@@ -874,6 +874,28 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Same as <code>{@link Node#getReferences()}</code> except that
+     * this method also filters out the references that appear to non-existent
+     * in this workspace if <code>skipInexistent</code> is set to <code>true</code>.
+     *
+     * @param skipInexistent if set to <code>true</code> inexistent items are skipped
+     */
+    protected PropertyIterator getReferences(boolean skipInexistent)
+            throws RepositoryException {
+        try {
+            NodeReferencesId targetId = new NodeReferencesId(((NodeId) id).getUUID());
+            NodeReferences refs = stateMgr.getNodeReferences(targetId);
+            // refs.getReferences returns a list of PropertyId's
+            List idList = refs.getReferences();
+            return new LazyItemIterator(itemMgr, idList, skipInexistent);
+        } catch (ItemStateException e) {
+            String msg = "Unable to retrieve node references for: " + id;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
      * Same as {@link Node#addMixin(String)}, but takes a <code>QName</code>
      * instad of a <code>String</code>.
      *
@@ -2420,30 +2442,6 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyIterator getReferences() throws RepositoryException {
         return getReferences(false);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * In addition to the normal behaviour, this method also filters out the
-     * references that do not exist in this workspace if <code>skipExistent</code>
-     * is set to <code>true</code>.
-     *
-     * @param skipInexistent if set to <code>true</code> inexistent items are skipped
-     */
-    protected PropertyIterator getReferences(boolean skipInexistent)
-            throws RepositoryException {
-        try {
-            NodeReferencesId targetId = new NodeReferencesId(((NodeId) id).getUUID());
-            NodeReferences refs = stateMgr.getNodeReferences(targetId);
-            // refs.getReferences returns a list of PropertyId's
-            List idList = refs.getReferences();
-            return new LazyItemIterator(itemMgr, idList, skipInexistent);
-        } catch (ItemStateException e) {
-            String msg = "Unable to retrieve node references for: " + id;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
     }
 
     /**

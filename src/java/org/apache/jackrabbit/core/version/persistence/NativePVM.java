@@ -544,7 +544,7 @@ public class NativePVM implements PersistentVersionManager, Constants {
     }
 
     /**
-     * @see PersistentVersionManager#getItemStateMgr()
+     * {@inheritDoc}
      */
     public UpdatableItemStateManager getItemStateMgr() {
         return stateMgr;

@@ -16,7 +16,10 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -159,14 +162,14 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @see javax.jcr.version.VersionHistory#getRootVersion()
+     * {@inheritDoc}
      */
     public InternalVersion getRootVersion() {
         return rootVersion;
     }
 
     /**
-     * @see javax.jcr.version.VersionHistory#getVersion(java.lang.String)
+     * {@inheritDoc}
      */
     public InternalVersion getVersion(QName versionName) throws VersionException {
         // maybe add cache by name?
@@ -181,8 +184,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @param versionName
-     * @return
+     * {@inheritDoc}
      */
     public boolean hasVersion(QName versionName) {
         // maybe add cache?
@@ -218,7 +220,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @see javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)
+     * {@inheritDoc}
      */
     public InternalVersion getVersionByLabel(QName label) {
         return (InternalVersion) labelCache.get(label);
@@ -276,7 +278,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @see InternalVersionHistory#addVersionLabel(QName, QName, boolean)
+     * {@inheritDoc}
      */
     public InternalVersion addVersionLabel(QName versionName, QName label, boolean move)
             throws VersionException {
@@ -317,7 +319,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @see InternalVersionHistory#removeVersionLabel(QName)
+     * {@inheritDoc}
      */
     public InternalVersion removeVersionLabel(QName label) throws VersionException {
 
@@ -411,14 +413,14 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @see org.apache.jackrabbit.core.version.InternalVersionHistory#getVersionableUUID()
+     * {@inheritDoc}
      */
     public String getVersionableUUID() {
         return versionableId;
     }
 
     /**
-     * @see org.apache.jackrabbit.core.version.InternalVersionHistory#getVersionLabels()
+     * {@inheritDoc}
      */
     public QName[] getVersionLabels() {
         return (QName[]) labelCache.keySet().toArray(new QName[labelCache.size()]);

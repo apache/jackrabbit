@@ -33,8 +33,8 @@ import org.apache.log4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.io.PrintStream;
-import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Shared <code>ItemStateManager</code>. Caches objects returned from a
@@ -403,7 +403,7 @@ public class SharedItemStateManager extends ItemStateCache
             NodeReferences refs = (NodeReferences) iter.next();
             NodeId id = new NodeId(refs.getUUID());
             // if targetid is in virtual provider, transfer to its modified set
-            for (int i=0; i<virtualProviders.length; i++) {
+            for (int i = 0; i < virtualProviders.length; i++) {
                 VirtualItemStateProvider provider = virtualProviders[i];
                 if (provider.hasItemState(id)) {
                     virtualRefs.add(refs);
@@ -472,7 +472,7 @@ public class SharedItemStateManager extends ItemStateCache
         while (iter.hasNext()) {
             NodeReferences refs = (NodeReferences) iter.next();
             // if targetid is in virtual provider, transfer to its modified set
-            for (int i=0; i<virtualProviders.length; i++) {
+            for (int i = 0; i < virtualProviders.length; i++) {
                 if (virtualProviders[i].setNodeReferences(refs)) {
                     break;
                 }

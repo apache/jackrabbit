@@ -181,21 +181,21 @@ class InternalVersionImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @see javax.jcr.version.Version#getCreated()
+     * {@inheritDoc}
      */
     public Calendar getCreated() {
         return created;
     }
 
     /**
-     * @see javax.jcr.version.Version#getSuccessors()
+     * {@inheritDoc}
      */
     public InternalVersion[] getSuccessors() {
         return (InternalVersionImpl[]) successors.toArray(new InternalVersionImpl[successors.size()]);
     }
 
     /**
-     * @see javax.jcr.version.Version#getSuccessors()
+     * {@inheritDoc}
      */
     public InternalVersion[] getPredecessors() {
         return (InternalVersionImpl[]) predecessors.toArray(new InternalVersionImpl[predecessors.size()]);
@@ -346,7 +346,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @see InternalVersion#hasLabel(QName)
+     * {@inheritDoc}
      */
     public boolean hasLabel(QName label) {
         return internalHasLabel(label);
@@ -362,7 +362,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     }
 
     /**
-     * @see InternalVersionImpl#getLabels()
+     * {@inheritDoc}
      */
     public QName[] getLabels() {
         return internalGetLabels();

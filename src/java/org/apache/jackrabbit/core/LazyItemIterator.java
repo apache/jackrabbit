@@ -16,17 +16,25 @@
  */
 package org.apache.jackrabbit.core;
 
-import javax.jcr.*;
-import java.util.List;
-import java.util.NoSuchElementException;
+import org.apache.log4j.Logger;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
  * the <code>Item</code>s only when they are requested.
  */
 class LazyItemIterator implements NodeIterator, PropertyIterator {
+
+    private static Logger log = Logger.getLogger(LazyItemIterator.class);
 
     /**
      * the item manager that is used to fetch the items
@@ -56,13 +64,19 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
     /**
      * Creates a new <code>LazyItemIterator</code> instance.
      *
-     * @param itemMgr item manager
-     * @param idList  list of item id's
+     * @param itemMgr        item manager
+     * @param idList         list of item id's
+     * @param skipInexistent if <code>true</code> the id's of those items
+     *                       that appear to be non-existent will be filtered
+     *                       out silently; otherwise such entries will cause
+     *                       a <code>NoSuchElementException</code> on
+     *                       <code>{@link #next()}</code> .
      */
-    public LazyItemIterator(ItemManager itemMgr, List idList, boolean skipInexistent) {
+    public LazyItemIterator(ItemManager itemMgr, List idList,
+                            boolean skipInexistent) {
         this.itemMgr = itemMgr;
         if (skipInexistent) {
-            // check all items first
+            // check existence of all items first
             this.idList = new ArrayList();
             Iterator iter = idList.iterator();
             while (iter.hasNext()) {
@@ -76,7 +90,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
         }
     }
 
-    //-------------------------------------------------------< NodeIterator >---
+    //---------------------------------------------------------< NodeIterator >
     /**
      * {@inheritDoc}
      */
@@ -84,7 +98,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
         return (Node) next();
     }
 
-    //---------------------------------------------------< PropertyIterator >---
+    //-----------------------------------------------------< PropertyIterator >
     /**
      * {@inheritDoc}
      */
@@ -120,7 +134,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
         pos += skipNum;
     }
 
-    //-----------------------------------------------------------< Iterator >---
+    //-------------------------------------------------------------< Iterator >
     /**
      * {@inheritDoc}
      */
@@ -135,9 +149,11 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
         if (pos >= idList.size()) {
             throw new NoSuchElementException();
         }
+        ItemId id = (ItemId) idList.get(pos++);
         try {
-            return itemMgr.getItem((ItemId) idList.get(pos++));
+            return itemMgr.getItem(id);
         } catch (RepositoryException e) {
+            log.debug("failed to fetch item " + id, e);
             throw new NoSuchElementException(e.getMessage());
         }
     }
@@ -145,7 +161,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
     /**
      * {@inheritDoc}
      *
-     * @throws UnsupportedOperationException allways, since not implemented
+     * @throws UnsupportedOperationException always since not implemented
      */
     public void remove() {
         throw new UnsupportedOperationException("remove");
