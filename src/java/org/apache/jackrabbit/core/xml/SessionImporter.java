@@ -33,6 +33,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.NodeDef;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -129,8 +130,14 @@ public class SessionImporter implements Importer {
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
-            // @todo implement IMPORT_UUID_COLLISION_REPLACE_EXISTING behavior
-            throw new RepositoryException("uuidBehavior IMPORT_UUID_COLLISION_REPLACE_EXISTING is not yet implemented");
+            // 'replace' current parent with parent of conflicting
+            parent = (NodeImpl) conflicting.getParent();
+            // remove conflicting
+            conflicting.remove();
+            // create new with given uuid at same location as conflicting
+            node = createNode(parent, nodeInfo.getName(),
+                    nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
+                    nodeInfo.getUUID());
         } else {
             String msg = "unknown uuidBehavior: " + uuidBehavior;
             log.debug(msg);
@@ -163,25 +170,48 @@ public class SessionImporter implements Importer {
         QName ntName = nodeInfo.getNodeTypeName();
         QName[] mixins = nodeInfo.getMixinNames();
 
-        // @todo check for auto-created node (JIRA issue JCR-31)
-        
-        if (uuid == null) {
-            // no potential uuid conflict, always add new node
-            node = createNode(parent, nodeName, ntName, mixins, null);
-        } else {
-            // potential uuid conflict
-            NodeImpl conflicting;
-            try {
-                conflicting = (NodeImpl) session.getNodeByUUID(uuid);
-            } catch (ItemNotFoundException infe) {
-                conflicting = null;
+        if (parent == null) {
+            // parent node was skipped, skip this child node also
+            parents.push(null); // push null on stack for skipped node
+            log.debug("skipping node " + nodeName);
+            return;
+        }
+        if (parent.hasNode(nodeName)) {
+            // a node with that name already exists...
+            NodeImpl existing = parent.getNode(nodeName);
+            NodeDef def = existing.getDefinition();
+            if (def.isProtected() && existing.isNodeType(ntName)) {
+                // skip protected node
+                parents.push(null); // push null on stack for skipped node
+                log.debug("skipping protected node " + existing.safeGetJCRPath());
+                return;
             }
-            if (conflicting != null) {
-                // resolve uuid conflict
-                node = resolveUUIDConflict(parent, conflicting, nodeInfo);
+            if (def.isAutoCreate() && existing.isNodeType(ntName)) {
+                // this node has already been auto-created, no need to create it
+                node = existing;
             } else {
-                // create new with given uuid
-                node = createNode(parent, nodeName, ntName, mixins, uuid);
+                throw new ItemExistsException(existing.safeGetJCRPath());
+            }
+        } else {
+            // there's no node with that name...
+            if (uuid == null) {
+                // no potential uuid conflict, always add new node
+                node = createNode(parent, nodeName, ntName, mixins, null);
+            } else {
+                // potential uuid conflict
+                NodeImpl conflicting;
+                try {
+                    conflicting = (NodeImpl) session.getNodeByUUID(uuid);
+                } catch (ItemNotFoundException infe) {
+                    conflicting = null;
+                }
+                if (conflicting != null) {
+                    // resolve uuid conflict
+                    node = resolveUUIDConflict(parent, conflicting, nodeInfo);
+                } else {
+                    // create new with given uuid
+                    node = createNode(parent, nodeName, ntName, mixins, uuid);
+                }
             }
         }
 
