@@ -32,6 +32,9 @@ public class TestResult {
     /** The test failed */
     public static final int FAILURE = 2;
 
+    /** The test cannot be executed */
+    public static final int NOT_EXECUTABLE = 4;
+
     /** The test */
     private Test test;
 

@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.text.MessageFormat;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 /**
  * The <code>TckTestRunner</code> class implements the <code>TestListener</code> interface.
  */
@@ -116,7 +118,11 @@ public class TckTestRunner extends BaseTestRunner {
      * @param t <code>Throwable</code> of error/failure
      */
     public void testFailed(int status, Test test, Throwable t) {
-        state = status;
+        if (t instanceof NotExecutableException) {
+            state = TestResult.NOT_EXECUTABLE;
+        } else {
+            state = status;
+        }
         result.setErrorMsg(t.toString());
     }
 
@@ -134,16 +140,20 @@ public class TckTestRunner extends BaseTestRunner {
                     writer.write(html);
                 }
 
-                String color = "clear";
+                String color;
                 switch (state) {
                     case TestResult.SUCCESS:
                         color = "pass";
                         break;
                     case TestResult.ERROR:
-                        color = "error";
-                        break;
                     case TestResult.FAILURE:
                         color = "failure";
+                        break;
+                    case TestResult.NOT_EXECUTABLE:
+                        color = "error";
+                        break;
+                    default:
+                        color = "clear";
                 }
 
                 if (interactionString!= null && !"".equals(interactionString)) {
@@ -175,9 +185,11 @@ public class TckTestRunner extends BaseTestRunner {
         this.interactionString = interactionString;
     }
 
-    public void testStarted(String testName) {}
+    public void testStarted(String testName) {
+    }
 
-	public void testEnded(String testName) {}
+    public void testEnded(String testName) {
+    }
 
-	}
+}
 

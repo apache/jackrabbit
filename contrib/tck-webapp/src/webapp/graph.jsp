@@ -47,55 +47,50 @@ String mode = request.getParameter("mode");
     </head>
     <body style="margin-top:0px;border-width:0px">
     <%
-
-    if (mode != null && mode.equals("testnow")) {
-        // read and save test configuration
-        WebAppTestConfig.save(request, repSession);
-
+    // draw empty test grid
+    if (mode == null || (mode != null && mode.equals("testnow"))) {
         // prepare test
         TestFinder tf = new TestFinder();
         tf.find(getServletConfig().getServletContext().getResource(testJarPath).openStream(),
                 "TestAll.java");
         Iterator  tests = tf.getSuites().keySet().iterator();
-        int maxlen = 0;
 
-        // get max number of tests per test unit
-        while (tests.hasNext()) {
-            String key = (String) tests.next();
-            TestSuite suite = (TestSuite) tf.getSuites().get(key);
-            int count = suite.countTestCases();
-            maxlen = (count > maxlen) ? count : maxlen;
-        }
-
-        out.write("<table width=\"100%\">");
+        out.write("<table style=\"width:100%;\">");
         tests = tf.getSuites().keySet().iterator();
 
         while (tests.hasNext()) {
             String key = (String) tests.next();
             TestSuite t = (TestSuite) tf.getSuites().get(key);
             Enumeration members = t.tests();
-            out.write("<tr><th colspan=\"100\" class=\"content\">" + t.toString() + "</th></tr>");
+            out.write("<tr><th colspan=\"3\" class=\"content\">" + t.toString() + "</th></tr>");
             while (members.hasMoreElements()) {
                 TestSuite aTest = (TestSuite) members.nextElement();
 
-                out.write("<tr><td class=\"graph\" width=\"35%\">" + aTest.toString() + "</td>");
+                out.write("<tr><td class=\"graph\" width=\"35%\" valign=\"top\">" + aTest.toString() + "</td><td>&nbsp;</td><td>");
 
                 Enumeration testMethods = aTest.tests();
+                int numOfTests = aTest.testCount();
                 while (testMethods.hasMoreElements()) {
                     TestCase tc = (TestCase) testMethods.nextElement();
                     String methodname = tc.getName();
 
                     String id = methodname + "(" + aTest.getName() + ")";
-                    out.write("<td align=\"center\" title=\"" + methodname + "\" id=\"" + id + "\"><img border=\"0\" id=\"" + id + "img" + "\" src=\"docroot/imgs/clear.png\"></td>");
+                    out.write("<img border=\"0\" id=\"" + id + "img" + "\" src=\"docroot/imgs/clear.png\"> ");
                 }
-                out.write("</tr>");
+                out.write("</td></tr>");
             }
             if (tests.hasNext()) {
-                out.write("<tr><th colspan=\"100\" class=\"content\">&nbsp;</th></tr>");
+                out.write("<tr><th colspan=\"3\" class=\"content\">&nbsp;</th></tr>");
             }
         }
 
         out.write("</table>");
+    }
+
+    // start testing or show results
+    if (mode != null && mode.equals("testnow")) {
+        // read and save test configuration
+        WebAppTestConfig.save(request, repSession);
 
         // start testing
         Node rootNode = repSession.getRootNode();
@@ -169,11 +164,11 @@ String mode = request.getParameter("mode");
             String key = (String) tests.next();
             TestSuite t = (TestSuite) tf.getSuites().get(key);
             Enumeration members = t.tests();
-            out.write("<tr><th class=\"content\" colspan=\"100\">" + t.toString() + "</th></tr>");
+            out.write("<tr><th class=\"content\" colspan=\"3\">" + t.toString() + "</th></tr>");
             while (members.hasMoreElements()) {
                 TestSuite aTest = (TestSuite) members.nextElement();
 
-                out.write("<tr><td class=\"graph\" width=\"35%\">" + aTest.toString() + "</td>");
+                out.write("<tr><td class=\"graph\" width=\"35%\" valign=\"top\">" + aTest.toString() + "</td><td>&nbsp;</td><td>");
 
                 Enumeration testMethods = aTest.tests();
                 while (testMethods.hasMoreElements()) {
@@ -184,19 +179,28 @@ String mode = request.getParameter("mode");
                     String keyname = methodname + "(" + aTest.getName() + ")";
 
                     // load node containig the test result for one test
-                    Node testResultNode = testroot.getNode(key + "/" + keyname);
+                    Node testResultNode;
+                    if (testroot.hasNode(key + "/" + keyname)) {
+                        testResultNode = testroot.getNode(key + "/" + keyname);
+                    } else {
+                        continue;
+                    }
 
                     int status = new Long(testResultNode.getProperty("status").getLong()).intValue();
-                    String color = "clear";
+                    String color;
                     switch (status) {
                         case TestResult.SUCCESS:
                             color = "pass";
                             break;
                         case TestResult.ERROR:
-                            color = "error";
-                            break;
                         case TestResult.FAILURE:
                             color = "failure";
+                            break;
+                        case TestResult.NOT_EXECUTABLE:
+                            color = "error";
+                            break;
+                        default:
+                            color = "clear";
                     }
 
                     String testTime = (testResultNode.hasProperty("testtime")) ?
@@ -213,31 +217,23 @@ String mode = request.getParameter("mode");
                             "Test name: " + methodname + "(" + aTest.getName() + ")<br>" +
                             "Time: " + testTime + "ms<br>" + errorMsg + "<br>";
 
-                    out.write("<td  title=\"" + methodname + " time: " +
-                            testTime +"ms\" id=\"" + methodname + "(" + aTest.getName() + ")\" " +
-                            "onclick=\"parent.statuswin.document.write('" + testInfo + "');parent.statuswin.scrollBy(0,70);\">" +
-                            "<img src=\"docroot/imgs/" + color + ".png\" border=\"0\"></td>");
+                    //out.write("<td  title=\"" + methodname + " time: " +
+                    //        testTime +"ms\" id=\"" + methodname + "(" + aTest.getName() + ")\" " +
+                    //        "onclick=\"parent.statuswin.document.write('" + testInfo + "');parent.statuswin.scrollBy(0,70);\">" +
+                    //        "<img src=\"docroot/imgs/" + color + ".png\" border=\"0\"></td>");
+                    out.write("<img src=\"docroot/imgs/" + color + ".png\" border=\"0\" onclick=\"parent.statuswin.document.write('" + testInfo + "');parent.statuswin.scrollBy(0,70);\"> ");
                 }
-                out.write("</tr>");
+                out.write("</td></tr>");
             }
             if (tests.hasNext()) {
-                out.write("<tr><th colspan=\"100\" class=\"content\">&nbsp;</th></tr>");
+                out.write("<tr><th colspan=\"3\" class=\"content\">&nbsp;</th></tr>");
             }
         }
 
         out.write("</table>");
         out.write("<script>parent.statuswin.scrollBy(0,20);</script>");
         out.write("<script>parent.statuswin.document.write(\"</body></html>\");</script>");
-    } else {
-        out.write("<table>");
-        out.write("<tr>");
-        out.write("<td class=\"graph\">");
-        out.write("Welcome to the JSR 170 Technology Compatibility Kit");
-        out.write("</td>");
-        out.write("<tr>");
-        out.write("<table>");
     }
-
     %>
     </body>
 </html>
