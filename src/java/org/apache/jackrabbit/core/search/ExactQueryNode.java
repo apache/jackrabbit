@@ -85,12 +85,21 @@ public class ExactQueryNode extends QueryNode {
     }
 
     /**
+     * Returns a JCR SQL representation for this query node.
+     *
+     * @return a JCR SQL representation for this query node.
+     */
+    public String toJCRSQLString() {
+        return "\"" + property + "\"='" + value + "'";
+    }
+
+    /**
      * Returns an XPath representation for this query node.
      *
      * @return an XPath representation for this query node.
      */
     public String toXPathString() {
-        // todo implement
-        return "";
+        // todo use encoding for property name
+        return "@" + property + "='" + value.replaceAll("'", "''") + "'";
     }
 }

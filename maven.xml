@@ -48,9 +48,78 @@
    
    <!-- Additionally cleans the test data created -->
    <postGoal name="clean">
+      <attainGoal name="test:clean"/>
+   </postGoal>
+   
+   <!-- deletes the test data -->
+   <goal name="test:clean">
       <ant:delete dir="applications/test/repository"/>
       <ant:delete dir="applications/test/tx"/>
       <ant:delete dir="applications/test/workspaces"/>
+   </goal>
+   
+   <postGoal name="java:prepare-filesystem">
+      <attainGoal name="jackrabbit:generate-parsers"/>
    </postGoal>
+   
+   <goal name="jackrabbit:generate-parsers">
+      <!-- SQL Parser -->
+      <ant:java classname="jjtree" fork="true">
+         <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/search/sql"/>
+         <arg value="src/grammar/sql/JCRSQL.jjt"/>
+         <classpath>
+            <fileset dir="${maven.repo.local}/javacc/jars">
+               <include name="javacc-3.2.jar"/>
+            </fileset>
+         </classpath>
+      </ant:java>
+      <ant:java classname="javacc" fork="true">
+         <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/search/sql"/>
+         <arg value="src/java/org/apache/jackrabbit/core/search/sql/JCRSQL.jj"/>
+         <classpath>
+            <fileset dir="${maven.repo.local}/javacc/jars">
+               <include name="javacc-3.2.jar"/>
+            </fileset>
+         </classpath>
+      </ant:java>
+
+
+      <!-- XPath Parser -->
+      <!-- The following is a hack to get xslt work with maven (See: http://maven.apache.org/faq.html#BadXSLT ) -->
+      ${systemScope.setProperty('javax.xml.transform.TransformerFactory','org.apache.xalan.processor.TransformerFactoryImpl')}
+      
+      <ant:xslt style="src/grammar/xpath/strip.xsl"
+             in="src/grammar/xpath/xpath-grammar.xml"
+             out="src/grammar/xpath/stripped-xpath-grammar.xml"
+             force="yes">
+      </ant:xslt>
+      <ant:xslt style="src/grammar/xpath/jjtree-jackrabbit.xsl"
+             in="src/grammar/xpath/stripped-xpath-grammar.xml"
+             out="src/grammar/xpath/XPath.jjt"
+             force="yes">
+      </ant:xslt>
+
+
+      <ant:java classname="jjtree" fork="true">
+         <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/search/xpath"/>
+         <arg value="src/grammar/xpath/XPath.jjt"/>
+         <classpath>
+            <fileset dir="${maven.repo.local}/javacc/jars">
+               <include name="javacc-3.2.jar"/>
+            </fileset>
+         </classpath>
+      </ant:java>
+      <ant:java classname="javacc" fork="true">
+         <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/search/xpath"/>
+         <arg value="-UNICODE_INPUT=true"/>
+         <arg value="src/java/org/apache/jackrabbit/core/search/xpath/XPath.jj"/>
+         <classpath>
+            <fileset dir="${maven.repo.local}/javacc/jars">
+               <include name="javacc-3.2.jar"/>
+            </fileset>
+         </classpath>
+      </ant:java>
+
+   </goal>
 
 </project>

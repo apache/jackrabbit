@@ -13,15 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.search.lucene;
+package org.apache.jackrabbit.core.search.sql;
 
-import org.apache.lucene.search.Query;
+public class ASTIdentifier extends SimpleNode {
 
-/**
- */
-class LocationStepQuery extends Query {
+    private String name;
 
-    public String toString(String s) {
-        return null;
+    public ASTIdentifier(int id) {
+    super(id);
+  }
+
+  public ASTIdentifier(JCRSQLParser p, int id) {
+    super(p, id);
+  }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+  /** Accept the visitor. **/
+  public Object jjtAccept(JCRSQLParserVisitor visitor, Object data) {
+    return visitor.visit(this, data);
+  }
+
+    public String toString() {
+        return super.toString() + ": " + name;
     }
 }

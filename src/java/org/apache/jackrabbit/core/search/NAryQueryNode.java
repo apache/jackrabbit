@@ -25,9 +25,14 @@ import java.util.List;
 public abstract class NAryQueryNode extends QueryNode {
 
     /**
+     * Empty result.
+     */
+    private static final Object[] EMPTY = new Object[0];
+
+    /**
      * The list of operands / children
      */
-    protected List operands = new ArrayList();
+    protected List operands = null;
 
     /**
      * Creates a new <code>NAryQueryNode</code> with a reference to a parent
@@ -57,6 +62,9 @@ public abstract class NAryQueryNode extends QueryNode {
      * @param operand the child {@link QueryNode} to add.
      */
     public void addOperand(QueryNode operand) {
+        if (operands == null) {
+            operands = new ArrayList();
+        }
         operands.add(operand);
     }
 
@@ -69,10 +77,17 @@ public abstract class NAryQueryNode extends QueryNode {
      * @return the return values of the <code>visitor.visit()</code> calls.
      */
     public Object[] acceptOperands(QueryNodeVisitor visitor, Object data) {
-        Object[] result = new Object[operands.size()];
-        for (int i = 0; i < operands.size(); i++) {
-            result[i] = ((QueryNode) operands.get(i)).accept(visitor, data);
+        if (operands == null) {
+            return EMPTY;
         }
-        return result;
+        
+        List result = new ArrayList(operands.size());
+        for (int i = 0; i < operands.size(); i++) {
+            Object r = ((QueryNode) operands.get(i)).accept(visitor, data);
+            if (r != null) {
+                result.add(r);
+            }
+        }
+        return result.toArray();
     }
 }

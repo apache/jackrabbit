@@ -16,7 +16,7 @@
   BUILD_PARSER = true;
   BUILD_TOKEN_MANAGER = true;
   SANITY_CHECK = true;
-  FORCE_LA_CHECK = true;                                                                                                       
+  FORCE_LA_CHECK = true;                                                                                                   
 }
 
 PARSER_BEGIN(JCRQLParser)
@@ -950,7 +950,7 @@ void Value() :
                            jjtree.closeNodeScope(jjtn000, true);
                            jjtc000 = false;
                          }
-/*@egen*/         { jjtn000.setType(Constants.TYPE_DATE);   jjtn000.setValue(t.image); }
+/*@egen*/         { jjtn000.setType(Constants.TYPE_TIMESTAMP);   jjtn000.setValue(t.image); }
 | t = <STRING_LITERAL>/*@bgen(jjtree)*/
                          {
                            jjtree.closeNodeScope(jjtn000, true);

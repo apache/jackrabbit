@@ -64,31 +64,18 @@ public class NodeIndexer {
         // UUID
         doc.add(new Field(FieldNames.UUID, node.getUUID(), true, true, false));
         try {
-            // Path
-            doc.add(new Field(FieldNames.PATH, path.toJCRPath(mappings), true, true, false));
-            Path p = null;
+            // parent UUID
             if (path.denotesRoot()) {
-                p = path;
+                doc.add(new Field(FieldNames.PARENT, "", true, true, false));
             } else {
-                p = path.getAncestor(1);
-            }
-            // Ancestors
-            while (!p.denotesRoot()) {
-                doc.add(new Field(FieldNames.ANCESTORS, p.toJCRPath(mappings),
-                        false, true, false));
-                p = p.getAncestor(1);
+                doc.add(new Field(FieldNames.PARENT, node.getParentUUID(), true, true, false));
             }
             // Label
             doc.add(new Field(FieldNames.LABEL, path.getNameElement().toJCRName(mappings),
                     false, true, false));
-            // hierarchy level
-            doc.add(new Field(FieldNames.LEVEL, String.valueOf(path.getAncestorCount()),
-                    false, true, false));
         } catch (NoPrefixDeclaredException e) {
             // will never happen, because this.mappings will dynamically add
             // unknown uri<->prefix mappings
-        } catch (PathNotFoundException e) {
-            // will never happen because we check for root
         }
 
         List props = node.getPropertyEntries();

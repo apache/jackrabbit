@@ -74,7 +74,7 @@ class WildcardTermEnum extends FilteredTermEnum {
                     escaped = true;
                 }
             } else {
-                if (Character.isLetter(likePattern.charAt(i))) {
+                if (Character.isLetterOrDigit(likePattern.charAt(i))) {
                     if (escaped) {
                         regexp.append("\\\\").append(likePattern.charAt(i));
                         escaped = false;

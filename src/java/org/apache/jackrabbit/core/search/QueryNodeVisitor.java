@@ -38,6 +38,8 @@ public interface QueryNodeVisitor {
 
     public Object visit(PathQueryNode node, Object data);
 
+    public Object visit(LocationStepQueryNode node, Object data);
+
     public Object visit(RelationQueryNode node, Object data);
 
     public Object visit(OrderQueryNode node, Object data);

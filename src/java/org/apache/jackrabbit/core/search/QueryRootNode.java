@@ -31,6 +31,7 @@ public class QueryRootNode extends QueryNode {
 
     /**
      * The list of nodeType constraints. Might be null
+     * @todo not used anymore, node types can be specified in any predicate.
      */
     private List nodeTypes = new ArrayList();
 
@@ -38,16 +39,6 @@ public class QueryRootNode extends QueryNode {
      * The list of property names to select. Might be null
      */
     private List selectProperties = new ArrayList();
-
-    /**
-     * Sub node that defines constraints. Might be null
-     */
-    private AndQueryNode constraintNode = new AndQueryNode(this);
-
-    /**
-     * The textsearch clause. Might be null
-     */
-    private TextsearchQueryNode textsearchNode;
 
     /**
      * The list of property names to order the result nodes. Might be null
@@ -100,33 +91,6 @@ public class QueryRootNode extends QueryNode {
     }
 
     /**
-     * Returns the constraint node.
-     *
-     * @return the constraint node.
-     */
-    public AndQueryNode getConstraintNode() {
-        return constraintNode;
-    }
-
-    /**
-     * Returns the textsearch node.
-     *
-     * @return the textsearch node.
-     */
-    public TextsearchQueryNode getTextsearchNode() {
-        return textsearchNode;
-    }
-
-    /**
-     * Sets a new textsearch node.
-     *
-     * @param textsearchNode the new textsearch node.
-     */
-    public void setTextsearchNode(TextsearchQueryNode textsearchNode) {
-        this.textsearchNode = textsearchNode;
-    }
-
-    /**
      * Returns the order node.
      *
      * @return the order node.
@@ -174,8 +138,56 @@ public class QueryRootNode extends QueryNode {
         if (locationNode != null) {
             sb.append(" ").append(locationNode.toJCRQLString());
         }
-        if (constraintNode != null) {
-            sb.append(" WHERE ").append(constraintNode.toJCRQLString());
+        LocationStepQueryNode[] steps = locationNode.getPathSteps();
+        QueryNode[] predicates = steps[steps.length - 1].getPredicates();
+        String and = "";
+        for (int i = 0; i < predicates.length; i++) {
+            if (i == 0) {
+                sb.append(" WHERE ");
+            }
+            sb.append(and).append(predicates[i].toJCRQLString());
+            and = " AND ";
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Returns a string representation of this query node including its sub-nodes.
+     * The returned string is formatted in JCR SQL syntax.
+     *
+     * @return a string representation of this query node including its sub-nodes.
+     */
+    public String toJCRSQLString() {
+        StringBuffer sb = new StringBuffer("SELECT *");
+        sb.append(" FROM");
+        String comma = "";
+        if (nodeTypes.size() > 0) {
+            for (Iterator it = nodeTypes.iterator(); it.hasNext();) {
+                NodeTypeQueryNode nodeType = (NodeTypeQueryNode) it.next();
+                sb.append(comma);
+                sb.append(" \"").append(nodeType.getValue()).append("\"");
+                comma = ",";
+            }
+        } else {
+            sb.append(" nt:base");
+        }
+        LocationStepQueryNode[] steps = locationNode.getPathSteps();
+        QueryNode[] predicates = steps[steps.length - 1].getPredicates();
+        String and = "";
+        for (int i = 0; i < predicates.length; i++) {
+            if (i == 0) {
+                sb.append(" WHERE ");
+            }
+            sb.append(and).append(predicates[i].toJCRSQLString());
+            and = " AND ";
+        }
+
+        if (steps.length == 2
+                && steps[1].getIncludeDescendants()
+                && steps[1].getNameTest() == null) {
+            // then this query selects all paths
+        } else {
+            sb.append(" AND ").append(locationNode.toJCRSQLString());
         }
         return sb.toString();
     }
@@ -187,6 +199,6 @@ public class QueryRootNode extends QueryNode {
      * @return a string representation of this query node including its sub-nodes.
      */
     public String toXPathString() {
-        return "";
+        return locationNode.toXPathString();
     }
 }

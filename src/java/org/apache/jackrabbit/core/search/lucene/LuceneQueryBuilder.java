@@ -15,11 +15,12 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.search.*;
 import org.apache.log4j.Logger;
@@ -45,6 +46,8 @@ import java.util.Arrays;
 public class LuceneQueryBuilder implements QueryNodeVisitor {
 
     private static final Logger log = Logger.getLogger(LuceneQueryBuilder.class);
+
+    private static QName primaryType = new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
 
     private QueryRootNode root;
 
@@ -92,10 +95,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(QueryRootNode node, Object data) {
         BooleanQuery root = new BooleanQuery();
-        Query constraintQuery = (Query) node.getConstraintNode().accept(this, null);
-        if (constraintQuery != null) {
-            root.add(constraintQuery, true, false);
-        }
 
         String[] props = node.getSelectProperties();
         for (int i = 0; i < props.length; i++) {
@@ -108,14 +107,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 exceptions.add(e);
             }
             root.add(new MatchAllQuery(prop), true, false);
-        }
-
-        TextsearchQueryNode textsearchNode = node.getTextsearchNode();
-        if (textsearchNode != null) {
-            Query textsearch = (Query) textsearchNode.accept(this, null);
-            if (textsearch != null) {
-                root.add(textsearch, true, false);
-            }
         }
 
         Query wrapped = root;
@@ -151,9 +142,17 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(NotQueryNode node, Object data) {
         BooleanQuery notQuery = new BooleanQuery();
+        try {
+            // first select any node
+            notQuery.add(new MatchAllQuery(primaryType.toJCRName(nsMappings)),
+                    false, false);
+        } catch (NoPrefixDeclaredException e) {
+            // will never happen, prefixes are created when unknown
+        }
         Object[] result = node.acceptOperands(this, null);
         for (int i = 0; i < result.length; i++) {
             Query operand = (Query) result[i];
+            // then prohibit the nodes from the not clause
             notQuery.add(operand, false, true);
         }
         return notQuery;
@@ -258,23 +257,82 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(PathQueryNode node, Object data) {
-        PathQuery pathQuery = null;
-        try {
-            // FIXME what about relative path?
-            Path p = Path.create(node.getPath(),
-                    session.getNamespaceResolver(), false);
-            pathQuery = new PathQuery(p, nsMappings, node.getType());
-        } catch (MalformedPathException e) {
-            exceptions.add(e);
+        Query context = null;
+        // loop over steps
+        QueryNode[] steps = node.getPathSteps();
+        for (int i = 0; i < steps.length; i++) {
+            context = (Query) steps[i].accept(this, context);
         }
-        if (pathQuery != null && pathQuery.getClauses().length > 0) {
-            BooleanQuery combined = new BooleanQuery();
-            combined.add(pathQuery, true, false);
-            combined.add((Query) data, true, false);
-            return combined;
+        if (data instanceof BooleanQuery) {
+            BooleanQuery constraint = (BooleanQuery) data;
+            if (constraint.getClauses().length > 0) {
+                constraint.add(context, true, false);
+                context = constraint;
+            }
+        }
+        return context;
+    }
+
+    public Object visit(LocationStepQueryNode node, Object data) {
+        if (node.getNameTest() != null && node.getNameTest().length() == 0) {
+            // select root node
+            return new TermQuery(new Term(FieldNames.PARENT, ""));
+        }
+
+        Query context = (Query) data;
+
+        BooleanQuery andQuery = new BooleanQuery();
+        if (context == null) {
+            exceptions.add(new IllegalArgumentException("Unsupported query"));
+        }
+
+        // predicate on step?
+        Object[] predicates = node.acceptOperands(this, data);
+        for (int i = 0; i < predicates.length; i++) {
+            andQuery.add((Query) predicates[i], true, false);
+        }
+
+        TermQuery nameTest = null;
+        if (node.getNameTest() != null) {
+            try {
+                String internalName = nsMappings.translatePropertyName(node.getNameTest(),
+                        session.getNamespaceResolver());
+                nameTest = new TermQuery(new Term(FieldNames.LABEL, internalName));
+            } catch (IllegalNameException e) {
+                exceptions.add(e);
+            } catch (UnknownPrefixException e) {
+                exceptions.add(e);
+            }
+        }
+
+        if (node.getIncludeDescendants()) {
+            if (nameTest != null) {
+                andQuery.add(new DescendantSelfAxisQuery(context, nameTest), true, false);
+            } else {
+                // descendant-or-self with nametest=*
+                if (predicates.length > 0) {
+                    // if we have a predicate attached, the condition acts as
+                    // the sub query.
+                    Query subQuery = new DescendantSelfAxisQuery(context, andQuery);
+                    andQuery = new BooleanQuery();
+                    andQuery.add(subQuery, true, false);
+                } else {
+                    // @todo this will traverse the whole index, optimize!
+                    Query subQuery = new MatchAllQuery(FieldNames.UUID);
+                    andQuery.add(new DescendantSelfAxisQuery(context, subQuery), true, false);
+                }
+            }
         } else {
-            return data;
+            // select child nodes
+            andQuery.add(new ChildAxisQuery(context), true, false);
+
+            // name test
+            if (nameTest != null) {
+                andQuery.add(nameTest, true, false);
+            }
         }
+
+        return andQuery;
     }
 
     public Object visit(RelationQueryNode node, Object data) {
@@ -322,6 +380,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 query = new RangeQuery(null, new Term(field, stringValue), true);
                 break;
             case Constants.OPERATION_LIKE:	// LIKE
+                // @todo use MatchAllQuery if stringValue is "*" (or "%" ?)
                 query = new WildcardQuery(new Term(field, stringValue));
                 break;
             case Constants.OPERATION_LT:	// <
@@ -341,9 +400,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(OrderQueryNode node, Object data) {
-        return null;
+        return data;
     }
-
-    //---------------------------< internal >-----------------------------------
-
 }

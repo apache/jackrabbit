@@ -16,20 +16,32 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 /**
- * Defines field names that are used internally to store UUID, Path, etc in the
+ * Defines field names that are used internally to store UUID, etc in the
  * search index.
  */
 public class FieldNames {
 
+    /**
+     * Name of the field that contains the UUID of the node. Terms are stored
+     * but not tokenized.
+     */
     public static final String UUID = "_:UUID";
 
-    public static final String PATH = "_:Path";
-
+    /**
+     * Name of the field that contains the fulltext index including terms
+     * from all properties of a node. Terms are tokenized.
+     */
     public static final String FULLTEXT = "_:FULLTEXT";
 
-    public static final String ANCESTORS = "_:ANCESTORS";
+    /**
+     * Name of the field that contains the UUID of the parent node. Terms are
+     * stored and but not tokenized.
+     */
+    public static final String PARENT = "_:PARENT";
 
+    /**
+     * Name of the field that contains the label of the node. Terms are not
+     * tokenized.
+     */
     public static final String LABEL = "_:LABEL";
-
-    public static final String LEVEL = "_:LEVEL";
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.search.jcrql;
 
-
 public class JCRQLParserTokenManager implements JCRQLParserConstants {
     public java.io.PrintStream debugStream = System.out;
 
@@ -1712,9 +1711,8 @@ public class JCRQLParserTokenManager implements JCRQLParserConstants {
     private final void ReInitRounds() {
         int i;
         jjround = 0x80000001;
-        for (i = 98; i-- > 0;) {
+        for (i = 98; i-- > 0;)
             jjrounds[i] = 0x80000000;
-        }
     }
 
     public void ReInit(SimpleCharStream stream, int lexState) {
@@ -1767,9 +1765,8 @@ public class JCRQLParserTokenManager implements JCRQLParserConstants {
 
             try {
                 input_stream.backup(0);
-                while (curChar <= 32 && (0x100002400L & (1L << curChar)) != 0L) {
+                while (curChar <= 32 && (0x100002400L & (1L << curChar)) != 0L)
                     curChar = input_stream.BeginToken();
-                }
             } catch (java.io.IOException e1) {
                 continue EOFLoop;
             }

@@ -38,16 +38,46 @@ public class SimpleQueryTest extends AbstractQueryTest {
         checkResult(result, 1);
     }
 
+    public void testSimpleQuerySQL1() throws Exception {
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("bla", new String[]{"bla"});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM \"" + NT_BASE
+                + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/foo'"
+                + " AND bla = 'bla'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+    }
+
     public void testSimpleQuery2() throws Exception {
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("bla", new String[]{"bla"});
-        Node bla = superuser.getRootNode().addNode("bla", NT_UNSTRUCTURED);
+        Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
+        bla.setProperty("bla", new String[]{"bla"});
+
+        testRootNode.save();
+
+        String jcrql = "SELECT * FROM nt:file LOCATION " + testRoot + "// WHERE bla=\"bla\"";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        QueryResult result = q.execute();
+        checkResult(result, 0);
+    }
+
+    public void testSimpleQuerySQL2() throws Exception {
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("bla", new String[]{"bla"});
+        Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
         bla.setProperty("bla", new String[]{"bla"});
 
         superuser.getRootNode().save();
 
-        String jcrql = "SELECT * FROM nt:file LOCATION " + testRoot + "// WHERE bla=\"bla\"";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM \"nt:file\"" +
+                " WHERE \"jcr:path\" LIKE '" + testRoot + "/%'"
+                + " AND bla = 'bla'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 0);
     }
@@ -62,6 +92,22 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         String jcrql = "SELECT * FROM nt:unstructured LOCATION " + testRoot + "// WHERE bla=\"bla\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        QueryResult result = q.execute();
+        checkResult(result, 2);
+    }
+
+    public void testSimpleQuerySQL3() throws Exception {
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("bla", new String[]{"bla"});
+        Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
+        bla.setProperty("bla", new String[]{"bla"});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM \"nt:unstructured\"" +
+                " WHERE \"jcr:path\" LIKE '" + testRoot + "/%'"
+                + " AND bla = 'bla'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 2);
     }

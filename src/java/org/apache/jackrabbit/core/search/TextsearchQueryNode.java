@@ -62,13 +62,16 @@ public class TextsearchQueryNode extends QueryNode {
         return "TEXTSEARCH \"" + query + "\"";
     }
 
+    public String toJCRSQLString() {
+        return "CONTAINS('" + query + "')";
+    }
+
     /**
      * Returns an XPath representation for this query node.
      *
      * @return an XPath representation for this query node.
      */
     public String toXPathString() {
-        // todo implement
-        return "";
+        return "jcrfn:contains('" + query.replaceAll("'", "''") + "')";
     }
 }

@@ -176,6 +176,15 @@ public class RangeQueryNode extends QueryNode implements Constants {
     }
 
     /**
+     * Returns a JCR SQL representation for this query node.
+     *
+     * @return a JCR SQL representation for this query node.
+     */
+    public String toJCRSQLString() {
+        return "";
+    }
+
+    /**
      * Returns an XPath representation for this query node.
      *
      * @return an XPath representation for this query node.

@@ -19,8 +19,6 @@ package org.apache.jackrabbit.core.search;
  * Implements an abstract base class for nodes of a query tree that represents
  * a query. The query tree is independent from the query syntax which is used
  * to search the repository.
- * <p/>
- * todo: extend QueryNode with toString method for both XPath flavours
  */
 public abstract class QueryNode {
 
@@ -69,6 +67,14 @@ public abstract class QueryNode {
      * @return a string representation of this query node including its sub-nodes.
      */
     public abstract String toJCRQLString();
+
+    /**
+     * Returns a string representation of this query node including its sub-nodes.
+     * The returned string is formatted in JCRQL syntax.
+     *
+     * @return a string representation of this query node including its sub-nodes.
+     */
+    public abstract String toJCRSQLString();
 
     /**
      * Returns a string representation of this query node including its sub-nodes.

@@ -37,6 +37,8 @@ import org.apache.lucene.search.Query;
 import org.apache.commons.collections.BeanMap;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.Event;
 import java.io.IOException;
@@ -52,6 +54,15 @@ public class SearchManager implements SynchronousEventListener {
 
     /** Name of the file to persist search internal namespace mappings */
     private static final String NS_MAPPING_FILE = "ns_mappings.properties";
+
+    /** Namespace URI for xpath functions */
+    // @todo this is not final! What should we use?
+    private static final String NS_FN_PREFIX = "fn";
+    public static final String NS_FN_URI = "http://www.w3.org/2004/10/xpath-functions";
+
+    /** Namespace URI for XML schema */
+    private static final String NS_XS_PREFIX = "xs";
+    public static final String NS_XS_URI = "http://www.w3.org/2001/XMLSchema";
 
     /** The actual search index */
     private final SearchIndex index;
@@ -72,7 +83,7 @@ public class SearchManager implements SynchronousEventListener {
     private final NamespaceMappings nsMappings;
 
     public SearchManager(SessionImpl session, SearchConfig config)
-            throws IOException {
+            throws RepositoryException, IOException {
         this.session = session;
         this.stateProvider = session.getItemStateManager();
         this.hmgr = session.getHierarchyManager();
@@ -80,6 +91,21 @@ public class SearchManager implements SynchronousEventListener {
         index = new SearchIndex(fs, new StandardAnalyzer());
         FileSystemResource mapFile = new FileSystemResource(fs, NS_MAPPING_FILE);
         nsMappings = new NamespaceMappings(mapFile);
+
+        // register namespaces
+        NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
+        try {
+            nsReg.getPrefix(NS_XS_URI);
+        } catch (NamespaceException e) {
+            // not yet known
+            nsReg.registerNamespace(NS_XS_PREFIX, NS_XS_URI);
+        }
+        try {
+            nsReg.getPrefix(NS_FN_URI);
+        } catch (RepositoryException e) {
+            // not yet known
+            nsReg.registerNamespace(NS_FN_PREFIX, NS_FN_URI);
+        }
 
         // set properties
         BeanMap bm = new BeanMap(this);
@@ -145,13 +171,14 @@ public class SearchManager implements SynchronousEventListener {
         // FIXME according to spec this should be descending
         // by default. this contrasts to standard sql semantics
         // where default is ascending.
-        boolean ascending = true;
+        boolean[] orderSpecs = null;
         String[] orderProperties = null;
         if (orderNode != null) {
-            ascending = orderNode.isAscending();
             orderProperties = orderNode.getOrderByProperties();
+            orderSpecs = orderNode.getOrderBySpecs();
         } else {
             orderProperties = new String[0];
+            orderSpecs = new boolean[0];
         }
 
 
@@ -160,7 +187,7 @@ public class SearchManager implements SynchronousEventListener {
 
         // execute it
         try {
-            Hits result = index.executeQuery(query, orderProperties, ascending);
+            Hits result = index.executeQuery(query, orderProperties, orderSpecs);
             uuids = new ArrayList(result.length());
             for (int i = 0; i < result.length(); i++) {
                 String uuid = result.doc(i).get(FieldNames.UUID);

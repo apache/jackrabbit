@@ -71,7 +71,7 @@ public class QueryImpl implements Query {
 
         // parse query according to language
         // build query tree
-        this.root = QueryParser.parse(statement, language);
+        this.root = QueryParser.parse(statement, language, session.getNamespaceResolver());
     }
 
     public QueryImpl(SessionImpl session,
@@ -106,7 +106,7 @@ public class QueryImpl implements Query {
 
             // parse query according to language
             // build query tree and pass to QueryImpl
-            QueryRootNode root = QueryParser.parse(statement, language);
+            QueryRootNode root = QueryParser.parse(statement, language, session.getNamespaceResolver());
             this.root = root;
         } catch (NoPrefixDeclaredException e) {
             throw new InvalidQueryException(e.getMessage(), e);

@@ -68,6 +68,16 @@ public class RelationQueryNode extends QueryNode implements Constants {
     private int type;
 
     /**
+     * Creates a new <code>RelationQueryNode</code> without a type nor value
+     * assigned.
+     * @param parent the parent node for this query node.
+     */
+    public RelationQueryNode(QueryNode parent, int operation) {
+        super(parent);
+        this.operation = operation;
+    }
+
+    /**
      * Creates a new <code>RelationQueryNode</code> with a <code>long</code>
      * <code>value</code> and an <code>operation</code> type.
      *
@@ -161,6 +171,14 @@ public class RelationQueryNode extends QueryNode implements Constants {
     }
 
     /**
+     * Sets a new property name for this relation query node.
+     * @param name the new property name.
+     */
+    public void setProperty(String name) {
+        property = name;
+    }
+
+    /**
      * Returns the <code>long</code> value if this relation if of type
      * {@link #TYPE_LONG}.
      *
@@ -168,6 +186,15 @@ public class RelationQueryNode extends QueryNode implements Constants {
      */
     public long getLongValue() {
         return valueLong;
+    }
+
+    /**
+     * Sets a new value of type <code>long</code>.
+     * @param value the new value.
+     */
+    public void setLongValue(long value) {
+        valueLong = value;
+        type = TYPE_LONG;
     }
 
     /**
@@ -181,6 +208,15 @@ public class RelationQueryNode extends QueryNode implements Constants {
     }
 
     /**
+     * Sets a new value of type <code>double</code>.
+     * @param value the new value.
+     */
+    public void setDoubleValue(double value) {
+        valueDouble = value;
+        type = TYPE_DOUBLE;
+    }
+
+    /**
      * Returns the <code>String</code> value if this relation if of type
      * {@link #TYPE_STRING}.
      *
@@ -191,6 +227,15 @@ public class RelationQueryNode extends QueryNode implements Constants {
     }
 
     /**
+     * Sets a new value of type <code>String</code>.
+     * @param value the new value.
+     */
+    public void setStringValue(String value) {
+        valueString = value;
+        type = TYPE_STRING;
+    }
+
+    /**
      * Returns the <code>Date</code> value if this relation if of type
      * {@link #TYPE_DATE}.
      *
@@ -198,6 +243,15 @@ public class RelationQueryNode extends QueryNode implements Constants {
      */
     public Date getDateValue() {
         return valueDate;
+    }
+
+    /**
+     * Sets a new value of type <code>Date</code>.
+     * @param value the new value.
+     */
+    public void setDateValue(Date value) {
+        valueDate = value;
+        type = TYPE_DATE;
     }
 
     /**
@@ -223,19 +277,19 @@ public class RelationQueryNode extends QueryNode implements Constants {
         }
 
         if (operation == OPERATION_EQ) {
-            sb.append("=");
+            sb.append(" = ");
         } else if (operation == OPERATION_GE) {
-            sb.append(">=");
+            sb.append(" >= ");
         } else if (operation == OPERATION_GT) {
-            sb.append(">");
+            sb.append(" > ");
         } else if (operation == OPERATION_LE) {
-            sb.append("<=");
+            sb.append(" <= ");
         } else if (operation == OPERATION_LIKE) {
             sb.append(" LIKE ");
         } else if (operation == OPERATION_LT) {
-            sb.append("<");
+            sb.append(" < ");
         } else if (operation == OPERATION_NE) {
-            sb.append("<>");
+            sb.append(" <> ");
         } else {
             throw new RuntimeException("invalid operation: " + operation);
         }
@@ -247,10 +301,54 @@ public class RelationQueryNode extends QueryNode implements Constants {
             sb.append(valueDouble);
         } else if (type == TYPE_STRING) {
             sb.append("\"").append(valueString).append("\"");
-        } else if (type == TYPE_DATE) {
+        } else if (type == TYPE_DATE || type == TYPE_TIMESTAMP) {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             cal.setTime(valueDate);
             sb.append(ISO8601.format(cal));
+        } else {
+            throw new RuntimeException("Invalid type: " + type);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Returns a JCR SQL representation for this query node.
+     *
+     * @return a JCR SQL representation for this query node.
+     */
+    public String toJCRSQLString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("\"" + property + "\"");
+
+        if (operation == OPERATION_EQ) {
+            sb.append(" = ");
+        } else if (operation == OPERATION_GE) {
+            sb.append(" >= ");
+        } else if (operation == OPERATION_GT) {
+            sb.append(" > ");
+        } else if (operation == OPERATION_LE) {
+            sb.append(" <= ");
+        } else if (operation == OPERATION_LIKE) {
+            sb.append(" LIKE ");
+        } else if (operation == OPERATION_LT) {
+            sb.append(" < ");
+        } else if (operation == OPERATION_NE) {
+            sb.append(" <> ");
+        } else {
+            throw new RuntimeException("invalid operation: " + operation);
+        }
+
+
+        if (type == TYPE_LONG) {
+            sb.append(valueLong);
+        } else if (type == TYPE_DOUBLE) {
+            sb.append(valueDouble);
+        } else if (type == TYPE_STRING) {
+            sb.append("'").append(valueString.replaceAll("'", "''")).append("'");
+        } else if (type == TYPE_DATE || type == TYPE_TIMESTAMP) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTime(valueDate);
+            sb.append("TIMESTAMP '").append(ISO8601.format(cal)).append("'");
         } else {
             throw new RuntimeException("Invalid type: " + type);
         }
@@ -263,7 +361,44 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @return an XPath representation for this query node.
      */
     public String toXPathString() {
-        // todo implement
-        return "";
+        StringBuffer sb = new StringBuffer();
+        // @todo use escaping for property name
+        sb.append("@" + property);
+
+        if (operation == OPERATION_EQ) {
+            sb.append(" = ");
+        } else if (operation == OPERATION_GE) {
+            sb.append(" >= ");
+        } else if (operation == OPERATION_GT) {
+            sb.append(" > ");
+        } else if (operation == OPERATION_LE) {
+            sb.append(" <= ");
+        } else if (operation == OPERATION_LIKE) {
+            // @todo make namespace aware
+            sb.insert(0, "jcrfn:like(").append(",");
+        } else if (operation == OPERATION_LT) {
+            sb.append(" < ");
+        } else if (operation == OPERATION_NE) {
+            sb.append(" != ");
+        } else {
+            throw new RuntimeException("invalid operation: " + operation);
+        }
+
+
+        if (type == TYPE_LONG) {
+            sb.append(valueLong);
+        } else if (type == TYPE_DOUBLE) {
+            sb.append(valueDouble);
+        } else if (type == TYPE_STRING) {
+            sb.append("'").append(valueString.replaceAll("'", "''")).append("'");
+        } else if (type == TYPE_DATE || type == TYPE_TIMESTAMP) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTime(valueDate);
+            // @todo make namespace aware
+            sb.append("xs:dateTime('").append(ISO8601.format(cal)).append("')");
+        } else {
+            throw new RuntimeException("Invalid type: " + type);
+        }
+        return sb.toString();
     }
 }

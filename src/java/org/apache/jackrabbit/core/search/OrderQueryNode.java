@@ -27,9 +27,9 @@ public class OrderQueryNode extends QueryNode {
     private String[] properties;
 
     /**
-     * Flag indicating whether nodes are ordered ascending or descending
+     * Array of flag indicating whether a node is ordered ascending or descending
      */
-    private boolean ascending;
+    private boolean[] orderSpecs;
 
     /**
      * Creates a new <code>OrderQueryNode</code> with a reference to a parent
@@ -37,13 +37,14 @@ public class OrderQueryNode extends QueryNode {
      *
      * @param parent     the parent node of this query node.
      * @param properties the names of the properties to sort the result nodes.
-     * @param asc        if <code>true</code> result nodes are orderd ascending;
+     * @param orderSpecs if <code>true</code> a result node is orderd ascending;
      *                   otherwise descending.
      */
-    public OrderQueryNode(QueryNode parent, String[] properties, boolean asc) {
+    public OrderQueryNode(QueryNode parent, String[] properties, boolean[] orderSpecs) {
         super(parent);
+        if (properties.length != orderSpecs.length)
         this.properties = properties;
-        this.ascending = asc;
+        this.orderSpecs = orderSpecs;
     }
 
 
@@ -55,13 +56,17 @@ public class OrderQueryNode extends QueryNode {
     }
 
     /**
-     * Returns <code>true</code> if result nodes should be orderd ascending.
-     * If <code>false</code> result nodes are ordered descending.
+     * Returns <code>true</code> if the property <code>i</code> should be orderd
+     * ascending. If <code>false</code> the property is ordered descending.
+     * @param i index of the property
      *
-     * @return the value of the ascending property.
+     * @return the order spec for the property <code>i</code>.
+     *
+     * @exception ArrayIndexOutOfBoundsException if there is no property with
+     * index <code>i</code>.
      */
-    public boolean isAscending() {
-        return ascending;
+    public boolean isAscending(int i) {
+        return orderSpecs[i];
     }
 
     /**
@@ -72,6 +77,15 @@ public class OrderQueryNode extends QueryNode {
      */
     public String[] getOrderByProperties() {
         return properties;
+    }
+
+    /**
+     * Returns a boolean array that contains the sort order specification
+     * for each property returned by {@link #getOrderByProperties()}.
+     * @return the sort specification.
+     */
+    public boolean[] getOrderBySpecs() {
+        return orderSpecs;
     }
 
     /**
@@ -86,14 +100,37 @@ public class OrderQueryNode extends QueryNode {
             for (int i = 0; i < properties.length; i++) {
                 sb.append(comma).append(" ");
                 sb.append(properties[i]);
+                if (isAscending(i)) {
+                    // FIXME really default to descending?
+                    sb.append(" ASCENDING");
+                }
                 comma = ",";
             }
         } else {
             sb.append(" SCORE");
         }
-        if (ascending) {
-            // FIXME really default to descending?
-            sb.append(" ASCENDING");
+        return sb.toString();
+    }
+
+    /**
+     * Returns a JCR SQL representation for this query node.
+     *
+     * @return a JCR SQL representation for this query node.
+     */
+    public String toJCRSQLString() {
+        StringBuffer sb = new StringBuffer("ORDER BY");
+        if (properties.length > 0) {
+            String comma = "";
+            for (int i = 0; i < properties.length; i++) {
+                sb.append(comma).append(" \"");
+                sb.append(properties[i]).append("\"");
+                if (!isAscending(i)) {
+                    sb.append(" DESC");
+                }
+                comma = ",";
+            }
+        } else {
+            sb.append(" SCORE");
         }
         return sb.toString();
     }

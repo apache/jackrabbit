@@ -1119,7 +1119,7 @@ TOKEN :
                     t = jj_consume_token(ISO_DATE);
                     jjtree.closeNodeScope(jjtn000, true);
                     jjtc000 = false;
-                    jjtn000.setType(Constants.TYPE_DATE);
+                    jjtn000.setType(Constants.TYPE_TIMESTAMP);
                     jjtn000.setValue(t.image);
                     break;
                 case STRING_LITERAL:
@@ -1311,9 +1311,7 @@ TOKEN :
         token = new Token();
         jj_ntk = -1;
         jj_gen = 0;
-        for (int i = 0; i < 28; i++) {
-            jj_la1[i] = -1;
-        }
+        for (int i = 0; i < 28; i++) jj_la1[i] = -1;
     }
 
     public void ReInit(java.io.InputStream stream) {
@@ -1323,9 +1321,7 @@ TOKEN :
         jj_ntk = -1;
         jjtree.reset();
         jj_gen = 0;
-        for (int i = 0; i < 28; i++) {
-            jj_la1[i] = -1;
-        }
+        for (int i = 0; i < 28; i++) jj_la1[i] = -1;
     }
 
     public JCRQLParser(java.io.Reader stream) {
@@ -1334,9 +1330,7 @@ TOKEN :
         token = new Token();
         jj_ntk = -1;
         jj_gen = 0;
-        for (int i = 0; i < 28; i++) {
-            jj_la1[i] = -1;
-        }
+        for (int i = 0; i < 28; i++) jj_la1[i] = -1;
     }
 
     public void ReInit(java.io.Reader stream) {
@@ -1346,9 +1340,7 @@ TOKEN :
         jj_ntk = -1;
         jjtree.reset();
         jj_gen = 0;
-        for (int i = 0; i < 28; i++) {
-            jj_la1[i] = -1;
-        }
+        for (int i = 0; i < 28; i++) jj_la1[i] = -1;
     }
 
     public JCRQLParser(JCRQLParserTokenManager tm) {
@@ -1356,9 +1348,7 @@ TOKEN :
         token = new Token();
         jj_ntk = -1;
         jj_gen = 0;
-        for (int i = 0; i < 28; i++) {
-            jj_la1[i] = -1;
-        }
+        for (int i = 0; i < 28; i++) jj_la1[i] = -1;
     }
 
     public void ReInit(JCRQLParserTokenManager tm) {
@@ -1367,9 +1357,7 @@ TOKEN :
         jj_ntk = -1;
         jjtree.reset();
         jj_gen = 0;
-        for (int i = 0; i < 28; i++) {
-            jj_la1[i] = -1;
-        }
+        for (int i = 0; i < 28; i++) jj_la1[i] = -1;
     }
 
     final private Token jj_consume_token(int kind) throws ParseException {

@@ -26,6 +26,19 @@ import javax.jcr.query.QueryResult;
 public class AbstractQueryTest extends AbstractJCRTest {
 
     /**
+     * Overwrites the <code>setUp</code> method from 
+     * {@link org.apache.jackrabbit.test.AbstractJCRTest} and adds additional
+     * setup code.
+     * @throws Exception if an error occurs during setup.
+     */
+    protected void setUp() throws Exception {
+        super.setUp();
+        // make sure root node is indexed
+        superuser.getRootNode().setProperty("dummy", new String[]{"dummy"});
+        superuser.getRootNode().save();
+    }
+
+    /**
      * Checks if the <code>result</code> contains a number of <code>hits</code>.
      *
      * @param result the <code>QueryResult</code>.

@@ -118,7 +118,7 @@ public class SearchIndex {
 
     public Hits executeQuery(Query query,
                              String[] orderProps,
-                             boolean ascending) throws IOException {
+                             boolean[] orderSpecs) throws IOException {
         try {
             readWriteLock.readLock().acquire();
         } catch (InterruptedException e) {

@@ -36,6 +36,34 @@ public class FulltextQueryTest extends AbstractQueryTest {
         checkResult(result, 1);
     }
 
+    public void testFulltextSimpleSQL1() throws Exception {
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM \"" + NT_UNSTRUCTURED
+                + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
+                + "' AND CONTAINS('fox')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+    }
+
+    public void testFulltextSimpleSQL2() throws Exception {
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM \"" + NT_UNSTRUCTURED
+                + "\" WHERE \"jcr:path\" = '" + testRoot + "/foo"
+                + "' AND CONTAINS('fox')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+    }
+
     public void testFulltextMultiWord() throws Exception {
         Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"test text"});
@@ -49,6 +77,25 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"fox test\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+    }
+
+    public void testFulltextMultiWordSQL() throws Exception {
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"test text"});
+        n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"other text"});
+        n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM \"" + NT_UNSTRUCTURED
+                + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
+                + "' AND CONTAINS('fox test')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
     }
@@ -70,6 +117,25 @@ public class FulltextQueryTest extends AbstractQueryTest {
         checkResult(result, 1);
     }
 
+    public void testFulltextPhraseSQL() throws Exception {
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"test text"});
+        n.setProperty("mytext", new String[]{"the quick brown jumps fox over the lazy dog."});
+
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"other text"});
+        n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM \"" + NT_UNSTRUCTURED
+                + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
+                + "' AND CONTAINS('text ''fox jumps''')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+    }
+
     public void testFulltextExclude() throws Exception {
         Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"test text"});
@@ -83,6 +149,25 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"text 'fox jumps' -other\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+    }
+
+    public void testFulltextExcludeSQL() throws Exception {
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"test text"});
+        n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"other text"});
+        n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        superuser.getRootNode().save();
+
+        String sql = "SELECT * FROM \"" + NT_UNSTRUCTURED
+                + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
+                + "' AND CONTAINS('text ''fox jumps'' -other')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
     }
@@ -104,6 +189,25 @@ public class FulltextQueryTest extends AbstractQueryTest {
         checkResult(result, 2);
     }
 
+    public void testFulltextOrSQL() throws Exception {
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"test text"});
+        n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"other text"});
+        n.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM \"" + NT_UNSTRUCTURED
+                + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
+                + "' AND CONTAINS('''fox jumps'' test OR other')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        QueryResult result = q.execute();
+        checkResult(result, 2);
+    }
+
     public void testFulltextIntercap() throws Exception {
         Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("title", new String[]{"tEst text"});
@@ -117,6 +221,25 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// TEXTSEARCH \"'fox juMps' Test OR otheR\"";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        QueryResult result = q.execute();
+        checkResult(result, 2);
+    }
+
+    public void testFulltextIntercapSQL() throws Exception {
+        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"tEst text"});
+        n.setProperty("mytext", new String[]{"The quick brown Fox jumps over the lazy dog."});
+
+        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n.setProperty("title", new String[]{"Other text"});
+        n.setProperty("mytext", new String[]{"the quick brown FOX jumPs over the lazy dog."});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM \"" + NT_UNSTRUCTURED
+                + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
+                + "' AND CONTAINS('''fox juMps'' Test OR otheR')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 2);
     }

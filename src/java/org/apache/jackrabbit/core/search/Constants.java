@@ -42,6 +42,11 @@ public interface Constants {
     public static int TYPE_DATE = 4;
 
     /**
+     * timestamp data type
+     */
+    public static int TYPE_TIMESTAMP = 5;
+
+    /**
      * equal operation: =
      */
     public static int OPERATION_EQ = 10;
@@ -72,8 +77,22 @@ public interface Constants {
     public static int OPERATION_LE = 15;
 
     /**
-     * like operation: LIKE
+     * like operation: identifier LIKE string_literal
      */
     public static int OPERATION_LIKE = 16;
 
+    /**
+     * between operation: identifier [ NOT ] BETWEEN literal AND literal
+     */
+    public static int OPERATION_BETWEEN = 17;
+
+    /**
+     * on operation: identifier [ NOT ] IN ( literal {, literal}* )
+     */
+    public static int OPERATION_IN = 18;
+
+    /**
+     * is null operation: identifier IS [ NOT ] NULL
+     */
+    public static int OPERATION_NULL = 19;
 }

@@ -16,6 +16,9 @@
 package org.apache.jackrabbit.core.search;
 
 import org.apache.jackrabbit.core.search.jcrql.JCRQLQueryBuilder;
+import org.apache.jackrabbit.core.search.xpath.XPathQueryBuilder;
+import org.apache.jackrabbit.core.search.sql.JCRSQLQueryBuilder;
+import org.apache.jackrabbit.core.NamespaceResolver;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
@@ -36,9 +39,9 @@ public class QueryParser {
      * Parses a query <code>statement</code> according to a query
      * <code>language</code> into a query tree.
      * <p/>
-     * <code>language</code> must be one of: {@link javax.query.Query#JCRQL},
-     * {@link javax.query.Query#XPATH_DOCUMENT_VIEW}, {@link
-     * javax.query.Query#XPATH_SYSTEM_VIEW}.
+     * <code>language</code> must be one of: {@link javax.jcr.query.Query#JCRQL},
+     * {@link javax.jcr.query.Query#XPATH_DOCUMENT_VIEW},
+     * {@link javax.jcr.query.Query#XPATH_SYSTEM_VIEW}.
      *
      * @param statement the query statement.
      * @param language  the language of the query statement.
@@ -46,11 +49,17 @@ public class QueryParser {
      * @throws InvalidQueryException if an error occurs while parsing the
      *                               statement.
      */
-    public static QueryRootNode parse(String statement, String language)
+    public static QueryRootNode parse(String statement,
+                                      String language,
+                                      NamespaceResolver resolver)
             throws InvalidQueryException {
 
-        if (language == Query.JCRQL) {
+        if (Query.JCRQL.equals(language)) {
             return JCRQLQueryBuilder.createQuery(statement);
+        } else if (Query.XPATH_DOCUMENT_VIEW.equals(language)) {
+            return XPathQueryBuilder.createQuery(statement, resolver);
+        } else if ("sql".equals(language)) {
+            return JCRSQLQueryBuilder.createQuery(statement, resolver);
         } else {
             throw new InvalidQueryException("unknown language");
         }

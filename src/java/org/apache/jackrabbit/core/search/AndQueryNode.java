@@ -46,6 +46,8 @@ public class AndQueryNode extends NAryQueryNode {
     }
 
     /**
+     * This method can return <code>null</code> to indicate that this
+     * <code>AndQueryNode</code> does not contain any operands.
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
@@ -81,12 +83,45 @@ public class AndQueryNode extends NAryQueryNode {
 
     /**
      * Returns a string representation of this query node including its sub-nodes.
+     * The returned string is formatted in JCR SQL syntax.
+     *
+     * @return a string representation of this query node including its sub-nodes.
+     */
+    public String toJCRSQLString() {
+        StringBuffer sb = new StringBuffer();
+        boolean bracket = false;
+        if (getParent() instanceof NotQueryNode) {
+            bracket = true;
+        }
+        if (bracket) {
+            sb.append("(");
+        }
+        String and = "";
+        for (Iterator it = operands.iterator(); it.hasNext();) {
+            sb.append(and);
+            sb.append(((QueryNode) it.next()).toJCRSQLString());
+            and = " AND ";
+        }
+        if (bracket) {
+            sb.append(")");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Returns a string representation of this query node including its sub-nodes.
      * The returned string is formatted in XPath syntax.
      *
      * @return a string representation of this query node including its sub-nodes.
      */
     public String toXPathString() {
-        // @todo implement
-        return "";
+        StringBuffer sb = new StringBuffer();
+        String and = "";
+        for (Iterator it = operands.iterator(); it.hasNext();) {
+            sb.append(and);
+            sb.append(((QueryNode) it.next()).toXPathString());
+            and = " and ";
+        }
+        return sb.toString();
     }
 }

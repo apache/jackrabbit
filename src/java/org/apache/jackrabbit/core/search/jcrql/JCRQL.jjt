@@ -584,7 +584,7 @@ void Value() :
 | t = <FALSE>            { jjtThis.setType(Constants.TYPE_STRING); jjtThis.setValue(t.image); }
 | value = ItemPath()     { jjtThis.setType(Constants.TYPE_STRING); jjtThis.setValue(value); }
 | t = <UUID>             { jjtThis.setType(Constants.TYPE_STRING); jjtThis.setValue(t.image); }
-| t = <ISO_DATE>         { jjtThis.setType(Constants.TYPE_DATE);   jjtThis.setValue(t.image); }
+| t = <ISO_DATE>         { jjtThis.setType(Constants.TYPE_TIMESTAMP);   jjtThis.setValue(t.image); }
 | t = <STRING_LITERAL>   { jjtThis.setType(Constants.TYPE_STRING); jjtThis.setValue(t.image.substring(1, t.image.length()-1)); }
   )
 }
