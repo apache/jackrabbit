@@ -419,7 +419,7 @@ public class NodeTypeRegistry {
 
         // validate supertypes
         QName[] supertypes = ntd.getSupertypes();
-        if (supertypes != null) {
+        if (supertypes != null && supertypes.length > 0) {
             for (int i = 0; i < supertypes.length; i++) {
                 // simple check for infinite recursion
                 // (won't trap recursion on a deeper inheritance level)
@@ -434,12 +434,12 @@ public class NodeTypeRegistry {
                     throw new InvalidNodeTypeDefException(reason);
                 }
             }
-        }
 
-        // check for circularity in inheritance chain ('a' extends 'b' extends 'a'):
-        Stack inheritanceChain = new Stack();
-        inheritanceChain.push(name);
-        checkForCircularInheritance(supertypes, inheritanceChain);
+            // check for circularity in inheritance chain ('a' extends 'b' extends 'a'):
+            Stack inheritanceChain = new Stack();
+            inheritanceChain.push(name);
+            checkForCircularInheritance(supertypes, inheritanceChain);
+        }
 
         /**
          * note that infinite recursion through inheritance is automatically being checked
