@@ -4,24 +4,14 @@ open issues, features not yet implemented, improvements, etc.
 the following list is not yet categorized/prioritized, neither 
 is it complete :(
 
-- locking
-- access control (jaas)
 - provide clean abstraction for persistence grouping (nodes & properties 
   that should be stored/loaded together in the persistence layer);
-  (e.g. properties are stored within .node.xml)
-- need a more efficient way to persistently remove state of items in transient attic 
-  (nodes in transient attic are orphaned, i.e. they are disconnected from 
-  the hierarchy and can thus not be easily identified on Node#save):
-  => need a hierarchical cache index for items in the transient attic 
-    (see TransientItemStateManager), sparse tree index?; this index needs 
-    to be maintained/updated on every transient & persistent hierarchy 
-    operation (move, remove, copy)
 - HierarchyManager: cache Path objects (key: ItemId, value: Path[]);
-  update cache on hierarchy changes (move, hardlink, remove, etc) 
+  update cache on hierarchy changes (move, order, remove, etc) 
 - inline @todo comments: resolve/implement
 - javaDoc, javaDoc, javaDoc
-- logging: use commons logging (JCL) instead of log4j 
-  (patch supplied by manoj is available pending a JCL/UGLI decision)
+- logging: use Commons Logging (JCL) or Universal and Generic Logging Interface (UGLI)
+  instead of log4j (patch supplied by manoj is available pending a JCL/UGLI decision)
 - logging: remove unnecessary output, check log categories/verbosity, 
   use 'debug' whenever possible
     
