@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.xerces.util.XMLChar;
+import org.apache.xml.utils.XMLChar;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
