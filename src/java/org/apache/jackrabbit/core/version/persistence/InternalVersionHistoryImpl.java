@@ -432,6 +432,13 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         return versionableId;
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.version.InternalVersionHistory#getVersionLabels()
+     */
+    public String[] getVersionLabels() {
+        return (String[]) labelCache.keySet().toArray(new String[labelCache.size()]);
+    }
+
     protected String getUUID() {
         return node.getUUID();
     }
@@ -458,7 +465,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
 
         // set the versionable uuid
         pNode.setPropertyValue(upd, NativePVM.PROPNAME_VERSIONABLE_ID, InternalValue.create(src.internalGetUUID()));
-        
+
         // create label node
         pNode.addNode(upd, NativePVM.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_UNSTRUCTURED);
 

@@ -123,7 +123,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionLabels
      */
     public String[] getVersionLabels() {
-        return new String[0];  // @todo implement VersionHistory#getVersionLabels()
+        return history.getVersionLabels();
     }
 
     /**
@@ -131,14 +131,15 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public String[] getVersionLabels(Version version)
             throws VersionException, RepositoryException {
-        return new String[0];  // @todo implement VersionHistory#getVersionLabels(Version)
+        checkOwnVersion(version);
+        return ((VersionImpl) version).getInternalVersion().getLabels();
     }
 
     /**
      * @see VersionHistory#hasVersionLabel(String)
      */
     public boolean hasVersionLabel(String label) {
-        return false;  // @todo implement VersionHistory#hasVersionLabel(String)
+        return history.getVersionByLabel(label)!=null;
     }
 
     /**
@@ -146,16 +147,23 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public boolean hasVersionLabel(Version version, String label)
             throws VersionException, RepositoryException {
-        return false;  // @todo implement VersionHistory#hasVersionLabel(Version, String)
+        checkOwnVersion(version);
+        return ((VersionImpl) version).getInternalVersion().hasLabel(label);
     }
 
     /**
-     * @see VersionHistory#removeVersionLabel(String)
+     * @see VersionHistory#removeVersion(String)
      */
-    public void removeVersion(String label)
+    public void removeVersion(String versionName)
             throws UnsupportedRepositoryOperationException, VersionException,
             RepositoryException {
-        // @todo implement VersionHistory#removeVersionLabel(String)
+        try {
+            history.removeVersion(QName.fromJCRName(versionName, session.getNamespaceResolver()));
+        } catch (IllegalNameException e) {
+            throw new VersionException("Unable to remove version.", e);
+        } catch (UnknownPrefixException e) {
+            throw new VersionException("Unable to remove version.", e);
+        }
     }
 
     /**
@@ -163,7 +171,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public String getUUID()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        //history.getRootVersion().getFrozenNode().getFrozenUUID();
         return history.getId();
     }
 
@@ -185,5 +192,18 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public String getVersionableUUID() throws RepositoryException {
         return history.getVersionableUUID();
+    }
+
+    /**
+     * Checks if the given version belongs to this history
+     * @param version
+     * @throws VersionException
+     * @throws RepositoryException
+     */
+    private void checkOwnVersion(Version version)
+            throws VersionException, RepositoryException {
+        if (!version.getParent().isSame(this)) {
+            throw new VersionException("Specified version not contained in this history.");
+        }
     }
 }

@@ -199,11 +199,7 @@
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <propertyDef name="*" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" multiple="false">
-            <valueConstraints>
-                <valueConstraint>nt:version</valueConstraint>
-            </valueConstraints>
-        </propertyDef>
+        <propertyDef name="*" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" multiple="true" />
     </nodeType>
     <nodeType name="nt:version" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
         <supertypes>
@@ -221,7 +217,7 @@
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>
         </propertyDef>
-        <childNodeDef name="jcr:frozenNode" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" sameNameSibs="true">
+        <childNodeDef name="jcr:frozenNode" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" sameNameSibs="false">
             <requiredPrimaryTypes>
                 <requiredPrimaryType>nt:frozenNode</requiredPrimaryType>
             </requiredPrimaryTypes>

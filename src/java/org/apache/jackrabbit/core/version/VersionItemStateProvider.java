@@ -177,6 +177,11 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
                 if (vi instanceof InternalVersionHistory) {
                     state = new VersionHistoryNodeState(this, (InternalVersionHistory) vi, root.getUUID());
                     state.setDefinitionId(NDEF_VERSION_HISTORY);
+                    // add version labels node state
+                    String uuid = UUID.randomUUID().toString();
+                    VersionLabelsNodeState vlns = new VersionLabelsNodeState(this, (InternalVersionHistory) vi, state.getUUID(), uuid);
+                    state.addChildNodeEntry(VersionManager.NODENAME_VERSION_LABELS, uuid);
+                    nodes.put(new NodeId(uuid), vlns);
 
                 } else if (vi instanceof InternalVersion) {
                     InternalVersion v = (InternalVersion) vi;

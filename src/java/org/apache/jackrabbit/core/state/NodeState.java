@@ -777,7 +777,7 @@ public class NodeState extends ItemState {
 
         private int hash = 0;
 
-        private PropertyEntry(QName propName) {
+        public PropertyEntry(QName propName) {
             super(propName);
         }
 
