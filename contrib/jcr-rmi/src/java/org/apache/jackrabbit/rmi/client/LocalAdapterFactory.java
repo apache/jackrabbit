@@ -28,6 +28,10 @@ import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -38,7 +42,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemoteQuery;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
+import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
@@ -56,6 +64,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * that functionality by subclassing from ClientObject.
  * 
  * @author Jukka Zitting
+ * @author Philipp Koch
  * @see org.apache.jackrabbit.rmi.server.RemoteAdapterFactory
  * @see org.apache.jackrabbit.rmi.client.ClientAdapterFactory
  * @see org.apache.jackrabbit.rmi.client.ClientObject
@@ -174,5 +183,42 @@ public interface LocalAdapterFactory {
      * @return local lock adapter
      */
     public Lock getLock(Node node, RemoteLock remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote query manager.
+     *
+     * @param session current session
+     * @param remote remote query manager
+     * @return local query manager adapter
+     */
+    public QueryManager getQueryManager(
+            Session session, RemoteQueryManager remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote query.
+     *
+     * @param session current session
+     * @param remote remote query
+     * @return local query adapter
+     */
+    public Query getQuery(Session session, RemoteQuery remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote query result.
+     *
+     * @param session current session
+     * @param remote remote query result
+     * @return local query result adapter
+     */
+    public QueryResult getQueryResult(
+            Session session, RemoteQueryResult remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote query row.
+     * 
+     * @param remote remote query row
+     * @return local query row adapter
+     */
+    public Row getRow(RemoteRow remote);
 
 }

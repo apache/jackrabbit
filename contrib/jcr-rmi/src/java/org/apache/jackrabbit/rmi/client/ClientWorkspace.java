@@ -51,6 +51,7 @@ import org.xml.sax.ContentHandler;
  * the JCR {@link javax.jcr.Workspace Workspace} interface.
  * 
  * @author Jukka Zitting
+ * @author Philipp Koch
  * @see javax.jcr.Workspace
  * @see org.apache.jackrabbit.rmi.remote.RemoteWorkspace
  */
@@ -130,9 +131,11 @@ public class ClientWorkspace extends ClientObject implements Workspace {
 
     /** {@inheritDoc} */
     public QueryManager getQueryManager() throws RepositoryException {
-        // TODO Auto-generated method stub
-        // return null;
-        throw new UnsupportedOperationException();
+        try {
+            return factory.getQueryManager(session, remote.getQueryManager());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */

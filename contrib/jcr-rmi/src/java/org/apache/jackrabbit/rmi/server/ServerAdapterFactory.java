@@ -30,6 +30,7 @@ import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -40,6 +41,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
@@ -53,6 +55,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * corresponding factory methods.
  * 
  * @author Jukka Zitting
+ * @author Philipp Koch
  */
 public class ServerAdapterFactory implements RemoteAdapterFactory {
 
@@ -175,4 +178,16 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     public RemoteLock getRemoteLock(Lock lock) throws RemoteException {
         return new ServerLock(lock);
     }
+
+    /**
+     * Creates and returns a {@link ServerQueryManager ServerQueryManager}
+     * instance.
+     *
+     * {@inheritDoc}
+     */
+    public RemoteQueryManager getRemoteQueryManager(QueryManager manager)
+            throws RemoteException {
+        return new ServerQueryManager(manager, this);
+    }
+
 }

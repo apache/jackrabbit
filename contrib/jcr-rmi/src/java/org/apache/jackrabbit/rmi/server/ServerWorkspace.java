@@ -28,6 +28,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
+import javax.jcr.query.QueryManager;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -35,6 +36,7 @@ import javax.jcr.nodetype.NodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.Workspace Workspace} interface.
@@ -43,6 +45,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * interface.
  * 
  * @author Jukka Zitting
+ * @author Philipp Koch
  * @see javax.jcr.Workspace
  * @see org.apache.jackrabbit.rmi.remote.RemoteWorkspace
  */
@@ -141,6 +144,17 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
     }
 
     /** {@inheritDoc} */
+    public RemoteQueryManager getQueryManager()
+            throws RepositoryException, RemoteException {
+        try {
+            QueryManager queryManager = workspace.getQueryManager();
+            return factory.getRemoteQueryManager(queryManager);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
     public String[] getAccessibleWorkspaceNames() throws RepositoryException,
             RemoteException {
         try {
@@ -161,4 +175,5 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throw getRepositoryException(ex);
         }
     }
+
 }
