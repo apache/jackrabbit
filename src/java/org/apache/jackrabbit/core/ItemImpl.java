@@ -672,11 +672,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             ItemState transientState = (ItemState) iterDirty.next();
             if (!transientState.isNode()) {
                 PropertyState propState = (PropertyState) transientState;
-                if (propState.getType() == PropertyType.REFERENCE) {
-                    if (propState.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
+                int type = propState.getType();
+                if (propState.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
+                    // this is a modified property, check old type...
+                    PropertyState oldPropState = (PropertyState) propState.getOverlayedState();
+                    int oldType = oldPropState.getType();
+                    if (oldType == PropertyType.REFERENCE) {
                         // this is a modified REFERENCE property:
                         // remove the 'reference' stored in the old value
-                        PropertyState oldPropState = (PropertyState) propState.getOverlayedState();
                         InternalValue[] vals = oldPropState.getValues();
                         for (int i = 0; vals != null && i < vals.length; i++) {
                             String uuid = vals[i].toString();
@@ -699,7 +702,10 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             refs.removeReference((PropertyId) propState.getId());
                         }
                     }
-                    // add the reference stored in the new value
+                }
+                if (type == PropertyType.REFERENCE) {
+                    // this is a modified REFERENCE property:
+                    // add the 'reference' stored in the new value
                     InternalValue[] vals = propState.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         String uuid = vals[i].toString();

@@ -38,13 +38,13 @@ public class ReferencesTest extends AbstractJCRTest {
 	n1.addMixin(mixReferenceable);
 	// create references: n2.p1 -> n1
 	Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-	n2.setProperty(propertyName1, new Value[]{new ReferenceValue(n1)});
+	Property p1 = n2.setProperty(propertyName1, new Value[]{new ReferenceValue(n1)});
 	testRootNode.save();
 	PropertyIterator iter = n1.getReferences();
 	if (iter.hasNext()) {
-	    assertEquals("Wrong referencer", iter.nextProperty().getParent().getPath(), n2.getPath());
+	    assertEquals("Wrong referer", iter.nextProperty().getPath(), p1.getPath());
 	} else {
-	    fail("no referencer");
+	    fail("no referer");
 	}
 
 	// create references: n3.p1 -> n1
@@ -59,14 +59,14 @@ public class ReferencesTest extends AbstractJCRTest {
 	    } else if (n3 != null && p.getParent().getPath().equals(n3.getPath())) {
 		n3 = null;
 	    } else {
-		fail("too many referencers: " + p.getPath());
+		fail("too many referers: " + p.getPath());
 	    }
 	}
 	if (n2 != null) {
-	    fail("referencer not in references set: " + n2.getPath());
+	    fail("referer not in references set: " + n2.getPath());
 	}
 	if (n3 != null) {
-	    fail("referencer not in references set: " + n3.getPath());
+	    fail("referer not in references set: " + n3.getPath());
 	}
 
 	// remove reference n3.p1 -> n1
@@ -74,12 +74,12 @@ public class ReferencesTest extends AbstractJCRTest {
 	testRootNode.save();
 	iter = n1.getReferences();
 	if (iter.hasNext()) {
-	    assertEquals("Wrong referencer", iter.nextProperty().getParent().getPath(), testRootNode.getNode(nodeName2).getPath());
+	    assertEquals("Wrong referer", iter.nextProperty().getParent().getPath(), testRootNode.getNode(nodeName2).getPath());
 	} else {
-	    fail("no referencer");
+	    fail("no referer");
 	}
 	if (iter.hasNext()) {
-	    fail("too many referencers: " + iter.nextProperty().getPath());
+	    fail("too many referers: " + iter.nextProperty().getPath());
 	}
 
 	// remove reference n2.p1 -> n1
@@ -87,12 +87,12 @@ public class ReferencesTest extends AbstractJCRTest {
 	testRootNode.save();
 	iter = n1.getReferences();
 	if (iter.hasNext()) {
-	    fail("too many referencers: " + iter.nextProperty().getPath());
+	    fail("too many referers: " + iter.nextProperty().getPath());
 	}
     }
 
     /**
-     * Test Property.getNode();
+     * Tests Property.getNode();
      */
     public void testReferenceTarget() throws RepositoryException {
 	Node n1 = testRootNode.addNode(nodeName1, testNodeType);
@@ -107,7 +107,7 @@ public class ReferencesTest extends AbstractJCRTest {
     }
 
     /**
-     * Test changing a refrence property
+     * Tests changing a reference property
      */
     public void testAlterReference() throws RepositoryException {
 	Node n1 = testRootNode.addNode(nodeName1, testNodeType);
@@ -121,12 +121,12 @@ public class ReferencesTest extends AbstractJCRTest {
 	assertEquals("Wrong reference target.", n3.getProperty(propertyName1).getNode(), n1);
 	PropertyIterator iter = n1.getReferences();
 	if (iter.hasNext()) {
-	    assertEquals("Wrong referencer", iter.nextProperty().getParent().getPath(), n3.getPath());
+	    assertEquals("Wrong referer", iter.nextProperty().getParent().getPath(), n3.getPath());
 	} else {
-	    fail("no referencer");
+	    fail("no referer");
 	}
 	if (iter.hasNext()) {
-	    fail("too many referencers: " + iter.nextProperty().getPath());
+	    fail("too many referers: " + iter.nextProperty().getPath());
 	}
 	// change reference: n3.p1 -> n2
 	n3.setProperty(propertyName1, n2);
@@ -134,16 +134,16 @@ public class ReferencesTest extends AbstractJCRTest {
 	assertEquals("Wrong reference target.", n3.getProperty(propertyName1).getNode(), n2);
 	iter = n1.getReferences();
 	if (iter.hasNext()) {
-	    fail("too many referencers: " + iter.nextProperty().getPath());
+	    fail("too many referers: " + iter.nextProperty().getPath());
 	}
 	iter = n2.getReferences();
 	if (iter.hasNext()) {
-	    assertEquals("Wrong referencer", iter.nextProperty().getParent().getPath(), n3.getPath());
+	    assertEquals("Wrong referer", iter.nextProperty().getParent().getPath(), n3.getPath());
 	} else {
-	    fail("no referencer");
+	    fail("no referers");
 	}
 	if (iter.hasNext()) {
-	    fail("too many referencers: " + iter.nextProperty().getPath());
+	    fail("too many referers: " + iter.nextProperty().getPath());
 	}
 
 	// clear reference by overwriting by other type
@@ -151,7 +151,7 @@ public class ReferencesTest extends AbstractJCRTest {
 	n3.save();
 	iter = n2.getReferences();
 	if (iter.hasNext()) {
-	    fail("too many referencers: " + iter.nextProperty().getPath());
+	    fail("too many referers: " + iter.nextProperty().getPath());
 	}
 
     }
