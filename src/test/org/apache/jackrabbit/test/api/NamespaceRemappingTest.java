@@ -22,6 +22,8 @@ import javax.jcr.Session;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.Property;
+import javax.jcr.nodetype.NodeType;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
@@ -71,12 +73,25 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
      * returns the property with the correct primaryType value.
      */
     public void testNamespaceRemapping() throws RepositoryException {
-        // find an unused prefix
-        String testPrefix = getUnusedPrefix();
-        // remap jcr prefix
-        session.setNamespacePrefix(testPrefix, NS_JCR_URI);
+        Property primaryTypeProp = session.getRootNode().getProperty(jcrPrimaryType);
+        NodeType ntBaseType = session.getWorkspace().getNodeTypeManager().getNodeType(ntBase);
 
-        String propval = session.getRootNode().getProperty(testPrefix + ":primaryType").getString();
+        // find an unused prefix
+        String jcrPrefix = getUnusedPrefix();
+        // remap jcr prefix
+        session.setNamespacePrefix(jcrPrefix, NS_JCR_URI);
+        // find an unused prefix
+        String ntPrefix = getUnusedPrefix();
+        // remap nt prefix
+        session.setNamespacePrefix(ntPrefix, NS_NT_URI);
+
+        assertTrue("Unable to retrieve property with new namespace prefix.",
+                session.getRootNode().getProperty(jcrPrefix + ":primaryType").isSame(primaryTypeProp));
+
+        assertEquals("NodeType name does not use new namespace prefix.",
+                ntBaseType.getName(), ntPrefix + ":base");
+
+        String propval = session.getRootNode().getProperty(jcrPrefix + ":primaryType").getString();
         String primaryType = session.getRootNode().getPrimaryNodeType().getName();
         assertEquals("Remapping of jcr prefix failed", primaryType, propval);
     }
@@ -165,7 +180,7 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
      */
     private String getUnusedPrefix() throws RepositoryException {
         Set prefixes = new HashSet();
-        prefixes.addAll(Arrays.asList(nsr.getPrefixes()));
+        prefixes.addAll(Arrays.asList(session.getNamespacePrefixes()));
         String prefix = "myapp";
         int count = 0;
         while (prefixes.contains(prefix + count)) {
