@@ -635,6 +635,15 @@ public class WorkspaceImporter implements Importer, Constants {
             if (node == null) {
                 // there's no node with that name...
                 if (uuid == null) {
+                    ChildNodeDef def =
+                            wsp.findApplicableNodeDefinition(nodeName, ntName, parent);
+                    if (def.isProtected()) {
+                        // skip protected node
+                        parents.push(null); // push null onto stack for skipped node
+                        log.debug("skipping protected node " + nodeName);
+                        return;
+                    }
+
                     // no potential uuid conflict, always create new node:
                     // check if new node can be added (check access rights &
                     // node type constraints only, assume locking & versioning status
@@ -681,22 +690,23 @@ public class WorkspaceImporter implements Importer, Constants {
                 int type = pi.getType();
 
                 PropertyState prop = null;
+                PropDef def = null;
 
                 if (node.hasPropertyEntry(propName)) {
                     // a property with that name already exists...
                     PropertyId idExisting = new PropertyId(node.getUUID(), propName);
                     PropertyState existing =
                             (PropertyState) stateMgr.getItemState(idExisting);
-                    PropDef propDef = ntReg.getPropDef(existing.getDefinitionId());
-                    if (propDef.isProtected()) {
+                    def = ntReg.getPropDef(existing.getDefinitionId());
+                    if (def.isProtected()) {
                         // skip protected property
                         log.debug("skipping protected property "
                                 + resolveJCRPath(idExisting));
                         continue;
                     }
-                    if (propDef.isAutoCreate() && (existing.getType() == type
+                    if (def.isAutoCreate() && (existing.getType() == type
                             || type == PropertyType.UNDEFINED)
-                            && propDef.isMultiple() == existing.isMultiValued()) {
+                            && def.isMultiple() == existing.isMultiValued()) {
                         // this property has already been auto-created,
                         // no need to create it
                         prop = existing;
@@ -706,28 +716,52 @@ public class WorkspaceImporter implements Importer, Constants {
                 }
                 if (prop == null) {
                     // there's no property with that name,
+                    // find applicable definition
+
+                    // multi- or single-valued property?
+                    if (vals.length == 1) {
+                        // could be single- or multi-valued (n == 1)
+                        try {
+                            // try single-valued
+                            def = wsp.findApplicablePropertyDefinition(propName,
+                                    type, false, parent);
+                        } catch (ConstraintViolationException cve) {
+                            // try multi-valued
+                            def = wsp.findApplicablePropertyDefinition(propName,
+                                    type, true, parent);
+                        }
+                    } else {
+                        // can only be multi-valued (n == 0 || n > 1)
+                        def = wsp.findApplicablePropertyDefinition(propName,
+                                type, true, parent);
+                    }
+
+                    if (def.isProtected()) {
+                        // skip protected property
+                        log.debug("skipping protected property " + propName);
+                        continue;
+                    }
+
                     // create new property
-                    prop = createProperty(node, propName, type, vals.length);
+                    prop = createProperty(node, propName, type, def);
                 }
 
-                PropDef propDef = ntReg.getPropDef(prop.getDefinitionId());
-
                 // check multi-valued characteristic
-                if ((vals.length == 0 || vals.length > 1) && !propDef.isMultiple()) {
+                if ((vals.length == 0 || vals.length > 1) && !def.isMultiple()) {
                     throw new ConstraintViolationException(resolveJCRPath(prop.getId())
                             + " is not multi-valued");
                 }
 
                 // check whether type conversion is required
-                if (propDef.getRequiredType() != PropertyType.UNDEFINED
-                        && propDef.getRequiredType() != type) {
+                if (def.getRequiredType() != PropertyType.UNDEFINED
+                        && def.getRequiredType() != type) {
                     // type doesn't match required type,
                     // type conversion required
                     for (int i = 0; i < vals.length; i++) {
                         // convert InternalValue to Value of required type
                         Value v =
                                 ValueHelper.convert(vals[i].toJCRValue(nsContext),
-                                        propDef.getRequiredType());
+                                        def.getRequiredType());
                         // convert Value to InternalValue using
                         // current namespace context of xml document
                         vals[i] = InternalValue.create(v, nsContext);
