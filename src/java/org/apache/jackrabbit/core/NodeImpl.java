@@ -586,7 +586,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // primary type
         set.add(nodeType.getQName());
         try {
-            return ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node " + safeGetJCRPath();
             log.error(msg, ntce);
@@ -1704,7 +1704,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
         try {
-            EffectiveNodeType ent = ntReg.buildEffectiveNodeType((QName[]) mixinNames.toArray(new QName[mixinNames.size()]));
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType((QName[]) mixinNames.toArray(new QName[mixinNames.size()]));
             return ent.includesNodeType(ntName);
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: invalid mixin node type(s)";
@@ -1788,14 +1788,14 @@ public class NodeImpl extends ItemImpl implements Node {
             // primary type
             set.add(nodeType.getQName());
             // build effective node type representing primary type including existing mixin's
-            entExisting = ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            entExisting = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
             if (entExisting.includesNodeType(ntName)) {
                 throw new RepositoryException(mixinName + ": already contained in mixin types");
             }
             // add new mixin
             set.add(ntName);
             // try to build new effective node type (will throw in case of conflicts)
-            ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             throw new ConstraintViolationException(ntce.getMessage());
         }
@@ -1916,7 +1916,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // primary type
             set.add(nodeType.getQName());
             // build effective node type representing primary type including remaining mixin's
-            entRemaining = ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            entRemaining = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             throw new ConstraintViolationException(ntce.getMessage());
         }
@@ -2010,14 +2010,14 @@ public class NodeImpl extends ItemImpl implements Node {
             // primary type
             set.add(nodeType.getQName());
             // build effective node type representing primary type including existing mixin's
-            entExisting = ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            entExisting = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
             if (entExisting.includesNodeType(ntName)) {
                 return false;
             }
             // add new mixin
             set.add(ntName);
             // try to build new effective node type (will throw in case of conflicts)
-            ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             return false;
         }

@@ -167,7 +167,7 @@ public class EffectiveNodeType implements Cloneable {
         // resolve supertypes recursively
         QName[] supertypes = ntd.getSupertypes();
         if (supertypes != null && supertypes.length > 0) {
-            ent.internalMerge(ntReg.buildEffectiveNodeType(supertypes), true);
+            ent.internalMerge(ntReg.getEffectiveNodeType(supertypes), true);
         }
 
         // we're done

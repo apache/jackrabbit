@@ -406,7 +406,7 @@ public class WorkspaceImpl implements Workspace {
         // primary type
         set.add(state.getNodeTypeName());
         try {
-            return ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node " + state.getUUID();
             log.error(msg, ntce);

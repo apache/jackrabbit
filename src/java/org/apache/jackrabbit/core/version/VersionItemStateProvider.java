@@ -292,15 +292,10 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
             def = getApplicableChildNodeDef(parent, name, nodeType == null ? null : nodeType.getQName());
         } catch (RepositoryException re) {
             // hack, use nt:unstructured as parent
-            try {
-                NodeTypeRegistry ntReg = getNodeTypeManager().getNodeTypeRegistry();
-                EffectiveNodeType ent = ntReg.buildEffectiveNodeType(new QName[]{NodeTypeRegistry.NT_UNSTRUCTURED});
-                ChildNodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
-                def = getNodeTypeManager().getNodeDef(new NodeDefId(cnd));
-            } catch (NodeTypeConflictException e) {
-                String msg = "no definition found in parent node's node type for new node";
-                throw new ConstraintViolationException(msg, re);
-            }
+            NodeTypeRegistry ntReg = getNodeTypeManager().getNodeTypeRegistry();
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(NodeTypeRegistry.NT_UNSTRUCTURED);
+            ChildNodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
+            def = getNodeTypeManager().getNodeDef(new NodeDefId(cnd));
         }
         if (nodeType == null) {
             // use default node type
@@ -408,7 +403,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         // primary type
         set.add(parent.getNodeTypeName());
         try {
-            return ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node " + parent.getUUID();
             throw new RepositoryException(msg, ntce);

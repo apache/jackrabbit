@@ -568,7 +568,7 @@ public class NodeTypeRegistry {
          */
         if (supertypes != null && supertypes.length > 0) {
             try {
-                EffectiveNodeType est = buildEffectiveNodeType(supertypes);
+                EffectiveNodeType est = getEffectiveNodeType(supertypes);
                 // make sure that all primary types except nt:base extend from nt:base
                 if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName()) &&
                         !est.includesNodeType(NT_BASE)) {
@@ -913,24 +913,46 @@ public class NodeTypeRegistry {
     }
 
     /**
+     *
      * @param ntName
      * @return
+     * @throws NoSuchNodeTypeException
      */
     public synchronized EffectiveNodeType getEffectiveNodeType(QName ntName)
             throws NoSuchNodeTypeException {
+        // 1. make sure that the specified node type is registered
+        if (!registeredNTDefs.containsKey(ntName)) {
+            throw new NoSuchNodeTypeException(ntName.toString());
+        }
+
+        // 2. check if effective node type has already been built
         WeightedKey key = new WeightedKey(new QName[]{ntName});
         if (entCache.contains(key)) {
             return entCache.get(key);
-        } else {
-            throw new NoSuchNodeTypeException(ntName.toString());
+        }
+
+        // 3. build effective node type
+        try {
+            EffectiveNodeType ent = EffectiveNodeType.create(this, ntName);
+            // store new effective node type
+            entCache.put(ent);
+            return ent;
+        } catch (NodeTypeConflictException ntce) {
+            // should never get here as all registered node types have to be valid!
+            String msg = "internal error: encountered invalid registered node type " + ntName;
+            log.error(msg, ntce);
+            throw new NoSuchNodeTypeException(msg, ntce);
         }
     }
 
     /**
+     *
      * @param ntNames
      * @return
+     * @throws NodeTypeConflictException
+     * @throws NoSuchNodeTypeException
      */
-    public synchronized EffectiveNodeType buildEffectiveNodeType(QName[] ntNames)
+    public synchronized EffectiveNodeType getEffectiveNodeType(QName[] ntNames)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // 1. make sure every single node type is registered
         for (int i = 0; i < ntNames.length; i++) {
@@ -941,7 +963,7 @@ public class NodeTypeRegistry {
 
         WeightedKey key = new WeightedKey(ntNames);
 
-        // 2. check if aggregate has already been build
+        // 2. check if aggregate has already been built
         if (entCache.contains(key)) {
             return entCache.get(key);
         }
@@ -960,14 +982,18 @@ public class NodeTypeRegistry {
                 key = key.subtract(key);
                 break;
             }
-            // walk list of existing aggregates sorted by 'weight' of
-            // aggregate (i.e. the cost of building it)
+            /**
+             * walk list of existing aggregates sorted by 'weight' of
+             * aggregate (i.e. the cost of building it)
+             */
             boolean foundSubResult = false;
             Iterator iter = entCache.keys();
             while (iter.hasNext()) {
                 WeightedKey k = (WeightedKey) iter.next();
-                // check if the existing aggregate is a 'subset' of the one
-                // we're looking for
+                /**
+                 * check if the existing aggregate is a 'subset' of the one
+                 * we're looking for
+                 */
                 if (key.contains(k)) {
                     tmpResults.add(entCache.get(k));
                     // subtract the result from the temporary key
@@ -977,8 +1003,10 @@ public class NodeTypeRegistry {
                 }
             }
             if (!foundSubResult) {
-                // no matching sub-aggregates found:
-                // build aggregate of remaining node types through iteration
+                /**
+                 * no matching sub-aggregates found:
+                 * build aggregate of remaining node types through iteration
+                 */
                 QName[] remainder = key.toArray();
                 for (int i = 0; i < remainder.length; i++) {
                     EffectiveNodeType ent = null;
@@ -1296,7 +1324,7 @@ public class NodeTypeRegistry {
         NodeTypeDef ntdOld = (NodeTypeDef) registeredNTDefs.get(name);
         NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
         if (!diff.isModified()) {
-            // the definition has been modified, there's nothing to do here...
+            // the definition has not been modified, there's nothing to do here...
             return getEffectiveNodeType(name);
         }
         if (diff.isTrivial()) {
