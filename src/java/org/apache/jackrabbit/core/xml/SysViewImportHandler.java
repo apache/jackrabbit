@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.log4j.Logger;
@@ -32,8 +33,7 @@ import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * <code>SysViewImportHandler</code>  ...
@@ -50,6 +50,12 @@ class SysViewImportHandler extends DefaultHandler {
      * when the corresponding sv:node element is encountered.
      */
     private Stack stateStack = new Stack();
+
+    /** list of all reference properties that need to be adjusted */
+    private LinkedList references = new LinkedList();
+
+    /** list of all mix:referenceable */
+    private HashMap referees = new HashMap();
 
     /**
      * fields used temporarily while processing sv:property and sv:value elements
@@ -292,6 +298,9 @@ class SysViewImportHandler extends DefaultHandler {
 			try {
 			    // try setting single-value
 			    current.node.setProperty(currentPropName, vals[0]);
+			} catch (ValueFormatException vfe) {
+                            // try setting value array
+                            current.node.setProperty(currentPropName, vals);
 			} catch (ConstraintViolationException vfe) {
 			    // try setting value array
 			    current.node.setProperty(currentPropName, vals);
@@ -300,6 +309,10 @@ class SysViewImportHandler extends DefaultHandler {
 			// can only be multi-valued (n == 0 || n > 1)
 			current.node.setProperty(currentPropName, vals);
 		    }
+                    // check if reference for later resolution
+                    if (currentPropType==PropertyType.REFERENCE) {
+                        references.add(current.node.getProperty(currentPropName));
+                    }
 		}
 
 		// reset temp fields
@@ -331,21 +344,71 @@ class SysViewImportHandler extends DefaultHandler {
 	    NodeDef def = state.node.getDefinition();
 	    if (def.isProtected()) {
                 // @todo how to handle protected/auto-created child node?
-                return;
+
             } else if (def.isAutoCreate()) {
 		// @todo how to handle protected/auto-created child node?
-                return;
-	    }
-	}
 
-	state.node = (NodeImpl) state.parent.addNode(state.nodeName, state.primaryType);
-	if (state.mixinTypes != null) {
-	    for (int i = 0; i < state.mixinTypes.size(); i++) {
-		NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType((QName) state.mixinTypes.get(i));
-		state.node.addMixin(mixin.getName());
 	    }
-	}
+	} else {
+            state.node = (NodeImpl) state.parent.addNode(state.nodeName, state.primaryType);
+            if (state.mixinTypes != null) {
+                for (int i = 0; i < state.mixinTypes.size(); i++) {
+                    NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType((QName) state.mixinTypes.get(i));
+                    state.node.addMixin(mixin.getName());
+                }
+            }
+        }
+
+        // check for mix:referenceable
+        if (state.node.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+            log.info("adding refereee: ori=" + state.uuid + " new=" + state.node.getUUID());
+            referees.put(state.uuid, state.node.getUUID());
+        }
     }
+
+    public void endDocument() throws SAXException {
+        try {
+            // adjust all reference properties
+            Iterator iter = references.iterator();
+            while (iter.hasNext()) {
+                Property prop = (Property) iter.next();
+                if (prop.getDefinition().isMultiple()) {
+                    Value[] values = prop.getValues();
+                    Value[] newVals = new Value[values.length];
+                    for (int i=0; i<values.length; i++) {
+                        Value val = values[i];
+                        if (val.getType()==PropertyType.REFERENCE) {
+                            String original = val.getString();
+                            String adjusted = (String) referees.get(original);
+                            if (adjusted==null) {
+                                log.error("Reference " + original + " of property can not be adjusted! " + prop.getPath());
+                                newVals[i] = val;
+                            } else {
+                                newVals[i] = new ReferenceValue(session.getNodeByUUID(adjusted));
+                            }
+                        } else {
+                            newVals[i] = val;
+                        }
+                    }
+                    prop.setValue(newVals);
+                } else {
+                    Value val = prop.getValue();
+                    if (val.getType()==PropertyType.REFERENCE) {
+                        String original = val.getString();
+                        String adjusted = (String) referees.get(original);
+                        if (adjusted==null) {
+                            log.error("Reference " + original + " of property can not be adjusted! " + prop.getPath());
+                        } else {
+                            prop.setValue(session.getNodeByUUID(adjusted));
+                        }
+                    }
+                }
+            }
+        } catch (RepositoryException e) {
+            log.error("Error while adjusting reference proerties: " + e.toString());
+        }
+    }
+
 
     //--------------------------------------------------------< inner classes >
     class ImportState {
