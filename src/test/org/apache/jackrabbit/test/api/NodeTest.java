@@ -649,11 +649,18 @@ public class NodeTest extends AbstractJCRTest {
         }
         testRootNode.save();
 
-        node.lock(true, true);
+        // remove first slash of path to get rel path to root
+        String pathRelToRoot = node.getPath().substring(1);
+
+        // access node through another session to lock it
+        Session session2 = helper.getSuperuserSession();
+        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+        node2.lock(true, true);
 
         // test fails if a LockException is thrown when removing the node
         // (remove must be possible since the parent is not locked)
         node.remove();
+        session2.logout();
     }
 
     /**
@@ -689,7 +696,13 @@ public class NodeTest extends AbstractJCRTest {
         Node subNode = node.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
-        node.lock(true, true);
+        // lock the node
+        // remove first slash of path to get rel path to root
+        String pathRelToRoot = node.getPath().substring(1);
+        // access node through another session to lock it
+        Session session2 = helper.getSuperuserSession();
+        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+        node2.lock(true, true);
 
         try {
             subNode.remove();
@@ -700,7 +713,8 @@ public class NodeTest extends AbstractJCRTest {
         }
 
         // unlock to remove node at tearDown()
-        node.unlock();
+        node2.unlock();
+        session2.logout();
     }
 
     /**
