@@ -17,11 +17,17 @@
 package org.apache.jackrabbit.server.simple.dav;
 
 import org.apache.jackrabbit.webdav.*;
+import org.apache.log4j.Logger;
 
 /**
  * ResourceFactoryImpl implements a simple DavLocatorFactory
+ *
+ * @todo improve special handling of root item....
  */
 public class LocatorFactoryImpl implements DavLocatorFactory {
+
+    /** the default logger */
+    private static final Logger log = Logger.getLogger(LocatorFactoryImpl.class);
 
     private final String repositoryPrefix;
 
@@ -32,9 +38,11 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
     public DavResourceLocator createResourceLocator(String prefix, String requestHandle) {
         String rPrefix = prefix + repositoryPrefix;
         String rHandle = requestHandle;
+	// remove the configured repository prefix from the path
         if (rHandle != null && rHandle.startsWith(repositoryPrefix)) {
             rHandle = rHandle.substring(repositoryPrefix.length());
         }
+	// special treatment for root item, that has no name but '/' path.
         if (rHandle == null || "".equals(rHandle)) {
             rHandle = "/";
         }
@@ -54,6 +62,7 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
         private Locator(String prefix, String itemPath, DavLocatorFactory factory) {
             this.prefix = prefix;
             this.factory = factory;
+	    // remove trailing '/' that is not part of the itemPath except for the root item.
             if (itemPath.endsWith("/") && !"/".equals(itemPath)) {
                 itemPath = itemPath.substring(0, itemPath.length()-1);
             }
@@ -85,7 +94,9 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
         }
 
         public String getHref(boolean isCollection) {
-            return prefix + itemPath + (isCollection ? "/" : "");
+	    // avoid doubled trainling '/' for the root item
+	    String suffix = (isCollection && !isRootLocation()) ? "/" : "";
+            return prefix + itemPath + suffix;
         }
 
         public boolean isRootLocation() {

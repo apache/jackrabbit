@@ -22,7 +22,8 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.spi.nodetype.NodeTypeConstants;
-import org.apache.jackrabbit.webdav.spi.nodetype.NodeTypeElement;
+import org.apache.jackrabbit.webdav.spi.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.webdav.spi.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.webdav.spi.JcrDavException;
 import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.jdom.Document;
@@ -30,7 +31,6 @@ import org.jdom.Element;
 
 import javax.jcr.nodetype.*;
 import javax.jcr.*;
-import javax.jcr.version.OnParentVersionAction;
 import java.util.*;
 
 /**
@@ -46,6 +46,10 @@ import java.util.*;
  * &lt;!ELEMENT mixin-nodetypes EMPTY &gt;
  * &lt;!ELEMENT primary-nodetypes EMPTY &gt;
  * </pre>
+ *
+ * @todo currently the nodetype report is not consistent with the general way of representing nodetype names (with NodetypeElement) in order to be compatible with the jackrabbit nodetype registry...
+ * @todo for the same reason, not the complete nodetype-definition, but only the nodetype def as stored is represented.
+ * @todo no namespace definition with response (> jackrabbit)... and nodetype element has same name as the one used with dav-properties
  */
 public class NodeTypesReport implements Report, NodeTypeConstants {
 
@@ -116,38 +120,42 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running jcr:nodetypes report");
         }
         try {
-            Element report = new Element("nodetypes-report", NAMESPACE);
+            Element report = new Element(XML_NODETYPES);
             NodeTypeIterator ntIter = getNodeTypes();
             while (ntIter.hasNext()) {
                 NodeType nt = ntIter.nextNodeType();
-                Element ntDef = new Element(XML_NODETYPEDEFINITION, NAMESPACE);
-                ntDef.addContent(new Element(XML_NODETYPENAME, NAMESPACE).setText(nt.getName()));
+                Element ntDef = new Element(XML_NODETYPE);
+                ntDef.setAttribute(ATTR_NAME, nt.getName());
+                ntDef.setAttribute(ATTR_ISMIXIN, Boolean.toString(nt.isMixin()));
+                ntDef.setAttribute(ATTR_HASORDERABLECHILDNODES, Boolean.toString(nt.hasOrderableChildNodes()));
 
-                if (nt.isMixin()) {
-                    ntDef.addContent(new Element(XML_MIXIN, NAMESPACE));
-                }
-                if (nt.hasOrderableChildNodes()) {
-                    ntDef.addContent(new Element(XML_ORDERABLECHILDNODES, NAMESPACE));
-                }
+		// declared supertypes
+		NodeType[] snts = nt.getDeclaredSupertypes();
+                Element supertypes = new Element(XML_SUPERTYPES);
+		for (int i = 0; i < snts.length; i++) {
+		    supertypes.addContent(new Element(XML_SUPERTYPE).setText(snts[i].getName()));
+		}
+		ntDef.addContent(supertypes);
 
-                Element supertypes = new Element(XML_SUPERTYPES, NAMESPACE).addContent(Arrays.asList(NodeTypeElement.create(nt.getSupertypes())));
-                ntDef.addContent(supertypes);
-                Element declSupertypes = new Element(XML_DECLARED_SUPERTYPES, NAMESPACE).addContent(Arrays.asList(NodeTypeElement.create(nt.getDeclaredSupertypes())));
-                ntDef.addContent(declSupertypes);
+		// declared childnode defs
+		NodeDef[] cnd = nt.getChildNodeDefs();
+		for (int i = 0; i < cnd.length; i++) {
+		    if (cnd[i].getDeclaringNodeType().getName().equals(nt.getName())) {
+			ntDef.addContent(NodeDefImpl.create(cnd[i]).toXml());
+		    }
+		}
 
-                NodeDef[] cnd = nt.getChildNodeDefs();
-                for (int i = 0; i < cnd.length; i++) {
-                    ntDef.addContent(getDefinitionElement(cnd[i]));
-                }
-
-                PropertyDef[] pd = nt.getPropertyDefs();
-                for (int i = 0; i < pd.length; i++) {
-                    ntDef.addContent(getDefinitionElement(pd[i]));
-                }
+		// declared propertyDefs
+		PropertyDef[] pd = nt.getPropertyDefs();
+		for (int i = 0; i < pd.length; i++) {
+		    if (pd[i].getDeclaringNodeType().getName().equals(nt.getName())) {
+			ntDef.addContent(PropertyDefImpl.create(pd[i]).toXml());
+		    }
+		}
 
                 String primaryItemName = nt.getPrimaryItemName();
                 if (primaryItemName != null) {
-                    ntDef.addContent(new Element(XML_PRIMARYITEMNAME, NAMESPACE).setText(primaryItemName));
+                    ntDef.setAttribute(ATTR_PRIMARYITEMNAME, primaryItemName);
                 }
                 report.addContent(ntDef);
             }
@@ -174,11 +182,11 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
             Element elem = (Element) it.next();
             if (elem.getNamespace().equals(NAMESPACE)) {
                 String name = elem.getName();
-                if ("allnodetypes".equals(name)) {
+                if (XML_REPORT_ALLNODETYPES.equals(name)) {
                     ntIter = ntMgr.getAllNodeTypes();
-                } else if ("mixinnodetypes".equals(name)) {
+                } else if (XML_REPORT_MIXINNODETYPES.equals(name)) {
                     ntIter = ntMgr.getMixinNodeTypes();
-                } else if ("primarynodetypes".equals(name)) {
+                } else if (XML_REPORT_PRIMARYNODETYPES.equals(name)) {
                     ntIter = ntMgr.getPrimaryNodeTypes();
                 }
             }
@@ -203,92 +211,5 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
         }
 
         return ntIter;
-    }
-
-    /**
-     * Return the Xml representation of a {@link NodeDef}.
-     *
-     * @param def
-     * @return Xml representation of the specified {@link NodeDef def}.
-     */
-    private Element getDefinitionElement(NodeDef def) {
-        Element elem = getDefinitionElement(XML_CHILDNODEDEF, def);
-
-        elem.setAttribute(ATTR_SAMENAMESIBS, Boolean.toString(def.allowSameNameSibs()), NAMESPACE);
-
-        // defaultPrimaryType can be 'null'
-        NodeType defaultPrimaryType = def.getDefaultPrimaryType();
-        if (defaultPrimaryType != null) {
-            Element ntElem = new Element(XML_DEFAULTPRIMARYTYPE, NAMESPACE);
-            ntElem.addContent(new NodeTypeElement(defaultPrimaryType));
-            elem.addContent(ntElem);
-        }
-        // reqPrimaryTypes: minimal set is nt:base.
-        NodeType[] nts = def.getRequiredPrimaryTypes();
-        Element reqPrimaryTypes = new Element(XML_REQUIREDPRIMARYTYPES, NAMESPACE);
-        reqPrimaryTypes.addContent(Arrays.asList(NodeTypeElement.create(nts)));
-        elem.addContent(reqPrimaryTypes);
-
-        return elem;
-    }
-
-    /**
-     * Returns the Xml representation of a {@link PropertyDef}.
-     *
-     * @param def
-     * @return Xml representation of the specified {@link PropertyDef def}.
-     */
-    private Element getDefinitionElement(PropertyDef def) {
-        Element elem = getDefinitionElement(XML_PROPERTYDEF, def);
-
-        elem.setAttribute(ATTR_MULTIPLE, Boolean.toString(def.isMultiple()), NAMESPACE);
-        elem.setAttribute(ATTR_TYPE, PropertyType.nameFromValue(def.getRequiredType()), NAMESPACE);
-
-        // default values may be 'null'
-        Value[] values = def.getDefaultValues();
-        if (values != null) {
-            Element dvElement = new Element(XML_DEFAULTVALUES, NAMESPACE);
-            for (int i = 0; i < values.length; i++) {
-                try {
-                    Element valElem = new Element(XML_DEFAULTVALUE, NAMESPACE).setText(values[i].getString());
-                    dvElement.addContent(valElem);
-                } catch (RepositoryException e) {
-                    // should not occur
-                    log.error(e.getMessage());
-                }
-            }
-            elem.addContent(dvElement);
-        }
-        // value constraints array is never null.
-        Element constrElem = new Element(XML_VALUECONSTRAINTS, NAMESPACE);
-        String[] constraints = def.getValueConstraints();
-        for (int i = 0; i < constraints.length; i++) {
-            constrElem.addContent(new Element(XML_VALUECONSTRAINT, NAMESPACE).setText(constraints[i]));
-        }
-        elem.addContent(constrElem);
-
-        return elem;
-    }
-
-    /**
-     * Returns the Xml representation of a {@link ItemDef} object.
-     *
-     * @param elementName
-     * @param def
-     * @return Xml representation of the specified {@link ItemDef def}.
-     */
-    private Element getDefinitionElement(String elementName, ItemDef def) {
-        Element elem = new Element(elementName, NAMESPACE);
-        elem.setAttribute(ATTR_NAME, def.getName(), NAMESPACE);
-        elem.setAttribute(ATTR_AUTOCREATE, Boolean.toString(def.isAutoCreate()), NAMESPACE);
-        elem.setAttribute(ATTR_MANDATORY, Boolean.toString(def.isMandatory()), NAMESPACE);
-        elem.setAttribute(ATTR_ONPARENTVERSION, OnParentVersionAction.nameFromValue(def.getOnParentVersion()), NAMESPACE);
-        elem.setAttribute(ATTR_PROTECTED, Boolean.toString(def.isProtected()), NAMESPACE);
-
-        Element ntElem = new Element(XML_DECLARINGNODETYPE, NAMESPACE);
-        ntElem.addContent(new NodeTypeElement(def.getDeclaringNodeType()));
-        elem.addContent(ntElem);
-
-        return elem;
     }
 }

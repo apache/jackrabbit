@@ -70,6 +70,12 @@ public interface ItemResourceConstants {
     public static final String XML_LENGTH = "length";
     public static final String XML_EXCLUSIVE_SESSION_SCOPED = "exclusive-session-scoped";
 
+    // xml elements used to reflect the workspaces ns-registry
+    // TODO: to be review...
+    public static final String XML_NAMESPACE = "namespace";
+    public static final String XML_NSPREFIX = "nsPrefix";
+    public static final String XML_NSURI = "nsURI";
+
     /**
      * Extension to the WebDAV 'exclusive' lock, that allows to distinguish
      * the session-scoped and open-scoped locks on a JCR node.
@@ -120,6 +126,9 @@ public interface ItemResourceConstants {
     public static final DavPropertyName JCR_VALUES = DavPropertyName.create("values", NAMESPACE);
     public static final DavPropertyName JCR_LENGTH = DavPropertyName.create("length", NAMESPACE);
     public static final DavPropertyName JCR_LENGTHS = DavPropertyName.create("lengths", NAMESPACE);
+
+    // property names used for resource representing a workspace
+    public static final DavPropertyName JCR_NAMESPACES = DavPropertyName.create("namespaces", NAMESPACE);
 
     /**
      * Property name for the jcr:created property present on Version items.

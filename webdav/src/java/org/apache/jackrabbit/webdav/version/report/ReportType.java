@@ -65,7 +65,7 @@ public class ReportType implements DeltaVConstants {
 	    // should never occur
 	    throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register Report.");
 	}
-    }
+    }    
 
     /**
      * Returns an Xml element representing this report type

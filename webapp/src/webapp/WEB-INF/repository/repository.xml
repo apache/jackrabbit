@@ -28,7 +28,7 @@
     a Versioning element that is used for configuring
     versioning-related settings
     -->
-    <!ELEMENT Repository (FileSystem,Workspaces,Workspace,Versioning)>
+    <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning)>
 
     <!--
     a virtual file system
@@ -36,6 +36,17 @@
     <!ELEMENT FileSystem (param*)>
     <!ATTLIST FileSystem
       class CDATA #REQUIRED>
+
+    <!--
+        the Security element specifies the name (appName attribute)
+        of the JAAS configuration app-entry for this repository. 
+
+        it also specifies the access manager to be used (AccessManager element).
+    -->
+    <!ELEMENT Security (AccessManager)>
+    <!ATTLIST Security
+      appName CDATA #REQUIRED>
+
 
     <!--
     generic parameter (name/value pair)
@@ -102,6 +113,20 @@
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
 	<param name="path" value="${rep.home}/repository"/>
     </FileSystem>
+
+    <!--
+        security configuration
+    -->
+    <Security appName="Jackrabbit">
+        <!--
+            access manager:
+            class: FQN of class implementing the AccessManager interface
+        -->
+        <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager">
+            <!-- <param name="config" value="${rep.home}/access.xml"/> -->
+        </AccessManager>
+    </Security>
+
     <!--
     location of workspaces root directory and name of default workspace
     -->

@@ -22,30 +22,26 @@ import org.apache.jackrabbit.webdav.spi.search.SearchResourceImpl;
 import org.apache.jackrabbit.webdav.spi.version.report.NodeTypesReport;
 import org.apache.jackrabbit.webdav.spi.version.report.ExportViewReport;
 import org.apache.jackrabbit.webdav.spi.version.report.LocateByUuidReport;
+import org.apache.jackrabbit.webdav.spi.version.report.RegisteredNamespacesReport;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.transaction.TxLockEntry;
-import org.apache.jackrabbit.webdav.version.report.*;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
-import org.apache.jackrabbit.webdav.version.DeltaVConstants;
-import org.apache.jackrabbit.webdav.version.OptionsResponse;
-import org.apache.jackrabbit.webdav.version.OptionsInfo;
+import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.search.*;
 import org.apache.jackrabbit.webdav.util.Text;
 
 import javax.jcr.*;
-import java.util.*;
 
 /**
  * <code>AbstractItemResource</code> covers common functionality for the various
  * resources, that represent a repository item.
  */
 abstract class AbstractItemResource extends AbstractResource implements
-    SearchResource, DeltaVResource, ItemResourceConstants {
+    SearchResource, ItemResourceConstants {
 
     private static Logger log = Logger.getLogger(AbstractItemResource.class);
 
     protected final Item item;
-    protected SupportedReportSetProperty supportedReports;
 
     /**
      * Create a new <code>AbstractItemResource</code>.
@@ -65,9 +61,6 @@ abstract class AbstractItemResource extends AbstractResource implements
             }
         }
         item = repositoryItem;
-        // initialize the supported locks and reports
-        initLockSupport();
-        initSupportedReports();
     }
 
     //----------------------------------------------< DavResource interface >---
@@ -174,7 +167,7 @@ abstract class AbstractItemResource extends AbstractResource implements
 
         } catch (PathNotFoundException e) {
             // according to rfc 2518
-            throw new DavException(DavServletResponse.SC_NOT_FOUND, e.getMessage());
+            throw new DavException(DavServletResponse.SC_CONFLICT, e.getMessage());
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -245,122 +238,6 @@ abstract class AbstractItemResource extends AbstractResource implements
         return new SearchResourceImpl(getLocator(), getSession()).search(sRequest);
     }
 
-    //-------------------------------------------< DeltaVResource interface >---
-    /**
-     * @param optionsInfo
-     * @return object to be used in the OPTIONS response body or <code>null</code>
-     * @see DeltaVResource#getOptionResponse(org.apache.jackrabbit.webdav.version.OptionsInfo)
-     */
-    public OptionsResponse getOptionResponse(OptionsInfo optionsInfo) {
-        OptionsResponse oR = null;
-        if (optionsInfo != null) {
-            oR = new OptionsResponse();
-            // currently on DAV:version-history-collection-set and
-            // DAV:workspace-collection-set is supported.
-            if (optionsInfo.containsElement(DeltaVConstants.XML_VH_COLLECTION_SET, DeltaVConstants.NAMESPACE)) {
-                String[] hrefs = new String[] { getLocatorFromResourcePath(VERSIONSTORAGE_PATH).getHref(true)};
-                oR.addEntry(DeltaVConstants.XML_VH_COLLECTION_SET, DeltaVConstants.NAMESPACE, hrefs);
-            } else if (optionsInfo.containsElement(DeltaVConstants.XML_WSP_COLLECTION_SET, DeltaVConstants.NAMESPACE)) {
-                // workspaces cannot be created anywhere.
-                oR.addEntry(DeltaVConstants.XML_WSP_COLLECTION_SET, DeltaVConstants.NAMESPACE, new String[0]);
-            }
-        }
-        return oR;
-    }
-
-    /**
-     * @param reportInfo
-     * @return the requested report
-     * @throws DavException
-     * @see DeltaVResource#getReport(org.apache.jackrabbit.webdav.version.report.ReportInfo)
-     */
-    public Report getReport(ReportInfo reportInfo) throws DavException {
-        if (reportInfo == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "A REPORT request must provide a valid XML request body.");
-        }
-        if (!exists()) {
-            throw new DavException(DavServletResponse.SC_NOT_FOUND);
-        }
-
-        if (supportedReports.isSupportedReport(reportInfo)) {
-            try {
-                Report report = ReportType.getType(reportInfo).createReport();
-                report.setInfo(reportInfo);
-                report.setResource(this);
-                return report;
-            } catch (IllegalArgumentException e) {
-                // should never occur.
-                throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-            }
-        } else {
-            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unkown report "+ reportInfo.getReportElement().getNamespacePrefix() + reportInfo.getReportElement().getName() +"requested.");
-        }
-    }
-
-    /**
-     * The JCR api does not provide methods to create new workspaces. Calling
-     * <code>addWorkspace</code> on this resource will always fail.
-     *
-     * @param workspace
-     * @throws DavException Always throws.
-     * @see DeltaVResource#addWorkspace(org.apache.jackrabbit.webdav.DavResource)
-     */
-    public void addWorkspace(DavResource workspace) throws DavException {
-        throw new DavException(DavServletResponse.SC_FORBIDDEN);
-    }
-
-    /**
-     * Return an array of <code>DavResource</code> objects that are referenced
-     * by the property with the specified name.
-     *
-     * @param hrefPropertyName
-     * @return array of <code>DavResource</code>s
-     * @throws DavException
-     * @see DeltaVResource#getReferenceResources(org.apache.jackrabbit.webdav.property.DavPropertyName)
-     */
-    public DavResource[] getReferenceResources(DavPropertyName hrefPropertyName) throws DavException {
-        DavProperty prop = getProperty(hrefPropertyName);
-        if (prop == null || !(prop instanceof HrefProperty)) {
-            throw new DavException(DavServletResponse.SC_CONFLICT, "Unknown Href-Property '"+hrefPropertyName+"' on resource "+getResourcePath());
-        }
-
-        List hrefs = ((HrefProperty)prop).getHrefs();
-        DavResource[] refResources = new DavResource[hrefs.size()];
-        Iterator hrefIter = hrefs.iterator();
-        int i = 0;
-        while (hrefIter.hasNext()) {
-            refResources[i] = getResourceFromHref((String)hrefIter.next());
-            i++;
-        }
-        return refResources;
-    }
-
-    /**
-     * Retrieve the <code>DavResource</code> object that is represented by
-     * the given href String.
-     *
-     * @param href
-     * @return <code>DavResource</code> object
-     */
-    private DavResource getResourceFromHref(String href) throws DavException {
-        // build a new locator: remove trailing prefix
-        DavResourceLocator locator = getLocator();
-        String prefix = locator.getPrefix();
-        if (href.startsWith(prefix)) {
-            href = href.substring(prefix.length());
-        }
-        DavResourceLocator loc = locator.getFactory().createResourceLocator(prefix, href);
-
-        // create a new resource object
-        DavResource res;
-        if (getRepositorySession().itemExists(loc.getResourcePath())) {
-            res = createResourceFromLocator(loc);
-        } else {
-            throw new DavException(DavServletResponse.SC_NOT_FOUND);
-        }
-        return res;
-    }
-
     //--------------------------------------------------------------------------
     /**
      * Initialize the {@link org.apache.jackrabbit.webdav.lock.SupportedLock} property
@@ -368,6 +245,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      *
      * @see org.apache.jackrabbit.webdav.lock.SupportedLock
      * @see org.apache.jackrabbit.webdav.transaction.TxLockEntry
+     * @see AbstractResource#initLockSupport()
      */
     protected void initLockSupport() {
         if (exists()) {
@@ -380,7 +258,8 @@ abstract class AbstractItemResource extends AbstractResource implements
     /**
      * Define the set of reports supported by this resource.
      *
-     * @see SupportedReportSetProperty
+     * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
+     * @see AbstractResource#initSupportedReports()
      */
     protected void initSupportedReports() {
         if (exists()) {
@@ -388,10 +267,9 @@ abstract class AbstractItemResource extends AbstractResource implements
                 ReportType.EXPAND_PROPERTY,
                 NodeTypesReport.NODETYPES_REPORT,
                 ExportViewReport.EXPORTVIEW_REPORT,
-                LocateByUuidReport.LOCATE_BY_UUID_REPORT
+                LocateByUuidReport.LOCATE_BY_UUID_REPORT,
+		RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT
             });
-        } else {
-            supportedReports = new SupportedReportSetProperty();
         }
     }
 
@@ -415,28 +293,16 @@ abstract class AbstractItemResource extends AbstractResource implements
             } else if (item.isModified()) {
                 properties.add(new DefaultDavProperty(JCR_ISMODIFIED, null, true));
             }
-
-            // DeltaV properties
-            properties.add(supportedReports);
-            // creator-displayname, comment: not value available from jcr
-            properties.add(new DefaultDavProperty(DeltaVConstants.CREATOR_DISPLAYNAME, null, true));
-            properties.add(new DefaultDavProperty(DeltaVConstants.COMMENT, null, true));
-
-
-	    // 'workspace' property as defined by RFC 3253
-	    String workspaceHref = getWorkspaceHref();
-	    if (workspaceHref != null) {
-		properties.add(new HrefProperty(DeltaVConstants.WORKSPACE, workspaceHref, true));
-	    }
-            // TODO: required supported-live-property-set
         }
     }
 
     /**
      * @return href of the workspace or <code>null</code> if this resource
      * does not represent a repository item.
+     *
+     * @see AbstractResource#getWorkspaceHref()
      */
-    private String getWorkspaceHref() {
+    protected String getWorkspaceHref() {
         String workspaceHref = null;
 	DavResourceLocator locator = getLocator();
         if (locator != null && locator.getWorkspaceName() != null) {
@@ -445,6 +311,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                 workspaceHref = workspaceHref.substring(workspaceHref.indexOf(locator.getResourcePath()));
             }
         }
+	log.info(workspaceHref);
         return workspaceHref;
     }
 
@@ -492,14 +359,5 @@ abstract class AbstractItemResource extends AbstractResource implements
             log.warn(e.getMessage());
         }
         return getLocatorFromResourcePath(itemPath);
-    }
-
-    /**
-     * Shortcut for <code>getSession().getRepositorySession()</code>
-     *
-     * @return repository session present in the {@link #session}.
-     */
-    protected Session getRepositorySession() {
-        return getSession().getRepositorySession();
     }
 }
