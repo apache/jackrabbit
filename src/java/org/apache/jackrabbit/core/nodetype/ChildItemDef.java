@@ -27,7 +27,7 @@ import javax.jcr.version.OnParentVersionAction;
 public abstract class ChildItemDef implements Cloneable {
 
     // '*' denoting residual child item definition
-    protected static final QName ANY_NAME =
+    public static final QName ANY_NAME =
             new QName(Constants.NS_DEFAULT_URI, "*");
 
     protected QName declaringNodeType = null;

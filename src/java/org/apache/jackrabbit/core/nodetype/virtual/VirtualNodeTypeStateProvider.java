@@ -27,11 +27,13 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
+import org.apache.jackrabbit.core.nodetype.ChildItemDef;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.nodetype.ItemDef;
 import javax.jcr.version.OnParentVersionAction;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -188,7 +190,9 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + JCR_PROPERTYDEF.toString() + "/" + n);
         VirtualNodeState pState = createNodeState(parent, JCR_PROPERTYDEF, uuid, NT_PROPERTYDEF);
         // add properties
-        pState.setPropertyValue(JCR_NAME, InternalValue.create(propDef.getName()));
+        if (!propDef.getName().equals(ChildItemDef.ANY_NAME)) {
+            pState.setPropertyValue(JCR_NAME, InternalValue.create(propDef.getName()));
+        }
         pState.setPropertyValue(JCR_AUTOCREATE, InternalValue.create(propDef.isAutoCreate()));
         pState.setPropertyValue(JCR_MANDATORY, InternalValue.create(propDef.isMandatory()));
         pState.setPropertyValue(JCR_ONPARENTVERSION, InternalValue.create(OnParentVersionAction.nameFromValue(propDef.getOnParentVersion())));
@@ -219,7 +223,9 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + JCR_CHILDNODEDEF.toString() + "/" + n);
         VirtualNodeState pState = createNodeState(parent, JCR_CHILDNODEDEF, uuid, NT_CHILDNODEDEF);
         // add properties
-        pState.setPropertyValue(JCR_NAME, InternalValue.create(cnDef.getName()));
+        if (!cnDef.getName().equals(ChildItemDef.ANY_NAME)) {
+            pState.setPropertyValue(JCR_NAME, InternalValue.create(cnDef.getName()));
+        }
         pState.setPropertyValue(JCR_AUTOCREATE, InternalValue.create(cnDef.isAutoCreate()));
         pState.setPropertyValue(JCR_MANDATORY, InternalValue.create(cnDef.isMandatory()));
         pState.setPropertyValue(JCR_ONPARENTVERSION, InternalValue.create(OnParentVersionAction.nameFromValue(cnDef.getOnParentVersion())));
