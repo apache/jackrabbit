@@ -898,6 +898,8 @@ public class SessionImpl implements Session, Constants {
         }
 
         // check lock status
+
+        srcParentNode.checkLock();
         destParentNode.checkLock();
 
         // do move operation
@@ -906,7 +908,8 @@ public class SessionImpl implements Session, Constants {
         // add target to new parent
         destParentNode.createChildNodeLink(destName.getName(), targetUUID);
         // remove target from old parent
-        srcParentNode.removeChildNode(srcName.getName(), srcName.getIndex() == 0 ? 1 : srcName.getIndex());
+        srcParentNode.removeChildNode(srcName.getName(),
+                srcName.getIndex() == 0 ? 1 : srcName.getIndex());
         // change definition of target if necessary
         NodeDefImpl oldTargetDef = (NodeDefImpl) targetNode.getDefinition();
         NodeDefId oldTargetDefId = new NodeDefId(oldTargetDef.unwrap());

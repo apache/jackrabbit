@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
+import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
@@ -56,8 +57,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>ItemImpl</code> implements the <code>Item</code> interface.
@@ -1132,51 +1135,14 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                  */
                 stateMgr.enablePathCaching(true);
 
-                // build list of transient states that should be persisted
+                /**
+                 * build list of transient (i.e. new & modified) states that
+                 * should be persisted
+                 */
                 Collection dirty = getTransientStates();
                 if (dirty.size() == 0) {
                     // no transient items, nothing to do here
                     return;
-                }
-
-                ItemState transientState;
-
-                /**
-                 * check that parent node is also included in the dirty items list
-                 * if dirty node was removed or added (adding/removing a parent/child
-                 * link requires that both parent and child are saved)
-                 */
-                Iterator iter = dirty.iterator();
-                while (iter.hasNext()) {
-                    transientState = (ItemState) iter.next();
-                    if (transientState.isNode()) {
-                        NodeState nodeState = (NodeState) transientState;
-                        ArrayList dirtyParents = new ArrayList();
-                        // removed parents
-                        dirtyParents.addAll(nodeState.getRemovedParentUUIDs());
-                        // added parents
-                        dirtyParents.addAll(nodeState.getAddedParentUUIDs());
-                        Iterator parentsIter = dirtyParents.iterator();
-                        while (parentsIter.hasNext()) {
-                            NodeId id = new NodeId((String) parentsIter.next());
-                            NodeState parentState;
-                            try {
-                                parentState = (NodeState) stateMgr.getTransientItemState(id);
-                            } catch (ItemStateException ise) {
-                                // should never get here...
-                                String msg = "inconsistency: failed to retrieve transient state for " + itemMgr.safeGetJCRPath(id);
-                                log.debug(msg);
-                                throw new RepositoryException(msg);
-                            }
-                            // check if parent is also going to be saved
-                            if (!dirty.contains(parentState)) {
-                                // need to save the parent too
-                                String msg = itemMgr.safeGetJCRPath(id) + " needs to be saved also.";
-                                log.debug(msg);
-                                throw new RepositoryException(msg);
-                            }
-                        }
-                    }
                 }
 
                 /**
@@ -1184,6 +1150,68 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                  * (i.e. those marked as 'removed')
                  */
                 Collection removed = getRemovedStates();
+
+                /**
+                 * build set of item id's who are within the scope of
+                 * (i.e. affected by) this save operation
+                 */
+                Set affectedIds = new HashSet(dirty.size() + removed.size());
+                for (Iterator it =
+                        new IteratorChain(dirty.iterator(), removed.iterator());
+                     it.hasNext();) {
+                    affectedIds.add(((ItemState) it.next()).getId());
+                }
+
+                /**
+                 * make sure that this save operation is totally 'self-contained'
+                 * and independant; items within the scope of this save operation
+                 * must not have 'external' dependencies;
+                 * (e.g. adding/removing a parent/child link requires that both
+                 * parent and child are saved)
+                 */
+                for (Iterator it =
+                        new IteratorChain(dirty.iterator(), removed.iterator());
+                     it.hasNext();) {
+                    ItemState transientState = (ItemState) it.next();
+                    if (transientState.isNode()) {
+                        NodeState nodeState = (NodeState) transientState;
+                        Set dependentUUIDs = new HashSet();
+                        // removed parents
+                        dependentUUIDs.addAll(nodeState.getRemovedParentUUIDs());
+                        // added parents
+                        dependentUUIDs.addAll(nodeState.getAddedParentUUIDs());
+                        // removed child node entries
+                        for (Iterator cneIt =
+                                nodeState.getRemovedChildNodeEntries().iterator();
+                             cneIt.hasNext();) {
+                            NodeState.ChildNodeEntry cne =
+                                    (NodeState.ChildNodeEntry) cneIt.next();
+                            dependentUUIDs.add(cne.getUUID());
+                        }
+                        // added child node entries
+                        for (Iterator cneIt =
+                                nodeState.getAddedChildNodeEntries().iterator();
+                             cneIt.hasNext();) {
+                            NodeState.ChildNodeEntry cne =
+                                    (NodeState.ChildNodeEntry) cneIt.next();
+                            dependentUUIDs.add(cne.getUUID());
+                        }
+
+                        // now walk through dependencies and check whether they
+                        // are within the scope of this save operation
+                        Iterator depIt = dependentUUIDs.iterator();
+                        while (depIt.hasNext()) {
+                            NodeId id = new NodeId((String) depIt.next());
+                            if (!affectedIds.contains(id)) {
+                                // need to save the parent also
+                                String msg = itemMgr.safeGetJCRPath(id)
+                                        + " needs to be saved also.";
+                                log.debug(msg);
+                                throw new RepositoryException(msg);
+                            }
+                        }
+                    }
+                }
 
                 /**
                  * validate access and node type constraints
@@ -1227,9 +1255,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     // transient item states must be removed now. otherwise
                     // the session item state provider will return an orphaned
                     // item state which is not referenced by any node instance.
-                    iter = dirty.iterator();
-                    while (iter.hasNext()) {
-                        transientState = (ItemState) iter.next();
+                    for (Iterator it = dirty.iterator(); it.hasNext();) {
+                        ItemState transientState = (ItemState) it.next();
                         // dispose the transient state, it is no longer used
                         stateMgr.disposeTransientItemState(transientState);
                     }
@@ -1259,9 +1286,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 // item states in attic are removed after store, because
                 // the observation mechanism needs to build paths of removed
                 // items in store().
-                iter = removed.iterator();
-                while (iter.hasNext()) {
-                    transientState = (ItemState) iter.next();
+                for (Iterator it = removed.iterator(); it.hasNext();) {
+                    ItemState transientState = (ItemState) it.next();
                     // dispose the transient state, it is no longer used
                     stateMgr.disposeTransientItemStateInAttic(transientState);
                 }

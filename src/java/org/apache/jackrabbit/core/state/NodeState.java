@@ -369,15 +369,7 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries(String uuid) {
-        ArrayList list = new ArrayList();
-        Iterator iter = childNodeEntries.iterator();
-        while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-            if (entry.getUUID().equals(uuid)) {
-                list.add(entry);
-            }
-        }
-        return Collections.unmodifiableList(list);
+        return childNodeEntries.get(uuid);
     }
 
     /**
@@ -389,15 +381,7 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries(QName nodeName) {
-        ArrayList list = new ArrayList();
-        Iterator iter = childNodeEntries.iterator();
-        while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-            if (entry.getName().equals(nodeName)) {
-                list.add(entry);
-            }
-        }
-        return Collections.unmodifiableList(list);
+        return childNodeEntries.get(nodeName);
     }
 
     /**
@@ -517,14 +501,9 @@ public class NodeState extends ItemState {
             return Collections.EMPTY_LIST;
         }
 
-        ArrayList list = new ArrayList(parentUUIDs);
-
         NodeState other = (NodeState) getOverlayedState();
-        Iterator i = other.parentUUIDs.iterator();
-        while (i.hasNext()) {
-            list.remove(i.next());
-        }
-
+        ArrayList list = new ArrayList(parentUUIDs);
+        list.removeAll(other.parentUUIDs);
         return list;
     }
 
@@ -539,14 +518,9 @@ public class NodeState extends ItemState {
             return Collections.unmodifiableList(propertyEntries);
         }
 
-        ArrayList list = new ArrayList(propertyEntries);
-
         NodeState other = (NodeState) getOverlayedState();
-        Iterator i = other.propertyEntries.iterator();
-        while (i.hasNext()) {
-            list.remove(i.next());
-        }
-
+        ArrayList list = new ArrayList(propertyEntries);
+        list.removeAll(other.propertyEntries);
         return list;
     }
 
@@ -561,15 +535,8 @@ public class NodeState extends ItemState {
             return Collections.unmodifiableList(childNodeEntries.entries());
         }
 
-        ArrayList list = new ArrayList(childNodeEntries.entries());
-
         NodeState other = (NodeState) getOverlayedState();
-        Iterator i = other.childNodeEntries.entries().iterator();
-        while (i.hasNext()) {
-            list.remove(i.next());
-        }
-
-        return list;
+        return childNodeEntries.removeAll(other.childNodeEntries);
     }
 
     /**
@@ -585,12 +552,7 @@ public class NodeState extends ItemState {
 
         NodeState other = (NodeState) getOverlayedState();
         ArrayList list = new ArrayList(other.parentUUIDs);
-
-        Iterator i = parentUUIDs.iterator();
-        while (i.hasNext()) {
-            list.remove(i.next());
-        }
-
+        list.removeAll(parentUUIDs);
         return list;
     }
 
@@ -607,12 +569,7 @@ public class NodeState extends ItemState {
 
         NodeState other = (NodeState) getOverlayedState();
         ArrayList list = new ArrayList(other.propertyEntries);
-
-        Iterator i = propertyEntries.iterator();
-        while (i.hasNext()) {
-            list.remove(i.next());
-        }
-
+        list.removeAll(propertyEntries);
         return list;
     }
 
@@ -628,26 +585,20 @@ public class NodeState extends ItemState {
         }
 
         NodeState other = (NodeState) getOverlayedState();
-        ArrayList list = new ArrayList(other.childNodeEntries.entries());
-
-        Iterator i = childNodeEntries.entries().iterator();
-        while (i.hasNext()) {
-            list.remove(i.next());
-        }
-
-        return list;
+        return other.childNodeEntries.removeAll(childNodeEntries);
     }
 
     //--------------------------------------------------< ItemState overrides >
     /**
      * Sets the UUID of the parent <code>NodeState</code>.
      *
-     * @param parentUUID the parent <code>NodeState</code>'s UUID or <code>null</code>
-     *                   if either this item state should represent the root node or this item state
-     *                   should be 'free floating', i.e. detached from the repository's hierarchy.
+     * @param parentUUID the parent <code>NodeState</code>'s UUID or
+     *                   <code>null</code> if either this item state should
+     *                   represent the root node or this item state should
+     *                   be 'free floating', i.e. detached from the repository's
+     *                   hierarchy.
      */
     public synchronized void setParentUUID(String parentUUID) {
-        // @todo is this correct?
         if (parentUUID != null && !parentUUIDs.contains(parentUUID)) {
             parentUUIDs.add(parentUUID);
         }
@@ -660,7 +611,8 @@ public class NodeState extends ItemState {
         out.defaultWriteObject();
     }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
         // delegate to default implementation
         in.defaultReadObject();
     }
@@ -752,12 +704,84 @@ public class NodeState extends ItemState {
             return true;
         }
 
+        List get(QName nodeName) {
+            List siblings = (List) names.get(nodeName);
+            if (siblings == null) {
+                return Collections.EMPTY_LIST;
+            } else {
+                return Collections.unmodifiableList(siblings);
+            }
+        }
+
+        boolean remove(QName nodeName, String uuid) {
+            List siblings = (List) names.get(nodeName);
+            if (siblings == null || siblings.isEmpty()) {
+                return false;
+            }
+
+            Iterator iter = siblings.iterator();
+            while (iter.hasNext()) {
+                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+                if (entry.getUUID().equals(uuid)) {
+                    return remove(entry);
+                }
+            }
+            return false;
+        }
+
+        List get(String uuid) {
+            if (entries.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            ArrayList list = new ArrayList();
+            Iterator iter = entries.iterator();
+            while (iter.hasNext()) {
+                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+                if (entry.getUUID().equals(uuid)) {
+                    list.add(entry);
+                }
+            }
+            return Collections.unmodifiableList(list);
+        }
+
         Iterator iterator() {
             return entries.iterator();
         }
 
         List entries() {
             return Collections.unmodifiableList(entries);
+        }
+
+        /**
+         * Returns a list of <code>ChildNodeEntry</code>s who do only exist in
+         * <code>this</code> but not in <code>other</code>
+         * <p/>
+         * Note that two entries are considered identical in this context if
+         * they have the same name and uuid, i.e. the index is disregarded,
+         * whereas <code>ChildNodeEntry.equals(Object)</code> also compares
+         * the index.
+         *
+         * @param other entries to be removed
+         * @return a new list of entries who do only exist in <code>this</code>
+         *         but not in <code>other</code>
+         */
+        List removeAll(ChildNodeEntries other) {
+            if (entries.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+            if (other.entries.isEmpty()) {
+                return Collections.unmodifiableList(entries);
+            }
+
+            ChildNodeEntries result = new ChildNodeEntries();
+            result.addAll(entries);
+
+            Iterator iter = other.entries.iterator();
+            while (iter.hasNext()) {
+                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+                result.remove(entry.getName(), entry.getUUID());
+            }
+            return result.entries;
         }
     }
 
