@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.Base64;
 import org.apache.log4j.Logger;
-import org.apache.xml.utils.XMLChar;
+import org.apache.xerces.util.XMLChar; 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
