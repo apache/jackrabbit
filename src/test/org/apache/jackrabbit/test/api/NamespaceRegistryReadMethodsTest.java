@@ -29,13 +29,13 @@ import java.util.HashSet;
 import java.util.Arrays;
 
 /**
- * <code>NamespaceRegistryTestLevel1</code> This class tests read method of the
+ * <code>NamespaceRegistryReadMethodsTest</code> This class tests read method of the
  * NamespaceRegistry class and also the correct Exception throwing for methods
  * not supported in level 1.
  *
  * @test
- * @sources NamespaceRegistryTestLevel1.java
- * @executeClass org.apache.jackrabbit.test.api.NamespaceRegistryTestLevel1
+ * @sources NamespaceRegistryReadMethodsTest.java
+ * @executeClass org.apache.jackrabbit.test.api.NamespaceRegistryReadMethodsTest
  * @keywords level1
  */
 public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {

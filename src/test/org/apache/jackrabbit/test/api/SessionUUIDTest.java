@@ -30,7 +30,7 @@ import javax.jcr.InvalidItemStateException;
  *
  * @test
  * @sources SessionUUIDTest.java
- * @executeClass org.apache.jackrabbit.test.api.session.SessionUUIDTest
+ * @executeClass org.apache.jackrabbit.test.api.SessionUUIDTest
  * @keywords uuid
  */
 public class SessionUUIDTest extends AbstractJCRTest {

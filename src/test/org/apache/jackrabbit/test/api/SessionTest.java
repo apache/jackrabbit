@@ -34,7 +34,7 @@ import javax.jcr.Value;
  *
  * @test
  * @sources SessionTest.java
- * @executeClass org.apache.jackrabbit.test.api.session.SessionTest
+ * @executeClass org.apache.jackrabbit.test.api.SessionTest
  * @keywords level2
  */
 public class SessionTest extends AbstractJCRTest {
