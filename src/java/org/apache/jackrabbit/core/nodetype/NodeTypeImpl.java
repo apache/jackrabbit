@@ -228,7 +228,9 @@ public class NodeTypeImpl implements NodeType {
      * Tests if the value constraints defined in the property definition
      * <code>def</code> are satisfied by the the specified <code>values</code>.
      * <p/>
-     * Note that the <i>protected</i> flag is not checked.
+     * Note that the <i>protected</i> flag is not checked. Also note that no
+     * type conversions are attempted if the type of the given values does not
+     * match the required type as specified in the given definition.
      *
      * @param def    The definiton of the property
      * @param values An array of <code>InternalValue</code> objects.
@@ -429,15 +431,33 @@ public class NodeTypeImpl implements NodeType {
         }
         try {
             QName name = QName.fromJCRName(propertyName, nsResolver);
-            PropertyDefImpl def =
-                    getApplicablePropertyDef(name, value.getType(), false);
+            PropertyDefImpl def;
+            try {
+                // try to get definition that matches the given value type
+                def = getApplicablePropertyDef(name, value.getType(), false);
+            } catch (ConstraintViolationException cve) {
+                // fallback: ignore type
+                def = getApplicablePropertyDef(name, PropertyType.UNDEFINED, false);
+            }
             if (def.isProtected()) {
                 return false;
             }
             if (def.isMultiple()) {
                 return false;
             }
-            InternalValue internalValue = InternalValue.create(value, nsResolver);
+            int targetType;
+            if (def.getRequiredType() != PropertyType.UNDEFINED &&
+                    def.getRequiredType() != value.getType()) {
+                // type conversion required
+                targetType = def.getRequiredType();
+            } else {
+                // no type conversion required
+                targetType = value.getType();
+            }
+            // create InternalValue from Value and perform
+            // type conversion as necessary
+            InternalValue internalValue = InternalValue.create(value, targetType,
+                    nsResolver);
             checkSetPropertyValueConstraints(def, new InternalValue[]{internalValue});
             return true;
         } catch (BaseException be) {
@@ -458,23 +478,56 @@ public class NodeTypeImpl implements NodeType {
         }
         try {
             QName name = QName.fromJCRName(propertyName, nsResolver);
-            int type = (values.length == 0) ? PropertyType.UNDEFINED : values[0].getType();
-            PropertyDefImpl def = getApplicablePropertyDef(name, type, true);
+            // determine type of values
+            int type = PropertyType.UNDEFINED;
+            for (int i = 0; i < values.length; i++) {
+                if (type == PropertyType.UNDEFINED) {
+                    type = values[i].getType();
+                } else if (type != values[i].getType()) {
+                    // inhomogeneous types
+                    return false;
+                }
+            }
+            PropertyDefImpl def;
+            try {
+                // try to get definition that matches the given value type
+                def = getApplicablePropertyDef(name, type, true);
+            } catch (ConstraintViolationException cve) {
+                // fallback: ignore type
+                def = getApplicablePropertyDef(name, PropertyType.UNDEFINED, true);
+            }
+
             if (def.isProtected()) {
                 return false;
             }
             if (!def.isMultiple()) {
                 return false;
             }
+            // determine target type
+            int targetType;
+            if (def.getRequiredType() != PropertyType.UNDEFINED &&
+                    def.getRequiredType() != type) {
+                // type conversion required
+                targetType = def.getRequiredType();
+            } else {
+                // no type conversion required
+                targetType = type;
+            }
+
             ArrayList list = new ArrayList();
             // convert values and compact array (purge null entries)
             for (int i = 0; i < values.length; i++) {
                 if (values[i] != null) {
-                    InternalValue internalValue = InternalValue.create(values[i], nsResolver);
+                    // create InternalValue from Value and perform
+                    // type conversion as necessary
+                    InternalValue internalValue =
+                            InternalValue.create(values[i], targetType,
+                                    nsResolver);
                     list.add(internalValue);
                 }
             }
-            InternalValue[] internalValues = (InternalValue[]) list.toArray(new InternalValue[list.size()]);
+            InternalValue[] internalValues =
+                    (InternalValue[]) list.toArray(new InternalValue[list.size()]);
             checkSetPropertyValueConstraints(def, internalValues);
             return true;
         } catch (BaseException be) {
