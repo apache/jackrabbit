@@ -54,7 +54,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
         try {
             wSuperuser = helper.getSuperuserSession(workspaceName);
         } catch (RepositoryException e) {
-            fail("Failed to retrieve superuser session for second workspace '"+workspaceName+"': "+e.getMessage());
+            fail("Failed to retrieve superuser session for second workspace '" + workspaceName + "': " + e.getMessage());
         }
 
         // test if the required nodes exist in the second workspace if not try to clone them
@@ -82,7 +82,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
         try {
             // set node-fields (wTestRoot, wVersionableNode, wVersionableNode2)
             // and check versionable nodes out.
-            wTestRoot = wSuperuser.getNodeByUUID(testRootNode.getUUID());
+            wTestRoot = (Node) wSuperuser.getItem(testRootNode.getPath());
 
             wVersionableNode = wSuperuser.getNodeByUUID(versionableNode.getUUID());
             wVersionableNode.checkout();
@@ -91,7 +91,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
             wVersionableNode2.checkout();
 
         } catch (RepositoryException e) {
-            fail("Failed to setup test environment in workspace: "+e.getMessage());
+            fail("Failed to setup test environment in workspace: " + e.toString());
         }
 
         // create persistent versionable CHILD-node below wVersionableNode in workspace 2

@@ -22,6 +22,7 @@ import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.OnParentVersionAction;
+import javax.jcr.version.VersionIterator;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.InvalidItemStateException;
@@ -155,10 +156,20 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testRestoreInvalidVersion2() throws RepositoryException {
-        Version vNode2 = versionableNode2.checkin();
-        try {
-            versionableNode.restore(vNode2.getName(), true);
+        String invalidName = null;
+        do {
+            invalidName = createRandomString(3);
+            for (VersionIterator it = versionableNode.getVersionHistory().getAllVersions(); it.hasNext();) {
+                Version v = it.nextVersion();
+                if (invalidName.equals(v.getName())) {
+                    invalidName = null;
+                    break;
+                }
+            }
+        } while (invalidName == null);
 
+        try {
+            versionableNode.restore(invalidName, true);
             fail("VersionException expected on Node.restore(String, boolean) if the specified version is not part of this node's version history.");
         } catch (VersionException e) {
             // ok
@@ -226,21 +237,6 @@ public class RestoreTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if restoring a node with an invalid version name throws a VersionException
-     *
-     * @throws RepositoryException
-     */
-    public void testRestoreWithInvalidVersionName() throws RepositoryException {
-        Version invalidVersion = versionableNode2.checkin();
-        try {
-            versionableNode.restore(invalidVersion.getName(), true);
-            fail("Node.restore(Version, boolean): A VersionException must be thrown if the specified version does not exists in this node's version history.");
-        } catch (VersionException e) {
-            // success
-        }
-    }
-
-    /**
      * Tests if restoring the <code>Version</code> of an existing node throws an
      * <code>ItemExistsException</code> if removeExisting is set to FALSE.
      */
@@ -249,16 +245,16 @@ public class RestoreTest extends AbstractVersionTest {
             Node naa = createVersionableNode(versionableNode, nodeName4, versionableNodeType);
             // Verify that nodes used for the test have proper opv behaviour
             NodeDef nd = naa.getDefinition();
-            if ( nd.getOnParentVersion() != OnParentVersionAction.COPY || nd.getOnParentVersion() != OnParentVersionAction.VERSION ) {
-                throw new NotExecutableException( "Child nodes must have OPV COPY or VERSION in order to be able to test Node.restore with uuid conflict." );
+            if (nd.getOnParentVersion() != OnParentVersionAction.COPY || nd.getOnParentVersion() != OnParentVersionAction.VERSION) {
+                throw new NotExecutableException("Child nodes must have OPV COPY or VERSION in order to be able to test Node.restore with uuid conflict.");
             }
 
             Version v = versionableNode.checkin();
-            superuser.move( naa.getPath(), versionableNode2.getPath() + "/" + naa.getName() );
-            versionableNode.restore( v, false );
+            superuser.move(naa.getPath(), versionableNode2.getPath() + "/" + naa.getName());
+            versionableNode.restore(v, false);
 
-            fail( "Node.restore( Version, boolean ): An ItemExistsException must be thrown if the node to be restored already exsits and removeExisting was set to false." );
-        } catch (ItemExistsException e ) {
+            fail("Node.restore( Version, boolean ): An ItemExistsException must be thrown if the node to be restored already exsits and removeExisting was set to false.");
+        } catch (ItemExistsException e) {
             // success
         }
     }

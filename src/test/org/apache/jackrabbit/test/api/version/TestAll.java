@@ -38,18 +38,19 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(VersionTest.class);
         suite.addTestSuite(VersionHistoryTest.class);
+        suite.addTestSuite(VersionStorageTest.class);
         suite.addTestSuite(VersionLabelTest.class);
         suite.addTestSuite(CheckoutTest.class);
         suite.addTestSuite(CheckinTest.class);
         suite.addTestSuite(VersionGraphTest.class);
         suite.addTestSuite(RemoveVersionTest.class);
-        //suite.addTestSuite(RestoreTest.class);
-        //suite.addTestSuite(WorkspaceRestoreTest.class);
-        //suite.addTestSuite(OnParentVersionAbortTest.class);
-        //suite.addTestSuite(OnParentVersionComputeTest.class);
-        //suite.addTestSuite(OnParentVersionCopyTest.class);
-        //suite.addTestSuite(OnParentVersionIgnoreTest.class);
-        //suite.addTestSuite(OnParentVersionInitializeTest.class);
+        suite.addTestSuite(RestoreTest.class);
+        suite.addTestSuite(WorkspaceRestoreTest.class);
+        suite.addTestSuite(OnParentVersionAbortTest.class);
+        suite.addTestSuite(OnParentVersionComputeTest.class);
+        suite.addTestSuite(OnParentVersionCopyTest.class);
+        suite.addTestSuite(OnParentVersionIgnoreTest.class);
+        suite.addTestSuite(OnParentVersionInitializeTest.class);
         suite.addTestSuite(GetReferencesNodeTest.class);
         suite.addTestSuite(GetPredecessorsTest.class);
         suite.addTestSuite(GetCreatedTest.class);
