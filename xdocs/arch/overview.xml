@@ -74,7 +74,7 @@ Systems".
 <p>
 The Content Repository API Layer is split into two major sections.
 <ul>
-<li>The Content Repository API defined by JSR-170</li>
+<li><a href="overview/jcrlevels.html">The Content Repository API defined by JSR-170</a></li>
 <li>A number features of a content repository, that have been removed from the JSR-170 specification since they are difficult to implement on existing non-java-based content repositories and administrational Repository tasks that have also been deliberately excluded from JSR-170</li>
 </ul>
 </p>

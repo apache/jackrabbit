@@ -21,7 +21,9 @@
   <menu name="Apache Jackrabbit">
     <item name="Overview"               href="/index.html" />
     <item name="Architecture&#xA0;Doc"  href="/arch/index.html"  collapse="true">
-      <item name="Overview"                 href="/arch/overview.html"/>
+      <item name="Overview"                 href="/arch/overview.html" collapse="true">
+        <item name="JSR-170 Levels"         href="/arch/overview/jcrlevels.html"/>
+      </item>
       <item name="Deployment&#xA0;Options"  href="/arch/deploy.html"/>
       <item name="Core&#xA0;Operations"     href="/arch/operate/index.html"  collapse="true">
         <item name="Start-up,&#xA0;Initialize" href="/arch/operate/startup.html"/>
