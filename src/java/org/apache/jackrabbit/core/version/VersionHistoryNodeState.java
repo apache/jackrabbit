@@ -16,6 +16,8 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
@@ -25,30 +27,48 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * This Class implements...
+ * This Class implements the virtual node state for a version history.
  */
 public class VersionHistoryNodeState extends VirtualNodeState {
 
+    /**
+     * the rerpesenting version history
+     */
     private final InternalVersionHistory vh;
 
-    public VersionHistoryNodeState(VersionItemStateProvider vm, InternalVersionHistory vh, String parentUUID) {
-        super(vm, vh.getId(), NodeTypeRegistry.NT_VERSION_HISTORY, parentUUID);
+    /**
+     * Creates a new versiom history node state
+     * @param vm
+     * @param vh
+     * @param parentUUID
+     * @throws RepositoryException
+     */
+    protected VersionHistoryNodeState(VersionItemStateProvider vm,
+                                   InternalVersionHistory vh,
+                                   String parentUUID)
+            throws RepositoryException {
+        super(vm, parentUUID, vh.getId(), NodeTypeRegistry.NT_VERSION_HISTORY, new QName[0]);
         this.vh = vh;
-
-        setDefinitionId(vm.getNodeDefId(NodeTypeRegistry.NT_VERSION_HISTORY));
-        // we do not initialize the childnode entry array, but rather
-        // generate it every time.
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.state.NodeState#hasChildNodeEntry(org.apache.jackrabbit.core.QName)
+     */
     public synchronized boolean hasChildNodeEntry(QName name) {
         return vh.hasVersion(name);
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.state.NodeState#hasChildNodeEntry(org.apache.jackrabbit.core.QName, int)
+     */
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
         // no same name siblings
         return index <= 1 ? vh.hasVersion(name) : false;
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntry(org.apache.jackrabbit.core.QName, int)
+     */
     public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
         try {
             if (index <= 1) {
@@ -61,6 +81,9 @@ public class VersionHistoryNodeState extends VirtualNodeState {
         return null;
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries()
+     */
     public synchronized List getChildNodeEntries() {
         Iterator iter = vh.getVersions();
         ArrayList list = new ArrayList(vh.getNumVersions());
@@ -71,6 +94,9 @@ public class VersionHistoryNodeState extends VirtualNodeState {
         return list;
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries(String)
+     */
     public synchronized List getChildNodeEntries(String uuid) {
         ArrayList list = new ArrayList(1);
         InternalVersion v = vh.getVersion(uuid);
@@ -78,6 +104,9 @@ public class VersionHistoryNodeState extends VirtualNodeState {
         return list;
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries(org.apache.jackrabbit.core.QName)
+     */
     public synchronized List getChildNodeEntries(QName nodeName) {
         ArrayList list = new ArrayList(1);
         try {
@@ -88,5 +117,4 @@ public class VersionHistoryNodeState extends VirtualNodeState {
         }
         return list;
     }
-
 }

@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 public class VirtualPropertyState extends PropertyState {
 
     /**
+     * Creates a new virtual property state
      * @param name
      * @param parentUUID
      */

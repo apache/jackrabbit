@@ -23,51 +23,165 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * This Class implements a virtual node state
  */
 public class VirtualNodeState extends NodeState {
 
-    protected VirtualItemStateProvider provider;
+    /**
+     * The virtual item state provide that created this node state
+     */
+    protected final VirtualItemStateProvider stateMgr;
 
     /**
+     * map of property states of this node state
+     * key=propname, value={@link VirtualPropertyState}
+     */
+    private final HashMap properties = new HashMap();
+
+    /**
+     * creates a new virtual node state
+     * @param stateMgr
+     * @param parentUUID
      * @param uuid
      * @param nodeTypeName
-     * @param parentUUID
+     * @param mixins
+     * @throws RepositoryException
      */
-    protected VirtualNodeState(VirtualItemStateProvider provider,
-                               String uuid, QName nodeTypeName, String parentUUID) {
+    public VirtualNodeState(VirtualItemStateProvider stateMgr,
+                                   String parentUUID,
+                                   String uuid,
+                                   QName nodeTypeName,
+                                   QName[] mixins)
+            throws RepositoryException {
         super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING);
+        this.stateMgr = stateMgr;
 
-        this.provider = provider;
-
-        // add some props
-        addPropertyEntry(ItemImpl.PROPNAME_PRIMARYTYPE);
-        addPropertyEntry(ItemImpl.PROPNAME_MIXINTYPES);
+        // add default properties
+        setPropertyValue(ItemImpl.PROPNAME_PRIMARYTYPE, InternalValue.create(nodeTypeName));
+        setMixinNodeTypes(mixins);
     }
 
-    public VirtualPropertyState getPropertyState(QName name)
-            throws NoSuchItemStateException {
-        if (name.equals(ItemImpl.PROPNAME_PRIMARYTYPE)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(ItemImpl.PROPNAME_PRIMARYTYPE));
-            state.setType(PropertyType.NAME);
-            state.setValues(InternalValue.create(new QName[]{getNodeTypeName()}));
-            return state;
-        } else if (name.equals(ItemImpl.PROPNAME_MIXINTYPES)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(ItemImpl.PROPNAME_MIXINTYPES));
-            state.setType(PropertyType.NAME);
-            state.setValues(InternalValue.create((QName[]) getMixinTypeNames().toArray(new QName[getMixinTypeNames().size()])));
-            return state;
-        } else if (name.equals(ItemImpl.PROPNAME_UUID)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(ItemImpl.PROPNAME_UUID));
-            state.setType(PropertyType.STRING);
-            state.setValues(InternalValue.create(new String[]{getUUID()}));
-            return state;
+    /**
+     * Returns the properties of this node
+     *
+     * @return
+     */
+    public VirtualPropertyState[] getProperties() {
+        return (VirtualPropertyState[]) properties.values().toArray(new VirtualPropertyState[properties.size()]);
+    }
+
+
+    /**
+     * Returns the values of the given property of <code>null</code>
+     *
+     * @param name
+     * @return
+     */
+    public InternalValue[] getPropertyValues(QName name) throws NoSuchItemStateException {
+        VirtualPropertyState ps = getProperty(name);
+        return ps==null ? null : ps.getValues();
+    }
+
+    /**
+     * Returns the value of the given property or <code>null</code>
+     *
+     * @param name
+     * @return
+     */
+    public InternalValue getPropertyValue(QName name) throws NoSuchItemStateException {
+        VirtualPropertyState ps = getProperty(name);
+        return ps==null || ps.getValues().length==0 ? null : ps.getValues()[0];
+    }
+
+    /**
+     * returns the property state of the given name
+     * @param name
+     * @return
+     * @throws NoSuchItemStateException
+     */
+    public VirtualPropertyState getProperty(QName name) throws NoSuchItemStateException {
+        return (VirtualPropertyState) properties.get(name);
+    }
+
+    /**
+     * Sets the property value
+     *
+     * @param name
+     * @param value
+     * @throws javax.jcr.RepositoryException
+     */
+    public void setPropertyValue(QName name, InternalValue value)
+            throws RepositoryException {
+        setPropertyValues(name, value.getType(), new InternalValue[]{value}, false);
+    }
+
+    /**
+     * Sets the property values
+     *
+     * @param name
+     * @param type
+     * @param values
+     * @throws RepositoryException
+     */
+    public void setPropertyValues(QName name, int type, InternalValue[] values)
+            throws RepositoryException {
+        setPropertyValues(name, type, values, true);
+    }
+
+    /**
+     * Sets the property values
+     *
+     * @param name
+     * @param type
+     * @param values
+     * @throws RepositoryException
+     */
+    public void setPropertyValues(QName name, int type, InternalValue[] values, boolean multiple)
+            throws RepositoryException {
+        VirtualPropertyState prop = getOrCreatePropertyState(name, type, multiple);
+        prop.setValues(values);
+    }
+
+    /**
+     * Retrieves or creates a new property state as child property of this node
+     *
+     * @param name
+     * @param type
+     * @param multiValued
+     * @return
+     * @throws RepositoryException
+     */
+    private VirtualPropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued)
+            throws RepositoryException {
+
+        VirtualPropertyState prop = (VirtualPropertyState) properties.get(name);
+        if (prop==null) {
+            prop = stateMgr.createPropertyState(this, name, type, multiValued);
+            properties.put(name, prop);
+            addPropertyEntry(name);
         }
-        throw new NoSuchItemStateException(name.toString());
+        return prop;
+    }
+
+    /**
+     * sets the mixing node type and adds the respective property
+     *
+     * @param mixins
+     * @throws RepositoryException
+     */
+    public void setMixinNodeTypes(QName[] mixins) throws RepositoryException {
+        HashSet set = new HashSet();
+        InternalValue[] values = new InternalValue[mixins.length];
+        for (int i = 0; i < mixins.length; i++) {
+            set.add(mixins[i]);
+            values[i] = InternalValue.create(mixins[i]);
+        }
+        setMixinTypeNames(set);
+        setPropertyValues(ItemImpl.PROPNAME_MIXINTYPES, PropertyType.NAME, values);
     }
 }

@@ -15,229 +15,47 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.util.uuid.UUID;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashSet;
 
 /**
- * This Class implements the Version representation of the node.
+ * This interface defines the internal version.
  */
-public final class InternalVersion extends InternalFreeze {
+public interface InternalVersion extends InternalVersionItem {
 
     /**
-     * the list/cache of predecessors (values == InternalVersion)
-     */
-    private ArrayList predecessors = new ArrayList();
-
-    /**
-     * the list of successors (values == InternalVersion)
-     */
-    private ArrayList successors = new ArrayList();
-
-    /**
-     * the internal version history that this version is contained in
-     */
-    private InternalVersionHistory versionHistory;
-
-    /**
-     * the underlaying persistance node of this history
-     */
-    private PersistentNode node;
-
-    /**
-     * the date when this version was created
-     */
-    private Calendar created;
-
-    /**
-     * the set of version labes of this history (values == String)
-     */
-    private HashSet labelCache = null;
-
-    /**
-     * the id of this version
-     */
-    private String versionId;
-
-    /**
-     * specifies if this is the root version
-     */
-    private final boolean isRoot;
-
-    /**
-     * Creates a new internal version with the given version history and
-     * persistance node
+     * Returns the name of this version.
      *
-     * @param vh
-     * @param node
+     * @return the name of this version.
      */
-    InternalVersion(InternalVersionHistory vh, PersistentNode node) {
-        super(null);
-        this.versionHistory = vh;
-        this.node = node;
-
-        // check name
-        isRoot = node.getName().equals(VersionManager.NODENAME_ROOTVERSION);
-
-        // get id
-        versionId = (String) node.getPropertyValue(PersistentVersionManager.PROPNAME_VERSION_ID).internalValue();
-
-        // init internal values
-        InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_CREATED);
-        if (values != null) {
-            created = (Calendar) values[0].internalValue();
-        }
-    }
+    public QName getName();
 
     /**
-     * Returns the uuid of this version
+     * Returns the frozen node of this version or <code>null</code> if this is
+     * the root version.
      *
-     * @return
+     * @return the frozen node.
      */
-    public String getId() {
-        return versionId;
-    }
+    public InternalFrozenNode getFrozenNode();
 
     /**
-     * Returns the name of this version
-     *
-     * @return
-     */
-    public QName getName() {
-        return node.getName();
-    }
-
-    /**
-     * returns the version manager
-     *
-     * @return
-     */
-    public PersistentVersionManager getVersionManager() {
-        return versionHistory.getVersionManager();
-    }
-
-    /**
-     * Returns the frozen node
-     *
-     * @return
-     */
-    public InternalFrozenNode getFrozenNode() {
-        // get frozen node
-        try {
-            PersistentNode pNode = node.getNode(PersistentVersionManager.NODENAME_FROZEN, 1);
-            return pNode == null ? null : new InternalFrozenNode(this, pNode);
-        } catch (RepositoryException e) {
-            // ignore
-        }
-        return null;
-    }
-
-    /**
-     * adds a successor version to the internal cache
-     *
-     * @param successor
-     */
-    private void addSuccessor(InternalVersion successor) {
-        successors.add(successor);
-    }
-
-    /**
-     * resolves the predecessors property and indirectly adds it self to their
-     * successor list.
-     */
-    void resolvePredecessors() {
-        InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_PREDECESSORS);
-        if (values != null) {
-            for (int i = 0; i < values.length; i++) {
-                InternalVersion v = versionHistory.getVersion(values[i].internalValue().toString());
-                predecessors.add(v);
-                v.addSuccessor(this);
-            }
-        }
-    }
-
-    /**
+     * Aequivalent to {@link javax.jcr.version.Version#getCreated()}
      * @see Version#getCreated()
      */
-    public Calendar getCreated() {
-        return created;
-    }
+    public Calendar getCreated();
 
     /**
+     * Aequivalent to {@link javax.jcr.version.Version#getSuccessors()}}
      * @see Version#getSuccessors()
      */
-    public InternalVersion[] getSuccessors() {
-        return (InternalVersion[]) successors.toArray(new InternalVersion[successors.size()]);
-    }
+    public InternalVersion[] getSuccessors();
 
     /**
-     * @see Version#getSuccessors()
+     * Aequivalent to {@link javax.jcr.version.Version#getPredecessors()}}
+     * @see javax.jcr.version.Version#getPredecessors()
      */
-    public InternalVersion[] getPredecessors() {
-        return (InternalVersion[]) predecessors.toArray(new InternalVersion[predecessors.size()]);
-    }
-
-    /**
-     * stores the internal predecessor cache to the persistance node
-     *
-     * @throws RepositoryException
-     */
-    private void storePredecessors() throws RepositoryException {
-        InternalValue[] values = new InternalValue[predecessors.size()];
-        for (int i = 0; i < values.length; i++) {
-            values[i] = InternalValue.create(new UUID(((InternalVersion) predecessors.get(i)).getId()));
-        }
-        node.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, values);
-    }
-
-    /**
-     * Detaches itself from the version graph.
-     *
-     * @throws RepositoryException
-     */
-    void internalDetach() throws RepositoryException {
-        // detach this from all successors
-        InternalVersion[] succ = (InternalVersion[]) getSuccessors();
-        for (int i = 0; i < succ.length; i++) {
-            succ[i].internalDetachPredecessor(this);
-        }
-
-        // clear properties
-        successors.clear();
-        predecessors.clear();
-        labelCache = null;
-        storePredecessors();
-    }
-
-    /**
-     * Removes the predecessor V of this predecessor list and adds all of Vs
-     * predecessors to it.
-     * <p/>
-     * please note, that this operation might corrupt the version graph
-     *
-     * @param v the successor to detach
-     */
-    private void internalDetachPredecessor(InternalVersion v) throws RepositoryException {
-        // remove 'v' from predecessor list
-        for (int i = 0; i < predecessors.size(); i++) {
-            if (predecessors.get(i).equals(v)) {
-                predecessors.remove(i);
-                break;
-            }
-        }
-        // attach v's successors
-        predecessors.clear();
-        predecessors.addAll(Arrays.asList(v.getPredecessors()));
-        storePredecessors();
-    }
+    public InternalVersion[] getPredecessors();
 
     /**
      * Checks if this version is more recent than the given version <code>v</code>.
@@ -248,70 +66,14 @@ public final class InternalVersion extends InternalFreeze {
      * @return <code>true</code> if the version is more recent;
      *         <code>false</code> otherwise.
      */
-    public boolean isMoreRecent(InternalVersion v) {
-        for (int i = 0; i < predecessors.size(); i++) {
-            InternalVersion pred = (InternalVersion) predecessors.get(i);
-            if (pred.equals(this) || pred.isMoreRecent(v)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    public boolean isMoreRecent(InternalVersion v);
 
     /**
-     * returns the internal version history of this version
+     * returns the internal version history in wich this version lifes in.
      *
-     * @return
+     * @return the version history for this version.
      */
-    protected InternalVersionHistory getVersionHistory() {
-        return versionHistory;
-    }
-
-    /**
-     * adds a label to the label cache. does not affect storage
-     *
-     * @param label
-     * @return
-     */
-    protected boolean internalAddLabel(String label) {
-        if (labelCache == null) {
-            labelCache = new HashSet();
-        }
-        return labelCache.add(label);
-    }
-
-    /**
-     * removes a label from the label cache. does not affect storage
-     *
-     * @param label
-     * @return
-     */
-    protected boolean internalRemoveLabel(String label) {
-        if (labelCache == null) {
-            return false;
-        } else {
-            return labelCache.remove(label);
-        }
-    }
-
-    /**
-     * checks, if a label is in the label cache
-     *
-     * @param label
-     * @return
-     */
-    protected boolean internalHasLabel(String label) {
-        return labelCache == null ? false : labelCache.contains(label);
-    }
-
-    /**
-     * returns the array of the cached labels
-     *
-     * @return
-     */
-    protected String[] internalGetLabels() {
-        return labelCache == null ? new String[0] : (String[]) labelCache.toArray(new String[labelCache.size()]);
-    }
+    public InternalVersionHistory getVersionHistory();
 
     /**
      * checks if this is the root version.
@@ -319,7 +81,19 @@ public final class InternalVersion extends InternalFreeze {
      * @return <code>true</code> if this version is the root version;
      *         <code>false</code> otherwise.
      */
-    public boolean isRootVersion() {
-        return isRoot;
-    }
+    public boolean isRootVersion();
+
+    /**
+     * Checks, if this version has the given label assosiated
+     * @param label the label to check.
+     * @return <code>true</code> if the label is assigned to this version;
+     *         <code>false</code> otherwise.
+     */
+    public boolean hasLabel(String label);
+
+    /**
+     * returns the labels that are assigned to this version
+     * @return a string array of labels.
+     */
+    public String[] getLabels();
 }

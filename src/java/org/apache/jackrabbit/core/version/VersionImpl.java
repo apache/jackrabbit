@@ -47,7 +47,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @param version
      * @throws RepositoryException
      */
-    protected VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
+    public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
                           NodeState state, NodeDef definition,
                           ItemLifeCycleListener[] listeners, InternalVersion version)
             throws RepositoryException {
@@ -66,14 +66,14 @@ public class VersionImpl extends NodeImpl implements Version {
      * @see Version#getVersionLabels()
      */
     public String[] getVersionLabels() throws RepositoryException {
-        return version.internalGetLabels();
+        return version.getLabels();
     }
 
     /**
      * @see Version#hasVersionLabel
      */
     public boolean hasVersionLabel(String label) {
-        return version.internalHasLabel(label);
+        return version.hasLabel(label);
     }
 
     /**

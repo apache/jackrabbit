@@ -17,98 +17,73 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.version.VersionItemStateProvider;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 
-import javax.jcr.PropertyType;
-import java.util.Calendar;
+import javax.jcr.RepositoryException;
 
 /**
- * This Class implements...
+ * This Class implements a virtual node state that represents a version.
+ * since some properties like 'jcr:versionLabels', 'jcr:predecessors' etc. can
+ * change over time, we treat them specially.
  */
 public class VersionNodeState extends VirtualNodeState {
 
+    /**
+     * the internal version
+     */
     private final InternalVersion v;
 
-    public VersionNodeState(VersionItemStateProvider vm, InternalVersion v) {
-        super(vm, v.getId(), NodeTypeRegistry.NT_VERSION, v.getVersionHistory().getId());
+    /**
+     * Creates a new version node state
+     * @param vm
+     * @param v
+     * @param parentUUID
+     * @throws RepositoryException
+     */
+    protected VersionNodeState(VersionItemStateProvider vm, InternalVersion v,
+                            String parentUUID)
+            throws RepositoryException {
+        super(vm, parentUUID, v.getId(), NodeTypeRegistry.NT_VERSION, new QName[0]);
         this.v = v;
 
-        // we map the property entries, since they do not change
-        addPropertyEntry(VersionManager.PROPNAME_CREATED);
-        addPropertyEntry(VersionManager.PROPNAME_FROZEN_UUID);
-        addPropertyEntry(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE);
-        addPropertyEntry(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES);
-        addPropertyEntry(VersionManager.PROPNAME_VERSION_LABELS);
-        addPropertyEntry(VersionManager.PROPNAME_PREDECESSORS);
-        addPropertyEntry(VersionManager.PROPNAME_SUCCESSORS);
-
-        // and the frozen node if not root version
+        // add the frozen node id if not root version
         if (!v.isRootVersion()) {
-            addChildNodeEntry(v.getFrozenNode().getName(), v.getFrozenNode().getInternalUUID());
+            addChildNodeEntry(VersionManager.NODENAME_FROZEN, v.getFrozenNode().getId());
         }
-
-        setDefinitionId(vm.getNodeDefId(VersionManager.NODENAME_ROOTVERSION));
     }
 
-    public VirtualPropertyState getPropertyState(QName name) throws NoSuchItemStateException {
-        if (name.equals(VersionManager.PROPNAME_CREATED)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(VersionManager.PROPNAME_CREATED));
-            state.setType(PropertyType.DATE);
-            state.setValues(InternalValue.create(new Calendar[]{v.getCreated()}));
-            return state;
-        } else if (name.equals(VersionManager.PROPNAME_FROZEN_UUID)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(VersionManager.PROPNAME_FROZEN_UUID));
-            state.setType(PropertyType.STRING);
-            state.setValues(InternalValue.create(new String[]{v.getFrozenNode().getUUID()}));
-            return state;
-        } else if (name.equals(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE));
-            state.setType(PropertyType.NAME);
-            state.setValues(InternalValue.create(new QName[]{v.getFrozenNode().getFrozenPrimaryType()}));
-            return state;
-        } else if (name.equals(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES));
-            state.setType(PropertyType.NAME);
-            state.setValues(InternalValue.create(v.getFrozenNode().getFrozenMixinTypes()));
-            return state;
-        } else if (name.equals(VersionManager.PROPNAME_VERSION_LABELS)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(VersionManager.PROPNAME_VERSION_LABELS));
-            state.setType(PropertyType.STRING);
-            state.setValues(InternalValue.create(v.internalGetLabels()));
-            return state;
-        } else if (name.equals(VersionManager.PROPNAME_PREDECESSORS)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(VersionManager.PROPNAME_PREDECESSORS));
-            state.setType(PropertyType.STRING);
-            InternalVersion[] preds = v.getPredecessors();
-            InternalValue[] predV = new InternalValue[preds.length];
-            for (int i = 0; i < preds.length; i++) {
-                predV[i] = InternalValue.create(new UUID(preds[i].getId()));
+    /**
+     * @see VirtualNodeState#getProperty(org.apache.jackrabbit.core.QName)
+     */
+    public VirtualPropertyState getProperty(QName name)
+            throws NoSuchItemStateException {
+        VirtualPropertyState state = super.getProperty(name);
+        if (state!=null) {
+            if (name.equals(VersionManager.PROPNAME_VERSION_LABELS)) {
+                state.setValues(InternalValue.create(v.getLabels()));
+            } else if (name.equals(VersionManager.PROPNAME_PREDECESSORS)) {
+                InternalVersion[] preds = v.getPredecessors();
+                InternalValue[] predV = new InternalValue[preds.length];
+                for (int i = 0; i < preds.length; i++) {
+                    predV[i] = InternalValue.create(new UUID(preds[i].getId()));
+                }
+                state.setValues(predV);
+            } else if (name.equals(VersionManager.PROPNAME_SUCCESSORS)) {
+                InternalVersion[] succs = v.getSuccessors();
+                InternalValue[] succV = new InternalValue[succs.length];
+                for (int i = 0; i < succs.length; i++) {
+                    succV[i] = InternalValue.create(new UUID(succs[i].getId()));
+                }
+                state.setValues(succV);
             }
-            state.setValues(predV);
-            return state;
-        } else if (name.equals(VersionManager.PROPNAME_SUCCESSORS)) {
-            VirtualPropertyState state = new VirtualPropertyState(name, getUUID());
-            state.setDefinitionId(provider.getPropDefId(VersionManager.PROPNAME_SUCCESSORS));
-            state.setType(PropertyType.STRING);
-            InternalVersion[] succs = v.getSuccessors();
-            InternalValue[] succV = new InternalValue[succs.length];
-            for (int i = 0; i < succs.length; i++) {
-                succV[i] = InternalValue.create(new UUID(succs[i].getId()));
-            }
-            state.setValues(succV);
-            return state;
-        } else {
-            return super.getPropertyState(name);
         }
+        return state;
     }
 }

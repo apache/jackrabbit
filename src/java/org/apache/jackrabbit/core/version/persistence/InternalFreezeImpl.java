@@ -13,20 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version;
+package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.version.InternalFreeze;
+import org.apache.jackrabbit.core.version.InternalVersionItem;
+import org.apache.jackrabbit.core.version.PersistentVersionManager;
 
 /**
- * the base interface for nodes that were versioned and turned either into
- * InternalFrozenNode or InteralFrozenVersionHistory.
+ * 
  */
-public interface InternalFreeze extends InternalVersionItem {
+abstract class InternalFreezeImpl extends InternalVersionItemImpl implements InternalFreeze {
 
-    /**
-     * returns the name of the node.
-     * @return the name of the node.
-     */
-    public QName getName();
+    private final InternalVersionItem parent;
+
+    protected InternalFreezeImpl(PersistentVersionManager vMgr, InternalVersionItem parent) {
+        super(vMgr);
+        this.parent = parent;
+    }
+
+    public InternalVersionItem getParent() {
+        return parent;
+    }
 
 }

@@ -15,209 +15,63 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.util.Text;
-import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.log4j.Logger;
 
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Iterator;
 
 /**
- * This Class implements a version history.
+ * This interface defines the internal version history.
  */
-public class InternalVersionHistory {
+public interface InternalVersionHistory extends InternalVersionItem {
 
     /**
-     * default logger
-     */
-    private static Logger log = Logger.getLogger(InternalVersionHistory.class);
-
-    /**
-     * the cache of the version labels
-     * key = version label (String)
-     * value = version
-     */
-    private HashMap labelCache = new HashMap();
-
-    /**
-     * the root version of this history
-     */
-    private InternalVersion rootVersion;
-
-    /**
-     * the hashmap of all versions
-     * key = versionId (String)
-     * value = version
-     */
-    private HashMap versionCache = new HashMap();
-
-    /**
-     * The nodes state of this version history
-     */
-    private PersistentNode node;
-
-    /**
-     * the node that holds the label nodes
-     */
-    private PersistentNode labelNode;
-
-    /**
-     * the id of this history
-     */
-    private String historyId;
-
-    /**
-     * the version manager
-     */
-    private final PersistentVersionManager vMgr;
-
-    /**
-     * Creates a new VersionHistory object for the given node state.
-     */
-    InternalVersionHistory(PersistentVersionManager vMgr, PersistentNode node) throws RepositoryException {
-        this.vMgr = vMgr;
-        this.node = node;
-        init();
-    }
-
-    /**
-     * Initialies the history and loads all internal caches
-     *
-     * @throws RepositoryException
-     */
-    private void init() throws RepositoryException {
-        versionCache.clear();
-        labelCache.clear();
-
-        // get id
-        historyId = (String) node.getPropertyValue(PersistentVersionManager.PROPNAME_HISTORY_ID).internalValue();
-
-        // get entries
-        PersistentNode[] children = node.getChildNodes();
-        for (int i = 0; i < children.length; i++) {
-            PersistentNode child = children[i];
-            if (child.getName().equals(PersistentVersionManager.NODENAME_VERSION_LABELS)) {
-                labelNode = child;
-                continue;
-            }
-            InternalVersion v = new InternalVersion(this, child);
-            versionCache.put(v.getId(), v);
-            if (v.isRootVersion()) {
-                rootVersion = v;
-            }
-        }
-
-        // resolve successors and predecessors
-        Iterator iter = versionCache.values().iterator();
-        while (iter.hasNext()) {
-            InternalVersion v = (InternalVersion) iter.next();
-            v.resolvePredecessors();
-        }
-
-        // init label cache
-        PersistentNode labels[] = labelNode.getChildNodes();
-        for (int i = 0; i < labels.length; i++) {
-            PersistentNode lNode = labels[i];
-            String name = (String) lNode.getPropertyValue(PersistentVersionManager.PROPNAME_NAME).internalValue();
-            String ref = (String) lNode.getPropertyValue(PersistentVersionManager.PROPNAME_VERSION).internalValue();
-            InternalVersion v = getVersion(ref);
-            labelCache.put(name, v);
-            v.internalAddLabel(name);
-        }
-    }
-
-    /**
-     * returns the version manager
-     *
-     * @return
-     */
-    public PersistentVersionManager getVersionManager() {
-        return vMgr;
-    }
-
-    /**
-     * Returns the id of this version history
-     *
-     * @return
-     */
-    public String getId() {
-        return historyId;
-    }
-
-    /**
+     * Aequivalalent to {@link VersionHistory#getRootVersion()}.
      * @see VersionHistory#getRootVersion()
      */
-    public InternalVersion getRootVersion() throws RepositoryException {
-        return rootVersion;
-    }
+    public InternalVersion getRootVersion();
 
     /**
+     * Aequivalent to {@link VersionHistory#getVersion(java.lang.String)}.
      * @see VersionHistory#getVersion(java.lang.String)
      */
-    public InternalVersion getVersion(QName versionName) throws RepositoryException {
-        // maybe add cache by name?
-        Iterator iter = versionCache.values().iterator();
-        while (iter.hasNext()) {
-            InternalVersion v = (InternalVersion) iter.next();
-            if (v.getName().equals(versionName)) {
-                return v;
-            }
-        }
-        throw new VersionException("Version " + versionName + " does not exist.");
-    }
+    public InternalVersion getVersion(QName versionName) throws VersionException;
 
     /**
-     * @see VersionHistory#hasVersion(String)
-     */
-    public boolean hasVersion(QName versionName) {
-        // maybe add cache?
-        Iterator iter = versionCache.values().iterator();
-        while (iter.hasNext()) {
-            InternalVersion v = (InternalVersion) iter.next();
-            if (v.getName().equals(versionName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Checks if the version for the given uuid exists
+     * Checks if the version with the given name exists in this version history.
      *
-     * @param uuid
-     * @return
+     * @param versionName the name of the version
+     * @return <code>true</code> if the version exists;
+     *         <code>false</code> otherwise.
      */
-    public boolean hasVersion(String uuid) {
-        return versionCache.containsKey(uuid);
-    }
+    public boolean hasVersion(QName versionName);
+
+    /**
+     * Checks if the version for the given uuid exists in this history.
+     *
+     * @param uuid the uuid of the version
+     * @return <code>true</code> if the version exists;
+     *         <code>false</code> otherwise.
+     */
+    public boolean hasVersion(String uuid);
 
     /**
      * Returns the version with the given uuid or <code>null</code> if the
      * respective version does not exist.
      *
-     * @param uuid
-     * @return
+     * @param uuid the uuid of the version
+     * @return the internal version ot <code>null</code>
      */
-    public InternalVersion getVersion(String uuid) {
-        return (InternalVersion) versionCache.get(uuid);
-    }
+    public InternalVersion getVersion(String uuid);
 
     /**
+     * Aequivalent to {@link VersionHistory#getVersionByLabel(java.lang.String)}
+     * but returns <code>null</code> if the version does not exists.
+     *
      * @see VersionHistory#getVersionByLabel(java.lang.String)
      */
-    public InternalVersion getVersionByLabel(String label) throws RepositoryException {
-        return (InternalVersion) labelCache.get(label);
-    }
+    public InternalVersion getVersionByLabel(String label);
 
     /**
      * Removes the indicated version from this VersionHistory. If the specified
@@ -228,209 +82,50 @@ public class InternalVersionHistory {
      * predecessors of the removed version and vice versa. then, the entire
      * version node and all its subnodes are removed.
      *
-     * @param versionName
-     * @throws RepositoryException
+     * @param versionName the name of the version to be removed
+     * @throws VersionException if an error occurrs.
      */
-    public void removeVersion(QName versionName) throws RepositoryException {
-        InternalVersion v = (InternalVersion) getVersion(versionName);
-        if (v.equals(rootVersion)) {
-            String msg = "Removal of " + versionName + " not allowed.";
-            log.error(msg);
-            throw new VersionException(msg);
-        }
-
-        // remove from persistance state
-        node.removeNode(versionName);
-
-        // unregister from labels
-        String[] labels = v.internalGetLabels();
-        for (int i = 0; i < labels.length; i++) {
-            v.internalRemoveLabel(labels[i]);
-            QName name = new QName("", Text.md5(labels[i]));
-            labelNode.removeNode(name);
-        }
-
-        // detach from the version graph
-        v.internalDetach();
-
-        // and remove from history
-        versionCache.remove(v.getId());
-        store();
-
-    }
+    public void removeVersion(QName versionName) throws VersionException;
 
     /**
-     * Adds a label to a version
+     * Adds a label to a version. If the given label is already assigned to
+     * another version in this version history, a VersionException is thrown,
+     * unless <code>move</code> is set to <code>true</code>. in this case, the
+     * label is removed from the previously assigned version and added to the
+     * specified one.
      *
-     * @param version
-     * @param label
-     * @throws RepositoryException
+     * @param name the name of the version
+     * @param label the label to assgign
+     * @param move flag what to do by collisions
+     * @return the version that was previously assigned by this label or <code>null</code>.
+     * @throws VersionException
      */
-    public void addVersionLabel(InternalVersion version, String label, boolean move)
-            throws VersionException, RepositoryException {
-        InternalVersion prev = (InternalVersion) labelCache.get(label);
-        if (version.equals(prev)) {
-            // ignore
-            return;
-        } else if (prev != null && !move) {
-            // already defined elsewhere, throw
-            throw new VersionException("Version label " + label + " already defined for version " + prev.getName());
-        } else if (prev != null) {
-            // if already defined, but move, remove old label first
-            removeVersionLabel(label);
-        }
-        labelCache.put(label, version);
-        version.internalAddLabel(label);
-        QName name = new QName("", Text.md5(label));
-        PersistentNode lNode = labelNode.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
-        lNode.setPropertyValue(PersistentVersionManager.PROPNAME_NAME, InternalValue.create(label));
-        lNode.setPropertyValue(PersistentVersionManager.PROPNAME_VERSION, InternalValue.create(version.getId()));
-        labelNode.store();
-
-        // inform manager
-        vMgr.onVersionModified(version);
-    }
+    public InternalVersion addVersionLabel(QName name, String label, boolean move)
+            throws VersionException;
 
     /**
-     * Removes the label from the respective version
+     * Removes the label from the respective version.
      *
-     * @param label
-     * @throws RepositoryException if the label does not exist
+     * @param label the label to be removed
+     * @return the version that had the label assigned
+     * @throws VersionException if the label does not exist
      */
-    public void removeVersionLabel(String label) throws RepositoryException {
-        InternalVersion v = (InternalVersion) labelCache.remove(label);
-        if (v == null) {
-            throw new RepositoryException("Version label " + label + " is not in version history.");
-        }
-        v.internalRemoveLabel(label);
-        QName name = new QName("", Text.md5(label));
-        labelNode.removeNode(name);
-        labelNode.store();
-
-        // inform manager
-        vMgr.onVersionModified(v);
-    }
+    public InternalVersion removeVersionLabel(String label) throws VersionException;
 
     /**
-     * Checks in a node. It creates a new version with the given name and freezes
-     * the state of the given node.
+     * Returns an iterator over all versions (not ordered yet), including the
+     * root version.
      *
-     * @param name
-     * @param src
-     * @return
-     * @throws RepositoryException
+     * @return an iterator over {@link InternalVersion} objects.
      */
-    protected InternalVersion checkin(QName name, NodeImpl src)
-            throws RepositoryException {
-
-        // copy predecessors from src node
-        Value[] preds = src.getProperty(VersionManager.PROPNAME_PREDECESSORS).getValues();
-        InternalValue[] predecessors = new InternalValue[preds.length];
-        for (int i = 0; i < preds.length; i++) {
-            String predId = preds[i].getString();
-            // check if version exist
-            if (!versionCache.containsKey(predId)) {
-                throw new RepositoryException("invalid predecessor in source node");
-            }
-            predecessors[i] = InternalValue.create(predId);
-        }
-
-        PersistentNode vNode = node.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
-        String versionId = UUID.randomUUID().toString();
-        vNode.setPropertyValue(PersistentVersionManager.PROPNAME_VERSION_ID, InternalValue.create(versionId));
-
-        // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, predecessors);
-
-        // checkin source node
-        InternalFrozenNode.checkin(vNode, PersistentVersionManager.NODENAME_FROZEN, src, false, false);
-
-        // and store
-        store();
-
-        // update version graph
-        InternalVersion version = new InternalVersion(this, vNode);
-        version.resolvePredecessors();
-
-        // update cache
-        versionCache.put(version.getId(), version);
-
-        return version;
-    }
-
+    public Iterator getVersions();
 
     /**
-     * Stores the changes made to this version history
+     * Returns the number of versions in this version history.
      *
-     * @throws RepositoryException
+     * @return the number of versions, including the root version.
      */
-    protected void store() throws RepositoryException {
-        node.store();
-    }
+    public int getNumVersions();
 
-    /**
-     * discards the changes made to this version history
-     *
-     * @throws RepositoryException
-     */
-    protected void reload() throws RepositoryException {
-        node.reload();
-        init();
-    }
 
-    /**
-     * Returns an iterator over all versions (not ordered yet)
-     *
-     * @return
-     */
-    protected Iterator getVersions() {
-        return versionCache.values().iterator();
-    }
-
-    /**
-     * Returns the number of versions
-     *
-     * @return
-     */
-    protected int getNumVersions() {
-        return versionCache.size();
-    }
-
-    /**
-     * Creates a new <code>InternalVersionHistory</code> below the given parent
-     * node and with the given name.
-     *
-     * @param parent
-     * @param name
-     * @return
-     * @throws RepositoryException
-     */
-    protected static InternalVersionHistory create(PersistentVersionManager vMgr, PersistentNode parent, String historyId, QName name, NodeImpl src)
-            throws RepositoryException {
-
-        // create history node
-        PersistentNode pNode = parent.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
-        pNode.setPropertyValue(PersistentVersionManager.PROPNAME_HISTORY_ID, InternalValue.create(historyId));
-
-        // create label node
-        pNode.addNode(PersistentVersionManager.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_UNSTRUCTURED);
-
-        // create root version
-        String versionId = UUID.randomUUID().toString();
-        PersistentNode vNode = pNode.addNode(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_UNSTRUCTURED);
-        vNode.setPropertyValue(PersistentVersionManager.PROPNAME_VERSION_ID, InternalValue.create(versionId));
-
-        // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
-
-        // add also an empty frozen node to the root version
-        InternalFrozenNode.checkin(vNode, PersistentVersionManager.NODENAME_FROZEN, src, true, false);
-
-        parent.store();
-        return new InternalVersionHistory(vMgr, pNode);
-    }
 }
-
-

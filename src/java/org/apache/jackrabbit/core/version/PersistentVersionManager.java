@@ -15,150 +15,18 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
-import org.apache.jackrabbit.core.state.PersistentNodeState;
-import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.log4j.Logger;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.Workspace;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
- * This Class provides implements the persistent part of the versionin. the
- * current implementation uses the 'normal' repository content as storage.
+ * This interface defines the access to the persistence layer of the
+ * versioning. The way how the versions are stored may totaly differ from
+ * the way they are exposed to the client.
  */
-public class PersistentVersionManager {
-
-
-    /**
-     * the logger
-     */
-    private static Logger log = Logger.getLogger(PersistentVersionManager.class);
-
-    /**
-     * root path for version storage
-     */
-    public static final QName VERSION_HISTORY_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "persistentVersionStorage");
-
-    /**
-     * name of the 'jcr:historyId' property
-     */
-    public static final QName PROPNAME_HISTORY_ID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "historyId");
-    /**
-     * name of the 'jcr:versionId' property
-     */
-    public static final QName PROPNAME_VERSION_ID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionId");
-    /**
-     * name of the 'jcr:versionLabels' node
-     */
-    public static final QName NODENAME_VERSION_LABELS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
-    /**
-     * name of the 'jcr:frozen' property
-     */
-    public static final QName NODENAME_FROZEN = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozen");
-    /**
-     * name of the 'jcr:name' property
-     */
-    public static final QName PROPNAME_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "name");
-    /**
-     * name of the 'jcr:version' property
-     */
-    public static final QName PROPNAME_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "version");
-
-    /**
-     * the id of the persisten root node
-     */
-    private static final NodeId PERSISTENT_ROOT_ID = new NodeId("faceface-ab3b-48a9-b31b-e7d0a9c1c3b1");
-
-    /**
-     * the persistent root node of the version histories
-     */
-    private final PersistentNode historyRoot;
-
-    /**
-     * the state manager for the version storage
-     */
-    private PersistentItemStateProvider stateMgr;
-
-    /**
-     * the nodetype manager for the version storage
-     */
-    private NodeTypeManagerImpl ntMgr;
-
-    /**
-     * The representation version managers (per workspace)
-     */
-    private HashMap versionManagers = new HashMap();
-
-    /**
-     * the version histories. key=uuid, value=version history
-     */
-    private Map histories = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
-
-    /**
-     * Creates a new PersistentVersionManager.
-     *
-     * @param session
-     * @throws RepositoryException
-     */
-    public PersistentVersionManager(SessionImpl session) throws RepositoryException {
-        this.stateMgr = ((WorkspaceImpl) session.getWorkspace()).getPersistentStateManager();
-        this.ntMgr = session.getNodeTypeManager();
-
-        try {
-            NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
-            // enable this to make the persistence storage visible
-            if (true) {
-                // check for versionhistory root
-                if (!systemRoot.hasNode(VERSION_HISTORY_ROOT_NAME)) {
-                    // if not exist, create
-                    systemRoot.addNode(VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
-                    systemRoot.save();
-                }
-                PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(new NodeId(systemRoot.getNode(VERSION_HISTORY_ROOT_NAME).internalGetUUID()));
-                historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
-            } else {
-                if (!stateMgr.hasItemState(PERSISTENT_ROOT_ID)) {
-                    PersistentNodeState nodeState = stateMgr.createNodeState(PERSISTENT_ROOT_ID.getUUID(), NodeTypeRegistry.NT_UNSTRUCTURED, null);
-                    nodeState.setDefinitionId(new NodeDefId(ntMgr.getRootNodeDefinition().unwrap()));
-                    nodeState.store();
-                    historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
-                } else {
-                    PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(PERSISTENT_ROOT_ID);
-                    historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
-                }
-            }
-        } catch (ItemStateException e) {
-            throw new RepositoryException("Unable to initialize PersistentVersionManager: " + e.toString());
-        }
-    }
-
-    /**
-     * returns the version manager
-     *
-     * @return
-     */
-    public synchronized VersionManager getVersionManager(Workspace wsp) {
-        VersionManager vm = (VersionManager) versionManagers.get(wsp.getName());
-        if (vm == null) {
-            vm = new VersionManager(this);
-            versionManagers.put(wsp.getName(), vm);
-        }
-        return vm;
-    }
-
+public interface PersistentVersionManager {
 
     /**
      * Creates a new Version History.
@@ -167,25 +35,8 @@ public class PersistentVersionManager {
      * @return the newly created version history.
      * @throws RepositoryException
      */
-    synchronized InternalVersionHistory createVersionHistory(NodeImpl node)
-            throws RepositoryException {
-
-        // create deep path
-        String uuid = UUID.randomUUID().toString();
-        QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid);
-        if (historyRoot.hasNode(historyNodeName)) {
-            historyRoot.removeNode(historyNodeName);
-            historyRoot.store();
-        }
-
-        // create new history node in the persistent state
-        InternalVersionHistory hist = InternalVersionHistory.create(this, historyRoot, uuid, historyNodeName, node);
-        histories.put(hist.getId(), hist);
-
-        // notify version managers
-        onVersionHistoryModified(hist);
-        return hist;
-    }
+    public InternalVersionHistory createVersionHistory(NodeImpl node)
+            throws RepositoryException;
 
     /**
      * returns the internal version history for the id
@@ -194,21 +45,8 @@ public class PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    synchronized InternalVersionHistory getVersionHistory(String histId)
-            throws RepositoryException {
-
-        InternalVersionHistory hist = (InternalVersionHistory) histories.get(histId);
-        if (hist == null) {
-            // we cannot used the uuid, since the persistent state do not share the same ids
-            QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, histId);
-            PersistentNode hNode = historyRoot.getNode(historyNodeName, 1);
-            if (hNode != null) {
-                hist = new InternalVersionHistory(this, hNode);
-                histories.put(histId, hist);
-            }
-        }
-        return hist;
-    }
+    public InternalVersionHistory getVersionHistory(String histId)
+            throws RepositoryException;
 
     /**
      * Checks if the versionhistory for the given id exists
@@ -216,28 +54,15 @@ public class PersistentVersionManager {
      * @param histId
      * @return
      */
-    synchronized boolean hasVersionHistory(String histId) {
-        if (histories.containsKey(histId)) {
-            return true;
-        } else {
-            return historyRoot.hasNode(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, histId));
-        }
-    }
+    public boolean hasVersionHistory(String histId);
 
     /**
-     * returns an iterator over all existing version histories
+     * returns an iterator over the external ids of the version histories
      *
      * @return
      * @throws RepositoryException
      */
-    synchronized Iterator getVersionHistories() throws RepositoryException {
-        PersistentNode[] ph = historyRoot.getChildNodes();
-        ArrayList list = new ArrayList(ph.length);
-        for (int i = 0; i < ph.length; i++) {
-            list.add(getVersionHistory(ph[i].getName().getLocalName()));
-        }
-        return list.iterator();
-    }
+    public Iterator getVersionHistoryIds() throws RepositoryException;
 
     /**
      * returns the number of version histories
@@ -245,9 +70,7 @@ public class PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    synchronized int getNumVersionHistories() throws RepositoryException {
-        return historyRoot.getChildNodes().length;
-    }
+    public int getNumVersionHistories() throws RepositoryException;
 
     /**
      * returns the internal version for the id
@@ -256,11 +79,8 @@ public class PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    synchronized InternalVersion getVersion(String histId, String versionId)
-            throws RepositoryException {
-        InternalVersionHistory history = getVersionHistory(histId);
-        return history.getVersion(versionId);
-    }
+    public InternalVersion getVersion(String histId, String versionId)
+            throws RepositoryException;
 
     /**
      * returns the version with the given id
@@ -269,20 +89,8 @@ public class PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    synchronized InternalVersion getVersion(String versionId)
-            throws RepositoryException {
-
-        // todo: implement better
-        PersistentNode[] ph = historyRoot.getChildNodes();
-        for (int i = 0; i < ph.length; i++) {
-            InternalVersionHistory vh = getVersionHistory(ph[i].getName().getLocalName());
-            InternalVersion v = vh.getVersion(versionId);
-            if (v != null) {
-                return v;
-            }
-        }
-        return null;
-    }
+    public InternalVersion getVersion(String versionId)
+            throws RepositoryException;
 
     /**
      * Checks if the version with the given id exists
@@ -290,47 +98,32 @@ public class PersistentVersionManager {
      * @param versionId
      * @return
      */
-    synchronized boolean hasVersion(String versionId) {
-        // todo: implement better
-        try {
-            PersistentNode[] ph = historyRoot.getChildNodes();
-            for (int i = 0; i < ph.length; i++) {
-                InternalVersionHistory vh = getVersionHistory(ph[i].getName().getLocalName());
-                if (vh.hasVersion(versionId)) {
-                    return true;
-                }
-            }
-        } catch (RepositoryException e) {
-            // ignore
-        }
-        return false;
-    }
+    public boolean hasVersion(String versionId);
 
     /**
-     * is informed by the versions if they were modified
-     *
-     * @param version
+     * checks, if the item with the given external id exists
+     * @param externalId
+     * @return
      */
-    void onVersionModified(InternalVersion version) throws RepositoryException {
-        // check if version manager already generated item states
-        Iterator iter = versionManagers.values().iterator();
-        while (iter.hasNext()) {
-            ((VersionManager) iter.next()).onVersionModified(version);
-        }
-    }
+    public boolean hasItem(String externalId);
 
     /**
-     * is informed by the versions if they were modified
-     *
-     * @param vh
+     * returns the item referred by the external id
+     * @param externalId
+     * @return
+     * @throws RepositoryException
      */
-    void onVersionHistoryModified(InternalVersionHistory vh) throws RepositoryException {
-        // check if version manager already generated item states
-        Iterator iter = versionManagers.values().iterator();
-        while (iter.hasNext()) {
-            ((VersionManager) iter.next()).onVersionHistoryModified(vh);
-        }
-    }
+    public InternalVersionItem getItemByExternal(String externalId)
+            throws RepositoryException;
+
+    /**
+     * returns the item referred by the internal id
+     * @param internalId
+     * @return
+     * @throws RepositoryException
+     */
+    public InternalVersionItem getItemByInternal(String internalId)
+            throws RepositoryException;
 
     /**
      * Checks in a node
@@ -340,50 +133,6 @@ public class PersistentVersionManager {
      * @throws RepositoryException
      * @see Node#checkin()
      */
-    synchronized InternalVersion checkin(NodeImpl node) throws RepositoryException {
-        // assuming node is versionable and checkout (check in nodeimpl)
-        // To create a new version of a versionable node N, the client calls N.checkin.
-        // This causes the following series of events:
-        String histUUID = node.getProperty(VersionManager.PROPNAME_VERSION_HISTORY).getString();
-        InternalVersionHistory history = getVersionHistory(histUUID);
-
-        // 0. resolve the predecessors
-        Value[] values = node.getProperty(VersionManager.PROPNAME_PREDECESSORS).getValues();
-        InternalVersion[] preds = new InternalVersion[values.length];
-        for (int i = 0; i < values.length; i++) {
-            preds[i] = history.getVersion(values[i].getString());
-        }
-
-        // 0.1 search a predecessor, suitable for generating the new name
-        String versionName = null;
-        int maxDots = Integer.MAX_VALUE;
-        for (int i = 0; i < preds.length; i++) {
-            // take the first pred. without a successor
-            if (preds[i].getSuccessors().length == 0) {
-                versionName = preds[i].getName().getLocalName(); //assuming no namespaces in version names
-                // need to count the dots
-                int pos = -1;
-                int numDots = 0;
-                while (versionName.indexOf('.', pos + 1) >= 0) {
-                    pos = versionName.indexOf('.', pos + 1);
-                    numDots++;
-                }
-                if (numDots < maxDots) {
-                    maxDots = numDots;
-                    versionName = pos < 0 ? "1.0" : versionName.substring(0, pos + 1) + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
-                }
-                break;
-            }
-        }
-        // if no empty found, generate new name
-        if (versionName == null) {
-            versionName = preds[0].getName().getLocalName();
-            do {
-                versionName += ".1";
-            } while (history.hasVersion(new QName("", versionName)));
-        }
-
-        return history.checkin(new QName("", versionName), node);
-    }
+    public InternalVersion checkin(NodeImpl node) throws RepositoryException;
 
 }

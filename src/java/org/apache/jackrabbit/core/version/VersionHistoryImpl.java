@@ -49,7 +49,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @param history
      * @throws RepositoryException
      */
-    protected VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
+    public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
                                  NodeState state, NodeDef definition,
                                  ItemLifeCycleListener[] listeners,
                                  InternalVersionHistory history) throws RepositoryException {
@@ -108,11 +108,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws VersionException, RepositoryException {
         try {
             QName name = QName.fromJCRName(version, session.getNamespaceResolver());
-            InternalVersion v = history.getVersion(name);
-            if (v == null) {
-                throw new VersionException("Version " + version + " does not exist in this version history.");
-            }
-            history.addVersionLabel(v, label, move);
+            history.addVersionLabel(name, label, move);
         } catch (IllegalNameException e) {
             throw new RepositoryException(e);
         } catch (UnknownPrefixException e) {

@@ -20,6 +20,10 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.VersionHistoryImpl;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
@@ -586,9 +590,13 @@ public class ItemManager implements ItemLifeCycleListener {
 
         // check special nodes
         if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION)) {
-            return session.versionMgr.createVersionInstance(session, state, def, this, listeners);
+            InternalVersion version = session.versionMgr.getVersion(state.getUUID());
+            return new VersionImpl(this, session, id, state, def, listeners, version);
+
         } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION_HISTORY)) {
-            return session.versionMgr.createVersionHistoryInstance(session, state, def, this, listeners);
+            InternalVersionHistory history = session.versionMgr.getVersionHistory(state.getUUID());
+            return new VersionHistoryImpl(this, session, id, state, def, listeners, history);
+
         } else {
             // create node object
             return new NodeImpl(this, session, id, state, def, listeners);

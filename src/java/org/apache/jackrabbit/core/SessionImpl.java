@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
@@ -158,7 +159,7 @@ public class SessionImpl implements Session {
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(credentials, hierMgr);
-        versionMgr = rep.getPersistentVersionManager() == null ? null : rep.getPersistentVersionManager().getVersionManager(wsp);
+        versionMgr = rep.getVersionManager();
 
         // add virtual item managers only for normal sessions
         if (!(this instanceof SystemSession)) {
@@ -190,7 +191,7 @@ public class SessionImpl implements Session {
         itemStateMgr = new SessionItemStateManager(rep.getRootNodeUUID(), wsp.getPersistentStateManager(), getNamespaceResolver());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
-        versionMgr = rep.getPersistentVersionManager() == null ? null : rep.getPersistentVersionManager().getVersionManager(wsp);
+        versionMgr = rep.getVersionManager();
 
         // add virtual item managers only for normal sessions
         if (!(this instanceof SystemSession)) {

@@ -15,68 +15,46 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.QName;
-
-import javax.jcr.RepositoryException;
+import javax.jcr.version.VersionException;
 
 /**
- * This Class represents a frozen versionable child node, that was created
+ * This interface defines a frozen versionable child node, that was created
  * during a {@link javax.jcr.Node#checkin()} with a OPV==Version node.
  */
-public class InternalFrozenVersionHistory extends InternalFreeze {
+public interface InternalFrozenVersionHistory extends InternalFreeze {
 
     /**
-     * the underlaying persistence node
-     */
-    private PersistentNode node;
-
-    /**
-     * Creates a new frozen version history.
+     * Returns the id of the version history that was assigned to the node at
+     * the time it was versioned.
      *
-     * @param node
+     * @return the id of the version history
      */
-    protected InternalFrozenVersionHistory(InternalFreeze parent, PersistentNode node) {
-        super(parent);
-        this.node = node;
-    }
+    public String getVersionHistoryId();
 
     /**
-     * Returns the name of this frozen version history
+     * Returns the version history that was assigned to the node at
+     * the time it was versioned.
      *
-     * @return
-     */
-    public QName getName() {
-        return node.getName();
-    }
-
-    /**
-     * Returns the version history that was versioned with this node.
-     *
-     * @return
-     * @throws RepositoryException
-     */
-    public String getVersionHistoryId()
-            throws RepositoryException {
-        return (String) node.getPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY).internalValue();
-    }
-
-    /**
-     * Returns the version history that was versioned with this node.
-     *
-     * @return
-     * @throws RepositoryException
+     * @return the internal version history.
+     * @throws VersionException if the history cannot be retrieved.
      */
     public InternalVersionHistory getVersionHistory()
-            throws RepositoryException {
-        return getVersionManager().getVersionHistory(getVersionHistoryId());
-    }
+            throws VersionException;
 
-    public String getBaseVersionId() throws RepositoryException {
-        return (String) node.getPropertyValue(VersionManager.PROPNAME_BASE_VERSION).internalValue();
-    }
+    /**
+     * Returns the id of the base version that was assigned to the node at
+     * the time it was versioned.
+     *
+     * @return the id of the base version
+     */
+    public String getBaseVersionId();
 
-    public InternalVersion getBaseVesion()
-            throws RepositoryException {
-        return getVersionManager().getVersion(getVersionHistoryId(), getBaseVersionId());
-    }
+    /**
+     * Returns the base version that was assigned to the node at
+     * the time it was versioned.
+     *
+     * @return the inernal base version
+     * @throws VersionException if the version could not be retrieved
+     */
+    public InternalVersion getBaseVesion() throws VersionException;
 }

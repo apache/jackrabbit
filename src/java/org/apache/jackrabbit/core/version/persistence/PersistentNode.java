@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version;
+package org.apache.jackrabbit.core.version.persistence;
 
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.*;
@@ -33,7 +33,7 @@ import java.util.List;
  * This Class provides some basic node operations directly on the persistent
  * state.
  */
-public class PersistentNode {
+class PersistentNode {
 
     /**
      * the underlaying persistent state
@@ -99,20 +99,27 @@ public class PersistentNode {
         return nodeState.getUUID();
     }
 
+    protected String getParentUUID() {
+        return nodeState.getParentUUID();
+    }
+
+    protected PersistentNodeState getState() {
+        return nodeState;
+    }
+
     /**
      * Returns the properties of this node
      *
      * @return
      */
-    protected PersistentProperty[] getProperties() {
+    protected PropertyState[] getProperties() {
         try {
             List list = nodeState.getPropertyEntries();
-            PersistentProperty[] props = new PersistentProperty[list.size()];
+            PropertyState[] props = new PropertyState[list.size()];
             for (int i = 0; i < list.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) list.get(i);
                 PropertyId propId = new PropertyId(nodeState.getUUID(), entry.getName());
-                PropertyState pState = (PropertyState) stateMgr.getItemState(propId);
-                props[i] = new PersistentProperty(pState, ntMgr.getPropDef(pState.getDefinitionId()).isMultiple());
+                props[i] = (PropertyState) stateMgr.getItemState(propId);
             }
             return props;
         } catch (ItemStateException e) {

@@ -2795,10 +2795,10 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // copy frozen properties
-        PersistentProperty[] props = freeze.getFrozenProperties();
+        PropertyState[] props = freeze.getFrozenProperties();
         HashSet propNames = new HashSet();
         for (int i = 0; i < props.length; i++) {
-            PersistentProperty prop = props[i];
+            PropertyState prop = props[i];
             propNames.add(prop.getName());
             if (prop.getValues().length == 1) {
                 try {

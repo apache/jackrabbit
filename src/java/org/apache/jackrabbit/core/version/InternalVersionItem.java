@@ -15,18 +15,23 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.QName;
-
 /**
- * the base interface for nodes that were versioned and turned either into
- * InternalFrozenNode or InteralFrozenVersionHistory.
+ * This interface defines the base for all internal versioning items. Internal
+ * versioning items are decoupled from their external form as exposed to the
+ * repository or in form of the node extensions {@link javax.jcr.version.Version}
+ * or {@link javax.jcr.version.VersionHistory}.
  */
-public interface InternalFreeze extends InternalVersionItem {
+public interface InternalVersionItem {
 
     /**
-     * returns the name of the node.
-     * @return the name of the node.
+     * Returns the external id of this item
+     * @return
      */
-    public QName getName();
+    public String getId();
 
+    /**
+     * returns the parent version item or null
+     * @return
+     */
+    public InternalVersionItem getParent();
 }
