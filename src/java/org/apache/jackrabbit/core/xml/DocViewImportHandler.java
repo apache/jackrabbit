@@ -17,9 +17,7 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.BaseException;
-import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
@@ -27,7 +25,6 @@ import org.apache.jackrabbit.core.util.ISO9075;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -38,12 +35,9 @@ import java.util.Stack;
  * <code>DocViewImportHandler</code> processes Document View XML SAX events
  * and 'translates' them into <code>{@link Importer}</code> method calls.
  */
-class DocViewImportHandler extends DefaultHandler implements Constants {
+class DocViewImportHandler extends TargetImportHandler {
 
     private static Logger log = Logger.getLogger(DocViewImportHandler.class);
-
-    private final Importer importer;
-    private final NamespaceResolver nsContext;
 
     /**
      * stack of NodeInfo instances; an instance is pushed onto the stack
@@ -52,11 +46,16 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
      */
     private final Stack stack = new Stack();
     // buffer used to merge adjacent character data
-    private final StringBuffer text = new StringBuffer();
+    private StringBufferValue textHandler = new StringBufferValue();
 
+    /**
+     * Constructs a new <code>DocViewImportHandler</code>.
+     *
+     * @param importer
+     * @param nsContext
+     */
     DocViewImportHandler(Importer importer, NamespaceResolver nsContext) {
-        this.importer = importer;
-        this.nsContext = nsContext;
+        super(importer, nsContext);
     }
 
     /**
@@ -68,30 +67,28 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
      * @param text
      * @throws SAXException
      */
-    private void onTextNode(String text)
+    private void onTextNode(StringBufferValue text)
             throws SAXException {
-        if (text.trim().length() == 0) {
+        String s = textHandler.retrieve();
+        if (s.trim().length() == 0) {
             // ignore whitespace-only character data
-            log.debug("ignoring withespace character data: " + text);
+            log.debug("ignoring withespace character data: " + s);
             return;
         }
-        if (text.length() > 0) {
-            try {
-                Importer.NodeInfo node =
-                        new Importer.NodeInfo(JCR_XMLTEXT, null, null, null);
-                InternalValue[] values = new InternalValue[1];
-                values[0] = InternalValue.create(text.toString());
-                ArrayList props = new ArrayList();
-                Importer.PropInfo prop =
-                        new Importer.PropInfo(JCR_XMLCHARACTERS,
-                                PropertyType.STRING, values);
-                props.add(prop);
-                // call Importer
-                importer.startNode(node, props, nsContext);
-                importer.endNode(node);
-            } catch (RepositoryException re) {
-                throw new SAXException(re);
-            }
+        try {
+            Importer.NodeInfo node =
+                    new Importer.NodeInfo(JCR_XMLTEXT, null, null, null);
+            Importer.TextValue[] values = new Importer.TextValue[]{text};
+            ArrayList props = new ArrayList();
+            Importer.PropInfo prop =
+                    new Importer.PropInfo(JCR_XMLCHARACTERS,
+                            PropertyType.STRING, values);
+            props.add(prop);
+            // call Importer
+            importer.startNode(node, props, nsContext);
+            importer.endNode(node);
+        } catch (RepositoryException re) {
+            throw new SAXException(re);
         }
     }
 
@@ -113,11 +110,12 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
-        if (text.length() > 0) {
+        if (textHandler != null && textHandler.length() > 0) {
             // there is character data that needs to be added to the current node
-            onTextNode(text.toString());
-            // reset buffer
-            text.setLength(0);
+            onTextNode(textHandler);
+            // reset handler
+            textHandler.dispose();
+            textHandler = null;
         }
 
         try {
@@ -162,7 +160,7 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
 
                 // value(s)
                 String attrValue = atts.getValue(i);
-                InternalValue[] propValues;
+                Importer.TextValue[] propValues;
 /*
                 // @todo should attribute value be interpreted as LIST type (i.e. multi-valued property)?
                 String[] strings = Text.explode(attrValue, ' ', true);
@@ -200,19 +198,19 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
                         uuid = attrValue;
                     }
                 } else {
-                    propValues = new InternalValue[1];
-                    propValues[0] = InternalValue.create(atts.getValue(i));
+                    propValues = new Importer.TextValue[1];
+                    propValues[0] = new StringValue(atts.getValue(i));
                     props.add(new Importer.PropInfo(propName,
                             PropertyType.UNDEFINED, propValues));
                 }
             }
 
-            Importer.NodeInfo nodeInfo =
+            Importer.NodeInfo node =
                     new Importer.NodeInfo(nodeName, nodeTypeName, mixinTypes, uuid);
             // all information has been collected, now delegate to importer
-            importer.startNode(nodeInfo, props, nsContext);
+            importer.startNode(node, props, nsContext);
             // push current node data onto stack
-            stack.push(nodeInfo);
+            stack.push(node);
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
@@ -221,23 +219,29 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
     /**
      * {@inheritDoc}
      */
-    public void characters(char[] ch, int start, int length) throws SAXException {
+    public void characters(char[] ch, int start, int length)
+            throws SAXException {
         /**
          * buffer character data; will be processed
          * in endElement and startElement method
          */
-        text.append(ch, start, length);
+        if (textHandler == null) {
+            textHandler = new StringBufferValue();
+        }
+        textHandler.append(ch, start, length);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
-        if (text.length() > 0) {
+    public void endElement(String namespaceURI, String localName, String qName)
+            throws SAXException {
+        if (textHandler != null && textHandler.length() > 0) {
             // there is character data that needs to be added to the current node
-            onTextNode(text.toString());
-            // reset buffer
-            text.setLength(0);
+            onTextNode(textHandler);
+            // reset handler
+            textHandler.dispose();
+            textHandler = null;
         }
         Importer.NodeInfo node = (Importer.NodeInfo) stack.peek();
         try {

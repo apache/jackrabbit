@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.List;
 
 /**
@@ -29,10 +30,14 @@ import java.util.List;
  */
 public interface Importer {
 
-    public static final int IMPORT_UUID_CREATE_NEW = Workspace.IMPORT_UUID_CREATE_NEW;
-    public static final int IMPORT_UUID_COLLISION_REMOVE_EXISTING = Workspace.IMPORT_UUID_COLLISION_REMOVE_EXISTING;
-    public static final int IMPORT_UUID_COLLISION_REPLACE_EXISTING = Workspace.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
-    public static final int IMPORT_UUID_COLLISION_THROW = Workspace.IMPORT_UUID_COLLISION_THROW;
+    public static final int IMPORT_UUID_CREATE_NEW =
+            Workspace.IMPORT_UUID_CREATE_NEW;
+    public static final int IMPORT_UUID_COLLISION_REMOVE_EXISTING =
+            Workspace.IMPORT_UUID_COLLISION_REMOVE_EXISTING;
+    public static final int IMPORT_UUID_COLLISION_REPLACE_EXISTING =
+            Workspace.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
+    public static final int IMPORT_UUID_COLLISION_THROW =
+            Workspace.IMPORT_UUID_COLLISION_THROW;
 
     /**
      * @throws RepositoryException
@@ -113,12 +118,12 @@ public interface Importer {
     public static class PropInfo {
         private QName name;
         private int type;
-        private InternalValue[] values;
+        private TextValue[] values;
 
         public PropInfo() {
         }
 
-        public PropInfo(QName name, int type, InternalValue[] values) {
+        public PropInfo(QName name, int type, TextValue[] values) {
             this.name = name;
             this.type = type;
             this.values = values;
@@ -140,12 +145,48 @@ public interface Importer {
             return type;
         }
 
-        public void setValues(InternalValue[] values) {
+        public void setValues(TextValue[] values) {
             this.values = values;
         }
 
-        public InternalValue[] getValues() {
+        public TextValue[] getValues() {
             return values;
         }
+    }
+
+    /**
+     * <code>TextValue</code> represents a serialized property value read
+     * from a System or Document View XML document.
+     */
+    public interface TextValue {
+        /**
+         * Returns the length of the serialized value.
+         * @return the length of the serialized value
+         * @throws IllegalStateException if the serialized value is not
+         *                               available anymore (e.g. because it
+         *                               been discarded)
+         * @throws IOException if an I/O error occurs
+         */
+        public long length() throws IllegalStateException, IOException;
+
+        /**
+         * Retrieves the serialized value.
+         * @return the serialized value
+         * @throws IllegalStateException if the serialized value is not
+         *                               available anymore (e.g. because it
+         *                               been discarded)
+         * @throws IOException if an I/O error occurs
+         */
+        public String retrieve() throws IllegalStateException, IOException;
+
+        /**
+         * Returns a <code>Reader</code> for reading the serialized value.
+         * @return a <code>Reader</code> for reading the serialized value.
+         * @throws IllegalStateException if the serialized value is not
+         *                               available anymore (e.g. because it
+         *                               been discarded)
+         * @throws IOException if an I/O error occurs
+         */
+        public Reader reader() throws IllegalStateException, IOException;
     }
 }

@@ -471,7 +471,8 @@ public class ValueHelper {
      * @param reader       reader for the string data to be deserialized
      * @param type         type of value
      * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
-     *                     character sequences will be decoded to single space characters each.
+     *                     character sequences will be decoded to single space
+     *                     characters each.
      * @return the deserialized <code>Value</code>
      * @throws IOException          if an i/o error occured during the
      *                              serialization
@@ -487,6 +488,15 @@ public class ValueHelper {
             // base64 encoded binary value;
             // the encodeBlanks flag can be ignored since base64-encoded
             // data cannot contain encoded space characters
+/*
+            // @todo decode to temp file and pass FileInputStream to BinaryValue constructor
+            File tmpFile = File.createTempFile("bin", null);
+            FileOutputStream out = new FileOutputStream(tmpFile);
+            tmpFile.deleteOnExit();
+            Base64.decode(reader, out);
+            out.close();
+            return new BinaryValue(new FileInputStream(tmpFile));
+*/
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             Base64.decode(reader, baos);
             // no need to close ByteArrayOutputStream
