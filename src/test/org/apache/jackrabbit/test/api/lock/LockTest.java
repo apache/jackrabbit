@@ -310,6 +310,30 @@ public class LockTest extends AbstractJCRTest {
     }
 
     /**
+     * Test Lock.isDeep()
+     */
+    public void testIsDeep() throws RepositoryException {
+        // create two lockable nodes
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixLockable);
+        Node n2 = testRootNode.addNode(nodeName2, testNodeType);
+        n2.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock node 1 "undeeply"
+        Lock lock1 = n1.lock(false, true);
+        assertFalse("Lock.isDeep() must be false if the lock has not been set " +
+                "as not deep",
+                lock1.isDeep());
+
+        // lock node 2 "deeply"
+        Lock lock2 = n2.lock(true, true);
+        assertTrue("Lock.isDeep() must be true if the lock has been set " +
+                "as deep",
+                lock2.isDeep());
+    }
+
+    /**
      * Test locks are released when session logs out
      */
     public void testLogout() throws Exception {

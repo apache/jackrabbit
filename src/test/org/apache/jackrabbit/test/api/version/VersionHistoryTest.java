@@ -30,6 +30,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
@@ -94,6 +95,22 @@ public class VersionHistoryTest extends AbstractVersionTest {
         Version rootVersion = vHistory.getRootVersion();
         if (rootVersion == null) {
             fail("The version history must contain an autocreated root version");
+        }
+    }
+
+    /**
+     * Test if initially auto-created root version does not provide any state
+     * information
+     */
+    public void testAutocreatedRootVersionHasNoState() throws
+            RepositoryException {
+
+        Version rootVersion = vHistory.getRootVersion();
+        try {
+            rootVersion.getNode(jcrFrozenNode);
+            fail("The root vesion must not store any state information.");
+        } catch (PathNotFoundException e) {
+            // success
         }
     }
 
