@@ -38,6 +38,8 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import junit.framework.TestCase;
 
@@ -59,6 +61,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
+import org.apache.jackrabbit.rmi.remote.RemoteVersion;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
@@ -472,6 +476,37 @@ public class RemoteAdapterTest extends TestCase {
         Row row = (Row) mock;
         RemoteRow remote = remoteFactory.getRemoteRow(row);
         Row local = localFactory.getRow(remote);
+
+        runTests(local);
+    }
+
+    /**
+     * Tests Version adapters.
+     *
+     * @throws Exception on errors
+     */
+    public void testVersion() throws Exception {
+        prepareTests(Version.class);
+
+        Version version = (Version) mock;
+        RemoteVersion remote = remoteFactory.getRemoteVersion(version);
+        Version local = localFactory.getVersion(null, remote);
+
+        runTests(local);
+    }
+
+    /**
+     * Tests VersionHistory adapters.
+     *
+     * @throws Exception on errors
+     */
+    public void testVersionHistory() throws Exception {
+        prepareTests(VersionHistory.class);
+
+        VersionHistory history = (VersionHistory) mock;
+        RemoteVersionHistory remote =
+            remoteFactory.getRemoteVersionHistory(history);
+        VersionHistory local = localFactory.getVersionHistory(null, remote);
 
         runTests(local);
     }
