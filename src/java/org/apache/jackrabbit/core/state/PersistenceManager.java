@@ -15,7 +15,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 
 /**
@@ -30,50 +29,28 @@ public interface PersistenceManager {
     public void init(WorkspaceConfig wspConfig) throws Exception;
 
     /**
-     * @param uuid
-     * @return
+     * @param state
      * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
-    public PersistentNodeState loadNodeState(String uuid)
+    public void load(PersistentNodeState state)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
      * @param state
-     * @throws ItemStateException
-     */
-    public void reload(PersistentNodeState state) throws ItemStateException;
-
-    /**
-     * @param parentUUID
-     * @param propName
-     * @return
      * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
-    public PersistentPropertyState loadPropertyState(String parentUUID, QName propName)
-            throws NoSuchItemStateException, ItemStateException;
-
-    /**
-     * @param state
-     * @throws ItemStateException
-     */
-    public void reload(PersistentPropertyState state) throws ItemStateException;
-
-    /**
-     * @param uuid
-     * @return
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
-     */
-    public NodeReferences loadNodeReferences(String uuid)
+    public void load(PersistentPropertyState state)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
      * @param refs
+     * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
-    public void reload(NodeReferences refs) throws ItemStateException;
+    public void load(NodeReferences refs)
+            throws NoSuchItemStateException, ItemStateException;
 
     /**
      * @param state
@@ -110,25 +87,4 @@ public interface PersistenceManager {
      * @throws ItemStateException
      */
     public void destroy(NodeReferences refs) throws ItemStateException;
-
-    //------------------------------------------------------< factory methods >
-    /**
-     * @param uuid
-     * @param nodeTypeName
-     * @return
-     */
-    public PersistentNodeState createNodeStateInstance(String uuid, QName nodeTypeName);
-
-    /**
-     * @param name
-     * @param parentUUID
-     * @return
-     */
-    public PersistentPropertyState createPropertyStateInstance(QName name, String parentUUID);
-
-    /**
-     * @param uuid
-     * @return
-     */
-    public NodeReferences createNodeReferencesInstance(String uuid);
 }

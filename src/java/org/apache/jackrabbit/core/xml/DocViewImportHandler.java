@@ -52,6 +52,7 @@ class DocViewImportHandler extends DefaultHandler {
      * Stores character data encountered in <code>{@link #characters(char[], int, int)}</code>
      * as <code>jcr:xmlcharacters</code> property of <code>jcr:xmltext</code>
      * child node.
+     *
      * @param parent
      * @param text
      * @throws SAXException

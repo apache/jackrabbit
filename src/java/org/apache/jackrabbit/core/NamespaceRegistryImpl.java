@@ -199,6 +199,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
 
     /**
      * Returns a prefix that is unique among the already registered prefixes.
+     *
      * @param uriHint namespace uri that serves as hint for the prefix generation
      * @return a unique prefix
      */

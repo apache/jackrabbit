@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.jndi.provider;
-
-import javax.naming.Context;
-import javax.naming.NamingException;
-import javax.naming.spi.InitialContextFactory;
-import java.util.Hashtable;
+package org.apache.jackrabbit.core.state.tx;
 
 /**
- * <code>DummyInitialContextFactory</code> ...
+ * Listener on a transaction. Will receive notifications about commit
+ * and rollback actions.
+ *
+ * @see Transaction
  */
-public class DummyInitialContextFactory implements InitialContextFactory {
+public interface TransactionListener {
 
     /**
-     * @see InitialContextFactory#getInitialContext(java.util.Hashtable)
+     * Transaction was committed
+     *
+     * @param tx transaction that was committed
      */
-    public Context getInitialContext(Hashtable environment) throws NamingException {
-        return new DummyContext(environment);
-    }
+    public void transactionCommitted(Transaction tx);
+
+    /**
+     * Transaction was rolled back
+     *
+     * @param tx transaction that was rolled back
+     */
+    public void transactionRolledBack(Transaction tx);
 }

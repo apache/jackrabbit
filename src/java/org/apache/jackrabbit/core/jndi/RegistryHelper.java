@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.core.jndi;
 
-import javax.naming.NamingException;
-import javax.naming.Context;
 import javax.jcr.RepositoryException;
+import javax.naming.Context;
+import javax.naming.NamingException;
 
 /**
  * <code>RegistryHelper</code> ...
@@ -31,21 +31,20 @@ public class RegistryHelper {
     }
 
     /**
-     *
-     * @param ctx context where the repository should be registered (i.e. bound)
-     * @param name the name to register the repository with
+     * @param ctx            context where the repository should be registered (i.e. bound)
+     * @param name           the name to register the repository with
      * @param configFilePath path to the configuration file of the repository
-     * @param repHomeDir repository home directory
-     * @param overwrite if <code>true</code>, any existing binding with the given
-     * name will be overwritten; otherwise a <code>NamingException</code> will
-     * be thrown if the name is already bound
+     * @param repHomeDir     repository home directory
+     * @param overwrite      if <code>true</code>, any existing binding with the given
+     *                       name will be overwritten; otherwise a <code>NamingException</code> will
+     *                       be thrown if the name is already bound
      * @throws NamingException
      * @throws RepositoryException
      */
     public static void registerRepository(Context ctx, String name,
-                                         String configFilePath,
-                                         String repHomeDir,
-                                         boolean overwrite)
+                                          String configFilePath,
+                                          String repHomeDir,
+                                          boolean overwrite)
             throws NamingException, RepositoryException {
         Object obj = BindableRepository.create(configFilePath, repHomeDir);
         if (overwrite) {
@@ -56,8 +55,7 @@ public class RegistryHelper {
     }
 
     /**
-     *
-     * @param ctx context where the repository should be unregistered (i.e. unbound)
+     * @param ctx  context where the repository should be unregistered (i.e. unbound)
      * @param name the name of the repository to unregister
      * @throws NamingException
      */

@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.store.InputStream;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.lucene.store.InputStream;
 
 import java.io.IOException;
 
@@ -72,7 +72,7 @@ class FileSystemInputStream extends InputStream {
     }
 
     public Object clone() {
-        FileSystemInputStream clone = (FileSystemInputStream)super.clone();
+        FileSystemInputStream clone = (FileSystemInputStream) super.clone();
         // decouple from this
         clone.in = null;
         clone.position = 0;

@@ -77,7 +77,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
 
     protected String baseVersionID;
 
-    protected final ItemId id;
+    protected ItemId id;
 
     /**
      * Listeners (soft references)
@@ -85,7 +85,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     protected final transient Map listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.SOFT, ReferenceMap.SOFT));
 
     // the backing persistent item state (may be null)
-    private transient ItemState overlayedState;
+    protected transient ItemState overlayedState;
 
     /**
      * Protected constructor
@@ -121,6 +121,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected ItemState(ItemState overlayedState, int initialStatus) {
         switch (initialStatus) {
+            case STATUS_EXISTING:
             case STATUS_EXISTING_MODIFIED:
             case STATUS_EXISTING_REMOVED:
                 status = initialStatus;
@@ -130,13 +131,22 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 log.error(msg);
                 throw new IllegalArgumentException(msg);
         }
-        parentUUID = overlayedState.parentUUID;
-        baseVersionID = overlayedState.getBaseVersionID();
-        lastModified = overlayedState.getLastModified();
-        id = overlayedState.getId();
         this.overlayedState = overlayedState;
         // add this transient state as a listener on the overlayed state
         this.overlayedState.addListener(this);
+    }
+
+    /**
+     * Copy state from another state. Copies over all state variables from
+     * another state.
+     *
+     * @param state state to copy
+     */
+    protected void copy(ItemState state) {
+        parentUUID = state.parentUUID;
+        baseVersionID = state.getBaseVersionID();
+        lastModified = state.getLastModified();
+        id = state.getId();
     }
 
     /**
@@ -146,11 +156,18 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     void onDisposed() {
         // prepare this instance so it can be gc'ed
         listeners.clear();
+        disconnect();
+        status = STATUS_UNDEFINED;
+    }
+
+    /**
+     * Disconnect this state from the underlying overlayed state.
+     */
+    protected void disconnect() {
         if (overlayedState != null) {
             overlayedState.removeListener(this);
             overlayedState = null;
         }
-        status = STATUS_UNDEFINED;
     }
 
     /**
@@ -193,9 +210,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
 
     /**
      * Notify the listeners that the persistent state this object is
-     * representing has been changed.
+     * representing has been updated.
      */
-    protected void notifyStateModified() {
+    protected void notifyStateUpdated() {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemStateListener[] la = new ItemStateListener[listeners.size()];
         Iterator iter = listeners.values().iterator();

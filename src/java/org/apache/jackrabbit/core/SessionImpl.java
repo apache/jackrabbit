@@ -15,11 +15,13 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.*;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -95,13 +97,14 @@ public class SessionImpl implements Session {
     protected final TransientNamespaceMappings nsMappings;
 
     /**
-     * Package private constructor.
+     * Protected constructor.
      *
      * @param rep
      * @param credentials
      * @param wspConfig
      */
-    SessionImpl(RepositoryImpl rep, Credentials credentials, WorkspaceConfig wspConfig)
+    protected SessionImpl(RepositoryImpl rep, Credentials credentials,
+                          WorkspaceConfig wspConfig)
             throws RepositoryException {
         this.rep = rep;
 
@@ -129,10 +132,11 @@ public class SessionImpl implements Session {
         String wspName = wspConfig.getName();
         wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
                 rep.getWorkspaceReferenceManager(wspName), rep, this);
-        itemStateMgr = new SessionItemStateManager(rep.getRootNodeUUID(), wsp.getPersistentStateManager(), getNamespaceResolver());
+
+        itemStateMgr = createSessionItemStateManager(wsp.getPersistentStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
-        itemMgr = new ItemManager(itemStateMgr, hierMgr, this, ntMgr.getRootNodeDefinition(), rep.getRootNodeUUID());
-        accessMgr = new AccessManagerImpl(credentials, hierMgr, getNamespaceResolver());
+        itemMgr = createItemManager(itemStateMgr, hierMgr);
+        accessMgr = createAccessManager(credentials, hierMgr);
     }
 
     /**
@@ -156,7 +160,39 @@ public class SessionImpl implements Session {
                 rep.getWorkspaceReferenceManager(wspName), rep, this);
         itemStateMgr = new SessionItemStateManager(rep.getRootNodeUUID(), wsp.getPersistentStateManager(), getNamespaceResolver());
         hierMgr = itemStateMgr.getHierarchyMgr();
-        itemMgr = new ItemManager(itemStateMgr, hierMgr, this, ntMgr.getRootNodeDefinition(), rep.getRootNodeUUID());
+        itemMgr = createItemManager(itemStateMgr, hierMgr);
+    }
+
+    /**
+     * Create the session item state manager.
+     *
+     * @return session item state manager
+     */
+    protected SessionItemStateManager createSessionItemStateManager(PersistentItemStateProvider provider) {
+
+        return new SessionItemStateManager(rep.getRootNodeUUID(), provider, getNamespaceResolver());
+    }
+
+    /**
+     * Create the item manager.
+     *
+     * @return item manager
+     */
+    protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
+                                            HierarchyManager hierMgr) {
+
+        return new ItemManager(itemStateMgr, hierMgr, this,
+                ntMgr.getRootNodeDefinition(), rep.getRootNodeUUID());
+    }
+
+    /**
+     * Create the access manager.
+     *
+     * @return access manager
+     */
+    protected AccessManagerImpl createAccessManager(Credentials credentials,
+                                                    HierarchyManager hierMgr) {
+        return new AccessManagerImpl(credentials, hierMgr, getNamespaceResolver());
     }
 
     /**
@@ -164,7 +200,7 @@ public class SessionImpl implements Session {
      *
      * @return the <code>AccessManager</code> associated with this session
      */
-    AccessManagerImpl getAccessManager() {
+    protected AccessManagerImpl getAccessManager() {
         return accessMgr;
     }
 
@@ -182,7 +218,7 @@ public class SessionImpl implements Session {
      *
      * @return the <code>ItemManager</code>
      */
-    ItemManager getItemManager() {
+    protected ItemManager getItemManager() {
         return itemMgr;
     }
 
@@ -200,7 +236,7 @@ public class SessionImpl implements Session {
      *
      * @return the <code>SessionItemStateManager</code> associated with this session
      */
-    SessionItemStateManager getItemStateManager() {
+    protected SessionItemStateManager getItemStateManager() {
         return itemStateMgr;
     }
 
@@ -209,8 +245,18 @@ public class SessionImpl implements Session {
      *
      * @return the <code>HierarchyManager</code> associated with this session
      */
-    HierarchyManager getHierarchyManager() {
+    protected HierarchyManager getHierarchyManager() {
         return hierMgr;
+    }
+
+    /**
+     * Dispatch events belonging to a save operation.
+     *
+     * @param events events to dispatch as result of a successful save
+     *               operation
+     */
+    protected void dispatch(EventStateCollection events) {
+        events.dispatch();
     }
 
     /**
@@ -223,7 +269,7 @@ public class SessionImpl implements Session {
     void dump(PrintStream ps) throws RepositoryException {
         ps.println("Session: " + (userId == null ? "unknown" : userId) + " (" + this + ")");
         ps.println();
-        itemMgr.dump(ps);
+        getItemManager().dump(ps);
     }
 
     //--------------------------------------------------------------< Session >
@@ -261,7 +307,7 @@ public class SessionImpl implements Session {
      * @see Session#getRootNode
      */
     public Node getRootNode() throws RepositoryException {
-        return (Node) itemMgr.getRootNode();
+        return getItemManager().getRootNode();
     }
 
     /**
@@ -269,7 +315,7 @@ public class SessionImpl implements Session {
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
         try {
-            NodeImpl node = (NodeImpl) itemMgr.getItem(new NodeId(uuid));
+            NodeImpl node = (NodeImpl) getItemManager().getItem(new NodeId(uuid));
             if (node.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
                 return node;
             } else {
@@ -286,7 +332,7 @@ public class SessionImpl implements Session {
      */
     public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
         try {
-            return itemMgr.getItem(Path.create(absPath, getNamespaceResolver(), true));
+            return getItemManager().getItem(Path.create(absPath, getNamespaceResolver(), true));
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(absPath);
         } catch (MalformedPathException mpe) {
@@ -301,7 +347,7 @@ public class SessionImpl implements Session {
      */
     public boolean itemExists(String absPath) {
         try {
-            itemMgr.getItem(Path.create(absPath, getNamespaceResolver(), true));
+            getItemManager().getItem(Path.create(absPath, getNamespaceResolver(), true));
             return true;
         } catch (RepositoryException re) {
             // fall through...
@@ -315,7 +361,7 @@ public class SessionImpl implements Session {
      * @see Session#save
      */
     public void save() throws AccessDeniedException, LockException, ConstraintViolationException, InvalidItemStateException, RepositoryException {
-        itemMgr.getRootNode().save();
+        getItemManager().getRootNode().save();
     }
 
     /**
@@ -324,17 +370,17 @@ public class SessionImpl implements Session {
     public void refresh(boolean keepChanges) throws RepositoryException {
         if (!keepChanges) {
             // optimization
-            itemStateMgr.disposeAllTransientItemStates();
+            getItemStateManager().disposeAllTransientItemStates();
             return;
         }
-        itemMgr.getRootNode().refresh(keepChanges);
+        getItemManager().getRootNode().refresh(keepChanges);
     }
 
     /**
      * @see Session#hasPendingChanges
      */
     public boolean hasPendingChanges() throws RepositoryException {
-        return itemStateMgr.hasAnyTransientItemStates();
+        return getItemStateManager().hasAnyTransientItemStates();
     }
 
     /**
@@ -355,12 +401,12 @@ public class SessionImpl implements Session {
             srcPath = Path.create(srcAbsPath, getNamespaceResolver(), true);
             srcName = srcPath.getNameElement();
             srcParentPath = srcPath.getAncestor(1);
-            ItemImpl item = itemMgr.getItem(srcPath);
+            ItemImpl item = getItemManager().getItem(srcPath);
             if (!item.isNode()) {
                 throw new PathNotFoundException(srcAbsPath);
             }
             targetNode = (NodeImpl) item;
-            srcParentNode = (NodeImpl) itemMgr.getItem(srcParentPath);
+            srcParentNode = (NodeImpl) getItemManager().getItem(srcParentPath);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(srcAbsPath);
         } catch (MalformedPathException mpe) {
@@ -377,7 +423,7 @@ public class SessionImpl implements Session {
             destPath = Path.create(destAbsPath, getNamespaceResolver(), true);
             destName = destPath.getNameElement();
             destParentPath = destPath.getAncestor(1);
-            destParentNode = (NodeImpl) itemMgr.getItem(destParentPath);
+            destParentNode = (NodeImpl) getItemManager().getItem(destParentPath);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(destAbsPath);
         } catch (MalformedPathException mpe) {
@@ -396,7 +442,7 @@ public class SessionImpl implements Session {
         // check for name collisions
 
         try {
-            ItemImpl item = itemMgr.getItem(destPath);
+            ItemImpl item = getItemManager().getItem(destPath);
             if (!item.isNode()) {
                 // there's already a property with that name
                 throw new ItemExistsException(item.safeGetJCRPath());
@@ -461,7 +507,7 @@ public class SessionImpl implements Session {
     public ContentHandler getImportContentHandler(String parentAbsPath) throws PathNotFoundException, RepositoryException {
         Item item = null;
         try {
-            item = itemMgr.getItem(Path.create(parentAbsPath, getNamespaceResolver(), true));
+            item = getItemManager().getItem(Path.create(parentAbsPath, getNamespaceResolver(), true));
         } catch (MalformedPathException mpe) {
             String msg = parentAbsPath + ": invalid path";
             log.error(msg, mpe);
@@ -521,7 +567,7 @@ public class SessionImpl implements Session {
      */
     public void logout() {
         // discard all transient changes
-        itemStateMgr.disposeAllTransientItemStates();
+        getItemStateManager().disposeAllTransientItemStates();
 
         // @todo invalidate session, release session-scoped locks, free resources, prepare to get gc'ed etc.
 

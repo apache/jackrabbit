@@ -16,8 +16,8 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.search.*;
 import org.apache.log4j.Logger;

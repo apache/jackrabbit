@@ -47,10 +47,8 @@ public class PropertyState extends ItemState {
      */
     PropertyState(PropertyState overlayedState, int initialStatus) {
         super(overlayedState, initialStatus);
-        name = overlayedState.getName();
-        type = overlayedState.getType();
-        defId = overlayedState.getDefinitionId();
-        values = overlayedState.getValues();
+
+        copy(overlayedState);
     }
 
     /**
@@ -66,6 +64,19 @@ public class PropertyState extends ItemState {
         type = PropertyType.UNDEFINED;
         values = new InternalValue[0];
     }
+
+    /**
+     * @see ItemState#copy
+     */
+    protected void copy(ItemState state) {
+        super.copy(state);
+
+        PropertyState propState = (PropertyState) state;
+        name = propState.getName();
+        type = propState.getType();
+        defId = propState.getDefinitionId();
+        values = propState.getValues();
+    }    
 
     //-------------------------------------------------------< public methods >
     /**

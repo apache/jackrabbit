@@ -55,17 +55,17 @@ public class InternalFrozenNode extends InternalFreeze {
     /**
      * the frozen uuid of the original node
      */
-    private String frozenUUID=null;
+    private String frozenUUID = null;
 
     /**
      * the frozen primary type of the orginal node
      */
-    private QName frozenPrimaryType=null;
+    private QName frozenPrimaryType = null;
 
     /**
      * the frozen list of mixin types of the original node
      */
-    private QName[] frozenMixinTypes=null;
+    private QName[] frozenMixinTypes = null;
 
     /**
      * Creates a new frozen node based on the given persistance node.
@@ -109,10 +109,10 @@ public class InternalFrozenNode extends InternalFreeze {
         frozenProperties = (PersistentProperty[]) propList.toArray(new PersistentProperty[propList.size()]);
 
         // do some checks
-        if (frozenMixinTypes==null) {
-            frozenMixinTypes=new QName[0];
+        if (frozenMixinTypes == null) {
+            frozenMixinTypes = new QName[0];
         }
-        if (frozenPrimaryType==null) {
+        if (frozenPrimaryType == null) {
             throw new RepositoryException("Illegal frozen node. Must have 'frozenPrimaryType'");
         }
         // init the frozen child nodes

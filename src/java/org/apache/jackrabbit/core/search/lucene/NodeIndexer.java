@@ -15,27 +15,19 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
+import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.search.NamespaceMappings;
+import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import javax.jcr.PropertyType;
 import javax.jcr.NamespaceException;
 import javax.jcr.PathNotFoundException;
-import java.util.List;
-import java.util.Iterator;
+import javax.jcr.PropertyType;
 import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  *

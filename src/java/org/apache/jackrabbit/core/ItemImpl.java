@@ -1087,7 +1087,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
 
         // all changes are persisted, now dispatch events
-        events.dispatch();
+        // forward this to the session to let it decide on the right time for those
+        // events to be dispatched in case of transactional support
+        session.dispatch(events);
     }
 
     /**

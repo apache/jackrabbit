@@ -46,6 +46,14 @@ public class AccessManagerImpl extends AbstractAccessManager {
     }
 
     /**
+     * Copy constructor
+     */
+    AccessManagerImpl(AccessManagerImpl other) {
+        this.hierMgr = other.hierMgr;
+        this.nsResolver = other.nsResolver;
+    }
+
+    /**
      * @param id
      * @param permissions
      * @return

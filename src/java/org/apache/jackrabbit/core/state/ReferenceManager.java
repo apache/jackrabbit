@@ -58,10 +58,11 @@ public class ReferenceManager {
         NodeReferences refs;
         try {
             // load persisted references
-            refs = persistMgr.loadNodeReferences(targetId.getUUID());
+            refs = new NodeReferences(new NodeId(targetId.getUUID()));
+            persistMgr.load(refs);
         } catch (NoSuchItemStateException nsise) {
             // does not exist, create new
-            refs = persistMgr.createNodeReferencesInstance(targetId.getUUID());
+            refs = new NodeReferences(new NodeId(targetId.getUUID()));
         } catch (ItemStateException ise) {
             String msg = "error while loading references";
             log.error(msg, ise);

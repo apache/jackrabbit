@@ -15,10 +15,10 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
+import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.Directory;
-import org.apache.jackrabbit.core.fs.FileSystem;
 
 import java.io.IOException;
 

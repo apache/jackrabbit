@@ -17,8 +17,8 @@ package org.apache.jackrabbit.core.fs.local;
 
 import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 
-import java.io.RandomAccessFile;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 /**
  * Implements a buffered output stream on a random access file.
@@ -58,7 +58,7 @@ class RAFOutputStream extends RandomAccessOutputStream {
     /**
      * Contructs a new output stream with the given buffer size.
      *
-     * @param raf the underlying <code>RandomAccessFile</code>.
+     * @param raf  the underlying <code>RandomAccessFile</code>.
      * @param size the size of the buffer.
      */
     public RAFOutputStream(RandomAccessFile raf, int size) throws IOException {

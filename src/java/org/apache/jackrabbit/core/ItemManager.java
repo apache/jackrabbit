@@ -50,6 +50,9 @@ import java.util.Map;
  * <li>maintaining a cache of the item instances it created.
  * <li>checking access rights of associated <code>Session</code> in all methods.
  * </ul>
+ * <p/>
+ * If the parent <code>Session</code> is an <code>XASession</code>, there is
+ * one <code>ItemManager</code> instance per started global transaction.
  */
 public class ItemManager implements ItemLifeCycleListener {
 

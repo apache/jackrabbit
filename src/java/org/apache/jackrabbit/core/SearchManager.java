@@ -15,6 +15,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.search.NamespaceMappings;
@@ -24,8 +26,6 @@ import org.apache.jackrabbit.core.search.lucene.*;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateProvider;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -38,12 +38,7 @@ import javax.jcr.access.Permission;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventType;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Collections;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
@@ -215,7 +210,7 @@ public class SearchManager implements SynchronousEventListener {
         }
         if (log.isDebugEnabled()) {
             log.debug("onEvent: indexing finished in "
-                    + String.valueOf(System.currentTimeMillis() - time) 
+                    + String.valueOf(System.currentTimeMillis() - time)
                     + " ms.");
         }
     }

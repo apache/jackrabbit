@@ -23,10 +23,9 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
-import org.apache.jackrabbit.core.state.PersistentItemStateManager;
-import org.apache.jackrabbit.core.state.ReferenceManager;
+import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.tx.TransactionManager;
+import org.apache.jackrabbit.core.state.tx.XASessionImpl;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.log4j.Logger;
@@ -82,6 +81,7 @@ public class RepositoryImpl implements Repository, EventListener {
     private final NamespaceRegistryImpl nsReg;
     private final NodeTypeRegistry ntReg;
     private final VersionManager vMgr;
+    private final TransactionManager txMgr;
 
     // configuration of the repository
     private final RepositoryConfig repConfig;
@@ -202,7 +202,7 @@ public class RepositoryImpl implements Repository, EventListener {
                 }
             } else {
                 // create new uuid
-                UUID rootUUID = UUID.randomUUID();	// version 4 uuid
+                UUID rootUUID = UUID.randomUUID();     // version 4 uuid
                 rootNodeUUID = rootUUID.toString();
                 try {
                     // persist uuid of the repository's root node
@@ -240,6 +240,17 @@ public class RepositoryImpl implements Repository, EventListener {
             String msg = "failed to access repository state";
             log.error(msg, fse);
             throw new RepositoryException(msg, fse);
+        }
+
+        // setup internal transaction manager
+        // @todo rewrite to use file system abstraction (FileSystem interface)
+        try {
+            File txRootDir = new File(repConfig.getHomeDir(), "tx");
+            txMgr = new TransactionManager(new File("tx"));
+        } catch (IOException ioe) {
+            String msg = "failed to initialize internal transaction manager";
+            log.error(msg, ioe);
+            throw new RepositoryException(msg, ioe);
         }
 
         // workspaces
@@ -280,8 +291,10 @@ public class RepositoryImpl implements Repository, EventListener {
                         SYSTEM_ROOT_NAME.toJCRName(verSession.getNamespaceResolver()),
                         SYSTEM_ROOT_NAME.toJCRName(verSession.getNamespaceResolver()));
             }
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException("Error: " + e.toString());
+        } catch (NoPrefixDeclaredException npde) {
+            String msg = "failed to initialize version manager";
+            log.error(msg, npde);
+            throw new RepositoryException(msg, npde);
         }
         vMgr = new VersionManager(verSession);
 
@@ -381,7 +394,7 @@ public class RepositoryImpl implements Repository, EventListener {
         return rootNodeUUID;
     }
 
-    synchronized PersistentItemStateManager getWorkspaceStateManager(String workspaceName)
+    synchronized PersistentItemStateProvider getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
         if (disposed) {
@@ -393,8 +406,8 @@ public class RepositoryImpl implements Repository, EventListener {
             throw new NoSuchWorkspaceException(workspaceName);
         }
         // get/create per named workspace (i.e. per physical storage) item state manager
-        PersistentItemStateManager stateMgr =
-                (PersistentItemStateManager) wspStateMgrs.get(workspaceName);
+        PersistentItemStateProvider stateMgr =
+                (PersistentItemStateProvider) wspStateMgrs.get(workspaceName);
         if (stateMgr == null) {
             // create state manager
             try {
@@ -481,7 +494,7 @@ public class RepositoryImpl implements Repository, EventListener {
                 }
                 ItemStateProvider stateProvider = getWorkspaceStateManager(workspaceName);
                 SystemSession s = getSystemSession(workspaceName);
-                searchMgr = new SearchManager(stateProvider, s.hierMgr, s,
+                searchMgr = new SearchManager(stateProvider, s.getHierarchyManager(), s,
                         wspConfig.getFileSystem(), wspConfig.getSearchIndexDir());
             } catch (IOException e) {
                 throw new RepositoryException("Exception opening search index.", e);
@@ -674,9 +687,8 @@ public class RepositoryImpl implements Repository, EventListener {
             return new SessionImpl(this, ANONYMOUS_CREDENTIALS, wspConfig);
         } else if (credentials instanceof SimpleCredentials) {
             // username/password credentials
-
             // @todo implement authentication/authorization
-            return new SessionImpl(this, credentials, wspConfig);
+            return new XASessionImpl(this, credentials, wspConfig, txMgr);
         } else {
             String msg = "login failed: incompatible credentials";
             log.error(msg);

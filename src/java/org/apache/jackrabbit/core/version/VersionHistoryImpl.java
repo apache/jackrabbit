@@ -17,10 +17,10 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
 
+import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Item;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;

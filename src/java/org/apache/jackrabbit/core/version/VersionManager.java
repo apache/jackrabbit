@@ -19,7 +19,7 @@ import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PersistentItemStateManager;
+import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
 import org.apache.jackrabbit.core.state.PersistentNodeState;
 import org.apache.log4j.Logger;
 
@@ -119,7 +119,7 @@ public class VersionManager {
     /**
      * the state manager for the version storage
      */
-    private PersistentItemStateManager stateMgr;
+    private PersistentItemStateProvider stateMgr;
 
     /**
      * the nodetype manager for the version storage

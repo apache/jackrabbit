@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.core.fs;
 
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Extends the regular <code>java.io.OutputStream</code> with a random
@@ -28,6 +28,7 @@ public abstract class RandomAccessOutputStream extends OutputStream {
     /**
      * Sets the current position in the resource where the next write
      * will occur.
+     *
      * @param position the new position in the resource.
      * @throws IOException if an error occurs while seeking to the position.
      */

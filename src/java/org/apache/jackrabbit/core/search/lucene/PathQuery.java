@@ -15,13 +15,13 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.index.Term;
-import org.apache.jackrabbit.core.search.PathQueryNode;
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.search.PathQueryNode;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
 
 /**
  * Implements a query for a path with a match type.

@@ -67,7 +67,7 @@ public class WorkspaceImpl implements Workspace {
      * The persistent state mgr associated with the workspace represented by <i>this</i>
      * <code>Workspace</code> instance.
      */
-    protected final PersistentItemStateManager persistentStateMgr;
+    protected final PersistentItemStateProvider persistentStateMgr;
 
     /**
      * The reference mgr associated with the workspace represented by <i>this</i>
@@ -105,7 +105,7 @@ public class WorkspaceImpl implements Workspace {
      * @param rep
      * @param session
      */
-    WorkspaceImpl(WorkspaceConfig wspConfig, PersistentItemStateManager persistentStateMgr,
+    WorkspaceImpl(WorkspaceConfig wspConfig, PersistentItemStateProvider persistentStateMgr,
                   ReferenceManager refMgr, RepositoryImpl rep, SessionImpl session) {
         this.wspConfig = wspConfig;
         this.rep = rep;
@@ -119,7 +119,7 @@ public class WorkspaceImpl implements Workspace {
         return rep;
     }
 
-    public PersistentItemStateManager getPersistentStateManager() {
+    public PersistentItemStateProvider getPersistentStateManager() {
         return persistentStateMgr;
     }
 
@@ -137,7 +137,7 @@ public class WorkspaceImpl implements Workspace {
     void dump(PrintStream ps) throws RepositoryException {
         ps.println("Workspace: " + wspConfig.getName() + " (" + this + ")");
         ps.println();
-        persistentStateMgr.dump(ps);
+        //persistentStateMgr.dump(ps);
     }
 
     /**
@@ -170,7 +170,7 @@ public class WorkspaceImpl implements Workspace {
     protected static PersistentNodeState getNodeState(String nodePath,
                                                       NamespaceResolver nsResolver,
                                                       HierarchyManagerImpl hierMgr,
-                                                      PersistentItemStateManager stateMgr)
+                                                      PersistentItemStateProvider stateMgr)
             throws PathNotFoundException, RepositoryException {
         try {
             return getNodeState(Path.create(nodePath, nsResolver, true), hierMgr, stateMgr);
@@ -193,7 +193,7 @@ public class WorkspaceImpl implements Workspace {
     protected static PersistentNodeState getParentNodeState(String path,
                                                             NamespaceResolver nsResolver,
                                                             HierarchyManagerImpl hierMgr,
-                                                            PersistentItemStateManager stateMgr)
+                                                            PersistentItemStateProvider stateMgr)
 
             throws PathNotFoundException, RepositoryException {
         try {
@@ -215,7 +215,7 @@ public class WorkspaceImpl implements Workspace {
      */
     protected static PersistentNodeState getNodeState(Path nodePath,
                                                       HierarchyManagerImpl hierMgr,
-                                                      PersistentItemStateManager stateMgr)
+                                                      PersistentItemStateProvider stateMgr)
             throws PathNotFoundException, RepositoryException {
         try {
             ItemId id = hierMgr.resolvePath(nodePath);
@@ -240,7 +240,7 @@ public class WorkspaceImpl implements Workspace {
      * @throws ItemStateException
      */
     protected static PersistentNodeState getNodeState(NodeId id,
-                                                      PersistentItemStateManager stateMgr)
+                                                      PersistentItemStateProvider stateMgr)
             throws NoSuchItemStateException, ItemStateException {
         return (PersistentNodeState) stateMgr.getItemState(id);
     }
@@ -262,7 +262,7 @@ public class WorkspaceImpl implements Workspace {
                                        NodeTypeRegistry ntReg,
                                        AccessManagerImpl accessMgr,
                                        HierarchyManagerImpl hierMgr,
-                                       PersistentItemStateManager stateMgr)
+                                       PersistentItemStateProvider stateMgr)
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, ItemExistsException, RepositoryException {
 
@@ -340,7 +340,7 @@ public class WorkspaceImpl implements Workspace {
                                           NodeTypeRegistry ntReg,
                                           AccessManagerImpl accessMgr,
                                           HierarchyManagerImpl hierMgr,
-                                          PersistentItemStateManager stateMgr)
+                                          PersistentItemStateProvider stateMgr)
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, RepositoryException {
 
@@ -433,8 +433,8 @@ public class WorkspaceImpl implements Workspace {
                                                      String parentUUID,
                                                      NodeTypeRegistry ntReg,
                                                      HierarchyManagerImpl srcHierMgr,
-                                                     PersistentItemStateManager srcStateMgr,
-                                                     PersistentItemStateManager destStateMgr,
+                                                     PersistentItemStateProvider srcStateMgr,
+                                                     PersistentItemStateProvider destStateMgr,
                                                      boolean clone)
             throws RepositoryException {
         PersistentNodeState newState;
@@ -489,8 +489,8 @@ public class WorkspaceImpl implements Workspace {
                                                              QName propName,
                                                              NodeTypeRegistry ntReg,
                                                              HierarchyManagerImpl srcHierMgr,
-                                                             PersistentItemStateManager srcStateMgr,
-                                                             PersistentItemStateManager destStateMgr)
+                                                             PersistentItemStateProvider srcStateMgr,
+                                                             PersistentItemStateProvider destStateMgr)
             throws RepositoryException {
         // @todo special handling required for properties with special semantics (e.g. those defined by mix:versionable, mix:lockable, et.al.)
         PersistentPropertyState newState;
@@ -526,10 +526,10 @@ public class WorkspaceImpl implements Workspace {
     }
 
     private static void internalCopy(String srcAbsPath,
-                                     PersistentItemStateManager srcStateMgr,
+                                     PersistentItemStateProvider srcStateMgr,
                                      HierarchyManagerImpl srcHierMgr,
                                      String destAbsPath,
-                                     PersistentItemStateManager destStateMgr,
+                                     PersistentItemStateProvider destStateMgr,
                                      HierarchyManagerImpl destHierMgr,
                                      AccessManagerImpl accessMgr,
                                      NamespaceResolver nsResolver,
@@ -688,7 +688,7 @@ public class WorkspaceImpl implements Workspace {
             ItemExistsException, RepositoryException {
         // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
-        PersistentItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
+        PersistentItemStateProvider srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
         // FIXME need to setup a hierarchy manager for source workspace
         HierarchyManagerImpl srcHierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
         // do cross-workspace copy

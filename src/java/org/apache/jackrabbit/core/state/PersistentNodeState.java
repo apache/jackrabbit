@@ -25,40 +25,96 @@ import java.io.ObjectOutputStream;
  * <code>PersistentNodeState</code> represents the persistent state of a
  * <code>Node</code>.
  */
-public abstract class PersistentNodeState extends NodeState implements PersistableItemState {
+public class PersistentNodeState extends NodeState implements PersistableItemState {
 
     static final long serialVersionUID = -371249062564922125L;
 
     protected final transient PersistenceManager persistMgr;
 
     /**
-     * Package private constructor
+     * Public constructor
      *
-     * @param uuid         the UUID of the this node
-     * @param nodeTypeName node type of this node
-     * @param parentUUID   the UUID of the parent node
-     * @param persistMgr   the persistence manager
+     * @param uuid       the UUID of the this node
+     * @param persistMgr the persistence manager
      */
-    protected PersistentNodeState(String uuid, QName nodeTypeName, String parentUUID, PersistenceManager persistMgr) {
-        super(uuid, nodeTypeName, parentUUID, STATUS_NEW);
+    public PersistentNodeState(String uuid, PersistenceManager persistMgr) {
+        super(uuid, null, null, STATUS_NEW);
         this.persistMgr = persistMgr;
     }
 
+    /**
+     * Constructor used for overlay mechanism.
+     *
+     * @param overlayedState other node state to overlay
+     * @param initialStatus  initial status
+     * @param persistMgr     persistence manager
+     */
+    protected PersistentNodeState(PersistentNodeState overlayedState,
+                                  int initialStatus,
+                                  PersistenceManager persistMgr) {
+
+        super(overlayedState, initialStatus);
+
+        this.persistMgr = persistMgr;
+    }
+
+    /**
+     * Set the node type name. Needed for deserialization and should therefore
+     * not change the internal status.
+     *
+     * @param nodeTypeName node type name
+     */
+    public void setNodeTypeName(QName nodeTypeName) {
+        this.nodeTypeName = nodeTypeName;
+    }
+
     //-------------------------------------------------< PersistableItemState >
+
     /**
      * @see PersistableItemState#reload
      */
-    public abstract void reload() throws ItemStateException;
+    public synchronized void reload() throws ItemStateException {
+        status = STATUS_UNDEFINED;
+        getPersistenceManager().load(this);
+        // reset status
+        status = STATUS_EXISTING;
+    }
 
     /**
      * @see PersistableItemState#store
      */
-    public abstract void store() throws ItemStateException;
+    public synchronized void store() throws ItemStateException {
+        getPersistenceManager().store(this);
+        // notify listeners
+        if (status == STATUS_NEW) {
+            notifyStateCreated();
+        } else {
+            notifyStateUpdated();
+        }
+        // reset status
+        status = STATUS_EXISTING;
+    }
 
     /**
      * @see PersistableItemState#destroy
      */
-    public abstract void destroy() throws ItemStateException;
+    public synchronized void destroy() throws ItemStateException {
+        getPersistenceManager().destroy(this);
+        // notify listeners
+        notifyStateDestroyed();
+        // reset status
+        status = STATUS_UNDEFINED;
+    }
+
+    /**
+     * Return the persistence manager to use for loading and storing data. May
+     * be overridden by subclasses.
+     *
+     * @return persistence manager
+     */
+    protected PersistenceManager getPersistenceManager() {
+        return persistMgr;
+    }
 
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {

@@ -43,7 +43,7 @@ public class PersistentNode {
     /**
      * the state manager
      */
-    private final PersistentItemStateManager stateMgr;
+    private final PersistentItemStateProvider stateMgr;
 
     /**
      * the node type manager
@@ -62,7 +62,7 @@ public class PersistentNode {
      * @param ntMgr
      * @param nodeState
      */
-    protected PersistentNode(PersistentItemStateManager statemgr,
+    protected PersistentNode(PersistentItemStateProvider statemgr,
                              NodeTypeManagerImpl ntMgr,
                              PersistentNodeState nodeState) {
         this.nodeState = nodeState;

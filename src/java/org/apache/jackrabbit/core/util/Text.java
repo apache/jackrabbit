@@ -16,8 +16,8 @@
 package org.apache.jackrabbit.core.util;
 
 import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * This Class provides some text related utilities

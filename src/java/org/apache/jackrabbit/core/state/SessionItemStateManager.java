@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 The Apache Software Foundation.
-   *
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,9 +29,8 @@ public class SessionItemStateManager implements ItemStateProvider {
 
     private static Logger log = Logger.getLogger(SessionItemStateManager.class);
 
-    private final PersistentItemStateManager persistentStateMgr;
+    private final PersistentItemStateProvider persistentStateMgr;
     private final TransientItemStateManager transientStateMgr;
-
     private final HierarchyManager hierMgr;
 
     /**
@@ -41,7 +40,7 @@ public class SessionItemStateManager implements ItemStateProvider {
      * @param persistentStateMgr
      * @param nsResolver
      */
-    public SessionItemStateManager(String rootNodeUUID, PersistentItemStateManager persistentStateMgr, NamespaceResolver nsResolver) {
+    public SessionItemStateManager(String rootNodeUUID, PersistentItemStateProvider persistentStateMgr, NamespaceResolver nsResolver) {
         this.persistentStateMgr = persistentStateMgr;
         // create transient item state manager
         transientStateMgr = new TransientItemStateManager();
@@ -152,7 +151,7 @@ public class SessionItemStateManager implements ItemStateProvider {
     public void dump(PrintStream ps) {
         ps.println("SessionItemStateManager (" + this + ")");
         ps.println();
-        persistentStateMgr.dump(ps);
+        //persistentStateMgr.dump(ps);
         ps.println();
         transientStateMgr.dump(ps);
         ps.println();
@@ -281,7 +280,7 @@ public class SessionItemStateManager implements ItemStateProvider {
                  * is a descendant of any of the specified parentId's paths
                  */
                 for (int i = 0; i < paths.length; i++) {
-                    Path p0 = paths[i];	// path to transient state
+                    Path p0 = paths[i]; // path to transient state
                     // walk through array of the specified parentId's paths
                     for (int j = 0; j < parentPaths.length; j++) {
                         Path p1 = parentPaths[j]; // path to specified parentId
@@ -316,7 +315,7 @@ public class SessionItemStateManager implements ItemStateProvider {
                          */
                         Path[] pa = hierMgr.getAllPaths(new NodeId((String) iterUUIDs.next()));
                         for (int k = 0; k < pa.length; k++) {
-                            Path p0 = pa[k];	// path to removed parent
+                            Path p0 = pa[k];   // path to removed parent
                             // walk through array of the specified parentId's paths
                             for (int j = 0; j < parentPaths.length; j++) {
                                 Path p1 = parentPaths[j]; // path to specified parentId
@@ -351,11 +350,6 @@ public class SessionItemStateManager implements ItemStateProvider {
         }
 
         return descendants.values().iterator();
-/*
-	ArrayList descendents = new ArrayList();
-	collectDescendantItemStates(parentId, descendents);
-	return Collections.unmodifiableList(descendents).iterator();
-*/
     }
 
     /**
@@ -391,7 +385,7 @@ public class SessionItemStateManager implements ItemStateProvider {
                  * is a descendant of any of the specified parentId's paths
                  */
                 for (int i = 0; i < paths.length; i++) {
-                    Path p0 = paths[i];	// path to transient state in attic
+                    Path p0 = paths[i]; // path to transient state in attic
                     // walk through array of the specified parentId's paths
                     for (int j = 0; j < parentPaths.length; j++) {
                         Path p1 = parentPaths[j]; // path to specified parentId
@@ -416,11 +410,6 @@ public class SessionItemStateManager implements ItemStateProvider {
         }
 
         return descendants.values().iterator();
-/*
-	ArrayList descendents = new ArrayList();
-	collectDescendantItemStatesInAttic(parentId, descendents);
-	return Collections.unmodifiableList(descendents).iterator();
-*/
     }
 
     //------< methods for creating & discarding transient ItemState instances >

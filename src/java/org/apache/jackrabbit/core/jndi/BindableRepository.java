@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.core.jndi;
 
-import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 import javax.jcr.*;
 import javax.naming.NamingException;

@@ -15,15 +15,15 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.OutputStream;
-import org.apache.lucene.store.InputStream;
-import org.apache.lucene.store.Lock;
+import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.commons.collections.ReferenceMap;
 import org.apache.log4j.Logger;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.InputStream;
+import org.apache.lucene.store.Lock;
+import org.apache.lucene.store.OutputStream;
 
 import java.io.IOException;
 import java.util.Map;
@@ -62,21 +62,21 @@ class FileSystemDirectory extends Directory {
      * <code>FileSystem</code> will return the previously returned
      * <code>FileSystemDirectory</code> instance.
      *
-     * @param fs the <code>FileSystem</code> where this <code>Directory</code>
-     *   is based on.
+     * @param fs     the <code>FileSystem</code> where this <code>Directory</code>
+     *               is based on.
      * @param create if <code>true</code>, an existing index in this
-     *   <code>Directory</code> is deleted.
+     *               <code>Directory</code> is deleted.
      * @return the <code>FileSystemDirectory</code> instance for the
-     *   <code>FileSystem</code> <code>fs</code>.
+     *         <code>FileSystem</code> <code>fs</code>.
      * @throws IOException if the <code>FileSystemDirectory</code> cannot
-     *   be created.
+     *                     be created.
      */
     static FileSystemDirectory getDirectory(FileSystem fs,
                                             boolean create)
             throws IOException {
 
         synchronized (directories) {
-            FileSystemDirectory dir = (FileSystemDirectory)directories.get(fs);
+            FileSystemDirectory dir = (FileSystemDirectory) directories.get(fs);
             if (dir == null) {
                 dir = new FileSystemDirectory(fs, create);
                 directories.put(fs, dir);
@@ -89,12 +89,12 @@ class FileSystemDirectory extends Directory {
      * Creates a new <code>FileSystemDirectory</code> based on
      * <code>FileSystem</code> <code>fs</code>.
      *
-     * @param fs the <code>FileSystem</code> where this <code>Directory</code>
-     *   is based on.
+     * @param fs     the <code>FileSystem</code> where this <code>Directory</code>
+     *               is based on.
      * @param create if <code>true</code>, an existing index in this
-     *   <code>Directory</code> is deleted.
+     *               <code>Directory</code> is deleted.
      * @throws IOException if the <code>FileSystemDirectory</code> cannot
-     *   be created.
+     *                     be created.
      */
     private FileSystemDirectory(FileSystem fs,
                                 boolean create) throws IOException {

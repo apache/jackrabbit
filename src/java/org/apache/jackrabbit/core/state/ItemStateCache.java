@@ -28,7 +28,7 @@ import java.util.Map;
  * An <code>ItemStateCache</code> maintains a cache of <code>ItemState</code>
  * instances.
  */
-abstract class ItemStateCache {
+public abstract class ItemStateCache {
     private static Logger log = Logger.getLogger(ItemStateCache.class);
 
     /**

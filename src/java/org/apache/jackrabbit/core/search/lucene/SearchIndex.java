@@ -16,15 +16,15 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
+import org.apache.jackrabbit.core.fs.BasedFileSystem;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.BasedFileSystem;
 
 import java.io.IOException;
 

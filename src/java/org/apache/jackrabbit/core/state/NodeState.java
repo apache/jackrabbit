@@ -61,13 +61,8 @@ public class NodeState extends ItemState {
      */
     NodeState(NodeState overlayedState, int initialStatus) {
         super(overlayedState, initialStatus);
-        nodeTypeName = overlayedState.getNodeTypeName();
-        mixinTypeNames.addAll(overlayedState.getMixinTypeNames());
-        defId = overlayedState.getDefinitionId();
-        uuid = overlayedState.getUUID();
-        parentUUIDs.addAll(overlayedState.getParentUUIDs());
-        propertyEntries.addAll(overlayedState.getPropertyEntries());
-        childNodeEntries.addAll(overlayedState.getChildNodeEntries());
+
+        copy(overlayedState);
     }
 
     /**
@@ -85,6 +80,26 @@ public class NodeState extends ItemState {
         }
         this.nodeTypeName = nodeTypeName;
         this.uuid = uuid;
+    }
+
+    /**
+     * @see ItemState#copy
+     */
+    protected void copy(ItemState state) {
+        super.copy(state);
+
+        NodeState nodeState = (NodeState) state;
+        nodeTypeName = nodeState.getNodeTypeName();
+        mixinTypeNames.clear();
+        mixinTypeNames.addAll(nodeState.getMixinTypeNames());
+        defId = nodeState.getDefinitionId();
+        uuid = nodeState.getUUID();
+        parentUUIDs.clear();
+        parentUUIDs.addAll(nodeState.getParentUUIDs());
+        propertyEntries.clear();
+        propertyEntries.addAll(nodeState.getPropertyEntries());
+        childNodeEntries.removeAll();
+        childNodeEntries.addAll(nodeState.getChildNodeEntries());
     }
 
     //-------------------------------------------------------< public methods >
@@ -601,15 +616,20 @@ public class NodeState extends ItemState {
     }
 
     //--------------------------------------------------< ItemState overrides >
+
     /**
-     * @see ItemState#setParentUUID
+     * Sets the UUID of the parent <code>NodeState</code>.
+     *
+     * @param parentUUID the parent <code>NodeState</code>'s UUID or <code>null</code>
+     *                   if either this item state should represent the root node or this item state
+     *                   should be 'free floating', i.e. detached from the repository's hierarchy.
      */
     public synchronized void setParentUUID(String parentUUID) {
         // @todo is this correct?
-        if (!parentUUIDs.contains(parentUUID) && parentUUID != null) {
+        if (parentUUID != null && !parentUUIDs.contains(parentUUID)) {
             parentUUIDs.add(parentUUID);
         }
-        super.setParentUUID(parentUUID);
+        this.parentUUID = parentUUID;
     }
 
     //-------------------------------------------------< Serializable support >

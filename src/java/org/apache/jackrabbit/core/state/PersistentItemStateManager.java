@@ -30,11 +30,12 @@ import java.util.Iterator;
  * <code>PersistentItemStateManager</code> ...
  */
 public class PersistentItemStateManager extends ItemStateCache
-        implements ItemStateProvider, ItemStateListener {
+        implements PersistentItemStateProvider, ItemStateListener {
 
     private static Logger log = Logger.getLogger(PersistentItemStateManager.class);
 
-    private final PersistenceManager persistMgr;
+    protected final PersistenceManager persistMgr;
+
 
     // keep a hard reference to the root node state
     private PersistentNodeState root;
@@ -143,11 +144,82 @@ public class PersistentItemStateManager extends ItemStateCache
         ps.println(id + " (" + state + ")");
     }
 
+    /**
+     * Create a <code>PersistentNodeState</code> instance. May be overridden by
+     * subclasses.
+     *
+     * @param uuid UUID
+     * @return persistent node state instance
+     */
+    protected PersistentNodeState createNodeStateInstance(String uuid) {
+        return new PersistentNodeState(uuid, persistMgr);
+    }
+
+    /**
+     * Create a <code>PersistentPropertyState</code> instance. May be overridden
+     * by subclasses.
+     *
+     * @param name       qualified name
+     * @param parentUUID parent UUID
+     * @return persistent property state instance
+     */
+    protected PersistentPropertyState createPropertyStateInstance(QName name,
+                                                                  String parentUUID) {
+
+        return new PersistentPropertyState(name, parentUUID, persistMgr);
+    }
+
+    /**
+     * @param id
+     * @return
+     * @throws NoSuchItemStateException
+     * @throws ItemStateException
+     */
+    protected PersistentNodeState getNodeState(NodeId id)
+            throws NoSuchItemStateException, ItemStateException {
+        // check cache
+        if (isCached(id)) {
+            return (PersistentNodeState) retrieve(id);
+        }
+        // load from persisted state
+        PersistentNodeState state = createNodeStateInstance(id.getUUID());
+        persistMgr.load(state);
+        state.setStatus(ItemState.STATUS_EXISTING);
+        // put it in cache
+        cache(state);
+        // register as listener
+        state.addListener(this);
+        return state;
+    }
+
+    /**
+     * @param id
+     * @return
+     * @throws NoSuchItemStateException
+     * @throws ItemStateException
+     */
+    protected PersistentPropertyState getPropertyState(PropertyId id)
+            throws NoSuchItemStateException, ItemStateException {
+        // check cache
+        if (isCached(id)) {
+            return (PersistentPropertyState) retrieve(id);
+        }
+        // load from persisted state
+        PersistentPropertyState state = createPropertyStateInstance(id.getName(), id.getParentUUID());
+        persistMgr.load(state);
+        state.setStatus(ItemState.STATUS_EXISTING);
+        // put it in cache
+        cache(state);
+        // register as listener
+        state.addListener(this);
+        return state;
+    }
+
     //----------------------------------------------------< ItemStateProvider >
     /**
      * @see ItemStateProvider#getItemState(ItemId)
      */
-    public ItemState getItemState(ItemId id)
+    public synchronized ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
         if (id.denotesNode()) {
             return getNodeState((NodeId) id);
@@ -185,62 +257,9 @@ public class PersistentItemStateManager extends ItemStateCache
         return false;
     }
 
-    //---------------< methods for listing and retrieving ItemState instances >
+    //------------------------------------------< PersistentItemStateProvider >
     /**
-     * @param id
-     * @return
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
-     */
-    synchronized PersistentNodeState getNodeState(NodeId id)
-            throws NoSuchItemStateException, ItemStateException {
-        // check cache
-        if (isCached(id)) {
-            return (PersistentNodeState) retrieve(id);
-        }
-        // load from persisted state
-        PersistentNodeState state = persistMgr.loadNodeState(id.getUUID());
-        state.setStatus(ItemState.STATUS_EXISTING);
-        // put it in cache
-        cache(state);
-        // register as listener
-        state.addListener(this);
-        return state;
-    }
-
-    /**
-     * @param id
-     * @return
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
-     */
-    synchronized PersistentPropertyState getPropertyState(PropertyId id)
-            throws NoSuchItemStateException, ItemStateException {
-        // check cache
-        if (isCached(id)) {
-            return (PersistentPropertyState) retrieve(id);
-        }
-        // load from persisted state
-        PersistentPropertyState state = persistMgr.loadPropertyState(id.getParentUUID(), id.getName());
-        state.setStatus(ItemState.STATUS_EXISTING);
-        // put it in cache
-        cache(state);
-        // register as listener
-        state.addListener(this);
-        return state;
-    }
-
-    //-------------------------< methods for creating new ItemState instances >
-    /**
-     * Creates a <code>PersistentNodeState</code> instance representing new,
-     * i.e. not yet existing state. Call <code>{@link PersistentNodeState#store()}</code>
-     * on the returned object to make it persistent.
-     *
-     * @param uuid
-     * @param nodeTypeName
-     * @param parentUUID
-     * @return
-     * @throws ItemStateException
+     * @see PersistentItemStateProvider#createNodeState
      */
     public synchronized PersistentNodeState createNodeState(String uuid, QName nodeTypeName, String parentUUID)
             throws ItemStateException {
@@ -252,7 +271,8 @@ public class PersistentItemStateManager extends ItemStateCache
             throw new ItemStateException(msg);
         }
 
-        PersistentNodeState state = persistMgr.createNodeStateInstance(uuid, nodeTypeName);
+        PersistentNodeState state = createNodeStateInstance(uuid);
+        state.setNodeTypeName(nodeTypeName);
         state.setParentUUID(parentUUID);
         // put it in cache
         cache(state);
@@ -262,14 +282,7 @@ public class PersistentItemStateManager extends ItemStateCache
     }
 
     /**
-     * Creates a <code>PersistentPropertyState</code> instance representing new,
-     * i.e. not yet existing state. Call <code>{@link PersistentPropertyState#store()}</code>
-     * on the returned object to make it persistent.
-     *
-     * @param parentUUID
-     * @param propName
-     * @return
-     * @throws ItemStateException
+     * @see PersistentItemStateProvider#createPropertyState
      */
     public synchronized PersistentPropertyState createPropertyState(String parentUUID, QName propName)
             throws ItemStateException {
@@ -281,7 +294,7 @@ public class PersistentItemStateManager extends ItemStateCache
             throw new ItemStateException(msg);
         }
 
-        PersistentPropertyState state = persistMgr.createPropertyStateInstance(propName, parentUUID);
+        PersistentPropertyState state = createPropertyStateInstance(propName, parentUUID);
         // put it in cache
         cache(state);
         // register as listener

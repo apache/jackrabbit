@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.jndi.RegistryHelper;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.jndi.RegistryHelper;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -26,10 +26,13 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.util.TraversingItemVisitor;
-import javax.naming.InitialContext;
 import javax.naming.Context;
+import javax.naming.InitialContext;
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Hashtable;
+import java.util.Properties;
 
 public class Test {
     private static Logger log = Logger.getLogger(Test.class);
@@ -58,8 +61,34 @@ public class Test {
 
         RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
         Repository r = (Repository) ctx.lookup("repo");
-
         Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
+/*
+        XASession session = (XASession) r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
+        XAResource xares = session.getXAResource();
+
+        Xid xid = new Xid() {
+            public byte[] getBranchQualifier() {
+                return new byte[0];
+            }
+
+            public int getFormatId() {
+                return 0;
+            }
+
+            public byte[] getGlobalTransactionId() {
+                return new byte[0];
+            }
+        };
+
+        xares.start(xid, XAResource.TMNOFLAGS);
+
+        // ....
+
+        xares.end(xid, XAResource.TMSUCCESS);
+
+        xares.prepare(xid);
+        xares.commit(xid, false);
+*/
         Workspace wsp = session.getWorkspace();
 
         NodeTypeManager ntMgr = wsp.getNodeTypeManager();

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.search.jcrql;
 
 
-
 public class JCRQLParserTokenManager implements JCRQLParserConstants {
     public java.io.PrintStream debugStream = System.out;
 

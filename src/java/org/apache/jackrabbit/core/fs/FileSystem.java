@@ -82,10 +82,11 @@ public interface FileSystem {
      *
      * @param filePath the path of the file.
      * @return an random access output stream for writing bytes to the file.
-     * @throws FileSystemException if the file could not be created or if the
-     *   output stream cannot be obtained.
-     * @exception UnsupportedOperationException if the implementation does
-     *   not support file access through a {@link RandomAccessOutputStream}.
+     * @throws FileSystemException           if the file could not be created or
+     *                                       if the output stream cannot be obtained.
+     * @throws UnsupportedOperationException if the implementation does
+     *                                       not support file access through a
+     *                                      {@link RandomAccessOutputStream}.
      */
     public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
             throws FileSystemException;

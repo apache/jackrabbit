@@ -15,10 +15,10 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.store.OutputStream;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
+import org.apache.lucene.store.OutputStream;
 
 import java.io.IOException;
 
