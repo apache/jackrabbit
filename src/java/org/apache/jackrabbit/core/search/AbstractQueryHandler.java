@@ -37,6 +37,11 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     private ItemStateManager stateProvider;
 
     /**
+     * PropertyType registry to look up the type of a property with a given name.
+     */ 
+    private PropertyTypeRegistry propRegistry;
+
+    /**
      * The UUID of the root node.
      */
     private String rootUUID;
@@ -49,12 +54,17 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      *                      <code>QueryHandler</code> may use to store its index.
      * @param stateProvider provides persistent item states.
      * @param rootUUID the uuid of the root node.
+     * @param registry the property type registry.
      */
-    public final void init(FileSystem fs, ItemStateManager stateProvider, String rootUUID)
+    public final void init(FileSystem fs, 
+                           ItemStateManager stateProvider, 
+                           String rootUUID,
+                           PropertyTypeRegistry registry)
             throws IOException {
         this.fs = fs;
         this.stateProvider = stateProvider;
         this.rootUUID = rootUUID;
+        this.propRegistry = registry;
         doInit();
     }
 
@@ -92,5 +102,13 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      */
     protected String getRootUUID() {
         return rootUUID;
+    }
+
+    /**
+     * Returns the PropertyTypeRegistry for this repository.
+     * @return the PropertyTypeRegistry for this repository.
+     */
+    protected PropertyTypeRegistry getPropertyTypeRegistry() {
+        return propRegistry;
     }
 }

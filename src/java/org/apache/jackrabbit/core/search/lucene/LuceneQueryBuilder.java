@@ -29,6 +29,8 @@ import org.apache.lucene.search.TermQuery;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
+import javax.jcr.util.ISO8601;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -37,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Calendar;
 
 /**
  * Implements a query builder that takes an abstract query tree and creates
@@ -75,6 +78,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      * The analyzer instance to use for contains function query parsing
      */
     private Analyzer analyzer;
+    
+    /**
+     * The property type registry.
+     */ 
+    private PropertyTypeRegistry propRegistry;
 
     /**
      * Exceptions thrown during tree translation
@@ -88,15 +96,18 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      * @param session    of the user executing this query.
      * @param nsMappings namespace resolver for internal prefixes.
      * @param analyzer   for parsing the query statement of the contains function.
+     * @param propReg    the property type registry.
      */
     private LuceneQueryBuilder(QueryRootNode root,
                                SessionImpl session,
                                NamespaceMappings nsMappings,
-                               Analyzer analyzer) {
+                               Analyzer analyzer,
+                               PropertyTypeRegistry propReg) {
         this.root = root;
         this.session = session;
         this.nsMappings = nsMappings;
         this.analyzer = analyzer;
+        this.propRegistry = propReg;
     }
 
     /**
@@ -107,17 +118,19 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      * @param session    of the user executing the query.
      * @param nsMappings namespace resolver for internal prefixes.
      * @param analyzer   for parsing the query statement of the contains function.
+     * @param propReg    the property type registry to lookup type information.
      * @return the lucene query tree.
      * @throws RepositoryException if an error occurs during the translation.
      */
     public static Query createQuery(QueryRootNode root,
                                     SessionImpl session,
                                     NamespaceMappings nsMappings,
-                                    Analyzer analyzer)
+                                    Analyzer analyzer,
+                                    PropertyTypeRegistry propReg)
             throws RepositoryException {
 
         LuceneQueryBuilder builder = new LuceneQueryBuilder(root,
-                session, nsMappings, analyzer);
+                session, nsMappings, analyzer, propReg);
 
         Query q = builder.createLuceneQuery();
         if (builder.exceptions.size() > 0) {
@@ -396,22 +409,28 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(RelationQueryNode node, Object data) {
         Query query;
-        String stringValue = null;
+        String stringValues[] = new String[1];
         switch (node.getValueType()) {
             case 0:
                 // not set: either IS NULL or IS NOT NULL
                 break;
             case QueryConstants.TYPE_DATE:
-                stringValue = DateField.dateToString(node.getDateValue());
+                stringValues[0] = DateField.dateToString(node.getDateValue());
                 break;
             case QueryConstants.TYPE_DOUBLE:
-                stringValue = DoubleField.doubleToString(node.getDoubleValue());
+                stringValues[0] = DoubleField.doubleToString(node.getDoubleValue());
                 break;
             case QueryConstants.TYPE_LONG:
-                stringValue = LongField.longToString(node.getLongValue());
+                stringValues[0] = LongField.longToString(node.getLongValue());
                 break;
             case QueryConstants.TYPE_STRING:
-                stringValue = node.getStringValue();
+                if (node.getOperation() == QueryConstants.OPERATION_LIKE
+                        || node.getOperation() == QueryConstants.OPERATION_NULL
+                        || node.getOperation() == QueryConstants.OPERATION_NOT_NULL) {
+                    stringValues[0] = node.getStringValue();
+                } else {
+                    stringValues = getStringValues(node.getProperty(), node.getStringValue());
+                }
                 break;
             default:
                 throw new IllegalArgumentException("Unknown relation type: "
@@ -439,38 +458,84 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
         switch (node.getOperation()) {
             case QueryConstants.OPERATION_EQ_VALUE:      // =
-                query = new TermQuery(new Term(field, stringValue));
+                if (stringValues.length == 1) {
+                    query = new TermQuery(new Term(field, stringValues[0]));
+                } else {
+                    BooleanQuery or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        or.add(new TermQuery(new Term(field, stringValues[i])), false, false);
+                    }
+                    query = or;
+                }
                 break;
             case QueryConstants.OPERATION_EQ_GENERAL:    // =
                 // search in single and multi valued properties
                 BooleanQuery or = new BooleanQuery();
-                or.add(new TermQuery(new Term(field, stringValue)), false, false);
-                or.add(new TermQuery(new Term(mvpField, stringValue)), false, false);
+                for (int i = 0; i < stringValues.length; i++) {
+                    or.add(new TermQuery(new Term(field, stringValues[i])), false, false);
+                    or.add(new TermQuery(new Term(mvpField, stringValues[i])), false, false);
+                }
                 query = or;
                 break;
             case QueryConstants.OPERATION_GE_VALUE:      // >=
-                query = new RangeQuery(new Term(field, stringValue), null, true);
+                if (stringValues.length == 1) {
+                    query = new RangeQuery(new Term(field, stringValues[0]), null, true);
+                } else {
+                    or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        or.add(new RangeQuery(new Term(field, stringValues[i]), null, true), false, false);
+                    }
+                    query = or;
+                }
                 break;
             case QueryConstants.OPERATION_GT_VALUE:      // >
-                query = new RangeQuery(new Term(field, stringValue), null, false);
+                if (stringValues.length == 1) {
+                    query = new RangeQuery(new Term(field, stringValues[0]), null, false);
+                } else {
+                    or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        or.add(new RangeQuery(new Term(field, stringValues[i]), null, false), false, false);
+                    }
+                    query = or;
+                }
                 break;
             case QueryConstants.OPERATION_LE_VALUE:      // <=
-                query = new RangeQuery(null, new Term(field, stringValue), true);
+                if (stringValues.length == 1) {
+                    query = new RangeQuery(null, new Term(field, stringValues[0]), true);
+                } else {
+                    or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        or.add(new RangeQuery(null, new Term(field, stringValues[i]), true), false, false);
+                    }
+                    query = or;
+                }
                 break;
             case QueryConstants.OPERATION_LIKE:          // LIKE
-                if (stringValue.equals("%")) {
+                // the like operation always has one string value.
+                // no coercing, see above
+                if (stringValues[0].equals("%")) {
                     query = new MatchAllQuery(field);
                 } else {
-                    query = new WildcardQuery(new Term(field, stringValue));
+                    query = new WildcardQuery(new Term(field, stringValues[0]));
                 }
                 break;
             case QueryConstants.OPERATION_LT_VALUE:      // <
-                query = new RangeQuery(null, new Term(field, stringValue), false);
+                if (stringValues.length == 1) {
+                    query = new RangeQuery(null, new Term(field, stringValues[0]), false);
+                } else {
+                    or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        or.add(new RangeQuery(null, new Term(field, stringValues[i]), false), false, false);
+                    }
+                    query = or;
+                }
                 break;
             case QueryConstants.OPERATION_NE_VALUE:      // !=
                 BooleanQuery notQuery = new BooleanQuery();
                 notQuery.add(new MatchAllQuery(field), false, false);
-                notQuery.add(new TermQuery(new Term(field, stringValue)), false, true);
+                for (int i = 0; i < stringValues.length; i++) {
+                    notQuery.add(new TermQuery(new Term(field, stringValues[i])), false, true);
+                }
                 query = notQuery;
                 break;
             case QueryConstants.OPERATION_NE_GENERAL:    // !=
@@ -478,8 +543,10 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 notQuery = new BooleanQuery();
                 notQuery.add(new MatchAllQuery(field), false, false);
                 notQuery.add(new MatchAllQuery(mvpField), false, false);
-                notQuery.add(new TermQuery(new Term(field, stringValue)), false, true);
-                notQuery.add(new TermQuery(new Term(mvpField, stringValue)), false, true);
+                for (int i = 0; i < stringValues.length; i++) {
+                    notQuery.add(new TermQuery(new Term(field, stringValues[i])), false, true);
+                    notQuery.add(new TermQuery(new Term(mvpField, stringValues[i])), false, true);
+                }
                 query = notQuery;
                 break;
             case QueryConstants.OPERATION_NULL:
@@ -500,5 +567,131 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(OrderQueryNode node, Object data) {
         return data;
+    }
+    
+    //---------------------------< internal >-----------------------------------
+    
+    /**
+     * Returns an array of String values to be used as a term to lookup the search index
+     * for a String <code>literal</code> of a certain property name. This method
+     * will lookup the <code>propertyName</code> in the node type registry
+     * trying to find out the {@link javax.jcr.PropertyType}s.
+     * If no property type is found looking up node type information, this
+     * method will guess the property type.
+     * @param propertyName the name of the property in the relation.
+     * @param literal the String literal in the relation.
+     * @return the String values to use as term for the query.
+     */ 
+    private String[] getStringValues(QName propertyName, String literal) {
+        PropertyTypeRegistry.TypeMapping[] types = propRegistry.getPropertyTypes(propertyName);
+        List values = new ArrayList();
+        for (int i = 0; i < types.length; i++) {
+            switch (types[i].type) {
+                case PropertyType.NAME:
+                    // try to translate name
+                    try {
+                        values.add(nsMappings.translatePropertyName(literal, session.getNamespaceResolver()));
+                        log.debug("Coerced " + literal + " into NAME.");
+                    } catch (IllegalNameException e) {
+                        log.warn("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
+                    } catch (UnknownPrefixException e) {
+                        log.warn("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
+                    }
+                    break;
+                case PropertyType.PATH:
+                    // try to translate path
+                    try {
+                        Path p = Path.create(literal, session.getNamespaceResolver(), false);
+                        values.add(p.toJCRPath(nsMappings));
+                        log.debug("Coerced " + literal + " into PATH.");
+                    } catch (MalformedPathException e) {
+                        log.warn("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
+                    } catch (NoPrefixDeclaredException e) {
+                        log.warn("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
+                    }
+                    break;
+                case PropertyType.DATE:
+                    // try to parse date
+                    Calendar c = ISO8601.parse(literal);
+                    if (c != null) {
+                        values.add(DateField.timeToString(c.getTimeInMillis()));
+                        log.debug("Coerced " + literal + " into DATE.");
+                    } else {
+                        log.warn("Unable to coerce '" + literal + "' into a DATE.");
+                    }
+                    break;
+                case PropertyType.DOUBLE:
+                    // try to parse double
+                    try {
+                        double d = Double.parseDouble(literal);
+                        values.add(DoubleField.doubleToString(d));
+                        log.debug("Coerced " + literal + " into DOUBLE.");
+                    } catch (NumberFormatException e) {
+                        log.warn("Unable to coerce '" + literal + "' into a DOUBLE: " + e.toString());
+                    }
+                    break;
+                case PropertyType.LONG:
+                    // try to parse long
+                    try {
+                        long l = Long.parseLong(literal);
+                        values.add(LongField.longToString(l));
+                        log.debug("Coerced " + literal + " into LONG.");
+                    } catch (NumberFormatException e) {
+                        log.warn("Unable to coerce '" + literal + "' into a LONG: " + e.toString());
+                    }
+                    break;
+                case PropertyType.STRING:
+                    values.add(literal);
+                    log.debug("Using literal " + literal + " as is.");
+                    break;
+            }
+        }
+        if (values.size() == 0) {
+            // try to guess property type
+            if (literal.indexOf('/') > -1) {
+                // might be a path
+                try {
+                    values.add(Path.create(literal, session.getNamespaceResolver(), false).toJCRPath(nsMappings));
+                    log.debug("Coerced " + literal + " into PATH.");
+                } catch (Exception e) {
+                    // not a path
+                }
+            } else if (literal.indexOf(':') > -1) {
+                // might be a name
+                try {
+                    values.add(QName.fromJCRName(literal, session.getNamespaceResolver()));
+                    log.debug("Coerced " + literal + " into NAME.");
+                } catch (Exception e) {
+                    // not a name
+                    // is it a date?
+                    Calendar c = ISO8601.parse(literal);
+                    if (c != null) {
+                        values.add(DateField.timeToString(c.getTimeInMillis()));
+                        log.debug("Coerced " + literal + " into DATE.");
+                    }
+                }
+            } else {
+                // long or double are possible at this point
+                try {
+                    values.add(LongField.longToString(Long.parseLong(literal)));
+                    log.debug("Coerced " + literal + " into LONG.");
+                } catch (NumberFormatException e) {
+                    // not a long
+                    // try double
+                    try {
+                        values.add(DoubleField.doubleToString(Double.parseDouble(literal)));
+                        log.debug("Coerced " + literal + " into DOUBLE.");
+                    } catch (NumberFormatException e1) {
+                        // not a double
+                    }
+                }
+            }
+        }
+        // if still no values use literal as is
+        if (values.size() == 0) {
+            values.add(literal);
+            log.debug("Using literal " + literal + " as is.");
+        }
+        return (String[]) values.toArray(new String[values.size()]);
     }
 }

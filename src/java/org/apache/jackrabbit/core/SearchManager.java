@@ -24,8 +24,10 @@ import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.search.QueryHandler;
 import org.apache.jackrabbit.core.search.QueryImpl;
+import org.apache.jackrabbit.core.search.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.log4j.Logger;
 
 import javax.jcr.NamespaceException;
@@ -96,7 +98,7 @@ public class SearchManager implements SynchronousEventListener {
      */
     private final QueryHandler handler;
 
-    public SearchManager(SessionImpl session, SearchConfig config)
+    public SearchManager(SessionImpl session, SearchConfig config, NodeTypeRegistry ntReg)
             throws RepositoryException {
         this.session = session;
         this.hmgr = session.getHierarchyManager();
@@ -123,12 +125,14 @@ public class SearchManager implements SynchronousEventListener {
             nsReg.registerNamespace(NS_JCRFN_PREFIX, NS_JCRFN_URI);
         }
 
+        PropertyTypeRegistry propRegistry = new PropertyTypeRegistry(ntReg);
+        ntReg.addListener(propRegistry);
         // initialize query handler
         try {
             Class handlerClass = Class.forName(config.getHandlerClassName());
             handler = (QueryHandler) handlerClass.newInstance();
             NodeId rootId = (NodeId) session.hierMgr.resolvePath(Path.ROOT);
-            handler.init(fs, session.getItemStateManager(), rootId.getUUID());
+            handler.init(fs, session.getItemStateManager(), rootId.getUUID(), propRegistry);
         } catch (Exception e) {
             throw new RepositoryException(e.getMessage(), e);
         }

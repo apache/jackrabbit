@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.Path;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -229,9 +230,15 @@ class NodeIndexer {
                         false));
                 break;
             case PropertyType.PATH:
-                String path = internalValue.toString();
+                Path path = (Path) internalValue;
+                String pathString = path.toString();
+                try {
+                    pathString = path.toJCRPath(mappings);
+                } catch (NoPrefixDeclaredException e) {
+                    // will never happen
+                }
                 doc.add(new Field(fieldName,
-                        path,
+                        pathString,
                         false,
                         true,
                         false));

@@ -22,10 +22,8 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
 
-import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
-import javax.jcr.Node;
 import java.io.IOException;
 
 /**
@@ -44,11 +42,13 @@ public interface QueryHandler {
      *  <code>QueryHandler</code> may use to store its index.
      * @param stateProvider provides persistent item states.
      * @param rootUUID the UUID of the root node.
+     * @param registry the property type registry.
      * @throws IOException if an error occurs during initialization.
      */
     public void init(FileSystem fs,
                      ItemStateManager stateProvider,
-                     String rootUUID) throws IOException;
+                     String rootUUID,
+                     PropertyTypeRegistry registry) throws IOException;
 
     /**
      * Adds a <code>Node</code> to the search index.

@@ -196,7 +196,7 @@ public class SearchIndex extends AbstractQueryHandler {
                                              String statement,
                                              String language)
             throws InvalidQueryException {
-        return new QueryImpl(session, itemMgr, this, statement, language);
+        return new QueryImpl(session, itemMgr, this, getPropertyTypeRegistry(), statement, language);
     }
 
     /**

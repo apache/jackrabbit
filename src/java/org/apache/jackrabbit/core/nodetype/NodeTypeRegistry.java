@@ -391,7 +391,7 @@ public class NodeTypeRegistry implements Constants {
      * @param listener the new listener to be informed on (un)registration
      *                 of node types
      */
-    void addListener(NodeTypeRegistryListener listener) {
+    public void addListener(NodeTypeRegistryListener listener) {
         if (!listeners.containsKey(listener)) {
             listeners.put(listener, listener);
         }
@@ -402,7 +402,7 @@ public class NodeTypeRegistry implements Constants {
      *
      * @param listener an existing listener
      */
-    void removeListener(NodeTypeRegistryListener listener) {
+    public void removeListener(NodeTypeRegistryListener listener) {
         listeners.remove(listener);
     }
 
@@ -822,9 +822,12 @@ public class NodeTypeRegistry implements Constants {
     }
 
     /**
-     * @return
+     * Returns the names of all registered node types. That includes primary
+     * and mixin node types.
+     *
+     * @return the names of all registered node types.
      */
-    synchronized QName[] getRegisteredNodeTypes() {
+    public synchronized QName[] getRegisteredNodeTypes() {
         return (QName[]) registeredNTDefs.keySet().toArray(new QName[registeredNTDefs.size()]);
     }
 

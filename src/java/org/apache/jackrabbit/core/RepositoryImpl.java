@@ -904,7 +904,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                     // no search index configured
                     return null;
                 }
-                searchMgr = new SearchManager(getSystemSession(), config.getSearchConfig());
+                searchMgr = new SearchManager(getSystemSession(), config.getSearchConfig(), ntReg);
             }
             return searchMgr;
         }

@@ -65,11 +65,17 @@ class QueryImpl implements ExecutableQuery {
     private final SearchIndex index;
 
     /**
+     * The property type registry for type lookup.
+     */
+    private final PropertyTypeRegistry propReg;
+
+    /**
      * Creates a new query instance from a query string.
      *
      * @param session   the session of the user executing this query.
      * @param itemMgr   the item manager of the session executing this query.
      * @param index     the search index.
+     * @param propReg   the property type registry.
      * @param statement the query statement.
      * @param language  the syntax of the query statement.
      * @throws InvalidQueryException if the query statement is invalid according
@@ -78,11 +84,13 @@ class QueryImpl implements ExecutableQuery {
     public QueryImpl(SessionImpl session,
                      ItemManager itemMgr,
                      SearchIndex index,
+                     PropertyTypeRegistry propReg,
                      String statement,
                      String language) throws InvalidQueryException {
         this.session = session;
         this.itemMgr = itemMgr;
         this.index = index;
+        this.propReg = propReg;
         // parse query according to language
         // build query tree
         this.root = QueryParser.parse(statement, language, session.getNamespaceResolver());
@@ -97,7 +105,7 @@ class QueryImpl implements ExecutableQuery {
     public QueryResult execute() throws RepositoryException {
         // build lucene query
         Query query = LuceneQueryBuilder.createQuery(root,
-                session, index.getNamespaceMappings(), index.getAnalyzer());
+                session, index.getNamespaceMappings(), index.getAnalyzer(), propReg);
 
         OrderQueryNode orderNode = root.getOrderNode();
 
