@@ -42,6 +42,9 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
 
     private static Logger log = Logger.getLogger(ObjectPersistenceManager.class);
 
+    /** encoding used for serializing String values */
+    private static final String ENCODING = "UTF-8";
+
     /**
      * hexdigits for toString
      */
@@ -281,10 +284,17 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
                 values[i] = InternalValue.create(blobStore.get(blobId));
                 if (blobVal.isTempFile()) {
                     blobVal.delete();
-                    blobVal = null;
+                    blobVal = null; // gc hint
                 }
             } else {
-                out.writeUTF(val.toString());   // value
+                /**
+                 * because writeUTF(String) has a size limit of 65k,
+                 * we're using write(byte[]) instead
+                 */
+                //out.writeUTF(val.toString());   // value
+                byte[] bytes = val.toString().getBytes(ENCODING);
+                out.writeInt(bytes.length); // lenght of byte[]
+                out.write(bytes);   // byte[]
             }
         }
     }
@@ -318,12 +328,21 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
         InternalValue[] values = new InternalValue[count];
         for (int i = 0; i < count; i++) {
             InternalValue val;
-            s = in.readUTF();   // value
             if (type == PropertyType.BINARY) {
+                s = in.readUTF();   // value (i.e. blobId)
                 // special handling required for binary value:
                 // the value stores the id of the blob resource in the blob store
                 val = InternalValue.create(blobStore.get(s));
             } else {
+                /**
+                 * because writeUTF(String) has a size limit of 65k,
+                 * Strings are serialized as <length><byte[]>
+                 */
+                //s = in.readUTF();   // value
+                int len = in.readInt(); // lenght of byte[]
+                byte[] bytes = new byte[len];
+                in.read(bytes); // byte[]
+                s = new String(bytes, ENCODING);
                 val = InternalValue.valueOf(s, type);
             }
             values[i] = val;
@@ -394,7 +413,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
         try {
             out = new BufferedOutputStream(internalBlobFile.getOutputStream());
             byte[] buffer = new byte[8192];
-            int read = 0;
+            int read;
             while ((read = in.read(buffer)) > 0) {
                 out.write(buffer, 0, read);
             }
