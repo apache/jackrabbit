@@ -231,6 +231,7 @@
       <groupId>jsr170</groupId>
       <artifactId>jcr</artifactId>
       <version>0.15</version>
+      <url>http://www.day.com/maven/jsr170/jars/jcr-0.15.jar</url>
     </dependency>
     <dependency>
       <id>log4j</id>
@@ -245,6 +246,22 @@
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
       <version>2.6.2</version>
+    </dependency>
+    <!--
+      cqfs-jackrabbit and cqfs are optional runtime dependencies 
+      (an alternative FileSystem implementation)
+    -->
+    <dependency>
+      <groupId>cqfs</groupId>
+      <artifactId>cqfs-jackrabbit</artifactId>
+      <version>3.5.6</version>
+      <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6.jar</url>
+    </dependency>
+    <dependency>
+      <groupId>cqfs</groupId>
+      <artifactId>cqfs</artifactId>
+      <version>3.5.6</version>
+      <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6.jar</url>
     </dependency>
   </dependencies>
 
