@@ -191,6 +191,14 @@ public class WorkspaceImporter implements Importer, Constants {
         parent.addChildNodeEntry(nodeName, node.getUUID());
 
         EffectiveNodeType ent = wsp.getEffectiveNodeType(node);
+
+        if (!node.getMixinTypeNames().isEmpty()) {
+            // create jcr:mixinTypes property
+            PropDef pd = ent.getApplicablePropertyDef(JCR_MIXINTYPES,
+                    PropertyType.NAME, true);
+            createProperty(node, pd.getName(), pd.getRequiredType(), pd);
+        }
+
         // add 'auto-create' properties defined in node type
         PropDef[] pda = ent.getAutoCreatePropDefs();
         for (int i = 0; i < pda.length; i++) {
