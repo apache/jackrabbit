@@ -175,7 +175,7 @@ public class SearchManager implements SynchronousEventListener {
 
                     Path path = Path.create(e.getPath(),
                             session.getNamespaceResolver(),
-                            true);
+                            true).getAncestor(1);
                     if (!modified.contains(e.getParentUUID())) {
                         deleteNode(path, e.getParentUUID());
                         modified.add(e.getParentUUID());

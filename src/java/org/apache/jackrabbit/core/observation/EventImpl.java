@@ -17,6 +17,8 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -78,7 +80,12 @@ public final class EventImpl implements Event {
      */
     public String getPath() throws RepositoryException {
         try {
-            return eventState.getParentPath().toJCRPath(session.getNamespaceResolver());
+            Path p = Path.create(eventState.getParentPath(), eventState.getChildItemQName(), false);
+            return p.toJCRPath(session.getNamespaceResolver());
+        } catch (MalformedPathException e) {
+            String msg = "internal error: malformed path for event";
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
         } catch (NoPrefixDeclaredException e) {
             String msg = "internal error: encountered unregistered namespace in path";
             log.error(msg, e);
