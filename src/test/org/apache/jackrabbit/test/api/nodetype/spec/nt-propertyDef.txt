@@ -1,0 +1,100 @@
+NodeTypeName
+  nt:propertyDef
+Supertypes
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDef
+  Name jcr:autoCreate
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:defaultValues
+  RequiredType UNDEFINED
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple true
+PropertyDef
+  Name jcr:mandatory
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:multiple
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:name
+  RequiredType NAME
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:onParentVersion
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:protected
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:requiredType
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDef
+  Name jcr:valueConstraints
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple true
