@@ -37,6 +37,8 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.Importer;
+import org.apache.jackrabbit.core.xml.WorkspaceImporter;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -139,10 +141,23 @@ public class WorkspaceImpl implements Workspace, Constants {
         this.session = session;
     }
 
-    RepositoryImpl getRepository() {
-        return rep;
+    /**
+     * The hierarchy manager that reflects workspace state only
+     * (i.e. that is isolated from transient changes made through
+     * the session)
+     *
+     * @return the hierarchy manager of this workspace
+     */
+    public HierarchyManager getHierarchyManager() {
+        return hierMgr;
     }
 
+    /**
+     * Returns the item state manager associated with the workspace
+     * represented by <i>this</i> <code>Workspace</code> instance.
+     *
+     * @return the item state manager of this workspace
+     */
     public TransactionalItemStateManager getItemStateManager() {
         return stateMgr;
     }
@@ -176,7 +191,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      * @throws RepositoryException if this workspace has been rendered invalid
      *                             for some reason
      */
-    protected void sanityCheck() throws RepositoryException {
+    public void sanityCheck() throws RepositoryException {
         // check session status
         session.sanityCheck();
     }
@@ -208,7 +223,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      * @throws ItemExistsException
      * @throws RepositoryException
      */
-    protected void checkAddNode(Path nodePath, QName nodeTypeName)
+    public void checkAddNode(Path nodePath, QName nodeTypeName)
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, ItemExistsException, RepositoryException {
 
@@ -263,7 +278,8 @@ public class WorkspaceImpl implements Workspace, Constants {
             try {
                 conflictingState = (NodeState) stateMgr.getItemState(conflictingId);
             } catch (ItemStateException ise) {
-                String msg = "internal error: failed to retrieve state of " + hierMgr.safeGetJCRPath(conflictingId);
+                String msg = "internal error: failed to retrieve state of "
+                        + hierMgr.safeGetJCRPath(conflictingId);
                 log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
@@ -283,7 +299,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    protected void checkRemoveNode(Path nodePath)
+    public void checkRemoveNode(Path nodePath)
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, LockException, RepositoryException {
 
@@ -404,7 +420,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      * @return the effective node type
      * @throws RepositoryException
      */
-    protected EffectiveNodeType getEffectiveNodeType(NodeState state)
+    public EffectiveNodeType getEffectiveNodeType(NodeState state)
             throws RepositoryException {
         // build effective node type of mixins & primary type:
         // existing mixin's
@@ -436,9 +452,9 @@ public class WorkspaceImpl implements Workspace, Constants {
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    protected ChildNodeDef findApplicableDefinition(QName name,
-                                                    QName nodeTypeName,
-                                                    NodeState parentState)
+    public ChildNodeDef findApplicableDefinition(QName name,
+                                                 QName nodeTypeName,
+                                                 NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
         return entParent.getApplicableChildNodeDef(name, nodeTypeName);
@@ -603,6 +619,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         // 3. do copy operation (modify and persist affected states)
 
+        boolean succeeded = false;
         try {
             stateMgr.edit();
 
@@ -619,16 +636,22 @@ public class WorkspaceImpl implements Workspace, Constants {
                             srcState.getNodeTypeName(), destParentState);
             newState.setDefinitionId(new NodeDefId(newNodeDef));
 
-            // persist states
+            // store states
             stateMgr.store(newState);
             stateMgr.store(destParentState);
 
             // finish update operations
             stateMgr.update();
+            succeeded = true;
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
             log.debug(msg);
             throw new RepositoryException(msg, ise);
+        } finally {
+            // update operation failed, cancel all modifications
+            if (!succeeded) {
+                stateMgr.cancel();
+            }
         }
     }
 
@@ -838,6 +861,8 @@ public class WorkspaceImpl implements Workspace, Constants {
         checkAddNode(destPath, targetState.getNodeTypeName());
 
         // 3. do move operation (modify and persist affected states)
+
+        boolean succeeded = false;
         try {
             stateMgr.edit();
             boolean renameOnly = srcParentState.getUUID().equals(destParentState.getUUID());
@@ -860,7 +885,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             int srcNameIndex = srcName.getIndex() == 0 ? 1 : srcName.getIndex();
             srcParentState.removeChildNodeEntry(srcName.getName(), srcNameIndex);
 
-            // persist states
+            // store states
             stateMgr.store(targetState);
             if (renameOnly) {
                 stateMgr.store(srcParentState);
@@ -871,10 +896,16 @@ public class WorkspaceImpl implements Workspace, Constants {
 
             // finish update
             stateMgr.update();
+            succeeded = true;
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
             log.debug(msg);
             throw new RepositoryException(msg, ise);
+        } finally {
+            // update operation failed, cancel all modifications
+            if (!succeeded) {
+                stateMgr.cancel();
+            }
         }
     }
 
@@ -950,7 +981,6 @@ public class WorkspaceImpl implements Workspace, Constants {
         sanityCheck();
 
         // @todo filter workspaces according to access rights
-
         return session.getWorkspaceNames();
     }
 
@@ -966,27 +996,28 @@ public class WorkspaceImpl implements Workspace, Constants {
         sanityCheck();
 
         // check path & retrieve state
-        Path targetPath;
-        NodeState targetState;
+        Path parentPath;
+        NodeState parentState;
 
         try {
-            targetPath = Path.create(parentAbsPath, session.getNamespaceResolver(), true);
-            targetState = getNodeState(targetPath);
+            parentPath = Path.create(parentAbsPath, session.getNamespaceResolver(), true);
+            parentState = getNodeState(parentPath);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + parentAbsPath;
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
 
-        // make sure target node is checked-out
-        verifyCheckedOut(targetPath);
+        // make sure import target node is checked-out
+        verifyCheckedOut(parentPath);
 
-        // @todo check locked-status
-
-        // check node type constraints & access rights
-        checkAddNode(targetPath, targetState.getNodeTypeName());
-
-        // @todo implement Workspace#getImportContentHandler
+        // check locked-status
+        getLockManager().checkLock(parentPath, session);
+/*
+        Importer importer = new WorkspaceImporter(parentState, this, uuidBehavior);
+        return new ImportHandler(importer, session.getNamespaceResolver(),
+                rep.getNamespaceRegistry());
+*/
         throw new RepositoryException("not yet implemented");
     }
 

@@ -248,28 +248,37 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 throw new VersionException(msg);
             }
 
+            boolean succeeded = false;
             UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
-            stateMgr.edit();
+            try {
+                stateMgr.edit();
 
-            // remove from persistance state
-            node.removeNode(v.getNode().getName());
+                // remove from persistance state
+                node.removeNode(v.getNode().getName());
 
-            // unregister from labels
-            QName[] labels = v.internalGetLabels();
-            for (int i = 0; i < labels.length; i++) {
-                v.internalRemoveLabel(labels[i]);
-                labelNode.removeNode(labels[i]);
+                // unregister from labels
+                QName[] labels = v.internalGetLabels();
+                for (int i = 0; i < labels.length; i++) {
+                    v.internalRemoveLabel(labels[i]);
+                    labelNode.removeNode(labels[i]);
+                }
+                // detach from the version graph
+                v.internalDetach();
+
+                // and remove from history
+                versionCache.remove(v.getId());
+
+                // store changes
+                node.store();
+
+                stateMgr.update();
+                succeeded = true;
+            } finally {
+                // update operation failed, cancel all modifications
+                if (!succeeded) {
+                    stateMgr.cancel();
+                }
             }
-            // detach from the version graph
-            v.internalDetach();
-
-            // and remove from history
-            versionCache.remove(v.getId());
-
-            // store changes
-            node.store();
-
-            stateMgr.update();
         } catch (ItemStateException e) {
             throw new VersionException("Unable to store modifications", e);
         } catch (RepositoryException e) {
@@ -301,8 +310,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
         labelCache.put(label, version);
         ((InternalVersionImpl) version).internalAddLabel(label);
+        UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
+        boolean succeeded = false;
         try {
-            UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
             stateMgr.edit();
             PersistentNode lNode = labelNode.addNode(label, NT_UNSTRUCTURED);
             lNode.setPropertyValue(NativePVM.PROPNAME_NAME, InternalValue.create(label));
@@ -310,10 +320,16 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             labelNode.store();
 
             stateMgr.update();
+            succeeded = true;
         } catch (ItemStateException e) {
             throw new VersionException("Error while storing modifications", e);
         } catch (RepositoryException e) {
             throw new VersionException("Error while storing modifications", e);
+        } finally {
+            // update operation failed, cancel all modifications
+            if (!succeeded) {
+                stateMgr.cancel();
+            }
         }
         return prev;
     }
@@ -329,16 +345,23 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throw new VersionException("Version label " + label + " is not in version history.");
         }
         v.internalRemoveLabel(label);
+        UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
+        boolean succeeded = false;
         try {
-            UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
             stateMgr.edit();
             labelNode.removeNode(label);
             labelNode.store();
             stateMgr.update();
+            succeeded = true;
         } catch (ItemStateException e) {
             throw new VersionException("Unable to store modifications", e);
         } catch (RepositoryException e) {
             throw new VersionException("Unable to store modifications", e);
+        } finally {
+            // update operation failed, cancel all modifications
+            if (!succeeded) {
+                stateMgr.cancel();
+            }
         }
 
         return v;

@@ -103,7 +103,7 @@ public class NodeImpl extends ItemImpl implements Node {
     protected static final short CREATED = 0;
 
     /**
-     * Package private constructor.
+     * Protected constructor.
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Node</code> instance
      * @param session    the <code>Session</code> through which this <code>Node</code> is acquired

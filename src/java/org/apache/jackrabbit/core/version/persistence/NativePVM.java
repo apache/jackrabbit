@@ -314,6 +314,7 @@ public class NativePVM implements PersistentVersionManager, Constants {
             return hist;
         }
 
+        boolean succeeded = false;
         try {
             stateMgr.edit();
 
@@ -335,10 +336,16 @@ public class NativePVM implements PersistentVersionManager, Constants {
 
             // end update
             stateMgr.update();
+            succeeded = true;
 
             initVirtualIds(hist.getId(), hist.getNode().getState());
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
+        } finally {
+            // update operation failed, cancel all modifications
+            if (!succeeded) {
+                stateMgr.cancel();
+            }
         }
 
         log.info("Created new version history " + hist.getId() + " for " + node.safeGetJCRPath() + ". NumHistories=" + versionedUUIDs.size());
@@ -547,16 +554,23 @@ public class NativePVM implements PersistentVersionManager, Constants {
             } while (history.hasVersion(new QName("", versionName)));
         }
 
+        boolean succeeded = false;
         try {
             stateMgr.edit();
             InternalVersionImpl v = history.checkin(new QName("", versionName), node);
             stateMgr.update();
+            succeeded = true;
 
             initVirtualIds(v.getId(), v.getNode().getState());
 
             return v;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
+        } finally {
+            // update operation failed, cancel all modifications
+            if (!succeeded) {
+                stateMgr.cancel();
+            }
         }
     }
 

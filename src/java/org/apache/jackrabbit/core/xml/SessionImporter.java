@@ -227,7 +227,7 @@ public class SessionImporter implements Importer {
     /**
      * {@inheritDoc}
      */
-    public void endNode(NodeInfo node) throws RepositoryException {
+    public void endNode(NodeInfo nodeInfo) throws RepositoryException {
         parents.pop();
     }
 

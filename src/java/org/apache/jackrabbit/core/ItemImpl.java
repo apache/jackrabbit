@@ -1193,6 +1193,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 Collection dirtyRefs =
                         checkReferences(dirty.iterator(), removed.iterator());
 
+                boolean succeeded = false;
                 try {
                     // start the update operation
                     stateMgr.edit();
@@ -1206,8 +1207,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                         // generated new transient state
                         dirty = getTransientStates();
 
-                        // and aswell the references
-                        dirtyRefs= checkReferences(dirty.iterator(), removed.iterator());
+                        // and the references as well
+                        dirtyRefs = checkReferences(dirty.iterator(), removed.iterator());
                     }
 
                     // process 'new' or 'modified' transient states
@@ -1234,13 +1235,17 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
                     // end update operation
                     stateMgr.update();
-
+                    // update operation succeeded
+                    succeeded = true;
                 } catch (ItemStateException e) {
-
                     String msg = safeGetJCRPath() + ": unable to update item.";
                     log.debug(msg);
                     throw new RepositoryException(msg, e);
-
+                } finally {
+                    // update operation failed, cancel all modifications
+                    if (!succeeded) {
+                        stateMgr.cancel();
+                    }
                 }
 
                 // now it is safe to dispose the transient states:
@@ -1254,7 +1259,6 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     // dispose the transient state, it is no longer used
                     stateMgr.disposeTransientItemStateInAttic(transientState);
                 }
-
             } finally {
                 // turn off temporary path caching
                 stateMgr.enablePathCaching(false);
