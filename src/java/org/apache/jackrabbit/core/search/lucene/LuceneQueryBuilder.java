@@ -310,6 +310,10 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             // replace unescaped ' with " and escaped ' with just '
             StringBuffer query = new StringBuffer();
             String textsearch = node.getQuery();
+            // the default lucene query parser recognizes 'AND', 'OR' and
+            // 'NOT' as keywords. when the whole statement is lowercased, this
+            // will not happen ;)
+            textsearch = textsearch.toLowerCase();
             boolean escaped = false;
             for (int i = 0; i < textsearch.length(); i++) {
                 if (textsearch.charAt(i) == '\\') {
