@@ -66,6 +66,7 @@ public class RepositoryImpl implements Repository, EventListener {
     public static final String STATS_PROP_COUNT_PROPERTY = "jcr.repository.stats.properties.count";
 
     // pre-defined values of well known repository properties
+    // @todo update as necessary
     private static final String SPEC_VERSION = "0.14";
     private static final String SPEC_NAME = "Content Repository API for Java(TM) Technology Specification";
     private static final String REP_VENDOR = "Apache Software Foundation";
@@ -116,6 +117,9 @@ public class RepositoryImpl implements Repository, EventListener {
     // misc. statistics
     private long nodesCount = 0;
     private long propsCount = 0;
+
+    // flag indicating if respository has been shut down
+    private boolean disposed = false;
 
     /**
      * private constructor
@@ -309,6 +313,13 @@ public class RepositoryImpl implements Repository, EventListener {
                         "/", true, null, null, false);
             }
         }
+
+        // finally register shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                shutdown();
+            }
+        });
     }
 
     /**
@@ -326,27 +337,57 @@ public class RepositoryImpl implements Repository, EventListener {
     }
 
     RepositoryConfig getConfig() {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         return repConfig;
     }
 
     NamespaceRegistryImpl getNamespaceRegistry() {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         return nsReg;
     }
 
     NodeTypeRegistry getNodeTypeRegistry() {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         return ntReg;
     }
 
     VersionManager getVersionManager() {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         return vMgr;
     }
 
     String getRootNodeUUID() {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         return rootNodeUUID;
     }
 
     synchronized PersistentItemStateManager getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
         if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
@@ -370,6 +411,11 @@ public class RepositoryImpl implements Repository, EventListener {
 
     synchronized ReferenceManager getWorkspaceReferenceManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
         if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
@@ -387,6 +433,11 @@ public class RepositoryImpl implements Repository, EventListener {
 
     synchronized ObservationManagerFactory getObservationManagerFactory(String workspaceName)
             throws NoSuchWorkspaceException {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         if (!wspConfigs.containsKey(workspaceName)) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
@@ -414,6 +465,11 @@ public class RepositoryImpl implements Repository, EventListener {
      */
     synchronized SearchManager getSearchManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
         SearchManager searchMgr
                 = (SearchManager) wspSearchMgrs.get(workspaceName);
@@ -437,6 +493,11 @@ public class RepositoryImpl implements Repository, EventListener {
 
     synchronized SystemSession getSystemSession(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
         if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
@@ -451,9 +512,18 @@ public class RepositoryImpl implements Repository, EventListener {
     }
 
     /**
-     * Shuts down this repository
+     * Shuts down this repository. Note that this method is called automatically
+     * through a shutdown hook.
+     *
+     * @see Runtime#addShutdownHook(Thread)
      */
-    protected void shutdown() {
+    protected synchronized void shutdown() {
+        // check state
+        if (disposed) {
+            // there's nothing to do here because the repository has already been shut down
+            return;
+        }
+
         // persist repository properties
         try {
             storeRepProps();
@@ -483,6 +553,9 @@ public class RepositoryImpl implements Repository, EventListener {
         } catch (FileSystemException e) {
             log.error("Error while closing filesystem", e);
         }
+
+        // make sure this instance is not used anymore
+        disposed = true;
     }
 
     private void loadRepProps() throws RepositoryException {
@@ -541,6 +614,11 @@ public class RepositoryImpl implements Repository, EventListener {
      * @return
      */
     public Properties getProperties() {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         return (Properties) repProps.clone();
     }
 
@@ -549,6 +627,11 @@ public class RepositoryImpl implements Repository, EventListener {
      * @return
      */
     public String getProperty(String key) {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         return repProps.getProperty(key);
     }
 
@@ -560,6 +643,11 @@ public class RepositoryImpl implements Repository, EventListener {
      * @throws RepositoryException
      */
     public NodeImpl getSystemRootNode(SessionImpl session) throws RepositoryException {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         return ((NodeImpl) session.getRootNode()).getNode(SYSTEM_ROOT_NAME);
     }
 
@@ -569,6 +657,11 @@ public class RepositoryImpl implements Repository, EventListener {
      */
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
         if (workspaceName == null) {
             workspaceName = repConfig.getDefaultWorkspaceName();
         }
@@ -591,11 +684,17 @@ public class RepositoryImpl implements Repository, EventListener {
         }
     }
 
-    //-----------------------------------------------------------< Repository >
+    //--------------------------------------------------------< EventListener >
     /**
      * @see EventListener#onEvent(EventIterator)
      */
     public synchronized void onEvent(EventIterator events) {
+        // check state
+        if (disposed) {
+            // ignore, repository instance has been shut down
+            return;
+        }
+
         while (events.hasNext()) {
             Event event = events.nextEvent();
             long type = event.getType();

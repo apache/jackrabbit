@@ -81,13 +81,6 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                 RegistryHelper.registerRepository(ctx, repName, repConfig, repHome, true);
                 repository = (Repository) ctx.lookup(repName);
 */
-/*
-                Runtime.getRuntime().addShutdownHook(new Thread() {
-                    public void run() {
-                        repository.shutdown();
-                    }
-                });
-*/
             } catch (Exception e) {
                 throw new RepositoryStubException(e.toString());
             }

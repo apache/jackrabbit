@@ -1,17 +1,96 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- <!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "file://config.dtd"> -->
+<!DOCTYPE Repository [
+    <!--
+        the Repository element configures a repository instance;
+        individual workspaces of the repository are configured through
+        separate configuration files called workspace.xml which are
+        located in a subfolder of the workspaces root directory
+        (see Workspaces element).
+
+        it consists of
+
+            a FileSystem element (the virtual file system
+            used by the repository to persist global state such as
+            registered namespaces, custom node types, etc..
+
+            a Workspaces element that specifies to the location of
+            workspaces root directory and the name of default workspace
+
+            a Workspace element that is used as a workspace configuration
+            template; it is used to create the initial workspace if there's
+            no workspace yet and for creating additional workspaces through
+            the api
+    -->
+    <!ELEMENT Repository (FileSystem,Workspaces,Workspace)>
+
+    <!--
+        a virtual file system
+    -->
+    <!ELEMENT FileSystem (param*)>
+    <!ATTLIST FileSystem
+      class CDATA #REQUIRED>
+
+    <!--
+        generic parameter (name/value pair)
+    -->
+    <!ELEMENT param EMPTY>
+    <!ATTLIST param
+      name CDATA #REQUIRED
+      value CDATA #REQUIRED>
+
+    <!--
+        the Workspaces element specifies the workspaces root directory
+        (rootPath attribute) and the name of the default workspace
+        (defaultWorkspace attribute).
+
+        individual workspaces are configured through individual workspace.xml
+        files located in a subfolder each of the workspaces root directory.
+    -->
+    <!ELEMENT Workspaces EMPTY>
+    <!ATTLIST Workspaces
+      rootPath CDATA #REQUIRED
+      defaultWorkspace CDATA #REQUIRED>
+
+    <!--
+        the Workspace element serves as a workspace configuration template;
+        it is used to create the initial workspace if there's no workspace yet
+        and for creating additional workspaces through the api
+    -->
+    <!ELEMENT Workspace (FileSystem,PersistenceManager,SearchIndex)>
+    <!ATTLIST Workspace
+      name CDATA #REQUIRED>
+
+    <!--
+        the PersistenceManager element configures the persistence manager
+        to be used for the workspace; the class attribute specifies the
+        FQN of the class implementing PersistenceManager interface
+    -->
+    <!ELEMENT PersistenceManager (param*)>
+    <!ATTLIST PersistenceManager
+      class CDATA #REQUIRED>
+
+    <!--
+        the SearchIndex element specifies the locaction of the search index
+        (used by the QueryManager)
+    -->
+    <!ELEMENT SearchIndex EMPTY>
+    <!ATTLIST SearchIndex
+      path CDATA #REQUIRED>
+]>
+<!-- Example Repository Configuration File -->
 <Repository>
     <!--
         virtual file system where the repository stores global state
         (e.g. registered namespaces, custom node types, etc.)
     -->
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-    	<param name="path" value="${rep.home}/repository"/>
+        <param name="path" value="${rep.home}/repository"/>
     </FileSystem>
     <!--
         location of workspaces root directory and name of default workspace
     -->
-    <Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" />
+    <Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default"/>
     <!--
         workspace configuration template:
         used to create the initial workspace if there's no workspace yet
@@ -25,7 +104,7 @@
             <param name="path" value="${wsp.home}"/>
         </FileSystem>
         <!--
-            persistence of the workspace:
+            persistence manager of the workspace:
             class: FQN of class implementing PersistenceManager interface
         -->
         <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager">
