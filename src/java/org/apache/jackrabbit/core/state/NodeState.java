@@ -875,15 +875,21 @@ public class NodeState extends ItemState {
                 return Collections.unmodifiableList(entries);
             }
 
-            ChildNodeEntries result = new ChildNodeEntries();
-            result.addAll(entries);
+            List result = new ArrayList(entries);
 
-            Iterator iter = other.entries.iterator();
-            while (iter.hasNext()) {
-                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-                result.remove(entry.getName(), entry.getUUID());
+            Iterator otherIter = other.entries.iterator();
+            while (otherIter.hasNext()) {
+                ChildNodeEntry otherEntry = (ChildNodeEntry) otherIter.next();
+                Iterator ourIter = entries.iterator();
+                while (ourIter.hasNext()) {
+                    ChildNodeEntry ourEntry = (ChildNodeEntry) ourIter.next();
+                    if (ourEntry.getName().equals(otherEntry.getName())
+                            && ourEntry.getUUID().equals(otherEntry.getUUID())) {
+                        result.remove(ourEntry);
+                    }
+                }
             }
-            return result.entries;
+            return result;
         }
     }
 
