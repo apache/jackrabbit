@@ -16,19 +16,24 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.Iterator;
 
 /**
  * Shared <code>ItemStateManager</code>. Caches objects returned from a
@@ -107,8 +112,8 @@ public class SharedItemStateManager extends ItemStateCache
         NodeState rootState = createInstance(rootNodeUUID, Constants.REP_ROOT, null);
 
         // @todo FIXME need to manually setup root node by creating mandatory jcr:primaryType property
-        NodeDefId nodeDefId = null;
-        PropDefId propDefId = null;
+        NodeDefId nodeDefId;
+        PropDefId propDefId;
 
         try {
             nodeDefId = new NodeDefId(ntReg.getRootNodeDef());
@@ -271,7 +276,7 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
-     * Checks if this itemstate manager has the given item state without
+     * Checks if this item state manager has the given item state without
      * considering the virtual item state managers.
      */
     private boolean hasNonVirtualItemState(ItemId id) {
@@ -340,6 +345,7 @@ public class SharedItemStateManager extends ItemStateCache
 
     /**
      * Create a new node state instance
+     *
      * @param other other state associated with new instance
      * @return new node state instance
      */
@@ -361,8 +367,7 @@ public class SharedItemStateManager extends ItemStateCache
      * @return new property state instance
      */
     PropertyState createInstance(QName propName, String parentUUID) {
-        PropertyState state = persistMgr.createNew(
-                new PropertyId(parentUUID, propName));
+        PropertyState state = persistMgr.createNew(new PropertyId(parentUUID, propName));
         state.setStatus(ItemState.STATUS_NEW);
         state.addListener(this);
 
@@ -376,9 +381,10 @@ public class SharedItemStateManager extends ItemStateCache
      * by this state manager.<p/>
      * After successfully storing the states the observation manager is informed
      * about the changes, if an observation manager is passed to this method.
-     * @param local change log containing local items
+     *
+     * @param local  change log containing local items
      * @param obsMgr the observation manager to inform, or <code>null</code> if
-     *  no observation manager should be informed.
+     *               no observation manager should be informed.
      * @throws ItemStateException if an error occurs
      */
     public synchronized void store(ChangeLog local, ObservationManagerImpl obsMgr) throws ItemStateException {

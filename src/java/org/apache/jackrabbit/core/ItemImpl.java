@@ -435,8 +435,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         return removed;
     }
 
-    private void validateTransientItems(Iterator dirtyIter, Iterator removerIter)
-            throws AccessDeniedException, ConstraintViolationException, RepositoryException {
+    private void validateTransientItems(Iterator dirtyIter, Iterator removedIter)
+            throws AccessDeniedException, ConstraintViolationException,
+            RepositoryException {
         /**
          * the following validations/checks are performed on transient items:
          *
@@ -607,8 +608,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         }
 
         // walk through list of removed transient items and check REMOVE permission
-        while (removerIter.hasNext()) {
-            ItemState itemState = (ItemState) removerIter.next();
+        while (removedIter.hasNext()) {
+            ItemState itemState = (ItemState) removedIter.next();
             ItemId id = itemState.getId();
             // check WRITE permission
             if (!accessMgr.isGranted(id, AccessManager.REMOVE)) {

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -25,7 +24,9 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.search.QueryManagerImpl;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -36,7 +37,6 @@ import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -943,6 +943,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
     /**
      * Returns the ObservationManagerImpl for this workspace instance.
+     *
      * @return the ObservationManagerImpl for this workspace instance.
      */
     public synchronized ObservationManagerImpl getObservationManagerImpl()

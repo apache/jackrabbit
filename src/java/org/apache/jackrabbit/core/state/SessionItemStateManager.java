@@ -16,14 +16,27 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.CachingHierarchyManager;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.HierarchyManagerImpl;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.TreeMap;
 
 /**
  * <code>SessionItemStateManager</code> ...
