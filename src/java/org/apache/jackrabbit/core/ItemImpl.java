@@ -435,7 +435,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         return removed;
     }
 
-    private void validateTransientItems(Iterator iter)
+    private void validateTransientItems(Iterator dirtyIter, Iterator removerIter)
             throws AccessDeniedException, ConstraintViolationException, RepositoryException {
         /**
          * the following validations/checks are performed on transient items:
@@ -459,17 +459,17 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
          */
 
         AccessManager accessMgr = session.getAccessManager();
-        // walk through list of transient items and validate each
-        while (iter.hasNext()) {
-            ItemState itemState = (ItemState) iter.next();
+        // walk through list of dirty transient items and validate each
+        while (dirtyIter.hasNext()) {
+            ItemState itemState = (ItemState) dirtyIter.next();
 
             if (itemState.getStatus() != ItemState.STATUS_NEW) {
                 // transient item is not 'new', therefore it has to be 'modified'
 
                 // check WRITE permission
                 ItemId id = itemState.getId();
-                if (!accessMgr.isGranted(itemState.getId(), AccessManager.WRITE)) {
-                    String msg = itemMgr.safeGetJCRPath(id) + ": not allowed modify item";
+                if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
+                    String msg = itemMgr.safeGetJCRPath(id) + ": not allowed to modify item";
                     log.debug(msg);
                     throw new AccessDeniedException(msg);
                 }
@@ -501,7 +501,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                              * satisfy the 'required primary types' constraint
                              */
                             String msg = node.safeGetJCRPath() + " must be of node type " + ntReq.getName();
-                            log.warn(msg);
+                            log.debug(msg);
                             throw new ConstraintViolationException(msg);
                         }
                     }
@@ -513,7 +513,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     PropDef pd = pda[i];
                     if (!nodeState.hasPropertyEntry(pd.getName())) {
                         String msg = node.safeGetJCRPath() + ": mandatory property " + pd.getName() + " does not exist";
-                        log.warn(msg);
+                        log.debug(msg);
                         throw new ConstraintViolationException(msg);
                     }
                 }
@@ -523,7 +523,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     ChildNodeDef cnd = cnda[i];
                     if (!nodeState.hasChildNodeEntry(cnd.getName())) {
                         String msg = node.safeGetJCRPath() + ": mandatory child node " + cnd.getName() + " does not exist";
-                        log.warn(msg);
+                        log.debug(msg);
                         throw new ConstraintViolationException(msg);
                     }
                 }
@@ -549,7 +549,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                         } catch (RepositoryException e) {
                             // repack exception for providing verboser error message
                             String msg = prop.safeGetJCRPath() + ": " + e.getMessage();
-                            log.warn(msg);
+                            log.debug(msg);
                             throw new ConstraintViolationException(msg);
                         }
 
@@ -591,7 +591,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                                     String msg = prop.safeGetJCRPath()
                                             + ": does not satisfy the value constraint "
                                             + constraints[0];   // just report the 1st
-                                    log.warn(msg);
+                                    log.debug(msg);
                                     throw new ConstraintViolationException(msg);
                                 }
                             }
@@ -600,9 +600,21 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 }
 
                 /**
-                 * no need to check the protected flag* as this is checked
+                 * no need to check the protected flag as this is checked
                  * in PropertyImpl.setValue(Value)
                  */
+            }
+        }
+
+        // walk through list of removed transient items and check REMOVE permission
+        while (removerIter.hasNext()) {
+            ItemState itemState = (ItemState) removerIter.next();
+            ItemId id = itemState.getId();
+            // check WRITE permission
+            if (!accessMgr.isGranted(id, AccessManager.REMOVE)) {
+                String msg = itemMgr.safeGetJCRPath(id) + ": not allowed to remove item";
+                log.debug(msg);
+                throw new AccessDeniedException(msg);
             }
         }
     }
@@ -1156,16 +1168,16 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 }
 
                 /**
-                 * validate access and node type constraints
-                 * (this will also validate child removals)
-                 */
-                validateTransientItems(dirty.iterator());
-
-                /**
                  * build list of transient descendents in the attic
                  * (i.e. those marked as 'removed')
                  */
                 Collection removed = getRemovedStates();
+
+                /**
+                 * validate access and node type constraints
+                 * (this will also validate child removals)
+                 */
+                validateTransientItems(dirty.iterator(), removed.iterator());
 
                 /**
                  * referential integrity checks:
