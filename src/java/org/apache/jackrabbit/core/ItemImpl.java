@@ -17,32 +17,13 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ItemVisitor;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.PropertyType;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
+import javax.jcr.*;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeDef;
@@ -50,12 +31,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <code>ItemImpl</code> implements the <code>Item</code> interface.
@@ -479,44 +455,48 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 ItemId id = nodeState.getId();
                 NodeImpl node = (NodeImpl) itemMgr.getItem(id);
                 NodeDef def = node.getDefinition();
-                NodeTypeImpl nt = (NodeTypeImpl) node.getPrimaryNodeType();
+                // primary type
+                NodeTypeImpl pnt = (NodeTypeImpl) node.getPrimaryNodeType();
+                // effective node type (primary type incl. mixins)
+                EffectiveNodeType ent = node.getEffectiveNodeType();
                 /**
                  * if the transient node was added (i.e. if it is 'new'),
                  * check its node's node type against the required node type
                  * in its definition
                  */
-                NodeType[] nta = def.getRequiredPrimaryTypes();
-                for (int i = 0; i < nta.length; i++) {
-                    NodeTypeImpl ntReq = (NodeTypeImpl) nta[i];
-                    if (nodeState.getStatus() == ItemState.STATUS_NEW
-                            && !(nt.getQName().equals(ntReq.getQName())
-                            || nt.isDerivedFrom(ntReq.getQName()))) {
-                        /**
-                         * the transient node's node type does not satisfy the
-                         * 'required primary types' constraint
-                         */
-                        String msg = node.safeGetJCRPath() + " must be of node type " + ntReq.getName();
-                        log.warn(msg);
-                        throw new ConstraintViolationException(msg);
+                if (nodeState.getStatus() == ItemState.STATUS_NEW) {
+                    NodeType[] nta = def.getRequiredPrimaryTypes();
+                    for (int i = 0; i < nta.length; i++) {
+                        NodeTypeImpl ntReq = (NodeTypeImpl) nta[i];
+                        if (!(pnt.getQName().equals(ntReq.getQName())
+                                || pnt.isDerivedFrom(ntReq.getQName()))) {
+                            /**
+                             * the transient node's primary node type does not
+                             * satisfy the 'required primary types' constraint
+                             */
+                            String msg = node.safeGetJCRPath() + " must be of node type " + ntReq.getName();
+                            log.warn(msg);
+                            throw new ConstraintViolationException(msg);
+                        }
                     }
                 }
 
                 // mandatory child properties
-                PropertyDef[] propDefs = nt.getMandatoryPropertyDefs();
-                for (int i = 0; i < propDefs.length; i++) {
-                    PropertyDefImpl pd = (PropertyDefImpl) propDefs[i];
-                    if (!nodeState.hasPropertyEntry(pd.getQName())) {
+                PropDef[] pda = ent.getMandatoryPropDefs();
+                for (int i = 0; i < pda.length; i++) {
+                    PropDef pd = pda[i];
+                    if (!nodeState.hasPropertyEntry(pd.getName())) {
                         String msg = node.safeGetJCRPath() + ": mandatory property " + pd.getName() + " does not exist";
                         log.warn(msg);
                         throw new ConstraintViolationException(msg);
                     }
                 }
                 // mandatory child nodes
-                NodeDef[] nodeDefs = nt.getMandatoryNodeDefs();
-                for (int i = 0; i < nodeDefs.length; i++) {
-                    NodeDefImpl nd = (NodeDefImpl) nodeDefs[i];
-                    if (!nodeState.hasChildNodeEntry(nd.getQName())) {
-                        String msg = node.safeGetJCRPath() + ": mandatory child node " + nd.getName() + " does not exist";
+                ChildNodeDef[] cnda = ent.getMandatoryNodeDefs();
+                for (int i = 0; i < cnda.length; i++) {
+                    ChildNodeDef cnd = cnda[i];
+                    if (!nodeState.hasChildNodeEntry(cnd.getName())) {
+                        String msg = node.safeGetJCRPath() + ": mandatory child node " + cnd.getName() + " does not exist";
                         log.warn(msg);
                         throw new ConstraintViolationException(msg);
                     }

@@ -404,6 +404,14 @@ public class EffectiveNodeType implements Cloneable {
         return (ChildNodeDef[]) defs.toArray(new ChildNodeDef[defs.size()]);
     }
 
+    /**
+     * Determines whether this effective node type representation includes
+     * (either through inheritance or aggregation) the given node type.
+     *
+     * @param nodeTypeName name of node type
+     * @return <code>true</code> if the given node type is included, otherwise
+     *         <code>false</code>
+     */
     public boolean includesNodeType(QName nodeTypeName) {
         return allNodeTypes.contains(nodeTypeName);
     }
