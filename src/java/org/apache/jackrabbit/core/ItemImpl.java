@@ -766,7 +766,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
         // now that all NodeReferences objects have been updated,
         // walk through 'removed' nodes and verify that no node that is still
-        // being referenced, is removed
+        // being referenced is removed
         Iterator iter = removedNodes.iterator();
         while (iter.hasNext()) {
             NodeState nodeState = (NodeState) iter.next();

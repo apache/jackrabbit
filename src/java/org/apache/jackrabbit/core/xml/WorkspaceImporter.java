@@ -599,6 +599,7 @@ public class WorkspaceImporter implements Importer, Constants {
             if (parent == null) {
                 // parent node was skipped, skip this child node also
                 parents.push(null); // push null onto stack for skipped node
+                succeeded = true;
                 log.debug("skipping node " + nodeName);
                 return;
             }
@@ -618,6 +619,7 @@ public class WorkspaceImporter implements Importer, Constants {
                     if (def.isProtected() && entExisting.includesNodeType(ntName)) {
                         // skip protected node
                         parents.push(null); // push null onto stack for skipped node
+                        succeeded = true;
                         log.debug("skipping protected node "
                                 + resolveJCRPath(existing.getId()));
                         return;
@@ -635,16 +637,18 @@ public class WorkspaceImporter implements Importer, Constants {
             if (node == null) {
                 // there's no node with that name...
                 if (uuid == null) {
+                    // no potential uuid conflict, always create new node
+
                     ChildNodeDef def =
                             wsp.findApplicableNodeDefinition(nodeName, ntName, parent);
                     if (def.isProtected()) {
                         // skip protected node
                         parents.push(null); // push null onto stack for skipped node
+                        succeeded = true;
                         log.debug("skipping protected node " + nodeName);
                         return;
                     }
 
-                    // no potential uuid conflict, always create new node:
                     // check if new node can be added (check access rights &
                     // node type constraints only, assume locking & versioning status
                     // has already been checked on ancestor)
@@ -652,7 +656,7 @@ public class WorkspaceImporter implements Importer, Constants {
                             WorkspaceImpl.CHECK_ACCESS
                             | WorkspaceImpl.CHECK_CONSTRAINTS);
                     // do create new node
-                    node = createNode(parent, nodeName, ntName, mixins, null);
+                    node = createNode(parent, nodeName, ntName, mixins, null, def);
                 } else {
                     // potential uuid conflict
                     NodeState conflicting;
@@ -667,7 +671,18 @@ public class WorkspaceImporter implements Importer, Constants {
                         // resolve uuid conflict
                         node = resolveUUIDConflict(parent, conflicting, nodeInfo);
                     } else {
-                        // create new with given uuid:
+                        // create new with given uuid
+
+                        ChildNodeDef def =
+                                wsp.findApplicableNodeDefinition(nodeName, ntName, parent);
+                        if (def.isProtected()) {
+                            // skip protected node
+                            parents.push(null); // push null onto stack for skipped node
+                            succeeded = true;
+                            log.debug("skipping protected node " + nodeName);
+                            return;
+                        }
+
                         // check if new node can be added (check access rights &
                         // node type constraints only, assume locking & versioning status
                         // has already been checked on ancestor)
@@ -675,7 +690,7 @@ public class WorkspaceImporter implements Importer, Constants {
                                 WorkspaceImpl.CHECK_ACCESS
                                 | WorkspaceImpl.CHECK_CONSTRAINTS);
                         // do create new node
-                        node = createNode(parent, nodeName, ntName, mixins, uuid);
+                        node = createNode(parent, nodeName, ntName, mixins, uuid, def);
                     }
                 }
             }
@@ -724,16 +739,16 @@ public class WorkspaceImporter implements Importer, Constants {
                         try {
                             // try single-valued
                             def = wsp.findApplicablePropertyDefinition(propName,
-                                    type, false, parent);
+                                    type, false, node);
                         } catch (ConstraintViolationException cve) {
                             // try multi-valued
                             def = wsp.findApplicablePropertyDefinition(propName,
-                                    type, true, parent);
+                                    type, true, node);
                         }
                     } else {
                         // can only be multi-valued (n == 0 || n > 1)
                         def = wsp.findApplicablePropertyDefinition(propName,
-                                type, true, parent);
+                                type, true, node);
                     }
 
                     if (def.isProtected()) {
