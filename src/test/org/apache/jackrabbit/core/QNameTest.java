@@ -1,0 +1,151 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core;
+
+import junit.framework.TestCase;
+
+import java.util.ArrayList;
+
+/**
+ * This Class implements a test case for the 'Path' class.
+ *
+ * Actually, this should be below the {@link org.apache.jackrabbit.test} package,
+ * but it needs package protected methods of that class.
+ */
+public class QNameTest extends TestCase {
+
+    private final NamespaceResolver resolver;
+
+    private Test[] tests;
+
+    private static int NUM_TESTS = 1;
+
+    public QNameTest() {
+
+        // create dummy namespace resolver
+        resolver = new NamespaceResolver(){
+            public String getURI(String prefix) {
+                return prefix;
+            }
+
+            public String getPrefix(String uri) {
+                return uri;
+            }
+        };
+
+        // create tests
+        ArrayList list = new ArrayList();
+
+        // valid names
+        list.add(new Test("name", "", "name"));
+        list.add(new Test("prefix:name", "prefix", "name"));
+        list.add(new Test("pre fix:na me", "pre fix", "na me"));
+
+        // invalid names
+        list.add(new Test(":name"));
+        list.add(new Test(""));
+        list.add(new Test(" name"));
+        list.add(new Test(" prefix: name"));
+        list.add(new Test("prefix: name"));
+        list.add(new Test("prefix:name "));
+        list.add(new Test("prefix :name"));
+        list.add(new Test("name/name"));
+        list.add(new Test("name[name"));
+        list.add(new Test("name]name"));
+        list.add(new Test("name*name"));
+        list.add(new Test("prefix:name:name"));
+
+        tests = (Test[]) list.toArray(new Test[list.size()]);
+    }
+
+    public void testCreate() throws Exception {
+        for (int i=0; i<tests.length; i++) {
+            Test t = tests[i];
+            long t1 = System.currentTimeMillis();
+            for (int j=0; j<NUM_TESTS; j++) {
+                try {
+                    QName n = QName.fromJCRName(t.jcrName, resolver);
+                    if (!t.isValid()) {
+                        fail("Should throw IllegalNameException: " + t.jcrName);
+                    }
+                    assertEquals("\"" + t.jcrName + "\".uri", t.prefix, n.namespaceURI);
+                    assertEquals("\"" + t.jcrName + "\".localName", t.name, n.localName);
+                } catch (IllegalNameException e) {
+                    if (t.isValid()) {
+                        throw e;
+                    }
+                }
+            }
+            long t2 = System.currentTimeMillis();
+            if (NUM_TESTS>1) {
+                System.out.println("testCreate():\t" + t + "\t" + (t2-t1) + "\tms");
+            }
+        }
+    }
+
+    public void testCheckFormat() throws Exception {
+        for (int i=0; i<tests.length; i++) {
+            Test t = tests[i];
+            long t1 = System.currentTimeMillis();
+            for (int j=0; j<NUM_TESTS; j++) {
+                // check just creation
+                boolean isValid = true;
+                try {
+                    QName.checkFormat(t.jcrName);
+                } catch (IllegalNameException e) {
+                    isValid = false;
+                }
+                assertEquals("\"" + t.jcrName + "\".checkFormat()", t.isValid(),  isValid);
+            }
+            long t2 = System.currentTimeMillis();
+            if (NUM_TESTS>1) {
+                System.out.println("testCheckFormat():\t" + t + "\t" + (t2-t1) + "\tms");
+            }
+        }
+    }
+
+    private static class Test {
+
+        private final String jcrName;
+
+        private final String prefix;
+
+        private final String name;
+
+        public Test(String jcrName) {
+            this(jcrName, null, null);
+        }
+
+        public Test(String jcrName, String prefix, String name) {
+            this.jcrName = jcrName;
+            this.prefix = prefix;
+            this.name = name;
+        }
+
+        public boolean isValid() {
+            return name!=null;
+        }
+
+        public String toString() {
+            StringBuffer b = new StringBuffer(jcrName);
+            if (isValid()) {
+                b.append(",VAL");
+            }
+            return b.toString();
+        }
+    }
+}
