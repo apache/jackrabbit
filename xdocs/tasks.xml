@@ -19,8 +19,8 @@
         	access control
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-        	current persistence model (nodes and properties are stored in separate
-  files) leads to *very* slow performance in a normal filesystem;
+		current persistence model (nodes and properties are stored in separate
+		files) leads to *very* slow performance in a normal filesystem;
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
         	use jdbc as an alternative to virtual filesystem persistence layer
@@ -48,22 +48,9 @@
         	inline @todo comments: resolve/implement
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-  		gracefull repository shutdown:      	
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-    		shutdown repository    
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-    		close workspaces    
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-    		close workspaces    
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-    		close abstract file systems (e.g. flush dirty buffers, etc.)
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-    		trap JVM shutdown in RepositoryFactory? (Runtime#addShutdownHook)
+  		gracefull repository shutdown: shutdown repository, close workspaces,
+		close abstract file systems (e.g. flush dirty buffers, etc.),
+		trap JVM shutdown in RepositoryFactory (Runtime#addShutdownHook)?
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
     		ItemState: hide STATUS_* flags, use set* and is* methods instead
