@@ -107,6 +107,10 @@ abstract class AbstractSAXEventGenerator implements Constants {
         String[] prefixes = session.getNamespacePrefixes();
         for (int i = 0; i < prefixes.length; i++) {
             String prefix = prefixes[i];
+            if (NS_XML_PREFIX.equals(prefix)) {
+                // skip 'xml' prefix as this would be an illegal namespace declaration
+                continue;
+            }
             String uri = session.getNamespaceURI(prefix);
             contentHandler.startPrefixMapping(prefix, uri);
         }
@@ -121,7 +125,12 @@ abstract class AbstractSAXEventGenerator implements Constants {
         // end namespace declarations
         String[] prefixes = session.getNamespacePrefixes();
         for (int i = 0; i < prefixes.length; i++) {
-            contentHandler.endPrefixMapping(prefixes[i]);
+            String prefix = prefixes[i];
+            if (NS_XML_PREFIX.equals(prefix)) {
+                // skip 'xml' prefix as this would be an illegal namespace declaration
+                continue;
+            }
+            contentHandler.endPrefixMapping(prefix);
         }
     }
 
