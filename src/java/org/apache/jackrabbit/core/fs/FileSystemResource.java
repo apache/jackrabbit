@@ -89,7 +89,7 @@ public class FileSystemResource {
      *
      * @throws FileSystemException
      */
-    public void makeParentDirs() throws FileSystemException {
+    public synchronized void makeParentDirs() throws FileSystemException {
         String parentDir = getParentDir();
         if (!fs.exists(parentDir)) {
             fs.createFolder(parentDir);
@@ -103,7 +103,7 @@ public class FileSystemResource {
      * @see FileSystem#deleteFile
      */
     public void delete() throws FileSystemException {
-        fs.deleteFile(path);
+        delete(false);
     }
 
     /**
@@ -113,7 +113,7 @@ public class FileSystemResource {
      *                             automatically be deleted
      * @see FileSystem#deleteFile
      */
-    public void delete(boolean pruneEmptyParentDirs) throws FileSystemException {
+    public synchronized void delete(boolean pruneEmptyParentDirs) throws FileSystemException {
         fs.deleteFile(path);
         if (pruneEmptyParentDirs) {
             // prune empty parent folders

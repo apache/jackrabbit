@@ -243,7 +243,7 @@ public class Test {
             imported = root.getNode("imported");
         }
 
-        //importNode(new File("d:/dev/jsr170/jackrabbit/src/java"), imported);
+        importNode(new File("d:/dev/jsr170/jackrabbit/src/java"), imported);
 
         if (root.hasNode("foo")) {
             root.getNode("foo").remove();

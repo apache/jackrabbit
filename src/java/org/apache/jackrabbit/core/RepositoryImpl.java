@@ -530,7 +530,7 @@ public class RepositoryImpl implements Repository, EventListener {
      *
      * @see Runtime#addShutdownHook(Thread)
      */
-    protected synchronized void shutdown() {
+    public synchronized void shutdown() {
         // check state
         if (disposed) {
             // there's nothing to do here because the repository has already been shut down

@@ -107,7 +107,8 @@
             persistence manager of the workspace:
             class: FQN of class implementing PersistenceManager interface
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager">
+        <!-- <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager"> -->
+        <PersistenceManager class="org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager">
             <!-- <param name="someParam" value="someValue"/> -->
         </PersistenceManager>
         <SearchIndex path="/index"/>

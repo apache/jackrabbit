@@ -131,7 +131,7 @@ public class WorkspaceImpl implements Workspace {
      * @param ps
      * @throws RepositoryException
      */
-    void dump(PrintStream ps) throws RepositoryException {
+    public void dump(PrintStream ps) throws RepositoryException {
         ps.println("Workspace: " + wspConfig.getName() + " (" + this + ")");
         ps.println();
         //persistentStateMgr.dump(ps);
