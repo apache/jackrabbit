@@ -186,6 +186,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
                     state = new VersionNodeState(this, v, vi.getParent().getId());
                     state.setDefinitionId(NDEF_VERSION);
                     state.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(v.getCreated()));
+                    // todo: do not read frozen stuff from frozen node instance here, rather put to version
                     state.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(v.getFrozenNode().getFrozenUUID()));
                     state.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE, InternalValue.create(v.getFrozenNode().getFrozenPrimaryType()));
                     state.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, InternalValue.create(v.getFrozenNode().getFrozenMixinTypes()));

@@ -20,13 +20,8 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.version.*;
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
-import org.apache.jackrabbit.core.state.PersistentNodeState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.*;
 import org.apache.commons.collections.ReferenceMap;
 
 import javax.jcr.RepositoryException;
@@ -126,11 +121,6 @@ public class NativePVM implements PersistentVersionManager {
     private PersistentItemStateProvider stateMgr;
 
     /**
-     * the nodetype manager for the version storage
-     */
-    private NodeTypeManagerImpl ntMgr;
-
-    /**
      * mapping from virtual uuids to persistent ids of the persistent nodes
      * key=externalId, value=PersistentId
      */
@@ -155,36 +145,15 @@ public class NativePVM implements PersistentVersionManager {
     /**
      * Creates a new PersistentVersionManager.
      *
-     * @param session
+     * @param pMgr
+     * @param ntReg
      * @throws javax.jcr.RepositoryException
      */
-    public NativePVM(SessionImpl session) throws RepositoryException {
-        this.stateMgr = ((WorkspaceImpl) session.getWorkspace()).getPersistentStateManager();
-        this.ntMgr = session.getNodeTypeManager();
-
+    public NativePVM(PersistenceManager pMgr, NodeTypeRegistry ntReg) throws RepositoryException {
         try {
-            NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
-            // enable this to make the persistence storage visible
-            if (true) {
-                // check for versionhistory root
-                if (!systemRoot.hasNode(VERSION_HISTORY_ROOT_NAME)) {
-                    // if not exist, create
-                    systemRoot.addNode(VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
-                    systemRoot.save();
-                }
-                PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(new NodeId(systemRoot.getNode(VERSION_HISTORY_ROOT_NAME).internalGetUUID()));
-                historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
-            } else {
-                if (!stateMgr.hasItemState(PERSISTENT_ROOT_ID)) {
-                    PersistentNodeState nodeState = stateMgr.createNodeState(PERSISTENT_ROOT_ID.getUUID(), NodeTypeRegistry.NT_UNSTRUCTURED, null);
-                    nodeState.setDefinitionId(new NodeDefId(ntMgr.getRootNodeDefinition().unwrap()));
-                    nodeState.store();
-                    historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
-                } else {
-                    PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(PERSISTENT_ROOT_ID);
-                    historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
-                }
-            }
+            this.stateMgr = new PersistentItemStateManager(pMgr, PERSISTENT_ROOT_ID.getUUID(), ntReg);
+            PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(PERSISTENT_ROOT_ID);
+            historyRoot = new PersistentNode(stateMgr, nodeState);
             initVirtualIds(historyRoot.getState());
             log.info("loaded " + idsByExternal.size() + " virtual ids.");
         } catch (ItemStateException e) {

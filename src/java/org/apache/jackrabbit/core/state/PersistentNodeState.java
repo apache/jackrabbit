@@ -113,7 +113,7 @@ public class PersistentNodeState extends NodeState implements PersistableItemSta
      *
      * @return persistence manager
      */
-    protected PersistenceManager getPersistenceManager() {
+    public PersistenceManager getPersistenceManager() {
         return persistMgr;
     }
 

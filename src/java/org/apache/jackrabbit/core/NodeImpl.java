@@ -2339,17 +2339,30 @@ public class NodeImpl extends ItemImpl implements Node {
             throws VersionException, UnsupportedRepositoryOperationException,
             RepositoryException {
 
+        // check if versionable
+        checkVersionable();
+
+        // check if checked out
         if (!isCheckedOut()) {
-            String msg = "Unable to checkin node. Is not checked-out. " + safeGetJCRPath();
+            String msg = safeGetJCRPath() + ": Node is already checked-in. ignoring.";
             log.debug(msg);
-            throw new VersionException(msg);
+            return getBaseVersion();
         }
+
         // check transient state
         if (isModified()) {
             String msg = "Unable to checkin node. Not allowed on transient node. " + safeGetJCRPath();
             log.debug(msg);
-            throw new IllegalStateException(msg);
+            throw new InvalidItemStateException(msg);
         }
+
+        // check if not merge failed
+        if (hasProperty(ItemImpl.PROPNAME_MERGE_FAILED) && getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues().length>0) {
+            String msg = "Unable to checkin node. Clear 'jcr:mergeFailed' first. " + safeGetJCRPath();
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
         Version v = session.versionMgr.checkin(this);
         Property prop = internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(false));
         prop.save();
@@ -2365,11 +2378,23 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public void checkout()
             throws UnsupportedRepositoryOperationException, RepositoryException {
+        // check if versionable
+        checkVersionable();
+
+        // check if already checked out
         if (isCheckedOut()) {
-            String msg = "Unable to checkout node. Is not checked-in. " + safeGetJCRPath();
+            String msg = safeGetJCRPath() + ": Node is already checked-out. ignoring.";
             log.debug(msg);
-            throw new VersionException(msg);
+            return;
         }
+
+        // check transient state
+        if (isModified()) {
+            String msg = "Unable to checkout node. Not allowed on transient node. " + safeGetJCRPath();
+            log.debug(msg);
+            throw new InvalidItemStateException(msg);
+        }
+
         Property prop = internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
         prop.save();
         prop = internalSetProperty(VersionManager.PROPNAME_PREDECESSORS,
@@ -2679,7 +2704,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // search nearest ancestor that is versionable
         NodeImpl node = this;
         while (!node.hasProperty(VersionManager.PROPNAME_IS_CHECKED_OUT)) {
-            if (node.isRepositoryRoot() || !inherit) {
+            if (!inherit || node.isRepositoryRoot()) {
                 return true;
             }
             node = (NodeImpl) node.getParent();
@@ -2700,16 +2725,18 @@ public class NodeImpl extends ItemImpl implements Node {
     public void restore(String versionName)
             throws VersionException, UnsupportedRepositoryOperationException,
             RepositoryException {
+        boolean removeExisting = true;
 
-        if (!isCheckedOut()) {
-            String msg = "Unable to restore version. Node is not checked-out " + safeGetJCRPath();
-            log.debug(msg);
-            throw new VersionException(msg);
+        // check if transient
+        if (session.hasPendingChanges()) {
+            String msg = "Unable to restore version. Session has pending changes.";
+            log.error(msg);
+            throw new InvalidItemStateException(msg);
         }
 
         GenericVersionSelector gvs = new GenericVersionSelector();
         gvs.setName(versionName);
-        internalRestore(getVersionHistory().getVersion(versionName), gvs);
+        internalRestore(getVersionHistory().getVersion(versionName), gvs, removeExisting);
         save();
     }
 
@@ -2718,18 +2745,20 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public void restore(Version version)
             throws UnsupportedRepositoryOperationException, RepositoryException {
+        boolean removeExisting = true;
 
-        if (!isCheckedOut()) {
-            String msg = "Unable to restore version. Node is not checked-out " + safeGetJCRPath();
-            log.debug(msg);
-            throw new VersionException(msg);
+        // check if transient
+        if (session.hasPendingChanges()) {
+            String msg = "Unable to restore version. Session has pending changes.";
+            log.error(msg);
+            throw new InvalidItemStateException(msg);
         }
 
         // check if 'own' version
         if (!version.getParent().getUUID().equals(getVersionHistory().getUUID())) {
             throw new VersionException("Unable to restore version. Not same version history.");
         }
-        internalRestore(version, new GenericVersionSelector(version.getCreated()));
+        internalRestore(version, new GenericVersionSelector(version.getCreated()), removeExisting);
         save();
     }
 
@@ -2741,22 +2770,24 @@ public class NodeImpl extends ItemImpl implements Node {
             throws PathNotFoundException, ItemExistsException,
             ConstraintViolationException, UnsupportedRepositoryOperationException,
             RepositoryException {
+        boolean removeExisting = true;
+
+        // check if transient
+        if (session.hasPendingChanges()) {
+            String msg = "Unable to restore version. Session has pending changes.";
+            log.error(msg);
+            throw new InvalidItemStateException(msg);
+        }
 
         // if node exists, do a 'normal' restore
         if (hasNode(relPath)) {
             getNode(relPath).restore(version);
+        } else {
+            // recreate node from frozen state
+            NodeImpl node = addNode(relPath, ((VersionImpl) version).getFrozenNode());
+            node.internalRestore(version, new GenericVersionSelector(version.getCreated()), removeExisting);
+            node.getParent().save();
         }
-
-        // recreate node from frozen state
-        NodeImpl node = addNode(relPath, ((VersionImpl) version).getFrozenNode());
-        if (!node.isCheckedOut()) {
-            String msg = "Unable to restore version. Node is not checked-out " + node.safeGetJCRPath();
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        node.internalRestore(version, new GenericVersionSelector(version.getCreated()));
-        node.getParent().save();
     }
 
     /**
@@ -2764,18 +2795,20 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public void restoreByLabel(String versionLabel)
             throws UnsupportedRepositoryOperationException, RepositoryException {
+        boolean removeExisting = false;
 
-        if (!isCheckedOut()) {
-            String msg = "Unable to restore version. Node is not checked-out " + safeGetJCRPath();
-            log.debug(msg);
-            throw new VersionException(msg);
+        // check if transient
+        if (session.hasPendingChanges()) {
+            String msg = "Unable to restore version. Session has pending changes.";
+            log.error(msg);
+            throw new InvalidItemStateException(msg);
         }
 
         Version v = getVersionHistory().getVersionByLabel(versionLabel);
         if (v == null) {
             throw new VersionException("No version for label " + versionLabel + " found.");
         }
-        internalRestore(v, new GenericVersionSelector(versionLabel));
+        internalRestore(v, new GenericVersionSelector(versionLabel), removeExisting);
         save();
     }
 
@@ -2886,9 +2919,54 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @throws RepositoryException
      */
-    private void internalRestore(Version version, VersionSelector vsel)
+    private void internalRestore(Version version, VersionSelector vsel, boolean removeExisting)
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        internalRestore(((VersionImpl) version).getInternalVersion(), vsel);
+        internalRestore(((VersionImpl) version).getInternalVersion(), vsel, removeExisting);
+    }
+
+    /**
+     * Checks if any frozen uuid in the given frozen node or its descendants
+     * collides with the one in the workspace. if 'removeExisting' is true,
+     * collisions will be removed, otherwise an ItemExistsException is thrown.
+     * If a frozen version history is already restored outside this nodes
+     * subtree, a exception is thrown, too, if the removeExisting is true.
+     * @param f
+     * @param removeExisting
+     * @throws RepositoryException
+     */
+    private void checkUUIDCollisions(InternalFrozenNode f, boolean removeExisting)
+            throws RepositoryException {
+
+        if (itemMgr.itemExists(new NodeId(f.getFrozenUUID()))) {
+            NodeImpl node = (NodeImpl) session.getNodeByUUID(f.getFrozenUUID());
+            if (removeExisting) {
+                node.remove();
+            } else {
+                throw new ItemExistsException("Unable to restore. UUID collides with " + node.safeGetJCRPath());
+            }
+        }
+        InternalFreeze[] fs = f.getFrozenChildNodes();
+        for (int i=0; i<fs.length; i++) {
+            if (fs[i] instanceof InternalFrozenNode) {
+                checkUUIDCollisions((InternalFrozenNode) fs[i], removeExisting);
+            } else if (!removeExisting) {
+                InternalFrozenVersionHistory fh = (InternalFrozenVersionHistory) fs[i];
+                VersionHistory history = (VersionHistory) session.getNodeByUUID(fh.getVersionHistoryId());
+                String nodeId = history.getName(); // this is implementation detail!
+
+                // check if representing vh already exists somewhere
+                if (itemMgr.itemExists(new NodeId(nodeId))) {
+                    NodeImpl n = (NodeImpl) session.getNodeByUUID(nodeId);
+                    try {
+                        if (!n.getPrimaryPath().isDescendantOf(getPrimaryPath())) {
+                            throw new ItemExistsException("Unable to restore. Same node already restored at " + n.safeGetJCRPath());
+                        }
+                    } catch (MalformedPathException e) {
+                        throw new RepositoryException(e);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -2897,17 +2975,23 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param version
      * @param vsel    the version selector that will select the correct version for
      *                OPV=Version childnodes.
-     * @throws UnsupportedRepositoryOperationException
+     * @param removeExisting
      *
      * @throws RepositoryException
      */
-    private void internalRestore(InternalVersion version, VersionSelector vsel)
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+    private void internalRestore(InternalVersion version, VersionSelector vsel, boolean removeExisting)
+            throws RepositoryException {
+
+        // first check, if any uuid conflicts would occurr
+        checkUUIDCollisions(version.getFrozenNode(), removeExisting);
+
+        // set jcr:isCheckedOut property to true, in order to avoid any conflicts
+        internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
 
         // 1. The child node and properties of N will be changed, removed or
         //    added to, depending on their corresponding copies in V and their
         //    own OnParentVersion attributes (see 7.2.8, below, for details).
-        restoreFrozenState(version.getFrozenNode(), vsel);
+        restoreFrozenState(version.getFrozenNode(), vsel, removeExisting);
 
         // 2. N’s jcr:baseVersion property will be changed to point to V.
         internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(version.getId())));
@@ -2927,7 +3011,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param freeze
      * @throws RepositoryException
      */
-    void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel)
+    void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel, boolean removeExisting)
             throws RepositoryException {
         // check uuid
         if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
@@ -2977,15 +3061,11 @@ public class NodeImpl extends ItemImpl implements Node {
         for (int i = 0; i < props.length; i++) {
             PropertyState prop = props[i];
             propNames.add(prop.getName());
-            if (prop.getValues().length == 1) {
-                try {
-                    internalSetProperty(props[i].getName(), prop.getValues()[0]);
-                    continue;
-                } catch (RepositoryException e) {
-                    // ignore and try multiple below
-                }
+            if (prop.isMultiValued()) {
+                internalSetProperty(props[i].getName(), prop.getValues());
+            } else {
+                internalSetProperty(props[i].getName(), prop.getValues()[0]);
             }
-            internalSetProperty(props[i].getName(), prop.getValues());
         }
         // remove properties that do not exist the the frozen representation
         PropertyIterator piter = getProperties();
@@ -3007,27 +3087,51 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // restore the frozen nodes
         InternalFreeze[] frozenNodes = freeze.getFrozenChildNodes();
+
+        // first delete all non frozen version histories
+        NodeIterator iter = getNodes();
+        while (iter.hasNext()) {
+            NodeImpl n = (NodeImpl) iter.nextNode();
+            // this is a bit lousy
+            boolean found = false;
+            for (int i=0; i<frozenNodes.length; i++) {
+                InternalFreeze child = frozenNodes[i];
+                if (child instanceof InternalFrozenVersionHistory) {
+                    if (n.internalGetUUID().equals(child.getId())) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) {
+                n.remove();
+            }
+        }
         for (int i = 0; i < frozenNodes.length; i++) {
             InternalFreeze child = frozenNodes[i];
             if (child instanceof InternalFrozenNode) {
                 InternalFrozenNode f = (InternalFrozenNode) child;
-                // if frozen node exist, replace
-                // todo: make work for same name siblings
-                if (hasNode(f.getName())) {
-                    getNode(f.getName()).remove();
-                }
                 NodeImpl n = addNode(f.getName(), f);
-                n.restoreFrozenState(f, vsel);
+                n.restoreFrozenState(f, vsel, removeExisting);
             } else if (child instanceof InternalFrozenVersionHistory) {
-                // check if child already exists
-                if (hasNode(child.getName())) {
-                    // do nothing
+                InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
+                VersionHistory history = (VersionHistory) session.getNodeByUUID(f.getVersionHistoryId());
+                String nodeId = history.getName(); // this is implementation detail!
+
+                // check if representing vh already exists somewhere
+                if (itemMgr.itemExists(new NodeId(nodeId))) {
+                    NodeImpl n = (NodeImpl) session.getNodeByUUID(nodeId);
+                    if (hasNode(n.getQName())) {
+                        // so order at end
+                        orderBefore(n.getName(), "");
+                    } else {
+                        session.move(n.getPath(), getPath()+ "/" + n.getName());
+                    }
                 } else {
                     // get desired version from version selector
-                    VersionHistory history = (VersionHistory) session.getNodeByUUID(((InternalFrozenVersionHistory) child).getVersionHistoryId());
                     InternalVersion v = ((VersionImpl) vsel.select(history)).getInternalVersion();
                     NodeImpl node = addNode(child.getName(), v.getFrozenNode());
-                    node.internalRestore(v, vsel);
+                    node.internalRestore(v, vsel, removeExisting);
                 }
             }
         }

@@ -267,7 +267,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
                 switch (opv) {
                     case OnParentVersionAction.ABORT:
                         parent.reload();
-                        throw new RepositoryException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
+                        throw new VersionException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
                     case OnParentVersionAction.COMPUTE:
                     case OnParentVersionAction.IGNORE:
                     case OnParentVersionAction.INITIALIZE:
@@ -287,7 +287,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
                 int opv = forceCopy ? OnParentVersionAction.COPY : child.getDefinition().getOnParentVersion();
                 switch (opv) {
                     case OnParentVersionAction.ABORT:
-                        throw new RepositoryException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
+                        throw new VersionException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
                     case OnParentVersionAction.COMPUTE:
                     case OnParentVersionAction.IGNORE:
                     case OnParentVersionAction.INITIALIZE:

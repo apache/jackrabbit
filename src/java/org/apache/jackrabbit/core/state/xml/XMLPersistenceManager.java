@@ -342,11 +342,18 @@ public class XMLPersistenceManager implements PersistenceManager {
      * @see PersistenceManager#init
      */
     public void init(PMContext context) throws Exception {
+        init(context.getWorkspaceConfig().getFileSystem(),
+                context.getWorkspaceConfig().getHomeDir());
+    }
+
+    /**
+     * @see PersistenceManager#init
+     */
+    public void init(FileSystem wspFS, String homeDir) throws Exception {
         if (initialized) {
             throw new IllegalStateException("already initialized");
         }
 
-        FileSystem wspFS = context.getWorkspaceConfig().getFileSystem();
         itemStateStore = new BasedFileSystem(wspFS, "/data");
 
         //blobStore = new BasedFileSystem(wspFS, "/blobs");
@@ -356,7 +363,7 @@ public class XMLPersistenceManager implements PersistenceManager {
          * todo make blob store configurable
          */
         LocalFileSystem blobFS = new LocalFileSystem();
-        blobFS.setPath(context.getWorkspaceConfig().getHomeDir() + "/blobs");
+        blobFS.setPath(homeDir + "/blobs");
         blobFS.init();
         blobStore = blobFS;
 

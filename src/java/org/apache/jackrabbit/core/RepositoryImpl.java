@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.xml.XMLPersistenceManager;
 import org.apache.jackrabbit.core.state.tx.TransactionManager;
 import org.apache.jackrabbit.core.state.tx.XASessionImpl;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -151,6 +152,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new RepositoryException(msg, fse);
         }
         versionStore = new BasedFileSystem(repStore, fsRootPath);
+
 
         FileSystemResource uuidFile = new FileSystemResource(metaDataStore, "rootUUID");
         try {
@@ -278,9 +280,14 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         }
 
         // init version manager
-        // todo: as soon as dynamic workspaces are available, base on system ws
-        SessionImpl verSession = getSystemSession(repConfig.getDefaultWorkspaceName());
-        pvMgr = new NativePVM(verSession);
+        // todo: improve configurability
+        XMLPersistenceManager pm = new XMLPersistenceManager();
+        try {
+            pm.init(versionStore, repConfig.getHomeDir()+"/versions");
+        } catch (Exception e) {
+            throw new RepositoryException(e);
+        }
+        pvMgr = new NativePVM(pm, getNodeTypeRegistry());
         vMgr = new VersionManagerImpl(pvMgr);
 
         // finally register shutdown hook
