@@ -50,7 +50,7 @@ public class WorkspaceConfig {
     private PersistenceManagerConfig pmc;
 
     /**
-     * Workspace search index configuration.
+     * Workspace search index configuration. Can be <code>null</code>.
      */
     private SearchConfig sc;
 
@@ -79,7 +79,9 @@ public class WorkspaceConfig {
      */
     public void init() throws ConfigurationException {
         fsc.init();
-        sc.init();
+        if (sc != null) {
+            sc.init();
+        }
     }
 
     /**
