@@ -561,6 +561,10 @@ public class SessionImpl implements Session, Constants {
                 String msg = "invalid path: " + absPath;
                 log.warn(msg, mpe);
                 throw new AccessControlException(ADD_NODE_ACTION);
+            } catch (AccessDeniedException re) {
+                // otherwise the RepositoryException catch clause will
+                // log a warn message, which is not appropriate in this case.
+                throw new AccessControlException(ADD_NODE_ACTION);
             } catch (RepositoryException re) {
                 String msg = "failed to check WRITE permission on parent of " + absPath;
                 log.warn(msg, re);
@@ -587,6 +591,10 @@ public class SessionImpl implements Session, Constants {
             } catch (MalformedPathException mpe) {
                 String msg = "invalid path: " + absPath;
                 log.warn(msg, mpe);
+                throw new AccessControlException(REMOVE_ACTION);
+            } catch (AccessDeniedException re) {
+                // otherwise the RepositoryException catch clause will
+                // log a warn message, which is not appropriate in this case.
                 throw new AccessControlException(REMOVE_ACTION);
             } catch (RepositoryException re) {
                 String msg = "failed to check REMOVE permission on " + absPath;
@@ -630,6 +638,10 @@ public class SessionImpl implements Session, Constants {
             } catch (MalformedPathException mpe) {
                 String msg = "invalid path: " + absPath;
                 log.warn(msg, mpe);
+                throw new AccessControlException(SET_PROPERTY_ACTION);
+            } catch (AccessDeniedException re) {
+                // otherwise the RepositoryException catch clause will
+                // log a warn message, which is not appropriate in this case.
                 throw new AccessControlException(SET_PROPERTY_ACTION);
             } catch (RepositoryException re) {
                 String msg = "failed to check WRITE permission on parent of " + absPath;
