@@ -326,9 +326,14 @@ class SysViewImportHandler extends DefaultHandler {
 	    // create with new uuid? what about reference values refering to given uuid?
 	}
 	if (state.parent.hasNode(state.nodeName)) {
-	    NodeDef def = state.parent.getNode(state.nodeName).getDefinition();
-	    if (def.isProtected() || def.isAutoCreate()) {
+            state.node = state.parent.getNode(state.nodeName);
+	    NodeDef def = state.node.getDefinition();
+	    if (def.isProtected()) {
+                // @todo how to handle protected/auto-created child node?
+                return;
+            } else if (def.isAutoCreate()) {
 		// @todo how to handle protected/auto-created child node?
+                return;
 	    }
 	}
 
