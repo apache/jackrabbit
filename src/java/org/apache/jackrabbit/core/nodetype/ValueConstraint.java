@@ -141,7 +141,8 @@ class BooleanConstraint extends ValueConstraint {
         } else if (definition.equals("false")) {
             reqBool = false;
         } else {
-            String msg = "'" + definition + "' is not a valid value constraint format for BOOLEAN values";
+            String msg = "'" + definition
+                    + "' is not a valid value constraint format for BOOLEAN values";
             log.debug(msg);
             throw new InvalidConstraintException(msg);
         }
@@ -149,20 +150,23 @@ class BooleanConstraint extends ValueConstraint {
 
     void check(Boolean bool) throws ConstraintViolationException {
         if (bool == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         check(bool.booleanValue());
     }
 
     void check(boolean bool) throws ConstraintViolationException {
         if (bool != reqBool) {
-            throw new ConstraintViolationException("'" + bool + "' does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("'" + bool
+                    + "' does not satisfy the constraint '" + definition + "'");
         }
     }
 
     void check(InternalValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         switch (value.getType()) {
             case PropertyType.BOOLEAN:
@@ -199,17 +203,20 @@ class StringConstraint extends ValueConstraint {
 
     void check(String text) throws ConstraintViolationException {
         if (text == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         Matcher matcher = pattern.matcher(text);
         if (!matcher.matches()) {
-            throw new ConstraintViolationException("'" + text + "' does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("'" + text
+                    + "' does not satisfy the constraint '" + definition + "'");
         }
     }
 
     void check(InternalValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         switch (value.getType()) {
             case PropertyType.STRING:
@@ -263,24 +270,28 @@ class NumericConstraint extends ValueConstraint {
                 s = matcher.group(4);
                 upperInclusive = s.equals("]");
                 if (lowerLimit == null && upperLimit == null) {
-                    String msg = "'" + definition + "' is not a valid value constraint format for numeric types: neither lower- nor upper-limit specified";
+                    String msg = "'" + definition
+                            + "' is not a valid value constraint format for numeric types: neither lower- nor upper-limit specified";
                     log.debug(msg);
                     throw new InvalidConstraintException(msg);
                 }
                 if (lowerLimit != null && upperLimit != null) {
                     if (lowerLimit.doubleValue() > upperLimit.doubleValue()) {
-                        String msg = "'" + definition + "' is not a valid value constraint format for numeric types: lower-limit exceeds upper-limit";
+                        String msg = "'" + definition
+                                + "' is not a valid value constraint format for numeric types: lower-limit exceeds upper-limit";
                         log.debug(msg);
                         throw new InvalidConstraintException(msg);
                     }
                 }
             } catch (NumberFormatException nfe) {
-                String msg = "'" + definition + "' is not a valid value constraint format for numeric types";
+                String msg = "'" + definition
+                        + "' is not a valid value constraint format for numeric types";
                 log.debug(msg);
                 throw new InvalidConstraintException(msg, nfe);
             }
         } else {
-            String msg = "'" + definition + "' is not a valid value constraint format for numeric values";
+            String msg = "'" + definition
+                    + "' is not a valid value constraint format for numeric values";
             log.debug(msg);
             throw new InvalidConstraintException(msg);
         }
@@ -288,14 +299,16 @@ class NumericConstraint extends ValueConstraint {
 
     void check(Double number) throws ConstraintViolationException {
         if (number == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         check(number.doubleValue());
     }
 
     void check(Long number) throws ConstraintViolationException {
         if (number == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         check(number.doubleValue());
     }
@@ -304,22 +317,30 @@ class NumericConstraint extends ValueConstraint {
         if (lowerLimit != null) {
             if (lowerInclusive) {
                 if (number < lowerLimit.doubleValue()) {
-                    throw new ConstraintViolationException(number + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(number
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
             } else {
                 if (number <= lowerLimit.doubleValue()) {
-                    throw new ConstraintViolationException(number + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(number
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
             }
         }
         if (upperLimit != null) {
             if (upperInclusive) {
                 if (number > upperLimit.doubleValue()) {
-                    throw new ConstraintViolationException(number + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(number
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
             } else {
                 if (number >= upperLimit.doubleValue()) {
-                    throw new ConstraintViolationException(number + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(number
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
             }
         }
@@ -327,7 +348,8 @@ class NumericConstraint extends ValueConstraint {
 
     void check(InternalValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         switch (value.getType()) {
             case PropertyType.LONG:
@@ -396,28 +418,33 @@ class DateConstraint extends ValueConstraint {
                 upperInclusive = s.equals("]");
 
                 if (lowerLimit == null && upperLimit == null) {
-                    String msg = "'" + definition + "' is not a valid value constraint format for dates: neither min- nor max-date specified";
+                    String msg = "'" + definition
+                            + "' is not a valid value constraint format for dates: neither min- nor max-date specified";
                     log.debug(msg);
                     throw new InvalidConstraintException(msg);
                 }
                 if (lowerLimit != null && upperLimit != null) {
                     if (lowerLimit.after(upperLimit)) {
-                        String msg = "'" + definition + "' is not a valid value constraint format for dates: min-date > max-date";
+                        String msg = "'" + definition
+                                + "' is not a valid value constraint format for dates: min-date > max-date";
                         log.debug(msg);
                         throw new InvalidConstraintException(msg);
                     }
                 }
             } catch (ValueFormatException vfe) {
-                String msg = "'" + definition + "' is not a valid value constraint format for dates";
+                String msg = "'" + definition
+                        + "' is not a valid value constraint format for dates";
                 log.debug(msg);
                 throw new InvalidConstraintException(msg, vfe);
             } catch (RepositoryException re) {
-                String msg = "'" + definition + "' is not a valid value constraint format for dates";
+                String msg = "'" + definition
+                        + "' is not a valid value constraint format for dates";
                 log.debug(msg);
                 throw new InvalidConstraintException(msg, re);
             }
         } else {
-            String msg = "'" + definition + "' is not a valid value constraint format for dates";
+            String msg = "'" + definition
+                    + "' is not a valid value constraint format for dates";
             log.debug(msg);
             throw new InvalidConstraintException(msg);
         }
@@ -425,27 +452,36 @@ class DateConstraint extends ValueConstraint {
 
     void check(Calendar cal) throws ConstraintViolationException {
         if (cal == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         if (lowerLimit != null) {
             if (lowerInclusive) {
                 if (cal.getTimeInMillis() < lowerLimit.getTimeInMillis()) {
-                    throw new ConstraintViolationException(cal + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(cal
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
             } else {
                 if (cal.getTimeInMillis() <= lowerLimit.getTimeInMillis()) {
-                    throw new ConstraintViolationException(cal + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(cal
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
             }
         }
         if (upperLimit != null) {
             if (upperInclusive) {
                 if (cal.getTimeInMillis() > upperLimit.getTimeInMillis()) {
-                    throw new ConstraintViolationException(cal + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(cal
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
             } else {
                 if (cal.getTimeInMillis() >= upperLimit.getTimeInMillis()) {
-                    throw new ConstraintViolationException(cal + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(cal
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
             }
         }
@@ -453,7 +489,8 @@ class DateConstraint extends ValueConstraint {
 
     void check(InternalValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         switch (value.getType()) {
             case PropertyType.DATE:
@@ -489,7 +526,8 @@ class PathConstraint extends ValueConstraint {
         try {
             path = Path.create(definition, nsResolver, false);
         } catch (MalformedPathException mpe) {
-            String msg = "invalid path expression specified as value constraint: " + definition;
+            String msg = "invalid path expression specified as value constraint: "
+                    + definition;
             log.debug(msg);
             throw new InvalidConstraintException(msg, mpe);
         }
@@ -511,14 +549,14 @@ class PathConstraint extends ValueConstraint {
 
     void check(InternalValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         switch (value.getType()) {
             case PropertyType.PATH:
                 Path p = (Path) value.internalValue();
                 // normalize paths before comparing them
-                Path p0 = null;
-                Path p1 = null;
+                Path p0, p1;
                 try {
                     p0 = path.getNormalizedPath();
                     p1 = p.getNormalizedPath();
@@ -528,16 +566,22 @@ class PathConstraint extends ValueConstraint {
                 if (deep) {
                     try {
                         if (!p0.isAncestorOf(p1)) {
-                            throw new ConstraintViolationException(p + " does not satisfy the constraint '" + definition + "'");
+                            throw new ConstraintViolationException(p
+                                    + " does not satisfy the constraint '"
+                                    + definition + "'");
                         }
                     } catch (MalformedPathException mpe) {
                         // can't compare relative with absolute path
-                        throw new ConstraintViolationException(p + " does not satisfy the constraint '" + definition + "'");
+                        throw new ConstraintViolationException(p
+                                + " does not satisfy the constraint '"
+                                + definition + "'");
                     }
                 } else {
                     // exact match required
                     if (!p0.equals(p1)) {
-                        throw new ConstraintViolationException(p + " does not satisfy the constraint '" + definition + "'");
+                        throw new ConstraintViolationException(p
+                                + " does not satisfy the constraint '"
+                                + definition + "'");
                     }
                 }
                 return;
@@ -566,11 +610,13 @@ class NameConstraint extends ValueConstraint {
             QName.checkFormat(definition);
             name = QName.fromJCRName(definition, nsResolver);
         } catch (IllegalNameException ine) {
-            String msg = "invalid name specified as value constraint: " + definition;
+            String msg = "invalid name specified as value constraint: "
+                    + definition;
             log.debug(msg);
             throw new InvalidConstraintException(msg, ine);
         } catch (UnknownPrefixException upe) {
-            String msg = "invalid name specified as value constraint: " + definition;
+            String msg = "invalid name specified as value constraint: "
+                    + definition;
             log.debug(msg);
             throw new InvalidConstraintException(msg, upe);
         }
@@ -587,13 +633,16 @@ class NameConstraint extends ValueConstraint {
 
     void check(InternalValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         switch (value.getType()) {
             case PropertyType.NAME:
                 QName n = (QName) value.internalValue();
                 if (!name.equals(n)) {
-                    throw new ConstraintViolationException(n + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException(n
+                            + " does not satisfy the constraint '"
+                            + definition + "'");
                 }
                 return;
 
@@ -619,11 +668,13 @@ class ReferenceConstraint extends ValueConstraint {
         try {
             ntName = QName.fromJCRName(definition, nsResolver);
         } catch (IllegalNameException ine) {
-            String msg = "invalid node type name specified as value constraint: " + definition;
+            String msg = "invalid node type name specified as value constraint: "
+                    + definition;
             log.debug(msg);
             throw new InvalidConstraintException(msg, ine);
         } catch (UnknownPrefixException upe) {
-            String msg = "invalid node type name specified as value constraint: " + definition;
+            String msg = "invalid node type name specified as value constraint: "
+                    + definition;
             log.debug(msg);
             throw new InvalidConstraintException(msg, upe);
         }
@@ -644,7 +695,8 @@ class ReferenceConstraint extends ValueConstraint {
 
     void check(InternalValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"
+                    + definition + "'");
         }
         switch (value.getType()) {
             case PropertyType.REFERENCE:
@@ -653,7 +705,8 @@ class ReferenceConstraint extends ValueConstraint {
                 UUID targetUUID = (UUID) value.internalValue();
                 NodeImpl targetNode = (NodeImpl) session.getNodeByUUID(targetUUID.toString());
                 if (!targetNode.isNodeType(ntName)) {
-                    throw new ConstraintViolationException("the node with uuid " + targetUUID + " does not satisfy the constraint '" + definition + "'");
+                    throw new ConstraintViolationException("the node with uuid "
+                            + targetUUID + " does not satisfy the constraint '" + definition + "'");
                 }
 */
                 log.warn("validation of REFERENCE constraint is not yet implemented");
