@@ -232,8 +232,8 @@ public final class Path {
 	}
 	// check path for "." and ".." names
 	for (int i = 0; i < elements.length; i++) {
-	    if (elements[i].equals(CURRENT_ELEMENT) ||
-		    elements[i].equals(PARENT_ELEMENT)) {
+	    if (elements[i].equals(CURRENT_ELEMENT)
+		    || elements[i].equals(PARENT_ELEMENT)) {
 		return false;
 	    }
 	}

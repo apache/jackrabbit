@@ -403,8 +403,8 @@ public class SessionImpl implements Session {
 	    } else {
 		// there's already a node with that name
 		// check same-name sibling setting of both new and existing node
-		if (!destParentNode.getDefinition().allowSameNameSibs() ||
-			!((NodeImpl) item).getDefinition().allowSameNameSibs()) {
+		if (!destParentNode.getDefinition().allowSameNameSibs()
+			|| !((NodeImpl) item).getDefinition().allowSameNameSibs()) {
 		    throw new ItemExistsException(item.safeGetJCRPath());
 		}
 	    }
@@ -632,8 +632,8 @@ public class SessionImpl implements Session {
 	    if (prefix == null || uri == null) {
 		throw new IllegalArgumentException("prefix/uri can not be null");
 	    }
-	    if (NamespaceRegistryImpl.NS_EMPTY_PREFIX.equals(prefix) ||
-		    NamespaceRegistryImpl.NS_DEFAULT_URI.equals(uri)) {
+	    if (NamespaceRegistryImpl.NS_EMPTY_PREFIX.equals(prefix)
+		    || NamespaceRegistryImpl.NS_DEFAULT_URI.equals(uri)) {
 		throw new NamespaceException("default namespace is reserved and can not be changed");
 	    }
 	    // check if namespace exists (the following call will

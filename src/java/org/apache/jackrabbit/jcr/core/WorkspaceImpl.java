@@ -314,8 +314,8 @@ class WorkspaceImpl implements Workspace {
 	    }
 	    ChildNodeDef conflictingTargetDef = ntReg.getNodeDef(conflictingState.getDefinitionId());
 	    // check same-name sibling setting of both target and existing node
-	    if (!conflictingTargetDef.allowSameNameSibs() ||
-		    !newNodeDef.allowSameNameSibs()) {
+	    if (!conflictingTargetDef.allowSameNameSibs()
+		    || !newNodeDef.allowSameNameSibs()) {
 		throw new ItemExistsException(hierMgr.safeGetJCRPath(nodePath));
 	    }
 	}

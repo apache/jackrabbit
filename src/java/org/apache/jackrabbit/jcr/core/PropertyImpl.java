@@ -859,7 +859,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(Value)
      */
-    synchronized public void setValue(Value value) throws ValueFormatException, RepositoryException {
+    public synchronized void setValue(Value value) throws ValueFormatException, RepositoryException {
 	// check state of this instance
 	checkItemState();
 
@@ -937,8 +937,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 			// use the value's type as property type
 			reqType = value.getType();
 		    }
-		    if (reqType != PropertyType.UNDEFINED &&
-			    reqType != value.getType()) {
+		    if (reqType != PropertyType.UNDEFINED
+			    && reqType != value.getType()) {
 			// type conversion required
 			internalValue = InternalValue.create(value, reqType, session.getNamespaceResolver());
 		    } else {

@@ -471,9 +471,9 @@ public class EffectiveNodeType implements Cloneable {
 		PropDef pd = pda[i];
 		int reqType = pd.getRequiredType();
 		// match type
-		if (reqType == PropertyType.UNDEFINED ||
-			type == PropertyType.UNDEFINED ||
-			reqType == type) {
+		if (reqType == PropertyType.UNDEFINED
+			|| type == PropertyType.UNDEFINED
+			|| reqType == type) {
 		    // match multiValued flag
 		    if (multiValued == pd.isMultiple()) {
 			// found match
@@ -487,9 +487,9 @@ public class EffectiveNodeType implements Cloneable {
 		int reqType = pd.getRequiredType();
 		// property definition with that name exists
 		// match type
-		if (reqType == PropertyType.UNDEFINED ||
-			type == PropertyType.UNDEFINED ||
-			reqType == type) {
+		if (reqType == PropertyType.UNDEFINED
+			|| type == PropertyType.UNDEFINED
+			|| reqType == type) {
 		    // match multiValued flag
 		    if (multiValued == pd.isMultiple()) {
 			// found match
@@ -576,7 +576,7 @@ public class EffectiveNodeType implements Cloneable {
      *                  the merge is the result of an explicit aggregation
      * @throws NodeTypeConflictException
      */
-    synchronized private void internalMerge(EffectiveNodeType other, boolean supertype)
+    private synchronized void internalMerge(EffectiveNodeType other, boolean supertype)
 	    throws NodeTypeConflictException {
 	QName[] nta = other.getAllNodeTypes();
 	int includedCount = 0;
@@ -629,8 +629,8 @@ public class EffectiveNodeType implements Cloneable {
 			PropDef pd = (PropDef) def;
 			PropDef epd = (PropDef) existing;
 			// compare type & multiValued flag
-			if (pd.getRequiredType() == epd.getRequiredType() &&
-				pd.isMultiple() == epd.isMultiple()) {
+			if (pd.getRequiredType() == epd.getRequiredType()
+				&& pd.isMultiple() == epd.isMultiple()) {
 			    // conflict
 			    String msg = "A property definition in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existing.getDeclaringNodeType() + "': ambiguos residual property definition";
 			    log.error(msg);

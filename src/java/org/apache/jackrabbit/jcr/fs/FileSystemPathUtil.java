@@ -26,7 +26,7 @@ import java.util.BitSet;
  */
 public final class FileSystemPathUtil {
 
-    private final static char[] hexTable = "0123456789abcdef".toCharArray();
+    private static final char[] hexTable = "0123456789abcdef".toCharArray();
 
     private static final char ESCAPE_CHAR = '%';
 

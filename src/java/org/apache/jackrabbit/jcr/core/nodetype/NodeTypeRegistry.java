@@ -256,7 +256,7 @@ public class NodeTypeRegistry {
      * @throws RepositoryException
      * @see #registerNodeType
      */
-    synchronized private void internalRegister(Collection ntDefs)
+    private synchronized void internalRegister(Collection ntDefs)
 	    throws InvalidNodeTypeDefException, RepositoryException {
 	ArrayList list = new ArrayList(ntDefs);
 
@@ -660,7 +660,7 @@ public class NodeTypeRegistry {
      * @param ntName
      * @return
      */
-    synchronized public EffectiveNodeType getEffectiveNodeType(QName ntName)
+    public synchronized EffectiveNodeType getEffectiveNodeType(QName ntName)
 	    throws NoSuchNodeTypeException {
 	WeightedKey key = new WeightedKey(new QName[]{ntName});
 	if (entCache.contains(key)) {
@@ -674,7 +674,7 @@ public class NodeTypeRegistry {
      * @param ntNames
      * @return
      */
-    synchronized public EffectiveNodeType buildEffectiveNodeType(QName[] ntNames)
+    public synchronized EffectiveNodeType buildEffectiveNodeType(QName[] ntNames)
 	    throws NodeTypeConflictException, NoSuchNodeTypeException {
 	// 1. make sure every single node type is registered
 	for (int i = 0; i < ntNames.length; i++) {
@@ -871,7 +871,7 @@ public class NodeTypeRegistry {
      * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    synchronized public EffectiveNodeType registerNodeType(NodeTypeDef ntd)
+    public synchronized EffectiveNodeType registerNodeType(NodeTypeDef ntd)
 	    throws InvalidNodeTypeDefException, RepositoryException {
 	// validate and register new node type definition
 	EffectiveNodeType ent = internalRegister(ntd);
@@ -900,7 +900,7 @@ public class NodeTypeRegistry {
      * @throws NoSuchNodeTypeException
      * @throws RepositoryException
      */
-    synchronized public void unregisterNodeType(QName name)
+    public synchronized void unregisterNodeType(QName name)
 	    throws NoSuchNodeTypeException, RepositoryException {
 	if (!registeredNTDefs.containsKey(name)) {
 	    throw new NoSuchNodeTypeException(name.toString());
@@ -967,7 +967,7 @@ public class NodeTypeRegistry {
      * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    synchronized public EffectiveNodeType reregisterNodeType(NodeTypeDef ntd)
+    public synchronized EffectiveNodeType reregisterNodeType(NodeTypeDef ntd)
 	    throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
 	    RepositoryException {
 	QName name = ntd.getName();
@@ -1002,7 +1002,7 @@ public class NodeTypeRegistry {
      * @return
      * @throws NoSuchNodeTypeException
      */
-    synchronized public NodeTypeDef getNodeTypeDef(QName nodeTypeName) throws NoSuchNodeTypeException {
+    public synchronized NodeTypeDef getNodeTypeDef(QName nodeTypeName) throws NoSuchNodeTypeException {
 	if (!registeredNTDefs.containsKey(nodeTypeName)) {
 	    throw new NoSuchNodeTypeException(nodeTypeName.toString());
 	}
@@ -1021,7 +1021,7 @@ public class NodeTypeRegistry {
      * @param nodeTypeName
      * @return
      */
-    synchronized public boolean isRegistered(QName nodeTypeName) {
+    public synchronized boolean isRegistered(QName nodeTypeName) {
 	return registeredNTDefs.containsKey(nodeTypeName);
     }
 
@@ -1086,7 +1086,7 @@ public class NodeTypeRegistry {
 	    }
 	    ps.println("\tMixin\t" + ntd.isMixin());
 	    ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
-	    PropDef pd[] = ntd.getPropertyDefs();
+	    PropDef[] pd = ntd.getPropertyDefs();
 	    for (int i = 0; i < pd.length; i++) {
 		ps.print("\tPropertyDef");
 		ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + new PropDefId(pd[i]));
@@ -1114,7 +1114,7 @@ public class NodeTypeRegistry {
 		ps.println("\t\tPrimaryItem\t" + pd[i].isPrimaryItem());
 		ps.println("\t\tMultiple\t" + pd[i].isMultiple());
 	    }
-	    ChildNodeDef nd[] = ntd.getChildNodeDefs();
+	    ChildNodeDef[] nd = ntd.getChildNodeDefs();
 	    for (int i = 0; i < nd.length; i++) {
 		ps.print("\tNodeDef");
 		ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + new NodeDefId(nd[i]));

@@ -35,12 +35,12 @@ public interface FileSystem {
     /**
      * File separator
      */
-    public final static String SEPARATOR = "/";
+    public static final String SEPARATOR = "/";
 
     /**
      * File separator character
      */
-    public final static char SEPARATOR_CHAR = '/';
+    public static final char SEPARATOR_CHAR = '/';
 
     /**
      * Initialize the file system

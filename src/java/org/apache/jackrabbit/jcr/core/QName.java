@@ -41,8 +41,8 @@ public class QName implements Cloneable, Comparable, Serializable {
      */
     private static final Pattern NAME_PATTERN = Pattern.compile("(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)");
 
-    transient private int hash;
-    transient private String string;
+    private transient int hash;
+    private transient String string;
 
     protected final String namespaceURI;
     protected final String localName;
@@ -231,8 +231,8 @@ public class QName implements Cloneable, Comparable, Serializable {
 	}
 	if (obj instanceof QName) {
 	    QName other = (QName) obj;
-	    return namespaceURI.equals(other.namespaceURI) &&
-		    localName.equals(other.localName);
+	    return namespaceURI.equals(other.namespaceURI)
+		    && localName.equals(other.localName);
 	}
 	return false;
     }

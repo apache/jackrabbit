@@ -73,7 +73,7 @@ public class RepositoryImpl implements Repository, EventListener {
     private static final String REP_VERSION = "0.1";
 
     // system root location
-    public static QName SYSTEM_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "system");
+    public static final QName SYSTEM_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "system");
 
     private String rootNodeUUID;
 
@@ -289,8 +289,8 @@ public class RepositoryImpl implements Repository, EventListener {
 	while (iter.hasNext()) {
 	    Session s = getSystemSession(((WorkspaceDef) iter.next()).getName());
 	    s.getWorkspace().getObservationManager().addEventListener(this,
-		    EventType.CHILD_NODE_ADDED | EventType.CHILD_NODE_REMOVED |
-		    EventType.PROPERTY_ADDED | EventType.PROPERTY_REMOVED,
+		    EventType.CHILD_NODE_ADDED | EventType.CHILD_NODE_REMOVED
+		    | EventType.PROPERTY_ADDED | EventType.PROPERTY_REMOVED,
 		    "/", true, null, null, false);
 	}
     }
@@ -558,7 +558,7 @@ public class RepositoryImpl implements Repository, EventListener {
     /**
      * @see EventListener#onEvent(EventIterator)
      */
-    synchronized public void onEvent(EventIterator events) {
+    public synchronized void onEvent(EventIterator events) {
 	while (events.hasNext()) {
 	    Event event = events.nextEvent();
 	    long type = event.getType();

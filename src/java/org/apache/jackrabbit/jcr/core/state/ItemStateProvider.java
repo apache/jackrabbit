@@ -17,8 +17,6 @@ package org.apache.jackrabbit.jcr.core.state;
 
 import org.apache.jackrabbit.jcr.core.ItemId;
 
-import java.util.Iterator;
-
 /**
  * The <code>ItemStateProvider</code> interface...
  *

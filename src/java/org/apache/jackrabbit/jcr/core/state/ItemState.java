@@ -31,7 +31,7 @@ import java.util.*;
  * @author Stefan Guggisberg
  * @version $Revision: 1.19 $, $Date: 2004/08/02 16:19:48 $
  */
-abstract public class ItemState implements ItemStateListener, Serializable {
+public abstract class ItemState implements ItemStateListener, Serializable {
 
     static final long serialVersionUID = -6632715936921139872L;
 
@@ -83,10 +83,10 @@ abstract public class ItemState implements ItemStateListener, Serializable {
     /**
      * Listeners (soft references)
      */
-    transient protected final Map listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.SOFT, ReferenceMap.SOFT));
+    protected final transient Map listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.SOFT, ReferenceMap.SOFT));
 
     // the backing persistent item state (may be null)
-    transient private ItemState overlayedState;
+    private transient ItemState overlayedState;
 
     /**
      * Protected constructor

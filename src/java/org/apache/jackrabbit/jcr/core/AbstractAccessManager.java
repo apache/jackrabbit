@@ -43,7 +43,7 @@ abstract class AbstractAccessManager implements AccessManager {
     /**
      * @see AccessManager#getPermissions(String)
      */
-    abstract public long getPermissions(String absPath)
+    public abstract long getPermissions(String absPath)
 	    throws PathNotFoundException, RepositoryException;
 
     /**
@@ -62,7 +62,7 @@ abstract class AbstractAccessManager implements AccessManager {
     }
 
     //--------------------------------------------------------< inner classes >
-    final static class PermissionImpl implements Permission {
+    static final class PermissionImpl implements Permission {
 
 	private final String name;
 	private final long value;
@@ -77,8 +77,8 @@ abstract class AbstractAccessManager implements AccessManager {
 		new PermissionImpl("read item", Permission.READ_ITEM);
 
 	static final long ALL_VALUES =
-		ADD_NODE_PERMISSION.getValue() | SET_PROPERTY_PERMISSION.getValue() |
-		READ_ITEM_PERMISSION.getValue() | REMOVE_ITEM_PERMISSION.getValue();
+		ADD_NODE_PERMISSION.getValue() | SET_PROPERTY_PERMISSION.getValue()
+		| READ_ITEM_PERMISSION.getValue() | REMOVE_ITEM_PERMISSION.getValue();
 
 	static final Permission[] ALL_PERMISSIONS =
 		new Permission[]{ADD_NODE_PERMISSION, SET_PROPERTY_PERMISSION,

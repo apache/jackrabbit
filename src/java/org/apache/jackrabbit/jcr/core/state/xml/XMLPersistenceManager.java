@@ -141,8 +141,8 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     private String buildBlobFilePath(String parentUUID, QName propName, int i) {
-	return buildNodeFolderPath(parentUUID) + "/" +
-		FileSystemPathUtil.escapeName(propName.toString()) + "." + i + ".bin";
+	return buildNodeFolderPath(parentUUID) + "/"
+		+ FileSystemPathUtil.escapeName(propName.toString()) + "." + i + ".bin";
     }
 
     private String buildNodeFilePath(String uuid) {
@@ -330,8 +330,8 @@ public class XMLPersistenceManager implements PersistenceManager {
 	Enumeration names = props.propertyNames();
 	while (names.hasMoreElements()) {
 	    String name = (String) names.nextElement();
-	    if (TYPE_ATTRIBUTE.equals(name) || COUNT_ATTRIBUTE.equals(name) ||
-		    DEFINITIONID_ATTRIBUTE.equals(name)) {
+	    if (TYPE_ATTRIBUTE.equals(name) || COUNT_ATTRIBUTE.equals(name)
+		    || DEFINITIONID_ATTRIBUTE.equals(name)) {
 		continue;
 	    }
 	    int i = Integer.parseInt(name);
@@ -595,17 +595,17 @@ public class XMLPersistenceManager implements PersistenceManager {
 		}
 
 		writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
-		writer.write("<" + NODE_ELEMENT + " " +
-			UUID_ATTRIBUTE + "=\"" + state.getUUID() + "\" " +
-			PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentUUID() == null ? "" : state.getParentUUID()) + "\" " +
-			DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" " +
-			NODETYPE_ATTRIBUTE + "=\"" + state.getNodeTypeName() + "\">\n");
+		writer.write("<" + NODE_ELEMENT + " "
+			+ UUID_ATTRIBUTE + "=\"" + state.getUUID() + "\" "
+			+ PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentUUID() == null ? "" : state.getParentUUID()) + "\" "
+			+ DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
+			+ NODETYPE_ATTRIBUTE + "=\"" + state.getNodeTypeName() + "\">\n");
 		// parents
 		writer.write("\t<" + PARENTS_ELEMENT + ">\n");
 		Iterator iter = state.getParentUUIDs().iterator();
 		while (iter.hasNext()) {
-		    writer.write("\t\t<" + PARENT_ELEMENT + " " +
-			    UUID_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
+		    writer.write("\t\t<" + PARENT_ELEMENT + " "
+			    + UUID_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
 		}
 		writer.write("\t</" + PARENTS_ELEMENT + ">\n");
 
@@ -613,8 +613,8 @@ public class XMLPersistenceManager implements PersistenceManager {
 		writer.write("\t<" + MIXINTYPES_ELEMENT + ">\n");
 		iter = state.getMixinTypeNames().iterator();
 		while (iter.hasNext()) {
-		    writer.write("\t\t<" + MIXINTYPE_ELEMENT + " " +
-			    NAME_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
+		    writer.write("\t\t<" + MIXINTYPE_ELEMENT + " "
+			    + NAME_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
 		}
 		writer.write("\t</" + MIXINTYPES_ELEMENT + ">\n");
 
@@ -623,8 +623,8 @@ public class XMLPersistenceManager implements PersistenceManager {
 		iter = state.getPropertyEntries().iterator();
 		while (iter.hasNext()) {
 		    NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-		    writer.write("\t\t<" + PROPERTY_ELEMENT + " " +
-			    NAME_ATTRIBUTE + "=\"" + entry.getName() + "\">\n");
+		    writer.write("\t\t<" + PROPERTY_ELEMENT + " "
+			    + NAME_ATTRIBUTE + "=\"" + entry.getName() + "\">\n");
 		    // @todo serialize type, definition id and values
 		    writer.write("\t\t</" + PROPERTY_ELEMENT + ">\n");
 		}
@@ -635,9 +635,9 @@ public class XMLPersistenceManager implements PersistenceManager {
 		iter = state.getChildNodeEntries().iterator();
 		while (iter.hasNext()) {
 		    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-		    writer.write("\t\t<" + NODE_ELEMENT + " " +
-			    NAME_ATTRIBUTE + "=\"" + entry.getName() + "\" " +
-			    UUID_ATTRIBUTE + "=\"" + entry.getUUID() + "\">\n");
+		    writer.write("\t\t<" + NODE_ELEMENT + " "
+			    + NAME_ATTRIBUTE + "=\"" + entry.getName() + "\" "
+			    + UUID_ATTRIBUTE + "=\"" + entry.getUUID() + "\">\n");
 		    writer.write("\t\t</" + NODE_ELEMENT + ">\n");
 		}
 		writer.write("\t</" + NODES_ELEMENT + ">\n");
@@ -854,8 +854,8 @@ public class XMLPersistenceManager implements PersistenceManager {
 	    nodeFile.delete();
 	    // prune empty folders
 	    String parentDir = FileSystemPathUtil.getParentDir(nodeFilePath);
-	    while (!parentDir.equals(FileSystem.SEPARATOR) &&
-		    !itemStateStore.hasChildren(parentDir)) {
+	    while (!parentDir.equals(FileSystem.SEPARATOR)
+		    && !itemStateStore.hasChildren(parentDir)) {
 		itemStateStore.deleteFolder(parentDir);
 		parentDir = FileSystemPathUtil.getParentDir(parentDir);
 	    }
@@ -894,8 +894,8 @@ public class XMLPersistenceManager implements PersistenceManager {
 	    propFile.delete();
 	    // prune empty folders
 	    String parentDir = FileSystemPathUtil.getParentDir(propFilePath);
-	    while (!parentDir.equals(FileSystem.SEPARATOR) &&
-		    !itemStateStore.hasChildren(parentDir)) {
+	    while (!parentDir.equals(FileSystem.SEPARATOR)
+		    && !itemStateStore.hasChildren(parentDir)) {
 		itemStateStore.deleteFolder(parentDir);
 		parentDir = FileSystemPathUtil.getParentDir(parentDir);
 	    }
@@ -1115,8 +1115,8 @@ public class XMLPersistenceManager implements PersistenceManager {
 	    refsFile.delete();
 	    // prune empty folders
 	    String parentDir = FileSystemPathUtil.getParentDir(refsFilePath);
-	    while (!parentDir.equals(FileSystem.SEPARATOR) &&
-		    !itemStateStore.hasChildren(parentDir)) {
+	    while (!parentDir.equals(FileSystem.SEPARATOR)
+		    && !itemStateStore.hasChildren(parentDir)) {
 		itemStateStore.deleteFolder(parentDir);
 		parentDir = FileSystemPathUtil.getParentDir(parentDir);
 	    }

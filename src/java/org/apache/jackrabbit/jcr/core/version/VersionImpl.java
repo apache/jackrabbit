@@ -26,9 +26,9 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
 import java.util.Calendar;
-import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * This Class implements the Version representation of the node.
@@ -68,7 +68,9 @@ public class VersionImpl extends FrozenNode implements Version {
      */
     public static final QName PROPNAME_BASE_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "baseVersion");
 
-    /** cache for version labels */
+    /**
+     * cache for version labels
+     */
     private Set cachedVersionLabels;
 
     /**
@@ -275,8 +277,8 @@ public class VersionImpl extends FrozenNode implements Version {
      * Initializes / Loads the version label cache
      */
     private void initLabelCache() throws RepositoryException {
-	if (cachedVersionLabels==null) {
-	    cachedVersionLabels=new HashSet();
+	if (cachedVersionLabels == null) {
+	    cachedVersionLabels = new HashSet();
 	    if (hasProperty(PROPNAME_VERSION_LABELS)) {
 		Value[] values = getProperty(PROPNAME_VERSION_LABELS).getValues();
 		for (int i = 0; i < values.length; i++) {
@@ -289,12 +291,13 @@ public class VersionImpl extends FrozenNode implements Version {
     /**
      * Saves the current labels in the cache to the 'VersionLabels' property
      * of this node.
+     *
      * @throws RepositoryException
      */
     private void saveLabelCache() throws RepositoryException {
 	InternalValue[] newValues = new InternalValue[cachedVersionLabels.size()];
 	Iterator iter = cachedVersionLabels.iterator();
-	for (int i=0; i<newValues.length; i++) {
+	for (int i = 0; i < newValues.length; i++) {
 	    newValues[i] = InternalValue.create((String) iter.next());
 	}
 	internalSetProperty(PROPNAME_VERSION_LABELS, newValues);

@@ -62,8 +62,8 @@ public class LocalFileSystem implements FileSystem {
 	}
 	if (obj instanceof LocalFileSystem) {
 	    LocalFileSystem other = (LocalFileSystem) obj;
-	    return (root == null ? other.root == null : root.equals(other.root)) &&
-		    (rootPath == null ? other.rootPath == null : rootPath.equals(other.rootPath));
+	    return (root == null ? other.root == null : root.equals(other.root))
+		    && (rootPath == null ? other.rootPath == null : rootPath.equals(other.rootPath));
 	}
 	return false;
     }
@@ -288,7 +288,7 @@ public class LocalFileSystem implements FileSystem {
 	    log.error(msg);
 	    throw new FileSystemException(msg);
 	}
-	String entries[] = new String[files.length];
+	String[] entries = new String[files.length];
 	for (int i = 0; i < files.length; i++) {
 	    entries[i] = files[i].getName();
 	}
@@ -310,7 +310,7 @@ public class LocalFileSystem implements FileSystem {
 	    log.error(msg);
 	    throw new FileSystemException(msg);
 	}
-	String entries[] = new String[folders.length];
+	String[] entries = new String[folders.length];
 	for (int i = 0; i < folders.length; i++) {
 	    entries[i] = folders[i].getName();
 	}

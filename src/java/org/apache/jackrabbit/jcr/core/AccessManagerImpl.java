@@ -38,6 +38,10 @@ public class AccessManagerImpl extends AbstractAccessManager {
 
     /**
      * Package private constructor
+     *
+     * @param credentials
+     * @param hierMgr
+     * @param nsReg
      */
     AccessManagerImpl(Credentials credentials, HierarchyManager hierMgr, NamespaceResolver nsReg) {
 	this.hierMgr = hierMgr;

@@ -190,8 +190,8 @@ public class FileSystemResource {
 	}
 	if (obj instanceof FileSystemResource) {
 	    FileSystemResource other = (FileSystemResource) obj;
-	    return (path == null ? other.path == null : path.equals(other.path)) &&
-		    (fs == null ? other.fs == null : fs.equals(other.fs));
+	    return (path == null ? other.path == null : path.equals(other.path))
+		    && (fs == null ? other.fs == null : fs.equals(other.fs));
 	}
 	return false;
     }

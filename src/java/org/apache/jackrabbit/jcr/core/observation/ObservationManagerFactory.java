@@ -43,7 +43,7 @@ import java.util.Set;
  *
  * @author Marcel Reutegger
  */
-final public class ObservationManagerFactory implements EventDispatcher, Runnable {
+public final class ObservationManagerFactory implements EventDispatcher, Runnable {
 
     /**
      * Logger instance for this class

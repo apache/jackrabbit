@@ -173,7 +173,7 @@ class SysViewImportHandler extends DefaultHandler {
     /**
      * @see ContentHandler#characters(char[], int, int)
      */
-    public void characters(char ch[], int start, int length) throws SAXException {
+    public void characters(char[] ch, int start, int length) throws SAXException {
 	if (currentPropValue != null) {
 	    // property value (character data of sv:value element)
 	    currentPropValue.append(ch, start, length);

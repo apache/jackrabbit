@@ -96,7 +96,7 @@ class DocViewImportHandler extends DefaultHandler {
     /**
      * @see ContentHandler#characters(char[], int, int)
      */
-    public void characters(char ch[], int start, int length) throws SAXException {
+    public void characters(char[] ch, int start, int length) throws SAXException {
 	// character data in document view:
 	// store as jcr:xmlcharacters property of jcr:xmltext node
 	// (need to store as node in order to maintain ordering)

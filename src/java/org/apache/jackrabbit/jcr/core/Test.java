@@ -101,7 +101,7 @@ public class Test {
 		root.addMixin("mix:accessControllable");
 	    }
 	    dumpTree(root, System.out);
-	    boolean accessControlable = root.isNodeType("mix:accessControllable");
+	    boolean accessControllable = root.isNodeType("mix:accessControllable");
 	    root.removeMixin("mix:versionable");
 	    dumpTree(root, System.out);
 	    root.save();

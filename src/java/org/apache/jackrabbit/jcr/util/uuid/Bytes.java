@@ -22,7 +22,7 @@ package org.apache.jackrabbit.jcr.util.uuid;
  * <p>Copied from the Jakarta Commons-Id project</p>
  * <p/>
  * todo remove and use official commons-id release as soon as it is available
- * 
+ *
  * @author Commons-Id Team
  * @version $Id: Bytes.java,v 1.2 2004/07/26 17:10:46 sguggisb Exp $
  * {@link http://jakarta.apache.org/turbine/turbine-2.3/}

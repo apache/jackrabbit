@@ -39,7 +39,7 @@ import java.util.Random;
  * <p>Copied from the Jakarta Commons-Id project</p>
  * <p/>
  * todo remove and use official commons-id release as soon as it is available
- * 
+ *
  * @author Commons-Id team
  * @version $Revision: 1.2 $ $Date: 2004/07/26 17:10:46 $
  *

@@ -64,7 +64,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     // jcr:lastModified
     public static final QName PROPNAME_LAST_MODIFIED =
 	    new QName(NamespaceRegistryImpl.NS_JCR_URI, "lastModified");
-    // jcr:mergeFailed 
+    // jcr:mergeFailed
     public static final QName PROPNAME_MERGE_FAILED =
 	    new QName(NamespaceRegistryImpl.NS_JCR_URI, "mergeFailed");
 
@@ -160,9 +160,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 	return state.isTransient();
     }
 
-    abstract protected ItemState getOrCreateTransientItemState() throws RepositoryException;
+    protected abstract ItemState getOrCreateTransientItemState() throws RepositoryException;
 
-    abstract protected void makePersistent() throws RepositoryException;
+    protected abstract void makePersistent() throws RepositoryException;
 
     /**
      * Marks this instance as 'removed' and notifies its listeners.
@@ -364,8 +364,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 		NodeType[] nta = def.getRequiredPrimaryTypes();
 		for (int i = 0; i < nta.length; i++) {
 		    NodeTypeImpl ntReq = (NodeTypeImpl) nta[i];
-		    if (nodeState.getStatus() == ItemState.STATUS_NEW &&
-			    !(nt.getQName().equals(ntReq.getQName())
+		    if (nodeState.getStatus() == ItemState.STATUS_NEW
+			    && !(nt.getQName().equals(ntReq.getQName())
 			    || nt.isDerivedFrom(ntReq.getQName()))) {
 			// the transient node's node type does not satisfy the
 			// 'required primary types' constraint
@@ -464,7 +464,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 	    }
 	}
     }
-    
+
     private void checkReferences(Iterator iterDirty, Iterator iterRemoved,
 				 ReferenceManager refMgr)
 	    throws ConstraintViolationException, RepositoryException {
@@ -506,7 +506,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 			NodeId targetId = new NodeId(uuid);
 			// verify that target exists
 			if (!itemMgr.itemExists(targetId)) {
-			    String msg = itemMgr.safeGetJCRPath(propState.getId()) + ": target node of REFERENCE property does not exist";
+			    String msg = itemMgr.safeGetJCRPath(propState.getId())
+				    + ": target node of REFERENCE property does not exist";
 			    log.warn(msg);
 			    throw new ConstraintViolationException(msg);
 			}
@@ -517,13 +518,15 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 			if (target.isNew()) {
 			    try {
 				if (!target.getPrimaryPath().isDescendantOf(getPrimaryPath())) {
-				    String msg = itemMgr.safeGetJCRPath(propState.getId()) + ": target node of REFERENCE property is a new node and must therefore either be saved first or be within the scope of the current save operation.";
+				    String msg = itemMgr.safeGetJCRPath(propState.getId())
+					    + ": target node of REFERENCE property is a new node and must therefore either be saved first or be within the scope of the current save operation.";
 				    log.warn(msg);
 				    throw new ConstraintViolationException(msg);
 				}
 			    } catch (MalformedPathException mpe) {
 				// should never get here...
-				String msg = itemMgr.safeGetJCRPath(propState.getId()) + ": failed to verify existence of target node";
+				String msg = itemMgr.safeGetJCRPath(propState.getId())
+					+ ": failed to verify existence of target node";
 				log.error(msg, mpe);
 				throw new RepositoryException(msg, mpe);
 			    }
@@ -590,7 +593,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 		refs = refMgr.get(targetId);
 	    }
 	    if (refs.hasReferences()) {
-		String msg = nodeState.getId() + ": the node cannot be removed because it is being referenced.";
+		String msg = nodeState.getId()
+			+ ": the node cannot be removed because it is being referenced.";
 		log.warn(msg);
 		throw new ConstraintViolationException(msg);
 	    }

@@ -15,10 +15,10 @@
  */
 package org.apache.jackrabbit.jcr.core.version;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import javax.jcr.RepositoryException;
 import java.util.Calendar;
 
 /**
@@ -32,13 +32,13 @@ import java.util.Calendar;
  */
 public class GenericVersionSelector implements VersionSelector {
 
-    private String name=null;
+    private String name = null;
 
-    private String label=null;
+    private String label = null;
 
-    private Calendar date=null;
+    private Calendar date = null;
 
-    private boolean returnLatest=true;
+    private boolean returnLatest = true;
 
     public GenericVersionSelector() {
     }
@@ -84,17 +84,17 @@ public class GenericVersionSelector implements VersionSelector {
     }
 
     public Version select(VersionHistory versionHistory) throws RepositoryException {
-	Version selected=null;
-	if (name!=null) {
+	Version selected = null;
+	if (name != null) {
 	    selected = selectByName(versionHistory, name);
 	}
-	if (selected==null && label!=null) {
+	if (selected == null && label != null) {
 	    selected = selectByLabel(versionHistory, label);
 	}
-	if (selected==null && date!=null) {
+	if (selected == null && date != null) {
 	    selected = selectByDate(versionHistory, date);
 	}
-	if (selected==null && returnLatest) {
+	if (selected == null && returnLatest) {
 	    selected = selectByDate(versionHistory, null);
 	}
 	return selected;
@@ -112,14 +112,14 @@ public class GenericVersionSelector implements VersionSelector {
 
     public static Version selectByDate(VersionHistory history, Calendar date)
 	    throws RepositoryException {
-	long time = date==null ? Long.MAX_VALUE : date.getTimeInMillis();
-	long latestDate=Long.MIN_VALUE;
-	Version latestVersion=null;
+	long time = date == null ? Long.MAX_VALUE : date.getTimeInMillis();
+	long latestDate = Long.MIN_VALUE;
+	Version latestVersion = null;
 	VersionIterator iter = history.getAllVersions();
 	while (iter.hasNext()) {
 	    Version v = iter.nextVersion();
 	    long c = v.getCreated().getTimeInMillis();
-	    if (c>latestDate && c<=time) {
+	    if (c > latestDate && c <= time) {
 		latestDate = c;
 		latestVersion = v;
 	    }

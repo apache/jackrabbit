@@ -498,8 +498,8 @@ public class NodeImpl extends ItemImpl implements Node {
 	    } else {
 		// there's already a node with that name
 		// check same-name sibling setting of both new and existing node
-		if (!def.allowSameNameSibs() ||
-			!((NodeImpl) item).getDefinition().allowSameNameSibs()) {
+		if (!def.allowSameNameSibs()
+			|| !((NodeImpl) item).getDefinition().allowSameNameSibs()) {
 		    throw new ItemExistsException(item.safeGetJCRPath());
 		}
 	    }
@@ -862,7 +862,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * @see Node#addNode(String)
      */
-    synchronized public NodeImpl addNode(QName nodeName)
+    public synchronized NodeImpl addNode(QName nodeName)
 	    throws ItemExistsException, ConstraintViolationException,
 	    RepositoryException {
 	// check state of this instance
@@ -874,7 +874,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * @see Node#addNode(String, String)
      */
-    synchronized public NodeImpl addNode(QName nodeName, QName nodeTypeName)
+    public synchronized NodeImpl addNode(QName nodeName, QName nodeTypeName)
 	    throws ItemExistsException, NoSuchNodeTypeException,
 	    ConstraintViolationException, RepositoryException {
 	// check state of this instance
@@ -1043,7 +1043,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * @see Node#remove(String)
      */
-    synchronized public void remove(String relPath)
+    public synchronized void remove(String relPath)
 	    throws PathNotFoundException, RepositoryException {
 	// check state of this instance
 	checkItemState();
@@ -1129,7 +1129,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * @see Node#addNode(String)
      */
-    synchronized public Node addNode(String relPath)
+    public synchronized Node addNode(String relPath)
 	    throws ItemExistsException, PathNotFoundException,
 	    ConstraintViolationException, RepositoryException {
 	// check state of this instance
@@ -1141,7 +1141,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * @see Node#addNode(String, String)
      */
-    synchronized public Node addNode(String relPath, String nodeTypeName)
+    public synchronized Node addNode(String relPath, String nodeTypeName)
 	    throws ItemExistsException, PathNotFoundException,
 	    NoSuchNodeTypeException, ConstraintViolationException,
 	    RepositoryException {
@@ -1224,16 +1224,16 @@ public class NodeImpl extends ItemImpl implements Node {
 	for (int i = 0; i < list.size(); i++) {
 	    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
 	    if (srcInd == -1) {
-		if (entry.getName().equals(insertName.getName()) &&
-			(entry.getIndex() == insertName.getIndex() ||
-			insertName.getIndex() == 0 && entry.getIndex() == 1)) {
+		if (entry.getName().equals(insertName.getName())
+			&& (entry.getIndex() == insertName.getIndex()
+			|| insertName.getIndex() == 0 && entry.getIndex() == 1)) {
 		    srcInd = i;
 		}
 	    }
 	    if (destInd == -1 && beforeName != null) {
-		if (entry.getName().equals(beforeName.getName()) &&
-			(entry.getIndex() == beforeName.getIndex() ||
-			beforeName.getIndex() == 0 && entry.getIndex() == 1)) {
+		if (entry.getName().equals(beforeName.getName())
+			&& (entry.getIndex() == beforeName.getIndex()
+			|| beforeName.getIndex() == 0 && entry.getIndex() == 1)) {
 		    destInd = i;
 		    if (srcInd != -1) {
 			break;
@@ -1830,8 +1830,8 @@ public class NodeImpl extends ItemImpl implements Node {
 	NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType(ntName);
 
 	// shortcut
-	if (mixin.getChildNodeDefs().length == 0 &&
-		mixin.getPropertyDefs().length == 0) {
+	if (mixin.getChildNodeDefs().length == 0
+		&& mixin.getPropertyDefs().length == 0) {
 	    // the node type has neither property nor child node definitions,
 	    // i.e. we're done
 	    return;
@@ -2534,7 +2534,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException          if another error occurs.
      */
     private NodeImpl addNode(String relPath, FrozenNode frozen)
-	    throws RepositoryException {
+	    throws ItemExistsException, PathNotFoundException,
+	    ConstraintViolationException, NoSuchNodeTypeException,
+	    RepositoryException {
 
 	// get frozen node type
 	NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
@@ -2930,7 +2932,7 @@ class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
 	int pLen = pattern.length();
 	int sLen = s.length();
 
-	for (; ;) {
+	for (;;) {
 	    if (pOff >= pLen) {
 		if (sOff >= sLen) {
 		    return true;
@@ -2956,7 +2958,7 @@ class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
 		    return true;
 		}
 
-		for (; ;) {
+		for (;;) {
 		    if (internalMatches(s, pattern, sOff, pOff)) {
 			return true;
 		    }

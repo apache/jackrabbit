@@ -32,7 +32,7 @@ public abstract class PersistentNodeState extends NodeState implements Persistab
 
     static final long serialVersionUID = -371249062564922125L;
 
-    transient protected final PersistenceManager persistMgr;
+    protected final transient PersistenceManager persistMgr;
 
     /**
      * Package private constructor

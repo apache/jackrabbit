@@ -204,7 +204,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
 				public void flush() /*throws IOException*/ {
 				}
 
-				public void write(char cbuf[], int off, int len) throws IOException {
+				public void write(char[] cbuf, int off, int len) throws IOException {
 				    try {
 					contentHandler.characters(cbuf, off, len);
 				    } catch (SAXException se) {
@@ -227,7 +227,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
 			    }
 			}
 		    } else {
-			char chars[] = values[i].toJCRValue(nsReg).getString().toCharArray();
+			char[] chars = values[i].toJCRValue(nsReg).getString().toCharArray();
 			contentHandler.characters(chars, 0, chars.length);
 		    }
 

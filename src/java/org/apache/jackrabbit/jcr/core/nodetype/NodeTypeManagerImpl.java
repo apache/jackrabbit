@@ -101,7 +101,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @return
      * @throws NoSuchNodeTypeException
      */
-    synchronized public NodeTypeImpl getNodeType(QName name) throws NoSuchNodeTypeException {
+    public synchronized NodeTypeImpl getNodeType(QName name) throws NoSuchNodeTypeException {
 	NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
 	if (nt != null) {
 	    return nt;

@@ -159,7 +159,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * @see ContentHandler#characters(char[], int, int)
      */
-    public void characters(char ch[], int start, int length) throws SAXException {
+    public void characters(char[] ch, int start, int length) throws SAXException {
 	// delegate to target handler
 	targetHandler.characters(ch, start, length);
     }

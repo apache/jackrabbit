@@ -15,8 +15,6 @@
  */
 package org.apache.jackrabbit.jcr.core;
 
-import javax.jcr.RepositoryException;
-
 /**
  * The <code>UnknownPrefixException</code> ...
  *

@@ -30,6 +30,13 @@ import javax.jcr.*;
  * @version $Revision: 1.12 $, $Date: 2004/08/26 10:06:40 $
  */
 public class ValueHelper {
+
+    /**
+     * empty private constructor
+     */
+    private ValueHelper() {
+    }
+
     /**
      * @param srcValue
      * @param targetType
@@ -67,9 +74,9 @@ public class ValueHelper {
 		try {
 		    val = new StringValue(srcValue.getString());
 		} catch (RepositoryException re) {
-		    throw new ValueFormatException("conversion failed: " +
-			    PropertyType.nameFromValue(srcType) + " to " +
-			    PropertyType.nameFromValue(targetType), re);
+		    throw new ValueFormatException("conversion failed: "
+			    + PropertyType.nameFromValue(srcType) + " to "
+			    + PropertyType.nameFromValue(targetType), re);
 		}
 		break;
 
@@ -78,9 +85,9 @@ public class ValueHelper {
 		try {
 		    val = new BinaryValue(srcValue.getStream());
 		} catch (RepositoryException re) {
-		    throw new ValueFormatException("conversion failed: " +
-			    PropertyType.nameFromValue(srcType) + " to " +
-			    PropertyType.nameFromValue(targetType), re);
+		    throw new ValueFormatException("conversion failed: "
+			    + PropertyType.nameFromValue(srcType) + " to "
+			    + PropertyType.nameFromValue(targetType), re);
 		}
 		break;
 
@@ -89,9 +96,9 @@ public class ValueHelper {
 		try {
 		    val = new BooleanValue(srcValue.getBoolean());
 		} catch (RepositoryException re) {
-		    throw new ValueFormatException("conversion failed: " +
-			    PropertyType.nameFromValue(srcType) + " to " +
-			    PropertyType.nameFromValue(targetType), re);
+		    throw new ValueFormatException("conversion failed: "
+			    + PropertyType.nameFromValue(srcType) + " to "
+			    + PropertyType.nameFromValue(targetType), re);
 		}
 		break;
 
@@ -100,9 +107,9 @@ public class ValueHelper {
 		try {
 		    val = new DateValue(srcValue.getDate());
 		} catch (RepositoryException re) {
-		    throw new ValueFormatException("conversion failed: " +
-			    PropertyType.nameFromValue(srcType) + " to " +
-			    PropertyType.nameFromValue(targetType), re);
+		    throw new ValueFormatException("conversion failed: "
+			    + PropertyType.nameFromValue(srcType) + " to "
+			    + PropertyType.nameFromValue(targetType), re);
 		}
 		break;
 
@@ -111,9 +118,9 @@ public class ValueHelper {
 		try {
 		    val = new DoubleValue(srcValue.getDouble());
 		} catch (RepositoryException re) {
-		    throw new ValueFormatException("conversion failed: " +
-			    PropertyType.nameFromValue(srcType) + " to " +
-			    PropertyType.nameFromValue(targetType), re);
+		    throw new ValueFormatException("conversion failed: "
+			    + PropertyType.nameFromValue(srcType) + " to "
+			    + PropertyType.nameFromValue(targetType), re);
 		}
 		break;
 
@@ -122,9 +129,9 @@ public class ValueHelper {
 		try {
 		    val = new LongValue(srcValue.getLong());
 		} catch (RepositoryException re) {
-		    throw new ValueFormatException("conversion failed: " +
-			    PropertyType.nameFromValue(srcType) + " to " +
-			    PropertyType.nameFromValue(targetType), re);
+		    throw new ValueFormatException("conversion failed: "
+			    + PropertyType.nameFromValue(srcType) + " to "
+			    + PropertyType.nameFromValue(targetType), re);
 		}
 		break;
 
@@ -162,9 +169,9 @@ public class ValueHelper {
 		    case PropertyType.DOUBLE:
 		    case PropertyType.LONG:
 		    case PropertyType.REFERENCE:
-			throw new ValueFormatException("conversion failed: " +
-				PropertyType.nameFromValue(srcType) + " to " +
-				PropertyType.nameFromValue(targetType));
+			throw new ValueFormatException("conversion failed: "
+				+ PropertyType.nameFromValue(srcType) + " to "
+				+ PropertyType.nameFromValue(targetType));
 
 		    default:
 			throw new IllegalArgumentException("not a valid type constant: " + srcType);
@@ -178,7 +185,7 @@ public class ValueHelper {
 			// no conversion needed, return original value
 			// (redundant code, just here for the sake of clarity)
 			return srcValue;
-
+			
 		    case PropertyType.BINARY:
 		    case PropertyType.STRING:
 		    case PropertyType.PATH:	// path might be a name (relative, onle element long path) 
@@ -205,9 +212,9 @@ public class ValueHelper {
 		    case PropertyType.DOUBLE:
 		    case PropertyType.LONG:
 		    case PropertyType.REFERENCE:
-			throw new ValueFormatException("conversion failed: " +
-				PropertyType.nameFromValue(srcType) + " to " +
-				PropertyType.nameFromValue(targetType));
+			throw new ValueFormatException("conversion failed: "
+				+ PropertyType.nameFromValue(srcType) + " to "
+				+ PropertyType.nameFromValue(targetType));
 
 		    default:
 			throw new IllegalArgumentException("not a valid type constant: " + srcType);
@@ -242,9 +249,9 @@ public class ValueHelper {
 		    case PropertyType.LONG:
 		    case PropertyType.PATH:
 		    case PropertyType.NAME:
-			throw new ValueFormatException("conversion failed: " +
-				PropertyType.nameFromValue(srcType) + " to " +
-				PropertyType.nameFromValue(targetType));
+			throw new ValueFormatException("conversion failed: "
+				+ PropertyType.nameFromValue(srcType) + " to "
+				+ PropertyType.nameFromValue(targetType));
 
 		    default:
 			throw new IllegalArgumentException("not a valid type constant: " + srcType);

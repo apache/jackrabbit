@@ -89,9 +89,9 @@ class EventState {
      * @param session    the session that added the node.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState ChildNodeAdded(String parentUUID,
-					    QName childName,
-					    Session session) {
+    public static EventState createChildNodeAdded(String parentUUID,
+						  QName childName,
+						  Session session) {
 	return new EventState(EventType.CHILD_NODE_ADDED,
 		parentUUID,
 		childName,
@@ -108,9 +108,9 @@ class EventState {
      * @param session    the session that removed the node.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState ChildNodeRemoved(String parentUUID,
-					      QName childName,
-					      Session session) {
+    public static EventState createChildNodeRemoved(String parentUUID,
+						    QName childName,
+						    Session session) {
 	return new EventState(EventType.CHILD_NODE_REMOVED,
 		parentUUID,
 		childName,
@@ -127,9 +127,9 @@ class EventState {
      * @param session    the session that added the property.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState PropertyAdded(String parentUUID,
-					   QName childName,
-					   Session session) {
+    public static EventState createPropertyAdded(String parentUUID,
+						 QName childName,
+						 Session session) {
 	return new EventState(EventType.PROPERTY_ADDED,
 		parentUUID,
 		childName,
@@ -146,9 +146,9 @@ class EventState {
      * @param session    the session that removed the property.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState PropertyRemoved(String parentUUID,
-					     QName childName,
-					     Session session) {
+    public static EventState createPropertyRemoved(String parentUUID,
+						   QName childName,
+						   Session session) {
 	return new EventState(EventType.PROPERTY_REMOVED,
 		parentUUID,
 		childName,
@@ -165,9 +165,9 @@ class EventState {
      * @param session    the session that changed the property.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState PropertyChanged(String parentUUID,
-					     QName childName,
-					     Session session) {
+    public static EventState createPropertyChanged(String parentUUID,
+						   QName childName,
+						   Session session) {
 	return new EventState(EventType.PROPERTY_CHANGED,
 		parentUUID,
 		childName,

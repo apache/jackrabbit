@@ -725,7 +725,7 @@ public class NodeState extends ItemState {
     /**
      * base class for <code>PropertyEntry</code> and <code>ChildNodeEntry</code>
      */
-    private static abstract class ChildEntry implements Serializable {
+    private abstract static class ChildEntry implements Serializable {
 	protected QName name;
 
 	protected ChildEntry(QName name) {

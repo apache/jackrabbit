@@ -34,7 +34,7 @@ import java.util.List;
  * @author mreutegg
  * @version $Revision: 1.5 $
  */
-final public class EventStateCollection {
+public final class EventStateCollection {
 
     /**
      * Logger instance for this class
@@ -72,8 +72,8 @@ final public class EventStateCollection {
 	    throws RepositoryException {
 	int status = state.getStatus();
 
-	if (status == ItemState.STATUS_EXISTING_MODIFIED ||
-		status == ItemState.STATUS_NEW) {
+	if (status == ItemState.STATUS_EXISTING_MODIFIED
+		|| status == ItemState.STATUS_NEW) {
 
 	    if (state.isNode()) {
 
@@ -82,7 +82,7 @@ final public class EventStateCollection {
 		List addedProperties = currentNode.getAddedPropertyEntries();
 		for (Iterator it = addedProperties.iterator(); it.hasNext();) {
 		    NodeState.PropertyEntry prop = (NodeState.PropertyEntry) it.next();
-		    events.add(EventState.PropertyAdded(currentNode.getUUID(),
+		    events.add(EventState.createPropertyAdded(currentNode.getUUID(),
 			    prop.getName(),
 			    session));
 		}
@@ -91,7 +91,7 @@ final public class EventStateCollection {
 		List removedProperties = currentNode.getRemovedPropertyEntries();
 		for (Iterator it = removedProperties.iterator(); it.hasNext();) {
 		    NodeState.PropertyEntry prop = (NodeState.PropertyEntry) it.next();
-		    events.add(EventState.PropertyRemoved(currentNode.getUUID(),
+		    events.add(EventState.createPropertyRemoved(currentNode.getUUID(),
 			    prop.getName(),
 			    session));
 		}
@@ -100,7 +100,7 @@ final public class EventStateCollection {
 		List addedNodes = currentNode.getAddedChildNodeEntries();
 		for (Iterator it = addedNodes.iterator(); it.hasNext();) {
 		    NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
-		    events.add(EventState.ChildNodeAdded(currentNode.getUUID(),
+		    events.add(EventState.createChildNodeAdded(currentNode.getUUID(),
 			    child.getName(),
 			    session));
 		}
@@ -109,14 +109,14 @@ final public class EventStateCollection {
 		List removedNodes = currentNode.getRemovedChildNodeEntries();
 		for (Iterator it = removedNodes.iterator(); it.hasNext();) {
 		    NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
-		    events.add(EventState.ChildNodeRemoved(currentNode.getUUID(),
+		    events.add(EventState.createChildNodeRemoved(currentNode.getUUID(),
 			    child.getName(),
 			    session));
 		}
 	    } else {
 		// only add property changed event if property is existing
 		if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
-		    events.add(EventState.PropertyChanged(state.getParentUUID(),
+		    events.add(EventState.createPropertyChanged(state.getParentUUID(),
 			    ((PropertyState) state).getName(),
 			    session));
 		}

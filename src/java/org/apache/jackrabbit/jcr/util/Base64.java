@@ -122,8 +122,8 @@ public class Base64 {
 	if (len == 0) {
 	    return;
 	}
-	if (len < 0 || off >= data.length ||
-		len + off > data.length) {
+	if (len < 0 || off >= data.length
+		|| len + off > data.length) {
 	    throw new IllegalArgumentException();
 	}
 	char[] enc = new char[4];
@@ -215,8 +215,8 @@ public class Base64 {
 	if (len == 0) {
 	    return;
 	}
-	if (len < 0 || off >= chars.length ||
-		len + off > chars.length) {
+	if (len < 0 || off >= chars.length
+		|| len + off > chars.length) {
 	    throw new IllegalArgumentException();
 	}
 	char[] chunk = new char[4];

@@ -32,7 +32,7 @@ public abstract class PersistentPropertyState extends PropertyState implements P
 
     static final long serialVersionUID = -8919019313955817383L;
 
-    transient protected final PersistenceManager persistMgr;
+    protected final transient PersistenceManager persistMgr;
 
     /**
      * Package private constructor

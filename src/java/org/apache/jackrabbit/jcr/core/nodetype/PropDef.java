@@ -45,11 +45,11 @@ public class PropDef extends ChildItemDef {
 	}
 	if (obj instanceof PropDef) {
 	    PropDef other = (PropDef) obj;
-	    return super.equals(obj) &&
-		    requiredType == other.requiredType &&
-		    (valueConstraint == null ? other.valueConstraint == null : valueConstraint.equals(other.valueConstraint)) &&
-		    Arrays.equals(defaultValues, other.defaultValues) &&
-		    multiple == other.multiple;
+	    return super.equals(obj)
+		    && requiredType == other.requiredType
+		    && (valueConstraint == null ? other.valueConstraint == null : valueConstraint.equals(other.valueConstraint))
+		    && Arrays.equals(defaultValues, other.defaultValues)
+		    && multiple == other.multiple;
 	}
 	return false;
     }

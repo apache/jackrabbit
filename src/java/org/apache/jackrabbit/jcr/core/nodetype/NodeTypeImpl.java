@@ -408,7 +408,7 @@ public class NodeTypeImpl implements NodeType {
     /**
      * @see NodeType#canSetProperty(String, Value[])
      */
-    public boolean canSetProperty(String propertyName, Value values[]) {
+    public boolean canSetProperty(String propertyName, Value[] values) {
 	if (values == null) {
 	    // setting a property to null is equivalent of removing it
 	    return canRemoveItem(propertyName);

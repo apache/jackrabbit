@@ -48,13 +48,13 @@ abstract class ChildItemDef implements Cloneable {
 	}
 	if (obj instanceof ChildItemDef) {
 	    ChildItemDef other = (ChildItemDef) obj;
-	    return (declaringNodeType == null ? other.declaringNodeType == null : declaringNodeType.equals(other.declaringNodeType)) &&
-		    (name == null ? other.name == null : name.equals(other.name)) &&
-		    autoCreate == other.autoCreate &&
-		    onParentVersion == other.onParentVersion &&
-		    writeProtected == other.writeProtected &&
-		    mandatory == other.mandatory &&
-		    primaryItem == other.primaryItem;
+	    return (declaringNodeType == null ? other.declaringNodeType == null : declaringNodeType.equals(other.declaringNodeType))
+		    && (name == null ? other.name == null : name.equals(other.name))
+		    && autoCreate == other.autoCreate
+		    && onParentVersion == other.onParentVersion
+		    && writeProtected == other.writeProtected
+		    && mandatory == other.mandatory
+		    && primaryItem == other.primaryItem;
 	}
 	return false;
     }

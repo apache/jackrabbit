@@ -168,9 +168,9 @@ abstract class AbstractSAXEventGenerator {
 	Iterator iter = nodeState.getPropertyEntries().iterator();
 	while (iter.hasNext()) {
 	    NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
-	    if (PROPNAME_PRIMARYTYPE.equals(pe.getName()) ||
-		    PROPNAME_MIXINTYPES.equals(pe.getName()) ||
-		    PROPNAME_UUID.equals(pe.getName())) {
+	    if (PROPNAME_PRIMARYTYPE.equals(pe.getName())
+		    || PROPNAME_MIXINTYPES.equals(pe.getName())
+		    || PROPNAME_UUID.equals(pe.getName())) {
 		continue;
 	    }
 	    PropertyId propId = new PropertyId(nodeState.getUUID(), pe.getName());
@@ -241,7 +241,7 @@ abstract class AbstractSAXEventGenerator {
      * @throws RepositoryException
      * @throws SAXException
      */
-    abstract protected void entering(NodeState state, QName name, int level)
+    protected abstract void entering(NodeState state, QName name, int level)
 	    throws RepositoryException, SAXException;
 
     /**
@@ -252,7 +252,7 @@ abstract class AbstractSAXEventGenerator {
      * @throws RepositoryException
      * @throws SAXException
      */
-    abstract protected void enteringProperties(NodeState state, QName name, int level)
+    protected abstract void enteringProperties(NodeState state, QName name, int level)
 	    throws RepositoryException, SAXException;
 
     /**
@@ -263,7 +263,7 @@ abstract class AbstractSAXEventGenerator {
      * @throws RepositoryException
      * @throws SAXException
      */
-    abstract protected void leavingProperties(NodeState state, QName name, int level)
+    protected abstract void leavingProperties(NodeState state, QName name, int level)
 	    throws RepositoryException, SAXException;
 
     /**
@@ -274,7 +274,7 @@ abstract class AbstractSAXEventGenerator {
      * @throws RepositoryException
      * @throws SAXException
      */
-    abstract protected void leaving(NodeState state, QName name, int level)
+    protected abstract void leaving(NodeState state, QName name, int level)
 	    throws RepositoryException, SAXException;
 
     /**
@@ -284,7 +284,7 @@ abstract class AbstractSAXEventGenerator {
      * @throws RepositoryException
      * @throws SAXException
      */
-    abstract protected void entering(PropertyState state, int level)
+    protected abstract void entering(PropertyState state, int level)
 	    throws RepositoryException, SAXException;
 
     /**
@@ -294,6 +294,6 @@ abstract class AbstractSAXEventGenerator {
      * @throws RepositoryException
      * @throws SAXException
      */
-    abstract protected void leaving(PropertyState state, int level)
+    protected abstract void leaving(PropertyState state, int level)
 	    throws RepositoryException, SAXException;
 }

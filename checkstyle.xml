@@ -44,11 +44,11 @@
         <!-- ************************************************************** -->
         <!-- Checks that are different from the sun coding conventions ones -->
         <!-- ************************************************************** -->
+
         <module name="Header">
             <property name="headerFile" value="${basedir}/HEADER.txt"/>
-            <property name="ignoreLines" value="2"/>
         </module>
-        <property name="tabWidth" value="4"/>
+        <!-- <property name="tabWidth" value="4"/> -->
         <module name="LeftCurly">
           <property name="option" value="eol"/>
         </module>
@@ -62,7 +62,7 @@
         <module name="ConstantName">
           <property name="format" value="log|^[a-zA-Z][a-zA-Z0-9_]*$"/>
         </module>
-        
+
         <!-- ************************************************************** -->
         <!-- Default Sun coding conventions checks                          -->
         <!-- ************************************************************** -->
@@ -72,7 +72,6 @@
         <module name="JavadocMethod"/>
         <module name="JavadocType"/>
         <module name="JavadocVariable"/>
-
 
         <!-- Checks for Naming Conventions.                  -->
         <!-- See http://checkstyle.sf.net/config_naming.html -->
@@ -105,7 +104,7 @@
         <module name="NoWhitespaceAfter"/>
         <module name="NoWhitespaceBefore"/>
         <module name="OperatorWrap"/>
-        <module name="TabCharacter"/>
+        <!-- <module name="TabCharacter"/> -->
         <module name="WhitespaceAfter"/>
         <module name="WhitespaceAround"/>
 
