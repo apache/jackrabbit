@@ -141,8 +141,8 @@
         </supertypes>
         <propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
         <propertyDef name="jcr:type" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-        <propertyDef name="jcr:valueConstraint" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-        <propertyDef name="jcr:defaultValues" type="undefined" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:valueConstraints" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
+        <propertyDef name="jcr:defaultValues" type="undefined" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
         <propertyDef name="jcr:autoCreate" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
         <propertyDef name="jcr:mandatory" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
         <propertyDef name="jcr:onParentVersion" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
