@@ -51,6 +51,9 @@ public class SearchIndex extends AbstractQueryHandler {
 
     private static final Logger log = Logger.getLogger(SearchIndex.class);
 
+    /** Name of the write lock file */
+    private static final String WRITE_LOCK = "write.lock";
+
     /** Name of the file to persist search internal namespace mappings */
     private static final String NS_MAPPING_FILE = "ns_mappings.properties";
 
@@ -84,9 +87,19 @@ public class SearchIndex extends AbstractQueryHandler {
      * @throws IOException if an error occurs while initializing this handler.
      */
     protected void doInit() throws IOException {
-        boolean create;
         try {
-            create = !getFileSystem().exists("segments");
+            // check if index is locked, probably from an unclean repository
+            // shutdown
+            if (getFileSystem().exists(WRITE_LOCK)) {
+                log.warn("Removing write lock on search index.");
+                try {
+                    getFileSystem().deleteFile(WRITE_LOCK);
+                } catch (FileSystemException e) {
+                    log.error("Unable to remove write lock on search index.");
+                }
+            }
+
+            boolean create = !getFileSystem().exists("segments");
             persistentIndex = new PersistentIndex(getFileSystem(), create, analyzer);
             persistentIndex.setUseCompoundFile(true);
             FileSystemResource mapFile = new FileSystemResource(getFileSystem(), NS_MAPPING_FILE);
