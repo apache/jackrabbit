@@ -21,7 +21,9 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 
 /**
- * <code>RegistryHelper</code> ...
+ * JNDI helper functionality. This class contains static utility
+ * methods for binding and unbinding Jackarbbit repositories to and
+ * from a JNDI context.
  */
 public class RegistryHelper {
 
@@ -32,6 +34,11 @@ public class RegistryHelper {
     }
 
     /**
+     * Binds a configured repository to the given JNDI context.
+     * This method creates a {@link BindableRepository BindableRepository}
+     * instance using the given configuration information, and binds
+     * it to the given JNDI context.
+     *
      * @param ctx            context where the repository should be registered (i.e. bound)
      * @param name           the name to register the repository with
      * @param configFilePath path to the configuration file of the repository
@@ -39,8 +46,8 @@ public class RegistryHelper {
      * @param overwrite      if <code>true</code>, any existing binding with the given
      *                       name will be overwritten; otherwise a <code>NamingException</code> will
      *                       be thrown if the name is already bound
-     * @throws NamingException
-     * @throws RepositoryException
+     * @throws RepositoryException if the repository cannot be created
+     * @throws NamingException if the repository cannot be registered in JNDI
      */
     public static void registerRepository(Context ctx, String name,
                                           String configFilePath,
@@ -56,9 +63,11 @@ public class RegistryHelper {
     }
 
     /**
+     * Removes the given JNDI binding.
+     *
      * @param ctx  context where the repository should be unregistered (i.e. unbound)
      * @param name the name of the repository to unregister
-     * @throws NamingException
+     * @throws NamingException on JNDI errors
      */
     public static void unregisterRepository(Context ctx, String name)
             throws NamingException {
