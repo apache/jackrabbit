@@ -39,9 +39,10 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 /**
- * Serializable {@link javax.jcr.Value Value} decorator. A SerialValue
- * decorator makes it possible to serialize the contents of a Value object
- * even if the object itself is not serializable.
+ * Serializable {@link Value Value} decorator. A SerialValue decorator
+ * makes it possible to serialize the contents of a Value object even
+ * if the object itself is not serializable. For example the standard
+ * JCR Value classes are not serializable.
  * <p>
  * Serialization is achieved by extracting and serializing the type and
  * underlying data of the Value object. On deserialization the type and
@@ -53,6 +54,13 @@ import javax.jcr.ValueFormatException;
  * The SerialValue decorator adds no other functionality to the Value
  * interface. Normal method calls are simply forwarded to the decorated
  * Value object.
+ * <p>
+ * Note that a decorator object keeps a reference to the underlying value
+ * object and uses the standard value access methods to perform serialization.
+ * Serialization therefore affects the internal state of the underlying value!
+ * On the other hand, the internal state of a value might interfere with the
+ * serialization decorator. The safest course of action is to only decorate
+ * and serialize fresh value objects and to discard them after serialization.
  *
  * @author Jukka Zitting
  * @see javax.jcr.Value
@@ -61,13 +69,13 @@ import javax.jcr.ValueFormatException;
 public class SerialValue implements Value, Serializable {
 
     /** Static serial version UID. */
-    static final long serialVersionUID = 8070492457339121953L;    
+    static final long serialVersionUID = 8070492457339121953L;
 
     /** The decorated value. */
     private Value value;
 
     /**
-     * Creates a SerialValue decorator for the given Value object.
+     * Creates a serialization decorator for the given value.
      *
      * @param value the value to be decorated
      */
@@ -76,21 +84,28 @@ public class SerialValue implements Value, Serializable {
     }
 
     /**
-     * Utility method for decorating an array of Value objects.
+     * Utility method for decorating an array of values. The
+     * returned array will contain SerialValue decorators for
+     * all the given values. Note that the contents of the
+     * original values will only be copied when the decorators
+     * are serialized.
+     * <p>
+     * If the given array is <code>null</code>, then an empty
+     * array is returned.
      *
-     * @param values the Value objects to be decorated
-     * @return array of SerialValue decorators
+     * @param values the values to be decorated
+     * @return array of decorated values
      */
     public static Value[] makeSerialValueArray(Value[] values) {
-        if (values == null) {
+        if (values != null) {
+            Value[] serials = new Value[values.length];
+            for (int i = 0; i < values.length; i++) {
+                serials[i] = new SerialValue(values[i]);
+            }
+            return serials;
+        } else {
             return new Value[0];
         }
-
-        Value[] serials = new Value[values.length];
-        for (int i = 0; i < values.length; i++) {
-            serials[i] = new SerialValue(values[i]);
-        }
-        return serials;
     }
 
     /**
@@ -138,7 +153,7 @@ public class SerialValue implements Value, Serializable {
             default:
                 throw new IOException("Unknown value type");
             }
-        } catch (RepositoryException ex) { // Is this possible?
+        } catch (RepositoryException ex) {
             throw new IOException(ex.getMessage());
         }
     }
@@ -194,56 +209,63 @@ public class SerialValue implements Value, Serializable {
         }
     }
 
-    /* (non-Javadoc)
-     * @see javax.jcr.Value#getBoolean()
+    /**
+     * Forwards the method call to the decorated value.
+     * {@inheritDoc}
      */
     public boolean getBoolean() throws ValueFormatException,
             IllegalStateException, RepositoryException {
         return value.getBoolean();
     }
 
-    /* (non-Javadoc)
-     * @see javax.jcr.Value#getDate()
+    /**
+     * Forwards the method call to the decorated value.
+     * {@inheritDoc}
      */
     public Calendar getDate() throws ValueFormatException,
             IllegalStateException, RepositoryException {
         return value.getDate();
     }
 
-    /* (non-Javadoc)
-     * @see javax.jcr.Value#getDouble()
+    /**
+     * Forwards the method call to the decorated value.
+     * {@inheritDoc}
      */
     public double getDouble() throws ValueFormatException,
             IllegalStateException, RepositoryException {
         return value.getDouble();
     }
 
-    /* (non-Javadoc)
-     * @see javax.jcr.Value#getLong()
+    /**
+     * Forwards the method call to the decorated value.
+     * {@inheritDoc}
      */
     public long getLong() throws ValueFormatException, IllegalStateException,
             RepositoryException {
         return value.getLong();
     }
 
-    /* (non-Javadoc)
-     * @see javax.jcr.Value#getStream()
+    /**
+     * Forwards the method call to the decorated value.
+     * {@inheritDoc}
      */
     public InputStream getStream() throws ValueFormatException,
             IllegalStateException, RepositoryException {
         return value.getStream();
     }
 
-    /* (non-Javadoc)
-     * @see javax.jcr.Value#getString()
+    /**
+     * Forwards the method call to the decorated value.
+     * {@inheritDoc}
      */
     public String getString() throws ValueFormatException,
             IllegalStateException, RepositoryException {
         return value.getString();
     }
 
-    /* (non-Javadoc)
-     * @see javax.jcr.Value#getType()
+    /**
+     * Forwards the method call to the decorated value.
+     * {@inheritDoc}
      */
     public int getType() {
         return value.getType();
