@@ -1269,7 +1269,7 @@ public class NodeTypeRegistry {
          * node type
          */
         HashSet names = new HashSet();
-        Iterator iter = registeredNTDefs.keySet().iterator();
+        Iterator iter = registeredNTDefs.values().iterator();
         while (iter.hasNext()) {
             NodeTypeDef ntd = (NodeTypeDef) iter.next();
             if (ntd.getDependencies().contains(nodeTypeName)) {
