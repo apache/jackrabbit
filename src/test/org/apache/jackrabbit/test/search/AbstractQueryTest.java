@@ -20,6 +20,8 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.*;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.RowIterator;
+import javax.jcr.query.Row;
 
 /**
  * Abstract base class for query test cases.
@@ -73,26 +75,21 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void checkResult(QueryResult result, int hits, int properties)
             throws RepositoryException {
-/*
         checkResult(result, hits);
         // now check property count
         int count = 0;
         log.println("Properties:");
-        for (PropertyIterator it = result.getProperties(); it.hasNext(); count++) {
+        String[] propNames = result.getPropertyNames();
+        for (RowIterator it = result.getRows(); it.hasNext();) {
             StringBuffer msg = new StringBuffer();
-            Property p = it.nextProperty();
-            msg.append("  ").append(p.getName()).append(": ");
-            Value[] values = null;
-            if (p.getDefinition().isMultiple()) {
-                values = p.getValues();
-            } else {
-                values = new Value[]{p.getValue()};
-            }
-            String sep = "";
-            for (int i = 0; i < values.length; i++) {
-                msg.append(sep);
-                msg.append(values[i].getString());
-                sep = " | ";
+            Value[] values = it.nextRow().getValues();
+            for (int i = 0; i < propNames.length; i++, count++) {
+                msg.append("  ").append(propNames[i]).append(": ");
+                if (values[i] == null) {
+                    msg.append("null");
+                } else {
+                    msg.append(values[i].getString());
+                }
             }
             log.println(msg);
         }
@@ -100,9 +97,6 @@ public class AbstractQueryTest extends AbstractJCRTest {
             log.println("  NONE");
         }
         assertEquals("Wrong property count.", properties, count);
-*/
-        //@todo rewrite test case
-        fail("need to rewrite test case according to interface change");
     }
 
 }

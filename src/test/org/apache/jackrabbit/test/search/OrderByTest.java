@@ -123,7 +123,7 @@ public class OrderByTest extends AbstractQueryTest {
         // both ascending
         String sql = "SELECT value FROM nt:unstructured WHERE " +
                 "jcr:path LIKE '/" + testRoot + "/%' ORDER BY value, text";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResultOrder(result, new String[]{"node2", "node3", "node1"});
 
@@ -135,7 +135,7 @@ public class OrderByTest extends AbstractQueryTest {
         // both descending
         sql = "SELECT value FROM nt:unstructured WHERE " +
                 "jcr:path LIKE '/" + testRoot + "/%' ORDER BY value DESC, text DESC";
-        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResultOrder(result, new String[]{"node1", "node3", "node2"});
 
@@ -147,7 +147,7 @@ public class OrderByTest extends AbstractQueryTest {
         // mixed ascending and descending
         sql = "SELECT value FROM nt:unstructured WHERE " +
                 "jcr:path LIKE '/" + testRoot + "/%' ORDER BY value DESC, text";
-        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResultOrder(result, new String[]{"node1", "node2", "node3"});
 
@@ -199,7 +199,7 @@ public class OrderByTest extends AbstractQueryTest {
         // first check ascending
         String sql = "SELECT value FROM nt:unstructured WHERE " +
                 "jcr:path LIKE '/" + testRoot + "/%' ORDER BY value";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResultOrder(result, nodeNames);
 
@@ -213,7 +213,7 @@ public class OrderByTest extends AbstractQueryTest {
 
         sql = "SELECT value FROM nt:unstructured WHERE " +
                 "jcr:path LIKE '/" + testRoot + "/%' ORDER BY value DESC";
-        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResultOrder(result, nodeNames);
 

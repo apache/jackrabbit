@@ -28,82 +28,82 @@ public class SelectClauseTest extends AbstractQueryTest {
 
     public void testSelectSQL() throws RepositoryException {
         Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"foo"});
+        n.setProperty("myvalue", "foo");
         n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"bar"});
+        n.setProperty("myvalue", "bar");
         n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
-        n.setProperty("yourvalue", new String[]{"foo"});
+        n.setProperty("yourvalue", "foo");
 
         testRootNode.save();
 
         String sql = "SELECT myvalue FROM \"" + NT_BASE
                 + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%'";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 2);
 
         sql = "SELECT myvalue FROM \"" + NT_BASE
                 + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%'"
                 + " AND yourvalue = 'foo'";
-        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResult(result, 0);
 
         sql = "SELECT myvalue FROM \"" + NT_BASE + "\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResult(result, 2);
     }
 
     public void testPropertyCountSQL() throws RepositoryException {
         Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"foo"});
+        n.setProperty("myvalue", "foo");
         n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"bar"});
+        n.setProperty("myvalue", "bar");
         n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
-        n.setProperty("yourvalue", new String[]{"foo"});
+        n.setProperty("yourvalue", "foo");
 
         testRootNode.save();
 
         String sql = "SELECT myvalue FROM \"" + NT_BASE
                 + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%'";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 2, 2);
 
         sql = "SELECT myvalue FROM \"" + NT_BASE
                 + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%'"
                 + " AND yourvalue = 'foo'";
-        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResult(result, 0, 0);
 
         sql = "SELECT myvalue FROM \"" + NT_BASE + "\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResult(result, 2, 2);
 
         sql = "SELECT * FROM \"" + NT_BASE
                 + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/%'"
                 + " AND myvalue LIKE '%'";
-        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
-        checkResult(result, 2, 4);
+        checkResult(result, 2, 2);
     }
 
     public void testSameNameSiblingSQL() throws RepositoryException {
         Node n = testRootNode.addNode("node", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"foo"});
+        n.setProperty("myvalue", "foo");
         n = testRootNode.addNode("node", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"bar"});
+        n.setProperty("myvalue", "bar");
         n = testRootNode.addNode("node", NT_UNSTRUCTURED);
-        n.setProperty("yourvalue", new String[]{"foo"});
+        n.setProperty("yourvalue", "foo");
 
         testRootNode.save();
 
         String sql = "SELECT myvalue FROM \"" + NT_BASE
                 + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/node'";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 2, 2);
 

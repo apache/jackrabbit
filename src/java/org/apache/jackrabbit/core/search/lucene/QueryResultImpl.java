@@ -82,7 +82,6 @@ class QueryResultImpl implements QueryResult {
      * @see QueryResult#getRows()
      */
     public RowIterator getRows() throws RepositoryException {
-        // @todo implement QueryResult#getRows()
-        throw new RepositoryException("not yet implemented");
+        return new RowIteratorImpl(new NodeIteratorImpl(itemMgr, uuids), selectProps, resolver);
     }
 }

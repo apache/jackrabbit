@@ -17,9 +17,15 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
 import org.apache.jackrabbit.core.search.QueryParser;
 import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.search.OrderQueryNode;
+import org.apache.jackrabbit.core.search.LocationStepQueryNode;
+import org.apache.jackrabbit.core.search.QueryNode;
+import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.search.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -37,6 +43,7 @@ import org.apache.lucene.search.Query;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.*;
@@ -173,10 +180,36 @@ class QueryImpl implements javax.jcr.query.Query {
             uuids = Collections.EMPTY_LIST;
         }
 
+        // get select properties
+        QName[] selectProps = root.getSelectProperties();
+        if (selectProps.length == 0) {
+            // use node type constraint
+            LocationStepQueryNode[] steps = root.getLocationNode().getPathSteps();
+            final QName[] ntName = new QName[1];
+            steps[steps.length - 1].acceptOperands(new DefaultQueryNodeVisitor() {
+                public Object visit(NodeTypeQueryNode node, Object data) {
+                    ntName[0] = node.getValue();
+                    return data;
+                }
+            }, null);
+            if (ntName[0] == null) {
+                ntName[0] = NodeTypeRegistry.NT_BASE;
+            }
+            NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
+            PropertyDef[] propDefs = (PropertyDef[]) nt.getPropertyDefs();
+            List tmp = new ArrayList();
+            for (int i = 0; i < propDefs.length; i++) {
+                if (!propDefs[i].isMultiple()) {
+                    tmp.add(((PropertyDefImpl) propDefs[i]).getQName());
+                }
+            }
+            selectProps = (QName[]) tmp.toArray(new QName[tmp.size()]);
+        }
+
         // return QueryResult
         return new QueryResultImpl(itemMgr,
                 (String[]) uuids.toArray(new String[uuids.size()]),
-                root.getSelectProperties(),
+                selectProps,
                 session.getNamespaceResolver());
     }
 
