@@ -30,7 +30,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
     /**
      * Helper object to access repository transparently
      */
-    public static final RepositoryHelper helper = new RepositoryHelper();
+    public static RepositoryHelper helper = new RepositoryHelper();
 
     protected static final String JCR_PRIMARY_TYPE = "jcr:primaryType";
 
