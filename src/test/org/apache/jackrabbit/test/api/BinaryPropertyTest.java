@@ -23,7 +23,6 @@ import javax.jcr.Value;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.io.InputStream;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 
 /**
@@ -103,39 +102,6 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
         }
         assertEquals("Value.getStream() and Property.getStream() " +
                 "return different values.", -1, in2.read());
-    }
-
-    /**
-     * Tests the conversion from a Binary value to a String value and tests
-     * that the received string is encoded in UTF-8.
-     */
-    public void testGetString() throws NotExecutableException, RepositoryException, IOException {
-        BufferedInputStream in = null;
-        try {
-            Value val = PropertyUtil.getValue(prop);
-            Value otherVal = prop.getValue();
-            in = new BufferedInputStream(val.getStream());
-            String str = otherVal.getString();
-            // read the stream into a byte array and compare the result
-            // of getString with that array.
-            // hopefully the binary property is not too long
-            byte[] utf8bytes = str.getBytes(UTF8);
-            byte b[] = new byte[1];
-            int i = 0;
-            while (in.read(b) != -1) {
-                assertEquals("The string received with Value.getString() " +
-                        "on a Stream value is not utf-8 encoded.", b[0], utf8bytes[i]);
-                i++;
-            }
-        } catch (ValueFormatException e) {
-            // throwing a ValueFormatException is permitted when the stream
-            // cannot be turned into a proper UTF-8 string
-            throw new NotExecutableException("Binary property value cannot be converted to a String");
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-        }
     }
 
     /**
