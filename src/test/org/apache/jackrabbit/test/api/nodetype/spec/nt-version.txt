@@ -1,0 +1,50 @@
+NodeTypeName
+  nt:version
+Supertypes
+  nt:base
+  mix:referenceable
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+ChildNodeDef
+  Name jcr:frozenNode
+  RequiredPrimaryTypes [nt:frozenNode]
+  DefaultPrimaryType null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  SameNameSibs true
+PropertyDef
+  Name jcr:created
+  RequiredType DATE
+  ValueConstraints []
+  DefaultValues null
+  AutoCreate true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  Multiple false
+PropertyDef
+  Name jcr:predecessors
+  RequiredType REFERENCE
+  ValueConstraints [nt:version]
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  Multiple true
+PropertyDef
+  Name jcr:successors
+  RequiredType REFERENCE
+  ValueConstraints [nt:version]
+  DefaultValues null
+  AutoCreate false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  Multiple true
