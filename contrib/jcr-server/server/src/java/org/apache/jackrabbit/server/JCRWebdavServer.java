@@ -100,8 +100,11 @@ public class JCRWebdavServer implements DavSessionProvider {
                 String workspaceName = request.getRequestLocator().getWorkspaceName();
 		Credentials creds = RepositoryAccessServlet.getCredentialsFromHeader(request.getHeader(DavConstants.HEADER_AUTHORIZATION));
                 session = repository.login(creds, workspaceName);
+            } catch (LoginException e) {
+                // LoginException results in UNAUTHORIZED,
+                throw new JcrDavException(e);
             } catch (RepositoryException e) {
-                // LoginException, RepositoryException both result in FORBIDDEN
+                // RepositoryException results in FORBIDDEN
                 throw new JcrDavException(e);
             } catch (ServletException e) {
 		throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());

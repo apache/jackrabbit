@@ -17,7 +17,10 @@
 package org.apache.jackrabbit.server.simple.dav;
 
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.spi.JcrDavException;
 import org.apache.jackrabbit.webdav.lock.LockManager;
+
+import javax.jcr.RepositoryException;
 
 /**
  * ResourceFactoryImpl implements a simple DavResourceFactory
@@ -36,8 +39,12 @@ public class ResourceFactoryImpl implements DavResourceFactory {
     }
 
     public DavResource createResource(DavResourceLocator locator, DavSession session) throws DavException {
-        DavResource res = new DavResourceImpl(locator, this, session);
-        res.addLockManager(lockMgr);
-        return res;
+        try {
+            DavResource res = new DavResourceImpl(locator, this, session);
+            res.addLockManager(lockMgr);
+            return res;
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
     }
 }

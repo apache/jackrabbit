@@ -47,8 +47,9 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @param locator
      * @param session
      */
-    public VersionControlledItemCollection(DavResourceLocator locator, DavSession session, DavResourceFactory factory) {
-        super(locator, session, factory);
+    public VersionControlledItemCollection(DavResourceLocator locator, DavSession session,
+                                           DavResourceFactory factory, Item item) {
+        super(locator, session, factory, item);
         if (exists() && !(item instanceof Node)) {
             throw new IllegalArgumentException("A collection resource can not be constructed from a Property item.");
         }

@@ -49,18 +49,9 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @param locator
      * @param session
      */
-    AbstractItemResource(DavResourceLocator locator, DavSession session, DavResourceFactory factory) {
+    AbstractItemResource(DavResourceLocator locator, DavSession session, DavResourceFactory factory, Item item) {
         super(locator, session, factory);
-        Item repositoryItem = null;
-        if (locator != null) {
-            try {
-                repositoryItem = getRepositorySession().getItem(locator.getResourcePath());
-            } catch (RepositoryException e) {
-                // ignore: exists field evaluates to false
-                log.info(e.getMessage());
-            }
-        }
-        item = repositoryItem;
+        this.item = item;
     }
 
     //----------------------------------------------< DavResource interface >---

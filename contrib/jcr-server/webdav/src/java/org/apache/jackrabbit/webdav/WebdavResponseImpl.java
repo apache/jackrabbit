@@ -61,11 +61,17 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @see DavServletResponse#sendErrorResponse(org.apache.jackrabbit.webdav.DavException)
      */
     public void sendErrorResponse(DavException exception) throws IOException {
-        Element errorElem = exception.getError();
-        if (errorElem == null || errorElem.getChildren().size() == 0) {
+        // special handling for unauthorized, should be done nicer
+        if (exception.getErrorCode() == HttpServletResponse.SC_UNAUTHORIZED) {
+            httpResponse.setHeader("WWW-Authenticate", "Basic Realm=Jackrabbit Webdav Server");
             httpResponse.sendError(exception.getErrorCode(), exception.getStatusPhrase());
         } else {
-            sendXmlResponse(new Document(exception.getError()), exception.getErrorCode());
+            Element errorElem = exception.getError();
+            if (errorElem == null || errorElem.getChildren().size() == 0) {
+                httpResponse.sendError(exception.getErrorCode(), exception.getStatusPhrase());
+            } else {
+                sendXmlResponse(new Document(exception.getError()), exception.getErrorCode());
+            }
         }
     }
 

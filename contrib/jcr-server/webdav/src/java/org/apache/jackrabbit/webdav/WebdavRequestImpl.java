@@ -466,7 +466,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         boolean isMatching = false;
         String lockToken = resource.getLock(Type.WRITE, Scope.EXCLUSIVE).getToken();
         if (lockToken != null) {
-            // TODO: strongETag is missing
+            // todo: do not ignore etag
             isMatching = matchesIfHeader(resource.getHref(), lockToken, "");
         } // else: lockToken is null >> the if-header will not match.
 

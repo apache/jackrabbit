@@ -60,7 +60,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
 		* comment etc.) is ignored. NO bad-request/conflict error is
 		* thrown.
 		*/
-		if (el instanceof Element && "value".equals(((Element)el).getName())) {
+		if (el instanceof Element && XML_VALUE.equals(((Element)el).getName())) {
 		    valueElements.add(el);
 		}
 	    }
@@ -85,7 +85,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
 	Element[] propValue = new Element[values.length];
 	for (int i = 0; i < values.length; i++) {
 	    propValue[i] = new Element(XML_VALUE, ItemResourceConstants.NAMESPACE);
-	    propValue[i].addContent(values[i].getString());
+	    propValue[i].addContent(ValueHelper.serialize(values[i], false));
 	}
 	// finally set the value to the DavProperty
 	value = propValue;
@@ -103,7 +103,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
 	Element[] propValue = (Element[])getValue();
 	Value[] values = new Value[propValue.length];
 	for (int i = 0; i < propValue.length; i++) {
-	    values[i] = ValueHelper.convert(propValue[i].getText(), propertyType);
+	    values[i] = ValueHelper.deserialize(propValue[i].getText(), propertyType, false);
 	}
 	return values;
     }
