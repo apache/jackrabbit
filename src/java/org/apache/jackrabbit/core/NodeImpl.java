@@ -2741,7 +2741,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public void update(String srcWorkspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             LockException, InvalidItemStateException, RepositoryException {
-        internalMerge(srcWorkspaceName, true, false);
+        internalMerge(srcWorkspaceName, null, false);
     }
 
     /**
@@ -2751,7 +2751,12 @@ public class NodeImpl extends ItemImpl implements Node {
             throws UnsupportedRepositoryOperationException,
             NoSuchWorkspaceException, AccessDeniedException, VersionException,
             LockException, InvalidItemStateException, RepositoryException {
-        internalMerge(srcWorkspace, false, bestEffort);
+
+        List failedIds = new ArrayList();
+        internalMerge(srcWorkspace, failedIds, bestEffort);
+
+        // enable for 0.16.4
+        // return new LazyItemIterator(itemMgr, failedIds);
     }
 
     public void cancelMerge(Version version)
@@ -3028,7 +3033,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      * @throws AccessDeniedException
      */
-    private NodeImpl doMergeTest(SessionImpl srcSession, boolean update, boolean bestEffort)
+    private NodeImpl doMergeTest(SessionImpl srcSession, List failedIds, boolean bestEffort)
             throws RepositoryException, AccessDeniedException {
 
         // If N does not have a corresponding node then the merge result for N is leave.
@@ -3038,7 +3043,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // if not versionable, update
-        if (!isNodeType(MIX_VERSIONABLE) || update) {
+        if (!isNodeType(MIX_VERSIONABLE) || failedIds == null) {
             return srcNode;
         }
         // if source node is not versionable, leave
@@ -3069,6 +3074,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 Set set = internalGetMergeFailed();
                 set.add(srcNode.getBaseVersion().getUUID());
                 internalSetMergeFailed(set);
+                failedIds.add(state.getId());
                 return null;
             } else {
                 String msg = "Unable to merge nodes. Violating versions. " + safeGetJCRPath();
@@ -3297,7 +3303,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     private void internalMerge(String srcWorkspaceName,
-                               boolean update, boolean bestEffort)
+                               List failedIds, boolean bestEffort)
             throws NoSuchWorkspaceException, AccessDeniedException,
             LockException, InvalidItemStateException, RepositoryException {
 
@@ -3319,9 +3325,8 @@ public class NodeImpl extends ItemImpl implements Node {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
             srcSession = rep.createSession(session.getSubject(), srcWorkspaceName);
-
             try {
-                internalMerge(srcSession, update, bestEffort, removeExisting, replaceExisting);
+                internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
             } catch (RepositoryException e) {
                 try {
                     session.refresh(false);
@@ -3343,23 +3348,23 @@ public class NodeImpl extends ItemImpl implements Node {
      * Merges/Updates this node with its corresponding ones
      *
      * @param srcSession
-     * @param update
+     * @param failedIds
      * @param bestEffort
      * @param removeExisting
      * @param replaceExisting
      * @throws LockException
      * @throws RepositoryException
      */
-    private void internalMerge(SessionImpl srcSession, boolean update, boolean bestEffort, boolean removeExisting, boolean replaceExisting)
+    private void internalMerge(SessionImpl srcSession, List failedIds, boolean bestEffort, boolean removeExisting, boolean replaceExisting)
             throws LockException, RepositoryException {
 
-        NodeImpl srcNode = doMergeTest(srcSession, update, bestEffort);
+        NodeImpl srcNode = doMergeTest(srcSession, failedIds, bestEffort);
         if (srcNode == null) {
             // leave, iterate over children
             NodeIterator iter = getNodes();
             while (iter.hasNext()) {
                 NodeImpl n = (NodeImpl) iter.nextNode();
-                n.internalMerge(srcSession, update, bestEffort, removeExisting, replaceExisting);
+                n.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
             }
             return;
         }
@@ -3437,9 +3442,9 @@ public class NodeImpl extends ItemImpl implements Node {
                 for (int i = 0; i < mixins.length; i++) {
                     dstNode.addMixin(mixins[i].getName());
                 }
-                dstNode.internalMerge(srcSession, true, bestEffort, removeExisting, replaceExisting);
+                dstNode.internalMerge(srcSession, null, bestEffort, removeExisting, replaceExisting);
             } else {
-                dstNode.internalMerge(srcSession, update, bestEffort, removeExisting, replaceExisting);
+                dstNode.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
             }
         }
     }
