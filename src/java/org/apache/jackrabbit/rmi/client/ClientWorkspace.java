@@ -24,6 +24,7 @@ import java.rmi.RemoteException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.observation.ObservationManager;
@@ -38,10 +39,9 @@ import org.apache.jackrabbit.rmi.xml.WorkspaceImportContentHandler;
 import org.xml.sax.ContentHandler;
 
 /**
- * Local adapter for the JCR-RMI
- * {@link org.apache.jackrabbit.rmi.remote.RemoteWorkspace RemoteWorkspace}
- * inteface. This class makes a remote workspace locally available using
- * the JCR {@link javax.jcr.Workspace Workspace} interface.
+ * Local adapter for the JCR-RMI {@link RemoteWorkspace RemoteWorkspace}
+ * interface. This class makes a remote workspace locally available using
+ * the JCR {@link Workspace Workspace} interface.
  *
  * @author Jukka Zitting
  * @author Philipp Koch
@@ -99,10 +99,10 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     }
 
     /** {@inheritDoc} */
-    public void copy(String from, String to, String workspace)
+    public void copy(String workspace, String to, String from)
             throws RepositoryException {
         try {
-            remote.copy(from, to, workspace);
+            remote.copy(workspace, from, to);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -152,7 +152,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
             throws RepositoryException {
         // TODO Auto-generated method stub
         // return null;
-        throw new UnsupportedOperationException();
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /** {@inheritDoc} */
@@ -201,6 +201,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     public void restore(Version[] versions, boolean removeExisting)
             throws RepositoryException {
         // TODO Auto-generated method stub
+        throw new UnsupportedRepositoryOperationException();
     }
 
 }

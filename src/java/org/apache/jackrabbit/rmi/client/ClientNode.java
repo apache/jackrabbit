@@ -35,6 +35,7 @@ import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.StringValue;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.NodeDef;
@@ -386,7 +387,7 @@ public class ClientNode extends ClientItem implements Node {
     public Version checkin() throws RepositoryException {
         // TODO Auto-generated method stub
         // return null;
-        throw new UnsupportedOperationException();
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /** {@inheritDoc} */
@@ -420,13 +421,13 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public void cancelMerge(Version version) throws RepositoryException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /** {@inheritDoc} */
     public void doneMerge(Version version) throws RepositoryException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /** {@inheritDoc} */
@@ -462,14 +463,14 @@ public class ClientNode extends ClientItem implements Node {
     public void restore(Version version, boolean removeExisting)
             throws RepositoryException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /** {@inheritDoc} */
     public void restore(Version version, String path, boolean removeExisting)
             throws RepositoryException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /** {@inheritDoc} */
@@ -517,14 +518,14 @@ public class ClientNode extends ClientItem implements Node {
     public VersionHistory getVersionHistory() throws RepositoryException {
         // TODO Auto-generated method stub
         // return null;
-        throw new UnsupportedOperationException();
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /** {@inheritDoc} */
     public Version getBaseVersion() throws RepositoryException {
         // TODO Auto-generated method stub
         // return null;
-        throw new UnsupportedOperationException();
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /** {@inheritDoc} */
