@@ -37,6 +37,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("javax.jcr.query tests");
 
         // ADD TEST CLASSES HERE:
+        suite.addTestSuite(SaveTest.class);
 
         return suite;
     }
