@@ -81,6 +81,11 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SetValueReferenceTest.class);
         suite.addTestSuite(SetValueStringTest.class);
 
+        suite.addTestSuite(NodeItemIsModifiedTest.class);
+        suite.addTestSuite(NodeItemIsNewTest.class);
+        suite.addTestSuite(PropertyItemIsModifiedTest.class);
+        suite.addTestSuite(PropertyItemIsNewTest.class);
+
         return suite;
     }
 }
