@@ -195,6 +195,45 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         return def;
     }
 
+    /**
+     * Retrieves state of item with given <code>id</code>. If the specified item
+     * doesn't exist an <code>ItemNotFoundException</code> will be thrown.
+     * If the item exists but the current session is not granted read access an
+     * <code>AccessDeniedException</code> will be thrown.
+     *
+     * @param id id of item to be retrieved
+     * @return state state of said item
+     * @throws ItemNotFoundException if no item with given <code>id</code> exists
+     * @throws AccessDeniedException if the current session is not allowed to
+     *                               read the said item
+     * @throws RepositoryException   if another error occurs
+     */
+    private ItemState getItemState(ItemId id)
+            throws ItemNotFoundException, AccessDeniedException,
+            RepositoryException {
+        // check privileges
+        if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
+            // clear cache
+            ItemImpl item = retrieveItem(id);
+            if (item != null) {
+                evictItem(id);
+            }
+            throw new AccessDeniedException("cannot read item " + id);
+        }
+
+        try {
+            return itemStateProvider.getItemState(id);
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "no such item: " + id;
+            log.debug(msg);
+            throw new ItemNotFoundException(msg);
+        } catch (ItemStateException ise) {
+            String msg = "failed to retrieve item state of " + id;
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+    }
+
     //--------------------------------------------------< item access methods >
     /**
      * Checks if the item with the given path exists.
@@ -362,29 +401,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         // check sanity of session
         session.sanityCheck();
 
-        // check privileges
-        if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
-            // clear cache
-            ItemImpl item = retrieveItem(parentId);
-            if (item != null) {
-                evictItem(parentId);
-            }
-            throw new AccessDeniedException("cannot read item " + parentId);
-        }
-
-        ItemState state;
-        try {
-            state = itemStateProvider.getItemState(parentId);
-        } catch (NoSuchItemStateException nsise) {
-            String msg = "no such item: " + parentId;
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
-        } catch (ItemStateException ise) {
-            String msg = "failed to retrieve item state of node " + parentId;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
+        ItemState state = getItemState(parentId);
         if (!state.isNode()) {
             String msg = "can't list child nodes of property " + parentId;
             log.debug(msg);
@@ -416,29 +433,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         // check sanity of session
         session.sanityCheck();
 
-        // check privileges
-        if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
-            // clear cache
-            ItemImpl item = retrieveItem(parentId);
-            if (item != null) {
-                evictItem(parentId);
-            }
-            throw new AccessDeniedException("cannot read item " + parentId);
-        }
-
-        ItemState state;
-        try {
-            state = itemStateProvider.getItemState(parentId);
-        } catch (NoSuchItemStateException nsise) {
-            String msg = "no such item: " + parentId;
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
-        } catch (ItemStateException ise) {
-            String msg = "failed to retrieve item state of node " + parentId;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
+        ItemState state = getItemState(parentId);
         if (!state.isNode()) {
             String msg = "can't list child nodes of property " + parentId;
             log.debug(msg);
@@ -472,28 +467,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         // check sanity of session
         session.sanityCheck();
 
-        // check privileges
-        if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
-            ItemImpl item = retrieveItem(parentId);
-            if (item != null) {
-                evictItem(parentId);
-            }
-            throw new AccessDeniedException("cannot read item " + parentId);
-        }
-
-        ItemState state;
-        try {
-            state = itemStateProvider.getItemState(parentId);
-        } catch (NoSuchItemStateException nsise) {
-            String msg = "no such item: " + parentId;
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
-        } catch (ItemStateException ise) {
-            String msg = "failed to retrieve item state of node " + parentId;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
+        ItemState state = getItemState(parentId);
         if (!state.isNode()) {
             String msg = "can't list child properties of property " + parentId;
             log.debug(msg);
@@ -527,36 +501,14 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         // check sanity of session
         session.sanityCheck();
 
-        // check privileges
-        if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
-            ItemImpl item = retrieveItem(parentId);
-            if (item != null) {
-                evictItem(parentId);
-            }
-            throw new AccessDeniedException("cannot read item " + parentId);
-        }
-
-        ArrayList childIds = new ArrayList();
-
-        ItemState state;
-        try {
-            state = itemStateProvider.getItemState(parentId);
-        } catch (NoSuchItemStateException nsise) {
-            String msg = "no such item: " + parentId;
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
-        } catch (ItemStateException ise) {
-            String msg = "failed to retrieve item state of node " + parentId;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
+        ItemState state = getItemState(parentId);
         if (!state.isNode()) {
             String msg = "can't list child properties of property " + parentId;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
         NodeState nodeState = (NodeState) state;
+        ArrayList childIds = new ArrayList();
         Iterator iter = nodeState.getPropertyEntries().iterator();
 
         while (iter.hasNext()) {
