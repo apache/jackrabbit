@@ -19,6 +19,7 @@ import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PersistentNodeState;
 import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
@@ -46,6 +47,7 @@ public class PersistentVersionManager {
      * root path for version storage
      */
     public static final QName VERSION_HISTORY_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "persistentVersionStorage");
+
     /**
      * name of the 'jcr:historyId' property
      */
@@ -71,6 +73,10 @@ public class PersistentVersionManager {
      */
     public static final QName PROPNAME_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "version");
 
+    /**
+     * the id of the persisten root node
+     */
+    private static final NodeId PERSISTENT_ROOT_ID = new NodeId("faceface-ab3b-48a9-b31b-e7d0a9c1c3b1");
 
     /**
      * the persistent root node of the version histories
@@ -107,17 +113,29 @@ public class PersistentVersionManager {
         this.stateMgr = ((WorkspaceImpl) session.getWorkspace()).getPersistentStateManager();
         this.ntMgr = session.getNodeTypeManager();
 
-        // check for versionhistory root
-        NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
-        if (!systemRoot.hasNode(VERSION_HISTORY_ROOT_NAME)) {
-            // if not exist, create
-            systemRoot.addNode(VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
-        }
-        systemRoot.save();
-
         try {
-            PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(new NodeId(systemRoot.getNode(VERSION_HISTORY_ROOT_NAME).internalGetUUID()));
-            historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
+            NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
+            // enable this to make the persistence storage visible
+            if (false) {
+                // check for versionhistory root
+                if (!systemRoot.hasNode(VERSION_HISTORY_ROOT_NAME)) {
+                    // if not exist, create
+                    systemRoot.addNode(VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
+                    systemRoot.save();
+                }
+                PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(new NodeId(systemRoot.getNode(VERSION_HISTORY_ROOT_NAME).internalGetUUID()));
+                historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
+            } else {
+                if (!stateMgr.hasItemState(PERSISTENT_ROOT_ID)) {
+                    PersistentNodeState nodeState = stateMgr.createNodeState(PERSISTENT_ROOT_ID.getUUID(), NodeTypeRegistry.NT_UNSTRUCTURED, null);
+                    nodeState.setDefinitionId(new NodeDefId(ntMgr.getRootNodeDefinition().unwrap()));
+                    nodeState.store();
+                    historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
+                } else {
+                    PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(PERSISTENT_ROOT_ID);
+                    historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
+                }
+            }
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to initialize PersistentVersionManager: " + e.toString());
         }
