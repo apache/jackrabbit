@@ -26,6 +26,9 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import javax.jcr.PropertyType;
 import java.util.NoSuchElementException;
 
 /**
@@ -216,6 +219,67 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
         };
 
         p.accept(itemVisitor);
+    }
+
+    /**
+     * Tests that no null value property exists in a given node tree.
+     */
+    public void testNoNullValue() throws RepositoryException {
+        assertFalse("Single property with null value found.",
+                PropertyUtil.nullValues(rootNode));
+    }
+
+    /**
+     * Tests that all values of a multivalue property have the same property
+     * type.
+     */
+    public void testMultiValueType() throws RepositoryException, NotExecutableException {
+        Property multiValProp = PropertyUtil.searchMultivalProp(rootNode);
+        if (multiValProp != null) {
+            Value[] vals = multiValProp.getValues();
+            if (vals.length > 0) {
+                int type = vals[0].getType();
+                for (int i = 1; i < vals.length; i++) {
+                    assertEquals("Multivalue property has values with different types.",
+                            type, vals[i].getType());
+                }
+            }
+        } else {
+            throw new NotExecutableException();
+        }
+    }
+
+    /**
+     * Tests failure of Property.getValue() method for a multivalue property.
+     */
+    public void testGetValue() throws RepositoryException, NotExecutableException {
+        Property multiValProp = PropertyUtil.searchMultivalProp(rootNode);
+        if (multiValProp != null) {
+            try {
+                multiValProp.getValue();
+                fail("Property.getValue() called on a multivalue property " +
+                        "should throw a ValueFormatException.");
+            } catch (ValueFormatException vfe) {
+                // ok
+            }
+        } else {
+            throw new NotExecutableException();
+        }
+    }
+
+    /**
+     * Tests failure of Property.getValues() method for a single value
+     * property.
+     */
+    public void testGetValues() throws RepositoryException {
+        Property singleProp = PropertyUtil.searchProp(session, rootNode, PropertyType.STRING);
+        try {
+            singleProp.getValues();
+            fail("Property.getValues() called on a single property " +
+                    "should throw a ValueFormatException.");
+        } catch (ValueFormatException vfe) {
+            // ok
+        }
     }
 
 }
