@@ -47,7 +47,7 @@ public interface Constants {
     public static final String NS_SV_PREFIX = "sv";
     public static final String NS_SV_URI = "http://www.jcp.org/jcr/sv/1.0";
 
-    // reserved namespaces that must not be used or redefined
+    // reserved namespaces that must not be redefined and should not be used
     public static final String NS_XML_PREFIX = "xml";
     public static final String NS_XML_URI = "http://www.w3.org/XML/1998/namespace";
     public static final String NS_XMLNS_PREFIX = "xmlns";
@@ -55,208 +55,349 @@ public interface Constants {
 
     //----------------------------------------< general item name constants >---
 
-    /** jcr:system */
+    /**
+     * jcr:system
+     */
     public static final QName JCR_SYSTEM = new QName(NS_JCR_URI, "system");
 
-    /** jcr:nodeTypes */
+    /**
+     * jcr:nodeTypes
+     */
     public static final QName JCR_NODETYPES = new QName(NS_JCR_URI, "nodeTypes");
 
-    /** jcr:uuid */
+    /**
+     * jcr:uuid
+     */
     public static final QName JCR_UUID = new QName(NS_JCR_URI, "uuid");
 
-    /** jcr:primaryType */
+    /**
+     * jcr:primaryType
+     */
     public static final QName JCR_PRIMARYTYPE = new QName(NS_JCR_URI, "primaryType");
 
-    /** jcr:mixinTypes */
+    /**
+     * jcr:mixinTypes
+     */
     public static final QName JCR_MIXINTYPES = new QName(NS_JCR_URI, "mixinTypes");
 
-    /** jcr:created */
+    /**
+     * jcr:created
+     */
     public static final QName JCR_CREATED = new QName(NS_JCR_URI, "created");
 
-    /** jcr:lastModified */
+    /**
+     * jcr:lastModified
+     */
     public static final QName JCR_LASTMODIFIED = new QName(NS_JCR_URI, "lastModified");
 
     //------------------------------------< xml related item name constants >---
 
-    /** jcr:root (dummy name for root node used in XML serialization) */
+    /**
+     * jcr:root (dummy name for root node used in XML serialization)
+     */
     public static final QName JCR_ROOT = new QName(NS_JCR_URI, "root");
 
-    /** jcr:xmltext */
+    /**
+     * jcr:xmltext
+     */
     public static final QName JCR_XMLTEXT = new QName(NS_JCR_URI, "xmltext");
 
-    /** jcr:xmlcharacters */
+    /**
+     * jcr:xmlcharacters
+     */
     public static final QName JCR_XMLCHARACTERS = new QName(NS_JCR_URI, "xmlcharacters");
 
     //----------------------------------------< locking item name constants >---
 
-    /** jcr:lockOwner */
+    /**
+     * jcr:lockOwner
+     */
     public static final QName JCR_LOCKOWNER = new QName(NS_JCR_URI, "lockOwner");
 
-    /** jcr:lockIsDeep */
+    /**
+     * jcr:lockIsDeep
+     */
     public static final QName JCR_LOCKISDEEP = new QName(NS_JCR_URI, "lockIsDeep");
 
     //-------------------------------------< versioning item name constants >---
 
-    /** jcr:versionStorage */
+    /**
+     * jcr:versionStorage
+     */
     public static final QName JCR_VERSIONSTORAGE = new QName(NS_JCR_URI, "versionStorage");
 
-    /** jcr:mergeFailed */
+    /**
+     * jcr:mergeFailed
+     */
     public static final QName JCR_MERGEFAILED = new QName(NS_JCR_URI, "mergeFailed");
 
-    /** jcr:frozenNode */
+    /**
+     * jcr:frozenNode
+     */
     public static final QName JCR_FROZENNODE = new QName(NS_JCR_URI, "frozenNode");
 
-    /** jcr:frozenUuid */
+    /**
+     * jcr:frozenUuid
+     */
     public static final QName JCR_FROZENUUID = new QName(NS_JCR_URI, "frozenUuid");
 
-    /** jcr:frozenPrimaryType */
+    /**
+     * jcr:frozenPrimaryType
+     */
     public static final QName JCR_FROZENPRIMARYTYPE = new QName(NS_JCR_URI, "frozenPrimaryType");
 
-    /** jcr:frozenMixinTypes  */
+    /**
+     * jcr:frozenMixinTypes
+     */
     public static final QName JCR_FROZENMIXINTYPES = new QName(NS_JCR_URI, "frozenMixinTypes");
 
-    /** jcr:predecessors */
+    /**
+     * jcr:predecessors
+     */
     public static final QName JCR_PREDECESSORS = new QName(NS_JCR_URI, "predecessors");
 
-    /** jcr:versionLabels */
+    /**
+     * jcr:versionLabels
+     */
     public static final QName JCR_VERSIONLABELS = new QName(NS_JCR_URI, "versionLabels");
 
-    /** jcr:successors */
+    /**
+     * jcr:successors
+     */
     public static final QName JCR_SUCCESSORS = new QName(NS_JCR_URI, "successors");
 
-    /** jcr:isCheckedOut */
+    /**
+     * jcr:isCheckedOut
+     */
     public static final QName JCR_ISCHECKEDOUT = new QName(NS_JCR_URI, "isCheckedOut");
 
-    /** jcr:versionHistory */
+    /**
+     * jcr:versionHistory
+     */
     public static final QName JCR_VERSIONHISTORY = new QName(NS_JCR_URI, "versionHistory");
 
-    /** jcr:baseVersion */
+    /**
+     * jcr:baseVersion
+     */
     public static final QName JCR_BASEVERSION = new QName(NS_JCR_URI, "baseVersion");
 
-    /** jcr:child */
+    /**
+     * jcr:child
+     */
     public static final QName JCR_CHILD = new QName(NS_JCR_URI, "child");
 
-    /** jcr:rootVersion */
+    /**
+     * jcr:rootVersion
+     */
     public static final QName JCR_ROOTVERSION = new QName(NS_JCR_URI, "rootVersion");
 
-    //---------------------------------------< nodetype item name constants >---
+    //--------------------------------------< node type item name constants >---
 
-    /** jcr:nodeTypeName */
-    public static final QName JCR_NODETYPENAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "nodeTypeName");
+    /**
+     * jcr:nodeTypeName
+     */
+    public static final QName JCR_NODETYPENAME = new QName(NS_JCR_URI, "nodeTypeName");
 
-    /** jcr:hasOrderableChildNodes */
-    public static final QName JCR_HASORDERABLECHILDNODES = new QName(NamespaceRegistryImpl.NS_JCR_URI, "hasOrderableChildNodes");
+    /**
+     * jcr:hasOrderableChildNodes
+     */
+    public static final QName JCR_HASORDERABLECHILDNODES = new QName(NS_JCR_URI, "hasOrderableChildNodes");
 
-    /** jcr:isMixin */
-    public static final QName JCR_ISMIXIN = new QName(NamespaceRegistryImpl.NS_JCR_URI, "isMixin");
+    /**
+     * jcr:isMixin
+     */
+    public static final QName JCR_ISMIXIN = new QName(NS_JCR_URI, "isMixin");
 
-    /** jcr:supertypes */
-    public static final QName JCR_SUPERTYPES = new QName(NamespaceRegistryImpl.NS_JCR_URI, "supertypes");
+    /**
+     * jcr:supertypes
+     */
+    public static final QName JCR_SUPERTYPES = new QName(NS_JCR_URI, "supertypes");
 
-    /** jcr:propertyDef */
-    public static final QName JCR_PROPERTYDEF = new QName(NamespaceRegistryImpl.NS_JCR_URI, "propertyDef");
+    /**
+     * jcr:propertyDef
+     */
+    public static final QName JCR_PROPERTYDEF = new QName(NS_JCR_URI, "propertyDef");
 
-    /** jcr:name */
-    public static final QName JCR_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "name");
+    /**
+     * jcr:name
+     */
+    public static final QName JCR_NAME = new QName(NS_JCR_URI, "name");
 
-    /** jcr:mandatory */
-    public static final QName JCR_MANDATORY = new QName(NamespaceRegistryImpl.NS_JCR_URI, "mandatory");
+    /**
+     * jcr:mandatory
+     */
+    public static final QName JCR_MANDATORY = new QName(NS_JCR_URI, "mandatory");
 
-    /** jcr:protected */
-    public static final QName JCR_PROTECTED = new QName(NamespaceRegistryImpl.NS_JCR_URI, "protected");
+    /**
+     * jcr:protected
+     */
+    public static final QName JCR_PROTECTED = new QName(NS_JCR_URI, "protected");
 
-    /** jcr:requiredType */
-    public static final QName JCR_REQUIREDTYPE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "requiredType");
+    /**
+     * jcr:requiredType
+     */
+    public static final QName JCR_REQUIREDTYPE = new QName(NS_JCR_URI, "requiredType");
 
-    /** jcr:onParentVersion */
-    public static final QName JCR_ONPARENTVERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "onParentVersion");
+    /**
+     * jcr:onParentVersion
+     */
+    public static final QName JCR_ONPARENTVERSION = new QName(NS_JCR_URI, "onParentVersion");
 
-    /** jcr:primaryItemName */
-    public static final QName JCR_PRIMARYITEMNAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryItemName");
+    /**
+     * jcr:primaryItemName
+     */
+    public static final QName JCR_PRIMARYITEMNAME = new QName(NS_JCR_URI, "primaryItemName");
 
-    /** jcr:multiple */
-    public static final QName JCR_MULTIPLE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "multiple");
+    /**
+     * jcr:multiple
+     */
+    public static final QName JCR_MULTIPLE = new QName(NS_JCR_URI, "multiple");
 
-    /** jcr:valueConstraints */
-    public static final QName JCR_VALUECONSTRAINTS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "valueConstraints");
+    /**
+     * jcr:valueConstraints
+     */
+    public static final QName JCR_VALUECONSTRAINTS = new QName(NS_JCR_URI, "valueConstraints");
 
-    /** jcr:defaultValues */
-    public static final QName JCR_DEFAULTVALUES = new QName(NamespaceRegistryImpl.NS_JCR_URI, "defaultValues");
+    /**
+     * jcr:defaultValues
+     */
+    public static final QName JCR_DEFAULTVALUES = new QName(NS_JCR_URI, "defaultValues");
 
-    /** jcr:autoCreate */
-    public static final QName JCR_AUTOCREATE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "autoCreate");
+    /**
+     * jcr:autoCreate
+     */
+    public static final QName JCR_AUTOCREATE = new QName(NS_JCR_URI, "autoCreate");
 
-    /** jcr:childNodeDef */
-    public static final QName JCR_CHILDNODEDEF = new QName(NamespaceRegistryImpl.NS_JCR_URI, "childNodeDef");
+    /**
+     * jcr:childNodeDef
+     */
+    public static final QName JCR_CHILDNODEDEF = new QName(NS_JCR_URI, "childNodeDef");
 
-    /** jcr:sameNameSibs */
-    public static final QName JCR_SAMENAMESIBS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "sameNameSibs");
+    /**
+     * jcr:sameNameSibs
+     */
+    public static final QName JCR_SAMENAMESIBS = new QName(NS_JCR_URI, "sameNameSibs");
 
-    /** jcr:defaultPrimaryType */
-    public static final QName JCR_DEFAULTPRIMARYTYPE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "defaultPrimaryType");
+    /**
+     * jcr:defaultPrimaryType
+     */
+    public static final QName JCR_DEFAULTPRIMARYTYPE = new QName(NS_JCR_URI, "defaultPrimaryType");
 
-    /** jcr:requiredPrimaryTypes */
-    public static final QName JCR_REQUIREDPRIMARYTYPES = new QName(NamespaceRegistryImpl.NS_JCR_URI, "requiredPrimaryTypes");
+    /**
+     * jcr:requiredPrimaryTypes
+     */
+    public static final QName JCR_REQUIREDPRIMARYTYPES = new QName(NS_JCR_URI, "requiredPrimaryTypes");
 
     //-------------------------------------------< node type name constants >---
 
-    /** rep:root */
+    /**
+     * rep:root
+     */
     public static final QName REP_ROOT = new QName(NS_REP_URI, "root");
 
-    /** rep:system */
+    /**
+     * rep:system
+     */
     public static final QName REP_SYSTEM = new QName(NS_REP_URI, "system");
 
-    /** rep:versionStorage */
+    /**
+     * rep:versionStorage
+     */
     public static final QName REP_VERSIONSTORAGE = new QName(NS_REP_URI, "versionStorage");
 
-    /** rep:versionStorage */
+    /**
+     * rep:versionStorage
+     */
     public static final QName REP_NODETYPES = new QName(NS_REP_URI, "nodeTypes");
 
-    /** nt:unstructured */
+    /**
+     * nt:unstructured
+     */
     public static final QName NT_UNSTRUCTURED = new QName(NS_NT_URI, "unstructured");
 
-    /** nt:base */
+    /**
+     * nt:base
+     */
     public static final QName NT_BASE = new QName(NS_NT_URI, "base");
 
-    /** nt:hierarchyNode */
+    /**
+     * nt:hierarchyNode
+     */
     public static final QName NT_HIERARCHYNODE = new QName(NS_NT_URI, "hierarchyNode");
 
-    /** nt:resource */
+    /**
+     * nt:resource
+     */
     public static final QName NT_RESOURCE = new QName(NS_NT_URI, "resource");
 
-    /** nt:query */
+    /**
+     * nt:query
+     */
     public static final QName NT_QUERY = new QName(NS_NT_URI, "query");
 
-    /** mix:referenceable */
+    /**
+     * mix:referenceable
+     */
     public static final QName MIX_REFERENCEABLE = new QName(NS_MIX_URI, "referenceable");
 
-    /** mix:referenceable */
+    /**
+     * mix:referenceable
+     */
     public static final QName MIX_LOCKABLE = new QName(NS_MIX_URI, "lockable");
 
-    /** mix:versionable */
+    /**
+     * mix:versionable
+     */
     public static final QName MIX_VERSIONABLE = new QName(NS_MIX_URI, "versionable");
 
-    /** nt:versionHistory */
+    /**
+     * nt:versionHistory
+     */
     public static final QName NT_VERSIONHISTORY = new QName(NS_NT_URI, "versionHistory");
 
-    /** nt:version */
+    /**
+     * nt:version
+     */
     public static final QName NT_VERSION = new QName(NS_NT_URI, "version");
 
-    /** nt:versionLabels */
+    /**
+     * nt:versionLabels
+     */
     public static final QName NT_VERSIONLABELS = new QName(NS_NT_URI, "versionLabels");
 
-    /** nt:versionedChild */
+    /**
+     * nt:versionedChild
+     */
     public static final QName NT_VERSIONEDCHILD = new QName(NS_NT_URI, "versionedChild");
 
-    /** nt:frozenNode */
+    /**
+     * nt:frozenNode
+     */
     public static final QName NT_FROZENNODE = new QName(NS_NT_URI, "frozenNode");
 
-    /** nt:nodeType */
-    public static final QName NT_NODETYPE= new QName(NS_NT_URI, "nodeType");
+    /**
+     * nt:nodeType
+     */
+    public static final QName NT_NODETYPE = new QName(NS_NT_URI, "nodeType");
 
-    /** nt:propertyDef */
+    /**
+     * nt:propertyDef
+     */
     public static final QName NT_PROPERTYDEF = new QName(NS_NT_URI, "propertyDef");
 
-    /** nt:childNodeDef */
+    /**
+     * nt:childNodeDef
+     */
     public static final QName NT_CHILDNODEDEF = new QName(NS_NT_URI, "childNodeDef");
+
+    //-------------------------------------------< security related constants >
+    /**
+     * Name of the internal <code>SimpleCredentials</code> attribute where
+     * the <code>Subject</code> of the <i>impersonating</i> <code>Session</code>
+     * is stored.
+     *
+     * @see javax.jcr.Session#impersonate(javax.jcr.Credentials)
+     */
+    public static final String IMPERSONATOR_ATTRIBUTE =
+            "org.apache.jackrabbit.core.security.impersonator";
 }

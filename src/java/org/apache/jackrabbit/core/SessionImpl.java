@@ -61,6 +61,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
@@ -78,6 +79,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -414,10 +416,22 @@ public class SessionImpl implements Session, Constants {
      * access rights of this session.
      *
      * @return the names of all accessible workspaces
+     * @throws RepositoryException if an error occurs
      */
-    protected String[] getWorkspaceNames() {
-        // @todo filter workspace names based on credentials of this session
-        return rep.getWorkspaceNames();
+    protected String[] getWorkspaceNames() throws RepositoryException {
+        // filter workspaces according to access rights
+        ArrayList list = new ArrayList();
+        String names[] = rep.getWorkspaceNames();
+        for (int i = 0; i < names.length; i++) {
+            try {
+                if (getAccessManager().canAccess(names[i])) {
+                    list.add(names[i]);
+                }
+            } catch (NoSuchWorkspaceException nswe) {
+                // should never happen, ignore...
+            }
+        }
+        return names;
     }
 
     /**
@@ -666,21 +680,24 @@ public class SessionImpl implements Session, Constants {
         // check sanity of this session
         sanityCheck();
 
-        // @todo reimplement impersonate(Credentials) correctly
+        if (!(otherCredentials instanceof SimpleCredentials)) {
+            String msg = "impersonate failed: incompatible credentials, SimpleCredentials expected";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
 
-        // check if the credentials of this session allow to 'impersonate'
-        // the user represented by tha supplied credentials
+        // set IMPERSONATOR_ATTRIBUTE attribute of given credentials
+        // with subject of current session
+        SimpleCredentials creds = (SimpleCredentials) otherCredentials;
+        creds.setAttribute(IMPERSONATOR_ATTRIBUTE, subject);
 
-        // FIXME: the original purpose of this method is to enable
-        // a 'superuser' to impersonate another user without needing
-        // to know its password.
         try {
             return rep.login(otherCredentials, getWorkspace().getName());
         } catch (NoSuchWorkspaceException nswe) {
             // should never get here...
             String msg = "impersonate failed";
-            log.debug(msg);
-            throw new LoginException(msg, nswe);
+            log.error(msg, nswe);
+            throw new RepositoryException(msg, nswe);
         }
     }
 

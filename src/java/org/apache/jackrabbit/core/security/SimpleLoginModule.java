@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Credentials;
@@ -96,7 +97,15 @@ public class SimpleLoginModule implements LoginModule {
                 if (creds instanceof SimpleCredentials) {
                     SimpleCredentials sc = (SimpleCredentials) creds;
                     // authenticate
-                    // @todo implement simple username/password authentication
+
+                    Object attr = sc.getAttribute(Constants.IMPERSONATOR_ATTRIBUTE);
+                    if (attr != null && attr instanceof Subject) {
+                        Subject impersonator = (Subject) attr;
+                        // @todo check privileges to 'impersonate' the user represented by the supplied credentials
+                    } else {
+                        // @todo implement simple username/password authentication
+                    }
+
                     // assume the user we authenticated is the UserPrincipal
                     principals.add(new UserPrincipal(sc.getUserId()));
                     authenticated = true;

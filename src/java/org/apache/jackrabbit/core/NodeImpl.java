@@ -1022,14 +1022,16 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a checked-in node";
+            String msg = safeGetJCRPath()
+                    + ": cannot remove a mixin node type from a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag
         if (definition.isProtected()) {
-            String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a protected node";
+            String msg = safeGetJCRPath()
+                    + ": cannot remove a mixin node type from a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
@@ -1137,8 +1139,8 @@ public class NodeImpl extends ItemImpl implements Node {
      *         otherwise <code>false</code>
      */
     public boolean isNodeType(QName ntName) throws RepositoryException {
-        // no need to perform sanity check; assume this has
-        // already been done by calling method
+        // check state of this instance
+        sanityCheck();
 
         if (ntName.equals(nodeType.getQName())) {
             return true;

@@ -1524,16 +1524,7 @@ public class WorkspaceImpl implements Workspace, Constants {
         // check state of this instance
         sanityCheck();
 
-        // filter workspaces according to access rights
-        ArrayList list = new ArrayList();
-        String names[] = session.getWorkspaceNames();
-        for (int i = 0; i < names.length; i++) {
-            if (session.getAccessManager().canAccess(names[i])) {
-                list.add(names[i]);
-            }
-        }
-
-        return (String[]) list.toArray(new String[list.size()]);
+        return session.getWorkspaceNames();
     }
 
     /**
