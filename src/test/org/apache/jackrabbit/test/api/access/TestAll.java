@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test.api;
+package org.apache.jackrabbit.test.api.access;
 
 import junit.framework.TestCase;
 import junit.framework.Test;
@@ -22,7 +22,7 @@ import junit.framework.TestSuite;
 
 /**
  * Test suite that includes all testcases for the package
- * <code>javax.jcr</code>.
+ * <code>javax.jcr.access</code>.
  */
 public class TestAll extends TestCase {
 
@@ -34,12 +34,9 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("javax.jcr tests");
+        TestSuite suite = new TestSuite("javax.jcr.access tests");
 
         // ADD TEST CLASSES HERE:
-        suite.addTestSuite(AddNodeTest.class);
-        suite.addTestSuite(GetAncestorTest.class);
-        suite.addTestSuite(RootNodeTest.class);
 
         return suite;
     }
