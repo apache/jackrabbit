@@ -50,6 +50,10 @@
 
   <dependencies>
     <dependency>
+      <id>jackrabbit</id>
+      <version>0.16.2-dev</version>
+    </dependency>
+    <dependency>
       <groupId>jsr170</groupId>
       <artifactId>jcr</artifactId>
       <version>0.16.2</version>
