@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.xerces.util.XMLChar;
+
 import javax.jcr.NamespaceException;
 import java.io.Serializable;
 import java.util.regex.Matcher;
@@ -53,7 +55,8 @@ public class QName implements Cloneable, Comparable, Serializable {
      * <li>group 3 is localName
      * </ul>
      */
-    private static final Pattern NAME_PATTERN = Pattern.compile("(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)");
+    private static final Pattern NAME_PATTERN =
+            Pattern.compile("(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)");
 
     private transient int hash;
     private transient String string;
@@ -165,7 +168,7 @@ public class QName implements Cloneable, Comparable, Serializable {
     /**
      * Parses the <code>jcrName</code> and returns an array of two strings:
      * the first array element contains the prefix (or empty string),
-     * the second the local name.     
+     * the second the local name.
      *
      * @param jcrName the name to be parsed
      * @return An array holding two strings: the first array element contains
@@ -178,6 +181,11 @@ public class QName implements Cloneable, Comparable, Serializable {
             throw new IllegalNameException("empty name");
         }
 
+        if (".".equals(jcrName) || "..".equals(jcrName)) {
+            // illegal syntax for name
+            throw new IllegalNameException("'" + jcrName + "' is not a valid name");
+        }
+
         String prefix;
         String localName;
 
@@ -188,6 +196,11 @@ public class QName implements Cloneable, Comparable, Serializable {
                 // prefix specified
                 // group 2 is namespace prefix excl. delimiter (colon)
                 prefix = matcher.group(2);
+                // check if the prefix is a valid XML prefix
+                if (!XMLChar.isValidNCName(prefix)) {
+                    // illegal syntax for prefix
+                    throw new IllegalNameException("'" + jcrName + "' is not a valid name: illegal prefix");
+                }
             } else {
                 // no prefix specified
                 prefix = "";

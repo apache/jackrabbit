@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.util.Text;
+import org.apache.xerces.util.XMLChar;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PathNotFoundException;
@@ -1227,6 +1228,11 @@ public final class Path {
                         // prefix specified
                         // group 4 is namespace prefix excl. delimiter (colon)
                         prefix = matcher.group(4);
+                        // check if the prefix is a valid XML prefix
+                        if (!XMLChar.isValidNCName(prefix)) {
+                            // illegal syntax for prefix
+                            throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' specifies an illegal namespace prefix");
+                        }
                     } else {
                         // no prefix specified
                         prefix = "";

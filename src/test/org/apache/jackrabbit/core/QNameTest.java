@@ -53,15 +53,19 @@ public class QNameTest extends TestCase {
         // valid names
         list.add(new Test("name", "", "name"));
         list.add(new Test("prefix:name", "prefix", "name"));
-        list.add(new Test("pre fix:na me", "pre fix", "na me"));
+        list.add(new Test("prefix:na me", "prefix", "na me"));
 
         // invalid names
         list.add(new Test(":name"));
+        list.add(new Test("."));
+        list.add(new Test(".."));
+        list.add(new Test("pre:"));
         list.add(new Test(""));
         list.add(new Test(" name"));
         list.add(new Test(" prefix: name"));
         list.add(new Test("prefix: name"));
         list.add(new Test("prefix:name "));
+        list.add(new Test("pre fix:name"));
         list.add(new Test("prefix :name"));
         list.add(new Test("name/name"));
         list.add(new Test("name[name"));

@@ -1798,7 +1798,11 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, String[] values)
             throws ValueFormatException, VersionException, LockException,
             RepositoryException {
-        return setProperty(name, values, PropertyType.STRING);
+        /**
+         * if the target property is not of type STRING then a
+         * best-effort conversion is tried
+         */
+        return setProperty(name, values, PropertyType.UNDEFINED);
     }
 
     /**
@@ -1848,8 +1852,12 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        /**
+         * if the target property is not of type STRING then a
+         * best-effort conversion is tried
+         */
         BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, false, status);
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.UNDEFINED, false, status);
         try {
             prop.setValue(value);
         } catch (RepositoryException re) {
@@ -3071,6 +3079,16 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#isCheckedOut()
      */
     protected boolean internalIsCheckedOut() throws RepositoryException {
+        /**
+         * try shortcut first: 
+         * if current node is 'new' we can safely consider it checked-out
+         * since otherwise it would had been impossible to add it in the first
+         * place
+         */
+        if (isNew()) {
+            return true;
+        }
+
         // search nearest ancestor that is versionable
         /**
          * FIXME should not only rely on existence of jcr:isCheckedOut property
