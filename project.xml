@@ -39,10 +39,8 @@
     content services such as versioning, transactions, indexing, workflow, etc.
   </description>
   <url>http://incubator.apache.org/projects/jackrabbit.html</url>
-  <issueTrackingUrl>http://nagoya.apache.org/jira/browse/JCR</issueTrackingUrl>
-  <siteAddress>incubator.apache.org</siteAddress>
-  <siteDirectory>/www/incubator.apache.org/jackrabbit/</siteDirectory>
-  <distributionDirectory>/www/incubator.apache.org/jackrabbit/builds/</distributionDirectory>
+  <issueTrackingUrl>http://issues.apache.org/jira/browse/JCR</issueTrackingUrl>
+  <siteDirectory>docs</siteDirectory>
 
   <repository>
     <connection>scm:subversion:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/</connection>
@@ -60,29 +58,28 @@
     </license>
   </licenses>
 
-  <!-- TODO: What are the list addresses here -->
-<!--
   <mailingLists>
+<!--
     <mailingList>
       <name>Jackrabbit Users List</name>
       <subscribe>user-subscribe@jackrabbit.apache.org</subscribe>
       <unsubscribe>user-unsubscribe@jackrabbit.apache.org</unsubscribe>
-      <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=user@jackrabbit.apache.org</archive>
+      <archive>http://mail-archives.apache.org/eyebrowse/SummarizeList?listName=user@jackrabbit.apache.org</archive>
     </mailingList>
+-->
     <mailingList>
       <name>Jackrabbit Developer List</name>
-      <subscribe>dev-subscribe@jackrabbit.apache.org</subscribe>
-      <unsubscribe>dev-unsubscribe@jackrabbit.apache.org</unsubscribe>
-      <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=dev@jackrabbit.apache.org</archive>
+      <subscribe>jackrabbit-dev-subscribe at incubator.apache.org</subscribe>
+      <unsubscribe>jackrabbit-dev-unsubscribe at incubator.apache.org</unsubscribe>
+      <archive>http://incubator.apache.org/mail/jackrabbit-dev/</archive>
     </mailingList>
     <mailingList>
       <name>Jackrabbit Source Control List</name>
-      <subscribe>scm-subscribe@jackrabbit.apache.org</subscribe>
-      <unsubscribe>scm-unsubscribe@jackrabbit.apache.org</unsubscribe>
-      <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=scm@jackrabbit.apache.org</archive>
+      <subscribe>jackrabbit-commits-subscribe at incubator.apache.org</subscribe>
+      <unsubscribe>jackrabbit-commits-unsubscribe at incubator.apache.org</unsubscribe>
+      <archive>http://incubator.apache.org/mail/jackrabbit-commits/</archive>
     </mailingList>
   </mailingLists>
--->
 
   <developers>
     <developer>
