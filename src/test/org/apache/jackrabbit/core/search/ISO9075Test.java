@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test.search;
+package org.apache.jackrabbit.core.search;
 
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.util.ISO9075;

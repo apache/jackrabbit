@@ -14,9 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test;
+package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
+import org.apache.jackrabbit.test.RepositoryStub;
+import org.apache.jackrabbit.test.RepositoryStubException;
 
 import javax.jcr.Repository;
 import javax.naming.Context;

@@ -75,6 +75,26 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String jcrPredecessors;
 
     /**
+     * JCR Name jcr:successors using the namespace resolver of the current session.
+     */
+    protected String jcrSuccessors;
+
+    /**
+     * JCR Name jcr:created using the namespace resolver of the current session.
+     */
+    protected String jcrCreated;
+
+    /**
+     * JCR Name jcr:frozenNode using the namespace resolver of the current session.
+     */
+    protected String jcrFrozenNode;
+
+    /**
+     * JCR Name jcr:rootVersion using the namespace resolver of the current session.
+     */
+    protected String jcrRootVersion;
+
+    /**
      * JCR Name jcr:baseVersion using the namespace resolver of the current session.
      */
     protected String jcrBaseVersion;
@@ -103,6 +123,21 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * JCR Name nt:base using the namespace resolver of the current session.
      */
     protected String ntBase;
+
+    /**
+     * JCR Name nt:version using the namespace resolver of the current session.
+     */
+    protected String ntVersion;
+
+    /**
+     * JCR Name nt:versionHistory using the namespace resolver of the current session.
+     */
+    protected String ntVersionHistory;
+
+    /**
+     * JCR Name nt:frozenNode using the namespace resolver of the current session.
+     */
+    protected String ntFrozenNode;
 
     /**
      * JCR Name mix:referenceable using the namespace resolver of the current session.
@@ -235,12 +270,19 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrPrimaryType = superuser.getNamespacePrefix(NS_JCR_URI) + ":primaryType";
         jcrMixinTypes = superuser.getNamespacePrefix(NS_JCR_URI) + ":mixinTypes";
         jcrPredecessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":predecessors";
+        jcrSuccessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":successors";
+        jcrCreated = superuser.getNamespacePrefix(NS_JCR_URI) + ":created";
+        jcrFrozenNode = superuser.getNamespacePrefix(NS_JCR_URI) + ":frozenNode";
+        jcrRootVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":rootVersion";
         jcrBaseVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":baseVersion";
         jcrUUID = superuser.getNamespacePrefix(NS_JCR_URI) + ":uuid";
         jcrLockOwner = superuser.getNamespacePrefix(NS_JCR_URI) + ":lockOwner";
         jcrlockIsDeep = superuser.getNamespacePrefix(NS_JCR_URI) + ":lockIsDeep";
         jcrMergeFailed = superuser.getNamespacePrefix(NS_JCR_URI) + ":mergeFailed";
         ntBase = superuser.getNamespacePrefix(NS_NT_URI) + ":base";
+        ntVersion = superuser.getNamespacePrefix(NS_NT_URI) + ":version";
+        ntVersionHistory = superuser.getNamespacePrefix(NS_NT_URI) + ":versionHistory";
+        ntFrozenNode = superuser.getNamespacePrefix(NS_NT_URI) + ":frozenNode";
         mixReferenceable = superuser.getNamespacePrefix(NS_MIX_URI) + ":referenceable";
         mixVersionable = superuser.getNamespacePrefix(NS_MIX_URI) + ":versionable";
         mixLockable = superuser.getNamespacePrefix(NS_MIX_URI) + ":lockable";
