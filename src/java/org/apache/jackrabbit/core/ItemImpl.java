@@ -703,9 +703,10 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     InternalValue[] vals = propState.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         String uuid = vals[i].toString();
-                        NodeReferencesId id = new NodeReferencesId(uuid);
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        NodeId targetId = new NodeId(uuid);
                         // verify that target exists
-                        if (!itemMgr.itemExists(id)) {
+                        if (!itemMgr.itemExists(targetId)) {
                             String msg = itemMgr.safeGetJCRPath(propState.getId())
                                     + ": target node of REFERENCE property does not exist";
                             log.warn(msg);
@@ -714,7 +715,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         // target is a new (unsaved) node; make sure that it is
                         // within the scope of the current save operation
                         // (by veryfying that it is a descendant of 'this' item)
-                        NodeImpl target = (NodeImpl) itemMgr.getItem(id);
+                        NodeImpl target = (NodeImpl) itemMgr.getItem(targetId);
                         if (target.isNew()) {
                             try {
                                 if (!target.getPrimaryPath().isDescendantOf(getPrimaryPath())) {
@@ -732,18 +733,18 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             }
                         }
                         NodeReferences refs;
-                        if (dirtyNodeRefs.containsKey(id)) {
-                            refs = (NodeReferences) dirtyNodeRefs.get(id);
+                        if (dirtyNodeRefs.containsKey(refsId)) {
+                            refs = (NodeReferences) dirtyNodeRefs.get(refsId);
                         } else {
                             try {
-                                refs = stateMgr.getNodeReferences(id);
+                                refs = stateMgr.getNodeReferences(refsId);
                             } catch (ItemStateException e) {
-                                String msg = itemMgr.safeGetJCRPath(id)
+                                String msg = itemMgr.safeGetJCRPath(targetId)
                                         + ": failed to load node references";
                                 log.debug(msg);
                                 throw new RepositoryException(msg, e);
                             }
-                            dirtyNodeRefs.put(id, refs);
+                            dirtyNodeRefs.put(refsId, refs);
                         }
                         // add reference to target node
                         refs.addReference((PropertyId) propState.getId());
@@ -1176,7 +1177,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         Iterator parentsIter = dirtyParents.iterator();
                         while (parentsIter.hasNext()) {
                             NodeId id = new NodeId((String) parentsIter.next());
-                            NodeState parentState = null;
+                            NodeState parentState;
                             try {
                                 parentState = (NodeState) stateMgr.getTransientItemState(id);
                             } catch (ItemStateException ise) {

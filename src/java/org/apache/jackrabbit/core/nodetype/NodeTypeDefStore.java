@@ -47,7 +47,7 @@ class NodeTypeDefStore {
     private static final String NODETYPE_ELEMENT = "nodeType";
     private static final String NAME_ATTRIBUTE = "name";
     private static final String ISMIXIN_ATTRIBUTE = "isMixin";
-    private static final String ORDERABLECHILDNODES_ATTRIBUTE = "orderableChildNodes";
+    private static final String HASORDERABLECHILDNODES_ATTRIBUTE = "hasOrderableChildNodes";
     private static final String PRIMARYITEMNAME_ATTRIBUTE = "primaryItemName";
     private static final String SUPERTYPES_ELEMENT = "supertypes";
     private static final String SUPERTYPE_ELEMENT = "supertype";
@@ -89,7 +89,7 @@ class NodeTypeDefStore {
     void load(InputStream in)
             throws IOException, InvalidNodeTypeDefException, RepositoryException {
         SAXBuilder builder = new SAXBuilder();
-        Element root = null;
+        Element root;
         try {
             Document doc = builder.build(in);
             root = doc.getRootElement();
@@ -263,7 +263,7 @@ class NodeTypeDefStore {
         }
 
         // orderableChildNodes
-        String orderableChildNodes = ntElem.getAttributeValue(ORDERABLECHILDNODES_ATTRIBUTE);
+        String orderableChildNodes = ntElem.getAttributeValue(HASORDERABLECHILDNODES_ATTRIBUTE);
         if (orderableChildNodes != null && orderableChildNodes.length() > 0) {
             ntDef.setOrderableChildNodes(Boolean.valueOf(orderableChildNodes).booleanValue());
         }
@@ -520,7 +520,7 @@ class NodeTypeDefStore {
             ntElem.setAttribute(ISMIXIN_ATTRIBUTE, Boolean.toString(ntd.isMixin()));
 
             // orderableChildNodes
-            ntElem.setAttribute(ORDERABLECHILDNODES_ATTRIBUTE, Boolean.toString(ntd.hasOrderableChildNodes()));
+            ntElem.setAttribute(HASORDERABLECHILDNODES_ATTRIBUTE, Boolean.toString(ntd.hasOrderableChildNodes()));
 
             // primaryItemName
             String primaryItemName = ntd.getPrimaryItemName() == null ? "" : ntd.getPrimaryItemName().toJCRName(nsResolver);
