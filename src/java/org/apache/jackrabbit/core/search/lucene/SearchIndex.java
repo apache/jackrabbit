@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.search.ExecutableQuery;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.QName;
@@ -35,10 +36,13 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.IndexSearcher;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
@@ -52,29 +56,52 @@ import java.util.Iterator;
  */
 public class SearchIndex extends AbstractQueryHandler {
 
+    /** The logger instance for this class */
     private static final Logger log = Logger.getLogger(SearchIndex.class);
 
     /** Name of the write lock file */
     private static final String WRITE_LOCK = "write.lock";
 
+    /** Default name of the redo log file */
+    private static final String REDO_LOG = "redo.log";
+
     /** Name of the file to persist search internal namespace mappings */
     private static final String NS_MAPPING_FILE = "ns_mappings.properties";
 
     /**
-     * 512k default size
+     * Default merge size: 1000
      */
-    //private static final long DEFAULT_MERGE_SIZE = 512 * 1024;
+    private static final long DEFAULT_MERGE_SIZE = 1000;
 
-    //private long mergeSize = DEFAULT_MERGE_SIZE;
+    /**
+     * The maximum number of entries in the redo log until the volatile index
+     * is merged into the persistent one.
+     */
+    private long mergeSize = DEFAULT_MERGE_SIZE;
 
+    /**
+     * The persistent index.
+     */
     private PersistentIndex persistentIndex;
 
-    //private VolatileIndex volatileIndex;
+    /**
+     * The in-memory index.
+     */
+    private VolatileIndex volatileIndex;
 
+    /**
+     * The analyzer we use for indexing.
+     */
     private final Analyzer analyzer;
 
+    /**
+     * Internal namespace mappings.
+     */
     private NamespaceMappings nsMappings;
 
+    /**
+     * Read-write lock to synchronize access on the index.
+     */
     private final FIFOReadWriteLock readWriteLock = new FIFOReadWriteLock();
 
     /**
@@ -82,7 +109,6 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public SearchIndex() {
         this.analyzer = new StandardAnalyzer();
-        //volatileIndex = new VolatileIndex(analyzer);
     }
 
     /**
@@ -112,6 +138,32 @@ public class SearchIndex extends AbstractQueryHandler {
                 NodeState rootState = (NodeState) getItemStateProvider().getItemState(new NodeId(getRootUUID()));
                 createIndex(rootState);
             }
+
+            // init volatile index
+            RedoLog redoLog = new RedoLog(new FileSystemResource(getFileSystem(), REDO_LOG));
+            if (redoLog.hasEntries()) {
+                log.warn("Found uncommitted redo log. Applying changes now...");
+                ItemStateManager itemMgr = getItemStateProvider();
+                // apply changes to persistent index
+                Iterator it = redoLog.getEntries().iterator();
+                while (it.hasNext()) {
+                    RedoLog.Entry entry = (RedoLog.Entry) it.next();
+                    if (entry.type == RedoLog.Entry.NODE_ADDED) {
+                        try {
+                            NodeState state = (NodeState) itemMgr.getItemState(new NodeId(entry.uuid));
+                            addNodePersistent(state);
+                        } catch (NoSuchItemStateException e) {
+                            // item does not exist anymore
+                        }
+                    } else {
+                        deleteNodePersistent(entry.uuid);
+                    }
+                }
+                log.warn("Redo changes applied.");
+                redoLog.clear();
+            }
+            volatileIndex = new VolatileIndex(analyzer, redoLog);
+            volatileIndex.setUseCompoundFile(false);
         } catch (ItemStateException e) {
             throw new IOException("Error indexing root node: " + e.getMessage());
         } catch (FileSystemException e) {
@@ -132,24 +184,27 @@ public class SearchIndex extends AbstractQueryHandler {
         try {
             readWriteLock.writeLock().acquire();
         } catch (InterruptedException e) {
-            // FIXME: ??? do logging, simply return?
-            return;
+            throw new RepositoryException("Failed to aquire write lock.");
         }
 
         try {
-            persistentIndex.addDocument(doc);
+            volatileIndex.addDocument(doc);
+            if (volatileIndex.getRedoLog().getSize() > mergeSize) {
+                log.info("Merging in-memory index");
+                persistentIndex.mergeIndex(volatileIndex);
+                // reset redo log
+                try {
+                    volatileIndex.getRedoLog().clear();
+                } catch (FileSystemException e) {
+                    log.error("Internal error: Unable to clear redo log.", e);
+                }
+                // create new volatile index
+                volatileIndex = new VolatileIndex(analyzer, volatileIndex.getRedoLog());
+                volatileIndex.setUseCompoundFile(false);
+            }
         } finally {
             readWriteLock.writeLock().release();
         }
-
-        /*
-        volatileIndex.addDocument(doc);
-        if (volatileIndex.size() > mergeSize) {
-            persistentIndex.mergeIndex(volatileIndex);
-            // create new volatile index
-            volatileIndex = new VolatileIndex(analyzer);
-        }
-        */
     }
 
     /**
@@ -163,17 +218,19 @@ public class SearchIndex extends AbstractQueryHandler {
         try {
             readWriteLock.writeLock().acquire();
         } catch (InterruptedException e) {
-            // FIXME: ??? do logging, simply return?
-            return;
+            throw new IOException("Failed to aquire write lock.");
         }
 
         try {
-            persistentIndex.removeDocument(idTerm);
+            // if the document cannot be deleted from the volatile index
+            // delete it from the persistent index.
+            if (volatileIndex.removeDocument(idTerm) == 0) {
+                persistentIndex.removeDocument(idTerm);
+            }
         } finally {
             readWriteLock.writeLock().release();
         }
 
-        //volatileIndex.removeDocument(idTerm);
     }
 
     /**
@@ -204,15 +261,18 @@ public class SearchIndex extends AbstractQueryHandler {
      * to this handler.
      */
     public void close() {
-        /*
+        log.info("Closing search index.");
         try {
-            persistentIndex.mergeIndex(volatileIndex);
+            if (volatileIndex.getRedoLog().hasEntries()) {
+                persistentIndex.mergeIndex(volatileIndex);
+                volatileIndex.getRedoLog().clear();
+            }
         } catch (IOException e) {
-            // FIXME do logging
+            log.error("Exception while closing search index.", e);
+        } catch (FileSystemException e) {
+            log.error("Exception while closing search index.", e);
         }
         volatileIndex.close();
-        */
-        log.info("Closing search index.");
         persistentIndex.close();
     }
 
@@ -256,11 +316,11 @@ public class SearchIndex extends AbstractQueryHandler {
                 }
             }
 
+            MultiReader multiReader = new MultiReader(new IndexReader[]{ persistentIndex.getIndexReader(), volatileIndex.getIndexReader()});
             if (sortFields.length > 0) {
-                hits = persistentIndex.getIndexSearcher().search(query,
-                        new Sort(sortFields));
+                hits = new IndexSearcher(multiReader).search(query, new Sort(sortFields));
             } else {
-                hits = persistentIndex.getIndexSearcher().search(query);
+                hits = new IndexSearcher(multiReader).search(query);
             }
         } finally {
             readWriteLock.readLock().release();
@@ -296,13 +356,37 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     private void createIndex(NodeState node)
             throws IOException, ItemStateException, RepositoryException {
-        addNode(node);
+        addNodePersistent(node);
         List children = node.getChildNodeEntries();
         ItemStateManager isMgr = getItemStateProvider();
         for (Iterator it = children.iterator(); it.hasNext();) {
             NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
             createIndex((NodeState) isMgr.getItemState(new NodeId(child.getUUID())));
         }
+    }
+
+    /**
+     * Adds a node to the persistent index. This method will <b>not</b> aquire a
+     * write lock while writing!
+     * @param node the node to add.
+     * @throws IOException if an error occurs while writing to the index.
+     * @throws RepositoryException if any other error occurs
+     */
+    private void addNodePersistent(NodeState node)
+            throws IOException, RepositoryException {
+        Document doc = NodeIndexer.createDocument(node, getItemStateProvider(), nsMappings);
+        persistentIndex.addDocument(doc);
+    }
+
+    /**
+     * Removes a node from the persistent index. This method will <b>not</b>
+     * aquire a write lock while writing!
+     * @param uuid the uuid of the node to remove.
+     * @throws IOException if an error occurs while writing to the index.
+     */
+    private void deleteNodePersistent(String uuid) throws IOException {
+        Term idTerm = new Term(FieldNames.UUID, uuid);
+        persistentIndex.removeDocument(idTerm);
     }
 
     //--------------------------< properties >----------------------------------
@@ -321,5 +405,9 @@ public class SearchIndex extends AbstractQueryHandler {
 
     public void setMergeFactor(int mergeFactor) {
         persistentIndex.setMergeFactor(mergeFactor);
+    }
+
+    public void setRedoSize(int size) {
+        mergeSize = size;
     }
 }

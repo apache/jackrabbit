@@ -26,30 +26,51 @@ import org.apache.lucene.store.Directory;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.OutputStream;
 
 /**
  * Implements common functionality for a lucene index.
  */
 abstract class AbstractIndex {
 
+    /** The logger instance for this class */
     private static final Logger log = Logger.getLogger(AbstractIndex.class);
 
+    /** PrintStream that pipes all calls to println(String) into log.info() */
+    private static final LoggingPrintStream STREAM_LOGGER = new LoggingPrintStream();
+
+    /** The currently set IndexWriter or <code>null</code> if none is set */
     private IndexWriter indexWriter;
 
+    /** The currently set IndexReader of <code>null</code> if none is set */
     private IndexReader indexReader;
 
+    /** The underlying Directory where the index is stored */
     private Directory directory;
 
+    /** Analyzer we use to tokenize text */
     private Analyzer analyzer;
 
+    /** Compound file flag */
     private boolean useCompoundFile = true;
 
+    /** minMergeDocs config parameter */
     private int minMergeDocs = 1000;
 
+    /** maxMergeDocs config parameter */
     private int maxMergeDocs = 10000;
 
+    /** mergeFactor config parameter */
     private int mergeFactor = 10;
 
+    /**
+     * Constructs an index with an <code>analyzer</code> and a
+     * <code>directory</code>.
+     * @param analyzer the analyzer for text tokenizing.
+     * @param directory the underlying directory.
+     * @throws IOException if the index cannot be initialized.
+     */
     AbstractIndex(Analyzer analyzer, Directory directory) throws IOException {
         this.analyzer = analyzer;
         this.directory = directory;
@@ -60,6 +81,7 @@ abstract class AbstractIndex {
             indexWriter.maxMergeDocs = maxMergeDocs;
             indexWriter.mergeFactor = mergeFactor;
             indexWriter.setUseCompoundFile(useCompoundFile);
+            indexWriter.infoStream = STREAM_LOGGER;
         }
     }
 
@@ -71,21 +93,43 @@ abstract class AbstractIndex {
      * @throws IOException
      */
     Directory getDirectory() throws IOException {
-        return this.directory;
+        return directory;
     }
 
+    /**
+     * Returns an <code>IndexSearcher</code> based on the <code>IndexReader</code>
+     * returned by {@link #getIndexReader()}.
+     * @return an <code>IndexSearcher</code> on this index.
+     * @throws IOException if an error occurs.
+     */
     IndexSearcher getIndexSearcher() throws IOException {
         return new IndexSearcher(getIndexReader());
     }
 
+    /**
+     * Adds a document to this index.
+     * @param doc the document to add.
+     * @throws IOException if an error occurs while writing to the index.
+     */
     void addDocument(Document doc) throws IOException {
         getIndexWriter().addDocument(doc);
     }
 
-    void removeDocument(Term idTerm) throws IOException {
-        getIndexReader().delete(idTerm);
+    /**
+     * Removes the document from this index.
+     * @param idTerm the id term of the document to remove.
+     * @throws IOException if an error occurs while removing the document.
+     * @return number of documents deleted
+     */
+    int removeDocument(Term idTerm) throws IOException {
+        return getIndexReader().delete(idTerm);
     }
 
+    /**
+     * Returns an <code>IndexReader</code> on this index.
+     * @return an <code>IndexReader</code> on this index.
+     * @throws IOException if the reader cannot be obtained.
+     */
     protected synchronized IndexReader getIndexReader() throws IOException {
         if (indexWriter != null) {
             indexWriter.close();
@@ -98,6 +142,11 @@ abstract class AbstractIndex {
         return indexReader;
     }
 
+    /**
+     * Returns an <code>IndexWriter</code> on this index.
+     * @return an <code>IndexWriter</code> on this index.
+     * @throws IOException if the writer cannot be obtained.
+     */
     protected synchronized IndexWriter getIndexWriter() throws IOException {
         if (indexReader != null) {
             indexReader.close();
@@ -110,10 +159,33 @@ abstract class AbstractIndex {
             indexWriter.maxMergeDocs = maxMergeDocs;
             indexWriter.mergeFactor = mergeFactor;
             indexWriter.setUseCompoundFile(useCompoundFile);
+            indexWriter.infoStream = STREAM_LOGGER;
         }
         return indexWriter;
     }
 
+    /**
+     * Commits all pending changes to the underlying <code>Directory</code>.
+     * After commit both <code>IndexReader</code> and <code>IndexWriter</code>
+     * are released.
+     * @throws IOException if an error occurs while commiting changes.
+     */
+    protected synchronized void commit() throws IOException {
+        if (indexReader != null) {
+            indexReader.close();
+            log.debug("closing IndexReader.");
+            indexReader = null;
+        }
+        if (indexWriter != null) {
+            indexWriter.close();
+            log.debug("closing IndexWriter.");
+            indexWriter = null;
+        }
+    }
+
+    /**
+     * Closes this index, releasing all held resources.
+     */
     void close() {
         if (indexWriter != null) {
             try {
@@ -140,6 +212,11 @@ abstract class AbstractIndex {
         }
     }
 
+    //-------------------------< properties >-----------------------------------
+
+    /**
+     * The lucene index writer property: useCompountFile
+     */
     void setUseCompoundFile(boolean b) {
         useCompoundFile = b;
         if (indexWriter != null) {
@@ -147,6 +224,9 @@ abstract class AbstractIndex {
         }
     }
 
+    /**
+     * The lucene index writer property: minMergeDocs
+     */
     void setMinMergeDocs(int minMergeDocs) {
         this.minMergeDocs = minMergeDocs;
         if (indexWriter != null) {
@@ -154,6 +234,9 @@ abstract class AbstractIndex {
         }
     }
 
+    /**
+     * The lucene index writer property: maxMergeDocs
+     */
     void setMaxMergeDocs(int maxMergeDocs) {
         this.maxMergeDocs = maxMergeDocs;
         if (indexWriter != null) {
@@ -161,10 +244,40 @@ abstract class AbstractIndex {
         }
     }
 
+    /**
+     * The lucene index writer property: mergeFactor
+     */
     void setMergeFactor(int mergeFactor) {
         this.mergeFactor = mergeFactor;
         if (indexWriter != null) {
             indexWriter.mergeFactor = mergeFactor;
+        }
+    }
+
+    /**
+     * Adapter to pipe info messages from lucene into log messages.
+     */
+    private static final class LoggingPrintStream extends PrintStream {
+
+        /** Buffer print calls until a newline is written */
+        private StringBuffer buffer = new StringBuffer();
+
+        public LoggingPrintStream() {
+            super(new OutputStream() {
+                public void write(int b) {
+                    // do nothing
+                }
+            });
+        }
+
+        public void print(String s) {
+            buffer.append(s);
+        }
+
+        public void println(String s) {
+            buffer.append(s);
+            log.debug(buffer.toString());
+            buffer.setLength(0);
         }
     }
 }

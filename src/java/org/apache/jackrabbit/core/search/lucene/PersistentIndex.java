@@ -29,23 +29,43 @@ import java.io.IOException;
  */
 class PersistentIndex extends AbstractIndex {
 
+    /** The underlying filesystem to store the index */
     private final FileSystem fs;
 
-    PersistentIndex(FileSystem fs,
-                    boolean create,
-                    Analyzer analyzer)
+    /**
+     * Creates a new <code>PersistentIndex</code> based on the file system
+     * <code>fs</code>.
+     * @param fs the underlying file system.
+     * @param create if <code>true</code> an existing index is deleted.
+     * @param analyzer the analyzer for text tokenizing.
+     * @throws IOException if an error occurs while opening / creating the
+     * index.
+     */
+    PersistentIndex(FileSystem fs, boolean create, Analyzer analyzer)
             throws IOException {
-
         super(analyzer, FileSystemDirectory.getDirectory(fs, create));
         this.fs = fs;
     }
 
+    /**
+     * Merges another index into this persistent index.
+     * @param index the other index to merge.
+     * @throws IOException if an error occurs while merging.
+     */
     void mergeIndex(AbstractIndex index) throws IOException {
-        this.getIndexWriter().addIndexes(new IndexReader[]{
-            index.getIndexReader()
+        // commit changes to directory on other index.
+        index.commit();
+        // merge index
+        getIndexWriter().addIndexes(new Directory[]{
+            index.getDirectory()
         });
     }
 
+    /**
+     * Returns the underlying directory.
+     * @return the directory.
+     * @throws IOException if an error occurs.
+     */
     Directory getDirectory() throws IOException {
         return FileSystemDirectory.getDirectory(fs, false);
     }
