@@ -45,9 +45,6 @@ public class NodeImpl extends ItemImpl implements Node {
 
     protected NodeDef definition;
 
-    // flag set in status passed to getOrCreateProperty if property was created
-    protected static final short CREATED = 0;
-
     /**
      * Package private constructor.
      *
@@ -167,10 +164,15 @@ public class NodeImpl extends ItemImpl implements Node {
         return genValues;
     }
 
-    protected PropertyImpl getOrCreateProperty(String name, int type,
-                                               boolean multiValued,
-                                               BitSet status)
+    protected PropertyImpl getOrCreateProperty(String name, int type, boolean multiValued)
             throws RepositoryException {
+        try {
+            return (PropertyImpl) getProperty(name);
+        } catch (PathNotFoundException pnfe) {
+            // fall through
+        }
+
+        // property does not exist yet...
         QName qName;
         try {
             qName = QName.fromJCRName(name, session.getNamespaceResolver());
@@ -179,25 +181,21 @@ public class NodeImpl extends ItemImpl implements Node {
         } catch (UnknownPrefixException upe) {
             throw new RepositoryException("invalid property name: " + name, upe);
         }
-        return getOrCreateProperty(qName, type, multiValued, status);
+        // find definition for the specified property and create property
+        PropertyDefImpl def = getApplicablePropertyDef(qName, type, multiValued);
+        return createChildProperty(qName, type, def);
     }
 
-    protected synchronized PropertyImpl getOrCreateProperty(QName name, int type,
-                                                            boolean multiValued,
-                                                            BitSet status)
+    protected PropertyImpl getOrCreateProperty(QName name, int type, boolean multiValued)
             throws RepositoryException {
-        status.clear();
-
-        PropertyId propId = new PropertyId(((NodeState) state).getUUID(), name);
-        if (itemMgr.itemExists(propId)) {
-            return getProperty(name);
+        try {
+            return (PropertyImpl) getProperty(name);
+        } catch (ItemNotFoundException e) {
+            // does not exist yet:
+            // find definition for the specified property and create property
+            PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
+            return createChildProperty(name, type, def);
         }
-        // does not exist yet:
-        // find definition for the specified property and create property
-        PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
-        PropertyImpl prop = createChildProperty(name, type, def);
-        status.set(CREATED);
-        return prop;
     }
 
     protected synchronized PropertyImpl createChildProperty(QName name, int type, PropertyDefImpl def)
@@ -319,19 +317,6 @@ public class NodeImpl extends ItemImpl implements Node {
         thisState.addChildNodeEntry(nodeName, targetUUID);
 
         return (NodeImpl) itemMgr.getItem(targetId);
-    }
-
-
-    protected void removeChildProperty(String propName) throws RepositoryException {
-        QName qName;
-        try {
-            qName = QName.fromJCRName(propName, session.getNamespaceResolver());
-        } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid property name: " + propName, ine);
-        } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid property name: " + propName, upe);
-        }
-        removeChildProperty(qName);
     }
 
     protected void removeChildProperty(QName propName) throws RepositoryException {
@@ -704,22 +689,11 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             type = value.getType();
         }
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, type, false, status);
-        try {
-            if (value == null) {
-                prop.internalSetValue((InternalValue[]) null, type);
-            } else {
-                prop.internalSetValue(new InternalValue[]{value}, type);
-            }
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
+        PropertyImpl prop = getOrCreateProperty(name, type, false);
+        if (value == null) {
+            prop.internalSetValue((InternalValue[]) null, type);
+        } else {
+            prop.internalSetValue(new InternalValue[]{value}, type);
         }
         return prop;
     }
@@ -748,19 +722,8 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             type = values[0].getType();
         }
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, type, true, status);
-        try {
-            prop.internalSetValue(values, type);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, type, true);
+        prop.internalSetValue(values, type);
         return prop;
     }
 
@@ -936,18 +899,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -966,18 +919,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, true, status);
-        try {
-            prop.setValue(values);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, true);
+        prop.setValue(values);
         return prop;
     }
 
@@ -1003,18 +946,8 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             type = values[0].getType();
         }
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, type, true, status);
-        try {
-            prop.setValue(values);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, type, true);
+        prop.setValue(values);
         return prop;
     }
 
@@ -1035,19 +968,8 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         int type = (value == null) ? PropertyType.STRING : value.getType();
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, type, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, type, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -1282,19 +1204,8 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             type = values[0].getType();
         }
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, type, true, status);
-        try {
-            prop.setValue(values);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, type, true);
+        prop.setValue(values);
         return prop;
     }
 
@@ -1306,18 +1217,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, true, status);
-        try {
-            prop.setValue(values);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, true);
+        prop.setValue(values);
         return prop;
     }
 
@@ -1328,18 +1229,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -1352,19 +1243,8 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         int type = (value == null) ? PropertyType.STRING : value.getType();
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, type, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, type, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -1376,18 +1256,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.BINARY, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.BINARY, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -1399,18 +1269,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.BOOLEAN, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.BOOLEAN, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -1422,18 +1282,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.DOUBLE, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.DOUBLE, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -1445,18 +1295,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.LONG, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.LONG, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -1468,18 +1308,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.DATE, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.DATE, false);
+        prop.setValue(value);
         return prop;
     }
 
@@ -1491,18 +1321,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.REFERENCE, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
+        PropertyImpl prop = getOrCreateProperty(name, PropertyType.REFERENCE, false);
+        prop.setValue(value);
         return prop;
     }
 
