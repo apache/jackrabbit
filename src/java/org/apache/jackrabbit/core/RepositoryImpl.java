@@ -64,10 +64,10 @@ public class RepositoryImpl implements Repository, EventListener {
     // pre-defined values of well known repository properties
     private static final String SPEC_VERSION = "0.14";
     private static final String SPEC_NAME = "Content Repository API for Java(TM) Technology Specification";
-    private static final String REP_VENDOR = "Day Software AG";
-    private static final String REP_VENDOR_URL = "http://www.day.com/";
-    private static final String REP_NAME = "JCR 1.0 Reference Implementation";
-    private static final String REP_VERSION = "0.1";
+    private static final String REP_VENDOR = "Apache Software Foundation";
+    private static final String REP_VENDOR_URL = "http://www.apache.org/";
+    private static final String REP_NAME = "Jackrabbit";
+    private static final String REP_VERSION = "0.14";
 
     // system root location
     public static final QName SYSTEM_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "system");
