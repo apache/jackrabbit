@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.ByteArrayInputStream;
 import java.util.Calendar;
 
 /**
@@ -43,46 +44,81 @@ import java.util.Calendar;
  */
 public class BLOBFileValue implements Value {
 
+    /** the property type */
     public static final int TYPE = PropertyType.BINARY;
 
+    /** the default encoding */
     protected static final String DEFAULT_ENCODING = "UTF-8";
 
+    /** empty array */
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
+    /** max size for keeping tmp data in memory */
+    private static final int MAX_BUFFER_SIZE = 0x10000;
+
+    /** underlaying file */
+    private final File file;
+
+    /** flag indicating if file is a temp file */
     private final boolean tmpFile;
 
-    private final File file;
+    /** buffer for small data */
+    private byte[] buffer = EMPTY_BYTE_ARRAY;
+
+    /** underlaying file system resource */
     private final FileSystemResource fsResource;
 
+    /** converted text */
     private String text = null;
 
     /**
      * Creates a new <code>BLOBFileValue</code> instance from an
      * <code>InputStream</code>. The contents of the stream is spooled
-     * to a temporary file.
+     * to a temporary file or to a byte buffer, if smaller than
+     * {@link #MAX_BUFFER_SIZE}.
      *
      * @param in stream to be represented as a <code>BLOBFileValue</code> instance
      * @throws IOException if an error occurs while reading from the stream or
      *                     writing to the temporary file
      */
     public BLOBFileValue(InputStream in) throws IOException {
-        // create temp file
-        file = File.createTempFile("bin", null);
-        file.deleteOnExit();
-        // this instance is backed by a 'real' file; set virtual fs resource to null
-        fsResource = null;
-
-        // spool stream to temp file
-        FileOutputStream out = new FileOutputStream(file);
+        byte[] spoolBuffer = new byte[0x2000];
+        int read;
+        int len = 0;
+        OutputStream out = null;
+        File spoolFile = null;
         try {
-            byte[] buffer = new byte[8192];
-            int read = 0;
-            while ((read = in.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
+            while ((read = in.read(spoolBuffer)) > 0) {
+                if (out != null) {
+                    out.write(spoolBuffer, 0, read);
+                    len += read;
+                } else if (len + read > MAX_BUFFER_SIZE) {
+                    // create temp file
+                    spoolFile = File.createTempFile("bin", null);
+                    spoolFile.deleteOnExit();
+                    out = new FileOutputStream(spoolFile);
+                    out.write(buffer, 0, len);
+                    out.write(spoolBuffer, 0, read);
+                    buffer = null;
+                    len += read;
+                } else if (len + read > buffer.length) {
+                    byte[] newBuffer = new byte[len+read];
+                    System.arraycopy(buffer, 0, newBuffer, 0, len);
+                    System.arraycopy(spoolBuffer, 0, newBuffer, len, read);
+                    buffer = newBuffer;
+                    len += read;
+                }
             }
         } finally {
-            out.close();
             in.close();
+            if (out != null) {
+                out.close();
+            }
         }
 
+        // init vars
+        file = spoolFile;
+        fsResource = null;
         tmpFile = true;
     }
 
@@ -130,6 +166,9 @@ public class BLOBFileValue implements Value {
         tmpFile = false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -156,13 +195,15 @@ public class BLOBFileValue implements Value {
             } else {
                 return -1;
             }
-        } else {
+        } else if (fsResource != null) {
             // this instance is backed by a resource in the virtual file system
             try {
                 return fsResource.length();
             } catch (FileSystemException fse) {
                 return -1;
             }
+        } else {
+            return buffer.length;
         }
     }
 
@@ -202,13 +243,15 @@ public class BLOBFileValue implements Value {
                     parent = parent.getParentFile();
                 }
             }
-        } else {
+        } else if (fsResource != null) {
             // this instance is backed by a resource in the virtual file system
             try {
                 fsResource.delete(pruneEmptyParentDirs);
             } catch (FileSystemException fse) {
                 // ignore
             }
+        } else {
+            buffer = EMPTY_BYTE_ARRAY;
         }
     }
 
@@ -230,17 +273,19 @@ public class BLOBFileValue implements Value {
             } catch (FileNotFoundException fnfe) {
                 throw new RepositoryException("file backing binary value not found", fnfe);
             }
-        } else {
+        } else if (fsResource != null) {
             // this instance is backed by a resource in the virtual file system
             try {
                 in = fsResource.getInputStream();
             } catch (FileSystemException fse) {
                 throw new RepositoryException(fsResource.getPath() + ": the specified resource does not exist", fse);
             }
+        } else {
+            in = new ByteArrayInputStream(buffer);
         }
         try {
             byte[] buffer = new byte[8192];
-            int read = 0;
+            int read;
             while ((read = in.read(buffer)) > 0) {
                 out.write(buffer, 0, read);
             }
@@ -252,7 +297,7 @@ public class BLOBFileValue implements Value {
         }
     }
 
-    //-------------------------------------------< java.lang.Object overrides >
+    //-----------------------------------------< java.lang.Object overrides >---
     /**
      * Returns the path string of the backing file.
      *
@@ -262,13 +307,16 @@ public class BLOBFileValue implements Value {
         if (file != null) {
             // this instance is backed by a 'real' file
             return file.toString();
-        } else {
+        } else if (fsResource != null) {
             // this instance is backed by a resource in the virtual file system
             return fsResource.toString();
+        } else {
+            // this instance is backed to a byte buffer
+            return buffer.toString();
         }
     }
 
-    //----------------------------------------------------------------< Value >
+    //--------------------------------------------------------------< Value >---
     /**
      * {@inheritDoc}
      */
@@ -313,13 +361,15 @@ public class BLOBFileValue implements Value {
             } catch (FileNotFoundException fnfe) {
                 throw new RepositoryException("file backing binary value not found", fnfe);
             }
-        } else {
+        } else if (fsResource != null) {
             // this instance is backed by a resource in the virtual file system
             try {
                 return fsResource.getInputStream();
             } catch (FileSystemException fse) {
                 throw new RepositoryException(fsResource.getPath() + ": the specified resource does not exist", fse);
             }
+        } else {
+            return new ByteArrayInputStream(buffer);
         }
     }
 
