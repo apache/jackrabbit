@@ -133,7 +133,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
             // create version in second workspace
             Version v = wVersionableNode.checkin();
             // try to restore that version
-            superuser.getWorkspace().restore(new Version[] {v}, false);
+            superuser.getWorkspace().restore(new Version[]{v}, false);
 
             fail("InvalidItemStateException must be thrown on attempt to call Workspace.restore(Version[], boolean) in a session having any unsaved changes pending.");
         } catch (InvalidItemStateException e) {
@@ -147,7 +147,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
      */
     public void testWorkspaceRestoreHasCorrespondingNode() throws RepositoryException {
         try {
-            superuser.getWorkspace().restore(new Version[] {wChildVersion}, false);
+            superuser.getWorkspace().restore(new Version[]{wChildVersion}, false);
             fail("Workspace.restore(Version[], boolean) must throw VersionException if non of the specified versions has a corresponding node in the workspace.");
         } catch (VersionException e) {
             // success
@@ -167,7 +167,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
 
         try {
             Version parentV = wVersionableNode.checkin();
-            superuser.getWorkspace().restore(new Version[] {parentV, wChildVersion}, false);
+            superuser.getWorkspace().restore(new Version[]{parentV, wChildVersion}, false);
         } catch (RepositoryException e) {
             fail("Workspace.restore(Version[], boolean) with a version that has no corresponding node must succeed if a version of a parent with correspondance is present in the version array.");
         }
@@ -176,10 +176,10 @@ public class WorkspaceRestoreTest extends RestoreTest {
     /**
      * Test if the removeExisting-flag removes an existing node in case of uuid conflict.
      */
-    public void testWorkspaceRestoreWithRemoveExisting()  throws NotExecutableException, RepositoryException {
+    public void testWorkspaceRestoreWithRemoveExisting() throws NotExecutableException, RepositoryException {
         // assert proper child node definition
         NodeDef d = wVersionableChildNode.getDefinition();
-        if (d.getOnParentVersion() != OnParentVersionAction.COPY || d.getOnParentVersion() != OnParentVersionAction.VERSION) {
+        if (d.getOnParentVersion() != OnParentVersionAction.COPY && d.getOnParentVersion() != OnParentVersionAction.VERSION) {
             fail("Childnode must have OPV COPY or VERSION in order to be able to test Node.restore with uuid conflict");
         }
 
@@ -193,7 +193,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
 
         // restore the parent with removeExisting == true >> moved child node
         // must be removed.
-        wSuperuser.getWorkspace().restore(new Version[] {parentV}, true);
+        wSuperuser.getWorkspace().restore(new Version[]{parentV}, true);
         if (wSuperuser.itemExists(newChildPath)) {
             fail("Workspace.restore(Version[], boolean) with the boolean flag set to true, must remove the existing node in case of Uuid conflict.");
         }
@@ -207,17 +207,18 @@ public class WorkspaceRestoreTest extends RestoreTest {
         try {
             // Verify that nodes used for the test are indeed versionable
             NodeDef nd = wVersionableNode.getDefinition();
-            if ( nd.getOnParentVersion() != OnParentVersionAction.COPY || nd.getOnParentVersion() != OnParentVersionAction.VERSION ) {
-                throw new NotExecutableException( "Nodes must be versionable in order to run this test." );
+            if (nd.getOnParentVersion() != OnParentVersionAction.COPY && nd.getOnParentVersion() != OnParentVersionAction.VERSION) {
+                throw new NotExecutableException("Nodes must be versionable in order to run this test.");
             }
 
             Version v = wVersionableNode.checkin();
+            wVersionableNode.checkout();
+            wSuperuser.move(wVersionableChildNode.getPath(), wVersionableNode2.getPath() + "/" + wVersionableChildNode.getName());
+            wSuperuser.save();
+            wSuperuser.getWorkspace().restore(new Version[]{v}, false);
 
-            wSuperuser.move( wVersionableChildNode.getPath(), wVersionableNode2.getPath() + "/" + wVersionableChildNode.getName() );
-            wSuperuser.getWorkspace().restore( new Version[] { v }, false );
-
-            fail( "Node.restore( Version, boolean ): An ItemExistsException must be thrown if the node to be restored already exsits and removeExisting was set to false." );
-        } catch (ItemExistsException e ) {
+            fail("Node.restore( Version, boolean ): An ItemExistsException must be thrown if the node to be restored already exsits and removeExisting was set to false.");
+        } catch (ItemExistsException e) {
             // success
         }
     }
@@ -227,20 +228,20 @@ public class WorkspaceRestoreTest extends RestoreTest {
      * Test if workspace-restoring a node works on checked-in node.
      */
     public void testWorkspaceRestoreOnCheckedInNode() throws RepositoryException {
-        if ( versionableNode.isCheckedOut() ) {
+        if (versionableNode.isCheckedOut()) {
             versionableNode.checkin();
         }
-        superuser.getWorkspace().restore( new Version[] { rootVersion }, true);
+        superuser.getWorkspace().restore(new Version[]{rootVersion}, true);
     }
 
     /**
      * Test if workspace-restoring a node works on checked-out node.
      */
     public void testWorkspaceRestoreOnCheckedOutNode() throws RepositoryException {
-        if ( !versionableNode.isCheckedOut() ) {
+        if (!versionableNode.isCheckedOut()) {
             versionableNode.checkout();
         }
-        superuser.getWorkspace().restore( new Version[] { rootVersion }, true);
+        superuser.getWorkspace().restore(new Version[]{rootVersion}, true);
     }
 
 }

@@ -2784,17 +2784,9 @@ public class NodeImpl extends ItemImpl implements Node {
             UnsupportedRepositoryOperationException, LockException,
             InvalidItemStateException, RepositoryException {
 
-        // check state of this instance
+        // checks
         sanityCheck();
-
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to restore version. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // check lock status
+        checkSessionHasPending();
         checkLock();
 
         GenericVersionSelector gvs = new GenericVersionSelector();
@@ -2810,17 +2802,11 @@ public class NodeImpl extends ItemImpl implements Node {
             throws VersionException, ItemExistsException,
             UnsupportedRepositoryOperationException, LockException,
             RepositoryException {
-        // check state of this instance
+
+        // do checks
         sanityCheck();
-
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to restore version. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // check lock status
+        checkSessionHasPending();
+        checkVersionable();
         checkLock();
 
         // check if 'own' version
@@ -2839,17 +2825,10 @@ public class NodeImpl extends ItemImpl implements Node {
             throws PathNotFoundException, ItemExistsException, VersionException,
             ConstraintViolationException, UnsupportedRepositoryOperationException,
             LockException, InvalidItemStateException, RepositoryException {
-        // check state of this instance
+
+        // do checks
         sanityCheck();
-
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to restore version. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // check lock status
+        checkSessionHasPending();
         checkLock();
 
         // if node exists, do a 'normal' restore
@@ -2894,17 +2873,10 @@ public class NodeImpl extends ItemImpl implements Node {
             throws VersionException, ItemExistsException,
             UnsupportedRepositoryOperationException, LockException,
             InvalidItemStateException, RepositoryException {
-        // check state of this instance
+
+        // do checks
         sanityCheck();
-
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to restore version. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // check lock status
+        checkSessionHasPending();
         checkLock();
 
         Version v = getVersionHistory().getVersionByLabel(versionLabel);
@@ -2956,6 +2928,23 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Checks if this nodes session has pending changes.
+     *
+     * @throws InvalidItemStateException if this nodes session has pending changes
+     * @throws RepositoryException
+     */
+    private void checkSessionHasPending() throws RepositoryException {
+        // check for pending changes
+        if (session.hasPendingChanges()) {
+            String msg = "Unable to perform operation. Session has pending changes.";
+            log.debug(msg);
+            throw new InvalidItemStateException(msg);
+        }
+
+
+    }
+
+    /**
      * Returns the corresponding node in the workspace of the given session.
      * <p/>
      * Given a node N1 in workspace W1, its corresponding node N2 in workspace
@@ -2981,7 +2970,15 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // search nearest ancestor that is referenceable
         NodeImpl m1 = this;
-        while (m1.getDepth() != 0 && !m1.isNodeType(MIX_REFERENCEABLE)) {
+        while (!m1.isNodeType(MIX_REFERENCEABLE)) {
+            if (m1.getDepth() == 0) {
+                // root node
+                try {
+                    return (NodeImpl) srcSession.getItem(getPath());
+                } catch (PathNotFoundException e) {
+                    return null;
+                }
+            }
             m1 = (NodeImpl) m1.getParent();
         }
 
@@ -3305,15 +3302,9 @@ public class NodeImpl extends ItemImpl implements Node {
         boolean removeExisting = true;
         boolean replaceExisting = false;
 
-        // check state of this instance
+        // do checks
         sanityCheck();
-
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to " + (update ? "update" : "merge") + " node. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
+        checkSessionHasPending();
 
         // if same workspace, ignore
         if (srcWorkspaceName.equals(session.getWorkspace().getName())) {

@@ -305,7 +305,7 @@ public class NodeTest extends AbstractJCRTest {
         // ok first check if node has no longer propertis
         assertFalse("Node updated with Node.update() should have property removed", defaultTestNode.hasProperty(propertyName1));
         // ok check if the child has been added
-        assertTrue("Node updated with Node.update() should have received childrens", defaultTestNode.hasNode(nodeName1));
+        assertTrue("Node updated with Node.update() should have received childrens", defaultTestNode.hasNode(nodeName2));
     }
 
     /**

@@ -56,11 +56,15 @@ public class RemoveVersionTest extends AbstractVersionTest {
             fail("VersionHistory must be created on persistent creation of a versionable node.");
         }
 
-        Version testV = versionableNode.checkin();
+        Version testV = versionableNode.checkin(); // create 1.0
+        versionableNode.checkout();
+        versionableNode.checkin(); // create 1.1
+        versionableNode.checkout();
+        versionableNode.checkin(); // create 1.2
         try {
             vHistory.removeVersion(testV.getName());
         } catch (UnsupportedRepositoryOperationException e) {
-            throw new NotExecutableException("Removing version is not supported: "+e.getMessage());
+            throw new NotExecutableException("Removing version is not supported: " + e.getMessage());
         }
 
         versionableNode.checkout();
@@ -73,7 +77,7 @@ public class RemoveVersionTest extends AbstractVersionTest {
         try {
             versionableNode2 = createVersionableNode(testRootNode, nodeName2, versionableNodeType);
         } catch (RepositoryException e) {
-            fail("Failed to create a second versionable node: "+e.getMessage());
+            fail("Failed to create a second versionable node: " + e.getMessage());
         }
     }
 
@@ -111,7 +115,7 @@ public class RemoveVersionTest extends AbstractVersionTest {
         }
     }
 
-     /**
+    /**
      * Test if the successors of the removed version are made successors of
      * all predecessors of the the removed version.
      *
