@@ -198,6 +198,8 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
                     VersionLabelsNodeState vlns = new VersionLabelsNodeState(this, (InternalVersionHistory) vi, state.getUUID(), uuid);
                     vlns.setDefinitionId(NDEF_VERSION_LABELS);
                     state.addChildNodeEntry(JCR_VERSIONLABELS, uuid);
+                    // need to add as hard reference to version history, so that it does not get fluhed.
+                    state.addStateReference(vlns);
                     nodes.put(new NodeId(uuid), vlns);
 
                 } else if (vi instanceof InternalVersion) {
@@ -437,19 +439,19 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
     }
 
     /**
-     * @see ItemStateListener#stateCreated
+     * {@inheritDoc}
      */
     public void stateCreated(ItemState created) {
     }
 
     /**
-     * @see ItemStateListener#stateModified
+     * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
     }
 
     /**
-     * @see ItemStateListener#stateDestroyed
+     * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
         destroyed.removeListener(this);
@@ -464,7 +466,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
     }
 
     /**
-     * @see ItemStateListener#stateDiscarded
+     * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
         discarded.removeListener(this);

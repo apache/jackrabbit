@@ -44,6 +44,9 @@ public class VirtualNodeState extends NodeState implements Constants {
      */
     private final HashMap properties = new HashMap();
 
+    /** a set of hard references to child states */
+    private HashSet stateRefs = null;
+
     /**
      * creates a new virtual node state
      *
@@ -228,6 +231,27 @@ public class VirtualNodeState extends NodeState implements Constants {
 
         protected VirtualPropertyEntry(QName propName) {
             super(propName);
+        }
+    }
+
+    /**
+     * Adds a hard reference to another state
+     * @param state
+     */
+    public void addStateReference(NodeState state) {
+        if (stateRefs == null) {
+            stateRefs = new HashSet();
+        }
+        stateRefs.add(state);
+    }
+
+    /**
+     * Removes a hard reference to another state
+     * @param state
+     */
+    public void removeStateReferences(NodeState state) {
+        if (stateRefs != null) {
+            stateRefs.remove(state);
         }
     }
 }
