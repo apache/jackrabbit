@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -32,10 +33,12 @@ import org.apache.log4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.PropertyIterator;
 import javax.jcr.version.VersionException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *
@@ -240,14 +243,19 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      */
     public void removeVersion(QName versionName) throws VersionException {
 
-        try {
-            InternalVersionImpl v = (InternalVersionImpl) getVersion(versionName);
-            if (v.equals(rootVersion)) {
-                String msg = "Removal of " + versionName + " not allowed.";
-                log.debug(msg);
-                throw new VersionException(msg);
-            }
+        InternalVersionImpl v = (InternalVersionImpl) getVersion(versionName);
+        if (v.equals(rootVersion)) {
+            String msg = "Removal of " + versionName + " not allowed.";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+        // check if any references (from outside the version storage) exist on this version
+        List refs = getVersionManager().getItemReferences(v);
+        if (!refs.isEmpty()) {
+            throw new VersionException("Unable to remove version. At least once referenced.");
+        }
 
+        try {
             boolean succeeded = false;
             UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
             try {

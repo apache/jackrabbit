@@ -221,14 +221,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public void removeVersion(String versionName)
             throws UnsupportedRepositoryOperationException, VersionException,
             RepositoryException {
-
-        // check if any references exist on this version
-        VersionImpl v = (VersionImpl) getVersion(versionName);
-        PropertyIterator iter = v.getReferences();
-        if (iter.hasNext()) {
-            throw new VersionException("Unable to remove version. At least once referenced: " + ((PropertyImpl) iter.nextProperty()).safeGetJCRPath());
+        try {
+            QName name = QName.fromJCRName(versionName, session.getNamespaceResolver());
+            history.removeVersion(name);
+        } catch (IllegalNameException e) {
+            throw new RepositoryException(e);
+        } catch (UnknownPrefixException e) {
+            throw new RepositoryException(e);
         }
-        history.removeVersion(v.getQName());
     }
 
     /**
