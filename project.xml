@@ -340,7 +340,7 @@
         <resource>
           <directory>src/test</directory>
           <includes>
-            <include>*.xml</include>
+            <include>**/*.xml</include>
           </includes>
         </resource>
       </resources>
