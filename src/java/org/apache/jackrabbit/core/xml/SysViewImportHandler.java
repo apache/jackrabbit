@@ -23,7 +23,7 @@ import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.util.Base64;
+import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -32,9 +32,6 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Stack;
 
@@ -285,20 +282,9 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
                     InternalValue[] vals = new InternalValue[currentPropValues.size()];
                     for (int i = 0; i < currentPropValues.size(); i++) {
                         String value = (String) currentPropValues.get(i);
-                        if (currentPropType == PropertyType.BINARY) {
-                            // base64 encoded binary value
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            try {
-                                Base64.decode(value, baos);
-                                baos.close();
-                                vals[i] = InternalValue.create(new ByteArrayInputStream(baos.toByteArray()));
-                            } catch (IOException ioe) {
-                                throw new SAXException("failed to decode binary value", ioe);
-                            }
-                        } else {
-                            vals[i] = InternalValue.create(value,
-                                    currentPropType, nsContext);
-                        }
+                        vals[i] = InternalValue.create(
+                                ValueHelper.deserialize(value, currentPropType,
+                                        false), nsContext);
                     }
                     Importer.PropInfo prop = new Importer.PropInfo();
                     prop.setName(currentPropName);

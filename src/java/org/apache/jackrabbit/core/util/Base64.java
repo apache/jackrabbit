@@ -35,7 +35,8 @@ public class Base64 {
     private static final char[] BASE64CHARS =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
 
-    // decoding table (used to lookup original 6-bit with base64 character as table index)
+    // decoding table (used to lookup original 6-bit with base64 character
+    // as table index)
     private static final byte[] DECODETABLE = new byte[128];
 
     static {
@@ -72,8 +73,9 @@ public class Base64 {
     }
 
     /**
-     * Pessimistically guesses the size (i.e. number of bytes) of the decoded output
-     * given the length (i.e. number of bytes) of the base64 encoded data.
+     * Pessimistically guesses the size (i.e. number of bytes) of the decoded
+     * output given the length (i.e. number of bytes) of the base64 encoded
+     * data.
      *
      * @param encLength length (i.e. number of bytes) of the base64 encoded data
      * @return size (i.e. number of bytes) of the decoded output
@@ -84,10 +86,12 @@ public class Base64 {
     }
 
     /**
-     * Outputs base64 representation of the specified stream data to an <code>OutputStream</code>.
+     * Outputs base64 representation of the specified stream data to a
+     * <code>Writer</code>.
      *
      * @param in     stream data to be encoded
      * @param writer writer to output the encoded data
+     * @throws IOException if an i/o error occurs
      */
     public static void encode(InputStream in, Writer writer)
             throws IOException {
@@ -95,17 +99,19 @@ public class Base64 {
         // chunksize must be a multiple of 3 in order
         // to avoid padding within output
         byte[] buffer = new byte[9 * 1024];
-        int read = 0;
+        int read;
         while ((read = in.read(buffer)) > 0) {
             encode(buffer, 0, read, writer);
         }
     }
 
     /**
-     * Outputs base64 representation of the specified stream data to an <code>OutputStream</code>.
+     * Outputs base64 representation of the specified stream data to an
+     * <code>OutputStream</code>.
      *
      * @param in  stream data to be encoded
      * @param out stream where the encoded data should be written to
+     * @throws IOException if an i/o error occurs
      */
     public static void encode(InputStream in, OutputStream out)
             throws IOException {
@@ -114,12 +120,14 @@ public class Base64 {
     }
 
     /**
-     * Outputs base64 representation of the specified data to an <code>OutputStream</code>.
+     * Outputs base64 representation of the specified data to a
+     * <code>Writer</code>.
      *
      * @param data   data to be encoded
      * @param off    offset within data at which to start encoding
      * @param len    length of data to encode
      * @param writer writer to output the encoded data
+     * @throws IOException if an i/o error occurs
      */
     public static void encode(byte[] data, int off, int len, Writer writer)
             throws IOException {
@@ -166,8 +174,10 @@ public class Base64 {
      *
      * @param reader reader for the base64 encoded data to be decoded
      * @param out    stream where the decoded data should be written to
+     * @throws IOException if an i/o error occurs
      */
-    public static void decode(Reader reader, OutputStream out) throws IOException {
+    public static void decode(Reader reader, OutputStream out)
+            throws IOException {
         char[] chunk = new char[8192];
         int read;
         while ((read = reader.read(chunk)) > -1) {
@@ -181,8 +191,10 @@ public class Base64 {
      *
      * @param in  inputstream of the base64 encoded data to be decoded
      * @param out stream where the decoded data should be written to
+     * @throws IOException if an i/o error occurs
      */
-    public static void decode(InputStream in, OutputStream out) throws IOException {
+    public static void decode(InputStream in, OutputStream out)
+            throws IOException {
         decode(new InputStreamReader(in, CHARSET), out);
     }
 
@@ -191,8 +203,10 @@ public class Base64 {
      *
      * @param data the base64 encoded data to be decoded
      * @param out  stream where the decoded data should be written to
+     * @throws IOException if an i/o error occurs
      */
-    public static void decode(String data, OutputStream out) throws IOException {
+    public static void decode(String data, OutputStream out)
+            throws IOException {
         char[] chars = data.toCharArray();
         decode(chars, 0, chars.length, out);
     }
@@ -202,8 +216,10 @@ public class Base64 {
      *
      * @param chars the base64 encoded data to be decoded
      * @param out   stream where the decoded data should be written to
+     * @throws IOException if an i/o error occurs
      */
-    public static void decode(char[] chars, OutputStream out) throws IOException {
+    public static void decode(char[] chars, OutputStream out)
+            throws IOException {
         decode(chars, 0, chars.length, out);
     }
 
@@ -214,8 +230,10 @@ public class Base64 {
      * @param off   offset within data at which to start decoding
      * @param len   length of data to decode
      * @param out   stream where the decoded data should be written to
+     * @throws IOException if an i/o error occurs
      */
-    public static void decode(char[] chars, int off, int len, OutputStream out) throws IOException {
+    public static void decode(char[] chars, int off, int len, OutputStream out)
+            throws IOException {
         if (len == 0) {
             return;
         }

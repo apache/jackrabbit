@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.util.Base64;
+import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -31,7 +31,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Writer;
 
 /**
@@ -197,47 +196,36 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                     PREFIXED_VALUE_ELEMENT, new AttributesImpl());
 
             // characters
-            if (prop.getType() == PropertyType.BINARY) {
-                // binary data, base64 encoding required
-                InputStream in = val.getStream();
-                Writer writer = new Writer() {
-                    public void close() /*throws IOException*/ {
-                    }
+            Writer writer = new Writer() {
+                public void close() /*throws IOException*/ {
+                }
 
-                    public void flush() /*throws IOException*/ {
-                    }
+                public void flush() /*throws IOException*/ {
+                }
 
-                    public void write(char[] cbuf, int off, int len) throws IOException {
-                        try {
-                            contentHandler.characters(cbuf, off, len);
-                        } catch (SAXException se) {
-                            throw new IOException(se.toString());
-                        }
-                    }
-                };
-                try {
-                    Base64.encode(in, writer);
-                    // no need to close our Writer implementation
-                    //writer.close();
-                } catch (IOException ioe) {
-                    // check if the exception wraps a SAXException
-                    Throwable t = ioe.getCause();
-                    if (t != null && t instanceof SAXException) {
-                        throw (SAXException) t;
-                    } else {
-                        throw new SAXException(ioe);
-                    }
-                } finally {
+                public void write(char[] cbuf, int off, int len) throws IOException {
                     try {
-                        in.close();
-                    } catch (IOException e) {
-                        // ignore
+                        contentHandler.characters(cbuf, off, len);
+                    } catch (SAXException se) {
+                        throw new IOException(se.toString());
                     }
                 }
-            } else {
-                char[] chars = val.getString().toCharArray();
-                contentHandler.characters(chars, 0, chars.length);
+            };
+            try {
+                ValueHelper.serialize(val, false, writer);
+                // no need to close our Writer implementation
+                //writer.close();
+            } catch (IOException ioe) {
+                // check if the exception wraps a SAXException
+                // (see Writer.write(char[], int, int) above)
+                Throwable t = ioe.getCause();
+                if (t != null && t instanceof SAXException) {
+                    throw (SAXException) t;
+                } else {
+                    throw new SAXException(ioe);
+                }
             }
+
             // end value element
             contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT,
                     PREFIXED_VALUE_ELEMENT);
