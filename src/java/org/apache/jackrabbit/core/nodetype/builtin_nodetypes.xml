@@ -291,7 +291,7 @@
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <childNodeDef name="jcr:versionStorage" defaultPrimaryType="nt:unstructured" autoCreate="true" mandatory="true" onParentVersion="IGNORE" protected="false" primaryItem="false" sameNameSibs="false">
+        <childNodeDef name="jcr:versionStorage" defaultPrimaryType="nt:unstructured" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="false" primaryItem="false" sameNameSibs="false">
             <requiredPrimaryTypes>
                 <requiredPrimaryType>nt:base</requiredPrimaryType>
             </requiredPrimaryTypes>

@@ -82,9 +82,13 @@ public class VersionManagerImpl implements VersionManager {
                 NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
                 if (!systemRoot.hasNode(VersionManager.NODENAME_HISTORY_ROOT)) {
                     // if not exist, create
-                    systemRoot.addNode(VersionManager.NODENAME_HISTORY_ROOT, NodeTypeRegistry.NT_UNSTRUCTURED);
+                    //systemRoot.addNode(VersionManager.NODENAME_HISTORY_ROOT, NodeTypeRegistry.NT_UNSTRUCTURED);
+                    //systemRoot.save();
+
+                    // maybe we will create a virtual for every workspace. currently,
+                    // all workspaces share the same
+                    throw new IllegalArgumentException("Workspace has no version storage");
                 }
-                systemRoot.save();
                 String rootId = systemRoot.getNode(VersionManager.NODENAME_HISTORY_ROOT).internalGetUUID();
 
                 NodeState virtRootState = (NodeState) base.getItemState(new NodeId(rootId));

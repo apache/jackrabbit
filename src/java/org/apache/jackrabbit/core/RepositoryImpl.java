@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PMContext;
@@ -60,6 +61,9 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      * hardcoded uuid of the repository root node
      */
     private static final String ROOT_NODE_UUID = "cafebabe-cafe-babe-cafe-babecafebabe";
+
+    private static final String SYSTEM_ROOT_NODE_UUID = "deadbeef-cafe-babe-cafe-babecafebabe";
+    private static final String VERSION_STORAGE_NODE_UUID = "deadbeef-face-babe-cafe-babecafebabe";
 
     private static final String ANONYMOUS_USER = "anonymous";
 
@@ -308,7 +312,11 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
          */
         NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
         if (!rootNode.hasNode(SYSTEM_ROOT_NAME)) {
-            rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.REP_SYSTEM);
+            NodeTypeImpl nt = sysSession.getNodeTypeManager().getNodeType(NodeTypeRegistry.REP_SYSTEM);
+            NodeImpl sysRoot = rootNode.internalAddChildNode(SYSTEM_ROOT_NAME, nt, SYSTEM_ROOT_NODE_UUID);
+            // add version storage
+            nt = sysSession.getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED);
+            sysRoot.internalAddChildNode(VersionManager.NODENAME_HISTORY_ROOT, nt, VERSION_STORAGE_NODE_UUID);
             rootNode.save();
         }
 
