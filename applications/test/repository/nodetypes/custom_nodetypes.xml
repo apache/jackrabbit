@@ -18,18 +18,18 @@
  */
  -->
 <nodeTypes xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:rep="internal" xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:test="http://www.apache.org/jackrabbit/test" xmlns:mix="http://www.jcp.org/jcr/mix/1.0">
-  <nodeType name="test:versionable" mixin="false" orderableChildNodes="false" primaryItemName="">
+  <nodeType name="test:versionable" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
-    <propertyDef name="*" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDef name="test:copyOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDef name="test:versionOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" multiple="false" />
-    <propertyDef name="test:initializeOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="INITIALIZE" protected="false" multiple="false" />
-    <propertyDef name="test:computeOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="COMPUTE" protected="false" multiple="false" />
-    <propertyDef name="test:ignoreOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" multiple="false" />
-    <propertyDef name="test:abortOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="false" multiple="false" />
+    <propertyDef name="*" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDef name="test:copyOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDef name="test:versionOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" multiple="false" />
+    <propertyDef name="test:initializeOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="INITIALIZE" protected="false" multiple="false" />
+    <propertyDef name="test:computeOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COMPUTE" protected="false" multiple="false" />
+    <propertyDef name="test:ignoreOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" multiple="false" />
+    <propertyDef name="test:abortOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="false" multiple="false" />
     <childNodeDef name="*" defaultPrimaryType="test:versionable" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
       <requiredPrimaryTypes>
         <requiredPrimaryType>nt:base</requiredPrimaryType>
@@ -68,7 +68,7 @@
   </nodeType>
   
   <!-- Defines a referenceable nodetype for testing purposes -->
-  <nodeType name="test:refTargetNode" mixin="false" orderableChildNodes="false" primaryItemName="">
+  <nodeType name="test:refTargetNode" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
@@ -77,7 +77,7 @@
   </nodeType>
 
   <!-- Defines a nodetype for testing NodeType.canSetProperty() -->
-  <nodeType name="test:canSetProperty" mixin="false" orderableChildNodes="false" primaryItemName="">
+  <nodeType name="test:canSetProperty" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
@@ -184,7 +184,7 @@
   </nodeType>
 
   <!-- Defines a nodetype for testing NodeType.canAddChildNode() -->
-  <nodeType name="test:canAddChildNode" mixin="false" orderableChildNodes="false" primaryItemName="">
+  <nodeType name="test:canAddChildNode" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
