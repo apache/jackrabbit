@@ -274,8 +274,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 stateMgr.update();
                 succeeded = true;
             } finally {
-                // update operation failed, cancel all modifications
                 if (!succeeded) {
+                    // update operation failed, cancel all modifications
                     stateMgr.cancel();
                 }
             }
@@ -326,8 +326,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         } catch (RepositoryException e) {
             throw new VersionException("Error while storing modifications", e);
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
         }
@@ -358,8 +358,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         } catch (RepositoryException e) {
             throw new VersionException("Unable to store modifications", e);
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
         }

@@ -322,7 +322,7 @@ class NumericConstraint extends ValueConstraint {
         switch (value.getType()) {
             case PropertyType.LONG:
                 check((Long) value.internalValue());
-                break;
+                return;
 
             case PropertyType.DOUBLE:
                 check((Double) value.internalValue());
@@ -335,8 +335,8 @@ class NumericConstraint extends ValueConstraint {
                     check(length);
                 } else {
                     log.warn("failed to determine length of binary value");
-                    return;
                 }
+                return;
 
             default:
                 String msg = "numeric constraint can not be applied to value of type: "

@@ -2579,7 +2579,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // aquire session of other workspace (throws NoSuchWorkspaceException)
+        // acquire session of other workspace (throws NoSuchWorkspaceException)
         // @todo FIXME need to get session with same credentials as current
         SessionImpl srcSession = rep.getSystemSession(workspaceName);
 

@@ -342,8 +342,8 @@ public class NativePVM implements PersistentVersionManager, Constants {
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
         }
@@ -567,8 +567,8 @@ public class NativePVM implements PersistentVersionManager, Constants {
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
         }

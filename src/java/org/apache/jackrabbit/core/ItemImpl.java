@@ -1242,8 +1242,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     log.debug(msg);
                     throw new RepositoryException(msg, e);
                 } finally {
-                    // update operation failed, cancel all modifications
                     if (!succeeded) {
+                        // update operation failed, cancel all modifications
                         stateMgr.cancel();
                     }
                 }
