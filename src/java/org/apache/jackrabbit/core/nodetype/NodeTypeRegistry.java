@@ -1121,13 +1121,18 @@ public class NodeTypeRegistry {
 
 	/**
 	 * todo
-	 * check if the given node type (or any node type that has dependencies
-	 * on this node type) is currently referenced by nodes in the repository.
+         * 1. apply deep locks on root nodes in every workspace or alternatively
+         *    put repository in 'single-user' mode
+         * 2. check if the given node type (or any node type that has
+         *    dependencies on this node type) is currently referenced by nodes
+         *    in the repository.
+         * 3. remove the node type if there are no direct or indirect references
+         *    to it, otherwise throw exception
 	 *
-	 * this is absolutely necessary in order to guarantee integrity of
-	 * repository content.
+	 * the above checks are absolutely necessary in order to guarantee
+         * integrity of repository content.
 	 *
-	 * throw exception until this is can be done (using search)
+	 * throw exception while this is not implemented properly yet
 	 */
 	boolean isReferenced = true;
 	if (isReferenced) {
@@ -1199,19 +1204,33 @@ public class NodeTypeRegistry {
 	    throw new RepositoryException(name.toString() + ": can't reregister built-in node type.");
 	}
 
+        /**
+         * collect names of node types that have dependencies on the given
+         * node type
+         */
+        Set dependentNTs = getDependentNodeTypes(name);
+
 	/**
 	 * todo
-	 * - check if this node type (or any node type that has dependencies
-	 *   on this node type) is currently referenced by any nodes;
-	 *   this is absolutely necessary in order to guarantee integrity of
-	 *   repository content
-	 * - validate new node type definition
-	 * - build diff of old & new node type definition
-	 * - check if applying changes to affected nodes would violate existing node type constraints
-	 * - re-register node type definition and update caches
-	 * - notify listeners on re-registration
-	 * - apply and persist changes to affected nodes
-	 * - what else?
+         * 1. validate new node type definition
+         * 2. determine type of change and build diff of current and new
+         *    definition
+         * 3. if the change is trivial and has no effect on current content
+         *    (e.g. when a property defintion has been changed from
+         *    single-valued to multi-valued): continue with step 7, otherwise
+         *    continue with next step
+         * 4. apply deep locks on root nodes in every workspace or alternatively
+         *    put repository in 'exclusive' or 'single-user' mode
+         * 5. check if the given node type (or any node type that has
+         *    dependencies on this node type) is currently referenced by nodes
+         *    in the repository.
+	 * 6. check if applying changes to affected nodes would violate
+         *    existing node type constraints
+	 * 7. re-register node type definition and update caches
+	 * 8. notify listeners on re-registration
+	 * 9. apply and persist changes to affected nodes (e.g. update
+         *    definition id's, etc.)
+	 * 10. what else?
 	 */
 	//unregisterNodeType(name);
 	//return registerNodeType(ntd);
