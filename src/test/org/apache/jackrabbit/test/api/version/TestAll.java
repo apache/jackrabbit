@@ -50,6 +50,7 @@ public class TestAll extends TestCase {
         //suite.addTestSuite(OnParentVersionCopyTest.class);
         //suite.addTestSuite(OnParentVersionIgnoreTest.class);
         //suite.addTestSuite(OnParentVersionInitializeTest.class);
+        suite.addTestSuite(GetReferencesNodeTest.class);
 
         return suite;
     }

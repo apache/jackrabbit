@@ -23,7 +23,7 @@
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
-    <propertyDef name="*" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
     <propertyDef name="test:copyOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
     <propertyDef name="test:versionOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" multiple="false" />
     <propertyDef name="test:initializeOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="INITIALIZE" protected="false" multiple="false" />
