@@ -181,14 +181,16 @@ public class VirtualNodeState extends NodeState implements Constants {
      * @throws RepositoryException
      */
     public void setMixinNodeTypes(QName[] mixins) throws RepositoryException {
-        HashSet set = new HashSet();
-        InternalValue[] values = new InternalValue[mixins.length];
-        for (int i = 0; i < mixins.length; i++) {
-            set.add(mixins[i]);
-            values[i] = InternalValue.create(mixins[i]);
+        if (mixins != null) {
+            HashSet set = new HashSet();
+            InternalValue[] values = new InternalValue[mixins.length];
+            for (int i = 0; i < mixins.length; i++) {
+                set.add(mixins[i]);
+                values[i] = InternalValue.create(mixins[i]);
+            }
+            setMixinTypeNames(set);
+            setPropertyValues(JCR_MIXINTYPES, PropertyType.NAME, values);
         }
-        setMixinTypeNames(set);
-        setPropertyValues(JCR_MIXINTYPES, PropertyType.NAME, values);
     }
 
     /**

@@ -57,14 +57,14 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#hasChildNodeEntry(org.apache.jackrabbit.core.QName)
+     * {@inheritDoc}
      */
     public synchronized boolean hasChildNodeEntry(QName name) {
         return vh.hasVersion(name) ? true : super.hasChildNodeEntry(name);
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#hasChildNodeEntry(org.apache.jackrabbit.core.QName, int)
+     * {@inheritDoc}
      */
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
         // no same name siblings
@@ -72,7 +72,7 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntry(org.apache.jackrabbit.core.QName, int)
+     * {@inheritDoc}
      */
     public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
         if (super.hasChildNodeEntry(nodeName, index)) {
@@ -92,7 +92,7 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries()
+     * {@inheritDoc}
      */
     public synchronized List getChildNodeEntries() {
         List list = new ArrayList(super.getChildNodeEntries());
@@ -105,7 +105,7 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries(String)
+     * {@inheritDoc}
      */
     public synchronized List getChildNodeEntries(String uuid) {
         List list = new ArrayList(super.getChildNodeEntries(uuid));
@@ -117,7 +117,7 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries(org.apache.jackrabbit.core.QName)
+     * {@inheritDoc}
      */
     public synchronized List getChildNodeEntries(QName nodeName) {
         List list = new ArrayList(super.getChildNodeEntries(nodeName));

@@ -336,6 +336,16 @@
             </requiredPrimaryTypes>
         </childNodeDef>
     </nodeType>
+    <nodeType name="rep:nodeTypes" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <childNodeDef name="*" defaultPrimaryType="nt:nodeType" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:nodeType</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
+    </nodeType>
     <!-- internal node types for persistent version manager -->
     <nodeType name="rep:versionHistory" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
         <supertypes>

@@ -18,12 +18,9 @@ package org.apache.jackrabbit.core.virtual;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 
 import javax.jcr.RepositoryException;
@@ -47,44 +44,6 @@ public interface VirtualItemStateProvider extends ItemStateManager, ItemStateLis
      * @return
      */
     public NodeId getVirtualRootId();
-
-    /**
-     * Checks if the node with the given id exists in this item state provider.
-     *
-     * @param id
-     * @return
-     */
-    public boolean hasNodeState(NodeId id);
-
-    /**
-     * Checks if the property with the given id exists in this item state provider.
-     *
-     * @param id
-     * @return
-     */
-    public boolean hasPropertyState(PropertyId id);
-
-    /**
-     * Returns the node state for the given node id
-     *
-     * @param id
-     * @return
-     * @throws ItemStateException
-     * @throws NoSuchItemStateException
-     */
-    public VirtualNodeState getNodeState(NodeId id)
-            throws ItemStateException, NoSuchItemStateException;
-
-    /**
-     * Returns the property state for the give property id
-     *
-     * @param id
-     * @return
-     * @throws ItemStateException
-     * @throws NoSuchItemStateException
-     */
-    public VirtualPropertyState getPropertyState(PropertyId id)
-            throws ItemStateException, NoSuchItemStateException;
 
     /**
      * Creats a new virtual property state

@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateProvider;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.security.CredentialsCallbackHandler;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -85,6 +86,7 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     private static final String SYSTEM_ROOT_NODE_UUID = "deadbeef-cafe-babe-cafe-babecafebabe";
     private static final String VERSION_STORAGE_NODE_UUID = "deadbeef-face-babe-cafe-babecafebabe";
+    private static final String NODETYPES_NODE_UUID = "deadbeef-cafe-cafe-cafe-babecafebabe";
 
     private static final String PROPERTIES_RESOURCE = "rep.properties";
     private final Properties repProps;
@@ -325,6 +327,9 @@ public class RepositoryImpl implements Repository, SessionListener,
             // add version storage
             nt = sysSession.getNodeTypeManager().getNodeType(REP_VERSIONSTORAGE);
             sysRoot.internalAddChildNode(JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_UUID);
+            // add nodetypes
+            nt = sysSession.getNodeTypeManager().getNodeType(REP_NODETYPES);
+            sysRoot.internalAddChildNode(JCR_NODETYPES, nt, NODETYPES_NODE_UUID);
             rootNode.save();
         }
 
@@ -1001,6 +1006,9 @@ public class RepositoryImpl implements Repository, SessionListener,
                     itemStateMgr = new SharedItemStateManager(getPersistenceManager(config.getPersistenceManagerConfig()), rootNodeUUID, ntReg);
                     try {
                         itemStateMgr.addVirtualItemStateProvider(vMgr.getVirtualItemStateProvider(itemStateMgr));
+                        itemStateMgr.addVirtualItemStateProvider(
+                                new VirtualNodeTypeStateProvider(ntReg, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID)
+                        );
                     } catch (Exception e) {
                         log.error("Unable to add vmgr: " + e.toString(), e);
                     }
