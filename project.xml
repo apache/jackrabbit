@@ -1,0 +1,291 @@
+<?xml version="1.0"?>
+
+<!--
+   Copyright 2003-2004 The Apache Software Foundation
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+  
+<project>
+  <pomVersion>3</pomVersion>
+  <name>Jackrabbit</name>
+  <id>jackrabbit</id>
+  <currentVersion>0.3-dev</currentVersion>
+  <organization>
+    <name>The Apache Software Foundation</name>
+    <url>http://incubator.apache.org/projects/jackrabbit.html</url>
+    <logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
+  </organization>
+  <inceptionYear>2003</inceptionYear>
+  	<package>org.apache.jackrabbit.*</package>
+  <shortDescription>Implementation of the Content Repository for Java</shortDescription>
+  <description>
+    The Jackrabbit Project has been formed to develop an open source implementation of the Content Repository
+    for Java Technology API (JCR), being specified within the Java Community Process as 
+    <a href="http://www.jcp.org/en/jsr/detail?id=170">JSR-170</a>. <a href="http://www.day.com/">Day Software</a>, 
+    the JSR-170 specification lead, has licensed an initial implementation of the JCR reference implementation 
+    for use as seed code for this project.  JCR specifies an API for application developers (and application 
+    frameworks) to use for interaction with modern content repositories -- content management systems that provide 
+    content services such as versioning, transactions, indexing, workflow, etc.
+  </description>
+  <url>http://incubator.apache.org/projects/jackrabbit.html</url>
+  <issueTrackingUrl>http://nagoya.apache.org/jira/browse/JCR</issueTrackingUrl>
+  <siteAddress>incubator.apache.org</siteAddress>
+  <siteDirectory>/www/incubator.apache.org/jackrabbit/</siteDirectory>
+  <distributionDirectory>/www/incubator.apache.org/jackrabbit/builds/</distributionDirectory>
+
+  <repository>
+    <connection>scm:subversion:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/</connection>
+    <developerConnection>scm:subversion:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/?root=Apache-SVN</url>
+  </repository>
+
+  <versions></versions>
+  
+  <licenses>
+	<license>
+    	<name>The Apache Software License, Version 2.0</name>
+    	<url>/LICENSE.txt</url>
+    	<distribution>repo</distribution>
+	</license>
+  </licenses>
+  
+  <!-- TODO: What are the list addresses here -->
+<!--
+  <mailingLists>
+      <mailingList>
+        <name>Jackrabbit Users List</name>
+        <subscribe>user-subscribe@jackrabbit.apache.org</subscribe>
+        <unsubscribe>user-unsubscribe@jackrabbit.apache.org</unsubscribe>
+        <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=user@jackrabbit.apache.org</archive>
+      </mailingList>
+      <mailingList>
+          <name>Jackrabbit Developer List</name>
+          <subscribe>dev-subscribe@jackrabbit.apache.org</subscribe>
+          <unsubscribe>dev-unsubscribe@jackrabbit.apache.org</unsubscribe>
+          <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=dev@jackrabbit.apache.org</archive>
+      </mailingList>
+      <mailingList>
+          <name>Jackrabbit Source Control List</name>
+          <subscribe>scm-subscribe@jackrabbit.apache.org</subscribe>
+          <unsubscribe>scm-unsubscribe@jackrabbit.apache.org</unsubscribe>
+          <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=scm@jackrabbit.apache.org</archive>
+      </mailingList>
+  </mailingLists>
+-->
+
+  <developers>
+    <developer>
+      <name>Roy T. Fielding</name>
+      <id>fielding </id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Mentor, Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Stefan Guggisberg</name>
+      <id>stefan</id>
+      <email></email>
+      <organization></organization>
+      <timezone>+1</timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Stefano Mazzocchi</name>
+      <id>stefano</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>David Nuescheler</name>
+      <id>uncled</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Peeter Piegaze</name>
+      <id>ppiegaze</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Gianugo Rabellino</name>
+      <id>gianugo</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Tim Reilly</name>
+      <id>treilly</id>
+      <email>treilly@apache.org</email>
+      <organization></organization>
+      <timezone>-4</timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Marcel Reutegger</name>
+      <id>mreutegg</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Paul Russell</name>
+      <id>prussell</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Andrew Savory</name>
+      <id>asavory</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Tobias Strasser</name>
+      <id>tripod</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Sylvain Wallez</name>
+      <id>sylvain</id>
+      <email></email>
+      <organization></organization>
+      <timezone></timezone>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <contributors>
+  </contributors>
+
+  <dependencies>
+    <dependency>
+      <id>junit</id>
+      <version>3.8.1</version>
+    </dependency>
+    <dependency>
+      <id>commons-collections</id>
+      <version>3.1</version>
+    </dependency>
+    <dependency>
+      <id>crimson</id>
+      <version>1.1.3</version>
+    </dependency>
+    <dependency>
+      <id>jdom</id>
+      <version>b10</version>
+    </dependency>
+    <dependency>
+      <groupId>geronimo-spec</groupId>
+      <artifactId>geronimo-spec-jta</artifactId>
+      <version>1.0-M1</version>
+    </dependency>
+    <dependency>
+      <id>commons-httpclient</id>
+      <version>2.0</version>
+    </dependency>
+    <dependency>
+    	<groupId>slide</groupId>
+    	<artifactId>webdav</artifactId>
+    	<version>1.0.16</version>
+    </dependency>
+    <dependency>
+    	<groupId>jcr-api</groupId>
+    	<artifactId>jcr</artifactId>
+    	<version>0.14beta</version>
+    </dependency>
+    <dependency>
+    	<id>log4j</id>
+    	<version>1.2.8</version>
+    </dependency>
+    <dependency>
+    	<groupId>xerces</groupId>
+    	<artifactId>xercesImpl</artifactId>
+    	<version>2.6.2</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+  	<sourceDirectory>src/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+    <unitTest>
+      <includes>
+        <include>**/*Test*</include>
+      </includes>
+    </unitTest>
+
+	<!-- J A R  R E S O U R C E S -->
+    <!-- Resources that are packaged up inside the JAR file -->
+   <resources>
+   </resources>
+  </build>
+
+  <reports>
+     <report>maven-changelog-plugin</report>
+     <report>maven-changes-plugin</report>
+     <!-- <report>maven-checkstyle-plugin</report> -->
+     <!-- <report>maven-clover-plugin</report> -->
+     <!-- <report>maven-developer-activity-plugin</report> -->
+     <!-- <report>maven-file-activity-plugin</report> -->
+     <report>maven-javadoc-plugin</report>
+     <!-- <report>maven-jellydoc-plugin</report> -->
+     <report>maven-junit-report-plugin</report>
+     <report>maven-jxr-plugin</report>
+     <report>maven-license-plugin</report>
+     <!-- <report>maven-linkcheck-plugin</report> -->
+     <!-- <report>maven-statcvs-plugin</report> -->
+     <report>maven-tasklist-plugin</report>
+  </reports>
+</project>

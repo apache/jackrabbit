@@ -1,0 +1,84 @@
+<document>
+  <properties>
+    <title>ToDo</title>
+    <author email="jackrabbit-dev@incubator.apache.org">Jackrabbit Team</author>
+  </properties>
+  <body>
+
+    <category name="General">
+        <task creator="stefan" assignedto="all" startdate="2004/10/09" enddate="2004/10/09" effort="?" status="?">
+        	search
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+        	locking
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+        	jta support
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+        	access control
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+        	current persistence model (nodes and properties are stored in separate
+  files) leads to *very* slow performance in a normal filesystem;
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+        	use jdbc as an alternative to virtual filesystem persistence layer
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+        	use an alternative journaling filesystem as (transactional) persistence layer 
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+        	provide clean abstraction for persistence grouping (nodes &amp; properties 
+		that should be stored/loaded together in the persistence layer);
+  		(e.g. properties are stored within .node.xml)
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+          	need a more efficient way to persistently remove state of items in transient attic 
+  	  	(nodes in transient attic are orphaned, i.e. they are disconnected from 
+  		the hierarchy and can thus not be easily identified on Node#save):
+  		=&gt; need a hierarchical cache index for items in the transient attic 
+    		(see TransientItemStateManager), sparse tree index?; this index needs 
+    		to be maintained/updated on every transient &amp; persistent hierarchy 
+    		operation (move, remove, copy)
+	</task>
+		HierarchyManager: cache Path objects (key: ItemId, value: Path[]);
+  		update cache on hierarchy changes (move, hardlink, remove, etc) 
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+        	inline @todo comments: resolve/implement
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+  		gracefull repository shutdown:      	
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		shutdown repository    
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		close workspaces    
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		close workspaces    
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		close abstract file systems (e.g. flush dirty buffers, etc.)
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		trap JVM shutdown in RepositoryFactory? (Runtime#addShutdownHook)
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		ItemState: hide STATUS_* flags, use set* and is* methods instead
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		javaDoc, javaDoc, javaDoc
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		logging: use commons logging instead of log4j
+        </task>
+        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
+    		logging: remove unnecessary output, check log categories/verbosity, 
+  		use 'debug' whenever possible
+        </task>
+    </category>
+
+  </body>
+</document>
