@@ -58,6 +58,14 @@ public class TestAll extends TestCase {
         suite.addTestSuite(StringPropertyTest.class);
         suite.addTestSuite(UndefinedPropertyTest.class);
 
+        suite.addTestSuite(NamespaceRegistryReadMethodsTest.class);
+        suite.addTestSuite(NamespaceRemappingTest.class);
+        suite.addTestSuite(NodeIteratorTest.class);
+        suite.addTestSuite(PropertyReadMethodsTest.class);
+        suite.addTestSuite(RepositoryDescriptorTest.class);
+        suite.addTestSuite(SessionReadMethodsTest.class);
+        suite.addTestSuite(WorkspaceReadMethodsTest.class);
+
         return suite;
     }
 }

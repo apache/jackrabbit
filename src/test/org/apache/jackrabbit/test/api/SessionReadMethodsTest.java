@@ -1,0 +1,164 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.test.api;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+
+import javax.jcr.Session;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.NodeIterator;
+
+/**
+ * <code>SessionReadMethodsTest</code>...
+ *
+ * @test
+ * @sources SessionReadMethodsTest.java
+ * @executeClass org.apache.jackrabbit.test.api.SessionReadMethodsTest
+ * @keywords level1
+ */
+public class SessionReadMethodsTest extends AbstractJCRTest {
+
+    /**
+     * A Version 1 UUID
+     */
+    private final String RANDOM_UUID = "710def90-80cd-11d9-9669-0800200c9a66";
+
+    /**
+     * The read only session for the tests
+     */
+    private Session session;
+
+    protected void setUp() throws Exception {
+        isReadOnly = true;
+        super.setUp();
+        session = helper.getReadOnlySession();
+    }
+
+    /**
+     * Tests that session.getItem() throws a PathNotFoundException with a given
+     * path to nowhere.
+     */
+    public void testGetItemFailure()
+            throws RepositoryException, NotExecutableException {
+        try {
+            session.getItem(getNonExistingPath());
+            fail("Session.getItem() does not throw PathNotFoundException in " +
+                    "case a invalid path is provided.");
+        } catch (PathNotFoundException pnfe) {
+            // ok
+        }
+    }
+
+    /**
+     * Tests session.getItem() with the testRootNode and assures that the
+     * returned node represents the same node in the repository as
+     * testRootNode.
+     */
+    public void testGetItem() throws RepositoryException {
+        Item item = session.getItem(testRoot);
+        assertTrue("Session.getItem doesn't return the correct item.",
+                item.isSame(testRootNode));
+    }
+
+    /**
+     * Tests session.itemExists() in the case of a valid and an invalid path.
+     */
+    public void testItemExists() throws RepositoryException {
+        assertTrue("Session.itemExists() returns false on the testRootNode.",
+                session.itemExists(testRootNode.getPath()));
+        assertFalse("Session.itemExists() returns true on a malformed path.",
+                session.itemExists(getNonExistingPath()));
+    }
+
+    /**
+     * Tests that session.getNodeByUUID() throws a ItemNotFoundException in case
+     * of an invalid uuid.
+     */
+    public void testGetNodeByUUIDFailure() throws RepositoryException {
+        try {
+            session.getNodeByUUID(RANDOM_UUID);
+            fail("Not valid UUID should throw a ItemNotFoundException.");
+        } catch (ItemNotFoundException infe) {
+            // ok
+        }
+    }
+
+    /**
+     * Tests session.getNodeByUUID() using a valid uuid of a referenceable node
+     */
+    public void testGetNodeByUUID() throws RepositoryException, NotExecutableException {
+        Node referenced = findReferenceable(testRootNode);
+        if (referenced == null) {
+            throw new NotExecutableException("Workspace does not contain a referenceable node.");
+        }
+        String uuid = referenced.getProperty(jcrUUID).getString();
+        Node node = session.getNodeByUUID(uuid);
+        assertTrue("Node retrieved with session.getNodeByUUID is not the same " +
+                "as the node having the given uuid.",
+                referenced.isSame(node));
+    }
+
+    //----------------------< internal >----------------------------------------
+
+    /**
+     * Returns a path to a node that does not exist.
+     *
+     * @return a path to a node that does not exist.
+     */
+    private String getNonExistingPath() throws RepositoryException {
+        // build path to a node that does not exist
+        StringBuffer tmp = new StringBuffer();
+        if (testRootNode.getName().length() > 0) {
+            tmp.append("/").append(testRootNode.getName());
+        }
+        int count = 0;
+        String nodeName = "node";
+        while (testRootNode.hasNode(nodeName + count)) {
+            count++;
+        }
+        tmp.append("/").append(nodeName + count);
+        return tmp.toString();
+    }
+
+    /**
+     * Find a referenceable node for uuid test.
+     *
+     * @param node the <code>Node</code> where to start the search.
+     * @return a referenceable node or <code>null</code> if none was found.
+     */
+    private Node findReferenceable(Node node) throws RepositoryException {
+        Node referenced = null;
+        if (node.isNodeType(mixReferenceable)) {
+            return node;
+        } else {
+            NodeIterator iter = node.getNodes();
+            while (iter.hasNext()) {
+                Node n = iter.nextNode();
+                referenced = findReferenceable(n);
+                if (referenced != null) {
+                    return referenced;
+                }
+            }
+        }
+        return referenced;
+    }
+}

@@ -71,6 +71,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String jcrBaseVersion;
 
     /**
+     * JCR Name jcr:uuid using the namespace resolver of the current session.
+     */
+    protected String jcrUUID;
+
+    /**
      * JCR Name nt:base using the namespace resolver of the current session.
      */
     protected String ntBase;
@@ -206,6 +211,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrPrimaryType = superuser.getNamespacePrefix(NS_JCR_URI) + ":primaryType";
         jcrPredecessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":predecessors";
         jcrBaseVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":baseVersion";
+        jcrUUID = superuser.getNamespacePrefix(NS_JCR_URI) + ":uuid";
         ntBase = superuser.getNamespacePrefix(NS_NT_URI) + ":base";
         mixReferenceable = superuser.getNamespacePrefix(NS_MIX_URI) + ":referenceable";
         mixVersionable = superuser.getNamespacePrefix(NS_MIX_URI) + ":versionable";

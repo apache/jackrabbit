@@ -62,6 +62,7 @@ public class PropertyTestData extends AbstractJCRTest {
         c.set(2005, 6, 18, 17, 30);
         dataRoot.setProperty("calendar", c);
         dataRoot.setProperty("path", PathValue.valueOf("/"));
+        dataRoot.setProperty("multi", new String[]{"one", "two", "three"});
         superuser.save();
     }
 }
