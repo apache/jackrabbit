@@ -83,6 +83,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     private static QName primaryType = org.apache.jackrabbit.core.Constants.JCR_PRIMARYTYPE;
 
     /**
+     * QName for jcr:mixinTypes
+     */
+    private static QName mixinTypes = org.apache.jackrabbit.core.Constants.JCR_MIXINTYPES;
+
+    /**
      * Root node of the abstract query tree
      */
     private QueryRootNode root;
@@ -256,10 +261,14 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         String field = "";
         List values = new ArrayList();
         try {
-            field = Constants.JCR_PRIMARYTYPE.toJCRName(nsMappings);
             values.add(node.getValue().toJCRName(nsMappings));
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
             NodeType base = ntMgr.getNodeType(node.getValue().toJCRName(session.getNamespaceResolver()));
+            if (base.isMixin()) {
+                field = mixinTypes.toJCRName(nsMappings);
+            } else {
+                field = primaryType.toJCRName(nsMappings);
+            }
             NodeTypeIterator allTypes = ntMgr.getAllNodeTypes();
             while (allTypes.hasNext()) {
                 NodeType nt = allTypes.nextNodeType();

@@ -114,6 +114,9 @@ class QueryImpl implements ExecutableQuery {
      * @throws RepositoryException if an error occurs
      */
     public QueryResult execute() throws RepositoryException {
+        if (log.isDebugEnabled()) {
+            log.debug("Executing query: \n" + root.dump());
+        }
         // build lucene query
         Query query = LuceneQueryBuilder.createQuery(root, session,
                 index.getItemStateProvider(), index.getNamespaceMappings(),

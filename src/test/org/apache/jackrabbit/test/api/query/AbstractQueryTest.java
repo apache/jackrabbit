@@ -249,6 +249,19 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     }
 
     /**
+     * Executes the <code>sql</code> query and checks the results against
+     * the specified <code>nodes</code>.
+     * @param session the session to use for the query.
+     * @param sql the sql query.
+     * @param nodes the expected result nodes.
+     */
+    protected void executeSqlQuery(Session session, String sql, Node[] nodes)
+            throws RepositoryException {
+        QueryResult res = session.getWorkspace().getQueryManager().createQuery(sql, Query.SQL).execute();
+        checkResult(res, nodes);
+    }
+
+    /**
      * Checks if the result set contains exactly the <code>nodes</code>.
      * @param result the query result.
      * @param nodes the expected nodes in the result set.

@@ -87,6 +87,16 @@ public abstract class QueryNode {
     }
 
     /**
+     * Dumps this QueryNode and its child nodes to a String.
+     * @return the query tree as a String.
+     */
+    public String dump() {
+        StringBuffer tmp = new StringBuffer();
+        QueryTreeDump.dump(this, tmp);
+        return tmp.toString();
+    }
+
+    /**
      * Accepts a {@link QueryNodeVisitor} and calls the apropriate <code>visit</code>
      * method on the visitor depending on the concrete implementation of
      * this <code>QueryNode</code>.
