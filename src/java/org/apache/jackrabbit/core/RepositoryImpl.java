@@ -263,25 +263,11 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
 
         ntReg = NodeTypeRegistry.create(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
-        /**
-         * todo implement 'System' workspace
-         * - the system workspace should have the /jcr:system node
-         * - versions, version history and node types should be reflected in
-         *   this system workspace as content under /jcr:system
-         * - all other workspaces should be dynamic workspaces based on
-         *   this 'read-only' system workspace
-         */
-
-        // check system root node of system workspace
-        // (for now, we just create a system root node in all workspaces)
-        Iterator wspNames = wspInfos.keySet().iterator();
-        while (wspNames.hasNext()) {
-            String wspName = (String) wspNames.next();
-            NodeImpl rootNode = (NodeImpl) getSystemSession(wspName).getRootNode();
-            if (!rootNode.hasNode(SYSTEM_ROOT_NAME)) {
-                rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.REP_SYSTEM);
-                rootNode.save();
-            }
+        // initialize workspaces
+        iter = wspInfos.keySet().iterator();
+        while (iter.hasNext()) {
+            String wspName = (String) iter.next();
+            initWorkspace(wspName);
         }
 
         // init version manager
@@ -295,29 +281,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         loadRepProps();
         nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
         propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
-
-        // get the system session for every defined workspace and
-        // register as an event listener
-        iter = wspInfos.values().iterator();
-        while (iter.hasNext()) {
-            String wspName = ((WorkspaceInfo) iter.next()).getName();
-            Session s = getSystemSession(wspName);
-            s.getWorkspace().getObservationManager().addEventListener(this,
-                    Event.NODE_ADDED | Event.NODE_REMOVED
-                    | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED,
-                    "/", true, null, null, false);
-
-            // register SearchManager as EventListener
-            SearchManager searchMgr = getSearchManager(wspName);
-
-            if (searchMgr != null) {
-                s.getWorkspace().getObservationManager().addEventListener(searchMgr,
-                        Event.NODE_ADDED | Event.NODE_REMOVED |
-                        Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED |
-                        Event.PROPERTY_CHANGED,
-                        "/", true, null, null, false);
-            }
-        }
 
         // finally register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -339,6 +302,46 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     public static RepositoryImpl create(RepositoryConfig config)
             throws RepositoryException {
         return new RepositoryImpl(config);
+    }
+
+    private void initWorkspace(String wspName) throws RepositoryException {
+        // get system session and Workspace instance
+        SessionImpl sysSession = getSystemSession(wspName);
+        WorkspaceImpl wsp = (WorkspaceImpl) sysSession.getWorkspace();
+
+        /**
+         * todo implement 'System' workspace
+         * FIXME
+         * - the should be one 'System' workspace per repositoy
+         * - the 'System' workspace should have the /jcr:system node
+         * - versions, version history and node types should be reflected in
+         *   this system workspace as content under /jcr:system
+         * - all other workspaces should be dynamic workspaces based on
+         *   this 'read-only' system workspace
+         *
+         * for now, we just create a /jcr:system node in every workspace
+         */
+        NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
+        if (!rootNode.hasNode(SYSTEM_ROOT_NAME)) {
+            rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.REP_SYSTEM);
+            rootNode.save();
+        }
+
+        // register the repository as event listener for keeping repository statistics
+        wsp.getObservationManager().addEventListener(this,
+                Event.NODE_ADDED | Event.NODE_REMOVED
+                | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED,
+                "/", true, null, null, false);
+
+        // register SearchManager as event listener
+        SearchManager searchMgr = getSearchManager(wspName);
+        if (searchMgr != null) {
+            wsp.getObservationManager().addEventListener(searchMgr,
+                    Event.NODE_ADDED | Event.NODE_REMOVED |
+                    Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED |
+                    Event.PROPERTY_CHANGED,
+                    "/", true, null, null, false);
+        }
     }
 
     RepositoryConfig getConfig() {
@@ -390,8 +393,9 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      * Returns the names of all workspaces of this repository.
      *
      * @return the names of all workspaces of this repository.
+     * @see SessionImpl#getWorkspaceNames
      */
-    protected String[] getWorkspaceNames() {
+    String[] getWorkspaceNames() {
         return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
     }
 
@@ -401,8 +405,9 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      * @param workspaceName name of the new workspace
      * @throws RepositoryException if a workspace with the given name
      *                             already exists or if another error occurs
+     * @see SessionImpl#createWorkspace(String)
      */
-    public void createWorkspace(String workspaceName) throws RepositoryException {
+     synchronized void createWorkspace(String workspaceName) throws RepositoryException {
         if (wspInfos.containsKey(workspaceName)) {
             throw new RepositoryException("workspace '" + workspaceName + "' already exists.");
         }
@@ -411,6 +416,9 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName);
         WorkspaceInfo info = new WorkspaceInfo(config);
         wspInfos.put(workspaceName, info);
+
+        // setup/initialize new workspace
+        initWorkspace(workspaceName);
     }
 
     PersistentItemStateProvider getWorkspaceStateManager(String workspaceName)

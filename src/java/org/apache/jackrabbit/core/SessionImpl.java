@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
@@ -329,10 +328,23 @@ public class SessionImpl implements Session {
      * Returns the names of all workspaces of this repository with respect of the
      * access rights of this session.
      *
-     * @return the names of all workspaces of this repository.
+     * @return the names of all accessible workspaces
      */
     public String[] getWorkspaceNames() {
+        // @todo filter workspace names based on credentials of this session
         return rep.getWorkspaceNames();
+    }
+
+    /**
+     * Creates a workspace with the given name.
+     *
+     * @param workspaceName name of the new workspace
+     * @throws RepositoryException if a workspace with the given name
+     *                             already exists or if another error occurs
+     */
+    public void createWorkspace(String workspaceName) throws RepositoryException {
+        // @todo verify that this session has the right privileges for this operation
+        rep.createWorkspace(workspaceName);
     }
 
     /**
