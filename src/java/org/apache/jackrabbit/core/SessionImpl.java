@@ -575,7 +575,7 @@ public class SessionImpl implements Session {
         } catch (NoSuchWorkspaceException nswe) {
             // should never get here...
             String msg = "impersonate failed";
-            log.error(msg, nswe);
+            log.debug(msg);
             throw new LoginException(msg, nswe);
         }
     }
@@ -623,7 +623,7 @@ public class SessionImpl implements Session {
             throw new PathNotFoundException(absPath);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path:" + absPath;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
     }
@@ -714,7 +714,7 @@ public class SessionImpl implements Session {
             throw new PathNotFoundException(srcAbsPath);
         } catch (MalformedPathException mpe) {
             String msg = srcAbsPath + ": invalid path";
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
 
@@ -731,14 +731,14 @@ public class SessionImpl implements Session {
             throw new PathNotFoundException(destAbsPath);
         } catch (MalformedPathException mpe) {
             String msg = destAbsPath + ": invalid path";
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
         int ind = destName.getIndex();
         if (ind > 0) {
             // subscript in name element
             String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
@@ -773,18 +773,18 @@ public class SessionImpl implements Session {
             newTargetDef = destParentNode.getApplicableChildNodeDef(destName.getName(), nt.getQName());
         } catch (RepositoryException re) {
             String msg = destAbsPath + ": no definition found in parent node's node type for new node";
-            log.error(msg, re);
+            log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
         // check protected flag of old & new parent
         if (destParentNode.getDefinition().isProtected()) {
             String msg = destAbsPath + ": cannot add a child node to a protected node";
-            log.error(msg);
+            log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
         if (srcParentNode.getDefinition().isProtected()) {
             String msg = srcAbsPath + ": cannot remove a child node from a protected node";
-            log.error(msg);
+            log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
 
@@ -818,14 +818,14 @@ public class SessionImpl implements Session {
             item = getItemManager().getItem(Path.create(parentAbsPath, getNamespaceResolver(), true));
         } catch (MalformedPathException mpe) {
             String msg = parentAbsPath + ": invalid path";
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(parentAbsPath);
         }
         if (!item.isNode()) {
             String msg = parentAbsPath + ": node expected";
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         NodeImpl parent = (NodeImpl) item;
@@ -833,14 +833,14 @@ public class SessionImpl implements Session {
         // verify that parent node is checked-out
         if (!parent.internalIsCheckedOut()) {
             String msg = parentAbsPath + ": cannot add a child to a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag of parent node
         if (parent.getDefinition().isProtected()) {
             String msg = parentAbsPath + ": cannot add a child to a protected node";
-            log.error(msg);
+            log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
 
@@ -870,7 +870,7 @@ public class SessionImpl implements Session {
                 throw (RepositoryException) e;
             } else {
                 String msg = "failed to parse XML stream";
-                log.error(msg, se);
+                log.debug(msg);
                 throw new InvalidSerializedDataException(msg, se);
             }
         }
@@ -899,7 +899,7 @@ public class SessionImpl implements Session {
             state = getNodeState(path, hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + absPath;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
 
@@ -952,7 +952,7 @@ public class SessionImpl implements Session {
             state = getNodeState(path, hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + absPath;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
 

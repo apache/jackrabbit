@@ -83,20 +83,20 @@ public class LocalFileSystem implements FileSystem {
     public void init() throws FileSystemException {
         if (root == null) {
             String msg = "root directory not set";
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
 
         if (root.exists()) {
             if (!root.isDirectory()) {
                 String msg = "path does not denote a folder";
-                log.error(msg);
+                log.debug(msg);
                 throw new FileSystemException(msg);
             }
         } else {
             if (!root.mkdirs()) {
                 String msg = "failed to create root";
-                log.error(msg);
+                log.debug(msg);
                 throw new FileSystemException(msg);
             }
         }
@@ -119,7 +119,7 @@ public class LocalFileSystem implements FileSystem {
             FileUtil.copy(src, dest);
         } catch (IOException ioe) {
             String msg = "copying " + src.getPath() + " to " + dest.getPath() + " failed";
-            log.error(msg, ioe);
+            log.debug(msg);
             throw new FileSystemException(msg, ioe);
         }
     }
@@ -131,12 +131,12 @@ public class LocalFileSystem implements FileSystem {
         File f = new File(root, osPath(folderPath));
         if (f.exists()) {
             String msg = f.getPath() + " already exists";
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
         if (!f.mkdirs()) {
             String msg = "failed to create folder " + f.getPath();
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
     }
@@ -165,14 +165,14 @@ public class LocalFileSystem implements FileSystem {
         File f = new File(root, osPath(folderPath));
         if (!f.isDirectory()) {
             String msg = f.getPath() + " does not denote an existing folder";
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
         try {
             FileUtil.delete(f);
         } catch (IOException ioe) {
             String msg = "failed to delete " + f.getPath();
-            log.error(msg, ioe);
+            log.debug(msg);
             throw new FileSystemException(msg, ioe);
         }
     }
@@ -194,7 +194,7 @@ public class LocalFileSystem implements FileSystem {
             return new FileInputStream(f);
         } catch (FileNotFoundException fnfe) {
             String msg = f.getPath() + " does not denote an existing file";
-            log.error(msg, fnfe);
+            log.debug(msg);
             throw new FileSystemException(msg, fnfe);
         }
     }
@@ -208,7 +208,7 @@ public class LocalFileSystem implements FileSystem {
             return new FileOutputStream(f);
         } catch (FileNotFoundException fnfe) {
             String msg = "failed to get output stream for " + f.getPath();
-            log.error(msg, fnfe);
+            log.debug(msg);
             throw new FileSystemException(msg, fnfe);
         }
     }
@@ -223,7 +223,7 @@ public class LocalFileSystem implements FileSystem {
             return new RAFOutputStream(new RandomAccessFile(f, "rw"));
         } catch (IOException e) {
             String msg = "failed to get output stream for " + f.getPath();
-            log.error(msg, e);
+            log.debug(msg);
             throw new FileSystemException(msg, e);
         }
     }
@@ -235,7 +235,7 @@ public class LocalFileSystem implements FileSystem {
         File f = new File(root, osPath(path));
         if (!f.exists()) {
             String msg = f.getPath() + " does not exist";
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
         if (f.isFile()) {
@@ -295,7 +295,7 @@ public class LocalFileSystem implements FileSystem {
         String[] entries = f.list();
         if (entries == null) {
             String msg = folderPath + " does not denote a folder";
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
         return entries;
@@ -313,7 +313,7 @@ public class LocalFileSystem implements FileSystem {
         });
         if (files == null) {
             String msg = folderPath + " does not denote a folder";
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
         String[] entries = new String[files.length];
@@ -335,7 +335,7 @@ public class LocalFileSystem implements FileSystem {
         });
         if (folders == null) {
             String msg = folderPath + " does not denote a folder";
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
         String[] entries = new String[folders.length];
@@ -358,7 +358,7 @@ public class LocalFileSystem implements FileSystem {
                 FileUtil.delete(dest);
             } catch (IOException ioe) {
                 String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
-                log.error(msg, ioe);
+                log.debug(msg);
                 throw new FileSystemException(msg, ioe);
             }
         }
@@ -367,7 +367,7 @@ public class LocalFileSystem implements FileSystem {
             // create destination parent folder first
             if (!destParent.mkdirs()) {
                 String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
-                log.error(msg);
+                log.debug(msg);
                 throw new FileSystemException(msg);
             }
         }
@@ -375,7 +375,7 @@ public class LocalFileSystem implements FileSystem {
         // now we're ready to move/rename the file/folder
         if (!src.renameTo(dest)) {
             String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
-            log.error(msg);
+            log.debug(msg);
             throw new FileSystemException(msg);
         }
 /*
@@ -384,7 +384,7 @@ public class LocalFileSystem implements FileSystem {
             FileUtil.delete(src);
         } catch (IOException ioe) {
 	    String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
-	    log.error(msg, ioe);
+	    log.debug(msg);
 	    throw new FileSystemException(msg, ioe);
         }
 */

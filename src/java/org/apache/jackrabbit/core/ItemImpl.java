@@ -355,21 +355,21 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 case ItemState.STATUS_NEW:
                     {
                         String msg = safeGetJCRPath() + ": cannot save a new item.";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new RepositoryException(msg);
                     }
 
                 case ItemState.STATUS_STALE_MODIFIED:
                     {
                         String msg = safeGetJCRPath() + ": the item cannot be saved because it has been modified externally.";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new InvalidItemStateException(msg);
                     }
 
                 case ItemState.STATUS_STALE_DESTROYED:
                     {
                         String msg = safeGetJCRPath() + ": the item cannot be saved because it has been deleted externally.";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new InvalidItemStateException(msg);
                     }
 
@@ -395,14 +395,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     case ItemState.STATUS_STALE_MODIFIED:
                         {
                             String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
-                            log.error(msg);
+                            log.debug(msg);
                             throw new InvalidItemStateException(msg);
                         }
 
                     case ItemState.STATUS_STALE_DESTROYED:
                         {
                             String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
-                            log.error(msg);
+                            log.debug(msg);
                             throw new InvalidItemStateException(msg);
                         }
 
@@ -437,12 +437,12 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 // check if stale
                 if (transientState.getStatus() == ItemState.STATUS_STALE_MODIFIED) {
                     String msg = transientState.getId() + ": the item cannot be removed because it has been modified externally.";
-                    log.error(msg);
+                    log.debug(msg);
                     throw new InvalidItemStateException(msg);
                 }
                 if (transientState.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
                     String msg = transientState.getId() + ": the item cannot be removed because it has already been deleted externally.";
-                    log.error(msg);
+                    log.debug(msg);
                     throw new InvalidItemStateException(msg);
                 }
                 removed.add(transientState);
@@ -514,7 +514,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     // check WRITE permission
                     if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
                         String msg = node.safeGetJCRPath() + ": not allowed to remove a child item";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new AccessDeniedException(msg);
                     }
 
@@ -535,7 +535,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         // check WRITE permission
                         if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
                             String msg = node.safeGetJCRPath() + ": not allowed to add node " + childNode.getName();
-                            log.error(msg);
+                            log.debug(msg);
                             throw new AccessDeniedException(msg);
                         }
                     }
@@ -572,14 +572,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     // check WRITE permission on property
                     if (!accessMgr.isGranted(propId, AccessManager.WRITE)) {
                         String msg = itemMgr.safeGetJCRPath(nodeId) + ": not allowed to set property " + prop.getName();
-                        log.error(msg);
+                        log.debug(msg);
                         throw new AccessDeniedException(msg);
                     }
                     if (propState.getOverlayedState() == null) {
                         // property has been added, check WRITE permission on parent
                         if (!accessMgr.isGranted(nodeId, AccessManager.WRITE)) {
                             String msg = itemMgr.safeGetJCRPath(nodeId) + ": not allowed to set property " + prop.getName();
-                            log.error(msg);
+                            log.debug(msg);
                             throw new AccessDeniedException(msg);
                         }
                     }
@@ -635,7 +635,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 } catch (RepositoryException re) {
                                     String msg = prop.safeGetJCRPath()
                                             + ": failed to check REFERENCE value constraint";
-                                    log.error(msg, re);
+                                    log.debug(msg);
                                     throw new ConstraintViolationException(msg, re);
                                 }
                                 if (!satisfied) {
@@ -690,7 +690,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 } catch (ItemStateException e) {
                                     String msg = itemMgr.safeGetJCRPath(targetId)
                                             + ": failed to load node references";
-                                    log.error(msg, e);
+                                    log.debug(msg);
                                     throw new RepositoryException(msg, e);
                                 }
                                 dirtyNodeRefs.put(targetId, refs);
@@ -727,7 +727,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 // should never get here...
                                 String msg = itemMgr.safeGetJCRPath(propState.getId())
                                         + ": failed to verify existence of target node";
-                                log.error(msg, mpe);
+                                log.debug(msg);
                                 throw new RepositoryException(msg, mpe);
                             }
                         }
@@ -740,7 +740,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             } catch (ItemStateException e) {
                                 String msg = itemMgr.safeGetJCRPath(targetId)
                                         + ": failed to load node references";
-                                log.error(msg, e);
+                                log.debug(msg);
                                 throw new RepositoryException(msg, e);
                             }
                             dirtyNodeRefs.put(targetId, refs);
@@ -780,7 +780,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             } catch (ItemStateException e) {
                                 String msg = itemMgr.safeGetJCRPath(targetId)
                                         + ": failed to load node references";
-                                log.error(msg, e);
+                                log.debug(msg);
                                 throw new RepositoryException(msg, e);
                             }
                             dirtyNodeRefs.put(targetId, refs);
@@ -809,7 +809,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 } catch (ItemStateException e) {
                     String msg = itemMgr.safeGetJCRPath(targetId)
                             + ": failed to load node references";
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new RepositoryException(msg, e);
                 }
             }
@@ -1086,7 +1086,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             // check if this is the repository root node
             if (node.isRepositoryRoot()) {
                 String msg = safeGetJCRPath() + ": cannot remove root node";
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
             }
 
@@ -1094,7 +1094,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             // check protected flag
             if (def.isProtected()) {
                 String msg = safeGetJCRPath() + ": cannot remove a protected node";
-                log.error(msg);
+                log.debug(msg);
                 throw new ConstraintViolationException(msg);
             }
         } else {
@@ -1103,7 +1103,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             // check protected flag
             if (def.isProtected()) {
                 String msg = safeGetJCRPath() + ": cannot remove a protected property";
-                log.error(msg);
+                log.debug(msg);
                 throw new ConstraintViolationException(msg);
             }
         }
@@ -1113,14 +1113,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // verify that parent node is checked-out
         if (!parentNode.internalIsCheckedOut()) {
             String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag of parent node
         if (parentNode.getDefinition().isProtected()) {
             String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a protected node";
-            log.error(msg);
+            log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
 
@@ -1184,14 +1184,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             } catch (ItemStateException ise) {
                                 // should never get here...
                                 String msg = "inconsistency: failed to retrieve transient state for " + itemMgr.safeGetJCRPath(id);
-                                log.error(msg);
+                                log.debug(msg);
                                 throw new RepositoryException(msg);
                             }
                             // check if parent is also going to be saved
                             if (!dirty.contains(parentState)) {
                                 // need to save the parent too
                                 String msg = itemMgr.safeGetJCRPath(id) + " needs to be saved also.";
-                                log.error(msg);
+                                log.debug(msg);
                                 throw new RepositoryException(msg);
                             }
                         }
@@ -1266,7 +1266,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 } catch (ItemStateException e) {
 
                     String msg = safeGetJCRPath() + ": unable to update item.";
-                    log.error(msg);
+                    log.debug(msg);
                     throw new RepositoryException(msg, e);
 
                 }
@@ -1344,7 +1344,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 case ItemState.STATUS_NEW:
                     {
                         String msg = safeGetJCRPath() + ": cannot revert a new item.";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new RepositoryException(msg);
                     }
 
@@ -1434,7 +1434,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace";
-            log.error(msg, npde);
+            log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
     }

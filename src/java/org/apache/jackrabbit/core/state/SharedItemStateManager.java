@@ -103,7 +103,7 @@ public class SharedItemStateManager extends ItemStateCache
             propDefId = new PropDefId(ntReg.getNodeTypeDef(NodeTypeRegistry.NT_BASE).getPropertyDefs()[0]);
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "failed to create root node";
-            log.error(msg, nsnte);
+            log.debug(msg);
             throw new ItemStateException(msg, nsnte);
         }
         rootState.setDefinitionId(nodeDefId);

@@ -137,7 +137,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
             } catch (NoPrefixDeclaredException npde) {
                 // should never get here...
                 String msg = "internal error: encountered unregistered namespace";
-                log.error(msg, npde);
+                log.debug(msg);
                 throw new RepositoryException(msg, npde);
             }
             if (!XMLChar.isValidName(elemName)) {
@@ -157,7 +157,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 } catch (NoPrefixDeclaredException npde) {
                     // should never get here...
                     String msg = "internal error: encountered unregistered namespace";
-                    log.error(msg, npde);
+                    log.debug(msg);
                     throw new RepositoryException(msg, npde);
                 }
                 if (!XMLChar.isValidName(attrName)) {
@@ -175,7 +175,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                         } catch (NoPrefixDeclaredException npde) {
                             // should never get here...
                             String msg = "internal error: encountered unregistered namespace";
-                            log.error(msg, npde);
+                            log.debug(msg);
                             throw new RepositoryException(msg, npde);
                         }
                     } else {
@@ -230,7 +230,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace";
-            log.error(msg, npde);
+            log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
 

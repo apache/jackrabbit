@@ -109,11 +109,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
         } catch (NoSuchItemStateException e) {
             String msg = "failed to retrieve state of item " + id;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemNotFoundException(msg, e);
         } catch (ItemStateException e) {
             String msg = "failed to retrieve state of item " + id;
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
         return (NodeId[]) list.toArray(new NodeId[list.size()]);
@@ -128,11 +128,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
             parentState = (NodeState) getItemState(id);
         } catch (NoSuchItemStateException e) {
             String msg = "failed to retrieve state of parent node " + id;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemNotFoundException(msg, e);
         } catch (ItemStateException e) {
             String msg = "failed to retrieve state of parent node " + id;
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
         ArrayList list = new ArrayList();
@@ -162,11 +162,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
             parentState = (NodeState) getItemState(id, true);
         } catch (NoSuchItemStateException nsise) {
             String msg = "failed to retrieve state of parent node " + id;
-            log.error(msg, nsise);
+            log.debug(msg);
             throw new ItemNotFoundException(msg, nsise);
         } catch (ItemStateException ise) {
             String msg = "failed to retrieve state of parent node " + id;
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
 
@@ -198,7 +198,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
         if (!path.isCanonical()) {
             String msg = "path is not canonical";
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
@@ -207,7 +207,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             parentState = (NodeState) getItemState(rootNodeId);
         } catch (ItemStateException e) {
             String msg = "failed to retrieve state of root node";
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
 
@@ -227,7 +227,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     parentState = (NodeState) getItemState(new NodeId(nodeEntry.getUUID()));
                 } catch (ItemStateException e) {
                     String msg = "failed to retrieve state of intermediary node";
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new RepositoryException(msg, e);
                 }
                 continue;
@@ -275,7 +275,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     List entries = parent.getChildNodeEntries(uuid);
                     if (entries.isEmpty()) {
                         String msg = "failed to build path of " + id + ": " + parent.getUUID() + " has no child entry for " + uuid;
-                        log.error(msg);
+                        log.debug(msg);
                         throw new RepositoryException(msg);
                     }
                     // if the parent has more than one child node entries pointing
@@ -304,15 +304,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
             return builder.getPath();
         } catch (NoSuchItemStateException nsise) {
             String msg = "failed to build path of " + id;
-            log.error(msg, nsise);
+            log.debug(msg);
             throw new ItemNotFoundException(msg, nsise);
         } catch (ItemStateException ise) {
             String msg = "failed to build path of " + id;
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         } catch (MalformedPathException mpe) {
             String msg = "failed to build path of " + id;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
     }
@@ -326,7 +326,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             NodeState parentState;
             if (!provider.hasItemState(nodeId)) {
                 String msg = "failed to resolve name of " + nodeId;
-                log.error(msg);
+                log.debug(msg);
                 throw new ItemNotFoundException(nodeId.toString());
             }
             try {
@@ -340,14 +340,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 parentState = (NodeState) getItemState(new NodeId(parentUUID));
             } catch (ItemStateException ise) {
                 String msg = "failed to resolve name of " + nodeId;
-                log.error(msg, ise);
+                log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
 
             List entries = parentState.getChildNodeEntries(nodeId.getUUID());
             if (entries.size() == 0) {
                 String msg = "failed to resolve name of " + nodeId;
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
             }
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
@@ -384,11 +384,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 nodeId = new NodeId(propState.getParentUUID());
             } catch (NoSuchItemStateException nsise) {
                 String msg = "failed to build path of " + id;
-                log.error(msg, nsise);
+                log.debug(msg);
                 throw new ItemNotFoundException(msg, nsise);
             } catch (ItemStateException ise) {
                 String msg = "failed to build path of " + id;
-                log.error(msg, ise);
+                log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
         } else {
@@ -407,7 +407,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 paths[i++] = pb.getPath();
             } catch (MalformedPathException mpe) {
                 String msg = "failed to build all paths of " + id;
-                log.error(msg, mpe);
+                log.debug(msg);
                 throw new RepositoryException(msg, mpe);
             }
         }
@@ -509,7 +509,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 }
                 if (entries.isEmpty()) {
                     String msg = "failed to build path of " + nodeId + ": " + parent.getUUID() + " has no child entry for " + uuid;
-                    log.error(msg);
+                    log.debug(msg);
                     throw new RepositoryException(msg);
                 }
                 n = entries.size() - 1;
@@ -539,11 +539,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
         } catch (NoSuchItemStateException nsise) {
             String msg = "failed to build path of " + nodeId;
-            log.error(msg, nsise);
+            log.debug(msg);
             throw new ItemNotFoundException(msg, nsise);
         } catch (ItemStateException ise) {
             String msg = "failed to build path of " + nodeId;
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
     }

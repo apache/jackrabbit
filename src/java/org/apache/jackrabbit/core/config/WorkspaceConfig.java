@@ -153,7 +153,7 @@ public class WorkspaceConfig extends AbstractConfig {
             return new WorkspaceConfig(is, wspHomeDir);
         } catch (IOException ioe) {
             String msg = "error while reading config file " + configFilePath;
-            log.error(msg, ioe);
+            log.debug(msg);
             throw new RepositoryException(msg, ioe);
         }
     }

@@ -65,7 +65,7 @@ abstract class AbstractConfig implements EntityResolver {
             config = parser.build(is);
         } catch (Exception e) {
             String msg = "error while parsing config file " + is.getSystemId();
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }
@@ -104,7 +104,7 @@ abstract class AbstractConfig implements EntityResolver {
             fs.init();
         } catch (Exception e) {
             String msg = "Cannot instantiate implementing class " + className;
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
         return fs;

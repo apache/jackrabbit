@@ -167,7 +167,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
             }
         } catch (Exception e) {
             String msg = "failed to load namespace registry";
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }
@@ -195,7 +195,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
             }
         } catch (Exception e) {
             String msg = "failed to persist namespace registry";
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }

@@ -294,7 +294,7 @@ public final class ObservationManagerFactory implements Runnable {
                 path = Path.create(absPath, session.getNamespaceResolver(), true);
             } catch (MalformedPathException mpe) {
                 String msg = "invalid path syntax: " + absPath;
-                log.error(msg, mpe);
+                log.debug(msg);
                 throw new RepositoryException(msg, mpe);
             }
             // create filter

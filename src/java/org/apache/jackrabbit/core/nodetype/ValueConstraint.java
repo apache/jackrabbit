@@ -124,7 +124,7 @@ class BooleanConstraint extends ValueConstraint {
             reqBool = false;
         } else {
             String msg = "'" + definition + "' is not a valid value constraint format for BOOLEAN values";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidConstraintException(msg);
         }
     }
@@ -154,7 +154,7 @@ class BooleanConstraint extends ValueConstraint {
             default:
                 String msg = "BOOLEAN constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
         }
     }
@@ -174,7 +174,7 @@ class StringConstraint extends ValueConstraint {
             pattern = Pattern.compile(definition);
         } catch (PatternSyntaxException pse) {
             String msg = "'" + definition + "' is not valid regular expression syntax";
-            log.error(msg, pse);
+            log.debug(msg);
             throw new InvalidConstraintException(msg, pse);
         }
     }
@@ -201,7 +201,7 @@ class StringConstraint extends ValueConstraint {
             default:
                 String msg = "STRING constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
         }
     }
@@ -246,24 +246,24 @@ class NumericConstraint extends ValueConstraint {
                 upperInclusive = s.equals("]");
                 if (lowerLimit == null && upperLimit == null) {
                     String msg = "'" + definition + "' is not a valid value constraint format for numeric types: neither lower- nor upper-limit specified";
-                    log.error(msg);
+                    log.debug(msg);
                     throw new InvalidConstraintException(msg);
                 }
                 if (lowerLimit != null && upperLimit != null) {
                     if (lowerLimit.doubleValue() > upperLimit.doubleValue()) {
                         String msg = "'" + definition + "' is not a valid value constraint format for numeric types: lower-limit exceeds upper-limit";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new InvalidConstraintException(msg);
                     }
                 }
             } catch (NumberFormatException nfe) {
                 String msg = "'" + definition + "' is not a valid value constraint format for numeric types";
-                log.error(msg, nfe);
+                log.debug(msg);
                 throw new InvalidConstraintException(msg, nfe);
             }
         } else {
             String msg = "'" + definition + "' is not a valid value constraint format for numeric values";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidConstraintException(msg);
         }
     }
@@ -333,7 +333,7 @@ class NumericConstraint extends ValueConstraint {
             default:
                 String msg = "numeric constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
         }
     }
@@ -379,28 +379,28 @@ class DateConstraint extends ValueConstraint {
 
                 if (lowerLimit == null && upperLimit == null) {
                     String msg = "'" + definition + "' is not a valid value constraint format for dates: neither min- nor max-date specified";
-                    log.error(msg);
+                    log.debug(msg);
                     throw new InvalidConstraintException(msg);
                 }
                 if (lowerLimit != null && upperLimit != null) {
                     if (lowerLimit.after(upperLimit)) {
                         String msg = "'" + definition + "' is not a valid value constraint format for dates: min-date > max-date";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new InvalidConstraintException(msg);
                     }
                 }
             } catch (ValueFormatException vfe) {
                 String msg = "'" + definition + "' is not a valid value constraint format for dates";
-                log.error(msg, vfe);
+                log.debug(msg);
                 throw new InvalidConstraintException(msg, vfe);
             } catch (RepositoryException re) {
                 String msg = "'" + definition + "' is not a valid value constraint format for dates";
-                log.error(msg, re);
+                log.debug(msg);
                 throw new InvalidConstraintException(msg, re);
             }
         } else {
             String msg = "'" + definition + "' is not a valid value constraint format for dates";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidConstraintException(msg);
         }
     }
@@ -445,7 +445,7 @@ class DateConstraint extends ValueConstraint {
             default:
                 String msg = "DATE constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
         }
     }
@@ -472,7 +472,7 @@ class PathConstraint extends ValueConstraint {
             path = Path.create(definition, nsResolver, false);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path expression specified as value constraint: " + definition;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new InvalidConstraintException(msg, mpe);
         }
     }
@@ -527,7 +527,7 @@ class PathConstraint extends ValueConstraint {
             default:
                 String msg = "PATH constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
         }
     }
@@ -549,11 +549,11 @@ class NameConstraint extends ValueConstraint {
             name = QName.fromJCRName(definition, nsResolver);
         } catch (IllegalNameException ine) {
             String msg = "invalid name specified as value constraint: " + definition;
-            log.error(msg, ine);
+            log.debug(msg);
             throw new InvalidConstraintException(msg, ine);
         } catch (UnknownPrefixException upe) {
             String msg = "invalid name specified as value constraint: " + definition;
-            log.error(msg, upe);
+            log.debug(msg);
             throw new InvalidConstraintException(msg, upe);
         }
     }
@@ -582,7 +582,7 @@ class NameConstraint extends ValueConstraint {
             default:
                 String msg = "NAME constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
         }
     }
@@ -602,11 +602,11 @@ class ReferenceConstraint extends ValueConstraint {
             ntName = QName.fromJCRName(definition, nsResolver);
         } catch (IllegalNameException ine) {
             String msg = "invalid node type name specified as value constraint: " + definition;
-            log.error(msg, ine);
+            log.debug(msg);
             throw new InvalidConstraintException(msg, ine);
         } catch (UnknownPrefixException upe) {
             String msg = "invalid node type name specified as value constraint: " + definition;
-            log.error(msg, upe);
+            log.debug(msg);
             throw new InvalidConstraintException(msg, upe);
         }
     }
@@ -644,7 +644,7 @@ class ReferenceConstraint extends ValueConstraint {
             default:
                 String msg = "REFERENCE constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
         }
     }

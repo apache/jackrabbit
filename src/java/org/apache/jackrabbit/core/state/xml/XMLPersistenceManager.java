@@ -162,20 +162,20 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         // first do some paranoid sanity checks
         if (!nodeElement.getName().equals(NODE_ELEMENT)) {
             String msg = "invalid serialization format (unexpected element: " + nodeElement.getName() + ")";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check uuid
         if (!state.getUUID().equals(nodeElement.getAttributeValue(UUID_ATTRIBUTE))) {
             String msg = "invalid serialized state: uuid mismatch";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check nodetype
         String ntName = nodeElement.getAttributeValue(NODETYPE_ATTRIBUTE);
         if (!QName.valueOf(ntName).equals(state.getNodeTypeName())) {
             String msg = "invalid serialized state: nodetype mismatch";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
 
@@ -240,20 +240,20 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         // first do some paranoid sanity checks
         if (!propElement.getName().equals(PROPERTY_ELEMENT)) {
             String msg = "invalid serialization format (unexpected element: " + propElement.getName() + ")";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check name
         if (!state.getName().equals(QName.valueOf(propElement.getAttributeValue(NAME_ATTRIBUTE)))) {
             String msg = "invalid serialized state: name mismatch";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check parentUUID
         String parentUUID = propElement.getAttributeValue(PARENTUUID_ATTRIBUTE);
         if (!parentUUID.equals(state.getParentUUID())) {
             String msg = "invalid serialized state: parentUUID mismatch";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
 
@@ -297,7 +297,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         val = InternalValue.create(new FileSystemResource(blobStore, text));
                     } catch (IOException ioe) {
                         String msg = "error while reading serialized binary valuey";
-                        log.error(msg, ioe);
+                        log.debug(msg);
                         throw new ItemStateException(msg, ioe);
                     }
                 } else {
@@ -316,13 +316,13 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         // first do some paranoid sanity checks
         if (!refsElement.getName().equals(NODEREFERENCES_ELEMENT)) {
             String msg = "invalid serialization format (unexpected element: " + refsElement.getName() + ")";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check targetId
         if (!refs.getTargetId().equals(NodeId.valueOf(refsElement.getAttributeValue(TARGETID_ATTRIBUTE)))) {
             String msg = "invalid serialized state: targetId  mismatch";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
 
@@ -428,7 +428,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             // fall through
         }
         String msg = "failed to read node state: " + uuid;
-        log.error(msg, e);
+        log.debug(msg);
         throw new ItemStateException(msg, e);
     }
 
@@ -471,7 +471,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             // fall through
         }
         String msg = "failed to read property state: " + parentUUID + "/" + name;
-        log.error(msg, e);
+        log.debug(msg);
         throw new ItemStateException(msg, e);
     }
 
@@ -555,7 +555,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             String msg = "failed to write node state: " + uuid;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -669,7 +669,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             String msg = "failed to store property state: " + state.getParentUUID() + "/" + state.getName();
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -692,7 +692,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete node state: " + uuid;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }
@@ -729,7 +729,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete property state: " + state.getParentUUID() + "/" + state.getName();
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }
@@ -776,7 +776,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             // fall through
         }
         String msg = "failed to load references: " + uuid;
-        log.error(msg, e);
+        log.debug(msg);
         throw new ItemStateException(msg, e);
     }
 
@@ -821,7 +821,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             String msg = "failed to store references: " + uuid;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -844,7 +844,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete references: " + uuid;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }
@@ -871,7 +871,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of item state: " + id;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }
@@ -891,7 +891,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             return refsFile.exists();
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of references: " + targetId;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }

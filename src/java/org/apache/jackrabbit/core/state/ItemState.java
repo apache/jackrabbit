@@ -113,7 +113,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 break;
             default:
                 String msg = "illegal status: " + initialStatus;
-                log.error(msg);
+                log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
         this.id = id;
@@ -141,7 +141,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 break;
             default:
                 String msg = "illegal status: " + initialStatus;
-                log.error(msg);
+                log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
         this.overlayedState = overlayedState;
@@ -364,7 +364,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 return;
         }
         String msg = "illegal status: " + newStatus;
-        log.error(msg);
+        log.debug(msg);
         throw new IllegalArgumentException(msg);
     }
 

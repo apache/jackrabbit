@@ -401,7 +401,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
             return state;
         } catch (Exception e) {
             String msg = "failed to read node state: " + id;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -430,7 +430,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
             return state;
         } catch (Exception e) {
             String msg = "failed to read property state: " + id;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -454,7 +454,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
             //out.close();
         } catch (Exception e) {
             String msg = "failed to write node state: " + state.getId();
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -478,7 +478,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
             //out.close();
         } catch (Exception e) {
             String msg = "failed to store property state: " + state.getId();
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -544,7 +544,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
             return refs;
         } catch (Exception e) {
             String msg = "failed to load references: " + targetId;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -568,7 +568,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
             //out.close();
         } catch (Exception e) {
             String msg = "failed to store references: " + refs.getTargetId();
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }

@@ -95,7 +95,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     if (pe.getIndex() > 0) {
                         // property name can't have subscript
                         String msg = relPath + " is not a valid property path";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new RepositoryException(msg);
                     }
                     // check if property entry exists
@@ -125,7 +125,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         } catch (MalformedPathException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }
@@ -183,7 +183,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         } catch (MalformedPathException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }
@@ -218,7 +218,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 state = transientState;
             } catch (ItemStateException ise) {
                 String msg = "failed to create transient state";
-                log.error(msg, ise);
+                log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
         }
@@ -345,13 +345,13 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for name collisions with existing child nodes
         if (((NodeState) state).hasChildNodeEntry(name)) {
             String msg = "there's already a child node with name " + name;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath() + "/" + name.toString();
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -381,7 +381,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         } catch (ItemStateException ise) {
             String msg = "failed to add property " + name + " to " + safeGetJCRPath();
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
 
@@ -410,7 +410,7 @@ public class NodeImpl extends ItemImpl implements Node {
             nodeState.setDefinitionId(new NodeDefId(def.unwrap()));
         } catch (ItemStateException ise) {
             String msg = "failed to add child node " + name + " to " + safeGetJCRPath();
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
 
@@ -486,7 +486,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // remove the property entry
         if (!thisState.removePropertyEntry(propName)) {
             String msg = "failed to remove property " + propName + " of " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
     }
@@ -498,7 +498,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState.ChildNodeEntry entry = thisState.getChildNodeEntry(nodeName, index);
         if (entry == null) {
             String msg = "failed to remove child " + nodeName + " of " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
@@ -510,7 +510,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // remove child entry
         if (!thisState.removeChildNodeEntry(nodeName, index)) {
             String msg = "failed to remove child " + nodeName + " of " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
     }
@@ -587,14 +587,14 @@ public class NodeImpl extends ItemImpl implements Node {
             nodePath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
             if (nodePath.getNameElement().getIndex() != 0) {
                 String msg = "illegal subscript specified: " + nodePath;
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
             }
             nodeName = nodePath.getNameElement().getName();
             parentPath = nodePath.getAncestor(1);
         } catch (MalformedPathException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
 
@@ -603,7 +603,7 @@ public class NodeImpl extends ItemImpl implements Node {
             Item parent = itemMgr.getItem(parentPath);
             if (!parent.isNode()) {
                 String msg = "cannot add a node to property " + parentPath;
-                log.error(msg);
+                log.debug(msg);
                 throw new ConstraintViolationException(msg);
             }
             parentNode = (NodeImpl) parent;
@@ -614,7 +614,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure that parent node is checked-out
         if (!parentNode.internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -635,7 +635,7 @@ public class NodeImpl extends ItemImpl implements Node {
         } catch (MalformedPathException e) {
             // should never happen
             String msg = "internal error: invalid path " + safeGetJCRPath();
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
 
@@ -644,7 +644,7 @@ public class NodeImpl extends ItemImpl implements Node {
             def = getApplicableChildNodeDef(nodeName, nodeType == null ? null : nodeType.getQName());
         } catch (RepositoryException re) {
             String msg = "no definition found in parent node's node type for new node";
-            log.error(msg, re);
+            log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
         if (nodeType == null) {
@@ -693,7 +693,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check protected flag of parent (i.e. this) node
         if (getDefinition().isProtected()) {
             String msg = safeGetJCRPath() + ": cannot add a child to a protected node";
-            log.error(msg);
+            log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
 
@@ -748,7 +748,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node " + safeGetJCRPath();
-            log.error(msg, ntce);
+            log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
     }
@@ -866,7 +866,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return ent.includesNodeType(ntName);
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: invalid mixin node type(s)";
-            log.error(msg, ntce);
+            log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
     }
@@ -1124,7 +1124,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot add node to a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1155,7 +1155,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot add node to a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1185,7 +1185,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1232,7 +1232,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1284,7 +1284,7 @@ public class NodeImpl extends ItemImpl implements Node {
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace " + name.getNamespaceURI();
-            log.error(msg, npde);
+            log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
     }
@@ -1311,7 +1311,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState thisState = (NodeState) state;
         if (thisState.getParentUUID() == null) {
             String msg = "root node doesn't have a parent";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemNotFoundException(msg);
         }
 
@@ -1373,7 +1373,7 @@ public class NodeImpl extends ItemImpl implements Node {
             insertName = p.getNameElement();
         } catch (MalformedPathException e) {
             String msg = "invalid name: " + srcName;
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
 
@@ -1388,7 +1388,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 beforeName = p.getNameElement();
             } catch (MalformedPathException e) {
                 String msg = "invalid name: " + destName;
-                log.error(msg, e);
+                log.debug(msg);
                 throw new RepositoryException(msg, e);
             }
         } else {
@@ -1406,14 +1406,14 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot change child node ordering of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag
         if (getDefinition().isProtected()) {
             String msg = safeGetJCRPath() + ": cannot change child node ordering of a protected node";
-            log.error(msg);
+            log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
 
@@ -1501,7 +1501,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1541,7 +1541,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1572,7 +1572,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1603,7 +1603,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1636,7 +1636,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1667,7 +1667,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1698,7 +1698,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1729,7 +1729,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1760,7 +1760,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1791,7 +1791,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1823,7 +1823,7 @@ public class NodeImpl extends ItemImpl implements Node {
             nodePath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
         } catch (MalformedPathException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
 
@@ -1868,11 +1868,11 @@ public class NodeImpl extends ItemImpl implements Node {
             return itemMgr.getChildNodes((NodeId) id);
         } catch (ItemNotFoundException infe) {
             String msg = "failed to list the child nodes of " + safeGetJCRPath();
-            log.error(msg, infe);
+            log.debug(msg);
             throw new RepositoryException(msg, infe);
         } catch (AccessDeniedException ade) {
             String msg = "failed to list the child nodes of " + safeGetJCRPath();
-            log.error(msg, ade);
+            log.debug(msg);
             throw new RepositoryException(msg, ade);
         }
     }
@@ -1895,11 +1895,11 @@ public class NodeImpl extends ItemImpl implements Node {
             return itemMgr.getChildProperties((NodeId) id);
         } catch (ItemNotFoundException infe) {
             String msg = "failed to list the child properties of " + safeGetJCRPath();
-            log.error(msg, infe);
+            log.debug(msg);
             throw new RepositoryException(msg, infe);
         } catch (AccessDeniedException ade) {
             String msg = "failed to list the child properties of " + safeGetJCRPath();
-            log.error(msg, ade);
+            log.debug(msg);
             throw new RepositoryException(msg, ade);
         }
     }
@@ -1917,7 +1917,7 @@ public class NodeImpl extends ItemImpl implements Node {
             propPath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
         } catch (MalformedPathException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
 
@@ -2046,14 +2046,14 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot add a mixin node type to a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag
         if (definition.isProtected()) {
             String msg = safeGetJCRPath() + ": cannot add a mixin node type to a protected node";
-            log.error(msg);
+            log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
 
@@ -2155,14 +2155,14 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a checked-in node";
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag
         if (definition.isProtected()) {
             String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a protected node";
-            log.error(msg);
+            log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
 
@@ -2351,7 +2351,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return new LazyItemIterator(itemMgr, idList);
         } catch (ItemStateException e) {
             String msg = "Unable to retrieve node references for: " + id;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }
@@ -2505,7 +2505,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (hasPendingChanges()) {
             String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -2566,7 +2566,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (session.hasPendingChanges()) {
             String msg = "Unable to checkin node. Session has pending changes.";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -2594,7 +2594,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (session.hasPendingChanges()) {
             String msg = "Unable to merge. Session has pending changes.";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -2671,7 +2671,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (hasPendingChanges()) {
             String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -2691,7 +2691,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (hasPendingChanges()) {
             String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -2723,7 +2723,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (session.hasPendingChanges()) {
             String msg = "Unable to restore version. Session has pending changes.";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -2746,7 +2746,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (session.hasPendingChanges()) {
             String msg = "Unable to restore version. Session has pending changes.";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -2773,7 +2773,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (session.hasPendingChanges()) {
             String msg = "Unable to restore version. Session has pending changes.";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -2801,7 +2801,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (session.hasPendingChanges()) {
             String msg = "Unable to restore version. Session has pending changes.";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -3198,7 +3198,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     addMixin(values[i].toJCRName(session.getNamespaceResolver()));
                 } catch (NoPrefixDeclaredException e) {
                     String msg = "Unable to add mixin for restored node: " + e.getMessage();
-                    log.error(msg);
+                    log.debug(msg);
                     throw new RepositoryException(msg);
                 }
             }
@@ -3333,7 +3333,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (hasPendingChanges()) {
             String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
@@ -3371,7 +3371,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check for pending changes
         if (hasPendingChanges()) {
             String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 

@@ -85,11 +85,11 @@ public final class EventImpl implements Event {
             return p.toJCRPath(session.getNamespaceResolver());
         } catch (MalformedPathException e) {
             String msg = "internal error: malformed path for event";
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         } catch (NoPrefixDeclaredException e) {
             String msg = "internal error: encountered unregistered namespace in path";
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }

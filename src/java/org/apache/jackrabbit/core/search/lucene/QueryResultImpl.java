@@ -64,7 +64,7 @@ class QueryResultImpl implements QueryResult {
             return propNames;
         } catch (NoPrefixDeclaredException npde) {
             String msg = "encountered invalid property name";
-            log.error(msg, npde);
+            log.debug(msg);
             throw new RepositoryException(msg, npde);
 
         }

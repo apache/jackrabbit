@@ -73,7 +73,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 state = transientState;
             } catch (ItemStateException ise) {
                 String msg = "failed to create transient state";
-                log.error(msg, ise);
+                log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
         }
@@ -650,7 +650,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             }
         } catch (IOException ioe) {
             String msg = "failed to spool stream to internal storage";
-            log.error(msg, ioe);
+            log.debug(msg);
             throw new RepositoryException(msg, ioe);
         }
 
@@ -844,7 +844,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 }
             } else {
                 String msg = "incompatible Node object: " + target;
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
             }
         } else {
@@ -906,7 +906,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         // verify that parent node is checked-out
         if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
             String msg = "cannot set the value of a property of a checked-in node " + safeGetJCRPath();
-            log.error(msg);
+            log.debug(msg);
             throw new VersionException(msg);
         }
 
@@ -1027,7 +1027,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 } catch (NoPrefixDeclaredException npde) {
                     // should never happen...
                     String msg = safeGetJCRPath() + ": the value represents an invalid name";
-                    log.error(msg, npde);
+                    log.debug(msg);
                     throw new RepositoryException(msg, npde);
                 }
 
@@ -1038,7 +1038,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 } catch (NoPrefixDeclaredException npde) {
                     // should never happen...
                     String msg = safeGetJCRPath() + ": the value represents an invalid path";
-                    log.error(msg, npde);
+                    log.debug(msg);
                     throw new RepositoryException(msg, npde);
                 }
 
@@ -1080,7 +1080,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                     } catch (NoPrefixDeclaredException npde) {
                         // should never happen...
                         String msg = safeGetJCRPath() + ": the value represents an invalid name";
-                        log.error(msg, npde);
+                        log.debug(msg);
                         throw new RepositoryException(msg, npde);
                     }
                     break;
@@ -1092,7 +1092,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                     } catch (NoPrefixDeclaredException npde) {
                         // should never happen...
                         String msg = safeGetJCRPath() + ": the value represents an invalid path";
-                        log.error(msg, npde);
+                        log.debug(msg);
                         throw new RepositoryException(msg, npde);
                     }
                     break;
@@ -1143,7 +1143,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace " + name.getNamespaceURI();
-            log.error(msg, npde);
+            log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
     }

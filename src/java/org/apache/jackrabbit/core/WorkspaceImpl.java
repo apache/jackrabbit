@@ -194,7 +194,7 @@ public class WorkspaceImpl implements Workspace {
             return getNodeState(Path.create(nodePath, nsResolver, true), hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + nodePath;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
     }
@@ -218,7 +218,7 @@ public class WorkspaceImpl implements Workspace {
             return getNodeState(Path.create(path, nsResolver, true).getAncestor(1), hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + path;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
     }
@@ -245,7 +245,7 @@ public class WorkspaceImpl implements Workspace {
             throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to retrieve state of " + hierMgr.safeGetJCRPath(nodePath);
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
     }
@@ -300,7 +300,7 @@ public class WorkspaceImpl implements Workspace {
             }
         } catch (ItemNotFoundException infe) {
             String msg = "internal error: failed to check access rights for " + hierMgr.safeGetJCRPath(parentPath);
-            log.error(msg, infe);
+            log.debug(msg);
             throw new RepositoryException(msg, infe);
         }
 
@@ -331,7 +331,7 @@ public class WorkspaceImpl implements Workspace {
                 conflictingState = (NodeState) stateMgr.getItemState(conflictingId);
             } catch (ItemStateException ise) {
                 String msg = "internal error: failed to retrieve state of " + hierMgr.safeGetJCRPath(conflictingId);
-                log.error(msg, ise);
+                log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
             ChildNodeDef conflictingTargetDef = ntReg.getNodeDef(conflictingState.getDefinitionId());
@@ -378,7 +378,7 @@ public class WorkspaceImpl implements Workspace {
             }
         } catch (ItemNotFoundException infe) {
             String msg = "internal error: failed to check access rights for " + hierMgr.safeGetJCRPath(nodePath);
-            log.error(msg, infe);
+            log.debug(msg);
             throw new RepositoryException(msg, infe);
         }
 
@@ -419,7 +419,7 @@ public class WorkspaceImpl implements Workspace {
             return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node " + state.getUUID();
-            log.error(msg, ntce);
+            log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
     }
@@ -499,7 +499,7 @@ public class WorkspaceImpl implements Workspace {
             return newState;
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to copy state of " + srcHierMgr.safeGetJCRPath(srcState.getId());
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
     }
@@ -563,7 +563,7 @@ public class WorkspaceImpl implements Workspace {
             srcState = getNodeState(srcPath, srcHierMgr, srcStateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + srcAbsPath;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
 
@@ -578,14 +578,14 @@ public class WorkspaceImpl implements Workspace {
             destParentState = getNodeState(destParentPath, destHierMgr, destStateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + destAbsPath;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
         int ind = destName.getIndex();
         if (ind > 0) {
             // subscript in name element
             String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
@@ -598,7 +598,7 @@ public class WorkspaceImpl implements Workspace {
             }
         } catch (ItemNotFoundException infe) {
             String msg = "internal error: failed to check access rights for " + srcAbsPath;
-            log.error(msg, infe);
+            log.debug(msg);
             throw new RepositoryException(msg, infe);
         }
         // check node type constraints
@@ -627,7 +627,7 @@ public class WorkspaceImpl implements Workspace {
             update.end();
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
     }
@@ -777,7 +777,7 @@ public class WorkspaceImpl implements Workspace {
             srcParentState = getNodeState(srcParentPath, hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + srcAbsPath;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
 
@@ -793,7 +793,7 @@ public class WorkspaceImpl implements Workspace {
             destParentState = getNodeState(destParentPath, hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + destAbsPath;
-            log.error(msg, mpe);
+            log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
 
@@ -801,7 +801,7 @@ public class WorkspaceImpl implements Workspace {
         if (ind > 0) {
             // subscript in name element
             String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
@@ -849,7 +849,7 @@ public class WorkspaceImpl implements Workspace {
             update.end();
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
     }
@@ -869,7 +869,7 @@ public class WorkspaceImpl implements Workspace {
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";
-                log.error(msg, nswe);
+                log.debug(msg);
                 throw new RepositoryException(msg, nswe);
             }
         }
@@ -890,13 +890,13 @@ public class WorkspaceImpl implements Workspace {
                 searchManager = rep.getSearchManager(wspConfig.getName());
                 if (searchManager == null) {
                     String msg = "no search manager configured for this workspace";
-                    log.error(msg);
+                    log.debug(msg);
                     throw new RepositoryException(msg);
                 }
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate query manager";
-                log.error(msg, nswe);
+                log.debug(msg);
                 throw new RepositoryException(msg, nswe);
             }
             queryManager = new QueryManagerImpl(session, session.getItemManager(), searchManager);
@@ -968,7 +968,7 @@ public class WorkspaceImpl implements Workspace {
                 throw (RepositoryException) e;
             } else {
                 String msg = "failed to parse XML stream";
-                log.error(msg, se);
+                log.debug(msg);
                 throw new InvalidSerializedDataException(msg, se);
             }
         }

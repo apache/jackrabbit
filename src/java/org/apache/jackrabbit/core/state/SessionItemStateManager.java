@@ -287,7 +287,7 @@ public class SessionItemStateManager implements ItemStateManager {
                     descendants.put(p, state);
                 } catch (ItemNotFoundException infe) {
                     String msg = id + ": the item has been removed externally.";
-                    log.error(msg);
+                    log.debug(msg);
                     throw new InvalidItemStateException(msg);
                 }
             }
@@ -299,7 +299,7 @@ public class SessionItemStateManager implements ItemStateManager {
             parentPaths = hierMgr.getAllPaths(parentId);
         } catch (ItemNotFoundException infe) {
             String msg = parentId + ": the item has been removed externally.";
-            log.error(msg);
+            log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 

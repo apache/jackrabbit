@@ -258,7 +258,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
             InternalVersionImpl v = (InternalVersionImpl) getVersion(versionName);
             if (v.equals(rootVersion)) {
                 String msg = "Removal of " + versionName + " not allowed.";
-                log.error(msg);
+                log.debug(msg);
                 throw new VersionException(msg);
             }
 

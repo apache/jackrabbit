@@ -143,7 +143,7 @@ public class RepositoryConfig extends AbstractConfig {
         File[] files = wspRoot.listFiles();
         if (files == null) {
             String msg = "invalid repsitory home directory";
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         for (int i = 0; i < files.length; i++) {
@@ -155,7 +155,7 @@ public class RepositoryConfig extends AbstractConfig {
                 String wspName = wspConfig.getName();
                 if (wspConfigs.containsKey(wspName)) {
                     String msg = "duplicate workspace name: " + wspName;
-                    log.error(msg);
+                    log.debug(msg);
                     throw new RepositoryException(msg);
                 }
                 wspConfigs.put(wspName, wspConfig);
@@ -167,7 +167,7 @@ public class RepositoryConfig extends AbstractConfig {
         } else {
             if (!wspConfigs.containsKey(defaultWspName)) {
                 String msg = "no configuration found for default workspace: " + defaultWspName;
-                log.error(msg);
+                log.debug(msg);
                 throw new RepositoryException(msg);
             }
         }
@@ -194,7 +194,7 @@ public class RepositoryConfig extends AbstractConfig {
             return new RepositoryConfig(is, repHomeDir);
         } catch (IOException ioe) {
             String msg = "error while reading config file " + configFilePath;
-            log.error(msg, ioe);
+            log.debug(msg);
             throw new RepositoryException(msg, ioe);
         }
     }
@@ -289,14 +289,14 @@ public class RepositoryConfig extends AbstractConfig {
     public synchronized WorkspaceConfig createWorkspaceConfig(String name) throws RepositoryException {
         if (wspConfigs.containsKey(name)) {
             String msg = "A workspace with the specified name alreay exists";
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         // create the workspace folder (i.e. the workspace home directory)
         File wspFolder = new File(wspConfigRootDir, name);
         if (!wspFolder.mkdir()) {
             String msg = "Failed to create the workspace home directory: " + wspFolder.getPath();
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         // clone the workspace definition template
@@ -317,7 +317,7 @@ public class RepositoryConfig extends AbstractConfig {
             out.output(doc, fos);
         } catch (IOException ioe) {
             String msg = "Failed to create workspace configuration file: " + configFile.getPath();
-            log.error(msg, ioe);
+            log.debug(msg);
             throw new RepositoryException(msg, ioe);
         } finally {
             if (fos != null) {

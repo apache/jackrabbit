@@ -102,7 +102,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace";
-            log.error(msg, npde);
+            log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
         attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, NS_SV_PREFIX + ":" + NAME_ATTRIBUTE, CDATA_TYPE, nodeName);
@@ -146,7 +146,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace";
-            log.error(msg, npde);
+            log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
         AttributesImpl attrs = new AttributesImpl();
@@ -186,7 +186,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                             } catch (NoPrefixDeclaredException npde) {
                                 // should never get here...
                                 String msg = "internal error: encountered unregistered namespace";
-                                log.error(msg, npde);
+                                log.debug(msg);
                                 throw new RepositoryException(msg, npde);
                             }
                             char[] chars = path.toCharArray();

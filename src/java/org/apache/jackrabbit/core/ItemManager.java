@@ -111,7 +111,7 @@ public class ItemManager implements ItemLifeCycleListener {
                 root = createNodeInstance(rootState, rootNodeDef);
             } catch (ItemStateException ise) {
                 String msg = "failed to retrieve state of root node";
-                log.error(msg, ise);
+                log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
         }
@@ -363,17 +363,17 @@ public class ItemManager implements ItemLifeCycleListener {
             state = itemStateProvider.getItemState(parentId);
         } catch (NoSuchItemStateException nsise) {
             String msg = "no such item: " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new ItemNotFoundException(msg);
         } catch (ItemStateException ise) {
             String msg = "failed to retrieve item state of node " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
         if (!state.isNode()) {
             String msg = "can't list child nodes of property " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         NodeState nodeState = (NodeState) state;
@@ -419,17 +419,17 @@ public class ItemManager implements ItemLifeCycleListener {
             state = itemStateProvider.getItemState(parentId);
         } catch (NoSuchItemStateException nsise) {
             String msg = "no such item: " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new ItemNotFoundException(msg);
         } catch (ItemStateException ise) {
             String msg = "failed to retrieve item state of node " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
         if (!state.isNode()) {
             String msg = "can't list child nodes of property " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         NodeState nodeState = (NodeState) state;
@@ -473,17 +473,17 @@ public class ItemManager implements ItemLifeCycleListener {
             state = itemStateProvider.getItemState(parentId);
         } catch (NoSuchItemStateException nsise) {
             String msg = "no such item: " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new ItemNotFoundException(msg);
         } catch (ItemStateException ise) {
             String msg = "failed to retrieve item state of node " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
         if (!state.isNode()) {
             String msg = "can't list child properties of property " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         NodeState nodeState = (NodeState) state;
@@ -530,17 +530,17 @@ public class ItemManager implements ItemLifeCycleListener {
             state = itemStateProvider.getItemState(parentId);
         } catch (NoSuchItemStateException nsise) {
             String msg = "no such item: " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new ItemNotFoundException(msg);
         } catch (ItemStateException ise) {
             String msg = "failed to retrieve item state of node " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 
         if (!state.isNode()) {
             String msg = "can't list child properties of property " + parentId;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         NodeState nodeState = (NodeState) state;
@@ -569,7 +569,7 @@ public class ItemManager implements ItemLifeCycleListener {
             throw new ItemNotFoundException(id.toString());
         } catch (ItemStateException ise) {
             String msg = "failed to retrieve item state of item " + id;
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
 

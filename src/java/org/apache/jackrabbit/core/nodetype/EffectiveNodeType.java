@@ -124,7 +124,7 @@ public class EffectiveNodeType implements Cloneable {
                         if (cnda[i].isAutoCreate() || def.isAutoCreate()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '" + name + "' in node type '" + ntName + "'";
-                            log.error(msg);
+                            log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }
                     }
@@ -155,7 +155,7 @@ public class EffectiveNodeType implements Cloneable {
                         if (pda[i].isAutoCreate() || def.isAutoCreate()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '" + name + "' in node type '" + ntName + "'";
-                            log.error(msg);
+                            log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }
                     }
@@ -465,7 +465,7 @@ public class EffectiveNodeType implements Cloneable {
             getApplicableChildNodeDef(name, null);
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "internal eror: inconsistent node type";
-            log.error(msg, nsnte);
+            log.debug(msg);
             throw new ConstraintViolationException(msg, nsnte);
         }
     }
@@ -647,7 +647,7 @@ public class EffectiveNodeType implements Cloneable {
             ent = ntReg.getEffectiveNodeType(nodeTypeName);
         } catch (RepositoryException re) {
             String msg = "failed to check node type constraint";
-            log.error(msg, re);
+            log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
         for (int i = 0; i < requiredPrimaryTypes.length; i++) {
@@ -726,7 +726,7 @@ public class EffectiveNodeType implements Cloneable {
                         if (def.isAutoCreate() || existingDef.isAutoCreate()) {
                             // conflict
                             String msg = "The item definition for '" + name + "' in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existingDef.getDeclaringNodeType() + "': name collision with auto-create definition";
-                            log.error(msg);
+                            log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }
                     }
@@ -760,14 +760,14 @@ public class EffectiveNodeType implements Cloneable {
                                 && pd.isMultiple() == epd.isMultiple()) {
                             // conflict
                             String msg = "A property definition in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existing.getDeclaringNodeType() + "': ambiguos residual property definition";
-                            log.error(msg);
+                            log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }
                     } else {
                         // child node definition
                         // conflict
                         String msg = "A child node definition in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existing.getDeclaringNodeType() + "': ambiguos residual child node definition";
-                        log.error(msg);
+                        log.debug(msg);
                         throw new NodeTypeConflictException(msg);
                     }
                 }

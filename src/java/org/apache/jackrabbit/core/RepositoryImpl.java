@@ -140,7 +140,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             }
         } catch (FileSystemException fse) {
             String msg = "failed to create folder for repository meta data";
-            log.error(msg, fse);
+            log.debug(msg);
             throw new RepositoryException(msg, fse);
         }
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
@@ -180,7 +180,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
                     rootNodeUUID = new UUID(new String(chars)).toString();
                 } catch (Exception e) {
                     String msg = "failed to load persisted repository state";
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new RepositoryException(msg, e);
                 }
             } else {
@@ -224,13 +224,13 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
                     }
                 } catch (Exception e) {
                     String msg = "failed to persist repository state";
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new RepositoryException(msg, e);
                 }
             }
         } catch (FileSystemException fse) {
             String msg = "failed to access repository state";
-            log.error(msg, fse);
+            log.debug(msg);
             throw new RepositoryException(msg, fse);
         }
 
@@ -574,7 +574,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             }
         } catch (Exception e) {
             String msg = "failed to load repository properties";
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }
@@ -592,7 +592,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             }
         } catch (Exception e) {
             String msg = "failed to persist repository properties";
-            log.error(msg, e);
+            log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }
@@ -683,7 +683,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             return ses;
         } else {
             String msg = "login failed: incompatible credentials";
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
     }
@@ -892,7 +892,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
                     itemStateMgr = new SharedItemStateManager(getPersistenceManager(config.getPersistenceManagerConfig()), rootNodeUUID, ntReg);
                 } catch (ItemStateException ise) {
                     String msg = "failed to instantiate persistent item state manager";
-                    log.error(msg, ise);
+                    log.debug(msg);
                     throw new RepositoryException(msg, ise);
                 }
             }

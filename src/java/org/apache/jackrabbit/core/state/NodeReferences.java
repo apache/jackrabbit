@@ -220,7 +220,7 @@ public class NodeReferences implements Serializable {
                 return;
         }
         String msg = "illegal status: " + newStatus;
-        log.error(msg);
+        log.debug(msg);
         throw new IllegalArgumentException(msg);
     }
 }

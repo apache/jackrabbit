@@ -183,7 +183,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
         String s = in.readUTF();
         if (!state.getUUID().equals(s)) {
             String msg = "invalid serialized state: uuid mismatch";
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
 
@@ -480,7 +480,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (FileSystemException fse) {
             String msg = "failed to read node state: " + nodeFilePath;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
 
@@ -493,14 +493,14 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
                 return state;
             } catch (Exception e) {
                 String msg = "failed to read node state: " + uuid;
-                log.error(msg, e);
+                log.debug(msg);
                 throw new ItemStateException(msg, e);
             } finally {
                 in.close();
             }
         } catch (Exception e) {
             String msg = "failed to read node state: " + nodeFilePath;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -522,7 +522,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (FileSystemException fse) {
             String msg = "failed to read property state: " + propFilePath;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
 
@@ -538,7 +538,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (Exception e) {
             String msg = "failed to read property state: " + propFilePath;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -560,7 +560,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (FileSystemException fse) {
             String msg = "failed to load references: " + targetId;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
 
@@ -576,7 +576,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (Exception e) {
             String msg = "failed to load references: " + targetId;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -604,7 +604,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (Exception e) {
             String msg = "failed to write node state: " + uuid;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -631,7 +631,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (Exception e) {
             String msg = "failed to store property state: " + state.getParentUUID() + "/" + state.getName();
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -657,7 +657,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (Exception e) {
             String msg = "failed to store references: " + uuid;
-            log.error(msg, e);
+            log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
@@ -680,7 +680,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete node state: " + uuid;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }
@@ -717,7 +717,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete property state: " + state.getParentUUID() + "/" + state.getName();
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }
@@ -740,7 +740,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete references: " + uuid;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }
@@ -767,7 +767,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             }
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of item state: " + id;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }
@@ -787,7 +787,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             return refsFile.exists();
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of references: " + targetId;
-            log.error(msg, fse);
+            log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
     }

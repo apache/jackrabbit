@@ -95,7 +95,7 @@ class NodeTypeDefStore {
             root = doc.getRootElement();
         } catch (JDOMException jde) {
             String msg = "internal error: failed to parse persistent node type definitions";
-            log.error(msg, jde);
+            log.debug(msg);
             throw new RepositoryException(msg, jde);
         }
         // read namespace declarations of root element
@@ -226,7 +226,7 @@ class NodeTypeDefStore {
             qntName = QName.fromJCRName(sntName, nsResolver);
         } catch (BaseException e) {
             String msg = "invalid serialized node type definition [" + sntName + "]: invalid node type name: " + sntName;
-            log.error(msg, e);
+            log.debug(msg);
             throw new InvalidNodeTypeDefException(msg, e);
         }
         ntDef.setName(qntName);
@@ -246,7 +246,7 @@ class NodeTypeDefStore {
                         list.add(QName.fromJCRName(name, nsResolver));
                     } catch (BaseException e) {
                         String msg = "invalid serialized node type definition [" + sntName + "]: invalid supertype: " + name;
-                        log.error(msg, e);
+                        log.debug(msg);
                         throw new InvalidNodeTypeDefException(msg, e);
                     }
                 }
@@ -275,7 +275,7 @@ class NodeTypeDefStore {
                 ntDef.setPrimaryItemName(QName.fromJCRName(primaryItemName, nsResolver));
             } catch (BaseException e) {
                 String msg = "invalid serialized node type definition [" + sntName + "]: invalid primaryItemName: " + primaryItemName;
-                log.error(msg, e);
+                log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg, e);
             }
         }
@@ -295,7 +295,7 @@ class NodeTypeDefStore {
                     pd.setName(QName.fromJCRName(propName, nsResolver));
                 } catch (BaseException e) {
                     String msg = "invalid serialized node type definition [" + sntName + "]: invalid property name: " + propName;
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg, e);
                 }
             } else {
@@ -310,7 +310,7 @@ class NodeTypeDefStore {
                     pd.setRequiredType(type);
                 } catch (IllegalArgumentException e) {
                     String msg = "invalid serialized node type definition [" + sntName + "]: invalid type: " + typeName;
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg, e);
                 }
             }
@@ -329,7 +329,7 @@ class NodeTypeDefStore {
                             list1.add(ValueConstraint.create(type, constraint, nsResolver));
                         } catch (InvalidConstraintException e) {
                             String msg = "invalid serialized node type definition [" + sntName + "]: invalid constraint: " + constraint;
-                            log.error(msg, e);
+                            log.debug(msg);
                             throw new InvalidNodeTypeDefException(msg, e);
                         }
                     }
@@ -354,7 +354,7 @@ class NodeTypeDefStore {
                             list1.add(InternalValue.valueOf(defValue, defValType));
                         } catch (IllegalArgumentException e) {
                             String msg = "invalid serialized node type definition [" + sntName + "]: invalid defaultValue: " + defValue;
-                            log.error(msg, e);
+                            log.debug(msg);
                             throw new InvalidNodeTypeDefException(msg, e);
                         }
                     }
@@ -380,7 +380,7 @@ class NodeTypeDefStore {
                     pd.setOnParentVersion(OnParentVersionAction.valueFromName(onVersion));
                 } catch (IllegalArgumentException e) {
                     String msg = "invalid serialized node type definition [" + sntName + "]: invalid onVersion: " + onVersion;
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg, e);
                 }
             }
@@ -416,7 +416,7 @@ class NodeTypeDefStore {
                     cnd.setName(QName.fromJCRName(nodeName, nsResolver));
                 } catch (BaseException e) {
                     String msg = "invalid serialized node type definition [" + sntName + "]: invalid child node name: " + nodeName;
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg, e);
                 }
             } else {
@@ -437,7 +437,7 @@ class NodeTypeDefStore {
                             list1.add(QName.fromJCRName(name, nsResolver));
                         } catch (BaseException e) {
                             String msg = "invalid serialized node type definition [" + sntName + "]: invalid requiredPrimaryType: " + name;
-                            log.error(msg, e);
+                            log.debug(msg);
                             throw new InvalidNodeTypeDefException(msg, e);
                         }
                     }
@@ -453,7 +453,7 @@ class NodeTypeDefStore {
                     cnd.setDefaultPrimaryType(QName.fromJCRName(defaultPrimaryType, nsResolver));
                 } catch (BaseException e) {
                     String msg = "invalid serialized node type definition [" + sntName + "]: invalid defaultPrimaryType: " + defaultPrimaryType;
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg, e);
                 }
             }
@@ -474,7 +474,7 @@ class NodeTypeDefStore {
                     cnd.setOnParentVersion(OnParentVersionAction.valueFromName(onVersion));
                 } catch (IllegalArgumentException e) {
                     String msg = "invalid serialized node type definition [" + sntName + "]: invalid onVersion: " + onVersion;
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg, e);
                 }
             }
@@ -610,7 +610,7 @@ class NodeTypeDefStore {
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace";
-            log.error(msg, npde);
+            log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
     }

@@ -148,7 +148,7 @@ abstract class AbstractSAXEventGenerator {
             process(nodeState.getPropertyEntry(PROPNAME_PRIMARYTYPE), nodeState.getUUID(), level + 1);
         } else {
             String msg = "internal error: missing jcr:primaryType property on node " + nodeState.getUUID();
-            log.error(msg);
+            log.debug(msg);
             throw new RepositoryException(msg);
         }
         // jcr:mixinTypes
@@ -193,7 +193,7 @@ abstract class AbstractSAXEventGenerator {
                         childState = (NodeState) stateProvider.getItemState(childId);
                     } catch (ItemStateException ise) {
                         String msg = "internal error: failed to retrieve state of node " + childId;
-                        log.error(msg, ise);
+                        log.debug(msg);
                         throw new RepositoryException(msg, ise);
                     }
                     // recurse
@@ -223,7 +223,7 @@ abstract class AbstractSAXEventGenerator {
             leaving(propState, level);
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to retrieve state of property " + propId;
-            log.error(msg, ise);
+            log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
     }

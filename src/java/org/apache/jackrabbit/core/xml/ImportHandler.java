@@ -147,7 +147,7 @@ public class ImportHandler extends DefaultHandler {
                 } catch (BaseException e) {
                     // should never happen...
                     String msg = "internal error: failed to parse/resolve element name " + qName;
-                    log.error(msg, e);
+                    log.debug(msg);
                     throw new SAXException(msg, e);
                 }
             }

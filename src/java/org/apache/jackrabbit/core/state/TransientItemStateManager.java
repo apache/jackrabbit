@@ -156,7 +156,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         // check cache
         if (isCached(id)) {
             String msg = "there's already a node state instance with id " + id;
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
 
@@ -178,7 +178,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         // check cache
         if (isCached(id)) {
             String msg = "there's already a node state instance with id " + id;
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
 
@@ -201,7 +201,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         // check cache
         if (isCached(id)) {
             String msg = "there's already a property state instance with id " + id;
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
 
@@ -223,7 +223,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         // check cache
         if (isCached(id)) {
             String msg = "there's already a property state instance with id " + id;
-            log.error(msg);
+            log.debug(msg);
             throw new ItemStateException(msg);
         }
 
