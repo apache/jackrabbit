@@ -1149,24 +1149,53 @@ public final class Path {
         }
     }
 
+    /**
+     * Object representation of a single JCR path element. A PathElement
+     * object contains the qualified name and optional index of a single
+     * JCR path element.
+     * <p>
+     * Once created, a PathElement object is immutable.
+     */
     public static class PathElement {
 
+        /** Qualified name of the path element. */
         private final QName name;
 
         /**
-         * 1-based index; 0 if not explicitly specified (which is equivalent to
-         * specifying 1)
+         * Optional index of the path element. Set to zero, if not
+         * explicitly specified, otherwise contains the 1-based index.
          */
         private final int index;
 
+        /**
+         * Creates a path element with the given qualified name.
+         * The created path element does not contain an explicit index.
+         *
+         * @param namespaceURI namespace URI
+         * @param localName local name
+         */
         private PathElement(String namespaceURI, String localName) {
             this(new QName(namespaceURI, localName));
         }
 
+        /**
+         * Creates a path element with the given qualified name and index.
+         *
+         * @param namespaceURI namespace URI
+         * @param localName local name
+         * @param index index
+         */
         private PathElement(String namespaceURI, String localName, int index) {
             this(new QName(namespaceURI, localName), index);
         }
 
+        /**
+         * Creates a path element with the given qualified name.
+         * The created path element does not contain an explicit index.
+         *
+         * @param name qualified name
+         * @throws IllegalArgumentException if the name is <code>null</code>
+         */
         private PathElement(QName name) {
             if (name == null) {
                 throw new IllegalArgumentException("name must not be null");
@@ -1175,6 +1204,13 @@ public final class Path {
             this.index = 0;
         }
 
+        /**
+         * Creates a path element with the given qualified name and index.
+         *
+         * @param name qualified name
+         * @param index index
+         * @throws IllegalArgumentException if the name is <code>null</code>
+         */
         private PathElement(QName name, int index) {
             if (name == null) {
                 throw new IllegalArgumentException("name must not be null");
@@ -1187,9 +1223,9 @@ public final class Path {
         }
 
         /**
-         * Returns the name of this path element.
+         * Returns the qualified name of this path element.
          *
-         * @return the name
+         * @return qualified name
          */
         public QName getName() {
             return name;
@@ -1249,6 +1285,17 @@ public final class Path {
             return !denotesRoot() && !denotesParent() && !denotesCurrent();
         }
 
+        /**
+         * Returns the JCR name representation of this path element.
+         * Note that strictly speaking the returned value is in fact
+         * a JCR relative path instead of a JCR name, as it contains
+         * the index value if the index is greater than one.
+         *
+         * @param resolver namespace resolver
+         * @return JCR name representation of the path element
+         * @throws NoPrefixDeclaredException if the namespace of the path
+         *                                   element name can not be resolved
+         */
         public String toJCRName(NamespaceResolver resolver) throws NoPrefixDeclaredException {
             StringBuffer sb = new StringBuffer();
             // name
@@ -1268,6 +1315,14 @@ public final class Path {
             return sb.toString();
         }
 
+        /**
+         * Returns a string representation of this path element. Note that
+         * the path element name is expressed using the <code>{uri}name</code>
+         * syntax. Use the {@link #toJCRName(NamespaceResolver) toJCRName}
+         * method to get the prefixed string representation of the path element.
+         *
+         * @return string representation of the path element
+         */
         public String toString() {
             StringBuffer sb = new StringBuffer();
             // name
@@ -1282,6 +1337,15 @@ public final class Path {
             return sb.toString();
         }
 
+        /**
+         * Parses the given path element string into a path element object.
+         *
+         * @param s path element string
+         * @return path element object
+         * @throws IllegalArgumentException if the given path element string
+         *                                  is <code>null</code> or if its
+         *                                  format is invalid
+         */
         public static PathElement fromString(String s) {
             if (s == null) {
                 throw new IllegalArgumentException("null PathElement literal");
@@ -1315,6 +1379,11 @@ public final class Path {
             }
         }
 
+        /**
+         * Computes a hash code for this path element.
+         *
+         * @return hash code
+         */
         public int hashCode() {
             // @todo treat index==0 as index==1?
             int h = 17;
@@ -1323,6 +1392,14 @@ public final class Path {
             return h;
         }
 
+        /**
+         * Check for path element equality. Returns true if the given
+         * object is a PathElement and contains the same name and index
+         * as this one.
+         *
+         * @param obj the object to compare with
+         * @return <code>true</code> if the path elements are equal
+         */
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
