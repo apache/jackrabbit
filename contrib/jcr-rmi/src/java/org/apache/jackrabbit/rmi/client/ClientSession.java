@@ -166,7 +166,7 @@ public class ClientSession extends ClientObject implements Session {
     public Item getItem(String path) throws PathNotFoundException,
             RepositoryException {
         try {
-            return factory.getItem(this, remote.getItem(path));
+            return getItem(this, remote.getItem(path));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
