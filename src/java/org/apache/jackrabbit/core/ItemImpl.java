@@ -1060,6 +1060,15 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      * @see Item#remove
      */
     public void remove() throws VersionException, LockException, RepositoryException {
+        internalRemove(false);
+    }
+
+    /**
+     * @see Item#remove
+     */
+    protected void internalRemove(boolean noChecks)
+            throws VersionException, LockException, RepositoryException {
+
         // check state of this instance
         sanityCheck();
 
@@ -1077,7 +1086,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
             NodeDef def = node.getDefinition();
             // check protected flag
-            if (def.isProtected()) {
+            if (!noChecks && def.isProtected()) {
                 String msg = safeGetJCRPath() + ": cannot remove a protected node";
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
@@ -1086,7 +1095,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             PropertyImpl prop = (PropertyImpl) this;
             PropertyDef def = prop.getDefinition();
             // check protected flag
-            if (def.isProtected()) {
+            if (!noChecks && def.isProtected()) {
                 String msg = safeGetJCRPath() + ": cannot remove a protected property";
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
@@ -1096,14 +1105,14 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         NodeImpl parentNode = (NodeImpl) getParent();
 
         // verify that parent node is checked-out
-        if (!parentNode.internalIsCheckedOut()) {
+        if (!noChecks && !parentNode.internalIsCheckedOut()) {
             String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag of parent node
-        if (parentNode.getDefinition().isProtected()) {
+        if (!noChecks && parentNode.getDefinition().isProtected()) {
             String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);

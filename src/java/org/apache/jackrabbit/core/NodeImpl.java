@@ -403,11 +403,15 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(msg);
         }
         // make sure this node is checked-out
+        /*
+         to internal place to check this
+
         if (!internalIsCheckedOut()) {
             String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath() + "/" + name.toString();
             log.debug(msg);
             throw new VersionException(msg);
         }
+        */
 
         String parentUUID = ((NodeState) state).getUUID();
 
@@ -2664,10 +2668,133 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeImpl srcNode = getCorrespondingNode(srcSession);
         if (srcNode == null) {
-            throw new ItemNotFoundException("No corresponding node for " + safeGetJCRPath());
+            /*
+             * If this node does not have a corresponding node in the workspace
+             * <code>srcWorkspaceName</code>, then the <code>update</code> method
+             * has no effect (it does not traverse down the subtree).
+            */
+            return;
         }
-        // not sure, if clone overrides 'this' node.
-        session.getWorkspace().clone(srcWorkspaceName, srcNode.getPath(), getPath(), true);
+
+        /*
+         * If this node does have a corresponding node in the workspace <code>srcWorkspaceName</code>,
+         * then this method traverses down the subtree rooted at this node and
+         * replaces the state of each node in the subtree rooted at this node with that
+         * of its corresponding node in the specified source workspace.
+         */
+        boolean removeExisting = false;
+        boolean replaceExisting = true;
+        try {
+            internalUpdate(srcNode, removeExisting, replaceExisting);
+        } catch (RepositoryException e) {
+            session.refresh(false);
+            throw e;
+        }
+        session.save();
+    }
+
+    /**
+     * updates this node with the state given by <code>srcNode</code>
+     * @param srcNode
+     * @param removeExisting
+     * @param replaceExisting
+     * @throws RepositoryException
+     */
+    private void internalUpdate(NodeImpl srcNode, boolean removeExisting, boolean replaceExisting)
+            throws RepositoryException {
+        /*
+         * The "state" of the node in this context means the set of properties and
+         * child nodes it has. In other words, when a node is updated, its set of
+         * properties and child nodes is replaced by that of its corresponding node in the
+         * source workspace. One repercussion of this is that if a node further down the
+         * subtree does not have a corresponding node, then that node is removed (thus
+         * aligning the state of its parent with <i>its</i> correspondee in the other
+         * workspace).
+         */
+
+        // update the properties
+        PropertyIterator iter = getProperties();
+        while (iter.hasNext()) {
+            PropertyImpl p = (PropertyImpl) iter.nextProperty();
+            if (!srcNode.hasProperty(p.getQName())) {
+                p.internalRemove(true);
+            }
+        }
+        iter = srcNode.getProperties();
+        while (iter.hasNext()) {
+            PropertyImpl p = (PropertyImpl) iter.nextProperty();
+            // ignore system types
+            if (p.getQName().equals(JCR_PRIMARYTYPE)
+                || p.getQName().equals(JCR_MIXINTYPES)
+                || p.getQName().equals(JCR_UUID)) {
+                continue;
+            }
+            if (p.getDefinition().isMultiple()) {
+                internalSetProperty(p.getQName(), p.internalGetValues());
+            } else {
+                internalSetProperty(p.getQName(), p.internalGetValue());
+            }
+        }
+
+        // update the nodes. remove all dst nodes first
+        NodeIterator niter = getNodes();
+        while (niter.hasNext()) {
+            ((NodeImpl) niter.nextNode()).internalRemove(true);
+        }
+        // add src ones
+        niter = srcNode.getNodes();
+        while (niter.hasNext()) {
+            NodeImpl child = (NodeImpl) niter.nextNode();
+            NodeImpl dstNode = null;
+            String uuid = child.internalGetUUID();
+            if (child.isNodeType(MIX_REFERENCEABLE)) {
+                // if child is referenceable, check if correspondance exist in this workspace
+                try {
+                    dstNode = (NodeImpl) session.getNodeByUUID(uuid);
+                    if (removeExisting) {
+                        // get applicable definition of target node at new location
+                        NodeTypeImpl nt = (NodeTypeImpl) dstNode.getPrimaryNodeType();
+                        NodeDefImpl newTargetDef;
+                        try {
+                            newTargetDef = ((NodeImpl) getParent()).getApplicableChildNodeDef(child.getQName(), nt.getQName());
+                        } catch (RepositoryException re) {
+                            String msg = dstNode.safeGetJCRPath() + ": no definition found in parent node's node type for new node";
+                            log.debug(msg);
+                            throw new ConstraintViolationException(msg, re);
+                        }
+
+                        // add target to new parent and remove from old one
+                        createChildNodeLink(child.getQName(), uuid);
+                        ((NodeImpl) dstNode.getParent()).removeChildNode(child.getQName(), child.getIndex() == 0 ? 1 : child.getIndex());
+                        // change definition of target if necessary
+                        NodeDefImpl oldTargetDef = (NodeDefImpl) dstNode.getDefinition();
+                        NodeDefId oldTargetDefId = new NodeDefId(oldTargetDef.unwrap());
+                        NodeDefId newTargetDefId = new NodeDefId(newTargetDef.unwrap());
+                        if (!oldTargetDefId.equals(newTargetDefId)) {
+                            dstNode.onRedefine(newTargetDefId);
+                        }
+                    } else if (replaceExisting) {
+                        // node exists outside of this update tree, so continue there
+                    } else {
+                        throw new ItemExistsException("Unable to update node: " + dstNode.safeGetJCRPath());
+                    }
+                } catch (ItemNotFoundException e) {
+                    // does not exist
+                }
+            } else {
+                // if child is not referenceable, adjust state
+                uuid = null;
+            }
+            if (dstNode == null) {
+                dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), uuid);
+                // add mixins
+                NodeType[] mixins = child.getMixinNodeTypes();
+                for (int i=0; i<mixins.length; i++) {
+                    dstNode.addMixin(mixins[i].getName());
+                }
+            }
+            dstNode.internalUpdate(child, removeExisting, replaceExisting);
+        }
     }
 
     /**
@@ -3278,29 +3405,12 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // adjust mixins
-        QName[] values = freeze.getFrozenMixinTypes();
-        NodeType[] mixins = getMixinNodeTypes();
-        for (int i = 0; i < values.length; i++) {
-            boolean found = false;
-            for (int j = 0; j < mixins.length; j++) {
-                if (values[i].equals(((NodeTypeImpl) mixins[j]).getQName())) {
-                    // clear
-                    mixins[j] = null;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                addMixin(values[i]);
-            }
-        }
-        // remove additional mixins
-        for (int i = 0; i < mixins.length; i++) {
-            if (mixins[i] != null) {
-                removeMixin(mixins[i].getName());
-            }
-        }
-
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        QName[] mixinNames = freeze.getFrozenMixinTypes();
+        Set mixins = new HashSet(Arrays.asList(mixinNames));
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        thisState.setMixinTypeNames(mixins);
+        internalSetProperty(JCR_MIXINTYPES, InternalValue.create(mixinNames));
         // copy frozen properties
         PropertyState[] props = freeze.getFrozenProperties();
         HashSet propNames = new HashSet();
@@ -3327,6 +3437,18 @@ public class NodeImpl extends ItemImpl implements Node {
                     || prop.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
                 if (!propNames.contains(prop.getQName())) {
                     removeChildProperty(prop.getQName());
+                }
+            }
+        }
+
+        // adjust autocreate properties, that do not exist yet
+        for (int j=0; j<mixinNames.length; j++) {
+            NodeTypeImpl mixin = ntMgr.getNodeType(mixinNames[j]);
+            PropertyDef[] pda = mixin.getAutoCreatePropertyDefs();
+            for (int i = 0; i < pda.length; i++) {
+                PropertyDefImpl pd = (PropertyDefImpl) pda[i];
+                if (!hasProperty(pd.getQName())) {
+                    createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
                 }
             }
         }
