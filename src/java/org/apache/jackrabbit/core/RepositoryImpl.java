@@ -20,14 +20,14 @@ import org.apache.commons.collections.BeanMap;
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PMContext;
@@ -53,7 +53,8 @@ import java.util.Properties;
 /**
  * A <code>RepositoryImpl</code> ...
  */
-public class RepositoryImpl implements Repository, SessionListener, EventListener {
+public class RepositoryImpl implements Repository, SessionListener,
+        EventListener, Constants {
 
     private static Logger log = Logger.getLogger(RepositoryImpl.class);
 
@@ -85,9 +86,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     private static final String REP_VENDOR_URL = "http://www.apache.org/";
     private static final String REP_NAME = "Jackrabbit";
     private static final String REP_VERSION = "0.16.2";
-
-    // system root location (jcr:system)
-    public static final QName SYSTEM_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "system");
 
     private String rootNodeUUID;
 
@@ -261,13 +259,12 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
 
         // init version manager
         VersioningConfig vConfig = repConfig.getVersioningConfig();
-        PersistenceManager pm = createPersistenceManager(
-            vConfig.getHomeDir(),
-            vConfig.getFileSystem(),
-            vConfig.getPersistenceManagerConfig(),
-            rootNodeUUID,
-            nsReg,
-            ntReg);
+        PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
+                vConfig.getFileSystem(),
+                vConfig.getPersistenceManagerConfig(),
+                rootNodeUUID,
+                nsReg,
+                ntReg);
         pvMgr = new NativePVM(pm, getNodeTypeRegistry());
         vMgr = new VersionManagerImpl(pvMgr, VERSION_STORAGE_NODE_UUID);
 
@@ -311,14 +308,13 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
          * for now, we just create a /jcr:system node in every workspace
          */
         NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
-        if (!rootNode.hasNode(SYSTEM_ROOT_NAME)) {
-            NodeTypeImpl nt = sysSession.getNodeTypeManager().getNodeType(NodeTypeRegistry.REP_SYSTEM);
-            NodeImpl sysRoot = rootNode.internalAddChildNode(SYSTEM_ROOT_NAME, nt, SYSTEM_ROOT_NODE_UUID);
+        if (!rootNode.hasNode(JCR_SYSTEM)) {
+            NodeTypeImpl nt = sysSession.getNodeTypeManager().getNodeType(REP_SYSTEM);
+            NodeImpl sysRoot = rootNode.internalAddChildNode(JCR_SYSTEM, nt, SYSTEM_ROOT_NODE_UUID);
             // add version storage
-            nt = sysSession.getNodeTypeManager().getNodeType(NodeTypeRegistry.REP_VERSION_STORAGE);
-            sysRoot.internalAddChildNode(VersionManager.NODENAME_HISTORY_ROOT, nt, VERSION_STORAGE_NODE_UUID);
+            nt = sysSession.getNodeTypeManager().getNodeType(REP_VERSIONSTORAGE);
+            sysRoot.internalAddChildNode(JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_UUID);
             rootNode.save();
-
         }
 
         // register the repository as event listener for keeping repository statistics
@@ -621,7 +617,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new IllegalStateException("repository instance has been shut down");
         }
 
-        return ((NodeImpl) session.getRootNode()).getNode(SYSTEM_ROOT_NAME);
+        return ((NodeImpl) session.getRootNode()).getNode(JCR_SYSTEM);
     }
 
     /**
@@ -631,11 +627,11 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      * @throws RepositoryException if the persistence manager could not be instantiated/initialized
      */
     private static PersistenceManager createPersistenceManager(File homeDir,
-                                                              FileSystem fs,
-                                                              PersistenceManagerConfig pmConfig,
-                                                              String rootNodeUUID,
-                                                              NamespaceRegistry nsReg,
-                                                              NodeTypeRegistry ntReg)
+                                                               FileSystem fs,
+                                                               PersistenceManagerConfig pmConfig,
+                                                               String rootNodeUUID,
+                                                               NamespaceRegistry nsReg,
+                                                               NodeTypeRegistry ntReg)
             throws RepositoryException {
         String className = pmConfig.getClassName();
         Map params = pmConfig.getParameters();
@@ -862,11 +858,10 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
          * @return the workspace persistence manager
          * @throws RepositoryException if the persistence manager could not be instantiated/initialized
          */
-        synchronized PersistenceManager getPersistenceManager(PersistenceManagerConfig pmConfig) 
+        synchronized PersistenceManager getPersistenceManager(PersistenceManagerConfig pmConfig)
                 throws RepositoryException {
             if (persistMgr == null) {
-                persistMgr = RepositoryImpl.createPersistenceManager(
-                        new File(config.getHomeDir()),
+                persistMgr = RepositoryImpl.createPersistenceManager(new File(config.getHomeDir()),
                         config.getFileSystem(),
                         pmConfig,
                         rootNodeUUID,

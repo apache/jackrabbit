@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
@@ -59,7 +60,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
         try {
             if (ntName == null) {
                 // return "nt:unstructured"
-                return ntMgr.getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED);
+                return ntMgr.getNodeType(Constants.NT_UNSTRUCTURED);
             } else {
                 return ntMgr.getNodeType(ntName);
             }
@@ -78,7 +79,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
         try {
             if (ntNames == null || ntNames.length == 0) {
                 // return "nt:base"
-                return new NodeType[]{ntMgr.getNodeType(NodeTypeRegistry.NT_BASE)};
+                return new NodeType[]{ntMgr.getNodeType(Constants.NT_BASE)};
             } else {
                 NodeType[] nodeTypes = new NodeType[ntNames.length];
                 for (int i = 0; i < ntNames.length; i++) {

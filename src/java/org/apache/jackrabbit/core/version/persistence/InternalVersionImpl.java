@@ -16,11 +16,15 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.*;
+import org.apache.jackrabbit.core.version.InternalFrozenNode;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersionItem;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -32,7 +36,8 @@ import java.util.HashSet;
 /**
  *
  */
-class InternalVersionImpl extends InternalVersionItemImpl implements InternalVersion {
+class InternalVersionImpl extends InternalVersionItemImpl
+        implements InternalVersion, Constants {
 
     /**
      * the list/cache of predecessors (values == InternalVersion)
@@ -95,7 +100,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
         versionId = (String) node.getPropertyValue(NativePVM.PROPNAME_VERSION_ID).internalValue();
 
         // init internal values
-        InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_CREATED);
+        InternalValue[] values = node.getPropertyValues(JCR_CREATED);
         if (values != null) {
             created = (Calendar) values[0].internalValue();
         }
@@ -105,7 +110,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
         } else {
             name = null; // ????
         }
-        isRoot = name.equals(VersionManager.NODENAME_ROOTVERSION);
+        isRoot = name.equals(JCR_ROOTVERSION);
     }
 
     public String getId() {
@@ -141,7 +146,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
     public InternalFrozenNode getFrozenNode() {
         // get frozen node
         try {
-            NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(VersionManager.NODENAME_FROZEN, 1);
+            NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(JCR_FROZENNODE, 1);
             if (entry == null) {
                 throw new InternalError("version has no frozen node: " + getId());
             }
@@ -165,7 +170,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      * successor list.
      */
     void resolvePredecessors() {
-        InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_PREDECESSORS);
+        InternalValue[] values = node.getPropertyValues(JCR_PREDECESSORS);
         if (values != null) {
             for (int i = 0; i < values.length; i++) {
                 InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(values[i].internalValue().toString());
@@ -206,7 +211,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
         for (int i = 0; i < values.length; i++) {
             values[i] = InternalValue.create(new UUID(((InternalVersion) predecessors.get(i)).getId()));
         }
-        node.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, values);
+        node.setPropertyValues(JCR_PREDECESSORS, PropertyType.STRING, values);
     }
 
     /**
@@ -221,11 +226,11 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
             succ[i].internalDetachPredecessor(this);
         }
 
-	// detach cached successors from preds
-	InternalVersionImpl[] preds = (InternalVersionImpl[]) getPredecessors();
-	for (int i=0; i<preds.length; i++) {
-	    preds[i].internalDetachSuccessor(this);
-	}
+        // detach cached successors from preds
+        InternalVersionImpl[] preds = (InternalVersionImpl[]) getPredecessors();
+        for (int i = 0; i < preds.length; i++) {
+            preds[i].internalDetachSuccessor(this);
+        }
 
         // clear properties
         successors.clear();
@@ -252,7 +257,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
         // attach v's predecessors
         predecessors.addAll(Arrays.asList(v.getPredecessors()));
         storePredecessors();
-	node.store();
+        node.store();
     }
 
     /**

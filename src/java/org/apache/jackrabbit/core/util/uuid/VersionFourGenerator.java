@@ -47,7 +47,7 @@ import java.util.Random;
 /**
  * XXX begin modification by stefan@apache.org
  */
-//public final class VersionFourGenerator implements IdentifierGenerator, Constants {
+//public final class VersionFourGenerator implements IdentifierGenerator, QueryConstants {
 public final class VersionFourGenerator implements Constants {
     /** XXX end modification by stefan@apache.org */
 

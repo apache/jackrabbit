@@ -16,24 +16,27 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.core.version.*;
+import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.*;
-import org.apache.commons.collections.ReferenceMap;
+import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersionItem;
+import org.apache.jackrabbit.core.version.PersistentVersionManager;
+import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * This Class implements the persistent part of the versioning. the
  * current implementation uses the 'normal' repository content as storage.
- * <p>
+ * <p/>
  * although the nodes need to be mapped again virtually in the real content,
  * the persistent nodes use a different structure as exposed later.
  * each versioning element (version history, version, freezes) is stored in a
@@ -41,51 +44,51 @@ import java.util.Iterator;
  * a persistentnodestate that represents a version, is the UUID of that version.
  * the hierarchy is somewhat similar, thus histories contain versions, contain
  * frozen nodes, etc.
- * <p>
+ * <p/>
  * on startup, the entire structure is traversed, in order to get a mapping
  * from real to persistent uuids.
- * <p>
+ * <p/>
  * todo: the persistence is not synchronized yet and could lead to multi-threading issues
  */
-public class NativePVM implements PersistentVersionManager {
+public class NativePVM implements PersistentVersionManager, Constants {
 
     /**
      * the logger
      */
-    private static Logger log = Logger.getLogger(PersistentVersionManager.class);
+    private static Logger log = Logger.getLogger(NativePVM.class);
 
     /**
      * root path for version storage
      */
-    public static final QName VERSION_HISTORY_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "persistentVersionStorage");
+    public static final QName VERSION_HISTORY_ROOT_NAME = new QName(NS_JCR_URI, "persistentVersionStorage");
     /**
      * name of the 'jcr:historyId' property
      */
-    public static final QName PROPNAME_HISTORY_ID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "historyId");
+    public static final QName PROPNAME_HISTORY_ID = new QName(NS_JCR_URI, "historyId");
     /**
      * name of the 'jcr:versionableId' property
      */
-    public static final QName PROPNAME_VERSIONABLE_ID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionableId");
+    public static final QName PROPNAME_VERSIONABLE_ID = new QName(NS_JCR_URI, "versionableId");
     /**
      * name of the 'jcr:versionId' property
      */
-    public static final QName PROPNAME_VERSION_ID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionId");
+    public static final QName PROPNAME_VERSION_ID = new QName(NS_JCR_URI, "versionId");
     /**
      * name of the 'jcr:versionName' property
      */
-    public static final QName PROPNAME_VERSION_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionName");
+    public static final QName PROPNAME_VERSION_NAME = new QName(NS_JCR_URI, "versionName");
     /**
      * name of the 'jcr:versionLabels' node
      */
-    public static final QName NODENAME_VERSION_LABELS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
+    public static final QName NODENAME_VERSION_LABELS = new QName(NS_JCR_URI, "versionLabels");
     /**
      * name of the 'jcr:name' property
      */
-    public static final QName PROPNAME_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "name");
+    public static final QName PROPNAME_NAME = new QName(NS_JCR_URI, "name");
     /**
      * name of the 'jcr:version' property
      */
-    public static final QName PROPNAME_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "version");
+    public static final QName PROPNAME_VERSION = new QName(NS_JCR_URI, "version");
 
     /**
      * the id of the persisten root node
@@ -95,22 +98,22 @@ public class NativePVM implements PersistentVersionManager {
     /**
      * The nodetype name of a persistent version
      */
-    protected static final QName NT_REP_VERSION = new QName(NamespaceRegistryImpl.NS_REP_URI, "version");
+    protected static final QName NT_REP_VERSION = new QName(NS_REP_URI, "version");
 
     /**
      * The nodetype name of a presistent version history
      */
-    protected static final QName NT_REP_VERSION_HISTORY = new QName(NamespaceRegistryImpl.NS_REP_URI, "versionHistory");
+    protected static final QName NT_REP_VERSION_HISTORY = new QName(NS_REP_URI, "versionHistory");
 
     /**
      * the nodetype name of a persistent frozen node
      */
-    protected static final QName NT_REP_FROZEN = new QName(NamespaceRegistryImpl.NS_REP_URI, "frozen");
+    protected static final QName NT_REP_FROZEN = new QName(NS_REP_URI, "frozen");
 
     /**
      * the nodetype name of a persistent frozen history
      */
-    protected static final QName NT_REP_FROZEN_HISTORY = new QName(NamespaceRegistryImpl.NS_REP_URI, "frozenVersionHistory");
+    protected static final QName NT_REP_FROZEN_HISTORY = new QName(NS_REP_URI, "frozenVersionHistory");
 
     /**
      * the persistent root node of the version histories
@@ -137,7 +140,7 @@ public class NativePVM implements PersistentVersionManager {
      * mapping from virtual uuids to persistent ids of the persistent nodes
      * key=internalId, value=PersistentId
      */
-    private HashMap idsByInternal= new HashMap();
+    private HashMap idsByInternal = new HashMap();
 
     /**
      * map of versioned uuids. key=versionedUUID, value=externalId
@@ -150,7 +153,7 @@ public class NativePVM implements PersistentVersionManager {
     private Map items = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
     /**
-     * Creates a new PersistentVersionManager.
+     * Creates a new NativePVM.
      *
      * @param pMgr
      * @param ntReg
@@ -167,7 +170,7 @@ public class NativePVM implements PersistentVersionManager {
             historyRoot = new PersistentNode(stateMgr, nodeState);
             initVirtualIds(historyRoot.getState());
             long t2 = System.currentTimeMillis();
-            log.info("loaded " + idsByExternal.size() + " virtual ids in " + (t2-t1) + "ms.");
+            log.info("loaded " + idsByExternal.size() + " virtual ids in " + (t2 - t1) + "ms.");
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to initialize PersistentVersionManager: " + e.toString(), e);
         }
@@ -177,6 +180,7 @@ public class NativePVM implements PersistentVersionManager {
      * Close this persistence version manager. After having closed a persistence
      * manager, further operations on this object are treated as illegal
      * and throw
+     *
      * @throws Exception if an error occurs
      */
     public void close() throws Exception {
@@ -187,6 +191,7 @@ public class NativePVM implements PersistentVersionManager {
 
     /**
      * initializes the internal item ids
+     *
      * @param parent
      * @throws RepositoryException
      * @throws ItemStateException
@@ -204,6 +209,7 @@ public class NativePVM implements PersistentVersionManager {
 
     /**
      * initializes the internal item ids
+     *
      * @param realUUID
      * @param state
      * @throws ItemStateException
@@ -213,7 +219,7 @@ public class NativePVM implements PersistentVersionManager {
             throws ItemStateException, RepositoryException {
         PersistentId id = new PersistentId(realUUID, state);
         if (id.type != PersistentId.TYPE_UNDEFINED) {
-            synchronized(idsByExternal) {
+            synchronized (idsByExternal) {
                 idsByExternal.put(id.externalId, id);
                 idsByInternal.put(id.internalId, id);
             }
@@ -229,17 +235,19 @@ public class NativePVM implements PersistentVersionManager {
 
     /**
      * returns the persistentid for a given external uuid
+     *
      * @param uuid
      * @return
      */
     private PersistentId getIdByExternal(String uuid) {
-        synchronized(idsByExternal) {
+        synchronized (idsByExternal) {
             return (PersistentId) idsByExternal.get(uuid);
         }
     }
 
     /**
      * returns the persustentid for a given internal uuid
+     *
      * @param uuid
      * @return
      */
@@ -249,12 +257,13 @@ public class NativePVM implements PersistentVersionManager {
 
     /**
      * returns the persustentid for a give internal uuid and item type
+     *
      * @param uuid
      * @param type
      * @return
      */
     private PersistentId getIdByExternal(String uuid, int type) {
-        synchronized(idsByExternal) {
+        synchronized (idsByExternal) {
             PersistentId id = (PersistentId) idsByExternal.get(uuid);
             return id != null && id.type == type ? id : null;
         }
@@ -263,6 +272,7 @@ public class NativePVM implements PersistentVersionManager {
     /**
      * Retrusn the version history that corresponds to the versionable node of
      * the given uuid.
+     *
      * @param uuid
      * @return
      */
@@ -284,7 +294,7 @@ public class NativePVM implements PersistentVersionManager {
 
         // check if version history for that node already exists
         InternalVersionHistoryImpl hist = getHistoryByVersionableUUID(node.internalGetUUID());
-        if (hist!=null) {
+        if (hist != null) {
             return hist;
         }
 
@@ -294,15 +304,15 @@ public class NativePVM implements PersistentVersionManager {
             // create deep path
             String uuid = UUID.randomUUID().toString();
             PersistentNode root = historyRoot;
-            for (int i=0; i<3; i++) {
-                QName name = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid.substring(i*2, i*2+2));
+            for (int i = 0; i < 3; i++) {
+                QName name = new QName(NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
                 if (!root.hasNode(name)) {
-                    root.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
+                    root.addNode(name, NT_UNSTRUCTURED);
                     root.store();
                 }
                 root = root.getNode(name, 1);
             }
-            QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid);
+            QName historyNodeName = new QName(NS_DEFAULT_URI, uuid);
 
             // create new history node in the persistent state
             hist = InternalVersionHistoryImpl.create(this, root, uuid, historyNodeName, node);
@@ -315,7 +325,7 @@ public class NativePVM implements PersistentVersionManager {
             throw new RepositoryException(e);
         }
 
-        log.info("Created new version history " + hist.getId()+ " for " + node.safeGetJCRPath() + ". NumHistories=" + versionedUUIDs.size());
+        log.info("Created new version history " + hist.getId() + " for " + node.safeGetJCRPath() + ". NumHistories=" + versionedUUIDs.size());
         return hist;
     }
 
@@ -330,7 +340,7 @@ public class NativePVM implements PersistentVersionManager {
             throws RepositoryException {
 
         PersistentId pid = getIdByExternal(histId, PersistentId.TYPE_HISTORY);
-        return pid==null ? null : (InternalVersionHistory) getItem(pid);
+        return pid == null ? null : (InternalVersionHistory) getItem(pid);
     }
 
     /**
@@ -387,7 +397,7 @@ public class NativePVM implements PersistentVersionManager {
             throws RepositoryException {
 
         PersistentId pid = getIdByExternal(versionId, PersistentId.TYPE_VERSION);
-        return pid==null ? null : (InternalVersion) getItem(pid);
+        return pid == null ? null : (InternalVersion) getItem(pid);
     }
 
     /**
@@ -402,6 +412,7 @@ public class NativePVM implements PersistentVersionManager {
 
     /**
      * checks, if the item with the given external id exists
+     *
      * @param externalId
      * @return
      */
@@ -411,6 +422,7 @@ public class NativePVM implements PersistentVersionManager {
 
     /**
      * returns the item referred by the external id
+     *
      * @param externalId
      * @return
      * @throws RepositoryException
@@ -418,11 +430,12 @@ public class NativePVM implements PersistentVersionManager {
     public InternalVersionItem getItemByExternal(String externalId)
             throws RepositoryException {
         PersistentId pid = getIdByExternal(externalId);
-        return pid==null ? null : getItem(pid);
+        return pid == null ? null : getItem(pid);
     }
 
     /**
      * returns the item referred by the internal id
+     *
      * @param internalId
      * @return
      * @throws RepositoryException
@@ -430,11 +443,12 @@ public class NativePVM implements PersistentVersionManager {
     public InternalVersionItem getItemByInternal(String internalId)
             throws RepositoryException {
         PersistentId pid = getIdByInternal(internalId);
-        return pid==null ? null : getItem(pid);
+        return pid == null ? null : getItem(pid);
     }
 
     /**
      * returns the item with the given persistent id
+     *
      * @param pid
      * @return
      * @throws RepositoryException
@@ -442,10 +456,10 @@ public class NativePVM implements PersistentVersionManager {
     private InternalVersionItem getItem(PersistentId pid)
             throws RepositoryException {
 
-        InternalVersionItem item =(InternalVersionItem) items.get(pid);
-        if (item==null) {
+        InternalVersionItem item = (InternalVersionItem) items.get(pid);
+        if (item == null) {
             PersistentNode pNode = historyRoot.getNodeByUUID(pid.internalId);
-            if (pNode!=null) {
+            if (pNode != null) {
                 InternalVersionItem parent = getItemByInternal(pNode.getParentUUID());
                 if (pid.type == PersistentId.TYPE_FROZEN) {
                     item = new InternalFrozenNodeImpl(this, pNode, pid.externalId, parent);
@@ -459,7 +473,7 @@ public class NativePVM implements PersistentVersionManager {
                     //return null;
                 }
             }
-            if (item!=null) {
+            if (item != null) {
                 items.put(pid, item);
             }
         }
@@ -478,11 +492,11 @@ public class NativePVM implements PersistentVersionManager {
         // assuming node is versionable and checkout (check in nodeimpl)
         // To create a new version of a versionable node N, the client calls N.checkin.
         // This causes the following series of events:
-        String histUUID = node.getProperty(VersionManager.PROPNAME_VERSION_HISTORY).getString();
+        String histUUID = node.getProperty(Constants.JCR_VERSIONHISTORY).getString();
         InternalVersionHistoryImpl history = (InternalVersionHistoryImpl) getVersionHistory(histUUID);
 
         // 0. resolve the predecessors
-        Value[] values = node.getProperty(VersionManager.PROPNAME_PREDECESSORS).getValues();
+        Value[] values = node.getProperty(Constants.JCR_PREDECESSORS).getValues();
         InternalVersion[] preds = new InternalVersion[values.length];
         for (int i = 0; i < values.length; i++) {
             preds[i] = history.getVersion(values[i].getString());
@@ -548,13 +562,19 @@ public class NativePVM implements PersistentVersionManager {
         private static final int TYPE_FROZEN = 3;
         private static final int TYPE_FROZEN_HISTORY = 4;
 
-        /** the type of the persistent node */
+        /**
+         * the type of the persistent node
+         */
         private final int type;
 
-        /** the persistent uuid of the node */
+        /**
+         * the persistent uuid of the node
+         */
         private final String externalId;
 
-        /** the persistent uuid of the node */
+        /**
+         * the persistent uuid of the node
+         */
         private final String internalId;
 
         public PersistentId(int type, String external, String internal) {

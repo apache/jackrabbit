@@ -16,9 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
@@ -33,67 +31,6 @@ import java.util.Iterator;
  * persistence layer of the versioning.
  */
 public interface VersionManager {
-    /**
-     * root path for version storage
-     */
-    public static final QName NODENAME_HISTORY_ROOT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionStorage");
-    /**
-     * the name of the frozen node
-     */
-    public static final QName NODENAME_FROZEN = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenNode");
-    /**
-     * the name of the version labels node
-     */
-    public static final QName NODENAME_VERSION_LABELS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
-    /**
-     * name of the 'jcr:frozenUuid' property
-     */
-    public static final QName PROPNAME_FROZEN_UUID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenUuid");
-    /**
-     * name of the 'jcr:frozenPrimaryType' property
-     */
-    public static final QName PROPNAME_FROZEN_PRIMARY_TYPE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenPrimaryType");
-    /**
-     * name of the 'jcr:frozenMixinTypes' property
-     */
-    public static final QName PROPNAME_FROZEN_MIXIN_TYPES = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenMixinTypes");
-    /**
-     * name of the 'jcr:predecessors' property
-     */
-    public static final QName PROPNAME_PREDECESSORS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "predecessors");
-    /**
-     * name of the 'jcr:versionLabels' property
-     */
-    public static final QName PROPNAME_VERSION_LABELS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
-    /**
-     * name of the 'jcr:successors' property
-     */
-    public static final QName PROPNAME_SUCCESSORS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "successors");
-    /**
-     * name of the 'jcr:isCheckedOut' property
-     */
-    public static final QName PROPNAME_IS_CHECKED_OUT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "isCheckedOut");
-    /**
-     * name of the 'jcr:versionHistory' property
-     */
-    public static final QName PROPNAME_VERSION_HISTORY = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionHistory");
-    /**
-     * name of the 'jcr:baseVersion' property
-     */
-    public static final QName PROPNAME_BASE_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "baseVersion");
-    /**
-     * name of the 'jcr:child' property
-     */
-    public static final QName PROPNAME_CHILD = new QName(NamespaceRegistryImpl.NS_JCR_URI, "child");
-    /**
-     * name of the 'jcr:created' property
-     */
-    public static final QName PROPNAME_CREATED = new QName(NamespaceRegistryImpl.NS_JCR_URI, "created");
-    /**
-     * the name of the 'jcr:rootVersion' node
-     */
-    public static final QName NODENAME_ROOTVERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "rootVersion");
-
     /**
      * returns the virtual item state provider that exposes the internal versions
      * as items.
@@ -198,6 +135,7 @@ public interface VersionManager {
      * Close this version manager. After having closed a persistence
      * manager, further operations on this object are treated as illegal
      * and throw
+     *
      * @throws Exception if an error occurs
      */
     public void close() throws Exception;

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.version.*;
 
@@ -63,14 +64,14 @@ class InternalFrozenVHImpl extends InternalFreezeImpl implements InternalFrozenV
     }
 
     /**
-     * @see org.apache.jackrabbit.core.version.InternalFrozenVersionHistory#getVersionHistoryId()
+     * @see InternalFrozenVersionHistory#getVersionHistoryId()
      */
     public String getVersionHistoryId() {
-        return (String) node.getPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY).internalValue();
+        return (String) node.getPropertyValue(Constants.JCR_VERSIONHISTORY).internalValue();
     }
 
     /**
-     * @see org.apache.jackrabbit.core.version.InternalFrozenVersionHistory#getVersionHistory()
+     * @see InternalFrozenVersionHistory#getVersionHistory()
      */
     public InternalVersionHistory getVersionHistory()
             throws VersionException {
@@ -82,14 +83,14 @@ class InternalFrozenVHImpl extends InternalFreezeImpl implements InternalFrozenV
     }
 
     /**
-     * @see org.apache.jackrabbit.core.version.InternalFrozenVersionHistory#getBaseVersionId()
+     * @see InternalFrozenVersionHistory#getBaseVersionId()
      */
     public String getBaseVersionId() {
-        return (String) node.getPropertyValue(VersionManager.PROPNAME_BASE_VERSION).internalValue();
+        return (String) node.getPropertyValue(Constants.JCR_BASEVERSION).internalValue();
     }
 
     /**
-     * @see org.apache.jackrabbit.core.version.InternalFrozenVersionHistory#getBaseVesion()
+     * @see InternalFrozenVersionHistory#getBaseVesion()
      */
     public InternalVersion getBaseVesion()
             throws VersionException {

@@ -84,7 +84,7 @@ public class SharedItemStateManager extends ItemStateCache
                                           NodeTypeRegistry ntReg)
             throws ItemStateException {
 
-        NodeState rootState = createInstance(rootNodeUUID, NodeTypeRegistry.REP_ROOT, null);
+        NodeState rootState = createInstance(rootNodeUUID, Constants.REP_ROOT, null);
 
         // @todo FIXME need to manually setup root node by creating mandatory jcr:primaryType property
         NodeDefId nodeDefId = null;
@@ -94,7 +94,7 @@ public class SharedItemStateManager extends ItemStateCache
             nodeDefId = new NodeDefId(ntReg.getRootNodeDef());
             // FIXME relies on definition of nt:base:
             // first property definition in nt:base is jcr:primaryType
-            propDefId = new PropDefId(ntReg.getNodeTypeDef(NodeTypeRegistry.NT_BASE).getPropertyDefs()[0]);
+            propDefId = new PropDefId(ntReg.getNodeTypeDef(Constants.NT_BASE).getPropertyDefs()[0]);
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "failed to create root node";
             log.debug(msg);
@@ -102,11 +102,11 @@ public class SharedItemStateManager extends ItemStateCache
         }
         rootState.setDefinitionId(nodeDefId);
 
-        QName propName = NodeTypeRegistry.JCR_PRIMARY_TYPE;
+        QName propName = Constants.JCR_PRIMARYTYPE;
         rootState.addPropertyEntry(propName);
 
         PropertyState prop = createInstance(propName, rootNodeUUID);
-        prop.setValues(new InternalValue[]{InternalValue.create(NodeTypeRegistry.REP_ROOT)});
+        prop.setValues(new InternalValue[]{InternalValue.create(Constants.REP_ROOT)});
         prop.setType(PropertyType.NAME);
         prop.setMultiValued(false);
         prop.setDefinitionId(propDefId);

@@ -25,9 +25,6 @@ import java.io.File;
 
 /**
  * This Class implements the configuration object for the versioning.
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class VersioningConfig {
 

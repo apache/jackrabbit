@@ -16,64 +16,64 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
-import org.apache.jackrabbit.core.search.QueryParser;
-import org.apache.jackrabbit.core.search.QueryRootNode;
-import org.apache.jackrabbit.core.search.OrderQueryNode;
-import org.apache.jackrabbit.core.search.LocationStepQueryNode;
-import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
-import org.apache.jackrabbit.core.search.DefaultQueryNodeVisitor;
-import org.apache.jackrabbit.core.search.ExecutableQuery;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.AccessManagerImpl;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.AccessManager;
+import org.apache.jackrabbit.core.search.*;
+import org.apache.log4j.Logger;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
-import org.apache.log4j.Logger;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
-import javax.jcr.RepositoryException;
-import java.util.List;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.io.IOException;
+import java.util.List;
 
 /**
  * Implements the {@link ExecutableQuery} interface.
  */
 class QueryImpl implements ExecutableQuery {
 
-    /** The logger instance for this class */
+    /**
+     * The logger instance for this class
+     */
     private static final Logger log = Logger.getLogger(QueryImpl.class);
 
-    /** The root node of the query tree */
+    /**
+     * The root node of the query tree
+     */
     private final QueryRootNode root;
 
-    /** The session of the user executing this query */
+    /**
+     * The session of the user executing this query
+     */
     private final SessionImpl session;
 
-    /** The item manager of the user executing this query */
+    /**
+     * The item manager of the user executing this query
+     */
     private final ItemManager itemMgr;
 
-    /** The actual search index */
+    /**
+     * The actual search index
+     */
     private final SearchIndex index;
 
     /**
      * Creates a new query instance from a query string.
-     * @param session the session of the user executing this query.
-     * @param itemMgr the item manager of the session executing this query.
-     * @param index the search index.
+     *
+     * @param session   the session of the user executing this query.
+     * @param itemMgr   the item manager of the session executing this query.
+     * @param index     the search index.
      * @param statement the query statement.
-     * @param language the syntax of the query statement.
+     * @param language  the syntax of the query statement.
      * @throws InvalidQueryException if the query statement is invalid according
-     * to the specified <code>language</code>.
+     *                               to the specified <code>language</code>.
      */
     public QueryImpl(SessionImpl session,
                      ItemManager itemMgr,
@@ -152,7 +152,7 @@ class QueryImpl implements ExecutableQuery {
                 }
             }, null);
             if (ntName[0] == null) {
-                ntName[0] = NodeTypeRegistry.NT_BASE;
+                ntName[0] = Constants.NT_BASE;
             }
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
             PropertyDef[] propDefs = (PropertyDef[]) nt.getPropertyDefs();

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.QName;
 
 import java.util.Arrays;
@@ -26,7 +27,7 @@ import java.util.Arrays;
 public class ChildNodeDef extends ChildItemDef {
 
     private QName defaultPrimaryType = null;
-    private QName[] requiredPrimaryTypes = new QName[]{NodeTypeRegistry.NT_BASE};
+    private QName[] requiredPrimaryTypes = new QName[]{Constants.NT_BASE};
     private boolean allowSameNameSibs = false;
 
     /**

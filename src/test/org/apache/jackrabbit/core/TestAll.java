@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all testcases for the Search module.
+ * Test suite that includes all testcases for the Core module.
  */
 public class TestAll extends TestCase {
 

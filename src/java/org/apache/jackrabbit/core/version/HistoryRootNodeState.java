@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
 import javax.jcr.RepositoryException;
@@ -59,26 +60,26 @@ public class HistoryRootNodeState extends VirtualNodeState {
                                    VersionManager vm,
                                    String parentUUID,
                                    String uuid) throws RepositoryException {
-        super(stateMgr, parentUUID, uuid, NodeTypeRegistry.REP_VERSION_STORAGE, new QName[0]);
+        super(stateMgr, parentUUID, uuid, Constants.REP_VERSIONSTORAGE, new QName[0]);
         this.vm = vm;
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#hasChildNodeEntry(org.apache.jackrabbit.core.QName)
+     * @see NodeState#hasChildNodeEntry(QName)
      */
     public synchronized boolean hasChildNodeEntry(QName name) {
         return vm.hasVersionHistory(name.getLocalName());
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#hasChildNodeEntry(org.apache.jackrabbit.core.QName, int)
+     * @see NodeState#hasChildNodeEntry(QName, int)
      */
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
         return index <= 1 ? vm.hasVersionHistory(name.getLocalName()) : false;
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntry(org.apache.jackrabbit.core.QName, int)
+     * @see NodeState#getChildNodeEntry(QName, int)
      */
     public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
         try {
@@ -93,7 +94,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries()
+     * @see NodeState#getChildNodeEntries()
      */
     public synchronized List getChildNodeEntries() {
         if (LIST_ALL_HISTORIES) {
@@ -102,7 +103,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
                 Iterator iter = vm.getVersionHistoryIds();
                 while (iter.hasNext()) {
                     String id = (String) iter.next();
-                    QName name = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, id);
+                    QName name = new QName(NS_DEFAULT_URI, id);
                     list.add(createChildNodeEntry(name, id, 1));
                 }
                 return list;
@@ -114,12 +115,12 @@ public class HistoryRootNodeState extends VirtualNodeState {
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries(String)
+     * @see NodeState#getChildNodeEntries(String)
      */
     public synchronized List getChildNodeEntries(String uuid) {
         // todo: do nicer
         try {
-            ChildNodeEntry entry = getChildNodeEntry(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid), 1);
+            ChildNodeEntry entry = getChildNodeEntry(new QName(NS_DEFAULT_URI, uuid), 1);
             if (entry != null) {
                 ArrayList list = new ArrayList(1);
                 list.add(entry);
@@ -132,7 +133,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
     }
 
     /**
-     * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntries(org.apache.jackrabbit.core.QName)
+     * @see NodeState#getChildNodeEntries(QName)
      */
     public synchronized List getChildNodeEntries(QName nodeName) {
         // todo: do nicer

@@ -29,7 +29,7 @@ import java.util.Date;
  * </ul>
  * @todo remove this class. not used anymore
  */
-public class RangeQueryNode extends QueryNode implements Constants {
+public class RangeQueryNode extends QueryNode implements QueryConstants {
 
     /**
      * Range array for long boundary values

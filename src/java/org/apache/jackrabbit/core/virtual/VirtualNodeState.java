@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -31,7 +31,7 @@ import java.util.HashSet;
 /**
  * This Class implements a virtual node state
  */
-public class VirtualNodeState extends NodeState {
+public class VirtualNodeState extends NodeState implements Constants {
 
     /**
      * The virtual item state provide that created this node state
@@ -46,6 +46,7 @@ public class VirtualNodeState extends NodeState {
 
     /**
      * creates a new virtual node state
+     *
      * @param stateMgr
      * @param parentUUID
      * @param uuid
@@ -54,16 +55,16 @@ public class VirtualNodeState extends NodeState {
      * @throws RepositoryException
      */
     public VirtualNodeState(VirtualItemStateProvider stateMgr,
-                                   String parentUUID,
-                                   String uuid,
-                                   QName nodeTypeName,
-                                   QName[] mixins)
+                            String parentUUID,
+                            String uuid,
+                            QName nodeTypeName,
+                            QName[] mixins)
             throws RepositoryException {
         super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING, false);
         this.stateMgr = stateMgr;
 
         // add default properties
-        setPropertyValue(ItemImpl.PROPNAME_PRIMARYTYPE, InternalValue.create(nodeTypeName));
+        setPropertyValue(JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
         setMixinNodeTypes(mixins);
     }
 
@@ -85,7 +86,7 @@ public class VirtualNodeState extends NodeState {
      */
     public InternalValue[] getPropertyValues(QName name) throws NoSuchItemStateException {
         VirtualPropertyState ps = getProperty(name);
-        return ps==null ? null : ps.getValues();
+        return ps == null ? null : ps.getValues();
     }
 
     /**
@@ -96,11 +97,12 @@ public class VirtualNodeState extends NodeState {
      */
     public InternalValue getPropertyValue(QName name) throws NoSuchItemStateException {
         VirtualPropertyState ps = getProperty(name);
-        return ps==null || ps.getValues().length==0 ? null : ps.getValues()[0];
+        return ps == null || ps.getValues().length == 0 ? null : ps.getValues()[0];
     }
 
     /**
      * returns the property state of the given name
+     *
      * @param name
      * @return
      * @throws NoSuchItemStateException
@@ -161,7 +163,7 @@ public class VirtualNodeState extends NodeState {
             throws RepositoryException {
 
         VirtualPropertyState prop = (VirtualPropertyState) properties.get(name);
-        if (prop==null) {
+        if (prop == null) {
             prop = stateMgr.createPropertyState(this, name, type, multiValued);
             properties.put(name, prop);
             addPropertyEntry(name);
@@ -183,11 +185,12 @@ public class VirtualNodeState extends NodeState {
             values[i] = InternalValue.create(mixins[i]);
         }
         setMixinTypeNames(set);
-        setPropertyValues(ItemImpl.PROPNAME_MIXINTYPES, PropertyType.NAME, values);
+        setPropertyValues(JCR_MIXINTYPES, PropertyType.NAME, values);
     }
 
     /**
      * Creates a new VirtualChildNodeEntry
+     *
      * @param nodeName
      * @param uuid
      * @param index
@@ -199,6 +202,7 @@ public class VirtualNodeState extends NodeState {
 
     /**
      * Creates a new VirtualPropertyEntry
+     *
      * @param name
      * @return
      */

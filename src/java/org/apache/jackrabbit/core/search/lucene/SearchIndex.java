@@ -20,7 +20,7 @@ import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.search.AbstractQueryHandler;
-import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.search.QueryConstants;
 import org.apache.jackrabbit.core.search.ExecutableQuery;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -201,7 +201,7 @@ public class SearchIndex extends AbstractQueryHandler {
         SortField[] sortFields = new SortField[orderProps.length];
         for (int i = 0; i < orderProps.length; i++) {
             String prop = null;
-            if (Constants.JCR_SCORE.equals(orderProps[i])) {
+            if (QueryConstants.JCR_SCORE.equals(orderProps[i])) {
                 sortFields[i] = new SortField(null, SortField.SCORE, !orderSpecs[i]);
             } else {
                 try {

@@ -16,46 +16,38 @@
  */
 package org.apache.jackrabbit.core.search.xpath;
 
-import org.apache.jackrabbit.core.search.QueryNodeVisitor;
-import org.apache.jackrabbit.core.search.QueryRootNode;
-import org.apache.jackrabbit.core.search.OrQueryNode;
-import org.apache.jackrabbit.core.search.AndQueryNode;
-import org.apache.jackrabbit.core.search.NotQueryNode;
-import org.apache.jackrabbit.core.search.ExactQueryNode;
-import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
-import org.apache.jackrabbit.core.search.RangeQueryNode;
-import org.apache.jackrabbit.core.search.TextsearchQueryNode;
-import org.apache.jackrabbit.core.search.PathQueryNode;
-import org.apache.jackrabbit.core.search.LocationStepQueryNode;
-import org.apache.jackrabbit.core.search.RelationQueryNode;
-import org.apache.jackrabbit.core.search.OrderQueryNode;
-import org.apache.jackrabbit.core.search.QueryNode;
-import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.search.*;
 import org.apache.jackrabbit.core.util.ISO9075;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.util.ISO8601;
-import java.util.Calendar;
-import java.util.TimeZone;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Implements the query node tree serialization into a String.
  */
-class QueryFormat implements QueryNodeVisitor, Constants {
+class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
-    /** Will be used to resolve QNames */
+    /**
+     * Will be used to resolve QNames
+     */
     private final NamespaceResolver resolver;
 
-    /** The String representation of the query node tree */
+    /**
+     * The String representation of the query node tree
+     */
     private String statement;
 
-    /** List of exception objects created while creating the XPath string */
+    /**
+     * List of exception objects created while creating the XPath string
+     */
     private List exceptions = new ArrayList();
 
     private QueryFormat(QueryRootNode root, NamespaceResolver resolver)
@@ -71,11 +63,12 @@ class QueryFormat implements QueryNodeVisitor, Constants {
     /**
      * Creates a XPath <code>String</code> representation of the QueryNode tree
      * argument <code>root</code>.
-     * @param root the query node tree.
+     *
+     * @param root     the query node tree.
      * @param resolver to resolve QNames.
      * @return the XPath string representation of the QueryNode tree.
      * @throws InvalidQueryException the query node tree cannot be represented
-     *   as a XPath <code>String</code>.
+     *                               as a XPath <code>String</code>.
      */
     public static String toString(QueryRootNode root, NamespaceResolver resolver)
             throws InvalidQueryException {
@@ -84,6 +77,7 @@ class QueryFormat implements QueryNodeVisitor, Constants {
 
     /**
      * Returns the string representation.
+     *
      * @return the string representation.
      */
     public String toString() {
@@ -190,7 +184,7 @@ class QueryFormat implements QueryNodeVisitor, Constants {
         StringBuffer sb = (StringBuffer) data;
         try {
             sb.append("@");
-            sb.append(NodeTypeRegistry.JCR_PRIMARY_TYPE.toJCRName(resolver));
+            sb.append(Constants.JCR_PRIMARYTYPE.toJCRName(resolver));
             sb.append("='").append(node.getValue().toJCRName(resolver));
             sb.append("'");
         } catch (NoPrefixDeclaredException e) {
@@ -336,10 +330,11 @@ class QueryFormat implements QueryNodeVisitor, Constants {
     /**
      * Appends the value of a relation node to the <code>StringBuffer</code>
      * <code>sb</code>.
+     *
      * @param node the relation node.
-     * @param b where to append the value.
+     * @param b    where to append the value.
      * @throws NoPrefixDeclaredException if a prefix declaration is missing for
-     *  a namespace URI. 
+     *                                   a namespace URI.
      */
     private void appendValue(RelationQueryNode node, StringBuffer b)
             throws NoPrefixDeclaredException {

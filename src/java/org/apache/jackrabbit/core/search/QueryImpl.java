@@ -105,8 +105,8 @@ public class QueryImpl implements Query {
             if (!node.isNodeType(NodeTypeRegistry.NT_QUERY.toJCRName(session.getNamespaceResolver()))) {
                 throw new InvalidQueryException("node is not of type nt:query");
             }
-            statement = node.getProperty(Constants.JCR_STATEMENT.toJCRName(session.getNamespaceResolver())).getString();
-            language = node.getProperty(Constants.JCR_LANGUAGE.toJCRName(session.getNamespaceResolver())).getString();
+            statement = node.getProperty(QueryConstants.JCR_STATEMENT.toJCRName(session.getNamespaceResolver())).getString();
+            language = node.getProperty(QueryConstants.JCR_LANGUAGE.toJCRName(session.getNamespaceResolver())).getString();
             query = handler.createExecutableQuery(session, itemMgr, statement, language);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
@@ -174,8 +174,8 @@ public class QueryImpl implements Query {
             Node queryNode = session.getRootNode().addNode(relPath,
                     NodeTypeRegistry.NT_QUERY.toJCRName(resolver));
             // set properties
-            queryNode.setProperty(Constants.JCR_LANGUAGE.toJCRName(resolver), language);
-            queryNode.setProperty(Constants.JCR_STATEMENT.toJCRName(resolver), statement);
+            queryNode.setProperty(QueryConstants.JCR_LANGUAGE.toJCRName(resolver), language);
+            queryNode.setProperty(QueryConstants.JCR_STATEMENT.toJCRName(resolver), statement);
             // todo this should be changed in the spec some time!
             queryNode.getParent().save();
         } catch (MalformedPathException e) {

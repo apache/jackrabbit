@@ -343,7 +343,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             return descendants.values().iterator();
         }
 
-        Path[] parentPaths = null;
+        Path[] parentPaths;
         try {
             parentPaths = hierMgr.getAllPaths(parentId);
         } catch (ItemNotFoundException infe) {
@@ -361,7 +361,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 ItemId id = state.getId();
-                Path[] paths = null;
+                Path[] paths;
                 try {
                     paths = hierMgr.getAllPaths(id);
                 } catch (ItemNotFoundException infe) {
@@ -417,7 +417,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
                          * specified parentId's paths.
                          */
                         String uuid = (String) iterUUIDs.next();
-                        Path[] pa = null;
+                        Path[] pa;
                         try {
                             pa = hierMgr.getAllPaths(new NodeId(uuid));
                         } catch (ItemNotFoundException infe) {
@@ -449,7 +449,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
                                      * avoid potential conflicts
                                      */
                                     Path dummy = Path.create(p0,
-                                            Path.create(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, Integer.toString(new Random().nextInt())), 0),
+                                            Path.create(new QName(Constants.NS_DEFAULT_URI, Integer.toString(new Random().nextInt())), 0),
                                             true);
                                     descendants.put(dummy, state);
                                     isDescendant = true;

@@ -335,7 +335,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 if (parentUUID == null) {
                     // this is the root or an orphaned node
                     // FIXME
-                    return new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, "");
+                    return new QName(Constants.NS_DEFAULT_URI, "");
                 }
                 parentState = (NodeState) getItemState(new NodeId(parentUUID));
             } catch (ItemStateException ise) {

@@ -18,10 +18,8 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ValueHelper;
-import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -39,7 +37,7 @@ import java.util.*;
 /**
  * <code>SysViewImportHandler</code>  ...
  */
-class SysViewImportHandler extends DefaultHandler {
+class SysViewImportHandler extends DefaultHandler implements Constants {
     private static Logger log = Logger.getLogger(SysViewImportHandler.class);
 
     private SessionImpl session;
@@ -58,7 +56,7 @@ class SysViewImportHandler extends DefaultHandler {
     private LinkedList references = new LinkedList();
 
     /**
-     * list of all mix:referenceable
+     * mapping <original uuid> to <new uuid> of mix:referenceable nodes
      */
     private HashMap referees = new HashMap();
 
@@ -81,7 +79,9 @@ class SysViewImportHandler extends DefaultHandler {
     /**
      * @see ContentHandler#startElement(String, String, String, Attributes)
      */
-    public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
+    public void startElement(String namespaceURI, String localName,
+                             String qName, Attributes atts)
+            throws SAXException {
         try {
             String elemName;
             String nsURI;
@@ -100,7 +100,7 @@ class SysViewImportHandler extends DefaultHandler {
                 }
             }
             // check namespace
-            if (!NamespaceRegistryImpl.NS_SV_URI.equals(nsURI)) {
+            if (!NS_SV_URI.equals(nsURI)) {
                 throw new SAXException(new InvalidSerializedDataException("invalid namespace for element in system view xml document: " + nsURI));
             }
             // check element name
@@ -222,7 +222,7 @@ class SysViewImportHandler extends DefaultHandler {
 
                 // check if all system properties (jcr:primaryType, jcr:uuid etc.)
                 // have been collected and create node as necessary
-                if (currentPropName.equals(ItemImpl.PROPNAME_PRIMARYTYPE)) {
+                if (currentPropName.equals(JCR_PRIMARYTYPE)) {
                     try {
                         current.primaryType = QName.fromJCRName((String) currentPropValues.get(0), session.getNamespaceResolver());
                     } catch (IllegalNameException ine) {
@@ -230,7 +230,7 @@ class SysViewImportHandler extends DefaultHandler {
                     } catch (UnknownPrefixException upe) {
                         throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + currentPropValues.get(0), upe));
                     }
-                } else if (currentPropName.equals(ItemImpl.PROPNAME_MIXINTYPES)) {
+                } else if (currentPropName.equals(JCR_MIXINTYPES)) {
                     if (current.mixinTypes == null) {
                         current.mixinTypes = new ArrayList(currentPropValues.size());
                     }
@@ -244,7 +244,7 @@ class SysViewImportHandler extends DefaultHandler {
                             throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + currentPropValues.get(i), upe));
                         }
                     }
-                } else if (currentPropName.equals(ItemImpl.PROPNAME_UUID)) {
+                } else if (currentPropName.equals(JCR_UUID)) {
                     current.uuid = (String) currentPropValues.get(0);
                     // jcr:uuid is the last system property; we can assume that all
                     // required system properties have been collected by now
@@ -253,13 +253,13 @@ class SysViewImportHandler extends DefaultHandler {
                         // we're ready to create the node
                         createNode(current);
                     }
-                } else if (currentPropName.equals(VersionManager.PROPNAME_BASE_VERSION)) {
+                } else if (currentPropName.equals(JCR_BASEVERSION)) {
                     // ignore so far
-                } else if (currentPropName.equals(VersionManager.PROPNAME_VERSION_HISTORY)) {
+                } else if (currentPropName.equals(JCR_VERSIONHISTORY)) {
                     // ignore so far
-                } else if (currentPropName.equals(VersionManager.PROPNAME_PREDECESSORS)) {
+                } else if (currentPropName.equals(JCR_PREDECESSORS)) {
                     // ignore so far
-                } else if (currentPropName.equals(VersionManager.PROPNAME_IS_CHECKED_OUT)) {
+                } else if (currentPropName.equals(JCR_ISCHECKEDOUT)) {
                     // ignore so far
                 } else {
                     // non-system property encountered; we can assume that all
@@ -314,8 +314,8 @@ class SysViewImportHandler extends DefaultHandler {
                         // can only be multi-valued (n == 0 || n > 1)
                         current.node.setProperty(currentPropName, vals);
                     }
-                    // check if reference for later resolution
                     if (currentPropType == PropertyType.REFERENCE) {
+                        // store reference for later resolution
                         references.add(current.node.getProperty(currentPropName));
                     }
                 }
@@ -332,6 +332,52 @@ class SysViewImportHandler extends DefaultHandler {
             }
         } catch (RepositoryException re) {
             throw new SAXException(re);
+        }
+    }
+
+    /**
+     * @see ContentHandler#endDocument()
+     */
+    public void endDocument() throws SAXException {
+        try {
+            // adjust all reference properties
+            Iterator iter = references.iterator();
+            while (iter.hasNext()) {
+                Property prop = (Property) iter.next();
+                if (prop.getDefinition().isMultiple()) {
+                    Value[] values = prop.getValues();
+                    Value[] newVals = new Value[values.length];
+                    for (int i = 0; i < values.length; i++) {
+                        Value val = values[i];
+                        if (val.getType() == PropertyType.REFERENCE) {
+                            String original = val.getString();
+                            String adjusted = (String) referees.get(original);
+                            if (adjusted == null) {
+                                log.warn("Reference " + original + " of property can not be adjusted! " + prop.getPath());
+                                newVals[i] = val;
+                            } else {
+                                newVals[i] = new ReferenceValue(session.getNodeByUUID(adjusted));
+                            }
+                        } else {
+                            newVals[i] = val;
+                        }
+                    }
+                    prop.setValue(newVals);
+                } else {
+                    Value val = prop.getValue();
+                    if (val.getType() == PropertyType.REFERENCE) {
+                        String original = val.getString();
+                        String adjusted = (String) referees.get(original);
+                        if (adjusted == null) {
+                            log.warn("Reference " + original + " of property can not be adjusted! " + prop.getPath());
+                        } else {
+                            prop.setValue(session.getNodeByUUID(adjusted));
+                        }
+                    }
+                }
+            }
+        } catch (RepositoryException re) {
+            throw new SAXException("failed to adjust REFERENCE properties", re);
         }
     }
 
@@ -365,55 +411,11 @@ class SysViewImportHandler extends DefaultHandler {
         }
 
         // check for mix:referenceable
-        if (state.node.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+        if (state.node.isNodeType(MIX_REFERENCEABLE)) {
             log.info("adding refereee: ori=" + state.uuid + " new=" + state.node.getUUID());
             referees.put(state.uuid, state.node.getUUID());
         }
     }
-
-    public void endDocument() throws SAXException {
-        try {
-            // adjust all reference properties
-            Iterator iter = references.iterator();
-            while (iter.hasNext()) {
-                Property prop = (Property) iter.next();
-                if (prop.getDefinition().isMultiple()) {
-                    Value[] values = prop.getValues();
-                    Value[] newVals = new Value[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        Value val = values[i];
-                        if (val.getType() == PropertyType.REFERENCE) {
-                            String original = val.getString();
-                            String adjusted = (String) referees.get(original);
-                            if (adjusted == null) {
-                                log.error("Reference " + original + " of property can not be adjusted! " + prop.getPath());
-                                newVals[i] = val;
-                            } else {
-                                newVals[i] = new ReferenceValue(session.getNodeByUUID(adjusted));
-                            }
-                        } else {
-                            newVals[i] = val;
-                        }
-                    }
-                    prop.setValue(newVals);
-                } else {
-                    Value val = prop.getValue();
-                    if (val.getType() == PropertyType.REFERENCE) {
-                        String original = val.getString();
-                        String adjusted = (String) referees.get(original);
-                        if (adjusted == null) {
-                            log.error("Reference " + original + " of property can not be adjusted! " + prop.getPath());
-                        } else {
-                            prop.setValue(session.getNodeByUUID(adjusted));
-                        }
-                    }
-                }
-            }
-        } catch (RepositoryException e) {
-            log.error("Error while adjusting reference proerties: " + e.toString());
-        }
-    }
-
 
     //--------------------------------------------------------< inner classes >
     class ImportState {

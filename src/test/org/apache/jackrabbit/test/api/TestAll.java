@@ -41,10 +41,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(GetAncestorTest.class);
         suite.addTestSuite(RootNodeTest.class);
         suite.addTestSuite(NamespaceRegistryTest.class);
-
-	// references test currently corrupts repository
-	// enable again, when bug JCR-44 is fixed
-        // suite.addTestSuite(ReferencesTest.class);
+        suite.addTestSuite(ReferencesTest.class);
 
         return suite;
     }

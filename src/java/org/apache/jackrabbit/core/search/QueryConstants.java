@@ -23,7 +23,7 @@ import org.apache.jackrabbit.core.NamespaceRegistryImpl;
  * This interface defines constants for data types and operation types
  * used in queries.
  */
-public interface Constants {
+public interface QueryConstants {
 
     /**
      * QName for jcr:score

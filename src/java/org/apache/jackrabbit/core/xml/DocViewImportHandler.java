@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -61,9 +60,9 @@ class DocViewImportHandler extends DefaultHandler {
     protected void addTextNode(NodeImpl parent, String text) throws SAXException {
         if (text.length() > 0) {
             try {
-                NodeImpl txtNode = (NodeImpl) parent.addNode(DocViewSAXEventGenerator.NODENAME_XMLTEXT);
+                NodeImpl txtNode = (NodeImpl) parent.addNode(Constants.JCR_XMLTEXT);
                 StringValue val = new StringValue(text.toString());
-                txtNode.setProperty(DocViewSAXEventGenerator.PROPNAME_XMLCHARACTERS, val);
+                txtNode.setProperty(Constants.JCR_XMLCHARACTERS, val);
             } catch (RepositoryException re) {
                 throw new SAXException(re);
             }
@@ -98,7 +97,7 @@ class DocViewImportHandler extends DefaultHandler {
 
             // @todo how should 'system' properties be handled in document view (e.g. jcr:primaryType,jcr:mixinTypes, jcr:uuid)?
             NodeImpl currentParent = (NodeImpl) parents.peek();
-            currentParent = (NodeImpl) currentParent.addNode(nodeName, NodeTypeRegistry.NT_UNSTRUCTURED);
+            currentParent = (NodeImpl) currentParent.addNode(nodeName, Constants.NT_UNSTRUCTURED);
             parents.push(currentParent);
 
             // properties

@@ -50,9 +50,6 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     public static final String CDATA_TYPE = "CDATA";
     public static final String ENUMERATION_TYPE = "ENUMERATION";
 
-    public static final String NS_SV_PREFIX = NamespaceRegistryImpl.NS_SV_PREFIX;
-    public static final String NS_SV_URI = NamespaceRegistryImpl.NS_SV_URI;
-
     /**
      * Constructor
      *
@@ -84,7 +81,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         try {
             if (node.isRepositoryRoot()) {
                 // root node needs a name
-                nodeName = NODENAME_ROOT.toJCRName(session.getNamespaceResolver());
+                nodeName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
             } else {
                 nodeName = name.toJCRName(session.getNamespaceResolver());
             }

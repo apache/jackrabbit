@@ -16,107 +16,132 @@
  */
 package org.apache.jackrabbit.core.search.xpath;
 
-import org.apache.jackrabbit.core.search.QueryRootNode;
-import org.apache.jackrabbit.core.search.PathQueryNode;
-import org.apache.jackrabbit.core.search.LocationStepQueryNode;
-import org.apache.jackrabbit.core.search.QueryNode;
-import org.apache.jackrabbit.core.search.AndQueryNode;
-import org.apache.jackrabbit.core.search.NAryQueryNode;
-import org.apache.jackrabbit.core.search.OrQueryNode;
-import org.apache.jackrabbit.core.search.RelationQueryNode;
-import org.apache.jackrabbit.core.search.NotQueryNode;
-import org.apache.jackrabbit.core.search.TextsearchQueryNode;
-import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
-import org.apache.jackrabbit.core.search.OrderQueryNode;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.SearchManager;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.search.*;
 import org.apache.jackrabbit.core.util.ISO9075;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.util.ISO8601;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * Query builder that translates a XPath statement into a query tree structure.
  */
 public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
-    /** QName for 'fn:not' */
+    /**
+     * QName for 'fn:not'
+     */
     static final QName FN_NOT = new QName(SearchManager.NS_FN_URI, "not");
 
-    /** QName for 'not' as defined in XPath 1.0 (no prefix) */
+    /**
+     * QName for 'not' as defined in XPath 1.0 (no prefix)
+     */
     static final QName FN_NOT_10 = new QName("", "not");
 
-    /** QName for xs:dateTime */
+    /**
+     * QName for xs:dateTime
+     */
     static final QName XS_DATETIME = new QName(SearchManager.NS_XS_URI, "dateTime");
 
-    /** QName for jcrfn:like */
+    /**
+     * QName for jcrfn:like
+     */
     static final QName JCRFN_LIKE = new QName(SearchManager.NS_JCRFN_URI, "like");
 
-    /** QName for jcrfn:contains */
+    /**
+     * QName for jcrfn:contains
+     */
     static final QName JCRFN_CONTAINS = new QName(SearchManager.NS_JCRFN_URI, "contains");
 
-    /** QName for jcr:root */
+    /**
+     * QName for jcr:root
+     */
     static final QName JCR_ROOT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "root");
 
-    /** String constant for operator 'eq' */
+    /**
+     * String constant for operator 'eq'
+     */
     private static final String OP_EQ = "eq";
 
-    /** String constant for operator 'ne' */
+    /**
+     * String constant for operator 'ne'
+     */
     private static final String OP_NE = "ne";
 
-    /** String constant for operator 'gt' */
+    /**
+     * String constant for operator 'gt'
+     */
     private static final String OP_GT = "gt";
 
-    /** String constant for operator 'ge' */
+    /**
+     * String constant for operator 'ge'
+     */
     private static final String OP_GE = "ge";
 
-    /** String constant for operator 'lt' */
+    /**
+     * String constant for operator 'lt'
+     */
     private static final String OP_LT = "lt";
 
-    /** String constant for operator 'le' */
+    /**
+     * String constant for operator 'le'
+     */
     private static final String OP_LE = "le";
 
-    /** String constant for operator '=' */
+    /**
+     * String constant for operator '='
+     */
     private static final String OP_SIGN_EQ = "=";
 
-    /** String constant for operator '!=' */
+    /**
+     * String constant for operator '!='
+     */
     private static final String OP_SIGN_NE = "!=";
 
-    /** String constant for operator '>' */
+    /**
+     * String constant for operator '>'
+     */
     private static final String OP_SIGN_GT = ">";
 
-    /** String constant for operator '>=' */
+    /**
+     * String constant for operator '>='
+     */
     private static final String OP_SIGN_GE = ">=";
 
-    /** String constant for operator '<' */
+    /**
+     * String constant for operator '<'
+     */
     private static final String OP_SIGN_LT = "<";
 
-    /** String constant for operator '<=' */
+    /**
+     * String constant for operator '<='
+     */
     private static final String OP_SIGN_LE = "<=";
 
-    /** The root <code>QueryNode</code> */
+    /**
+     * The root <code>QueryNode</code>
+     */
     private final QueryRootNode root = new QueryRootNode();
 
-    /** The {@link org.apache.jackrabbit.core.NamespaceResolver} in use */
+    /**
+     * The {@link org.apache.jackrabbit.core.NamespaceResolver} in use
+     */
     private final NamespaceResolver resolver;
 
-    /** List of exceptions that are created while building the query tree */
+    /**
+     * List of exceptions that are created while building the query tree
+     */
     private final List exceptions = new ArrayList();
 
     /**
      * Creates a new <code>XPathQueryBuilder</code> instance.
+     *
      * @param statement the XPath statement.
-     * @param resolver the namespace resolver to use.
+     * @param resolver  the namespace resolver to use.
      * @throws InvalidQueryException if the XPath statement is malformed.
      */
     private XPathQueryBuilder(String statement, NamespaceResolver resolver)
@@ -149,8 +174,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /**
      * Creates a <code>QueryNode</code> tree from a XPath statement.
+     *
      * @param statement the XPath statement.
-     * @param resolver the namespace resolver to use.
+     * @param resolver  the namespace resolver to use.
      * @return the <code>QueryNode</code> tree for the XPath statement.
      * @throws InvalidQueryException if the XPath statement is malformed.
      */
@@ -163,11 +189,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /**
      * Creates a String representation of the query node tree in XPath syntax.
-     * @param root the root of the query node tree.
+     *
+     * @param root     the root of the query node tree.
      * @param resolver to resolve QNames.
      * @return a String representation of the query node tree.
      * @throws InvalidQueryException if the query node tree cannot be converted
-     *   into a String representation due to restrictions in XPath.
+     *                               into a String representation due to restrictions in XPath.
      */
     public static String toString(QueryRootNode root, NamespaceResolver resolver)
             throws InvalidQueryException {
@@ -176,6 +203,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /**
      * Returns the root node of the <code>QueryNode</code> tree.
+     *
      * @return the root node of the <code>QueryNode</code> tree.
      */
     QueryRootNode getRootNode() {
@@ -186,11 +214,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /**
      * Implements the generic visit method for this <code>XPathVisitor</code>.
+     *
      * @param node the current node as created by the XPath parser.
      * @param data the current <code>QueryNode</code> created by this
-     *  <code>XPathVisitor</code>.
+     *             <code>XPathVisitor</code>.
      * @return the current <code>QueryNode</code>. Can be different from
-     *  <code>data</code>.
+     *         <code>data</code>.
      */
     public Object visit(SimpleNode node, Object data) {
         switch (node.getId()) {
@@ -283,7 +312,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 break;
             case JJTORDERMODIFIER:
                 if (node.jjtGetNumChildren() > 0
-                        && ((SimpleNode) node.jjtGetChild(0)) .getId() == JJTDESCENDING) {
+                        && ((SimpleNode) node.jjtGetChild(0)).getId() == JJTDESCENDING) {
                     OrderQueryNode.OrderSpec[] specs = ((OrderQueryNode) data).getOrderSpecs();
                     specs[specs.length - 1].setAscending(false);
                 }
@@ -300,7 +329,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Creates a <code>LocationStepQueryNode</code> at the current position
      * in parent.
-     * @param node the current node in the xpath syntax tree.
+     *
+     * @param node   the current node in the xpath syntax tree.
      * @param parent the parent <code>PathQueryNode</code>.
      * @return the created <code>LocationStepQueryNode</code>.
      */
@@ -327,9 +357,10 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Creates a name test either for a <code>LocationStepQueryNode</code> or
      * for a <code>RelationQueryNode</code>.
-     * @param node the current node in the xpath syntax tree.
+     *
+     * @param node      the current node in the xpath syntax tree.
      * @param queryNode either a <code>LocationStepQueryNode</code> or a
-     *   <code>RelationQueryNode</code>.
+     *                  <code>RelationQueryNode</code>.
      */
     private void createNameTest(SimpleNode node, QueryNode queryNode) {
         if (node.jjtGetNumChildren() > 0) {
@@ -370,7 +401,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Creates a new {@link org.apache.jackrabbit.core.search.RelationQueryNode}
      * with <code>queryNode</code> as its parent node.
-     * @param node a comparison expression node.
+     *
+     * @param node      a comparison expression node.
      * @param queryNode the current <code>QueryNode</code>.
      */
     private void createExpression(SimpleNode node, NAryQueryNode queryNode) {
@@ -407,7 +439,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         node.childrenAccept(this, rqn);
 
         // if property name is jcr:primaryType treat special
-        if (rqn.getProperty().equals(NodeTypeRegistry.JCR_PRIMARY_TYPE)) {
+        if (rqn.getProperty().equals(Constants.JCR_PRIMARYTYPE)) {
             if (rqn.getType() == RelationQueryNode.TYPE_STRING) {
                 try {
                     QName ntName = QName.fromJCRName(rqn.getStringValue(), resolver);
@@ -430,6 +462,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /**
      * Creates the primary path query node.
+     *
      * @param node xpath node representing the root of the parsed tree.
      * @return
      */
@@ -441,8 +474,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /**
      * Assigns a value to the <code>queryNode</code>.
-     * @param node must be of type string, decimal, double or integer; otherwise
-     *   an InvalidQueryException is added to {@link #exceptions}.
+     *
+     * @param node      must be of type string, decimal, double or integer; otherwise
+     *                  an InvalidQueryException is added to {@link #exceptions}.
      * @param queryNode current node in the query tree.
      */
     private void assignValue(SimpleNode node, RelationQueryNode queryNode) {
@@ -467,7 +501,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /**
      * Creates a function based on <code>node</code>.
-     * @param node the function node from the xpath tree.
+     *
+     * @param node      the function node from the xpath tree.
      * @param queryNode the current query node.
      * @return
      */
@@ -597,6 +632,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Returns true if <code>node</code> has a child node which is the attribute
      * axis.
+     *
      * @param node a node with type {@link org.apache.jackrabbit.core.search.xpath.XPathTreeConstants.JJTSTEPEXPR}.
      * @return <code>true</code> if this step expression uses the attribute axis.
      */

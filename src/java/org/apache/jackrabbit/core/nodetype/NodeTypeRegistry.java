@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.ReferenceMap;
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.QName;
@@ -39,63 +40,8 @@ import java.util.*;
 /**
  * A <code>NodeTypeRegistry</code> ...
  */
-public class NodeTypeRegistry {
+public class NodeTypeRegistry implements Constants {
     private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
-
-    // some well known node type names:
-    // rep:root
-    public static final QName REP_ROOT =
-            new QName(NamespaceRegistryImpl.NS_REP_URI, "root");
-    // rep:system
-    public static final QName REP_SYSTEM =
-            new QName(NamespaceRegistryImpl.NS_REP_URI, "system");
-    // rep:versionStorage
-    public static final QName REP_VERSION_STORAGE =
-            new QName(NamespaceRegistryImpl.NS_REP_URI, "versionStorage");
-    // nt:unstructured
-    public static final QName NT_UNSTRUCTURED =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "unstructured");
-    // nt:base
-    public static final QName NT_BASE =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "base");
-    // nt:hierarchyNode
-    public static final QName NT_HIERARCHYNODE =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "hierarchyNode");
-    // nt:resource
-    public static final QName NT_RESOURCE =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "resource");
-    // nt:query
-    public static final QName NT_QUERY =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "query");
-    // mix:referenceable
-    public static final QName MIX_REFERENCEABLE =
-            new QName(NamespaceRegistryImpl.NS_MIX_URI, "referenceable");
-    // mix:lockable
-    public static final QName MIX_LOCKABLE =
-            new QName(NamespaceRegistryImpl.NS_MIX_URI, "lockable");
-    // mix:versionable
-    public static final QName MIX_VERSIONABLE =
-            new QName(NamespaceRegistryImpl.NS_MIX_URI, "versionable");
-    // nt:versionHistory
-    public static final QName NT_VERSION_HISTORY =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "versionHistory");
-    // nt:version
-    public static final QName NT_VERSION =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "version");
-    // nt:versionLabels
-    public static final QName NT_VERSION_LABELS =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "versionLabels");
-    // nt:versionedChild
-    public static final QName NT_VERSIONED_CHILD =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "versionedChild");
-    // nt:frozenNode
-    public static final QName NT_FROZEN_NODE =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "frozenNode");
-
-    // some well known item names:
-    // jcr:primaryType
-    public static final QName JCR_PRIMARY_TYPE =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
 
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
             "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";
@@ -271,7 +217,7 @@ public class NodeTypeRegistry {
         ChildNodeDef def = new ChildNodeDef();
 
         // FIXME need a fake declaring node type
-        def.setDeclaringNodeType(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, ""));
+        def.setDeclaringNodeType(new QName(NS_DEFAULT_URI, ""));
         def.setRequiredPrimaryTypes(new QName[]{REP_ROOT});
         def.setDefaultPrimaryType(REP_ROOT);
         def.setMandatory(true);

@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.search.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
@@ -49,7 +48,7 @@ import java.util.Iterator;
 /**
  * A <code>WorkspaceImpl</code> ...
  */
-public class WorkspaceImpl implements Workspace {
+public class WorkspaceImpl implements Workspace, Constants {
 
     private static Logger log = Logger.getLogger(WorkspaceImpl.class);
 
@@ -290,7 +289,7 @@ public class WorkspaceImpl implements Workspace {
          * this would have a negative impact on performance though...
          */
         NodeState nodeState = getNodeState(nodePath, hierMgr, stateMgr);
-        while (!nodeState.hasPropertyEntry(VersionManager.PROPNAME_IS_CHECKED_OUT)) {
+        while (!nodeState.hasPropertyEntry(JCR_ISCHECKEDOUT)) {
             if (nodePath.denotesRoot()) {
                 return;
             }
@@ -298,7 +297,7 @@ public class WorkspaceImpl implements Workspace {
             nodeState = getNodeState(nodePath, hierMgr, stateMgr);
         }
         PropertyId propId =
-                new PropertyId(nodeState.getUUID(), VersionManager.PROPNAME_IS_CHECKED_OUT);
+                new PropertyId(nodeState.getUUID(), JCR_ISCHECKEDOUT);
         PropertyState propState;
         try {
             propState = (PropertyState) stateMgr.getItemState(propId);
@@ -579,8 +578,8 @@ public class WorkspaceImpl implements Workspace {
             // FIXME delegate to 'node type instance handler'
             if (defId != null) {
                 PropDef def = ntReg.getPropDef(defId);
-                if (def.getDeclaringNodeType().equals(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-                    if (propName.equals(ItemImpl.PROPNAME_UUID)) {
+                if (def.getDeclaringNodeType().equals(MIX_REFERENCEABLE)) {
+                    if (propName.equals(JCR_UUID)) {
                         // set correct value of jcr:uuid property
                         newState.setValues(new InternalValue[]{InternalValue.create(parentUUID)});
                     }

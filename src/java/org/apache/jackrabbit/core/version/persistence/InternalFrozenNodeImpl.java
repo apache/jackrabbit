@@ -16,29 +16,32 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.version.*;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.version.InternalFreeze;
+import org.apache.jackrabbit.core.version.InternalFrozenNode;
+import org.apache.jackrabbit.core.version.InternalVersionItem;
+import org.apache.jackrabbit.core.version.PersistentVersionManager;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.NodeType;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *
  */
-class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFrozenNode {
+class InternalFrozenNodeImpl extends InternalFreezeImpl
+        implements InternalFrozenNode, Constants {
 
     /**
      * the underlaying persistance node
@@ -77,9 +80,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
      * @throws javax.jcr.RepositoryException
      */
     protected InternalFrozenNodeImpl(PersistentVersionManager vMgr,
-                                 PersistentNode node,
-                                 String id,
-                                 InternalVersionItem parent) throws RepositoryException {
+                                     PersistentNode node,
+                                     String id,
+                                     InternalVersionItem parent) throws RepositoryException {
         super(vMgr, parent);
         this.node = node;
         this.id = id;
@@ -95,15 +98,15 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
 
         for (int i = 0; i < props.length; i++) {
             PropertyState prop = props[i];
-            if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_UUID)) {
+            if (prop.getName().equals(JCR_FROZENUUID)) {
                 // special property
-                frozenUUID = node.getPropertyValue(VersionManager.PROPNAME_FROZEN_UUID).internalValue().toString();
-            } else if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE)) {
+                frozenUUID = node.getPropertyValue(JCR_FROZENUUID).internalValue().toString();
+            } else if (prop.getName().equals(JCR_FROZENPRIMARYTYPE)) {
                 // special property
-                frozenPrimaryType = (QName) node.getPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE).internalValue();
-            } else if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES)) {
+                frozenPrimaryType = (QName) node.getPropertyValue(JCR_FROZENPRIMARYTYPE).internalValue();
+            } else if (prop.getName().equals(JCR_FROZENMIXINTYPES)) {
                 // special property
-                InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES);
+                InternalValue[] values = node.getPropertyValues(JCR_FROZENMIXINTYPES);
                 if (values == null) {
                     frozenMixinTypes = new QName[0];
                 } else {
@@ -112,9 +115,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
                         frozenMixinTypes[j] = (QName) values[j].internalValue();
                     }
                 }
-            } else if (prop.getName().equals(ItemImpl.PROPNAME_PRIMARYTYPE)) {
+            } else if (prop.getName().equals(JCR_PRIMARYTYPE)) {
                 // ignore
-            } else if (prop.getName().equals(ItemImpl.PROPNAME_UUID)) {
+            } else if (prop.getName().equals(JCR_UUID)) {
                 // ignore
             } else {
                 propList.add(prop);
@@ -134,9 +137,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
         PersistentNode[] childNodes = node.getChildNodes();
         frozenChildNodes = new InternalFreeze[childNodes.length];
         for (int i = 0; i < childNodes.length; i++) {
-        if (childNodes[i].hasProperty(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE)) {
+        if (childNodes[i].hasProperty(JCR_FROZEN_PRIMARY_TYPE)) {
         frozenChildNodes[i] = new InternalFrozenNode(this, childNodes[i]);
-        } else if (childNodes[i].hasProperty(VersionManager.PROPNAME_VERSION_HISTORY)) {
+        } else if (childNodes[i].hasProperty(JCR_VERSION_HISTORY)) {
         frozenChildNodes[i] = new InternalFrozenVersionHistory(this, childNodes[i]);
         } else {
         // unkown ?
@@ -173,7 +176,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
             List entries = node.getState().getChildNodeEntries();
             InternalFreeze[] freezes = new InternalFreeze[entries.size()];
             Iterator iter = entries.iterator();
-            int i=0;
+            int i = 0;
             while (iter.hasNext()) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
                 freezes[i++] = (InternalFreeze) getVersionManager().getItemByInternal(entry.getUUID());
@@ -244,20 +247,20 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
         node = parent.addNode(name, NativePVM.NT_REP_FROZEN);
 
         // initialize the internal properties
-        if (src.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-            node.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(src.getUUID()));
+        if (src.isNodeType(MIX_REFERENCEABLE)) {
+            node.setPropertyValue(JCR_FROZENUUID, InternalValue.create(src.getUUID()));
         }
 
-        node.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE,
+        node.setPropertyValue(JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
 
-        if (src.hasProperty(NodeImpl.PROPNAME_MIXINTYPES)) {
+        if (src.hasProperty(NodeImpl.JCR_MIXINTYPES)) {
             NodeType[] mixins = src.getMixinNodeTypes();
             InternalValue[] ivalues = new InternalValue[mixins.length];
             for (int i = 0; i < mixins.length; i++) {
                 ivalues[i] = InternalValue.create(((NodeTypeImpl) mixins[i]).getQName());
             }
-            node.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, ivalues);
+            node.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
         }
 
         if (!initOnly) {
@@ -295,12 +298,12 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
                     case OnParentVersionAction.INITIALIZE:
                         break;
                     case OnParentVersionAction.VERSION:
-                        if (child.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
+                        if (child.isNodeType(MIX_VERSIONABLE)) {
                             // create frozen versionable child
                             PersistentNode newChild = node.addNode(child.getQName(), NativePVM.NT_REP_FROZEN_HISTORY);
-                            newChild.setPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY,
+                            newChild.setPropertyValue(JCR_VERSIONHISTORY,
                                     InternalValue.create(child.getVersionHistory().getUUID()));
-                            newChild.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION,
+                            newChild.setPropertyValue(JCR_BASEVERSION,
                                     InternalValue.create(child.getBaseVersion().getUUID()));
                             break;
                         }

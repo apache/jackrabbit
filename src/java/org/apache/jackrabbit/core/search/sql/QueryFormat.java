@@ -30,7 +30,7 @@ import org.apache.jackrabbit.core.search.LocationStepQueryNode;
 import org.apache.jackrabbit.core.search.RelationQueryNode;
 import org.apache.jackrabbit.core.search.OrderQueryNode;
 import org.apache.jackrabbit.core.search.QueryNode;
-import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.search.QueryConstants;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
@@ -47,7 +47,7 @@ import java.util.Iterator;
 /**
  * Implements the query node tree serialization into a String.
  */
-class QueryFormat implements QueryNodeVisitor, Constants {
+class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
     /** Will be used to resolve QNames */
     private final NamespaceResolver resolver;
@@ -265,7 +265,7 @@ class QueryFormat implements QueryNodeVisitor, Constants {
     public Object visit(PathQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
-            sb.append(Constants.JCR_PATH.toJCRName(resolver));
+            sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
             sb.append(" LIKE '");
             LocationStepQueryNode[] steps = node.getPathSteps();
             for (int i = 0; i < steps.length; i++) {

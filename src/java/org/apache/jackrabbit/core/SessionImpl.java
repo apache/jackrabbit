@@ -18,7 +18,10 @@ package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.nodetype.*;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
@@ -51,7 +54,7 @@ import java.util.*;
 /**
  * A <code>SessionImpl</code> ...
  */
-public class SessionImpl implements Session {
+public class SessionImpl implements Session, Constants {
 
     private static Logger log = Logger.getLogger(SessionImpl.class);
 
@@ -308,6 +311,15 @@ public class SessionImpl implements Session {
      */
     protected HierarchyManager getHierarchyManager() {
         return hierMgr;
+    }
+
+    /**
+     * Returns the <code>VersionManager</code> associated with this session.
+     *
+     * @return the <code>VersionManager</code> associated with this session
+     */
+    protected VersionManager getVersionManager() {
+        return versionMgr;
     }
 
     /**
@@ -602,7 +614,7 @@ public class SessionImpl implements Session {
 
         try {
             NodeImpl node = (NodeImpl) getItemManager().getItem(new NodeId(uuid));
-            if (node.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+            if (node.isNodeType(MIX_REFERENCEABLE)) {
                 return node;
             } else {
                 // there is a node with that uuid but the node does not expose it
@@ -1094,12 +1106,12 @@ public class SessionImpl implements Session {
             if (prefix == null || uri == null) {
                 throw new IllegalArgumentException("prefix/uri can not be null");
             }
-            if (NamespaceRegistryImpl.NS_EMPTY_PREFIX.equals(prefix)
-                    || NamespaceRegistryImpl.NS_DEFAULT_URI.equals(uri)) {
+            if (NS_EMPTY_PREFIX.equals(prefix)
+                    || NS_DEFAULT_URI.equals(uri)) {
                 throw new NamespaceException("default namespace is reserved and can not be changed");
             }
             // special case: prefixes xml*
-            if (prefix.toLowerCase().startsWith(NamespaceRegistryImpl.NS_XML_PREFIX)) {
+            if (prefix.toLowerCase().startsWith(NS_XML_PREFIX)) {
                 throw new NamespaceException("reserved prefix: " + prefix);
             }
             // check if the prefix is a valid XML prefix

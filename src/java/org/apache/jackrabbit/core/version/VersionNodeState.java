@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.ItemImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
@@ -50,35 +48,35 @@ public class VersionNodeState extends VirtualNodeState {
     protected VersionNodeState(VersionItemStateProvider vm, InternalVersion v,
                                String parentUUID)
             throws RepositoryException {
-        super(vm, parentUUID, v.getId(), NodeTypeRegistry.NT_VERSION, new QName[0]);
+        super(vm, parentUUID, v.getId(), NT_VERSION, new QName[0]);
         this.v = v;
 
         // version is referenceable
-        setPropertyValue(ItemImpl.PROPNAME_UUID, InternalValue.create(v.getId()));
+        setPropertyValue(JCR_UUID, InternalValue.create(v.getId()));
 
         // add the frozen node id if not root version
         if (!v.isRootVersion()) {
-            addChildNodeEntry(VersionManager.NODENAME_FROZEN, v.getFrozenNode().getId());
+            addChildNodeEntry(JCR_FROZENNODE, v.getFrozenNode().getId());
         }
     }
 
     /**
-     * @see VirtualNodeState#getProperty(org.apache.jackrabbit.core.QName)
+     * @see VirtualNodeState#getProperty(QName)
      */
     public VirtualPropertyState getProperty(QName name)
             throws NoSuchItemStateException {
         VirtualPropertyState state = super.getProperty(name);
         if (state != null) {
-            if (name.equals(VersionManager.PROPNAME_VERSION_LABELS)) {
+            if (name.equals(JCR_VERSIONLABELS)) {
                 state.setValues(InternalValue.create(v.getLabels()));
-            } else if (name.equals(VersionManager.PROPNAME_PREDECESSORS)) {
+            } else if (name.equals(JCR_PREDECESSORS)) {
                 InternalVersion[] preds = v.getPredecessors();
                 InternalValue[] predV = new InternalValue[preds.length];
                 for (int i = 0; i < preds.length; i++) {
                     predV[i] = InternalValue.create(new UUID(preds[i].getId()));
                 }
                 state.setValues(predV);
-            } else if (name.equals(VersionManager.PROPNAME_SUCCESSORS)) {
+            } else if (name.equals(JCR_SUCCESSORS)) {
                 InternalVersion[] succs = v.getSuccessors();
                 InternalValue[] succV = new InternalValue[succs.length];
                 for (int i = 0; i < succs.length; i++) {

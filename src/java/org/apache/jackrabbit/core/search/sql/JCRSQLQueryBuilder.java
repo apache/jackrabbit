@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.search.OrQueryNode;
 import org.apache.jackrabbit.core.search.NotQueryNode;
 import org.apache.jackrabbit.core.search.OrderQueryNode;
 import org.apache.jackrabbit.core.search.RelationQueryNode;
-import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.search.QueryConstants;
 import org.apache.jackrabbit.core.search.QueryNode;
 import org.apache.jackrabbit.core.search.TextsearchQueryNode;
 import org.apache.jackrabbit.core.search.PathQueryNode;
@@ -52,7 +52,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /**
      * DateFormat pattern for type
-     * {@link org.apache.jackrabbit.core.search.Constants.TYPE_DATE}.
+     * {@link org.apache.jackrabbit.core.search.QueryConstants.TYPE_DATE}.
      */
     private static final String DATE_PATTERN = "yyyy-MM-dd";
 
@@ -202,7 +202,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }, data);
             QName identifier = tmp[0];
 
-            if (identifier.equals(Constants.JCR_PATH)) {
+            if (identifier.equals(QueryConstants.JCR_PATH)) {
                 if (node.children[1] instanceof ASTIdentifier) {
                     // simply ignore, this is a join of a mixin node type
                 } else {
@@ -212,34 +212,34 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 return data;
             }
 
-            if (type == Constants.OPERATION_BETWEEN) {
+            if (type == QueryConstants.OPERATION_BETWEEN) {
                 AndQueryNode between = new AndQueryNode(parent);
                 RelationQueryNode rel = createRelationQueryNode(between,
-                        identifier, Constants.OPERATION_GE_VALUE, (ASTLiteral) node.children[1]);
+                        identifier, QueryConstants.OPERATION_GE_VALUE, (ASTLiteral) node.children[1]);
                 between.addOperand(rel);
                 rel = createRelationQueryNode(between,
-                        identifier, Constants.OPERATION_LE_VALUE, (ASTLiteral) node.children[2]);
+                        identifier, QueryConstants.OPERATION_LE_VALUE, (ASTLiteral) node.children[2]);
                 between.addOperand(rel);
                 predicateNode = between;
-            } else if (type == Constants.OPERATION_EQ_VALUE) {
+            } else if (type == QueryConstants.OPERATION_EQ_VALUE) {
                 if (node.children[1] instanceof ASTIdentifier) {
                     // simply ignore, this is a join of a mixin node type
                 } else {
                     predicateNode = createRelationQueryNode(parent,
                             identifier, type, (ASTLiteral) node.children[1]);
                 }
-            } else if (type == Constants.OPERATION_GE_VALUE
-                    || type == Constants.OPERATION_GT_VALUE
-                    || type == Constants.OPERATION_LE_VALUE
-                    || type == Constants.OPERATION_LT_VALUE
-                    || type == Constants.OPERATION_NE_VALUE) {
+            } else if (type == QueryConstants.OPERATION_GE_VALUE
+                    || type == QueryConstants.OPERATION_GT_VALUE
+                    || type == QueryConstants.OPERATION_LE_VALUE
+                    || type == QueryConstants.OPERATION_LT_VALUE
+                    || type == QueryConstants.OPERATION_NE_VALUE) {
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, (ASTLiteral) node.children[1]);
-            } else if (type == Constants.OPERATION_EQ_GENERAL
-                    || type == Constants.OPERATION_NE_GENERAL) {
+            } else if (type == QueryConstants.OPERATION_EQ_GENERAL
+                    || type == QueryConstants.OPERATION_NE_GENERAL) {
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, (ASTLiteral) node.children[0]);
-            } else if (type == Constants.OPERATION_LIKE) {
+            } else if (type == QueryConstants.OPERATION_LIKE) {
                 ASTLiteral pattern = (ASTLiteral) node.children[1];
                 if (node.getEscapeString() != null) {
                     if (node.getEscapeString().length() == 1) {
@@ -256,19 +256,19 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 }
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, pattern);
-            } else if (type == Constants.OPERATION_IN) {
+            } else if (type == QueryConstants.OPERATION_IN) {
                 OrQueryNode in = new OrQueryNode(parent);
                 for (int i = 1; i < node.children.length; i++) {
                     RelationQueryNode rel = createRelationQueryNode(in,
-                            identifier, Constants.OPERATION_EQ_VALUE, (ASTLiteral) node.children[i]);
+                            identifier, QueryConstants.OPERATION_EQ_VALUE, (ASTLiteral) node.children[i]);
                     in.addOperand(rel);
                 }
                 predicateNode = in;
-            } else if (type == Constants.OPERATION_NULL
-                    || type == Constants.OPERATION_NOT_NULL) {
+            } else if (type == QueryConstants.OPERATION_NULL
+                    || type == QueryConstants.OPERATION_NOT_NULL) {
                 // create a dummy literal
                 ASTLiteral star = new ASTLiteral(JCRSQLParserTreeConstants.JJTLITERAL);
-                star.setType(Constants.TYPE_STRING);
+                star.setType(QueryConstants.TYPE_STRING);
                 star.setValue("%");
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, star);
@@ -402,19 +402,19 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         RelationQueryNode node = null;
 
         try {
-            if (literal.getType() == Constants.TYPE_DATE) {
+            if (literal.getType() == QueryConstants.TYPE_DATE) {
                 SimpleDateFormat format = new SimpleDateFormat(DATE_PATTERN);
                 Date date = format.parse(stringValue);
                 node = new RelationQueryNode(parent, propertyName, date, operationType);
-            } else if (literal.getType() == Constants.TYPE_DOUBLE) {
+            } else if (literal.getType() == QueryConstants.TYPE_DOUBLE) {
                 double d = Double.parseDouble(stringValue);
                 node = new RelationQueryNode(parent, propertyName, d, operationType);
-            } else if (literal.getType() == Constants.TYPE_LONG) {
+            } else if (literal.getType() == QueryConstants.TYPE_LONG) {
                 long l = Long.parseLong(stringValue);
                 node = new RelationQueryNode(parent, propertyName, l, operationType);
-            } else if (literal.getType() == Constants.TYPE_STRING) {
+            } else if (literal.getType() == QueryConstants.TYPE_STRING) {
                 node = new RelationQueryNode(parent, propertyName, stringValue, operationType);
-            } else if (literal.getType() == Constants.TYPE_TIMESTAMP) {
+            } else if (literal.getType() == QueryConstants.TYPE_TIMESTAMP) {
                 Calendar c = ISO8601.parse(stringValue);
                 node = new RelationQueryNode(parent, propertyName, c.getTime(), operationType);
             }

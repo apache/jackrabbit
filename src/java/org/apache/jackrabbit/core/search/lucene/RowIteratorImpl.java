@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.search.QueryConstants;
 
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
@@ -191,9 +191,9 @@ class RowIteratorImpl implements RowIterator {
                         }
                     } else {
                         // property not set or jcr:path / jcr:score
-                        if (Constants.JCR_PATH.equals(properties[i])) {
+                        if (QueryConstants.JCR_PATH.equals(properties[i])) {
                             tmp[i] = PathValue.valueOf(node.getPath());
-                        } else if (Constants.JCR_SCORE.equals(properties[i])) {
+                        } else if (QueryConstants.JCR_SCORE.equals(properties[i])) {
                             tmp[i] = new LongValue((int) (score * 1000f));
                         } else {
                             tmp[i] = null;
@@ -233,9 +233,9 @@ class RowIteratorImpl implements RowIterator {
                     return node.getProperty(prop).getValue();
                 } else {
                     // either jcr:score / jcr:path or not set
-                    if (Constants.JCR_PATH.equals(prop)) {
+                    if (QueryConstants.JCR_PATH.equals(prop)) {
                         return PathValue.valueOf(node.getPath());
-                    } else if (Constants.JCR_SCORE.equals(prop)) {
+                    } else if (QueryConstants.JCR_SCORE.equals(prop)) {
                         return new LongValue((int) (score * 1000f));
                     } else {
                         return null;

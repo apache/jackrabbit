@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.*;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersionItem;
+import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
@@ -38,7 +37,8 @@ import java.util.Iterator;
 /**
  *
  */
-class InternalVersionHistoryImpl extends InternalVersionItemImpl implements InternalVersionHistory {
+class InternalVersionHistoryImpl extends InternalVersionItemImpl
+        implements InternalVersionHistory, Constants {
     /**
      * default logger
      */
@@ -302,7 +302,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         try {
             UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
             stateMgr.edit();
-            PersistentNode lNode = labelNode.addNode(label, NodeTypeRegistry.NT_UNSTRUCTURED);
+            PersistentNode lNode = labelNode.addNode(label, NT_UNSTRUCTURED);
             lNode.setPropertyValue(NativePVM.PROPNAME_NAME, InternalValue.create(label));
             lNode.setPropertyValue(NativePVM.PROPNAME_VERSION, InternalValue.create(version.getId()));
             labelNode.store();
@@ -355,7 +355,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
             throws RepositoryException {
 
         // copy predecessors from src node
-        Value[] preds = src.getProperty(VersionManager.PROPNAME_PREDECESSORS).getValues();
+        Value[] preds = src.getProperty(JCR_PREDECESSORS).getValues();
         InternalValue[] predecessors = new InternalValue[preds.length];
         for (int i = 0; i < preds.length; i++) {
             String predId = preds[i].getString();
@@ -367,17 +367,17 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         }
 
         String versionId = UUID.randomUUID().toString();
-        QName nodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, versionId);
+        QName nodeName = new QName(NS_DEFAULT_URI, versionId);
         PersistentNode vNode = node.addNode(nodeName, NativePVM.NT_REP_VERSION);
         vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_ID, InternalValue.create(versionId));
         vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(name));
 
         // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, predecessors);
+        vNode.setPropertyValue(JCR_CREATED, InternalValue.create(Calendar.getInstance()));
+        vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.STRING, predecessors);
 
         // checkin source node
-        InternalFrozenNodeImpl.checkin(vNode, VersionManager.NODENAME_FROZEN, src, false, false);
+        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, false, false);
 
         // and store
         node.store();
@@ -452,22 +452,22 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         pNode.setPropertyValue(NativePVM.PROPNAME_VERSIONABLE_ID, InternalValue.create(src.internalGetUUID()));
 
         // create label node
-        pNode.addNode(NativePVM.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_UNSTRUCTURED);
+        pNode.addNode(NativePVM.NODENAME_VERSION_LABELS, NT_UNSTRUCTURED);
 
         // create root version
         String versionId = UUID.randomUUID().toString();
-        QName nodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, versionId);
+        QName nodeName = new QName(NS_DEFAULT_URI, versionId);
 
         PersistentNode vNode = pNode.addNode(nodeName, NativePVM.NT_REP_VERSION);
         vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_ID, InternalValue.create(versionId));
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(VersionManager.NODENAME_ROOTVERSION));
+        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(JCR_ROOTVERSION));
 
         // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
+        vNode.setPropertyValue(JCR_CREATED, InternalValue.create(Calendar.getInstance()));
+        vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
 
         // add also an empty frozen node to the root version
-        InternalFrozenNodeImpl.checkin(vNode, VersionManager.NODENAME_FROZEN, src, true, false);
+        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, true, false);
 
         parent.store();
         return new InternalVersionHistoryImpl(vMgr, pNode);

@@ -108,8 +108,8 @@ class NodeTypeDefStore {
             uriToPrefix.put(ns.getURI(), ns.getPrefix());
         }
         // add default namespace (empty uri)
-        prefixToURI.put(NamespaceRegistryImpl.NS_EMPTY_PREFIX, NamespaceRegistryImpl.NS_DEFAULT_URI);
-        uriToPrefix.put(NamespaceRegistryImpl.NS_DEFAULT_URI, NamespaceRegistryImpl.NS_EMPTY_PREFIX);
+        prefixToURI.put(Constants.NS_EMPTY_PREFIX, Constants.NS_DEFAULT_URI);
+        uriToPrefix.put(Constants.NS_DEFAULT_URI, Constants.NS_EMPTY_PREFIX);
 
         NamespaceResolver nsResolver = new NamespaceResolver() {
             public String getURI(String prefix) throws NamespaceException {
@@ -561,7 +561,7 @@ class NodeTypeDefStore {
                     }
                 }
                 // autoCreate
-		elem.setAttribute(AUTOCREATE_ATTRIBUTE, Boolean.toString(pd.isAutoCreate()));
+                elem.setAttribute(AUTOCREATE_ATTRIBUTE, Boolean.toString(pd.isAutoCreate()));
                 // mandatory
                 elem.setAttribute(MANDATORY_ATTRIBUTE, Boolean.toString(pd.isMandatory()));
                 // onParentVersion

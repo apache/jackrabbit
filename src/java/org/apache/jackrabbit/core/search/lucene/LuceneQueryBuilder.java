@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.search.*;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -55,7 +54,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * QName for jcr:primaryType
      */
-    private static QName primaryType = NodeTypeRegistry.JCR_PRIMARY_TYPE;
+    private static QName primaryType = org.apache.jackrabbit.core.Constants.JCR_PRIMARYTYPE;
 
     /**
      * Root node of the abstract query tree
@@ -211,7 +210,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         String field = "";
         List values = new ArrayList();
         try {
-            field = primaryType.toJCRName(nsMappings);
+            field = Constants.JCR_PRIMARYTYPE.toJCRName(nsMappings);
             values.add(node.getValue().toJCRName(nsMappings));
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
             NodeType base = ntMgr.getNodeType(node.getValue().toJCRName(session.getNamespaceResolver()));
@@ -405,16 +404,16 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             case 0:
                 // not set: either IS NULL or IS NOT NULL
                 break;
-            case Constants.TYPE_DATE:
+            case QueryConstants.TYPE_DATE:
                 stringValue = DateField.dateToString(node.getDateValue());
                 break;
-            case Constants.TYPE_DOUBLE:
+            case QueryConstants.TYPE_DOUBLE:
                 stringValue = DoubleField.doubleToString(node.getDoubleValue());
                 break;
-            case Constants.TYPE_LONG:
+            case QueryConstants.TYPE_LONG:
                 stringValue = LongField.longToString(node.getLongValue());
                 break;
-            case Constants.TYPE_STRING:
+            case QueryConstants.TYPE_STRING:
                 stringValue = node.getStringValue();
                 break;
             default:
@@ -442,42 +441,42 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         }
 
         switch (node.getOperation()) {
-            case Constants.OPERATION_EQ_VALUE:      // =
+            case QueryConstants.OPERATION_EQ_VALUE:      // =
                 query = new TermQuery(new Term(field, stringValue));
                 break;
-            case Constants.OPERATION_EQ_GENERAL:    // =
+            case QueryConstants.OPERATION_EQ_GENERAL:    // =
                 // search in single and multi valued properties
                 BooleanQuery or = new BooleanQuery();
                 or.add(new TermQuery(new Term(field, stringValue)), false, false);
                 or.add(new TermQuery(new Term(mvpField, stringValue)), false, false);
                 query = or;
                 break;
-            case Constants.OPERATION_GE_VALUE:      // >=
+            case QueryConstants.OPERATION_GE_VALUE:      // >=
                 query = new RangeQuery(new Term(field, stringValue), null, true);
                 break;
-            case Constants.OPERATION_GT_VALUE:      // >
+            case QueryConstants.OPERATION_GT_VALUE:      // >
                 query = new RangeQuery(new Term(field, stringValue), null, false);
                 break;
-            case Constants.OPERATION_LE_VALUE:      // <=
+            case QueryConstants.OPERATION_LE_VALUE:      // <=
                 query = new RangeQuery(null, new Term(field, stringValue), true);
                 break;
-            case Constants.OPERATION_LIKE:          // LIKE
+            case QueryConstants.OPERATION_LIKE:          // LIKE
                 if (stringValue.equals("%")) {
                     query = new MatchAllQuery(field);
                 } else {
                     query = new WildcardQuery(new Term(field, stringValue));
                 }
                 break;
-            case Constants.OPERATION_LT_VALUE:      // <
+            case QueryConstants.OPERATION_LT_VALUE:      // <
                 query = new RangeQuery(null, new Term(field, stringValue), false);
                 break;
-            case Constants.OPERATION_NE_VALUE:      // !=
+            case QueryConstants.OPERATION_NE_VALUE:      // !=
                 BooleanQuery notQuery = new BooleanQuery();
                 notQuery.add(new MatchAllQuery(field), false, false);
                 notQuery.add(new TermQuery(new Term(field, stringValue)), false, true);
                 query = notQuery;
                 break;
-            case Constants.OPERATION_NE_GENERAL:    // !=
+            case QueryConstants.OPERATION_NE_GENERAL:    // !=
                 // search in single and multi valued properties
                 notQuery = new BooleanQuery();
                 notQuery.add(new MatchAllQuery(field), false, false);
@@ -486,13 +485,13 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 notQuery.add(new TermQuery(new Term(mvpField, stringValue)), false, true);
                 query = notQuery;
                 break;
-            case Constants.OPERATION_NULL:
+            case QueryConstants.OPERATION_NULL:
                 notQuery = new BooleanQuery();
                 notQuery.add(new MatchAllQuery(primaryTypeField), false, false);
                 notQuery.add(new MatchAllQuery(field), false, true);
                 query = notQuery;
                 break;
-            case Constants.OPERATION_NOT_NULL:
+            case QueryConstants.OPERATION_NOT_NULL:
                 query = new MatchAllQuery(field);
                 break;
             default:

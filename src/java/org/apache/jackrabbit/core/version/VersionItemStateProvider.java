@@ -35,7 +35,7 @@ import java.util.Map;
  * This Class implements a virtual item state provider, in order to expose the
  * versions to the version storage.
  */
-public class VersionItemStateProvider implements VirtualItemStateProvider {
+public class VersionItemStateProvider implements VirtualItemStateProvider, Constants {
     /**
      * the default logger
      */
@@ -85,10 +85,10 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     public VersionItemStateProvider(VersionManager vMgr, NodeTypeManagerImpl ntMgr, String rootId, String parentId) throws RepositoryException {
         this.vMgr = vMgr;
         this.ntMgr = ntMgr;
-        NDEF_VERSION = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_VERSION_HISTORY).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_VERSION).unwrap());
-        NDEF_VERSION_HISTORY = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_VERSION_HISTORY).unwrap());
-        NDEF_VERSION_HISTORY_ROOT = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.REP_SYSTEM).getApplicableChildNodeDef(VersionManager.NODENAME_HISTORY_ROOT, NodeTypeRegistry.REP_VERSION_STORAGE).unwrap());
-        NDEF_VERSION_LABELS = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_VERSION_HISTORY).getApplicableChildNodeDef(VersionManager.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_VERSION_LABELS).unwrap());
+        NDEF_VERSION = new NodeDefId(getNodeTypeManager().getNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSION).unwrap());
+        NDEF_VERSION_HISTORY = new NodeDefId(getNodeTypeManager().getNodeType(NT_UNSTRUCTURED).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSIONHISTORY).unwrap());
+        NDEF_VERSION_HISTORY_ROOT = new NodeDefId(getNodeTypeManager().getNodeType(REP_SYSTEM).getApplicableChildNodeDef(JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE).unwrap());
+        NDEF_VERSION_LABELS = new NodeDefId(getNodeTypeManager().getNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_VERSIONLABELS, NT_VERSIONLABELS).unwrap());
 
         this.root = new HistoryRootNodeState(this, vMgr, parentId, rootId);
         this.root.setDefinitionId(NDEF_VERSION_HISTORY_ROOT);
@@ -180,31 +180,31 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
                     String uuid = UUID.randomUUID().toString();
                     VersionLabelsNodeState vlns = new VersionLabelsNodeState(this, (InternalVersionHistory) vi, state.getUUID(), uuid);
                     vlns.setDefinitionId(NDEF_VERSION_LABELS);
-                    state.addChildNodeEntry(VersionManager.NODENAME_VERSION_LABELS, uuid);
+                    state.addChildNodeEntry(JCR_VERSIONLABELS, uuid);
                     nodes.put(new NodeId(uuid), vlns);
 
                 } else if (vi instanceof InternalVersion) {
                     InternalVersion v = (InternalVersion) vi;
                     state = new VersionNodeState(this, v, vi.getParent().getId());
                     state.setDefinitionId(NDEF_VERSION);
-                    state.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(v.getCreated()));
+                    state.setPropertyValue(JCR_CREATED, InternalValue.create(v.getCreated()));
                     // todo: do not read frozen stuff from frozen node instance here, rather put to version
-                    //state.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(v.getFrozenNode().getFrozenUUID()));
-                    //state.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE, InternalValue.create(v.getFrozenNode().getFrozenPrimaryType()));
-                    //state.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, InternalValue.create(v.getFrozenNode().getFrozenMixinTypes()));
-                    //state.setPropertyValues(VersionManager.PROPNAME_VERSION_LABELS, PropertyType.STRING, InternalValue.create(v.getLabels()));
-                    state.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
-                    state.setPropertyValues(VersionManager.PROPNAME_SUCCESSORS, PropertyType.REFERENCE, new InternalValue[0]);
+                    //state.setPropertyValue(JCR_FROZENUUID, InternalValue.create(v.getFrozenNode().getFrozenUUID()));
+                    //state.setPropertyValue(JCR_FROZENPRIMARYTYPE, InternalValue.create(v.getFrozenNode().getFrozenPrimaryType()));
+                    //state.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, InternalValue.create(v.getFrozenNode().getFrozenMixinTypes()));
+                    //state.setPropertyValues(JCR_VERSIONLABELS, PropertyType.STRING, InternalValue.create(v.getLabels()));
+                    state.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
+                    state.setPropertyValues(JCR_SUCCESSORS, PropertyType.REFERENCE, new InternalValue[0]);
 
                 } else if (vi instanceof InternalFrozenNode) {
                     InternalFrozenNode fn = (InternalFrozenNode) vi;
                     VirtualNodeState parent = getNodeState(new NodeId(fn.getParent().getId()));
                     boolean mimicFrozen = !(parent instanceof VersionNodeState);
                     state = createNodeState(parent,
-                            VersionManager.NODENAME_FROZEN,
+                            JCR_FROZENNODE,
                             id.getUUID(),
                             mimicFrozen ? fn.getFrozenPrimaryType() :
-                            NodeTypeRegistry.NT_FROZEN_NODE);
+                            NT_FROZENNODE);
                     mapFrozenNode(state, fn, mimicFrozen);
 
                 } else if (vi instanceof InternalFrozenVersionHistory) {
@@ -213,10 +213,10 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
                     state = createNodeState(parent,
                             fn.getName(),
                             id.getUUID(),
-                            NodeTypeRegistry.NT_VERSIONED_CHILD);
+                            NT_VERSIONEDCHILD);
                     // IMO, this should be exposed aswell
-                    // state.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(UUID.fromString(fn.getBaseVersionId())));
-                    state.setPropertyValue(VersionManager.PROPNAME_CHILD, InternalValue.create(UUID.fromString(fn.getVersionHistoryId())));
+                    // state.setPropertyValue(JCR_BASE_VERSION, InternalValue.create(UUID.fromString(fn.getBaseVersionId())));
+                    state.setPropertyValue(JCR_CHILD, InternalValue.create(UUID.fromString(fn.getVersionHistoryId())));
                 } else {
                     // not found, throw
                     throw new NoSuchItemStateException(id.toString());
@@ -297,7 +297,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         } catch (RepositoryException re) {
             // hack, use nt:unstructured as parent
             NodeTypeRegistry ntReg = getNodeTypeManager().getNodeTypeRegistry();
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType(NodeTypeRegistry.NT_UNSTRUCTURED);
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(NT_UNSTRUCTURED);
             ChildNodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
             def = getNodeTypeManager().getNodeDef(new NodeDefId(cnd));
         }
@@ -344,16 +344,16 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
 
         if (mimicFrozen) {
             if (node.getFrozenUUID() != null) {
-                state.setPropertyValue(ItemImpl.PROPNAME_UUID, InternalValue.create(node.getFrozenUUID()));
+                state.setPropertyValue(JCR_UUID, InternalValue.create(node.getFrozenUUID()));
             }
-            state.setPropertyValues(ItemImpl.PROPNAME_MIXINTYPES, PropertyType.NAME, InternalValue.create(node.getFrozenMixinTypes()));
+            state.setPropertyValues(JCR_MIXINTYPES, PropertyType.NAME, InternalValue.create(node.getFrozenMixinTypes()));
         } else {
-            state.setPropertyValue(ItemImpl.PROPNAME_UUID, InternalValue.create(node.getId()));
+            state.setPropertyValue(JCR_UUID, InternalValue.create(node.getId()));
             if (node.getFrozenUUID() != null) {
-                state.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(node.getFrozenUUID()));
+                state.setPropertyValue(JCR_FROZENUUID, InternalValue.create(node.getFrozenUUID()));
             }
-            state.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE, InternalValue.create(node.getFrozenPrimaryType()));
-            state.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, InternalValue.create(node.getFrozenMixinTypes()));
+            state.setPropertyValue(JCR_FROZENPRIMARYTYPE, InternalValue.create(node.getFrozenPrimaryType()));
+            state.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, InternalValue.create(node.getFrozenMixinTypes()));
         }
 
         // map properties

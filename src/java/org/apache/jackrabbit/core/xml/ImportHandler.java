@@ -43,7 +43,9 @@ public class ImportHandler extends DefaultHandler {
     protected boolean systemViewXML;
     protected boolean initialized;
 
-    public ImportHandler(NodeImpl importTargetNode, NamespaceRegistryImpl nsReg, SessionImpl session) {
+    public ImportHandler(NodeImpl importTargetNode,
+                         NamespaceRegistryImpl nsReg,
+                         SessionImpl session) {
         this.importTargetNode = importTargetNode;
         this.session = session;
         this.nsReg = nsReg;
@@ -55,7 +57,9 @@ public class ImportHandler extends DefaultHandler {
      */
     public void warning(SAXParseException e) throws SAXException {
         // log exception and carry on...
-        log.warn("warning encountered at line: " + e.getLineNumber() + ", column: " + e.getColumnNumber() + " while parsing XML stream", e);
+        log.warn("warning encountered at line: " + e.getLineNumber()
+                + ", column: " + e.getColumnNumber()
+                + " while parsing XML stream", e);
     }
 
     /**
@@ -63,7 +67,9 @@ public class ImportHandler extends DefaultHandler {
      */
     public void error(SAXParseException e) throws SAXException {
         // log exception and carry on...
-        log.error("error encountered at line: " + e.getLineNumber() + ", column: " + e.getColumnNumber() + " while parsing XML stream", e);
+        log.error("error encountered at line: " + e.getLineNumber()
+                + ", column: " + e.getColumnNumber()
+                + " while parsing XML stream", e);
     }
 
     /**
@@ -71,7 +77,9 @@ public class ImportHandler extends DefaultHandler {
      */
     public void fatalError(SAXParseException e) throws SAXException {
         // log and re-throw exception
-        log.error("fatal error encountered at line: " + e.getLineNumber() + ", column: " + e.getColumnNumber() + " while parsing XML stream", e);
+        log.error("fatal error encountered at line: " + e.getLineNumber()
+                + ", column: " + e.getColumnNumber()
+                + " while parsing XML stream", e);
         throw e;
     }
 
@@ -96,7 +104,8 @@ public class ImportHandler extends DefaultHandler {
     /**
      * @see ContentHandler#startPrefixMapping(String, String)
      */
-    public void startPrefixMapping(String prefix, String uri) throws SAXException {
+    public void startPrefixMapping(String prefix, String uri)
+            throws SAXException {
         try {
             String oldPrefix = session.getNamespacePrefix(uri);
             // namespace is already registered; check prefix
@@ -108,7 +117,8 @@ public class ImportHandler extends DefaultHandler {
                 try {
                     session.setNamespacePrefix(prefix, uri);
                 } catch (RepositoryException re) {
-                    throw new SAXException("failed to remap namespace " + uri + " to prefix " + prefix, re);
+                    throw new SAXException("failed to remap namespace " + uri
+                            + " to prefix " + prefix, re);
                 }
             }
         } catch (NamespaceException nse) {
@@ -134,7 +144,8 @@ public class ImportHandler extends DefaultHandler {
     /**
      * @see ContentHandler#startElement(String, String, String, Attributes)
      */
-    public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
+    public void startElement(String namespaceURI, String localName, String qName,
+                             Attributes atts) throws SAXException {
         if (!initialized) {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
@@ -151,7 +162,7 @@ public class ImportHandler extends DefaultHandler {
                     throw new SAXException(msg, e);
                 }
             }
-            systemViewXML = NamespaceRegistryImpl.NS_SV_URI.equals(nsURI);
+            systemViewXML = Constants.NS_SV_URI.equals(nsURI);
 
             if (systemViewXML) {
                 targetHandler = new SysViewImportHandler(importTargetNode, session);
@@ -177,7 +188,8 @@ public class ImportHandler extends DefaultHandler {
     /**
      * @see ContentHandler#endElement(String, String, String)
      */
-    public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
+    public void endElement(String namespaceURI, String localName, String qName)
+            throws SAXException {
         // delegate to target handler
         targetHandler.endElement(namespaceURI, localName, qName);
     }

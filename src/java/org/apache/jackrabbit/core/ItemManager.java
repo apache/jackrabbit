@@ -56,7 +56,7 @@ import java.util.Map;
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
  * one <code>ItemManager</code> instance per started global transaction.
  */
-public class ItemManager implements ItemLifeCycleListener {
+public class ItemManager implements ItemLifeCycleListener, Constants {
 
     private static Logger log = Logger.getLogger(ItemManager.class);
 
@@ -358,7 +358,7 @@ public class ItemManager implements ItemLifeCycleListener {
             throw new AccessDeniedException("cannot read item " + parentId);
         }
 
-        ItemState state = null;
+        ItemState state;
         try {
             state = itemStateProvider.getItemState(parentId);
         } catch (NoSuchItemStateException nsise) {
@@ -414,7 +414,7 @@ public class ItemManager implements ItemLifeCycleListener {
 
         ArrayList childIds = new ArrayList();
 
-        ItemState state = null;
+        ItemState state;
         try {
             state = itemStateProvider.getItemState(parentId);
         } catch (NoSuchItemStateException nsise) {
@@ -468,7 +468,7 @@ public class ItemManager implements ItemLifeCycleListener {
             throw new AccessDeniedException("cannot read item " + parentId);
         }
 
-        ItemState state = null;
+        ItemState state;
         try {
             state = itemStateProvider.getItemState(parentId);
         } catch (NoSuchItemStateException nsise) {
@@ -525,7 +525,7 @@ public class ItemManager implements ItemLifeCycleListener {
 
         ArrayList childIds = new ArrayList();
 
-        ItemState state = null;
+        ItemState state;
         try {
             state = itemStateProvider.getItemState(parentId);
         } catch (NoSuchItemStateException nsise) {
@@ -561,8 +561,8 @@ public class ItemManager implements ItemLifeCycleListener {
     //-------------------------------------------------< item factory methods >
     private ItemImpl createItemInstance(ItemId id) throws ItemNotFoundException, RepositoryException {
         // create instance of item using its state object
-        ItemImpl item = null;
-        ItemState state = null;
+        ItemImpl item;
+        ItemState state;
         try {
             state = itemStateProvider.getItemState(id);
         } catch (NoSuchItemStateException ise) {
@@ -589,12 +589,12 @@ public class ItemManager implements ItemLifeCycleListener {
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
         // check special nodes
-        if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION)) {
-            InternalVersion version = session.versionMgr.getVersion(state.getUUID());
+        if (state.getNodeTypeName().equals(NT_VERSION)) {
+            InternalVersion version = session.getVersionManager().getVersion(state.getUUID());
             return new VersionImpl(this, session, id, state, def, listeners, version);
 
-        } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION_HISTORY)) {
-            InternalVersionHistory history = session.versionMgr.getVersionHistory(state.getUUID());
+        } else if (state.getNodeTypeName().equals(NT_VERSIONHISTORY)) {
+            InternalVersionHistory history = session.getVersionManager().getVersionHistory(state.getUUID());
             return new VersionHistoryImpl(this, session, id, state, def, listeners, history);
 
         } else {

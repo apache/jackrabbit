@@ -84,7 +84,7 @@ public interface Constants {
     String URN_PREFIX = "urn:uuid:";
 
 
-    //** UUID Variant Constants
+    //** UUID Variant QueryConstants
     /**
      * UUID variant bits described in the IETF Draft MSB order,
      * this is the "Reserved, NCS backward compatibility field" 0 x x with unknown bits as 0
@@ -110,7 +110,7 @@ public interface Constants {
     int VARIANT_FUTURE = 7;
 
 
-    //** UUID Version Constants
+    //** UUID Version QueryConstants
     /**
      * Version one constant for UUID version one of four
      */

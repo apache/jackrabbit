@@ -45,13 +45,6 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
     public static final String CDATA_TYPE = "CDATA";
 
-    // jcr:xmltext
-    public static final QName NODENAME_XMLTEXT =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "xmltext");
-    // jcr:xmlcharacters
-    public static final QName PROPNAME_XMLCHARACTERS =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "xmlcharacters");
-
     // used to temporarily store properties of a node
     private final List props;
 
@@ -98,13 +91,13 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     protected void leavingProperties(NodeImpl node, int level)
             throws RepositoryException, SAXException {
         QName name = node.getQName();
-        if (name.equals(NODENAME_XMLTEXT)) {
+        if (name.equals(JCR_XMLTEXT)) {
             // the node represents xml character data
             Iterator iter = props.iterator();
             while (iter.hasNext()) {
                 PropertyImpl prop = (PropertyImpl) iter.next();
                 QName propName = prop.getQName();
-                if (propName.equals(PROPNAME_XMLCHARACTERS)) {
+                if (propName.equals(JCR_XMLCHARACTERS)) {
                     // assume jcr:xmlcharacters is single-valued
                     char[] chars = prop.getValue().getString().toCharArray();
                     contentHandler.characters(chars, 0, chars.length);
@@ -120,7 +113,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
             try {
                 if (node.isRepositoryRoot()) {
                     // root node needs a name
-                    elemName = NODENAME_ROOT.toJCRName(session.getNamespaceResolver());
+                    elemName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
                 } else {
                     elemName = name.toJCRName(session.getNamespaceResolver());
                 }
@@ -196,7 +189,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                     } else {
                         textVal = val.getString();
                     }
-                    // enocde spaces in value
+                    // enocde blanks in value
                     textVal = Text.replace(textVal, " ", "_x0020_");
                     attrValue.append(textVal);
                 }
@@ -213,7 +206,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     protected void leaving(NodeImpl node, int level)
             throws RepositoryException, SAXException {
         QName name = node.getQName();
-        if (name.equals(NODENAME_XMLTEXT)) {
+        if (name.equals(JCR_XMLTEXT)) {
             // the node represents xml character data
             // (already processed in leavingProperties(NodeImpl, int)
             return;
@@ -223,7 +216,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
         try {
             if (node.isRepositoryRoot()) {
                 // root node needs a name
-                elemName = NODENAME_ROOT.toJCRName(session.getNamespaceResolver());
+                elemName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
             } else {
                 elemName = name.toJCRName(session.getNamespaceResolver());
             }

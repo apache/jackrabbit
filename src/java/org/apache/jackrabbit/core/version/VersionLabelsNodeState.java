@@ -16,26 +16,26 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * This Class implements a virtual node state that represents a nt:versionLabels.
  * node state.
  */
-public class VersionLabelsNodeState extends VirtualNodeState {
+public class VersionLabelsNodeState extends VirtualNodeState implements Constants {
 
     /**
      * the internal version
@@ -56,9 +56,9 @@ public class VersionLabelsNodeState extends VirtualNodeState {
      * @throws javax.jcr.RepositoryException
      */
     protected VersionLabelsNodeState(VersionItemStateProvider vm, InternalVersionHistory vh,
-                               String parentUUID, String uuid)
+                                     String parentUUID, String uuid)
             throws RepositoryException {
-        super(vm, parentUUID, uuid, NodeTypeRegistry.NT_VERSION_LABELS, new QName[0]);
+        super(vm, parentUUID, uuid, NT_VERSIONLABELS, new QName[0]);
         this.vh = vh;
     }
 
@@ -82,7 +82,7 @@ public class VersionLabelsNodeState extends VirtualNodeState {
     public synchronized List getPropertyEntries() {
         ArrayList list = new ArrayList(super.getPropertyEntries());
         QName[] labels = vh.getVersionLabels();
-        for (int i=0; i<labels.length; i++) {
+        for (int i = 0; i < labels.length; i++) {
             list.add(createPropertyEntry(labels[i]));
         }
         return list;
@@ -91,7 +91,7 @@ public class VersionLabelsNodeState extends VirtualNodeState {
     public VirtualPropertyState[] getProperties() {
         List list = getPropertyEntries();
         VirtualPropertyState[] states = new VirtualPropertyState[list.size()];
-        for (int i=0; i< states.length; i++) {
+        for (int i = 0; i < states.length; i++) {
             try {
                 states[i] = getProperty(((PropertyEntry) list.get(i)).getName());
             } catch (NoSuchItemStateException e) {
@@ -117,7 +117,7 @@ public class VersionLabelsNodeState extends VirtualNodeState {
             if (v != null) {
                 try {
                     VirtualPropertyState state = (VirtualPropertyState) labelStates.get(name);
-                    if (state==null) {
+                    if (state == null) {
                         state = stateMgr.createPropertyState(this, name, PropertyType.REFERENCE, false);
                         labelStates.put(name, state);
                     }

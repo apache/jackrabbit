@@ -35,41 +35,12 @@ import java.util.Properties;
 /**
  * A <code>NamespaceRegistryImpl</code> ...
  */
-public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolver {
+public class NamespaceRegistryImpl implements NamespaceRegistry,
+        NamespaceResolver, Constants {
 
     private static Logger log = Logger.getLogger(NamespaceRegistryImpl.class);
 
-    // default namespace (empty uri)
-    public static final String NS_EMPTY_PREFIX = "";
-    public static final String NS_DEFAULT_URI = "";
-
-    // reserved namespace for repository internal node types
-    public static final String NS_REP_PREFIX = "rep";
-    public static final String NS_REP_URI = "internal";
-
-    // reserved namespace for items defined by built-in node types
-    public static final String NS_JCR_PREFIX = "jcr";
-    public static final String NS_JCR_URI = "http://www.jcp.org/jcr/1.0";
-
-    // reserved namespace for built-in primary node types
-    public static final String NS_NT_PREFIX = "nt";
-    public static final String NS_NT_URI = "http://www.jcp.org/jcr/nt/1.0";
-
-    // reserved namespace for built-in mixin node types
-    public static final String NS_MIX_PREFIX = "mix";
-    public static final String NS_MIX_URI = "http://www.jcp.org/jcr/mix/1.0";
-
-    // reserved namespace used in the system view XML serialization format
-    public static final String NS_SV_PREFIX = "sv";
-    public static final String NS_SV_URI = "http://www.jcp.org/jcr/sv/1.0";
-
     private static final String NS_REG_RESOURCE = "ns_reg.properties";
-
-    // reserved namespaces that must not be used or redefined
-    public static final String NS_XML_PREFIX = "xml";
-    public static final String NS_XML_URI = "http://www.w3.org/XML/1998/namespace";
-    public static final String NS_XMLNS_PREFIX = "xmlns";
-    public static final String NS_XMLNS_URI = "http://www.w3.org/2000/xmlns/";
 
     private static final HashSet reservedPrefixes = new HashSet();
     private static final HashSet reservedURIs = new HashSet();

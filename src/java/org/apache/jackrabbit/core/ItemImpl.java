@@ -17,12 +17,13 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.nodetype.*;
+import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
@@ -38,30 +39,9 @@ import java.util.*;
 /**
  * <code>ItemImpl</code> implements the <code>Item</code> interface.
  */
-public abstract class ItemImpl implements Item, ItemStateListener {
+public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
     private static Logger log = Logger.getLogger(ItemImpl.class);
-
-    // some constants used in derived classes
-    // system properties (values are system generated)
-    // jcr:uuid
-    public static final QName PROPNAME_UUID =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "uuid");
-    // jcr:primaryType
-    public static final QName PROPNAME_PRIMARYTYPE =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
-    // jcr:mixinTypes
-    public static final QName PROPNAME_MIXINTYPES =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "mixinTypes");
-    // jcr:created
-    public static final QName PROPNAME_CREATED =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "created");
-    // jcr:lastModified
-    public static final QName PROPNAME_LAST_MODIFIED =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "lastModified");
-    // jcr:mergeFailed
-    public static final QName PROPNAME_MERGE_FAILED =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "mergeFailed");
 
     protected static final int STATUS_NORMAL = 0;
     protected static final int STATUS_MODIFIED = 1;
@@ -881,13 +861,13 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             ItemState itemState = (ItemState) iter.next();
             if (itemState.isNode()) {
                 NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
-                if (node.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
-                    if (!node.hasProperty(VersionManager.PROPNAME_VERSION_HISTORY)) {
-                        VersionHistory hist = session.versionMgr.createVersionHistory(node);
-                        node.internalSetProperty(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
-                        node.internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
-                        node.internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
-                        node.internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+                if (node.isNodeType(MIX_VERSIONABLE)) {
+                    if (!node.hasProperty(JCR_VERSIONHISTORY)) {
+                        VersionHistory hist = session.getVersionManager().createVersionHistory(node);
+                        node.internalSetProperty(JCR_VERSIONHISTORY, InternalValue.create(new UUID(hist.getUUID())));
+                        node.internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
+                        node.internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));
+                        node.internalSetProperty(JCR_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
                         createdTransientState = true;
                     }
                 }
@@ -965,15 +945,15 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                  * persistent item that has been transiently removed
                  */
                 case ItemState.STATUS_EXISTING_REMOVED:
-                /**
-                 * persistent item that has been transiently modified
-                 */
+                    /**
+                     * persistent item that has been transiently modified
+                     */
                 case ItemState.STATUS_EXISTING_MODIFIED:
-                /**
-                 * persistent item that has been transiently modified or removed
-                 * and the underlying persistent state has been externally
-                 * modified since the transient modification/removal.
-                 */
+                    /**
+                     * persistent item that has been transiently modified or removed
+                     * and the underlying persistent state has been externally
+                     * modified since the transient modification/removal.
+                     */
                 case ItemState.STATUS_STALE_MODIFIED:
                     ItemState persistentState = state.getOverlayedState();
                     /**
@@ -994,11 +974,11 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     }
                     return;
 
-                /**
-                 * persistent item that has been transiently modified or removed
-                 * and the underlying persistent state has been externally
-                 * destroyed since the transient modification/removal.
-                 */
+                    /**
+                     * persistent item that has been transiently modified or removed
+                     * and the underlying persistent state has been externally
+                     * destroyed since the transient modification/removal.
+                     */
                 case ItemState.STATUS_STALE_DESTROYED:
                     /**
                      * first notify the listeners that this instance has been
@@ -1012,9 +992,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     state = null;
                     return;
 
-                /**
-                 * new item that has been transiently added
-                 */
+                    /**
+                     * new item that has been transiently added
+                     */
                 case ItemState.STATUS_NEW:
                     /**
                      * first notify the listeners that this instance has been
@@ -1148,7 +1128,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         sanityCheck();
 
         // synchronize on this session
-        synchronized(session) {
+        synchronized (session) {
             try {
                 /**
                  * turn on temporary path caching for better performance

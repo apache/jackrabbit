@@ -849,7 +849,7 @@ public final class Path {
         static final String LITERAL = "*";
 
         private RootElement() {
-            super(NamespaceRegistryImpl.NS_DEFAULT_URI, "");
+            super(Constants.NS_DEFAULT_URI, "");
         }
 
         // PathElement override
@@ -887,7 +887,7 @@ public final class Path {
         static final String LITERAL = ".";
 
         private CurrentElement() {
-            super(NamespaceRegistryImpl.NS_DEFAULT_URI, LITERAL);
+            super(Constants.NS_DEFAULT_URI, LITERAL);
         }
 
         // PathElement override
@@ -925,7 +925,7 @@ public final class Path {
         static final String LITERAL = "..";
 
         private ParentElement() {
-            super(NamespaceRegistryImpl.NS_DEFAULT_URI, LITERAL);
+            super(Constants.NS_DEFAULT_URI, LITERAL);
         }
 
         // PathElement override

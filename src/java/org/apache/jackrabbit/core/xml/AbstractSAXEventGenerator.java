@@ -41,7 +41,7 @@ import javax.jcr.RepositoryException;
  * </ul>
  * for every item it encounters.
  */
-abstract class AbstractSAXEventGenerator {
+abstract class AbstractSAXEventGenerator implements Constants {
 
     private static Logger log = Logger.getLogger(AbstractSAXEventGenerator.class);
 
@@ -50,16 +50,6 @@ abstract class AbstractSAXEventGenerator {
     protected final NodeImpl startNode;
     protected final boolean skipBinary;
     protected final boolean noRecurse;
-
-    // dummy name for root node (jcr:root)
-    public static final QName NODENAME_ROOT =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "root");
-    // jcr:uuid
-    protected static final QName PROPNAME_UUID = ItemImpl.PROPNAME_UUID;
-    // jcr:primaryType
-    protected static final QName PROPNAME_PRIMARYTYPE = ItemImpl.PROPNAME_PRIMARYTYPE;
-    // jcr:mixinTypes
-    protected static final QName PROPNAME_MIXINTYPES = ItemImpl.PROPNAME_MIXINTYPES;
 
     /**
      * Constructor
@@ -130,20 +120,20 @@ abstract class AbstractSAXEventGenerator {
 
         // serialize jcr:primaryType, jcr:mixinTypes & jcr:uuid first:
         // jcr:primaryType
-        if (node.hasProperty(PROPNAME_PRIMARYTYPE)) {
-            process(node.getProperty(PROPNAME_PRIMARYTYPE), level + 1);
+        if (node.hasProperty(JCR_PRIMARYTYPE)) {
+            process(node.getProperty(JCR_PRIMARYTYPE), level + 1);
         } else {
             String msg = "internal error: missing jcr:primaryType property on node " + node.safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg);
         }
         // jcr:mixinTypes
-        if (node.hasProperty(PROPNAME_MIXINTYPES)) {
-            process(node.getProperty(PROPNAME_MIXINTYPES), level + 1);
+        if (node.hasProperty(JCR_MIXINTYPES)) {
+            process(node.getProperty(JCR_MIXINTYPES), level + 1);
         }
         // jcr:uuid
-        if (node.hasProperty(PROPNAME_UUID)) {
-            process(node.getProperty(PROPNAME_UUID), level + 1);
+        if (node.hasProperty(JCR_UUID)) {
+            process(node.getProperty(JCR_UUID), level + 1);
         }
 
         // serialize remaining properties
@@ -151,9 +141,9 @@ abstract class AbstractSAXEventGenerator {
         while (propIter.hasNext()) {
             PropertyImpl prop = (PropertyImpl) propIter.nextProperty();
             QName name = prop.getQName();
-            if (PROPNAME_PRIMARYTYPE.equals(name)
-                    || PROPNAME_MIXINTYPES.equals(name)
-                    || PROPNAME_UUID.equals(name)) {
+            if (JCR_PRIMARYTYPE.equals(name)
+                    || JCR_MIXINTYPES.equals(name)
+                    || JCR_UUID.equals(name)) {
                 continue;
             }
             // serialize property
