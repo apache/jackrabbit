@@ -318,9 +318,12 @@ public class LocalItemStateManager extends ItemStateCache
     protected void update(ChangeLog changeLog)
             throws ItemStateException {
 
+        ObservationManagerImpl obsMgr = null;
+
         try {
-            sharedStateMgr.store(changeLog,
-                    (wspImpl != null) ? (ObservationManagerImpl) wspImpl.getObservationManager() : null);
+            if (wspImpl != null) {
+                obsMgr = (ObservationManagerImpl) wspImpl.getObservationManager();
+            }
         } catch (RepositoryException e) {
             // should never get here
             String msg = "ObservationManager unavailable";
@@ -328,6 +331,7 @@ public class LocalItemStateManager extends ItemStateCache
             throw new ItemStateException(msg, e);
         }
 
+        sharedStateMgr.store(changeLog, obsMgr);
         changeLog.persisted();
     }
 

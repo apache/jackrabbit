@@ -448,43 +448,58 @@ public class SharedItemStateManager extends ItemStateCache
             }
         }
 
-        /**
-         * Reconnect all items contained in the change log to their
-         * respective shared item and add the shared items to a
-         * new change log.
-         */
-        iter = local.modifiedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            state.connect(getItemState(state.getId()));
-            shared.modified(state.getOverlayedState());
-        }
-        iter = local.deletedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            state.connect(getItemState(state.getId()));
-            shared.deleted(state.getOverlayedState());
-        }
-        iter = local.addedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            state.connect(createInstance(state));
-            shared.added(state.getOverlayedState());
-        }
-
-        /* prepare the events */
         EventStateCollection events = null;
-        if (obsMgr != null) {
-            events = obsMgr.createEventStateCollection();
-            events.createEventStates(root.getUUID(), local, this);
-            events.prepare();
+        boolean succeeded = false;
+
+        try {
+            /**
+             * Reconnect all items contained in the change log to their
+             * respective shared item and add the shared items to a
+             * new change log.
+             */
+            iter = local.modifiedStates();
+            while (iter.hasNext()) {
+                ItemState state = (ItemState) iter.next();
+                state.connect(getItemState(state.getId()));
+                shared.modified(state.getOverlayedState());
+            }
+            iter = local.deletedStates();
+            while (iter.hasNext()) {
+                ItemState state = (ItemState) iter.next();
+                state.connect(getItemState(state.getId()));
+                shared.deleted(state.getOverlayedState());
+            }
+            iter = local.addedStates();
+            while (iter.hasNext()) {
+                ItemState state = (ItemState) iter.next();
+                state.connect(createInstance(state));
+                shared.added(state.getOverlayedState());
+            }
+
+            /* prepare the events */
+            if (obsMgr != null) {
+                events = obsMgr.createEventStateCollection();
+                events.createEventStates(root.getUUID(), local, this);
+                events.prepare();
+            }
+
+            /* Push all changes from the local items to the shared items */
+            local.push();
+
+            /* Store items in the underlying persistence manager */
+            persistMgr.store(shared);
+            succeeded = true;
+
+        } finally {
+
+            /**
+             * If some store operation was unsuccessful, we have to restore
+             * the original state of all items in the local change log.
+             */
+            if (!succeeded) {
+                local.disconnect();
+            }
         }
-
-        /* Push all changes from the local items to the shared items */
-        local.push();
-
-        /* Store items in the underlying persistence manager */
-        persistMgr.store(shared);
 
         /* Let the shared item listeners know about the change */
         shared.persisted();
