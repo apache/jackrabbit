@@ -18,8 +18,8 @@
 
 <project>
   <pomVersion>3</pomVersion>
-  <name>Jackrabbit</name>
   <id>jackrabbit</id>
+  <name>Jackrabbit</name>
   <currentVersion>0.14-dev</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
@@ -28,36 +28,28 @@
   </organization>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.*</package>
-  <shortDescription>Implementation of the Content Repository for Java</shortDescription>
   <description>
     The Jackrabbit Project has been formed to develop an open source implementation of the Content Repository
     for Java Technology API (JCR), being specified within the Java Community Process as
-    <a href="http://www.jcp.org/en/jsr/detail?id=170">JSR-170</a>. <a href="http://www.day.com/">Day Software</a>,
+    &lt;a href=http://www.jcp.org/en/jsr/detail?id=170&gt;JSR-170&lt;/a&gt;. &lt;a href=http://www.day.com/&gt;Day Software&lt;/a&gt;,
     the JSR-170 specification lead, has licensed an initial implementation of the JCR reference implementation 
     for use as seed code for this project.  JCR specifies an API for application developers (and application 
     frameworks) to use for interaction with modern content repositories -- content management systems that provide 
     content services such as versioning, transactions, indexing, workflow, etc.
   </description>
+  <shortDescription>Implementation of the Content Repository for Java</shortDescription>
   <url>http://incubator.apache.org/projects/jackrabbit.html</url>
   <issueTrackingUrl>http://issues.apache.org/jira/browse/JCR</issueTrackingUrl>
-  <siteDirectory>docs</siteDirectory>
-
+  <siteAddress>incubator.apache.org</siteAddress>
+  <siteDirectory>/www/incubator.apache.org/jackrabbit/docs/</siteDirectory>
+  <distributionSite>incubator.apache.org</distributionSite>
+  <distributionDirectory>/www/www.apache.org/dist/java-repository/</distributionDirectory>
   <repository>
     <connection>scm:subversion:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/</connection>
     <developerConnection>scm:subversion:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/</developerConnection>
     <url>http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/?root=Apache-SVN</url>
   </repository>
-
-  <versions></versions>
-
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>/LICENSE.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
+  <versions/>
   <mailingLists>
 <!--
     <mailingList>
@@ -84,128 +76,134 @@
   <developers>
     <developer>
       <name>Roy T. Fielding</name>
-      <id>fielding </id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <id>fielding</id>
+      <email/>
+      <organization/>
       <roles>
-        <role>Mentor, Java Developer</role>
+        <role>Mentor</role>
+        <role>Java Developer</role>
       </roles>
+      <timezone>-6</timezone>
     </developer>
     <developer>
       <name>Stefan Guggisberg</name>
       <id>stefan</id>
-      <email></email>
-      <organization></organization>
-      <timezone>+1</timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+1</timezone>
     </developer>
     <developer>
       <name>Stefano Mazzocchi</name>
       <id>stefano</id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>-4</timezone>
     </developer>
     <developer>
       <name>David Nuescheler</name>
       <id>uncled</id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+2</timezone>
     </developer>
     <developer>
       <name>Peeter Piegaze</name>
       <id>ppiegaze</id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+2</timezone>
     </developer>
     <developer>
       <name>Gianugo Rabellino</name>
       <id>gianugo</id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+2</timezone>
     </developer>
     <developer>
       <name>Tim Reilly</name>
       <id>treilly</id>
       <email>treilly@apache.org</email>
       <organization></organization>
-      <timezone>-4</timezone>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>-4</timezone>
     </developer>
     <developer>
       <name>Marcel Reutegger</name>
       <id>mreutegg</id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+2</timezone>
     </developer>
     <developer>
       <name>Paul Russell</name>
       <id>prussell</id>
       <email></email>
       <organization></organization>
-      <timezone>0</timezone>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+1</timezone>
     </developer>
     <developer>
       <name>Andrew Savory</name>
       <id>asavory</id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+1</timezone>
     </developer>
     <developer>
       <name>Tobias Strasser</name>
       <id>tripod</id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+2</timezone>
     </developer>
     <developer>
       <name>Sylvain Wallez</name>
       <id>sylvain</id>
-      <email></email>
-      <organization></organization>
-      <timezone></timezone>
+      <email/>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone>+2</timezone>
     </developer>
   </developers>
-
-  <contributors>
-  </contributors>
+  <contributors/>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>/LICENSE.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <dependencies>
     <dependency>
