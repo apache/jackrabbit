@@ -55,17 +55,17 @@ public class InternalFrozenNode extends InternalFreeze {
     /**
      * the frozen uuid of the original node
      */
-    private String frozenUUID;
+    private String frozenUUID=null;
 
     /**
      * the frozen primary type of the orginal node
      */
-    private QName frozenPrimaryType;
+    private QName frozenPrimaryType=null;
 
     /**
      * the frozen list of mixin types of the original node
      */
-    private QName[] frozenMixinTypes;
+    private QName[] frozenMixinTypes=null;
 
     /**
      * Creates a new frozen node based on the given persistance node.
@@ -76,29 +76,28 @@ public class InternalFrozenNode extends InternalFreeze {
     protected InternalFrozenNode(PersistentNode node) throws RepositoryException {
         this.node = node;
 
-        // init the internal properties
-        frozenUUID = node.getPropertyValue(VersionManager.PROPNAME_FROZEN_UUID).internalValue().toString();
-        frozenPrimaryType = (QName) node.getPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE).internalValue();
-        InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES);
-        if (values == null) {
-            frozenMixinTypes = new QName[0];
-        } else {
-            frozenMixinTypes = new QName[values.length];
-            for (int i = 0; i < values.length; i++) {
-                frozenMixinTypes[i] = (QName) values[i].internalValue();
-            }
-        }
         // init the frozen properties
         PersistentProperty[] props = node.getProperties();
         List propList = new ArrayList();
         for (int i = 0; i < props.length; i++) {
             PersistentProperty prop = props[i];
             if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_UUID)) {
-                // already set
+                // special property
+                frozenUUID = node.getPropertyValue(VersionManager.PROPNAME_FROZEN_UUID).internalValue().toString();
             } else if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE)) {
-                // already set
+                // special property
+                frozenPrimaryType = (QName) node.getPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE).internalValue();
             } else if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES)) {
-                // already set
+                // special property
+                InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES);
+                if (values == null) {
+                    frozenMixinTypes = new QName[0];
+                } else {
+                    frozenMixinTypes = new QName[values.length];
+                    for (int j = 0; j < values.length; j++) {
+                        frozenMixinTypes[j] = (QName) values[j].internalValue();
+                    }
+                }
             } else if (prop.getName().equals(ItemImpl.PROPNAME_PRIMARYTYPE)) {
                 // ignore
             } else if (prop.getName().equals(ItemImpl.PROPNAME_UUID)) {
@@ -109,6 +108,13 @@ public class InternalFrozenNode extends InternalFreeze {
         }
         frozenProperties = (PersistentProperty[]) propList.toArray(new PersistentProperty[propList.size()]);
 
+        // do some checks
+        if (frozenMixinTypes==null) {
+            frozenMixinTypes=new QName[0];
+        }
+        if (frozenPrimaryType==null) {
+            throw new RepositoryException("Illegal frozen node. Must have 'frozenPrimaryType'");
+        }
         // init the frozen child nodes
         PersistentNode[] childNodes = node.getChildNodes();
         frozenChildNodes = new InternalFreeze[childNodes.length];

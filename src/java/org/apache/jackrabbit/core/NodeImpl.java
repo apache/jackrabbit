@@ -2666,11 +2666,11 @@ public class NodeImpl extends ItemImpl implements Node {
     void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel)
             throws RepositoryException {
         // check uuid
-        if (!isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-            throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". Not referenceable.");
-        }
-        if (!freeze.getFrozenUUID().equals(getUUID())) {
-            throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". UUID changed.");
+        if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+            String uuid = freeze.getFrozenUUID();
+            if (uuid!=null && !uuid.equals(getUUID())) {
+                throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". UUID changed.");
+            }
         }
         // check primarty type
         if (!freeze.getFrozenPrimaryType().equals(nodeType.getQName())) {
