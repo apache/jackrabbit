@@ -73,6 +73,21 @@ public abstract class NAryQueryNode extends QueryNode {
     }
 
     /**
+     * Removes an <code>operand</code> (child node) from this query node.
+     *
+     * @param operand the child to remove.
+     * @return <code>true</code> if the operand was in the list of child nodes
+     *  and has been removed; <code>false</code> if this node does not contain
+     *  <code>operand</code> as a child node.
+     */
+    public boolean removeOperand(QueryNode operand) {
+        if (operands == null) {
+            return false;
+        }
+        return operands.remove(operand);
+    }
+
+    /**
      * Returns an array of currently set <code>QueryNode</code> operands of this
      * <code>QueryNode</code>. Returns an empty array if no operands are set.
      *

@@ -16,10 +16,18 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.state.*;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;

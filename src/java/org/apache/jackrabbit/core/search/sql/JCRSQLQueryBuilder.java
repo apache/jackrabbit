@@ -182,15 +182,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
         return node.childrenAccept(new DefaultParserVisitor() {
             public Object visit(ASTIdentifier node, Object data) {
-                try {
-                    if (!node.getName().equals(NodeTypeRegistry.NT_BASE.toJCRName(resolver))) {
-                        // node is either primary or mixin node type
-                        NodeTypeQueryNode nodeType
-                                = new NodeTypeQueryNode(constraintNode, node.getName());
-                        constraintNode.addOperand(nodeType);
-                    }
-                } catch (NoPrefixDeclaredException e) {
-                    throw new IllegalArgumentException("No prefix declared for name: " + node.getName());
+                if (!node.getName().equals(NodeTypeRegistry.NT_BASE)) {
+                    // node is either primary or mixin node type
+                    NodeTypeQueryNode nodeType
+                            = new NodeTypeQueryNode(constraintNode, node.getName());
+                    constraintNode.addOperand(nodeType);
                 }
                 return data;
             }
@@ -203,10 +199,6 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     public Object visit(ASTPredicate node, Object data) {
         NAryQueryNode parent = (NAryQueryNode) data;
-
-        if (node.isNegate()) {
-            parent = new NotQueryNode(parent);
-        }
 
         int type = node.getOperationType();
         QueryNode predicateNode = null;
@@ -271,12 +263,16 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                     in.addOperand(rel);
                 }
                 predicateNode = in;
-            } else if (type == Constants.OPERATION_NULL) {
+            } else if (type == Constants.OPERATION_NULL
+                    || type == Constants.OPERATION_NOT_NULL) {
+                // create a dummy literal
                 ASTLiteral star = new ASTLiteral(JCRSQLParserTreeConstants.JJTLITERAL);
                 star.setType(Constants.TYPE_STRING);
                 star.setValue("%");
                 predicateNode = createRelationQueryNode(parent,
-                        identifier, Constants.OPERATION_LIKE, star);
+                        identifier, type, star);
+            } else {
+                throw new IllegalArgumentException("Unknown operation type: " + type);
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new IllegalArgumentException("Too few arguments in predicate");

@@ -325,7 +325,11 @@ void Predicate() :
       )
     )
   |
-    (<IS> (<NOT> { jjtThis.setNegate(true); })? <NULL> { jjtThis.setOperationType(Constants.OPERATION_NULL); } )
+    (<IS> (<NOT> { jjtThis.setNegate(true); })? <NULL>
+      {
+        jjtThis.setOperationType(jjtThis.isNegate() ? Constants.OPERATION_NOT_NULL : Constants.OPERATION_NULL); 
+      }
+    )
   )
 }
 

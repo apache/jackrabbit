@@ -258,45 +258,39 @@ class QueryFormat implements QueryNodeVisitor, Constants {
         StringBuffer sb = (StringBuffer) data;
         try {
 
-            int propIdx = sb.length();
-            sb.append("@" + ISO9075.encode(node.getProperty()).toJCRName(resolver));
+            //int propIdx = sb.length();
+            String propName = "@" + ISO9075.encode(node.getProperty()).toJCRName(resolver);
 
             if (node.getOperation() == OPERATION_EQ) {
-                sb.append(" = ");
+                sb.append(propName).append(" = ");
+                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GE) {
-                sb.append(" >= ");
+                sb.append(propName).append(" >= ");
+                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GT) {
-                sb.append(" > ");
+                sb.append(propName).append(" > ");
+                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LE) {
-                sb.append(" <= ");
+                sb.append(propName).append(" <= ");
+                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LIKE) {
-                sb.insert(propIdx, XPathQueryBuilder.JCRFN_LIKE.toJCRName(resolver) + "(");
-                sb.append(",");
+                sb.append(XPathQueryBuilder.JCRFN_LIKE.toJCRName(resolver));
+                sb.append("(").append(propName).append(", ");
+                appendValue(node, sb);
+                sb.append(")");
             } else if (node.getOperation() == OPERATION_LT) {
-                sb.append(" < ");
+                sb.append(propName).append(" < ");
+                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NE) {
-                sb.append(" != ");
+                sb.append(propName).append(" != ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_NULL) {
+                sb.append(XPathQueryBuilder.FN_NOT.toJCRName(resolver));
+                sb.append("(").append(propName).append(")");
+            } else if (node.getOperation() == OPERATION_NOT_NULL) {
+                sb.append(propName);
             } else {
                 exceptions.add(new InvalidQueryException("Invalid operation: " + node.getOperation()));
-            }
-
-            if (node.getType() == TYPE_LONG) {
-                sb.append(node.getLongValue());
-            } else if (node.getType() == TYPE_DOUBLE) {
-                sb.append(node.getDoubleValue());
-            } else if (node.getType() == TYPE_STRING) {
-                sb.append("'").append(node.getStringValue().replaceAll("'", "''")).append("'");
-            } else if (node.getType() == TYPE_DATE || node.getType() == TYPE_TIMESTAMP) {
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                cal.setTime(node.getDateValue());
-                sb.append(XPathQueryBuilder.XS_DATETIME.toJCRName(resolver));
-                sb.append("('").append(ISO8601.format(cal)).append("')");
-            } else {
-                exceptions.add(new InvalidQueryException("Invalid type: " + node.getType()));
-            }
-
-            if (node.getOperation() == OPERATION_LIKE) {
-                sb.append(")");
             }
         } catch (NoPrefixDeclaredException e) {
             exceptions.add(e);
@@ -307,5 +301,26 @@ class QueryFormat implements QueryNodeVisitor, Constants {
     public Object visit(OrderQueryNode node, Object data) {
         // @todo implement
         return data;
+    }
+
+    //----------------------------< internal >----------------------------------
+
+    private void appendValue(RelationQueryNode node, StringBuffer b)
+            throws NoPrefixDeclaredException {
+        if (node.getType() == TYPE_LONG) {
+            b.append(node.getLongValue());
+        } else if (node.getType() == TYPE_DOUBLE) {
+            b.append(node.getDoubleValue());
+        } else if (node.getType() == TYPE_STRING) {
+            b.append("'").append(node.getStringValue().replaceAll("'", "''")).append("'");
+        } else if (node.getType() == TYPE_DATE || node.getType() == TYPE_TIMESTAMP) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTime(node.getDateValue());
+            b.append(XPathQueryBuilder.XS_DATETIME.toJCRName(resolver));
+            b.append("('").append(ISO8601.format(cal)).append("')");
+        } else {
+            exceptions.add(new InvalidQueryException("Invalid type: " + node.getType()));
+        }
+
     }
 }

@@ -43,23 +43,41 @@ import java.util.List;
 import java.util.Arrays;
 
 /**
+ * Implements a query builder that takes an abstract query tree and creates
+ * a lucene {@link org.apache.lucene.search.Query} tree that can be executed
+ * on an index.
+ * todo introduce a node type hierarchy for efficient translation of NodeTypeQueryNode
  */
 class LuceneQueryBuilder implements QueryNodeVisitor {
 
+    /** Logger for this class */
     private static final Logger log = Logger.getLogger(LuceneQueryBuilder.class);
 
+    /** QName for jcr:primaryType */
     private static QName primaryType = new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
 
+    /** Root node of the abstract query tree */
     private QueryRootNode root;
 
+    /** Session of the user executing this query */
     private SessionImpl session;
 
+    /** Namespace mappings to internal prefixes */
     private NamespaceMappings nsMappings;
 
+    /** The analyzer instance to use for contains function query parsing */
     private Analyzer analyzer;
 
+    /** Exceptions thrown during tree translation */
     private List exceptions = new ArrayList();
 
+    /**
+     * Creates a new <code>LuceneQueryBuilder</code> instance.
+     * @param root the root node of the abstract query tree.
+     * @param session of the user executing this query.
+     * @param nsMappings namespace resolver for internal prefixes.
+     * @param analyzer for parsing the query statement of the contains function.
+     */
     private LuceneQueryBuilder(QueryRootNode root,
                                SessionImpl session,
                                NamespaceMappings nsMappings,
@@ -70,6 +88,16 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         this.analyzer = analyzer;
     }
 
+    /**
+     * Creates a lucene {@link org.apache.lucene.search.Query} tree from an
+     * abstract query tree.
+     * @param root the root node of the abstract query tree.
+     * @param session of the user executing the query.
+     * @param nsMappings namespace resolver for internal prefixes.
+     * @param analyzer for parsing the query statement of the contains function.
+     * @return the lucene query tree.
+     * @throws RepositoryException if an error occurs during the translation.
+     */
     public static Query createQuery(QueryRootNode root,
                                     SessionImpl session,
                                     NamespaceMappings nsMappings,
@@ -85,14 +113,21 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             for (Iterator it = builder.exceptions.iterator(); it.hasNext();) {
                 msg.append(it.next().toString()).append('\n');
             }
-            throw new RepositoryException("Exception parsing query: " + msg.toString());
+            throw new RepositoryException("Exception building query: " + msg.toString());
         }
         return q;
     }
 
+    /**
+     * Starts the tree traversal and returns the lucene
+     * {@link org.apache.lucene.search.Query}.
+     * @return the lucene <code>Query</code>.
+     */
     private Query createLuceneQuery() {
         return (Query) root.accept(this, null);
     }
+
+    //---------------------< QueryNodeVisitor interface >-----------------------
 
     public Object visit(QueryRootNode node, Object data) {
         BooleanQuery root = new BooleanQuery();
@@ -333,8 +368,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(RelationQueryNode node, Object data) {
         Query query;
-        String stringValue;
+        String stringValue = null;
         switch (node.getType()) {
+            case 0:
+                // not set: either IS NULL or IS NOT NULL
+                break;
             case Constants.TYPE_DATE:
                 stringValue = DateField.dateToString(node.getDateValue());
                 break;
@@ -353,8 +391,10 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         }
 
         String field = "";
+        String primaryTypeField = "";
         try {
             field = node.getProperty().toJCRName(nsMappings);
+            primaryTypeField = primaryType.toJCRName(nsMappings);
         } catch (NoPrefixDeclaredException e) {
             // should never happen
             exceptions.add(e);
@@ -388,6 +428,15 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 notQuery.add(new MatchAllQuery(field), false, false);
                 notQuery.add(new TermQuery(new Term(field, stringValue)), false, true);
                 query = notQuery;
+                break;
+            case Constants.OPERATION_NULL:
+                notQuery = new BooleanQuery();
+                notQuery.add(new MatchAllQuery(primaryTypeField), false, false);
+                notQuery.add(new MatchAllQuery(field), false, true);
+                query = notQuery;
+                break;
+            case Constants.OPERATION_NOT_NULL:
+                query = new MatchAllQuery(field);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown relation operation: "

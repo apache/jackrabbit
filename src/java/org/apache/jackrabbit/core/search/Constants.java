@@ -93,7 +93,12 @@ public interface Constants {
     public static int OPERATION_IN = 18;
 
     /**
-     * is null operation: identifier IS [ NOT ] NULL
+     * is null operation: identifier IS NULL
      */
     public static int OPERATION_NULL = 19;
+
+    /**
+     * is not null operation: identifier IS NOT NULL
+     */
+    public static int OPERATION_NOT_NULL = 20;
 }

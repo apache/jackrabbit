@@ -317,35 +317,31 @@ class QueryFormat implements QueryNodeVisitor, Constants {
 
         if (node.getOperation() == OPERATION_EQ) {
             sb.append(" = ");
+            appendValue(node, sb);
         } else if (node.getOperation() == OPERATION_GE) {
             sb.append(" >= ");
+            appendValue(node, sb);
         } else if (node.getOperation() == OPERATION_GT) {
             sb.append(" > ");
+            appendValue(node, sb);
         } else if (node.getOperation() == OPERATION_LE) {
             sb.append(" <= ");
+            appendValue(node, sb);
         } else if (node.getOperation() == OPERATION_LIKE) {
             sb.append(" LIKE ");
+            appendValue(node, sb);
         } else if (node.getOperation() == OPERATION_LT) {
             sb.append(" < ");
+            appendValue(node, sb);
         } else if (node.getOperation() == OPERATION_NE) {
             sb.append(" <> ");
+            appendValue(node, sb);
+        } else if (node.getOperation() == OPERATION_NULL) {
+            sb.append(" IS NULL");
+        } else if (node.getOperation() == OPERATION_NOT_NULL) {
+            sb.append(" IS NOT NULL");
         } else {
             exceptions.add(new InvalidQueryException("Invalid operation: " + node.getOperation()));
-        }
-
-
-        if (node.getType() == TYPE_LONG) {
-            sb.append(node.getLongValue());
-        } else if (node.getType() == TYPE_DOUBLE) {
-            sb.append(node.getDoubleValue());
-        } else if (node.getType() == TYPE_STRING) {
-            sb.append("'").append(node.getStringValue().replaceAll("'", "''")).append("'");
-        } else if (node.getType() == TYPE_DATE || node.getType() == TYPE_TIMESTAMP) {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.setTime(node.getDateValue());
-            sb.append("TIMESTAMP '").append(ISO8601.format(cal)).append("'");
-        } else {
-            exceptions.add(new InvalidQueryException("Invalid type: " + node.getType()));
         }
 
         if (node.getOperation() == OPERATION_LIKE && node.getStringValue().indexOf('\\') > -1) {
@@ -404,5 +400,22 @@ class QueryFormat implements QueryNodeVisitor, Constants {
         if (quote) {
             b.append('"');
         }
+    }
+
+    private void appendValue(RelationQueryNode node, StringBuffer b) {
+        if (node.getType() == TYPE_LONG) {
+            b.append(node.getLongValue());
+        } else if (node.getType() == TYPE_DOUBLE) {
+            b.append(node.getDoubleValue());
+        } else if (node.getType() == TYPE_STRING) {
+            b.append("'").append(node.getStringValue().replaceAll("'", "''")).append("'");
+        } else if (node.getType() == TYPE_DATE || node.getType() == TYPE_TIMESTAMP) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTime(node.getDateValue());
+            b.append("TIMESTAMP '").append(ISO8601.format(cal)).append("'");
+        } else {
+            exceptions.add(new InvalidQueryException("Invalid type: " + node.getType()));
+        }
+
     }
 }

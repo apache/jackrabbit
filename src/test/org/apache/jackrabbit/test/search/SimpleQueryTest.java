@@ -296,4 +296,44 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
     }
 
+    public void testIsNull() throws Exception {
+        Node foo = testRootNode.addNode("foo");
+        foo.setProperty("mytext", "the quick brown fox jumps over the lazy dog.");
+        Node bar = testRootNode.addNode("bar");
+        bar.setProperty("text", "the quick brown fox jumps over the lazy dog.");
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured WHERE mytext is null and jcr:path LIKE '/"
+                + testRoot + "/%'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+
+        String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and fn:not(@mytext)]";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        result = q.execute();
+        checkResult(result, 1);
+
+    }
+
+    public void testIsNotNull() throws Exception {
+        Node foo = testRootNode.addNode("foo");
+        foo.setProperty("mytext", "the quick brown fox jumps over the lazy dog.");
+        Node bar = testRootNode.addNode("bar");
+        bar.setProperty("text", "the quick brown fox jumps over the lazy dog.");
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured WHERE mytext is not null";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+
+        String xpath = "//*[@jcr:primaryType='nt:unstructured' and @mytext]";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        result = q.execute();
+        checkResult(result, 1);
+    }
+
 }

@@ -203,8 +203,27 @@ public class XPathQueryBuilder implements XPathVisitor {
                 break;
             case XPathTreeConstants.JJTSTEPEXPR:
                 if (isAttributeAxis(node)) {
-                    // traverse
-                    node.childrenAccept(this, data);
+                    if (data instanceof RelationQueryNode) {
+                        // traverse
+                        node.childrenAccept(this, data);
+                    } else if (data instanceof NotQueryNode) {
+                        // is null expression
+                        RelationQueryNode isNull
+                                = new RelationQueryNode((QueryNode) data,
+                                        RelationQueryNode.OPERATION_NULL);
+                        node.childrenAccept(this, isNull);
+                        NotQueryNode notNode = (NotQueryNode) data;
+                        NAryQueryNode parent = (NAryQueryNode) notNode.getParent();
+                        parent.removeOperand(notNode);
+                        parent.addOperand(isNull);
+                    } else {
+                        // not null expression
+                        RelationQueryNode notNull
+                                = new RelationQueryNode((QueryNode) data,
+                                        RelationQueryNode.OPERATION_NOT_NULL);
+                        node.childrenAccept(this, notNull);
+                        ((NAryQueryNode) data).addOperand(notNull);
+                    }
                 } else {
                     if (data instanceof PathQueryNode) {
                         data = createLocationStep(node, (PathQueryNode) data);
