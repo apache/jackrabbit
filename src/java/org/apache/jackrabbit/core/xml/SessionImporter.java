@@ -162,6 +162,9 @@ public class SessionImporter implements Importer {
         QName nodeName = nodeInfo.getName();
         QName ntName = nodeInfo.getNodeTypeName();
         QName[] mixins = nodeInfo.getMixinNames();
+
+        // @todo check for auto-created node (JIRA issue JCR-31)
+        
         if (uuid == null) {
             // no potential uuid conflict, always add new node
             node = createNode(parent, nodeName, ntName, mixins, null);

@@ -796,14 +796,21 @@ public class WorkspaceImpl implements Workspace, Constants {
         // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
 
-        // create session on other workspace for current subject
-        // (may throw NoSuchWorkspaceException and AccessDeniedException)
-        SessionImpl srcSession =
-                rep.createSession(session.getSubject(), srcWorkspace);
-        WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
+        SessionImpl srcSession = null;
+        try {
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
+            WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
-        // do cross-workspace copy
-        internalCopy(srcAbsPath, srcWsp, destAbsPath, true);
+            // do cross-workspace copy
+            internalCopy(srcAbsPath, srcWsp, destAbsPath, true);
+        } finally {
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
+            }
+        }
     }
 
     /**
@@ -847,14 +854,21 @@ public class WorkspaceImpl implements Workspace, Constants {
         // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
 
-        // create session on other workspace for current subject
-        // (may throw NoSuchWorkspaceException and AccessDeniedException)
-        SessionImpl srcSession =
-                rep.createSession(session.getSubject(), srcWorkspace);
-        WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
+        SessionImpl srcSession = null;
+        try {
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
+            WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
-        // do cross-workspace copy
-        internalCopy(srcAbsPath, srcWsp, destAbsPath, false);
+            // do cross-workspace copy
+            internalCopy(srcAbsPath, srcWsp, destAbsPath, false);
+        } finally {
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
+            }
+        }
     }
 
     /**

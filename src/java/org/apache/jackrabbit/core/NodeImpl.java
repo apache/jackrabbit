@@ -2586,51 +2586,58 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // create session on other workspace for current subject
-        // (may throw NoSuchWorkspaceException and AccessDeniedException)
-        SessionImpl srcSession =
-                rep.createSession(session.getSubject(), workspaceName);
-
-        // search nearest ancestor that is referenceable
-        NodeImpl m1 = this;
-        while (m1.getDepth() != 0 && !m1.isNodeType(MIX_REFERENCEABLE)) {
-            m1 = (NodeImpl) m1.getParent();
-        }
-
-        // if root is common ancestor, corresponding path is same as ours
-        if (m1.getDepth() == 0) {
-            // check existence
-            if (!srcSession.getItemManager().itemExists(getPrimaryPath())) {
-                throw new ItemNotFoundException(safeGetJCRPath());
-            } else {
-                return getPath();
-            }
-        }
-
-        // get corresponding ancestor
-        Node m2 = srcSession.getNodeByUUID(m1.getUUID());
-
-        // return path of m2, if m1 == n1
-        if (m1 == this) {
-            return m2.getPath();
-        }
-
-        String relPath;
+        SessionImpl srcSession = null;
         try {
-            Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
-            // use prefix mappings of srcSession
-            relPath = p.toJCRPath(srcSession.getNamespaceResolver());
-        } catch (BaseException be) {
-            // should never get here...
-            String msg = "internal error: failed to determine relative path";
-            log.error(msg, be);
-            throw new RepositoryException(msg, be);
-        }
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), workspaceName);
 
-        if (!m2.hasNode(relPath)) {
-            throw new ItemNotFoundException();
-        } else {
-            return m2.getNode(relPath).getPath();
+            // search nearest ancestor that is referenceable
+            NodeImpl m1 = this;
+            while (m1.getDepth() != 0 && !m1.isNodeType(MIX_REFERENCEABLE)) {
+                m1 = (NodeImpl) m1.getParent();
+            }
+
+            // if root is common ancestor, corresponding path is same as ours
+            if (m1.getDepth() == 0) {
+                // check existence
+                if (!srcSession.getItemManager().itemExists(getPrimaryPath())) {
+                    throw new ItemNotFoundException(safeGetJCRPath());
+                } else {
+                    return getPath();
+                }
+            }
+
+            // get corresponding ancestor
+            Node m2 = srcSession.getNodeByUUID(m1.getUUID());
+
+            // return path of m2, if m1 == n1
+            if (m1 == this) {
+                return m2.getPath();
+            }
+
+            String relPath;
+            try {
+                Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
+                // use prefix mappings of srcSession
+                relPath = p.toJCRPath(srcSession.getNamespaceResolver());
+            } catch (BaseException be) {
+                // should never get here...
+                String msg = "internal error: failed to determine relative path";
+                log.error(msg, be);
+                throw new RepositoryException(msg, be);
+            }
+
+            if (!m2.hasNode(relPath)) {
+                throw new ItemNotFoundException();
+            } else {
+                return m2.getNode(relPath).getPath();
+            }
+        } finally {
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
+            }
         }
     }
 
@@ -2743,36 +2750,43 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        // create session on other workspace for current subject
-        // (may throw NoSuchWorkspaceException and AccessDeniedException)
-        SessionImpl srcSession =
-                rep.createSession(session.getSubject(), srcWorkspaceName);
-
-        NodeImpl srcNode = getCorrespondingNode(srcSession);
-        if (srcNode == null) {
-            /*
-             * If this node does not have a corresponding node in the workspace
-             * <code>srcWorkspaceName</code>, then the <code>update</code> method
-             * has no effect (it does not traverse down the subtree).
-            */
-            return;
-        }
-
-        /*
-         * If this node does have a corresponding node in the workspace <code>srcWorkspaceName</code>,
-         * then this method traverses down the subtree rooted at this node and
-         * replaces the state of each node in the subtree rooted at this node with that
-         * of its corresponding node in the specified source workspace.
-         */
-        boolean removeExisting = false;
-        boolean replaceExisting = true;
+        SessionImpl srcSession = null;
         try {
-            internalUpdate(srcNode, removeExisting, replaceExisting);
-        } catch (RepositoryException e) {
-            session.refresh(false);
-            throw e;
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), srcWorkspaceName);
+
+            NodeImpl srcNode = getCorrespondingNode(srcSession);
+            if (srcNode == null) {
+                /*
+                 * If this node does not have a corresponding node in the workspace
+                 * <code>srcWorkspaceName</code>, then the <code>update</code> method
+                 * has no effect (it does not traverse down the subtree).
+                */
+                return;
+            }
+
+            /*
+             * If this node does have a corresponding node in the workspace <code>srcWorkspaceName</code>,
+             * then this method traverses down the subtree rooted at this node and
+             * replaces the state of each node in the subtree rooted at this node with that
+             * of its corresponding node in the specified source workspace.
+             */
+            boolean removeExisting = false;
+            boolean replaceExisting = true;
+            try {
+                internalUpdate(srcNode, removeExisting, replaceExisting);
+            } catch (RepositoryException e) {
+                session.refresh(false);
+                throw e;
+            }
+            session.save();
+        } finally {
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
+            }
         }
-        session.save();
     }
 
     /**
@@ -2800,62 +2814,69 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        // create session on other workspace for current subject
-        // (may throw NoSuchWorkspaceException and AccessDeniedException)
-        SessionImpl srcSession =
-                rep.createSession(session.getSubject(), srcWorkspace);
+        SessionImpl srcSession = null;
+        try {
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
 
-        NodeImpl srcNode = doMergeTest(srcSession, bestEffort);
-        if (srcNode != null) {
-            // remove properties
-            PropertyIterator pi = getProperties();
-            while (pi.hasNext()) {
-                Property p = pi.nextProperty();
-                if (!srcNode.hasProperty(p.getName())) {
-                    p.setValue((Value) null);
+            NodeImpl srcNode = doMergeTest(srcSession, bestEffort);
+            if (srcNode != null) {
+                // remove properties
+                PropertyIterator pi = getProperties();
+                while (pi.hasNext()) {
+                    Property p = pi.nextProperty();
+                    if (!srcNode.hasProperty(p.getName())) {
+                        p.setValue((Value) null);
+                    }
                 }
-            }
-            // copy properties
-            pi = srcNode.getProperties();
-            while (pi.hasNext()) {
-                PropertyImpl p = (PropertyImpl) pi.nextProperty();
-                internalCopyPropertyFrom(p);
+                // copy properties
+                pi = srcNode.getProperties();
+                while (pi.hasNext()) {
+                    PropertyImpl p = (PropertyImpl) pi.nextProperty();
+                    internalCopyPropertyFrom(p);
+                }
+
+                // remove subnodes
+                NodeIterator ni = getNodes();
+                while (ni.hasNext()) {
+                    // if the subnode does not exist in the src, and this is update,
+                    // so delete here as well?
+                    Node n = ni.nextNode();
+                    if (!srcNode.hasNode(n.getName())) {
+                        // todo: how does this work for same name siblings?
+                        n.remove();
+                    }
+                }
+                // 'clone' nodes that do not exist
+                ni = srcNode.getNodes();
+                while (ni.hasNext()) {
+                    Node n = ni.nextNode();
+                    if (!hasNode(n.getName())) {
+                        // todo: probably need some internal stuff
+                        // todo: how does this work for same name siblings?
+                        // todo: since clone is a ws operation, 'save' does not work later
+                        session.getWorkspace().clone(srcWorkspace, n.getPath(), getPath() + "/" + n.getName(), true);
+                    } else {
+                        // do recursive merge
+                        n.merge(srcWorkspace, bestEffort);
+                    }
+                }
+            } else {
+                // do not change this node, but recuse merge
+                NodeIterator ni = srcNode.getNodes();
+                while (ni.hasNext()) {
+                    ni.nextNode().merge(srcWorkspace, bestEffort);
+                }
             }
 
-            // remove subnodes
-            NodeIterator ni = getNodes();
-            while (ni.hasNext()) {
-                // if the subnode does not exist in the src, and this is update,
-                // so delete here as well?
-                Node n = ni.nextNode();
-                if (!srcNode.hasNode(n.getName())) {
-                    // todo: how does this work for same name siblings?
-                    n.remove();
-                }
-            }
-            // 'clone' nodes that do not exist
-            ni = srcNode.getNodes();
-            while (ni.hasNext()) {
-                Node n = ni.nextNode();
-                if (!hasNode(n.getName())) {
-                    // todo: probably need some internal stuff
-                    // todo: how does this work for same name siblings?
-                    // todo: since clone is a ws operation, 'save' does not work later
-                    session.getWorkspace().clone(srcWorkspace, n.getPath(), getPath() + "/" + n.getName(), true);
-                } else {
-                    // do recursive merge
-                    n.merge(srcWorkspace, bestEffort);
-                }
-            }
-        } else {
-            // do not change this node, but recuse merge
-            NodeIterator ni = srcNode.getNodes();
-            while (ni.hasNext()) {
-                ni.nextNode().merge(srcWorkspace, bestEffort);
+            save();
+        } finally {
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
             }
         }
-
-        save();
     }
 
     /**
