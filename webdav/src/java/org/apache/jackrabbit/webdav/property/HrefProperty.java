@@ -78,22 +78,29 @@ public class HrefProperty extends AbstractDavProperty {
      */
     public HrefProperty(DavProperty prop) {
         super(prop.getName(), prop.isProtected());
-        if (! (prop.getValue() instanceof List)) {
-            throw new IllegalArgumentException("Expected a property with a List value object.");
-        }
-        Iterator it = ((List)prop.getValue()).iterator();
         ArrayList hrefList = new ArrayList();
-        while (it.hasNext()) {
-            Object o = it.next();
-            if (o instanceof Element) {
-                String href = ((Element)o).getChildText(XML_HREF, NAMESPACE);
-                if (href != null) {
-                    hrefList.add(href);
+        Object val = prop.getValue();
+        if (val instanceof List) {
+            Iterator it = ((List)val).iterator();
+            while (it.hasNext()) {
+                Object o = it.next();
+                if (o instanceof Element) {
+                    String href = ((Element)o).getChildText(XML_HREF, NAMESPACE);
+                    if (href != null) {
+                        hrefList.add(href);
+                    } else {
+                        log.warn("Valid DAV:href element expected instead of " + o.toString());
+                    }
                 } else {
-                    log.warn("Valid DAV:href element expected instead of " + o.toString());
+                    log.warn("DAV: href element expected in the content of " + getName().toString());
                 }
+            }
+        } else if (val instanceof Element) {
+            String href = ((Element)val).getChildText(XML_HREF, NAMESPACE);
+            if (href != null) {
+                hrefList.add(href);
             } else {
-                log.warn("DAV: href element expected in the content of " + getName().toString());
+                log.warn("Valid DAV:href element expected instead of " + val.toString());
             }
         }
         value = (String[]) hrefList.toArray(new String[hrefList.size()]);

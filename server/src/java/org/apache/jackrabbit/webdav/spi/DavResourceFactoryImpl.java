@@ -72,51 +72,45 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                                       DavServletRequest request,
                                       DavServletResponse response) throws DavException {
 
-        DavResource resource = null;
         DavSession session = request.getDavSession();
 
+        DavResource resource;
         if (locator.isRootLocation()) {
             resource = new RootCollection(locator, session, this);
-        }
-
-        if (resource == null) {
+        } else {
             try {
                 resource = createResourceForItem(locator, session);
-            } catch (RepositoryException e) {
-                // create the default resources if no such item exists
 
-                // MKCOL request forces a collection-resource even if there already
-                // exists a repository-property with the given path. the MKCOL will
-                // in that particular case fail with a 405 (method not allowed).
-                if (DavMethods.getMethodCode(request.getMethod()) == DavMethods.DAV_MKCOL) {
-                    resource = new VersionControlledItemCollection(locator, session, this);
-                } else {
-                    resource = new DefaultItemResource(locator, session, this);
-                }
-            }
-
-            // if the created resource is version-controlled and the request
-            // contains a Label header, the corresponding Version must be used
-            // instead.
-            if (request instanceof DeltaVServletRequest && isVersionControlled(resource)) {
-                String labelHeader = ((DeltaVServletRequest)request).getLabel();
-                if (labelHeader != null && DavMethods.isMethodAffectedByLabel(request.getMethod())) {
-                    try {
+                /* if the created resource is version-controlled and the request
+                contains a Label header, the corresponding Version must be used
+                instead.*/
+                if (request instanceof DeltaVServletRequest && isVersionControlled(resource)) {
+                    String labelHeader = ((DeltaVServletRequest)request).getLabel();
+                    if (labelHeader != null && DavMethods.isMethodAffectedByLabel(request.getMethod())) {
                         Item item = session.getRepositorySession().getItem(locator.getResourcePath());
                         Version v = ((Node)item).getVersionHistory().getVersionByLabel(labelHeader);
                         DavResourceLocator vloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), v.getPath());
-                        resource =  new VersionItemCollection(vloc, session, this);
-                    } catch (RepositoryException e) {
-                        log.error("Failed to build version resource from "+locator.getHref(true)+" and label "+labelHeader);
-                        throw new JcrDavException(e);
+                        resource =  new VersionItemCollection(vloc, session, this, v);
                     }
                 }
+            } catch (PathNotFoundException e) {
+                /* item does not exist yet: create the default resources
+                Note: MKCOL request forces a collection-resource even if there already
+                exists a repository-property with the given path. the MKCOL will
+                in that particular case fail with a 405 (method not allowed).*/
+                if (DavMethods.getMethodCode(request.getMethod()) == DavMethods.DAV_MKCOL) {
+                    resource = new VersionControlledItemCollection(locator, session, this, null);
+                } else {
+                    resource = new DefaultItemResource(locator, session, this, null);
+                }
+            } catch (RepositoryException e) {
+                log.error("Failed to build resource from item '"+ locator.getResourcePath() + "'");
+                throw new JcrDavException(e);
             }
         }
 
         ((TransactionResource)resource).init(txMgr, ((TransactionDavServletRequest)request).getTransactionId());
         ((ObservationResource)resource).init(subsMgr);
-
         return resource;
     }
 
@@ -140,13 +134,13 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                 resource =  new RootCollection(locator, session, this);
             } else {
 		// todo: is this correct?
-		resource = new VersionControlledItemCollection(locator, session, this);
+		resource = new VersionControlledItemCollection(locator, session, this, null);
             }
         }
 
+        // todo: currently transactionId is set manually after creation > to be improved.
         resource.addLockManager(txMgr);
         ((ObservationResource)resource).init(subsMgr);
-
         return resource;
     }
 
@@ -167,16 +161,16 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
         if (item.isNode()) {
             // create special resources for Version and VersionHistory
             if (item instanceof Version) {
-                resource = new VersionItemCollection(locator, session, this);
+                resource = new VersionItemCollection(locator, session, this, item);
             } else if (item instanceof VersionHistory) {
-                resource = new VersionHistoryItemCollection(locator, session, this);
+                resource = new VersionHistoryItemCollection(locator, session, this, item);
             } else if (ItemResourceConstants.ROOT_ITEM_PATH.equals(locator.getResourcePath())) {
-                resource =  new RootItemCollection(locator, session, this);
+                resource =  new RootItemCollection(locator, session, this, item);
             }  else{
-                resource = new VersionControlledItemCollection(locator, session, this);
+                resource = new VersionControlledItemCollection(locator, session, this, item);
             }
         } else {
-            resource = new DefaultItemResource(locator, session, this);
+            resource = new DefaultItemResource(locator, session, this, item);
         }
         return resource;
     }

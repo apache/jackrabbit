@@ -48,8 +48,8 @@ public class VersionItemCollection extends DefaultItemCollection
      * @param session
      * @param factory
      */
-    public VersionItemCollection(DavResourceLocator locator, DavSession session, DavResourceFactory factory) {
-        super(locator, session, factory);
+    public VersionItemCollection(DavResourceLocator locator, DavSession session, DavResourceFactory factory, Item item) {
+        super(locator, session, factory, item);
         if (item == null || !(item instanceof Version)) {
             throw new IllegalArgumentException("Version item expected.");
         }

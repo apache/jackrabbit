@@ -42,7 +42,6 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
-
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>

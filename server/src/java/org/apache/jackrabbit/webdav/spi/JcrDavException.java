@@ -101,6 +101,10 @@ public class JcrDavException extends DavException {
         this(e, DavServletResponse.SC_FORBIDDEN);
     }
 
+    public JcrDavException(LoginException e) {
+        this(e, DavServletResponse.SC_UNAUTHORIZED);
+    }
+
     public JcrDavException(UnsupportedRepositoryOperationException e) {
         this(e, DavServletResponse.SC_NOT_IMPLEMENTED);
     }

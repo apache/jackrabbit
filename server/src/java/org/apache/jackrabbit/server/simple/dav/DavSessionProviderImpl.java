@@ -34,25 +34,26 @@ public class DavSessionProviderImpl implements DavSessionProvider {
      * Acquires a DavSession. Upon success, the WebdavRequest will
      * reference that session.
      *
-     * A session will not be available if credentials can not be found
-     * in the request (meaning that the  request has not been
-     * authenticated).
+     * A session will not be available if an exception is thrown.
      *
      * @param request
-     * @throws DavException if a problem occurred while obtaining the
-     * session
+     * @throws DavException if a problem occurred while obtaining the session
      * @see DavSessionProvider#acquireSession(org.apache.jackrabbit.webdav.WebdavRequest)
      */
     public void acquireSession(WebdavRequest request) throws DavException {
         try {
-            Credentials creds = RepositoryAccessServlet.getCredentialsFromHeader(request.getHeader(DavConstants.HEADER_AUTHORIZATION));
-            if (creds == null) {
-                // generate anonymous login to gain write access
-                creds = new SimpleCredentials("anonymous", "anonymous".toCharArray());
-            }
+            // extract credentials from the auth header. depending of the
+            // configuration of the RepositoryAccessServlet, this could also
+            // throw a login excetpion.
+            Credentials creds = RepositoryAccessServlet.getCredentialsFromHeader(
+                    request.getHeader(DavConstants.HEADER_AUTHORIZATION));
+
+            // login to repository
             Session repSession = RepositoryAccessServlet.getRepository().login(creds);
             DavSession ds = new DavSessionImpl(repSession);
             request.setDavSession(ds);
+        } catch (LoginException e) {
+	    throw new JcrDavException(e);
         } catch (RepositoryException e) {
 	    throw new JcrDavException(e);
 	} catch (ServletException e) {

@@ -29,13 +29,10 @@ public interface DavSessionProvider {
      * Acquires a DavSession. Upon success, the WebdavRequest will
      * reference that session.
      *
-     * A session will not be available if credentials can not be found
-     * in the request (meaning that the  request has not been
-     * authenticated).
+     * A session will not be available if an exception is thrown.
      *
      * @param request
-     * @throws DavException if a problem occurred while obtaining the
-     * session
+     * @throws DavException if a problem occurred while obtaining the session
      */
     public void acquireSession(WebdavRequest request) throws DavException;
 

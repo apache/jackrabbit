@@ -45,8 +45,9 @@ public class DefaultItemResource extends AbstractItemResource {
      * @param locator
      * @param session
      */
-    public DefaultItemResource(DavResourceLocator locator, DavSession session, DavResourceFactory factory) {
-        super(locator, session, factory);
+    public DefaultItemResource(DavResourceLocator locator, DavSession session,
+                               DavResourceFactory factory, Item item) {
+        super(locator, session, factory, item);
     }
 
     //----------------------------------------------< DavResource interface >---
@@ -108,7 +109,8 @@ public class DefaultItemResource extends AbstractItemResource {
             Property prop = (Property) item;
             int type = prop.getType();
             if (property.getName().equals(JCR_VALUE)) {
-                Value val = ValueHelper.convert(String.valueOf(property.getValue()), type);
+                String strVal = (property.getValue() != null) ? String.valueOf(property.getValue()) : "";
+                Value val = ValueHelper.deserialize(strVal, type, false);
                 prop.setValue(val);
             } else if (property.getName().equals(JCR_VALUES)) {
                 prop.setValue(new ValuesProperty(property).getValues(prop.getType()));
@@ -223,7 +225,7 @@ public class DefaultItemResource extends AbstractItemResource {
                     properties.add(new ValuesProperty(prop.getValues()));
                     properties.add(new LengthsProperty(prop.getLengths()));
                 } else {
-                    properties.add(new DefaultDavProperty(JCR_VALUE, prop.getString()));
+                    properties.add(new DefaultDavProperty(JCR_VALUE, ValueHelper.serialize(prop.getValue(), false)));
                     properties.add(new DefaultDavProperty(JCR_LENGTH, String.valueOf(prop.getLength())));
                 }
             } catch (RepositoryException e) {

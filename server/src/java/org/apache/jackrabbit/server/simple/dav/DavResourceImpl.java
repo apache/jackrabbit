@@ -51,14 +51,16 @@ public class DavResourceImpl implements DavResource {
      * @param factory
      * @param session
      */
-    public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory, DavSession session) {
+    public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
+                           DavSession session)
+        throws RepositoryException {
         this.session = session;
         this.factory = factory;
         this.locator = locator;
         if (locator != null && locator.getResourcePath() != null) {
             try {
                 init(session.getRepositorySession().getItem(locator.getResourcePath()));
-            } catch (RepositoryException e) {
+            } catch (PathNotFoundException e) {
                 // ignore: exists field evaluates to false
             }
         }
@@ -299,6 +301,8 @@ public class DavResourceImpl implements DavResource {
     }
 
     /**
+     * Adds a new non-collection member to this resource.
+     *
      * @see DavResource#addMember(DavResource, InputStream)
      */
     public void addMember(DavResource member, InputStream in) throws DavException {
@@ -333,9 +337,6 @@ public class DavResourceImpl implements DavResource {
 		importFile(file, in, "application/octet-stream");
 	    }
             session.getRepositorySession().save();
-        } catch (ItemExistsException e) {
-            // according to RFC 2518: MKCOL only possible on non-existing/deleted resource
-            throw new JcrDavException(e, DavServletResponse.SC_METHOD_NOT_ALLOWED);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         } catch (IOException e) {
@@ -345,6 +346,7 @@ public class DavResourceImpl implements DavResource {
 
     /**
      * Imports a xml into the repository
+     *
      * @param parentNode
      * @param in
      * @param contentType
@@ -361,6 +363,7 @@ public class DavResourceImpl implements DavResource {
 
     /**
      * Imports a plain file to the repository
+     *
      * @param parentNode
      * @param in
      * @param contentType
@@ -376,6 +379,8 @@ public class DavResourceImpl implements DavResource {
     }
 
     /**
+     * Creates a new collection as member of this resource.
+     *
      * @see DavResource#addMember(DavResource)
      */
     public void addMember(DavResource member) throws DavException {
@@ -388,6 +393,8 @@ public class DavResourceImpl implements DavResource {
         try {
             node.addNode(member.getDisplayName(), "nt:folder");
             node.save();
+        } catch (ItemExistsException e) {
+            throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -550,23 +557,21 @@ public class DavResourceImpl implements DavResource {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
         /* since lock is always has infinite timeout >> no extra refresh needed
-        return a lockdiscovery with the lock-info and the default scope and type */
-        ActiveLock lock = getLock(lockInfo.getType(), lockInfo.getScope());
+           return a lockdiscovery with the lock-info and the default scope and type */
+        ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
         if (lock == null) {
            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "No lock present on resource " + getResourcePath());
-        } else if (lock.isLockedByToken(lockToken)) {
-            if (lock instanceof JcrActiveLock) {
-                try {
-                    // refresh JCR lock and return the original lock object.
-                    node.getLock().refresh();
-                } catch (RepositoryException e) {
-                    throw new JcrDavException(e);
-                }
-            } else {
-                lock = lockManager.refreshLock(lockInfo, lockToken, this);
+        }
+        
+        if (lock instanceof JcrActiveLock) {
+            try {
+                // refresh JCR lock and return the original lock object.
+                node.getLock().refresh();
+            } catch (RepositoryException e) {
+                throw new JcrDavException(e);
             }
         } else {
-            throw new DavException(DavServletResponse.SC_LOCKED);
+            lock = lockManager.refreshLock(lockInfo, lockToken, this);
         }
         return lock;
     }

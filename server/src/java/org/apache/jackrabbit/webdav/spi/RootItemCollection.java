@@ -23,6 +23,7 @@ import org.jdom.Element;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
+import javax.jcr.Item;
 
 /**
  * <code>RootItemCollection</code> represents the root node of the underlaying
@@ -41,8 +42,9 @@ public class RootItemCollection extends VersionControlledItemCollection {
      * @param locator
      * @param session
      */
-    protected RootItemCollection(DavResourceLocator locator, DavSession session, DavResourceFactory factory) {
-        super(locator, session, factory);
+    protected RootItemCollection(DavResourceLocator locator, DavSession session,
+                                 DavResourceFactory factory, Item item) {
+        super(locator, session, factory, item);
     }
 
     //----------------------------------------------< DavResource interface >---
