@@ -2397,17 +2397,11 @@ public class NodeImpl extends ItemImpl implements Node {
 	    // thus determining the result of a merge is non-trivial.
 	    if (bestEffort) {
 		// add 'offending' version to jcr:mergeFailed property
-		if (hasProperty(ItemImpl.PROPNAME_MERGE_FAILED)) {
-		    Value[] values = getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues();
-		    Value[] newValues = new Value[values.length + 1];
-		    System.arraycopy(values, 0, newValues, 0, values.length);
-		    newValues[values.length] = new ReferenceValue(vp);
-		    setProperty(ItemImpl.PROPNAME_MERGE_FAILED, newValues);
-		} else {
-		    Value[] newValues = new Value[1];
-		    newValues[0] = new ReferenceValue(vp);
-		    setProperty(ItemImpl.PROPNAME_MERGE_FAILED, newValues);
-		}
+		List values = hasProperty(ItemImpl.PROPNAME_MERGE_FAILED)
+			? Arrays.asList(getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues())
+			: new ArrayList();
+		values.add(new ReferenceValue(vp));
+		setProperty(ItemImpl.PROPNAME_MERGE_FAILED, (Value[]) values.toArray(new Value[values.size()]));
 		return null;
 	    } else {
 		String msg = "Unable to merge nodes. Violating versions. " + safeGetJCRPath();

@@ -274,5 +274,10 @@
 		<valueConstraint>nt:version</valueConstraint>
 	    </valueConstraints>
 	</propertyDef>
+	<propertyDef name="jcr:mergeFailed" type="Reference" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" primaryItem="false" multiple="true">
+	    <valueConstraints>
+		<valueConstraint>nt:version</valueConstraint>
+	    </valueConstraints>
+	</propertyDef>
     </nodeType>
 </nodeTypes>
