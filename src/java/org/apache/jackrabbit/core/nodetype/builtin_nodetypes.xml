@@ -247,22 +247,22 @@
         <supertypes>
             <supertype>mix:referenceable</supertype>
         </supertypes>
-        <propertyDef name="jcr:versionHistory" type="Reference" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="true" primaryItem="false" multiple="false">
+        <propertyDef name="jcr:versionHistory" type="Reference" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" primaryItem="false" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:versionHistory</valueConstraint>
             </valueConstraints>
         </propertyDef>
-        <propertyDef name="jcr:baseVersion" type="Reference" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
+        <propertyDef name="jcr:baseVersion" type="Reference" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>
         </propertyDef>
-        <propertyDef name="jcr:isCheckedOut" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
+        <propertyDef name="jcr:isCheckedOut" type="Boolean" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
             <defaultValues>
                 <defaultValue>true</defaultValue>
             </defaultValues>
         </propertyDef>
-        <propertyDef name="jcr:predecessors" type="Reference" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="true" primaryItem="false" multiple="true">
+        <propertyDef name="jcr:predecessors" type="Reference" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" primaryItem="false" multiple="true">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>
