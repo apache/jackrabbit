@@ -235,25 +235,6 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     }
 
     /**
-     * Notify the listeners that this instance has been resurrected
-     * (i.e. it has been rendered 'valid' again).
-     */
-    protected void notifyResurrected() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = new ItemLifeCycleListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (ItemLifeCycleListener) iter.next();
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].itemResurrected(this);
-            }
-        }
-    }
-
-    /**
      * Notify the listeners that this instance has been destroyed
      * (i.e. it has been permanently rendered 'invalid').
      */
@@ -966,12 +947,6 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     state = persistentState;
                     state.addListener(this);
 
-                    if (status == STATUS_INVALIDATED) {
-                        // resurrect this instance
-                        status = STATUS_NORMAL;
-                        // notify the listeners
-                        notifyResurrected();
-                    }
                     return;
 
                     /**

@@ -38,43 +38,6 @@ public class TransactionContext {
     private final Map attributes = new HashMap();
 
     /**
-     * Flag indicating whether rollback only is allowed
-     */
-    private boolean rollbackOnly;
-
-    /**
-     * Commit this transaction. Commits all changes to items contained in the
-     * transaction. After having successfully committed the transaction, it
-     * may no longer be used.
-     *
-     * @throws org.apache.jackrabbit.core.state.TransactionException if an error occurs
-     */
-    public void commit() throws TransactionException {
-        if (rollbackOnly) {
-            throw new TransactionException("Transaction set to rollback only.");
-        }
-        notifyCommitted();
-    }
-
-    /**
-     * Set outcome of this transaction to rollback only.
-     */
-    public void setRollbackOnly() {
-        rollbackOnly = true;
-    }
-
-    /**
-     * Rollback this transaction. Rollbacks all changes to items contained in
-     * the transaction. After having successfully rolled back the transaction,
-     * it may no longer be used.
-     *
-     * @throws org.apache.jackrabbit.core.state.TransactionException if an error occurs
-     */
-    public void rollback() throws TransactionException {
-        notifyRolledBack();
-    }
-
-    /**
      * Set an attribute on this transaction. If the value specified is
      * <code>null</code>, it is semantically equivalent to
      * {@link #removeAttribute}.
@@ -137,7 +100,7 @@ public class TransactionContext {
      * one commit and one rollback event to be reported, the listeners can
      * safely be cleared at the same time.
      */
-    private void notifyCommitted() throws TransactionException {
+    void notifyCommitted() {
         TransactionListener[] al;
 
         synchronized (listeners) {
@@ -156,7 +119,7 @@ public class TransactionContext {
      * one commit and one rollback event to be reported, the listeners can
      * safely be cleared at the same time.
      */
-    private void notifyRolledBack() throws TransactionException {
+    void notifyRolledBack() {
         TransactionListener[] al;
 
         synchronized (listeners) {

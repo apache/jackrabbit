@@ -537,16 +537,16 @@ public class NodeImpl extends ItemImpl implements Node {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
 
-        // remove property
-        PropertyId propId = new PropertyId(thisState.getUUID(), propName);
-        itemMgr.removeItem(propId);
-
         // remove the property entry
         if (!thisState.removePropertyEntry(propName)) {
             String msg = "failed to remove property " + propName + " of " + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg);
         }
+
+        // remove property
+        PropertyId propId = new PropertyId(thisState.getUUID(), propName);
+        itemMgr.getItem(propId).setRemoved();
     }
 
     protected void removeChildNode(QName nodeName, int index) throws RepositoryException {
@@ -624,7 +624,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         if (orphaned) {
             // remove this node
-            itemMgr.removeItem(id);
+            itemMgr.getItem(id).setRemoved();
         }
     }
 
@@ -2689,7 +2689,7 @@ public class NodeImpl extends ItemImpl implements Node {
         } catch (RepositoryException e) {
             session.refresh(false);
             throw e;
-        }
+    }
         session.save();
     }
 

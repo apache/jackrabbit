@@ -301,11 +301,33 @@ public class SharedItemStateManager extends ItemStateCache
         ChangeLog shared = new ChangeLog();
 
         /**
+         * Validate modified references. Target node of references may
+         * have been deleted in the meantime.
+         */
+        Iterator iter = local.modifiedRefs();
+        while (iter.hasNext()) {
+            NodeReferences refs = (NodeReferences) iter.next();
+            NodeId id = new NodeId(refs.getUUID());
+
+            if (refs.hasReferences()) {
+                try {
+                    if (local.get(id) == null && !hasItemState(id)) {
+                        throw new NoSuchItemStateException();
+                    }
+                } catch (NoSuchItemStateException e) {
+                    String msg = "Target node " + id + " of REFERENCE property does not exist";
+                    throw new ItemStateException(msg);
+                }
+            }
+            shared.modified(refs);
+        }
+
+        /**
          * Reconnect all items contained in the change log to their
          * respective shared item and add the shared items to a
          * new change log.
          */
-        Iterator iter = local.addedStates();
+        iter = local.addedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             state.connect(createInstance(state));
@@ -322,10 +344,6 @@ public class SharedItemStateManager extends ItemStateCache
             ItemState state = (ItemState) iter.next();
             state.connect(getItemState(state.getId()));
             shared.deleted(state.getOverlayedState());
-        }
-        iter = local.modifiedRefs();
-        while (iter.hasNext()) {
-            shared.modified((NodeReferences) iter.next());
         }
 
         /* Push all changes from the local items to the shared items */

@@ -24,8 +24,7 @@ import org.apache.log4j.Logger;
  * multiple save() requests and commits them only when an associated transaction
  * is itself committed.
  */
-public class TransactionalItemStateManager extends LocalItemStateManager
-        implements TransactionListener {
+public class TransactionalItemStateManager extends LocalItemStateManager {
 
     /**
      * Logger instance
@@ -38,14 +37,9 @@ public class TransactionalItemStateManager extends LocalItemStateManager
     private static final String ATTRIBUTE_CHANGE_LOG = "ChangeLog";
 
     /**
-     * Currently associated transaction
+     * Current transactional change log
      */
-    private transient TransactionContext tx;
-
-    /**
-     * Current change log
-     */
-    private transient ChangeLog changeLog;
+    private transient ChangeLog txLog;
 
     /**
      * Creates a new <code>LocalItemStateManager</code> instance.
@@ -61,15 +55,46 @@ public class TransactionalItemStateManager extends LocalItemStateManager
      * @param tx transaction context.
      */
     public void setTransactionContext(TransactionContext tx) {
+        txLog = null;
+
         if (tx != null) {
-            changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
-            if (changeLog == null) {
-                changeLog = new ChangeLog();
-                tx.setAttribute(ATTRIBUTE_CHANGE_LOG, changeLog);
-                tx.addListener(this);
+            txLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
+            if (txLog == null) {
+                txLog = new ChangeLog();
+                tx.setAttribute(ATTRIBUTE_CHANGE_LOG, txLog);
             }
         }
-        this.tx = tx;
+    }
+
+    /**
+     * Commit changes made within a transaction
+     * @param tx transaction context
+     * @throws TransactionException if an error occurs
+     */
+    public void commit(TransactionContext tx) throws TransactionException {
+        ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
+        if (changeLog != null) {
+            try {
+                super.update(changeLog);
+            } catch (ItemStateException e) {
+                changeLog.undo(sharedStateMgr);
+                throw new TransactionException("Unable to end update.", e);
+            }
+            changeLog.reset();
+            tx.notifyCommitted();
+        }
+    }
+
+    /**
+     * Rollback changes made within a transaction
+     * @param tx transaction context
+     */
+    public void rollback(TransactionContext tx) {
+        ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
+        if (changeLog != null) {
+            changeLog.undo(sharedStateMgr);
+        }
+        tx.notifyRolledBack();
     }
 
     //-----------------------------------------------------< ItemStateManager >
@@ -83,9 +108,9 @@ public class TransactionalItemStateManager extends LocalItemStateManager
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        if (tx != null) {
+        if (txLog != null) {
             // check items in change log
-            ItemState state = changeLog.get(id);
+            ItemState state = txLog.get(id);
             if (state != null) {
                 return state;
             }
@@ -100,10 +125,10 @@ public class TransactionalItemStateManager extends LocalItemStateManager
      * change log first.
      */
     public boolean hasItemState(ItemId id) {
-        if (tx != null) {
+        if (txLog != null) {
             // check items in change log
             try {
-                ItemState state = changeLog.get(id);
+                ItemState state = txLog.get(id);
                 if (state != null) {
                     return true;
                 }
@@ -123,9 +148,9 @@ public class TransactionalItemStateManager extends LocalItemStateManager
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        if (tx != null) {
+        if (txLog != null) {
             // check change log
-            NodeReferences refs = changeLog.get(id);
+            NodeReferences refs = txLog.get(id);
             if (refs != null) {
                 return refs;
             }
@@ -141,40 +166,10 @@ public class TransactionalItemStateManager extends LocalItemStateManager
      * then again deleted).
      */
     protected void update(ChangeLog changeLog) throws ItemStateException {
-        if (tx != null) {
-            this.changeLog.merge(changeLog);
+        if (txLog != null) {
+            txLog.merge(changeLog);
         } else {
             super.update(changeLog);
-        }
-    }
-
-
-    //--------------------------------------------------< TransactionListener >
-
-    /**
-     * @see TransactionListener#transactionCommitted
-     */
-    public void transactionCommitted(TransactionContext tx)
-            throws TransactionException {
-
-        ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
-        if (changeLog != null) {
-            try {
-                super.update(changeLog);
-                changeLog.reset();
-            } catch (ItemStateException e) {
-                throw new TransactionException("Unable to end update.", e);
-            }
-        }
-    }
-
-    /**
-     * @see TransactionListener#transactionRolledBack
-     */
-    public void transactionRolledBack(TransactionContext tx) {
-        ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
-        if (changeLog != null) {
-            changeLog.undo(sharedStateMgr);
         }
     }
 }

@@ -33,8 +33,19 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
 
     private static Logger log = Logger.getLogger(SessionItemStateManager.class);
 
+    /**
+     * Root node id
+     */
     private final NodeId rootNodeId;
+
+    /**
+     * State manager that allows updates
+     */
     private final UpdatableItemStateManager persistentStateMgr;
+
+    /**
+     * Virtual item state providers
+     */
     private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
     private final TransientItemStateManager transientStateMgr;
     private HierarchyManager hierMgr;

@@ -628,27 +628,6 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         return createPropertyInstance(state, def);
     }
 
-    /**
-     * Removes the specified item from the cache and renders it
-     * 'invalid'.
-     *
-     * @param id
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    void removeItem(ItemId id)
-            throws ItemNotFoundException, RepositoryException {
-        // the removed instance is not directly removed from the cache;
-        // it will be removed when the instance notifies the item manager
-        // that it has been invalidated (see itemInvalidated method)
-        ItemImpl item = retrieveItem(id);
-        if (item == null) {
-            // need to instantiate item first
-            item = createItemInstance(id);
-        }
-        item.setRemoved();
-    }
-
     //---------------------------------------------------< item cache methods >
     /**
      * Checks if there's a cache entry for the specified id.
@@ -748,15 +727,6 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         log.debug("invalidated item " + id);
         // remove instance from cache
         evictItem(id);
-    }
-
-    /**
-     * @see ItemLifeCycleListener#itemResurrected
-     */
-    public void itemResurrected(ItemImpl item) {
-        log.debug("resurrected item " + item.getId());
-        // add instance to cache
-        cacheItem(item);
     }
 
     /**

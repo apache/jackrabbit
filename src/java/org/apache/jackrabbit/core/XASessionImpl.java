@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.TransactionContext;
 import org.apache.jackrabbit.core.state.TransactionException;
 import org.apache.jackrabbit.core.state.TransactionListener;
-import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Credentials;
@@ -193,7 +192,6 @@ public class XASessionImpl extends SessionImpl
             disassociate();
         } else if (flags == TMFAIL) {
             disassociate();
-            tx.setRollbackOnly();
         } else if (flags == TMSUSPEND) {
             disassociate();
         } else {
@@ -220,12 +218,7 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        try {
-            tx.rollback();
-        } catch (TransactionException e) {
-            log.error("Unable to rollback transaction.", e);
-            throw new XAException(XAException.XAER_RMERR);
-        }
+        wsp.getItemStateManager().rollback(tx);
     }
 
     /**
@@ -238,10 +231,10 @@ public class XASessionImpl extends SessionImpl
         }
 
         try {
-            tx.commit();
+            wsp.getItemStateManager().commit(tx);
         } catch (TransactionException e) {
             log.error("Unable to commit transaction.", e);
-            throw new XAException(XAException.XAER_RMERR);
+            throw new XAException(XAException.XA_RBOTHER);
         }
     }
 

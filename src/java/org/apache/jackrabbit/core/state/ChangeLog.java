@@ -57,7 +57,10 @@ public class ChangeLog {
     }
 
     /**
-     * A state has been modified
+     * A state has been modified. If the state is not a new state
+     * (not in the collection of added ones), then disconnect
+     * the local state from its underlying shared state and add
+     * it to the modified states collection.
      * @param state state that has been modified
      */
     public void modified(ItemState state) {
@@ -68,7 +71,11 @@ public class ChangeLog {
     }
 
     /**
-     * A state has been deleted
+     * A state has been deleted. If the state is not a new state
+     * (not in the collection of added ones), then disconnect
+     * the local state from its underlying shared state, remove
+     * it from the modified states collection and add it to the
+     * deleted states collection.
      * @param state state that has been deleted
      */
     public void deleted(ItemState state) {
@@ -220,32 +227,14 @@ public class ChangeLog {
     }
 
     /**
-     * Reset this change log, removing all members inside.
+     * Reset this change log, removing all members inside the
+     * maps we built.
      */
     public void reset() {
         addedStates.clear();
         modifiedStates.clear();
         deletedStates.clear();
         modifiedRefs.clear();
-    }
-
-    /**
-     * Discard all items contained in this change log
-     */
-    public void discard() {
-        Iterator iter = addedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).discard();
-        }
-        iter = modifiedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).discard();
-        }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).discard();
-        }
-        reset();
     }
 
     /**

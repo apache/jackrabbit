@@ -46,14 +46,6 @@ public interface ItemLifeCycleListener {
     public void itemInvalidated(ItemId id, ItemImpl item);
 
     /**
-     * Called when a previously invalidated <code>ItemImpl</code> instance
-     * has been resurrected (i.e. it has been rendered 'valid' again).
-     *
-     * @param item the instance which has been resurrected
-     */
-    public void itemResurrected(ItemImpl item);
-
-    /**
      * Called when an <code>ItemImpl</code> instance has been destroyed
      * (i.e. it has been permanently rendered 'invalid').
      * <p/>
