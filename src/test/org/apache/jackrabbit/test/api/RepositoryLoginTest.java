@@ -42,6 +42,7 @@ public class RepositoryLoginTest extends AbstractJCRTest {
      * Sets up the fixture for the test cases.
      */
     protected void setUp() throws Exception {
+        isReadOnly = true;
         super.setUp();
 
         credentials = helper.getReadOnlyCredentials();
@@ -50,7 +51,7 @@ public class RepositoryLoginTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests if {@link javax.jcr.Repository#login(Credentials credentials, String workspaceName)} 
+     * Tests if {@link javax.jcr.Repository#login(Credentials credentials, String workspaceName)}
      * throws a {@link javax.jcr.NoSuchWorkspaceException}
      * if no workspace of the requested name is existing.
      */
