@@ -25,6 +25,8 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
@@ -32,6 +34,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -112,30 +115,37 @@ public class SharedItemStateManager extends ItemStateCache
 
         NodeState rootState = createInstance(rootNodeUUID, Constants.REP_ROOT, null);
 
-        // @todo FIXME need to manually setup root node by creating mandatory jcr:primaryType property
-        NodeDefId nodeDefId;
-        PropDefId propDefId;
+        // FIXME need to manually setup root node by creating mandatory jcr:primaryType property
+        // @todo delegate setup of root node to NodeTypeInstanceHandler
 
+        // id of the root node's definition
+        NodeDefId nodeDefId;
+        // definition of jcr:primaryType property
+        PropDef propDef;
         try {
             nodeDefId = new NodeDefId(ntReg.getRootNodeDef());
-            // FIXME relies on definition of nt:base:
-            // first property definition in nt:base is jcr:primaryType
-            propDefId = new PropDefId(ntReg.getNodeTypeDef(Constants.NT_BASE).getPropertyDefs()[0]);
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(Constants.REP_ROOT);
+            propDef = ent.getApplicablePropertyDef(Constants.JCR_PRIMARYTYPE,
+                    PropertyType.NAME, false);
         } catch (NoSuchNodeTypeException nsnte) {
-            String msg = "failed to create root node";
-            log.debug(msg);
+            String msg = "internal error: failed to create root node";
+            log.error(msg, nsnte);
             throw new ItemStateException(msg, nsnte);
+        } catch (ConstraintViolationException cve) {
+            String msg = "internal error: failed to create root node";
+            log.error(msg, cve);
+            throw new ItemStateException(msg, cve);
         }
         rootState.setDefinitionId(nodeDefId);
 
-        QName propName = Constants.JCR_PRIMARYTYPE;
-        rootState.addPropertyEntry(propName);
+        // create jcr:primaryType property
+        rootState.addPropertyEntry(propDef.getName());
 
-        PropertyState prop = createInstance(propName, rootNodeUUID);
+        PropertyState prop = createInstance(propDef.getName(), rootNodeUUID);
         prop.setValues(new InternalValue[]{InternalValue.create(Constants.REP_ROOT)});
-        prop.setType(PropertyType.NAME);
-        prop.setMultiValued(false);
-        prop.setDefinitionId(propDefId);
+        prop.setType(propDef.getRequiredType());
+        prop.setMultiValued(propDef.isMultiple());
+        prop.setDefinitionId(new PropDefId(propDef));
 
         ChangeLog changeLog = new ChangeLog();
         changeLog.added(rootState);
