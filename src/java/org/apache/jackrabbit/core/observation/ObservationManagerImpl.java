@@ -157,4 +157,21 @@ public class ObservationManagerImpl implements ObservationManager {
         return new EventStateCollection(obsMgrFactory, session);
     }
 
+    /**
+     * Unregisters all EventListeners.
+     */
+    public void dispose() {
+        try {
+            EventListenerIterator it = getRegisteredEventListeners();
+            while (it.hasNext()) {
+                EventListener l = it.nextEventListener();
+                log.debug("removing EventListener: " + l);
+                removeEventListener(l);
+            }
+        } catch (RepositoryException e) {
+            log.error("Internal error: Unable to dispose ObservationManager.", e);
+        }
+
+    }
+
 }

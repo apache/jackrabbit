@@ -59,8 +59,6 @@ import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
@@ -161,16 +159,9 @@ public class WorkspaceImpl implements Workspace, Constants {
      * Disposes this <code>WorkspaceImpl</code> and frees resources.
      */
     void dispose() {
-        try {
-            ObservationManager om = getObservationManager();
-            EventListenerIterator it = om.getRegisteredEventListeners();
-            while (it.hasNext()) {
-                EventListener l = it.nextEventListener();
-                log.debug("removing EventListener: " + l);
-                om.removeEventListener(l);
-            }
-        } catch (RepositoryException e) {
-            log.error("Exception while disposing Workspace:", e);
+        if (obsMgr != null) {
+            obsMgr.dispose();
+            obsMgr = null;
         }
     }
 
