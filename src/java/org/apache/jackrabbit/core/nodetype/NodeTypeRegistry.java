@@ -572,6 +572,14 @@ public class NodeTypeRegistry implements Constants {
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
+            // check that auto-created properties specify a type
+            if (pd.getRequiredType() == PropertyType.UNDEFINED
+                    && pd.isAutoCreate()) {
+                String msg = "[" + name + "#" + pd.getName()
+                        + "] auto-created properties must specify a type";
+                log.debug(msg);
+                throw new InvalidNodeTypeDefException(msg);
+            }
             /**
              * check default values:
              * make sure type of value is consistent with required property type
@@ -673,6 +681,14 @@ public class NodeTypeRegistry implements Constants {
             if (cnd.definesResidual() && cnd.isAutoCreate()) {
                 String msg = "[" + name + "#" + cnd.getName()
                         + "] auto-created child-nodes must specify a name";
+                log.debug(msg);
+                throw new InvalidNodeTypeDefException(msg);
+            }
+            // check that auto-created child-nodes specify a default primary type
+            if (cnd.getDefaultPrimaryType() == null
+                    && cnd.isAutoCreate()) {
+                String msg = "[" + name + "#" + cnd.getName()
+                        + "] auto-created child-nodes must specify a default primary type";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
