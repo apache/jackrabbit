@@ -30,6 +30,8 @@ import org.apache.ojb.broker.accesslayer.conversions.FieldConversion;
 public class ValuesToStringFieldConversion
     implements FieldConversion {
 
+    public static final String SEPARATOR = "#$#";
+
     private int type;
 
     public ValuesToStringFieldConversion() {
@@ -45,7 +47,7 @@ public class ValuesToStringFieldConversion
         for (int i=0; i < values.length; i++) {
             buffer.append(values[i].toString());
             if (i < values.length - 1) {
-                buffer.append(",");
+                buffer.append(SEPARATOR);
             }
         }
         return buffer.toString();
@@ -53,7 +55,7 @@ public class ValuesToStringFieldConversion
 
     public Object sqlToJava(Object object) throws ConversionException {
         ArrayList valueList = new ArrayList();
-        StringTokenizer tokenizer = new StringTokenizer((String) object, ",");
+        StringTokenizer tokenizer = new StringTokenizer((String) object, SEPARATOR);
         while (tokenizer.hasMoreTokens()) {
             InternalValue curValue = InternalValue.valueOf(tokenizer.nextToken(), type);
             valueList.add(curValue);

@@ -24,19 +24,14 @@
              <param name="ConversionPattern"
                             value="%6r [%t] %5p %c.%M:%L - %m%n"/>
         </layout>
-        <!--
+    </appender>
 
-        Uncomment the following if you need to filter on message
-        strings.
-
-        -->
-        <!--
-        <filter class="org.apache.log4j.varia.StringMatchFilter">
-            <param name="StringToMatch" value="field"/>
-                <param name="AcceptOnMatch" value="false"/>
-        </filter>
-        <filter class="org.apache.log4j.varia.DenyAllFilter" />
-        -->
+    <appender name="FILE" class="org.apache.log4j.FileAppender">
+        <param name="File" value="jcr.log" />	
+        <layout class="org.apache.log4j.PatternLayout">
+             <param name="ConversionPattern"
+                            value="%6r [%t] %5p %c.%M:%L - %m%n"/>
+        </layout>
     </appender>
 
     <category name="org.apache.jackrabbit">
@@ -53,7 +48,7 @@
     </category>
 
     <root>
-        <priority value="debug"/>
-        <appender-ref ref="STDOUT"/>
+        <priority value="info"/>
+        <appender-ref ref="FILE"/>
     </root>
 </log4j:configuration>
