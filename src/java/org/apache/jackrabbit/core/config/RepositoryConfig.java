@@ -105,7 +105,7 @@ public class RepositoryConfig {
      * a subfolder with a workspace configuration file for every workspace
      * in the repository)
      */
-    private String wspConfigRootDir;
+    private String workspaceDirectory;
 
     /**
      * name of default workspace
@@ -120,7 +120,7 @@ public class RepositoryConfig {
     /**
      * the versioning config
      */
-    private VersioningConfig vConfig;
+    private VersioningConfig vc;
 
     public RepositoryConfig(
             Element config, ConfigurationParser parser,
@@ -133,25 +133,27 @@ public class RepositoryConfig {
         this.appName = name;
         this.wspConfigs = new HashMap();
         this.fsc = fsc;
-        this.wspConfigRootDir = root;
+        this.workspaceDirectory = root;
         this.defaultWspName = defaultWspName;
         this.amConfig = amc;
-        this.vConfig = vc;
+        this.vc = vc;
     }
 
     private void init() throws ConfigurationException {
         fsc.init();
-        vConfig.init();
+        vc.init();
 
-        File root = new File(wspConfigRootDir);
-        if (!root.exists()) {
-            root.mkdirs();
+        // Get the workspace root directory (create it if not found)
+        File directory = new File(workspaceDirectory);
+        if (!directory.exists()) {
+            directory.mkdirs();
         }
 
-        File[] files = root.listFiles();
+        // Get all workspace subdirectories
+        File[] files = directory.listFiles();
         if (files == null) {
             throw new ConfigurationException(
-                    "Invalid workspace root directory: " + wspConfigRootDir);
+                    "Invalid workspace root directory: " + workspaceDirectory);
         }
 
         for (int i = 0; i < files.length; i++) {
@@ -160,6 +162,15 @@ public class RepositoryConfig {
                 config.init();
                 addWorkspaceConfig(config);
             }
+        }
+
+        if (wspConfigs.isEmpty()) {
+            // create initial default workspace
+            createWorkspaceConfig(defaultWspName);
+        } else if (!wspConfigs.containsKey(defaultWspName)) {
+            throw new ConfigurationException(
+                    "no configuration found for default workspace: "
+                    + defaultWspName);
         }
     }
 
@@ -205,7 +216,7 @@ public class RepositoryConfig {
     public synchronized WorkspaceConfig createWorkspaceConfig(String name)
             throws ConfigurationException {
         // create the workspace folder (i.e. the workspace home directory)
-        File wspFolder = new File(wspConfigRootDir, name);
+        File wspFolder = new File(workspaceDirectory, name);
         if (!wspFolder.mkdir()) {
             String msg = "Failed to create the workspace home directory: " + wspFolder.getPath();
             throw new ConfigurationException(msg);
@@ -290,7 +301,7 @@ public class RepositoryConfig {
      * @return the workspaces config root directory
      */
     public String getWorkspacesConfigRootDir() {
-        return wspConfigRootDir;
+        return workspaceDirectory;
     }
 
     /**
@@ -328,7 +339,7 @@ public class RepositoryConfig {
      * @return a <code>VersioningConfig</code> object
      */
     public VersioningConfig getVersioningConfig() {
-        return vConfig;
+        return vc;
     }
 
     /**
