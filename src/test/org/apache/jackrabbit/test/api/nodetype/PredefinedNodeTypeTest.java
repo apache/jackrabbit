@@ -35,6 +35,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeTypeIterator;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.Iterator;
@@ -109,6 +110,44 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
             session.logout();
         }
         super.tearDown();
+    }
+
+
+    /**
+     * Tests if the mandatory node type <code>nt:base</code> is supported
+     */
+    public void testNTBaseSupport()
+            throws RepositoryException {
+
+        try {
+            manager.getNodeType(ntBase);
+        } catch (NoSuchNodeTypeException e) {
+            fail("Node type nt:base must be supported.");
+        }
+    }
+
+    /**
+     * Tests if all primary node types are subtypes of node type <code>nt:base</code>
+     */
+    public void testIfPrimaryNodeTypesAreSubtypesOfNTBase()
+            throws NoSuchNodeTypeException, RepositoryException {
+
+        NodeTypeIterator types = manager.getPrimaryNodeTypes();
+
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            NodeType superTypes[] = type.getSupertypes();
+            if (!type.getName().equals(ntBase)) {
+                boolean isSubOfNTBase = false;
+                for (int i = 0; i < superTypes.length; i++) {
+                    if (superTypes[i].getName().equals(ntBase)) {
+                        isSubOfNTBase = true;
+                    }
+                }
+                assertTrue("All primary node types must be subtypes of nt:base",
+                           isSubOfNTBase);
+            }
+        }
     }
 
     /**
