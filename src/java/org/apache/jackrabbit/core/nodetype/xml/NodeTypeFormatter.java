@@ -20,9 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.Vector;
 
 import javax.jcr.NamespaceRegistry;
@@ -47,7 +45,15 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * TODO
+ * Facade class for reading and writing node type definition files.
+ * A NodeTypeFormatter instance uses a simple XML transformer instance
+ * to convert XML between DOM and stream representations. The task
+ * of actually interpreting the XML elements is delegated to the
+ * package-local Format classes.
+ * <p>
+ * This class (and through it the entire .xml subpackage) is used only by the
+ * {@link org.apache.jackrabbit.core.nodetype.NodeTypeDefStore NodeTypeDefStore}
+ * class. 
  */
 public class NodeTypeFormatter {
 
