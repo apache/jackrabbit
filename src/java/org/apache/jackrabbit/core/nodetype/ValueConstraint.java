@@ -99,7 +99,8 @@ public abstract class ValueConstraint {
                 return new ReferenceConstraint(definition, nsResolver);
 
             default:
-                throw new IllegalArgumentException("unknown/unsupported target type for constraint: " + PropertyType.nameFromValue(type));
+                throw new IllegalArgumentException("unknown/unsupported target type for constraint: "
+                        + PropertyType.nameFromValue(type));
         }
     }
 
@@ -150,7 +151,8 @@ class BooleanConstraint extends ValueConstraint {
                 return;
 
             default:
-                String msg = "BOOLEAN constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                String msg = "BOOLEAN constraint can not be applied to value of type: "
+                        + PropertyType.nameFromValue(value.getType());
                 log.error(msg);
                 throw new RepositoryException(msg);
         }
@@ -196,7 +198,8 @@ class StringConstraint extends ValueConstraint {
                 return;
 
             default:
-                String msg = "STRING constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                String msg = "STRING constraint can not be applied to value of type: "
+                        + PropertyType.nameFromValue(value.getType());
                 log.error(msg);
                 throw new RepositoryException(msg);
         }
@@ -327,7 +330,8 @@ class NumericConstraint extends ValueConstraint {
                 }
 
             default:
-                String msg = "numeric constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                String msg = "numeric constraint can not be applied to value of type: "
+                        + PropertyType.nameFromValue(value.getType());
                 log.error(msg);
                 throw new RepositoryException(msg);
         }
@@ -438,7 +442,8 @@ class DateConstraint extends ValueConstraint {
                 return;
 
             default:
-                String msg = "DATE constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                String msg = "DATE constraint can not be applied to value of type: "
+                        + PropertyType.nameFromValue(value.getType());
                 log.error(msg);
                 throw new RepositoryException(msg);
         }
@@ -513,7 +518,8 @@ class PathConstraint extends ValueConstraint {
                 return;
 
             default:
-                String msg = "PATH constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                String msg = "PATH constraint can not be applied to value of type: "
+                        + PropertyType.nameFromValue(value.getType());
                 log.error(msg);
                 throw new RepositoryException(msg);
         }
@@ -567,7 +573,8 @@ class NameConstraint extends ValueConstraint {
                 return;
 
             default:
-                String msg = "NAME constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                String msg = "NAME constraint can not be applied to value of type: "
+                        + PropertyType.nameFromValue(value.getType());
                 log.error(msg);
                 throw new RepositoryException(msg);
         }
@@ -614,24 +621,25 @@ class ReferenceConstraint extends ValueConstraint {
         if (value == null) {
             throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
         }
-        // @todo check REFERENCE value constraint (requires a session)
-        /*
         switch (value.getType()) {
             case PropertyType.REFERENCE:
+                // @todo check REFERENCE value constraint (requires a session)
+/*
                 UUID targetUUID = (UUID) value.internalValue();
                 NodeImpl targetNode = (NodeImpl) session.getNodeByUUID(targetUUID.toString());
                 if (!targetNode.isNodeType(ntName)) {
                     throw new ConstraintViolationException("the node with uuid " + targetUUID + " does not satisfy the constraint '" + definition + "'");
                 }
+*/
+                log.warn("validation of REFERENCE constraint is not yet implemented");
                 return;
 
             default:
-                String msg = "REFERENCE constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                String msg = "REFERENCE constraint can not be applied to value of type: "
+                        + PropertyType.nameFromValue(value.getType());
                 log.error(msg);
                 throw new RepositoryException(msg);
         }
-        */
-        log.warn("validation of REFERENCE constraint is not yet implemented");
     }
 }
 

@@ -16,10 +16,7 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.state.*;
@@ -586,7 +583,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 // as those are set by the implementation only, i.e. they
                 // cannot be set by the user through the api)
                 if (!def.isProtected()) {
-                    if (def.getValueConstraints() != null) {
+                    String[] constraints = def.getValueConstraints();
+                    if (constraints != null) {
                         InternalValue[] values = propState.getValues();
                         try {
                             NodeTypeImpl.checkSetPropertyValueConstraints(def, values);
@@ -595,6 +593,43 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             String msg = prop.safeGetJCRPath() + ": " + e.getMessage();
                             log.warn(msg);
                             throw new ConstraintViolationException(msg);
+                        }
+
+                        // need to manually check REFERENCE value constraints
+                        // as this requires a session (target node needs to
+                        // be checked)
+                        if (def.getRequiredType() == PropertyType.REFERENCE) {
+                            for (int i = 0; i < values.length; i++) {
+                                boolean satisfied = false;
+                                try {
+                                    UUID targetUUID = (UUID) values[i].internalValue();
+                                    Node targetNode = session.getNodeByUUID(targetUUID.toString());
+                                    // constraints are OR-ed, i.e. at least one
+                                    // has to be satisfied
+                                    for (int j = 0; j < constraints.length; j++) {
+                                        // a REFERENCE value constraint specifies
+                                        // the name of the required node type of
+                                        // the target node
+                                        String ntName = constraints[j];
+                                        if (targetNode.isNodeType(ntName)) {
+                                            satisfied = true;
+                                            break;
+                                        }
+                                    }
+                                } catch (RepositoryException re) {
+                                    String msg = prop.safeGetJCRPath()
+                                            + ": failed to check REFERENCE value constraint";
+                                    log.error(msg, re);
+                                    throw new ConstraintViolationException(msg, re);
+                                }
+                                if (!satisfied) {
+                                    String msg = prop.safeGetJCRPath()
+                                            + ": does not satisfy the value constraint "
+                                            + constraints[0];   // just report the 1st
+                                    log.warn(msg);
+                                    throw new ConstraintViolationException(msg);
+                                }
+                            }
                         }
                     }
                 }

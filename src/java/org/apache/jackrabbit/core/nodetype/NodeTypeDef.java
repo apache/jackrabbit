@@ -17,6 +17,7 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.QName;
 
+import javax.jcr.PropertyType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -56,27 +57,51 @@ public class NodeTypeDef implements Cloneable {
     }
 
     /**
-     * Returns a collection of node type <code>QName</code>s which are being referenced
-     * by this node type definition (e.g. in supertypes and/or in child node
-     * definitions).
+     * Returns a collection of node type <code>QName</code>s that are being
+     * referenced by <i>this</i> node type definition (e.g. as supertypes, as
+     * required/default primary types in child node definitions, as REFERENCE
+     * value constraints in property definitions).
+     * <p/>
+     * Note that self-references (e.g. a child node definition that specifies
+     * the declaring node type as the default primary type) are not considered 
+     * dependencies.
      *
      * @return a collection of node type <code>QName</code>s
      */
     public Collection getDependencies() {
         if (dependencies == null) {
             dependencies = new HashSet();
+            // supertypes
             for (int i = 0; i < supertypes.length; i++) {
                 dependencies.add(supertypes[i]);
             }
+            // child node definitions
             for (int i = 0; i < nodeDefs.length; i++) {
+                // default primary type
                 QName ntName = nodeDefs[i].getDefaultPrimaryType();
                 if (ntName != null && !name.equals(ntName)) {
                     dependencies.add(ntName);
                 }
+                // required primary type
                 QName[] ntNames = nodeDefs[i].getRequiredPrimaryTypes();
                 for (int j = 0; j < ntNames.length; j++) {
                     if (ntNames[j] != null && !name.equals(ntNames[j])) {
                         dependencies.add(ntNames[j]);
+                    }
+                }
+            }
+            // property definitions
+            for (int i = 0; i < propDefs.length; i++) {
+                // REFERENCE value constraints
+                if (propDefs[i].getRequiredType() == PropertyType.REFERENCE) {
+                    ValueConstraint[] ca = propDefs[i].getValueConstraints();
+                    if (ca != null) {
+                        for (int j = 0; j < ca.length; j++) {
+                            ReferenceConstraint rc = (ReferenceConstraint) ca[j];
+                            if (!name.equals(rc.getNodeTypeName())) {
+                                dependencies.add(rc.getNodeTypeName());
+                            }
+                        }
                     }
                 }
             }
