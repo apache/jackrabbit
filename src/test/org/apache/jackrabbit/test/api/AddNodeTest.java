@@ -32,7 +32,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
  * @test
  * @sources AddNodeTest.java
  * @executeClass org.apache.jackrabbit.test.api.AddNodeTest
- * @keywords level1
+ * @keywords level2
  */
 public class AddNodeTest extends AbstractJCRTest {
 

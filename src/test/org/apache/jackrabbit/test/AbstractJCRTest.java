@@ -146,9 +146,15 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String workspaceName;
 
     /**
-     * The superuser session
+     * The superuser session for the default workspace
      */
     protected Session superuser;
+
+    /**
+     * Flag that indicates if the current test is a level1 test, that is
+     * the workspace is read-only.
+     */
+    protected boolean isLevel1Test = false;
 
     /**
      * The root <code>Node</code> for testing
@@ -226,29 +232,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
             }
         }
 
-        Node root = superuser.getRootNode();
-        if (root.hasNode(testPath)) {
-            // clean test root
-            testRootNode = root.getNode(testPath);
-            for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
-                children.nextNode().remove();
+        if (isLevel1Test) {
+            if (!superuser.getRootNode().hasNode(testPath)) {
+                fail("Workspace does not contain test data at: " + testRoot);
             }
         } else {
-            // create nodes to testPath
-            StringTokenizer names = new StringTokenizer(testPath, "/");
-            Node currentNode = root;
-            while (names.hasMoreTokens()) {
-                currentNode = currentNode.addNode(names.nextToken(), testNodeType);
-            }
-            testRootNode = currentNode;
-        }
-        root.save();
-    }
-
-    protected void tearDown() throws Exception {
-        if (superuser != null) {
-            // do a 'rollback'
-            superuser.refresh(false);
             Node root = superuser.getRootNode();
             if (root.hasNode(testPath)) {
                 // clean test root
@@ -256,9 +244,38 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
                     children.nextNode().remove();
                 }
-                root.save();
+            } else {
+                // create nodes to testPath
+                StringTokenizer names = new StringTokenizer(testPath, "/");
+                Node currentNode = root;
+                while (names.hasMoreTokens()) {
+                    currentNode = currentNode.addNode(names.nextToken(), testNodeType);
+                }
+                testRootNode = currentNode;
             }
-            superuser.logout();
+            root.save();
+        }
+    }
+
+    protected void tearDown() throws Exception {
+        if (superuser != null) {
+            try {
+                if (!isLevel1Test) {
+                    // do a 'rollback'
+                    superuser.refresh(false);
+                    Node root = superuser.getRootNode();
+                    if (root.hasNode(testPath)) {
+                        // clean test root
+                        testRootNode = root.getNode(testPath);
+                        for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
+                            children.nextNode().remove();
+                        }
+                        root.save();
+                    }
+                }
+            } finally {
+                superuser.logout();
+            }
         }
     }
 

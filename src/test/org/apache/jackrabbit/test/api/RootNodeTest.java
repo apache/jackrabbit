@@ -35,6 +35,7 @@ public class RootNodeTest extends AbstractJCRTest {
     Node rootNode;
 
     protected void setUp() throws Exception {
+        isLevel1Test = true;
         super.setUp();
         rootNode = helper.getReadOnlySession().getRootNode();
     }
