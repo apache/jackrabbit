@@ -70,6 +70,8 @@ class NodeTypeDefStore {
     private static final String REQUIREDPRIMARYTYPE_ELEMENT = "requiredPrimaryType";
     private static final String DEFAULTPRIMARYTYPE_ATTRIBUTE = "defaultPrimaryType";
 
+    private static final String WILDCARD = "*";
+
     // map of node type names and node type definitions
     private HashMap ntDefs;
 
@@ -278,7 +280,7 @@ class NodeTypeDefStore {
 	    pd.setDeclaringNodeType(qntName);
 	    // name
 	    String propName = elem.getAttributeValue(NAME_ATTRIBUTE);
-	    if (propName != null && propName.length() > 0) {
+	    if (propName != null && !propName.equals(WILDCARD)) {
 		try {
 		    pd.setName(QName.fromJCRName(propName, nsResolver));
 		} catch (BaseException e) {
@@ -286,6 +288,8 @@ class NodeTypeDefStore {
 		    log.error(msg, e);
 		    throw new InvalidNodeTypeDefException(msg, e);
 		}
+	    } else {
+		pd.setName(ChildItemDef.ANY_NAME);
 	    }
 	    // type
 	    String typeName = elem.getAttributeValue(TYPE_ATTRIBUTE);
@@ -402,7 +406,7 @@ class NodeTypeDefStore {
 	    cnd.setDeclaringNodeType(qntName);
 	    // name
 	    String nodeName = elem.getAttributeValue(NAME_ATTRIBUTE);
-	    if (nodeName != null && nodeName.length() > 0) {
+	    if (nodeName != null && !nodeName.equals(WILDCARD)) {
 		try {
 		    cnd.setName(QName.fromJCRName(nodeName, nsResolver));
 		} catch (BaseException e) {
@@ -410,6 +414,8 @@ class NodeTypeDefStore {
 		    log.error(msg, e);
 		    throw new InvalidNodeTypeDefException(msg, e);
 		}
+	    } else {
+		cnd.setName(ChildItemDef.ANY_NAME);
 	    }
 	    // requiredPrimaryTypes
 	    Element reqTtypesElem = elem.getChild(REQUIREDPRIMARYTYPES_ELEMENT);
@@ -524,7 +530,7 @@ class NodeTypeDefStore {
 		ntElem.addContent(elem);
 
 		// name
-		String name = pd.getName() == null ? "" : pd.getName().toJCRName(nsResolver);
+		String name = pd.definesResidual() ? WILDCARD : pd.getName().toJCRName(nsResolver);
 		elem.setAttribute(NAME_ATTRIBUTE, name);
 		// type
 		elem.setAttribute(TYPE_ATTRIBUTE, PropertyType.nameFromValue(pd.getRequiredType()));
@@ -575,7 +581,7 @@ class NodeTypeDefStore {
 		ntElem.addContent(elem);
 
 		// name
-		String name = nd.getName() == null ? "" : nd.getName().toJCRName(nsResolver);
+		String name = nd.definesResidual() ? WILDCARD : nd.getName().toJCRName(nsResolver);
 		elem.setAttribute(NAME_ATTRIBUTE, name);
 		// requiredPrimaryTypes
 		qNames = nd.getRequiredPrimaryTypes();

@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 
 import javax.jcr.version.OnParentVersionAction;
 
@@ -27,8 +28,12 @@ import javax.jcr.version.OnParentVersionAction;
  */
 abstract class ChildItemDef implements Cloneable {
 
+    // '*' denoting residual child item definition
+    protected static final QName ANY_NAME =
+	    new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, "*");
+
     protected QName declaringNodeType = null;
-    private QName name = null;
+    private QName name = ANY_NAME;
     private boolean autoCreate = false;
     private int onParentVersion = OnParentVersionAction.COPY;
     private boolean writeProtected = false;
@@ -113,6 +118,10 @@ abstract class ChildItemDef implements Cloneable {
 
     public boolean isPrimaryItem() {
 	return primaryItem;
+    }
+
+    public boolean definesResidual() {
+	return name.equals(ANY_NAME);
     }
 
     public abstract boolean definesNode();

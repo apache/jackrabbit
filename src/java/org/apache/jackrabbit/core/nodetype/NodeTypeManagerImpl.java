@@ -37,6 +37,7 @@ import java.util.Map;
  * @version $Revision: 1.54 $, $Date: 2004/08/27 15:48:20 $
  */
 public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryListener {
+
     private static Logger log = Logger.getLogger(NodeTypeManagerImpl.class);
 
     private final NodeTypeRegistry ntReg;
@@ -226,7 +227,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
 	 */
 	public String getName() {
 	    // not applicable
-	    return null;
+	    return "";
 	}
 
 	/**

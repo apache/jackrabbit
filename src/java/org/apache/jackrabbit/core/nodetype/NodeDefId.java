@@ -42,7 +42,7 @@ public class NodeDefId implements Serializable {
 
 	sb.append(def.getDeclaringNodeType().toString());
 	sb.append('/');
-	if (def.getName() == null) {
+	if (def.definesResidual()) {
 	    sb.append('*');
 	} else {
 	    sb.append(def.getName().toString());

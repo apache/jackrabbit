@@ -108,23 +108,23 @@ public class EffectiveNodeType implements Cloneable {
 
 	ChildNodeDef[] cnda = ntd.getChildNodeDefs();
 	for (int i = 0; i < cnda.length; i++) {
-	    QName name = cnda[i].getName();
-	    if (name == null) {
+	    if (cnda[i].definesResidual()) {
 		// residual node definition
 		ent.unnamedItemDefs.add(cnda[i]);
 	    } else {
 		// named node definition
+		QName name = cnda[i].getName();
 		ent.namedItemDefs.put(name, cnda[i]);
 	    }
 	}
 	PropDef[] pda = ntd.getPropertyDefs();
 	for (int i = 0; i < pda.length; i++) {
-	    QName name = pda[i].getName();
-	    if (name == null) {
+	    if (pda[i].definesResidual()) {
 		// residual property definition
 		ent.unnamedItemDefs.add(pda[i]);
 	    } else {
 		// named property definition
+		QName name = pda[i].getName();
 		ent.namedItemDefs.put(name, pda[i]);
 	    }
 	}

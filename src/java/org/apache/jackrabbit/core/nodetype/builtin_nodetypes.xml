@@ -72,13 +72,13 @@
 	<supertypes>
 	    <supertype>nt:base</supertype>
 	</supertypes>
-	<childNodeDef name="" defaultPrimaryType="nt:unstructured" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" sameNameSibs="true">
+	<childNodeDef name="*" defaultPrimaryType="nt:unstructured" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" sameNameSibs="true">
 	    <requiredPrimaryTypes>
 		<requiredPrimaryType>nt:base</requiredPrimaryType>
 	    </requiredPrimaryTypes>
 	</childNodeDef>
-	<propertyDef name="" type="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
-	<propertyDef name="" type="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+	<propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
+	<propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:hierarchyNode" mixin="false" orderableChildNodes="false">
 	<supertypes>
@@ -110,7 +110,7 @@
 	<supertypes>
 	    <supertype>nt:hierarchyNode</supertype>
 	</supertypes>
-	<childNodeDef name="" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" primaryItem="false" sameNameSibs="false">
+	<childNodeDef name="*" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" primaryItem="false" sameNameSibs="false">
 	    <requiredPrimaryTypes>
 		<requiredPrimaryType>nt:hierarchyNode</requiredPrimaryType>
 	    </requiredPrimaryTypes>
@@ -178,7 +178,7 @@
 		<requiredPrimaryType>nt:version</requiredPrimaryType>
 	    </requiredPrimaryTypes>
 	</childNodeDef>
- 	<childNodeDef name="" defaultPrimaryType="nt:version" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="false">
+ 	<childNodeDef name="*" defaultPrimaryType="nt:version" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="false">
 	     <requiredPrimaryTypes>
 		 <requiredPrimaryType>nt:version</requiredPrimaryType>
 	     </requiredPrimaryTypes>
@@ -206,9 +206,9 @@
 	<propertyDef name="jcr:frozenPrimaryType" type="Name" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
 	<propertyDef name="jcr:frozenMixinTypes" type="Name" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
 	<propertyDef name="jcr:frozenUUID" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-	<propertyDef name="" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
-	<propertyDef name="" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-	<childNodeDef name="" defaultPrimaryType="nt:frozen" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="true">
+	<propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
+	<propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
+	<childNodeDef name="*" defaultPrimaryType="nt:frozen" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="true">
 	    <requiredPrimaryTypes>
 		<requiredPrimaryType>nt:base</requiredPrimaryType>
 	    </requiredPrimaryTypes>

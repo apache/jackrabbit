@@ -174,12 +174,12 @@ public class NodeTypeRegistry {
 	    internalRegister(builtInNTDefs.all());
 	} catch (IOException ioe) {
 	    String error = "internal error: failed to read built-in node type definitions stored in " + BUILTIN_NODETYPES_RESOURCE_PATH;
-	    log.error(error);
-	    throw new RepositoryException(error);
+	    log.error(error, ioe);
+	    throw new RepositoryException(error, ioe);
 	} catch (InvalidNodeTypeDefException intde) {
 	    String error = "internal error: invalid built-in node type definition stored in " + BUILTIN_NODETYPES_RESOURCE_PATH;
-	    log.error(error);
-	    throw new RepositoryException(error);
+	    log.error(error, intde);
+	    throw new RepositoryException(error, intde);
 	} finally {
 	    if (in != null) {
 		try {
@@ -229,7 +229,6 @@ public class NodeTypeRegistry {
     private static ChildNodeDef createRootNodeDef() {
 	ChildNodeDef def = new ChildNodeDef();
 
-	//def.setName(null);
 	// FIXME need a fake declaring node type
 	def.setDeclaringNodeType(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, ""));
 	def.setRequiredPrimaryTypes(new QName[]{NT_BASE});
@@ -466,7 +465,7 @@ public class NodeTypeRegistry {
 	    PropDef pd = pda[i];
 	    // check primary item flag
 	    if (pd.isPrimaryItem()) {
-		if (pd.getName() == null) {
+		if (pd.definesResidual()) {
 		    String reason = "primary item must specify a name";
 		    log.error(reason);
 		    throw new InvalidNodeTypeDefException(reason);
@@ -480,7 +479,7 @@ public class NodeTypeRegistry {
 		}
 	    }
 	    // check that auto-created properties specify a name
-	    if (pd.getName() == null && pd.isAutoCreate()) {
+	    if (pd.definesResidual() && pd.isAutoCreate()) {
 		String reason = "auto-created properties must specify a name";
 		log.error(reason);
 		throw new InvalidNodeTypeDefException(reason);
@@ -496,7 +495,7 @@ public class NodeTypeRegistry {
 			    constraints[j].check(defVals[k]);
 			} catch (ConstraintViolationException cve) {
 			    String msg = "default value of property "
-				    + (pd.getName() == null ? "[null]" : pd.getName().toString())
+				    + (pd.definesResidual() ? "*" : pd.getName().toString())
 				    + " does not satisfy value constraint "
 				    + constraints[j].getDefinition();
 			    log.error(msg, cve);
@@ -513,7 +512,7 @@ public class NodeTypeRegistry {
 	    ChildNodeDef cnd = cnda[i];
 	    // check primary item flag
 	    if (cnd.isPrimaryItem()) {
-		if (cnd.getName() == null) {
+		if (cnd.definesResidual()) {
 		    String msg = "primary item must specify a name";
 		    log.error(msg);
 		    throw new InvalidNodeTypeDefException(msg);
@@ -527,7 +526,7 @@ public class NodeTypeRegistry {
 		}
 	    }
 	    // check that auto-created child-nodes specify a name
-	    if (cnd.getName() == null && cnd.isAutoCreate()) {
+	    if (cnd.definesResidual() && cnd.isAutoCreate()) {
 		String msg = "auto-created child-nodes must specify a name";
 		log.error(msg);
 		throw new InvalidNodeTypeDefException(msg);
@@ -1095,9 +1094,9 @@ public class NodeTypeRegistry {
 	    for (int i = 0; i < pd.length; i++) {
 		ps.print("\tPropertyDef");
 		ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + new PropDefId(pd[i]));
-		ps.println("\t\tName\t\t" + pd[i].getName());
+		ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
 		String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
-		ps.println("\t\tRequiredType\t\t" + type);
+		ps.println("\t\tRequiredType\t" + type);
 		ValueConstraint[] vca = pd[i].getValueConstraints();
 		StringBuffer constraints = new StringBuffer();
 		if (vca == null) {
@@ -1135,7 +1134,7 @@ public class NodeTypeRegistry {
 	    for (int i = 0; i < nd.length; i++) {
 		ps.print("\tNodeDef");
 		ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + new NodeDefId(nd[i]));
-		ps.println("\t\tName\t" + nd[i].getName());
+		ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
 		QName[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
 		if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
 		    for (int n = 0; n < reqPrimaryTypes.length; n++) {

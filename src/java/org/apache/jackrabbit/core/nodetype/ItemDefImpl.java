@@ -34,6 +34,8 @@ abstract class ItemDefImpl implements ItemDef {
 
     private static Logger log = Logger.getLogger(ItemDefImpl.class);
 
+    protected static final String ANY_NAME = "*";
+
     protected final NodeTypeManagerImpl ntMgr;
     // namespace resolver used to translate qualified names to JCR names
     protected final NamespaceResolver nsResolver;
@@ -75,17 +77,17 @@ abstract class ItemDefImpl implements ItemDef {
      * @see ItemDef#getName
      */
     public String getName() {
-	QName name = itemDef.getName();
-	if (name == null) {
-	    return null;
-	}
-	try {
-	    return name.toJCRName(nsResolver);
-	} catch (NoPrefixDeclaredException npde) {
-	    // should never get here
-	    log.error("encountered unregistered namespace in property name", npde);
-	    // not correct, but an acceptable fallback
-	    return itemDef.getName().toString();
+	if (itemDef.definesResidual()) {
+	    return ANY_NAME;
+	} else {
+	    try {
+		return itemDef.getName().toJCRName(nsResolver);
+	    } catch (NoPrefixDeclaredException npde) {
+		// should never get here
+		log.error("encountered unregistered namespace in property name", npde);
+		// not correct, but an acceptable fallback
+		return itemDef.getName().toString();
+	    }
 	}
     }
 
