@@ -59,6 +59,12 @@ public class TestAll extends TestCase {
         suite.addTestSuite(PredicatesTest.class);
         suite.addTestSuite(SimpleSelectionTest.class);
 
+        suite.addTestSuite(OrderByDateTest.class);
+        suite.addTestSuite(OrderByDoubleTest.class);
+        suite.addTestSuite(OrderByLongTest.class);
+        suite.addTestSuite(OrderByMultiTypeTest.class);
+        suite.addTestSuite(OrderByStringTest.class);
+
         return suite;
     }
 }

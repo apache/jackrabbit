@@ -31,7 +31,7 @@ import javax.jcr.query.QueryResult;
  * @test
  * @sources JcrPathTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.JcrPathTest
- * @keywords level1 sql
+ * @keywords sql
  */
 public class JcrPathTest extends AbstractQueryTest {
 
