@@ -76,7 +76,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     private static final String REP_NAME = "Jackrabbit";
     private static final String REP_VERSION = "0.15";
 
-    // system root location
+    // system root location (jcr:system)
     public static final QName SYSTEM_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "system");
 
     private String rootNodeUUID;
@@ -282,18 +282,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         // init version manager
         // todo: as soon as dynamic workspaces are available, base on system ws
         SessionImpl verSession = getSystemSession(repConfig.getDefaultWorkspaceName());
-        NodeImpl vRootNode = (NodeImpl) verSession.getRootNode();
-        try {
-            if (!vRootNode.hasNode(SYSTEM_ROOT_NAME)) {
-                verSession.getWorkspace().clone(repConfig.getDefaultWorkspaceName(),
-                        SYSTEM_ROOT_NAME.toJCRName(verSession.getNamespaceResolver()),
-                        SYSTEM_ROOT_NAME.toJCRName(verSession.getNamespaceResolver()));
-            }
-        } catch (NoPrefixDeclaredException npde) {
-            String msg = "failed to initialize version manager";
-            log.error(msg, npde);
-            throw new RepositoryException(msg, npde);
-        }
         vMgr = new PersistentVersionManager(verSession);
 
         // load repository properties
