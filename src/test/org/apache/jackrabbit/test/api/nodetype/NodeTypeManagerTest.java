@@ -31,7 +31,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  *
  * @test
  * @sources NodeTypeManagerTest.java
- * @executeClass org.apache.jackrabbit.test.api.NodeTypeManagerTest
+ * @executeClass org.apache.jackrabbit.test.api.nodetype.NodeTypeManagerTest
  * @keywords level1
  */
 public class NodeTypeManagerTest extends AbstractJCRTest {

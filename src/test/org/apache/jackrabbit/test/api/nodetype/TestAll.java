@@ -42,6 +42,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeTypeTest.class);
         suite.addTestSuite(PropertyDefTest.class);
 
+        suite.addTestSuite(PredefinedNodeTypeTest.class);
+
         return suite;
     }
 }

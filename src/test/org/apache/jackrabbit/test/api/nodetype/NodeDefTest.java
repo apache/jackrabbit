@@ -34,7 +34,7 @@ import javax.jcr.nodetype.NodeDef;
  *
  * @test
  * @sources NodeDefTest.java
- * @executeClass org.apache.jackrabbit.test.api.NodeDefTest
+ * @executeClass org.apache.jackrabbit.test.api.nodetype.NodeDefTest
  * @keywords level1
  */
 public class NodeDefTest extends AbstractJCRTest {
