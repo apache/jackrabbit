@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-   Copyright 2003-2004 The Apache Software Foundation
+   Copyright 2004 The Apache Software Foundation.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,15 +15,10 @@
    limitations under the License.
   -->
 <document>
-
  <properties>
   <title>Jackrabbit operations explained</title>
-  <author email="jackrabbit-dev@incubator.apache.org">Jackrabbit Documentation team</author>
-  <revision>$Id: $</revision>
  </properties>
-
  <body>
-
 <section name="Core Content Repository Operations">
 <p>
 This section describes how the Core Repository of Jackrabbit
@@ -34,6 +29,5 @@ operates, segmented into a number of common operations.
 What happens on start-up? What can be configured? <a href="startup.html">more...</a>
 </p>
 </section>
-
 </body>
 </document>
