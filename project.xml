@@ -226,6 +226,15 @@
       </roles>
       <timezone>+1</timezone>
     </contributor>
+    <contributor>
+      <name>Serge Huber</name>
+      <email/>
+      <organization/>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
   </contributors>
   <licenses>
     <license>

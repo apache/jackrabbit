@@ -185,6 +185,4 @@ public interface Constants {
 
     /** nt:frozenNode */
     public static final QName NT_FROZENNODE = new QName(NS_NT_URI, "frozenNode");
-
-
 }

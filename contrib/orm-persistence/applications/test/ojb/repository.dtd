@@ -1,0 +1,950 @@
+<!-- @version $Id: $ -->
+<!--
+#/* Copyright 2004 Apache Software Foundation
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *     http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# */
+-->
+<!--
+	ObJectRelationalBridge - Bridging Java objects and relational dabatases
+	This DTD describes the grammar of the Descriptor repository
+	Author: Thomas Mahler, (c) 2000, 2001, 2002, 2003
+  -->
+
+<!--
+	The descriptor-repository is the root element of a
+    repository.xml file.
+	It consists of one jdbc-connection-descriptor and at least one
+	class-descriptor element.
+
+	The attribute element allows to add custom attributes.
+
+    The jdbc-connection-descriptor element specifies the default jdbc
+	connection for the repository.
+
+	class-descriptor elements specify o/r mapping information for
+	persistent classes.
+  -->
+<!ELEMENT descriptor-repository (documentation?, attribute*,
+        jdbc-connection-descriptor*, class-descriptor*)>
+
+<!--
+	The version attribute is used to bind a repository.xml
+    file to a given version of this dtd. This will help to
+    avoid versions conflicts.
+
+    The isolation attribute defines the default isolation level for
+    class-descriptor on ODMG api level that do not define a
+    specific isolation level (this does NOT touch the jdbc-level
+    of the connection).
+  -->
+<!ATTLIST descriptor-repository
+	version (1.0) #REQUIRED
+	isolation-level (read-uncommitted | read-committed | repeatable-read |
+	                 serializable | optimistic) "read-uncommitted"
+	proxy-prefetching-limit CDATA "50"
+>
+
+<!--
+	The documentation element can be used to store arbitrary
+	information on all repository entries.
+-->
+<!ELEMENT documentation (#PCDATA)>
+
+<!--
+	The attribute element allows to add custom attributes.
+
+    The jdbc-connection-descriptor element specifies the a jdbc
+	connection for the repository.
+
+    The object-cache element specifies the object-cache implementation
+    class associated with this class.
+
+	A connection-pool element may be used to define connection pool
+	properties for the specified JDBC connection.
+
+    A sequence-manager element may be used to
+    define which sequence manager implementation should be used within
+    the defined connection.
+  -->
+<!ELEMENT jdbc-connection-descriptor (documentation?, attribute*,
+                object-cache?, connection-pool?, sequence-manager?)>
+
+<!--
+    The jcdAlias attribute is a shortcut name for the defined connection
+    descriptor. OJB use jcdAlias as key for the defined connections.
+
+    The default-connection attribute used to define if this connection
+    should used as default connection with OJB. You could define only
+    one connection as default connection. It is also possible to set
+    the default connection at runtime using
+    PersistenceBrokerFactory#setDefaultKey(...) method.
+    If set 'true' you could use on PB-api a shortcut-method of the
+    PersistenceBrokerFactory to lookup PersistenceBroker instances.
+
+    The platform attribute is used to define the specific RDBMS
+    Platform. This attribute corresponds to a
+	org.apache.ojb.broker.platforms.PlatformXXXImpl class.
+
+	The jdbc-level attribute is used to specify the Jdbc compliance
+	level of the used Jdbc driver.
+
+    The eager-release attribute was adopt to solve a problem occured when
+    using OJB within JBoss (3.0 <= version < 3.2.2, seems to be fixed in jboss 3.2.2).
+    Only use within JBoss.
+
+    The batch-mode attribute allow to enable JDBC connection batch support
+    (if supported by used database), 'true' value allows to enable per-session
+    batch mode, whereas 'false' prohibits it.
+    PB.serviceConnectionManager.setBatchMode(...) method can be used
+    to switch on/off batch modus, if batch-mode was enabled. On PB.close()
+    OJB switch off batch modus, thus you have to do '...setBatchMode(true)' on each
+    obtained PB instance.
+
+    The useAutoCommit attribute allow to set how OJB uses
+    the autoCommit state of the used connections. The default mode
+    was 1. When using mode 0 or 2 with the PB-api, you must use PB
+    transaction demarcation.
+    0 - OJB ignores the autoCommit setting of the connection and do not
+        try to change it. This mode could be helpfully if the
+        connection don't let you set the autoCommit state
+        (e.g. using datasources from application server).
+    1 - set autoCommit explicit 'true' when connection was created
+        and temporary set to 'false' when necessary (default mode).
+    2 - set autoCommit explicit 'false' when connection was created.
+
+    If the ignoreAutoCommitExceptions attribute is set 'true', all
+    exceptions caused by setting autocommit state, will be ignored.
+    Default mode 'false'.
+
+	If a jndi-datasource-name for JNDI based lookup of Jdbc
+    connections is specified, the four attributes driver, protocol,
+    subprotocol, dbalias used for Jdbc DriverManager based construction
+    of Jdbc Connections must not be declared.
+
+    The username and password attributes are used as credentials
+    for obtaining a jdbc connections.
+    If users don't want to keep this information the
+    repository.xml file, they could pass user/password
+    using PBKey.java to obtain a PersistenceBroker
+  -->
+<!ATTLIST jdbc-connection-descriptor
+	jcd-alias CDATA #REQUIRED
+    default-connection (true | false) "false"
+    platform (Db2 | Hsqldb | Informix | MsAccess | MsSQLServer |
+	          MySQL | Oracle | PostgreSQL | Sybase | SybaseASE |
+              SybaseASA | Sapdb | Firebird | Axion | NonstopSql |
+              Oracle9i | MaxDB ) "Hsqldb"
+	jdbc-level (1.0 | 2.0 | 3.0) "1.0"
+	eager-release (true | false) "false"
+    batch-mode (true | false) "false"
+    useAutoCommit (0 | 1 | 2) "1"
+    ignoreAutoCommitExceptions (true | false) "false"
+
+	jndi-datasource-name CDATA #IMPLIED
+
+	driver CDATA #IMPLIED
+	protocol CDATA #IMPLIED
+	subprotocol CDATA #IMPLIED
+	dbalias CDATA #IMPLIED
+
+	username CDATA #IMPLIED
+	password CDATA #IMPLIED
+>
+
+
+<!--
+    The object-cache element can be used to specify the ObjectCache
+    implementation used by OJB. There are three levels of
+    declaration:
+        1. in OJB.properties file, to declare the standard (default)
+        ObjectCache implementation.
+        2. on jdbc-connection-descriptor level, to declare ObjectCache implementation
+        on a per connection/user level
+        3. on class-descriptor level, to declare ObjectCache implementation
+        on a per class level
+
+    The priority of the declared object-cache elements are:
+    per class > per jdbc descriptor > standard
+
+    E.g. if you declare ObjectCache 'cacheDef' as standard, set
+    ObjectCache 'cacheA' in class-descriptor for class A and class B
+    does not declare an object-cache element. Then OJB use cacheA as ObjectCache
+    for class A and cacheDef for class B
+-->
+<!ELEMENT object-cache (documentation?, attribute*)>
+
+<!--
+    Attribute 'class' specifies the full qualified class name of
+    the used ObjectCache implementation.
+-->
+<!ATTLIST object-cache
+    class                          CDATA #REQUIRED
+>
+
+
+<!--
+	The connection-pool element specifies the connection pooling
+	parameter.
+-->
+<!ELEMENT connection-pool (documentation?)>
+
+
+<!--
+	maxActive
+	maximum number of connections that can be borrowed from the
+	pool at one time. When non-positive, there is no limit.
+
+	maxIdle
+	controls the maximum number of connections that can sit idle in the
+	pool at any time. When non-positive, there is no limit
+
+	maxWait
+	max time block to get connection instance from pool, after that exception is thrown.
+	When non-positive, block till last judgement
+
+	whenExhaustedAction
+	0 - fail when pool is exhausted
+	1 - block when pool is exhausted
+	2 - grow when pool is exhausted
+
+	testOnBorrow
+	The pool will attempt to validate each object before it is returned from the pool
+
+	testOnReturn
+	The pool will attempt to validate each object before it is returned to the pool
+
+	testWhileIdle
+	Indicates whether or not idle objects should be validated.
+	Objects that fail to validate will be dropped from the pool
+
+	timeBetweenEvictionRunsMillis
+	indicates how long the eviction thread should sleep before "runs" of examining
+	idle objects. When non-positive, no eviction thread will be launched.
+
+	minEvictableIdleTimeMillis
+	specifies the minimum amount of time that a connection may sit idle
+	in the pool before it is eligable for eviction due to idle time.
+	When non-positive, no connection will be dropped from the pool due
+	to idle time alone (depends on timeBetweenEvictionRunsMillis > 0)
+
+	numTestsPerEvictionRun
+	The number of connections to examine during each run of the
+	idle object evictor thread (if any)
+
+    validationQuery
+    Here you could specify a validation query used by pool to test a
+    obtained connection (e.g. "select 1 from dual"), else a default query was
+    used - if defined in the platform class for your database.
+
+    logAbandoned
+    Only supported when using
+    org.apache.ojb.broker.accesslayer.ConnectionFactoryDBCPImpl
+    ConnectionFactory implementation.
+    Flag to log stack traces for application code which abandoned
+    a Statement or Connection. Defaults to false. Logging of
+    abandoned Statements and Connections adds overhead for
+    every Connection open or new Statement because a
+    stack trace has to be generated.
+
+    removeAbandoned/removeAbandonedTimeout
+    Only supported when using
+    org.apache.ojb.broker.accesslayer.ConnectionFactoryDBCPImpl
+    ConnectionFactory implementation.
+    Flag to remove abandoned connections if they exceed the
+    removeAbandonedTimeout. Set to true or false, default false.
+    If set to true a connection is considered abandoned and
+    eligible for removal if it has been idle longer than the
+    removeAbandonedTimeout. Setting this to true can recover
+    db connections from poorly written applications which
+    fail to close a connection.
+
+-->
+<!ATTLIST connection-pool
+    maxActive                       CDATA #IMPLIED
+    maxIdle                         CDATA #IMPLIED
+    maxWait                         CDATA #IMPLIED
+    minEvictableIdleTimeMillis      CDATA #IMPLIED
+    numTestsPerEvictionRun          CDATA #IMPLIED
+    testOnBorrow                    (true|false) #IMPLIED
+    testOnReturn                    (true|false) #IMPLIED
+    testWhileIdle                   (true|false) #IMPLIED
+    timeBetweenEvictionRunsMillis   CDATA #IMPLIED
+    whenExhaustedAction             (0|1|2) #IMPLIED
+    validationQuery                 CDATA #IMPLIED
+
+    logAbandoned                    (true|false) #IMPLIED
+    removeAbandoned                 (true|false) #IMPLIED
+    removeAbandonedTimeout          CDATA #IMPLIED
+>
+
+
+
+<!--
+	The sequence-manager element specifies the sequence
+    manager implementation used for key generation. All
+    sequence manager implementations shipped with OJB
+    you will find under org.apache.ojb.broker.util.sequence
+    If no sequence-manager is defined, OJB use a default one.
+    For configuration examples please consult documentation.
+
+    Use the attribute element to pass implementation specific
+    properties. This depends on the used implementation class.
+-->
+<!ELEMENT sequence-manager (documentation?, attribute*)>
+
+<!--
+    The className attribute represents the full qualified class name
+    of the desired sequence manager implementation - it is mandatory
+    when using the sequence-manager element.
+    All sequence manager implementations you find will under
+    org.apache.ojb.broker.util.sequence package named as SequenceManagerXXXImpl.
+    For configuration examples please consult documentation.
+-->
+<!ATTLIST sequence-manager
+    className                       CDATA #REQUIRED
+>
+
+
+
+<!--
+	For interfaces or abstract classes a class-descriptor holds a sequence of
+	extent-class elements.
+
+	For concrete classes it must have field-descriptors that describe primitive
+	typed instance variables.
+	References to other persistent entity classes are specified by
+	reference-descriptor elements.
+	Collections or arrays attributes that contain other persistent entity
+	classes are specified by collection-descriptor elements
+
+	Concrete base classes, may specify a sequence of extent-class elements,
+	naming the derived classes.
+
+	A class-descriptor may contain user defined custom attribute elements.
+
+    The insert-procedure, update-procedure and delete-procedure elements
+    identify the procedure/function that is defined in the database which
+    will handle the insertion, update or deletion of an instance of this
+    class.  These elements are all optional.  If they are absent then basic
+    sql statements (INSERT INTO xxx..., UPDATE xxx, DELETE FROM xxx) will
+    be utilized.
+
+  -->
+<!ELEMENT class-descriptor
+	((documentation?, extent-class+, attribute*) |
+	(documentation?, object-cache?, extent-class*, field-descriptor+,
+	 reference-descriptor*, collection-descriptor*,
+     index-descriptor*, attribute*,
+     insert-procedure?, update-procedure?, delete-procedure?))>
+
+
+<!--
+	The class attribute contains the full qualified name of the specified class.
+	As this attribute is of type ID there can only be one class-descriptor per
+	class.
+
+	The isolation-level attribute specifies the transactional isolation to be
+	used for this class on ODMG api level (this does NOT touch the jdbc-level
+    of the connection).
+
+	If the proxy attribute is set, proxies are used for all loading operations
+	of instances of this class. If set to "dynamic", dynamic proxies are used.
+	If set to another value this value is interpreted as the full-qualified
+	name of the proxy class to use.
+
+    If the proxy-prefetching-limit attribute (used with the proxy attribute)
+    is set to the value > 0, the collections of objects of this class are materialized
+    by groups of the specified size, say when user tries to access the first
+    object of the collection, next proxy-prefetching-limit objects are loaded
+    by one database query.
+    Set this parameter to 0 if you want to turn this feature off.
+
+	The schema attribute may contain the database schema owning the table
+	mapped to this class.
+
+	The table attribute specifies the table name this class is mapped to.
+
+	The row-reader attribute may contain a full qualified class name.
+	This class will be used as the RowReader implementation used to
+	materialize instances of the persistent class.
+
+	The accept-locks attribute specifies whether implicit locking should
+	propagate to this class.  Currently relevant for the ODMG layer only.
+
+	The optional initialization-method specifies a no-argument instance
+	method that is invoked after reading an instance from a database row.
+	It can be used to do initialization and validations.
+
+	The optional factory-class specifies a factory-class that
+	that is to be used instead of a no argument constructor.
+	If the factory-class is specified the factory-method
+	also must be defined.
+	factory-method refers to a static no-argument method
+	of the factory-class class.
+
+	The refresh attribute can be set to true to force OJB to refresh
+	instances when loaded from cache. It's set to false by default.
+  -->
+<!ATTLIST class-descriptor
+	class ID #REQUIRED
+	isolation-level (read-uncommitted | read-committed | repeatable-read |
+	                 serializable | optimistic) "read-uncommitted"
+	proxy CDATA #IMPLIED
+	proxy-prefetching-limit CDATA #IMPLIED
+	schema CDATA #IMPLIED
+	table CDATA #IMPLIED
+	row-reader CDATA #IMPLIED
+    extends IDREF #IMPLIED
+	accept-locks (true | false) "true"
+	initialization-method CDATA #IMPLIED
+	factory-class CDATA #IMPLIED
+	factory-method CDATA #IMPLIED
+	refresh (true | false) "false"
+>
+
+
+<!--
+	An extent-class element is used to specify an implementing class or a
+	derived class that belongs to the extent of all instances of the interface
+	or base class.
+  -->
+<!ELEMENT extent-class (documentation?)>
+<!--
+	The class-ref attribute must contain a fully qualified classname.
+	The repository file must contain a class-descriptor for this class.
+  -->
+<!ATTLIST extent-class
+	class-ref IDREF #REQUIRED
+>
+
+<!--
+  A field descriptor contains mapping info for a primitive typed
+  attribute of a persistent class.
+
+  A field descriptor may contain custom attribute elements.
+  -->
+<!ELEMENT field-descriptor (documentation?, attribute*)>
+<!--
+	<b>The id attribute is optional.</b> If not specified, OJB internally
+	sorts field-descriptors according to their order of appearance in the
+	repository file.
+	If a different sort order is intended the id attribute may be used to
+	hold a unique number identifying the decriptors position in the sequence of
+	field-descriptors.
+	The order of the numbers for the field-descriptors must correspond to
+	the order of columns in the mapped table.
+
+	The name attribute holds the name of the persistent classes attribute.
+	If the PersistentFieldDefaultImpl is used there must be an attribute
+	in the persistent class with this name.
+	If the PersistentFieldPropertyImpl is used there must be a JavaBeans
+	compliant property of this name.
+
+	The table attribute may specify a table different from the mapped
+	table for the persistent class. (currently not implemented).
+
+	The column attribute specifies the column the persistent classes field
+	is mapped to.
+
+	The optional jdbc-type attribute specifies the JDBC type of the column.
+	If not specified OJB tries to identify the JDBC type by inspecting the
+	Java attribute by reflection.
+
+	The primarykey specifies if the column is a primary key column.
+
+	The nullable attribute specifies if the column may contain null values.
+
+	The indexed attribute specifies if there is an index on this column
+
+	The autoincrement attribute specifies if the values for the persistent
+	attribute are automatically generated by OJB.
+
+    The sequence-name attribute can be used to state explicitly a sequence
+    name used by the sequence manager implementations. Check the docs/javadocs
+    of the used sequence manager implementation to get information if this
+    is a mandatory attribute. OJB standard sequence manager implementations
+    build a sequence name by its own, if the attribute was not set.
+
+	The locking attribute is set to true if the persistent attribute is
+	used for optimistic locking. can only be set for TIMESTAMP and INTEGER
+	columns.
+
+	The updatelock attribute is set to false if the persistent attribute is
+	used for optimistic locking AND the dbms should update the lock column
+    itself. The default is true which means that when locking is true then
+    OJB will update the locking fields. Can only be set for TIMESTAMP and INTEGER
+	columns.
+
+	The default-fetch attribute specifies whether the persistent attribute
+	belongs to the JDO default fetch group.
+
+	The conversion attribute contains a fully qualified class name.
+	This class must implement the interface
+	org.apache.ojb.accesslayer.conversions.FieldConversion.
+	A FieldConversion can be used to implement conversions between Java-
+	attributes and database columns.
+
+	The length attribute can be used to specify a length setting, if
+	required by the jdbc-type of the underlying database column.
+
+	The precision attribute can be used to specify a precision setting, if
+	required by the jdbc-type of the underlying database column.
+
+	The scale attribute can be used to specify a scale setting, if
+	required by the jdbc-type of the underlying database column.
+
+	The access attribute specifies the accessibility of the field.
+	"readonly" marks fields that are not to modified. "readwrite" marks
+	fields that may be read and written to. "anonymous" marks anonymous fields.
+	An anonymous field has a database representation (column) but no
+	corresponding Java attribute. Hence the name of such a field does not
+	refer to a Java attribute of the class, but is used as a unique
+	identifier only.
+
+  -->
+<!ATTLIST field-descriptor
+	id CDATA #IMPLIED
+	name CDATA #REQUIRED
+	table CDATA #IMPLIED
+	column CDATA #REQUIRED
+	jdbc-type (BIT | TINYINT | SMALLINT | INTEGER | BIGINT | DOUBLE |
+	           FLOAT | REAL | NUMERIC | DECIMAL | CHAR | VARCHAR |
+	           LONGVARCHAR | DATE | TIME | TIMESTAMP | BINARY |
+	           VARBINARY | LONGVARBINARY | CLOB | BLOB | STRUCT |
+               ARRAY | REF | BOOLEAN | DATALINK) #IMPLIED
+	primarykey (true | false) "false"
+	nullable (true | false) "true"
+	indexed (true | false) "false"
+	autoincrement (true | false) "false"
+    sequence-name CDATA #IMPLIED
+	locking (true | false) "false"
+	update-lock (true | false) "true"
+	default-fetch (true | false) "false"
+	conversion CDATA #IMPLIED
+	length CDATA #IMPLIED
+	precision CDATA #IMPLIED
+	scale CDATA #IMPLIED
+	access (readonly | readwrite | anonymous) "readwrite"
+>
+
+
+<!--
+  An attribute element allows arbitrary name/value pairs to
+  be represented in the repository.
+  -->
+<!ELEMENT attribute (documentation?)>
+
+<!--
+	The attribute-name identifies the name of the attribute.
+	The attribute-value identifies the value of the attribute.
+-->
+<!ATTLIST attribute
+	attribute-name CDATA #REQUIRED
+	attribute-value CDATA #REQUIRED
+>
+
+<!--
+    A reference-descriptor contains mapping info for an attribute of a
+    persistent class that is not primitive but references another
+    persistent entity Object.
+
+    A foreignkey element contains information on foreign key columns that
+    implement the association on the database level.
+
+    A reference-decriptor may contain user defined attribute elements.
+  -->
+<!ELEMENT reference-descriptor (documentation?, foreignkey+, attribute*)>
+<!--
+	The name attribute holds the name of the persistent classes attribute.
+	If the PersistentFieldDefaultImpl is used there must be an attribute
+	in the persistent class with this name.
+	If the PersistentFieldPropertyImpl is used there must be a JavaBeans
+	compliant property of this name.
+
+	The class-ref attribute contains a fully qualified class name.
+	This class is the Object type of the persistent reference attribute.
+	As this is an IDREF there must be a class-descriptor for this class
+	in the repository too.
+
+	The proxy attribute can be set to true to specify that proxy based
+	lazy loading should be used for this attribute.
+
+    If the proxy-prefetching-limit attribute (used with the proxy attribute)
+    is set to the value > 0, then loading of the reference for the first
+    object of some collection causes loading of the references for
+    the next proxy-prefetching-limit objects.
+    Set this parameter to 0 if you want to turn this feature off.
+
+	The refresh attribute can be set to true to force OJB to refresh
+	object references on instance loading.
+
+	The auto-retrieve attribute specifies whether OJB automatically retrieves
+	this reference attribute on loading the persistent object.
+	If set to false the reference attribute is set to null. In this case the
+	user is responsible to fill the reference attribute.
+
+	The auto-update attribute specifies whether OJB automatically stores
+	this reference attribute on storing the persistent object or not or only
+    link the reference.
+	This attribute must be set to 'false' if using the OTM, ODMG or JDO layer.
+    More info see OJB documentation.
+
+	The auto-delete attribute specifies whether OJB automatically deletes
+	this reference attribute on deleting the persistent object or not.
+	This attribute must be set to 'false' if using the OTM, ODMG or JDO layer.
+    More info see OJB documentation.
+
+	The otm-dependent attribute specifies whether the OTM layer automatically
+    creates the referred object or deletes it if the reference field is set to null.
+    Also otm-dependent references behave as if auto-update and auto-delete
+    were set to true, but the auto-update and auto-delete attributes themself
+    must be always set to false for use with OTM layer.
+
+  -->
+<!ATTLIST reference-descriptor
+	name CDATA #REQUIRED
+	class-ref IDREF #REQUIRED
+
+	proxy (true | false) "false"
+	proxy-prefetching-limit CDATA #IMPLIED
+	refresh (true | false) "false"
+
+	auto-retrieve (true | false) "true"
+	auto-update (none | link | object | true | false) "false"
+	auto-delete (none | link | object | true | false) "false"
+	otm-dependent (true | false) "false"
+>
+
+<!--
+    A foreignkey element contains information on a foreign-key persistent
+    attribute that implement the association on the database level.
+  -->
+<!ELEMENT foreignkey (documentation?)>
+<!--
+	The field-id-ref contains the id attribute of the field-descriptor
+	used as a foreign key.
+  -->
+<!ATTLIST foreignkey
+	field-id-ref CDATA #IMPLIED
+	field-ref CDATA #IMPLIED
+>
+
+
+<!--
+    A collection-descriptor contains mapping info for a Collection- or
+    Array-attribute of a  persistent class that contains persistent
+    entity Objects.
+
+    The inverse-foreignkey elements contains information on foreign-key
+    attributes that implement the association on the database level.
+
+    The fk-pointing-to-this-class and fk-pointing-to-element-class elements
+    are only needed if the Collection or array implements a m:n association.
+    In this case they contain information on the foreign-key columns of
+    the intermediary table.
+
+    A collection-descriptor may contain user defined attribute elements.
+  -->
+<!ELEMENT collection-descriptor (
+    documentation?,
+    orderby*,
+    inverse-foreignkey*,
+	fk-pointing-to-this-class*,
+	fk-pointing-to-element-class*,
+	query-customizer?,
+	attribute*)>
+
+
+<!--
+	The name attribute holds the name of the persistent classes attribute.
+	If the PersistentFieldDefaultImpl is used there must be an attribute
+	in the persistent class with this name.
+	If the PersistentFieldPropertyImpl is used there must be a JavaBeans
+	compliant property of this name.
+
+	The collection-class may hold a fully qualified class name.
+	This class must be the Java type of the Collection attribute.
+	This attribute must only specified if the attribute type is not
+	a java.util.Collection (or subclass) or Array type. The declared
+    (none java.util.Collection or non Array) class must implement
+    ManageableCollection to let OJB handle this type of collection.
+
+	The element-class-ref attribute contains a fully qualified class name.
+	This class is the Object type of the elements of persistent collection
+	or Array attribute.
+	As this is an IDREF there must be a class-descriptor for this class
+	in the repository too.
+
+	The orderby attribute may specify a field of the element class.
+	The Collection or Array will be sorted according to the specified attribute.
+	The sort attribute may be used to specify ascending or descending order for
+	this operation.
+
+	The indirection-table must specify the name of an intermediary table,
+	if the persistent collection attribute implements a m:n association.
+
+	The proxy attribute can be set to true to specify that proxy based
+	lazy loading should be used for this attribute.
+
+    If the proxy-prefetching-limit attribute (used with the proxy attribute)
+    is set to the value > 0, then loading of the collection for the first
+    object of some other collection causes loading of the collections for
+    the next proxy-prefetching-limit objects.
+    Set this parameter to 0 if you want to turn this feature off.
+
+	The refresh attribute can be set to true to force OJB to refresh
+	object and collection references on instance loading.
+
+	The auto-retrieve attribute specifies whether OJB automatically retrieves
+	this attribute on loading the persistent object.
+	If set to false the persistent attribute is set to null. In this case the
+	user is responsible to fill the persistent attribute.
+
+	The auto-update attribute specifies whether OJB automatically stores
+	the referenced objects on storing the persistent object or not or only link.
+	This attribute must be set to 'false' if using the OTM, ODMG or JDO layer.
+    More info see OJB documentation.
+
+	The auto-delete attribute specifies whether OJB automatically deletes
+	the referenced objects on deleting the persistent object or not.
+	This attribute must be set to false if using the OTM, ODMG or JDO layer.
+    More info see OJB documentation.
+
+	The otm-dependent attribute specifies whether the OTM layer automatically
+    creates collection elements that were included into the collectionelements
+    and deletes collection elements that were excluded from the collection.
+    Also otm-dependent references behave as if auto-update and auto-delete
+    were set to true, but the auto-update and auto-delete attributes themself
+    must be always set to false for use with OTM layer.
+
+
+  -->
+<!ATTLIST collection-descriptor
+	name CDATA #IMPLIED
+	collection-class CDATA #IMPLIED
+	element-class-ref IDREF #REQUIRED
+	orderby CDATA #IMPLIED
+	sort (ASC | DESC) "ASC"
+
+	indirection-table CDATA #IMPLIED
+
+	proxy (true | false) "false"
+	proxy-prefetching-limit CDATA #IMPLIED
+	refresh (true | false) "false"
+
+	auto-retrieve (true | false) "true"
+	auto-update (none | link | object | true | false) "false"
+	auto-delete (none | link | object | true | false) "false"
+	otm-dependent (true | false) "false"
+>
+
+<!--
+	an OrderBy elemnent contains an attribute name and a sort order
+  -->
+<!ELEMENT orderby (documentation?)>
+<!ATTLIST orderby
+	name CDATA #REQUIRED
+	sort (ASC | DESC) "ASC"
+>
+
+<!--
+    A inverse-foreignkey element contains information on a foreign-key
+    persistent attribute that implement the association on the database level.
+  -->
+<!ELEMENT inverse-foreignkey (documentation?)>
+<!--
+	The field-id-ref contains the id attribute of the field-descriptor
+	in the class of the collection elements that is used as a foreign key.
+  -->
+<!ATTLIST inverse-foreignkey
+	field-id-ref CDATA #IMPLIED
+	field-ref CDATA #IMPLIED
+>
+
+<!--
+    A fk-pointing-to-this-class element contains information on a foreign-key
+    column of an intermediary table in a m:n scenario.
+  -->
+<!ELEMENT fk-pointing-to-this-class (documentation?)>
+<!--
+	The column attribute specifies the foreign-key column in the intermediary
+	table that points to the class holding the collection.
+  -->
+<!ATTLIST fk-pointing-to-this-class
+	column CDATA #REQUIRED
+>
+
+<!--
+    A fk-pointing-to-element-class element contains information on a foreign-key
+    column of an intermediary table in a m:n scenario.
+  -->
+<!ELEMENT fk-pointing-to-element-class (documentation?)>
+<!--
+	The column attribute specifies the foreign-key column in the intermediary
+	table that points to the class of the collection elements.
+  -->
+<!ATTLIST fk-pointing-to-element-class
+	column CDATA #REQUIRED
+>
+
+
+<!--
+	a queryEnhancer element to enhance the 1:n query
+  -->
+<!ELEMENT query-customizer (
+	documentation?,
+	attribute*)>
+<!ATTLIST query-customizer
+	class CDATA #REQUIRED
+>
+
+<!--
+    An index-descriptor describes an index by listing its columns.  It may be
+    unique or not.
+-->
+<!ELEMENT index-descriptor (documentation?, index-column+)>
+<!ATTLIST index-descriptor
+    name CDATA #REQUIRED
+    unique (true | false) "false">
+
+<!--
+    An index-column is just the name of a column in an index.
+-->
+<!ELEMENT index-column (documentation?)>
+<!ATTLIST index-column
+    name CDATA #REQUIRED>
+
+<!--
+	Identifies the procedure/function that should be used to handle
+    insertions for a specific class-descriptor.
+
+    The nested 'argument' elements define the argument list for the
+    procedure/function as well as the source for each argument.
+
+    The name attribute identifies the name of the procedure/function to use
+
+    The return-field-ref identifies the field-descriptor that will receive
+    the value that is returned by the procedure/function.  If the procedure/
+    function does not include a return value, then do not specify a value
+    for this attribute.
+
+    The include-all-fields attribute indicates if all field-descriptors in
+    the corresponding class-descriptor are to be passed to the procedure/
+    function.  If include-all-fields is 'true', any nested 'argument'
+    elements will be ignored.  In this case, values for all field-descriptors
+    will be passed to the procedure/function.  The order of values that are
+    passed to the procedure/function will match the order of field-descriptors
+    on the corresponding class-descriptor.  If include-all-fields is false,
+    then values will be passed to the procedure/function based on the
+    information in the nested 'argument' elements.
+  -->
+<!ELEMENT insert-procedure
+	(documentation?, (runtime-argument | constant-argument)*, attribute*)>
+<!ATTLIST insert-procedure
+	name CDATA #REQUIRED
+    return-field-ref CDATA #IMPLIED
+    include-all-fields (true | false) "false"
+>
+
+<!--
+	Identifies the procedure/function that should be used to handle
+    updates for a specific class-descriptor.
+
+    The nested 'argument' elements define the argument list for the
+    procedure/function as well as the source for each argument.
+
+    The name attribute identifies the name of the procedure/function to use
+
+    The return-field-ref identifies the field-descriptor that will receive
+    the value that is returned by the procedure/function.  If the procedure/
+    function does not include a return value, then do not specify a value
+    for this attribute.
+
+    The include-all-fields attribute indicates if all field-descriptors in
+    the corresponding class-descriptor are to be passed to the procedure/
+    function.  If include-all-fields is 'true', any nested 'argument'
+    elements will be ignored.  In this case, values for all field-descriptors
+    will be passed to the procedure/function.  The order of values that are
+    passed to the procedure/function will match the order of field-descriptors
+    on the corresponding class-descriptor.  If include-all-fields is false,
+    then values will be passed to the procedure/function based on the
+    information in the nested 'argument' elements.
+  -->
+<!ELEMENT update-procedure
+	(documentation?, (runtime-argument | constant-argument)*, attribute*)>
+<!ATTLIST update-procedure
+	name CDATA #REQUIRED
+    return-field-ref CDATA #IMPLIED
+    include-all-fields (true | false) "false"
+>
+
+<!--
+	Identifies the procedure/function that should be used to handle
+    deletions for a specific class-descriptor.
+
+    The nested 'runtime-argument' and 'constant-argument' elements define
+    the argument list for the procedure/function as well as the source
+    for each argument.
+
+    The name attribute identifies the name of the procedure/function to use
+
+    The return-field-ref identifies the field-descriptor that will receive
+    the value that is returned by the procedure/function.  If the procedure/
+    function does not include a return value, then do not specify a value
+    for this attribute.
+
+    The include-pk-only attribute indicates if all field-descriptors in
+    the corresponding class-descriptor that are identified as being part of
+    the primary key are to be passed to the procedure/function.  If
+    include-pk-only is 'true', any nested 'argument' elements will be
+    ignored.  In this case, values for all field-descriptors that are identified
+    as being part of the primary key will be passed to the procedure/function.
+    The order of values that are passed to the procedure/function will match
+    the order of field-descriptors on the corresponding class-descriptor.
+    If include-pk-only is false, then values will be passed to the procedure/
+    function based on the information in the nested 'argument' elements.
+  -->
+<!ELEMENT delete-procedure
+	(documentation?, (runtime-argument | constant-argument)*, attribute*)>
+<!ATTLIST delete-procedure
+	name CDATA #REQUIRED
+    return-field-ref CDATA #IMPLIED
+    include-pk-only (true | false) "false"
+>
+<!--
+    Defines an argument that is passed to a procedure/function.  Each argument
+    will be set to a value from a field-descriptor or null.
+
+    The field-ref attribute identifies the field-descriptor in the corresponding
+    class-descriptor that provides the value for this argument.  If this attribute
+    is unspecified, then this argument will be set to null.
+-->
+<!ELEMENT runtime-argument
+	(documentation?, attribute*)>
+<!ATTLIST runtime-argument
+	field-ref CDATA #IMPLIED
+    return (true | false) "false"
+>
+<!--
+    Defines a constant value that is passed to a procedure/function.
+
+    The value attribute identifies the value that is passed to the procedure/
+    function.
+-->
+<!ELEMENT constant-argument
+	(documentation?, attribute*)>
+<!ATTLIST constant-argument
+    value CDATA #REQUIRED
+>
+
