@@ -21,8 +21,11 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.Namespace;
+import org.jdom.filter.Filter;
+import org.jdom.filter.ContentFilter;
 import org.jdom.input.SAXBuilder;
 import org.jdom.output.XMLOutputter;
+import org.jdom.output.Format;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -42,16 +45,19 @@ import java.util.*;
 class NodeTypeDefStore {
     private static Logger log = Logger.getLogger(NodeTypeDefStore.class);
 
-    private static final String ROOT_ELEMENT_NAME = "nodeTypes";
-    private static final String NODETYPE_ELEMENT_NAME = "nodeType";
+    private static final String ROOT_ELEMENT = "nodeTypes";
+    private static final String NODETYPE_ELEMENT = "nodeType";
     private static final String NAME_ATTRIBUTE = "name";
     private static final String MIXIN_ATTRIBUTE = "mixin";
     private static final String ORDERABLECHILDNODES_ATTRIBUTE = "orderableChildNodes";
-    private static final String SUPERTYPES_ATTRIBUTE = "supertypes";
-    private static final String PROPERTYDEF_ELEMENT_NAME = "propertyDef";
+    private static final String SUPERTYPES_ELEMENT = "supertypes";
+    private static final String SUPERTYPE_ELEMENT = "supertype";
+    private static final String PROPERTYDEF_ELEMENT = "propertyDef";
     private static final String TYPE_ATTRIBUTE = "type";
-    private static final String VALUECONSTRAINT_ATTRIBUTE = "valueConstraint";
-    private static final String DEFAULTVALUES_ATTRIBUTE = "defaultValues";
+    private static final String VALUECONSTRAINTS_ELEMENT = "valueConstraints";
+    private static final String VALUECONSTRAINT_ELEMENT = "valueConstraint";
+    private static final String DEFAULTVALUES_ELEMENT = "defaultValues";
+    private static final String DEFAULTVALUE_ELEMENT = "defaultValue";
     private static final String AUTOCREATE_ATTRIBUTE = "autoCreate";
     private static final String MANDATORY_ATTRIBUTE = "mandatory";
     private static final String PROTECTED_ATTRIBUTE = "protected";
@@ -59,8 +65,9 @@ class NodeTypeDefStore {
     private static final String MULTIPLE_ATTRIBUTE = "multiple";
     private static final String SAMENAMESIBS_ATTRIBUTE = "sameNameSibs";
     private static final String ONPARENTVERSION_ATTRIBUTE = "onParentVersion";
-    private static final String CHILDNODEDEF_ELEMENT_NAME = "childNodeDef";
-    private static final String REQUIREDPRIMARYTYPES_ATTRIBUTE = "requiredPrimaryTypes";
+    private static final String CHILDNODEDEF_ELEMENT = "childNodeDef";
+    private static final String REQUIREDPRIMARYTYPES_ELEMENT = "requiredPrimaryTypes";
+    private static final String REQUIREDPRIMARYTYPE_ELEMENT = "requiredPrimaryType";
     private static final String DEFAULTPRIMARYTYPE_ATTRIBUTE = "defaultPrimaryType";
 
     // map of node type names and node type definitions
@@ -87,9 +94,9 @@ class NodeTypeDefStore {
 	    Document doc = builder.build(in);
 	    root = doc.getRootElement();
 	} catch (JDOMException jde) {
-	    String error = "internal error: failed to parse persistent node type definitions";
-	    log.error(error);
-	    throw new RepositoryException(error);
+	    String msg = "internal error: failed to parse persistent node type definitions";
+	    log.error(msg, jde);
+	    throw new RepositoryException(msg, jde);
 	}
 	// read namespace declarations of root element
 	Iterator nsIter = root.getAdditionalNamespaces().iterator();
@@ -121,7 +128,7 @@ class NodeTypeDefStore {
 	};
 
 	// read definitions
-	Iterator iter = root.getChildren(NODETYPE_ELEMENT_NAME).iterator();
+	Iterator iter = root.getChildren(NODETYPE_ELEMENT).iterator();
 	while (iter.hasNext()) {
 	    NodeTypeDef ntDef = readDef((Element) iter.next(), nsResolver);
 	    add(ntDef);
@@ -136,7 +143,7 @@ class NodeTypeDefStore {
      */
     void store(OutputStream out, NamespaceRegistryImpl nsReg)
 	    throws IOException, RepositoryException {
-	Element root = new Element(ROOT_ELEMENT_NAME);
+	Element root = new Element(ROOT_ELEMENT);
 
 	// namespace declarations
 	String[] prefixes = nsReg.getPrefixes();
@@ -153,12 +160,12 @@ class NodeTypeDefStore {
 	Iterator iter = all().iterator();
 	while (iter.hasNext()) {
 	    NodeTypeDef ntd = (NodeTypeDef) iter.next();
-	    Element ntElem = new Element(NODETYPE_ELEMENT_NAME);
+	    Element ntElem = new Element(NODETYPE_ELEMENT);
 	    writeDef(ntd, ntElem, nsReg);
 	    root.addContent(ntElem);
 	}
 
-	XMLOutputter serializer = new XMLOutputter("\t", true);
+	XMLOutputter serializer = new XMLOutputter(Format.getPrettyFormat());
 	serializer.output(new Document(root), out);
     }
 
@@ -212,36 +219,49 @@ class NodeTypeDefStore {
 	    throws InvalidNodeTypeDefException {
 	String sntName = ntElem.getAttributeValue(NAME_ATTRIBUTE);
 	NodeTypeDef ntDef = new NodeTypeDef();
+
 	// name
 	QName qntName;
 	try {
 	    qntName = QName.fromJCRName(sntName, nsResolver);
 	} catch (BaseException e) {
-	    throw new InvalidNodeTypeDefException("invalid node type name:" + sntName, e);
+	    String msg = "invalid serialized node type definition [" + sntName + "]: invalid node type name: " + sntName;
+	    log.error(msg, e);
+	    throw new InvalidNodeTypeDefException(msg, e);
 	}
 	ntDef.setName(qntName);
 
 	// supertypes
-	String supertypes = ntElem.getAttributeValue(SUPERTYPES_ATTRIBUTE);
-	if (supertypes != null && supertypes.length() > 0) {
-	    String[] sta = supertypes.split(",\\s*");
-	    QName[] qNames = new QName[sta.length];
-	    for (int i = 0; i < sta.length; i++) {
-		try {
-		    qNames[i] = QName.fromJCRName(sta[i], nsResolver);
-		} catch (BaseException e) {
-		    throw new InvalidNodeTypeDefException("invalid supertype name:" + sta[i], e);
+	ArrayList list = new ArrayList();
+	Element typesElem = ntElem.getChild(SUPERTYPES_ELEMENT);
+	if (typesElem != null) {
+	    Iterator iter = typesElem.getChildren(SUPERTYPE_ELEMENT).iterator();
+	    while (iter.hasNext()) {
+		Element typeElem = (Element) iter.next();
+		Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
+		List content = typeElem.getContent(filter);
+		if (!content.isEmpty()) {
+		    String name = typeElem.getTextTrim();
+		    try {
+			list.add(QName.fromJCRName(name, nsResolver));
+		    } catch (BaseException e) {
+			String msg = "invalid serialized node type definition [" + sntName + "]: invalid supertype: " + name;
+			log.error(msg, e);
+			throw new InvalidNodeTypeDefException(msg, e);
+		    }
 		}
 	    }
-	    if (sta.length > 0) {
-		ntDef.setSupertypes(qNames);
+	    if (!list.isEmpty()) {
+		ntDef.setSupertypes((QName[]) list.toArray(new QName[list.size()]));
 	    }
 	}
+
 	// mixin
 	String mixin = ntElem.getAttributeValue(MIXIN_ATTRIBUTE);
 	if (mixin != null && mixin.length() > 0) {
 	    ntDef.setMixin(Boolean.valueOf(mixin).booleanValue());
 	}
+
 	// orderableChildNodes
 	String orderableChildNodes = ntElem.getAttributeValue(ORDERABLECHILDNODES_ATTRIBUTE);
 	if (orderableChildNodes != null && orderableChildNodes.length() > 0) {
@@ -249,8 +269,8 @@ class NodeTypeDefStore {
 	}
 
 	// property definitions
-	ArrayList list = new ArrayList();
-	Iterator iter = ntElem.getChildren(PROPERTYDEF_ELEMENT_NAME).iterator();
+	list.clear();
+	Iterator iter = ntElem.getChildren(PROPERTYDEF_ELEMENT).iterator();
 	while (iter.hasNext()) {
 	    Element elem = (Element) iter.next();
 	    PropDef pd = new PropDef();
@@ -262,7 +282,9 @@ class NodeTypeDefStore {
 		try {
 		    pd.setName(QName.fromJCRName(propName, nsResolver));
 		} catch (BaseException e) {
-		    throw new InvalidNodeTypeDefException("invalid property name:" + propName, e);
+		    String msg = "invalid serialized node type definition [" + sntName + "]: invalid property name: " + propName;
+		    log.error(msg, e);
+		    throw new InvalidNodeTypeDefException(msg, e);
 		}
 	    }
 	    // type
@@ -273,34 +295,58 @@ class NodeTypeDefStore {
 		    type = PropertyType.valueFromName(typeName);
 		    pd.setRequiredType(type);
 		} catch (IllegalArgumentException e) {
-		    String error = "invalid serialized node type definition: invalid type " + typeName;
-		    log.error(error);
-		    throw new InvalidNodeTypeDefException(error);
+		    String msg = "invalid serialized node type definition [" + sntName + "]: invalid type: " + typeName;
+		    log.error(msg, e);
+		    throw new InvalidNodeTypeDefException(msg, e);
 		}
 	    }
-	    // valueConstraint
-	    String valueConstraint = elem.getAttributeValue(VALUECONSTRAINT_ATTRIBUTE);
-	    if (valueConstraint != null && valueConstraint.length() > 0) {
-		try {
-		    pd.setValueConstraint(ValueConstraint.create(type, valueConstraint));
-		} catch (InvalidConstraintException e) {
-		    String error = "invalid serialized node type definition: invalid constraint " + valueConstraint;
-		    log.error(error, e);
-		    throw new InvalidNodeTypeDefException(error, e);
+	    // valueConstraints
+	    Element constraintsElem = elem.getChild(VALUECONSTRAINTS_ELEMENT);
+	    if (constraintsElem != null) {
+		ArrayList list1 = new ArrayList();
+		Iterator iter1 = constraintsElem.getChildren(VALUECONSTRAINT_ELEMENT).iterator();
+		while (iter1.hasNext()) {
+		    Element constraintElem = (Element) iter1.next();
+		    Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
+		    List content = constraintElem.getContent(filter);
+		    if (!content.isEmpty()) {
+			String constraint = constraintElem.getTextTrim();
+			try {
+			    list1.add(ValueConstraint.create(type, constraint));
+			} catch (InvalidConstraintException e) {
+			    String msg = "invalid serialized node type definition [" + sntName + "]: invalid constraint: " + constraint;
+			    log.error(msg, e);
+			    throw new InvalidNodeTypeDefException(msg, e);
+			}
+		    }
+		}
+		if (!list1.isEmpty()) {
+		    pd.setValueConstraints((ValueConstraint[]) list1.toArray(new ValueConstraint[list1.size()]));
 		}
 	    }
 	    // defaultValues
-	    // @todo provide escaping for separator character within single value or change xml representation for defaultValues
-	    String defaultValues = elem.getAttributeValue(DEFAULTVALUES_ATTRIBUTE);
-	    if (defaultValues != null && defaultValues.length() > 0) {
+	    Element defValuesElem = elem.getChild(DEFAULTVALUES_ELEMENT);
+	    if (defValuesElem != null) {
 		int defValType = (type == PropertyType.UNDEFINED) ? PropertyType.STRING : type;
-		String[] dva = defaultValues.split(",\\s*");
-		InternalValue[] defVals = new InternalValue[dva.length];
-		for (int i = 0; i < dva.length; i++) {
-		    defVals[i] = InternalValue.valueOf(dva[i], defValType);
+		ArrayList list1 = new ArrayList();
+		Iterator iter1 = defValuesElem.getChildren(DEFAULTVALUE_ELEMENT).iterator();
+		while (iter1.hasNext()) {
+		    Element valueElem = (Element) iter1.next();
+		    Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
+		    List content = valueElem.getContent(filter);
+		    if (!content.isEmpty()) {
+			String defValue = valueElem.getTextTrim();
+			try {
+			    list1.add(InternalValue.valueOf(defValue, defValType));
+			} catch (IllegalArgumentException e) {
+			    String msg = "invalid serialized node type definition [" + sntName + "]: invalid defaultValue: " + defValue;
+			    log.error(msg, e);
+			    throw new InvalidNodeTypeDefException(msg, e);
+			}
+		    }
 		}
-		if (defVals.length > 0) {
-		    pd.setDefaultValues(defVals);
+		if (!list1.isEmpty()) {
+		    pd.setDefaultValues((InternalValue[]) list1.toArray(new InternalValue[list1.size()]));
 		}
 	    }
 	    // autoCreate
@@ -319,9 +365,9 @@ class NodeTypeDefStore {
 		try {
 		    pd.setOnParentVersion(OnParentVersionAction.valueFromName(onVersion));
 		} catch (IllegalArgumentException e) {
-		    String error = "invalid serialized node type definition: invalid onVersion " + onVersion;
-		    log.error(error);
-		    throw new InvalidNodeTypeDefException(error);
+		    String msg = "invalid serialized node type definition [" + sntName + "]: invalid onVersion: " + onVersion;
+		    log.error(msg, e);
+		    throw new InvalidNodeTypeDefException(msg, e);
 		}
 	    }
 	    // protected
@@ -348,7 +394,7 @@ class NodeTypeDefStore {
 
 	// child-node definitions
 	list.clear();
-	iter = ntElem.getChildren(CHILDNODEDEF_ELEMENT_NAME).iterator();
+	iter = ntElem.getChildren(CHILDNODEDEF_ELEMENT).iterator();
 	while (iter.hasNext()) {
 	    Element elem = (Element) iter.next();
 	    ChildNodeDef cnd = new ChildNodeDef();
@@ -360,23 +406,33 @@ class NodeTypeDefStore {
 		try {
 		    cnd.setName(QName.fromJCRName(nodeName, nsResolver));
 		} catch (BaseException e) {
-		    throw new InvalidNodeTypeDefException("invalid child node name:" + nodeName, e);
+		    String msg = "invalid serialized node type definition [" + sntName + "]: invalid child node name: " + nodeName;
+		    log.error(msg, e);
+		    throw new InvalidNodeTypeDefException(msg, e);
 		}
 	    }
 	    // requiredPrimaryTypes
-	    String requiredPrimaryTypes = elem.getAttributeValue(REQUIREDPRIMARYTYPES_ATTRIBUTE);
-	    if (requiredPrimaryTypes != null && requiredPrimaryTypes.length() > 0) {
-		String[] sta = requiredPrimaryTypes.split(",\\s*");
-		QName[] qNames = new QName[sta.length];
-		for (int i = 0; i < sta.length; i++) {
-		    try {
-			qNames[i] = QName.fromJCRName(sta[i], nsResolver);
-		    } catch (BaseException e) {
-			throw new InvalidNodeTypeDefException("invalid requiredPrimaryType:" + sta[i], e);
+	    Element reqTtypesElem = elem.getChild(REQUIREDPRIMARYTYPES_ELEMENT);
+	    if (reqTtypesElem != null) {
+		ArrayList list1 = new ArrayList();
+		Iterator iter1 = reqTtypesElem.getChildren(REQUIREDPRIMARYTYPE_ELEMENT).iterator();
+		while (iter1.hasNext()) {
+		    Element typeElem = (Element) iter1.next();
+		    Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
+		    List content = typeElem.getContent(filter);
+		    if (!content.isEmpty()) {
+			String name = typeElem.getTextTrim();
+			try {
+			    list1.add(QName.fromJCRName(name, nsResolver));
+			} catch (BaseException e) {
+			    String msg = "invalid serialized node type definition [" + sntName + "]: invalid requiredPrimaryType: " + name;
+			    log.error(msg, e);
+			    throw new InvalidNodeTypeDefException(msg, e);
+			}
 		    }
 		}
-		if (sta.length > 0) {
-		    cnd.setRequiredPrimaryTypes(qNames);
+		if (!list1.isEmpty()) {
+		    cnd.setRequiredPrimaryTypes((QName[]) list1.toArray(new QName[list1.size()]));
 		}
 	    }
 	    // defaultPrimaryType
@@ -385,7 +441,9 @@ class NodeTypeDefStore {
 		try {
 		    cnd.setDefaultPrimaryType(QName.fromJCRName(defaultPrimaryType, nsResolver));
 		} catch (BaseException e) {
-		    throw new InvalidNodeTypeDefException("invalid defaultPrimaryType:" + defaultPrimaryType, e);
+		    String msg = "invalid serialized node type definition [" + sntName + "]: invalid defaultPrimaryType: " + defaultPrimaryType;
+		    log.error(msg, e);
+		    throw new InvalidNodeTypeDefException(msg, e);
 		}
 	    }
 	    // autoCreate
@@ -404,9 +462,9 @@ class NodeTypeDefStore {
 		try {
 		    cnd.setOnParentVersion(OnParentVersionAction.valueFromName(onVersion));
 		} catch (IllegalArgumentException e) {
-		    String error = "invalid serialized node type definition: invalid onVersion " + onVersion;
-		    log.error(error);
-		    throw new InvalidNodeTypeDefException(error);
+		    String msg = "invalid serialized node type definition [" + sntName + "]: invalid onVersion: " + onVersion;
+		    log.error(msg, e);
+		    throw new InvalidNodeTypeDefException(msg, e);
 		}
 	    }
 	    // protected
@@ -439,18 +497,22 @@ class NodeTypeDefStore {
 	try {
 	    // name
 	    ntElem.setAttribute(NAME_ATTRIBUTE, ntd.getName().toJCRName(nsResolver));
+
 	    // supertypes
-	    StringBuffer supertypes = new StringBuffer();
 	    QName[] qNames = ntd.getSupertypes();
-	    for (int i = 0; i < qNames.length; i++) {
-		if (supertypes.length() > 0) {
-		    supertypes.append(",");
+	    if (qNames.length != 0) {
+		Element typesElem = new Element(SUPERTYPES_ELEMENT);
+		ntElem.addContent(typesElem);
+		for (int i = 0; i < qNames.length; i++) {
+		    Element typeElem = new Element(SUPERTYPE_ELEMENT);
+		    typesElem.addContent(typeElem);
+		    typeElem.setText(qNames[i].toJCRName(nsResolver));
 		}
-		supertypes.append(qNames[i].toJCRName(nsResolver));
 	    }
-	    ntElem.setAttribute(SUPERTYPES_ATTRIBUTE, supertypes.toString());
+
 	    // mixin
 	    ntElem.setAttribute(MIXIN_ATTRIBUTE, Boolean.toString(ntd.isMixin()));
+
 	    // orderableChildNodes
 	    ntElem.setAttribute(ORDERABLECHILDNODES_ATTRIBUTE, Boolean.toString(ntd.hasOrderableChildNodes()));
 
@@ -458,7 +520,7 @@ class NodeTypeDefStore {
 	    PropDef[] pda = ntd.getPropertyDefs();
 	    for (int i = 0; i < pda.length; i++) {
 		PropDef pd = pda[i];
-		Element elem = new Element(PROPERTYDEF_ELEMENT_NAME);
+		Element elem = new Element(PROPERTYDEF_ELEMENT);
 		ntElem.addContent(elem);
 
 		// name
@@ -466,23 +528,28 @@ class NodeTypeDefStore {
 		elem.setAttribute(NAME_ATTRIBUTE, name);
 		// type
 		elem.setAttribute(TYPE_ATTRIBUTE, PropertyType.nameFromValue(pd.getRequiredType()));
-		// valueConstraint
-		String valueConstraint = pd.getValueConstraint() == null ? "" : pd.getValueConstraint().getDefinition();
-		elem.setAttribute(VALUECONSTRAINT_ATTRIBUTE, valueConstraint);
-		// defaultValues
-		// @todo provide escaping for separator character within single value or change xml representation for defaultValues
-		InternalValue[] defVals = pd.getDefaultValues();
-		StringBuffer defaultValues = new StringBuffer();
-		if (defVals != null) {
-		    for (int n = 0; n < defVals.length; n++) {
-			if (defaultValues.length() > 0) {
-			    defaultValues.append(",");
-			}
-			defaultValues.append(defVals[n].toString());
+		// valueConstraints
+		ValueConstraint[] vca = pd.getValueConstraints();
+		if (vca != null && vca.length != 0) {
+		    Element constraintsElem = new Element(VALUECONSTRAINTS_ELEMENT);
+		    elem.addContent(constraintsElem);
+		    for (int j = 0; j < vca.length; j++) {
+			Element constraintElem = new Element(VALUECONSTRAINTS_ELEMENT);
+			constraintsElem.addContent(constraintElem);
+			constraintElem.setText(vca[j].getDefinition());
 		    }
 		}
-
-		elem.setAttribute(DEFAULTVALUES_ATTRIBUTE, defaultValues.toString());
+		// defaultValues
+		InternalValue[] defVals = pd.getDefaultValues();
+		if (defVals != null && defVals.length != 0) {
+		    Element valuesElem = new Element(DEFAULTVALUES_ELEMENT);
+		    elem.addContent(valuesElem);
+		    for (int j = 0; j < defVals.length; j++) {
+			Element valueElem = new Element(DEFAULTVALUE_ELEMENT);
+			valuesElem.addContent(valueElem);
+			valueElem.setText(defVals[j].toString());
+		    }
+		}
 		// autoCreate
 		String autoCreate = elem.getAttributeValue(AUTOCREATE_ATTRIBUTE);
 		if (autoCreate != null && autoCreate.length() > 0) {
@@ -504,22 +571,23 @@ class NodeTypeDefStore {
 	    ChildNodeDef[] nda = ntd.getChildNodeDefs();
 	    for (int i = 0; i < nda.length; i++) {
 		ChildNodeDef nd = nda[i];
-		Element elem = new Element(CHILDNODEDEF_ELEMENT_NAME);
+		Element elem = new Element(CHILDNODEDEF_ELEMENT);
 		ntElem.addContent(elem);
 
 		// name
 		String name = nd.getName() == null ? "" : nd.getName().toJCRName(nsResolver);
 		elem.setAttribute(NAME_ATTRIBUTE, name);
 		// requiredPrimaryTypes
-		StringBuffer requiredPrimaryTypes = new StringBuffer();
 		qNames = nd.getRequiredPrimaryTypes();
-		for (int j = 0; j < qNames.length; j++) {
-		    if (requiredPrimaryTypes.length() > 0) {
-			requiredPrimaryTypes.append(",");
+		if (qNames.length != 0) {
+		    Element typesElem = new Element(REQUIREDPRIMARYTYPES_ELEMENT);
+		    elem.addContent(typesElem);
+		    for (int j = 0; j < qNames.length; j++) {
+			Element typeElem = new Element(REQUIREDPRIMARYTYPE_ELEMENT);
+			typesElem.addContent(typeElem);
+			typeElem.setText(qNames[j].toJCRName(nsResolver));
 		    }
-		    requiredPrimaryTypes.append(qNames[j].toJCRName(nsResolver));
 		}
-		elem.setAttribute(REQUIREDPRIMARYTYPES_ATTRIBUTE, requiredPrimaryTypes.toString());
 		// defaultPrimaryType
 		String defaultPrimaryType = nd.getDefaultPrimaryType() == null ? "" : nd.getDefaultPrimaryType().toJCRName(nsResolver);
 		elem.setAttribute(DEFAULTPRIMARYTYPE_ATTRIBUTE, defaultPrimaryType);

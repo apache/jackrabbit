@@ -86,10 +86,11 @@ public class PropertyDefImpl extends ItemDefImpl implements PropertyDef {
      * @see PropertyDef#getValueConstraint
      */
     public String getValueConstraint() {
-	if (propDef.getValueConstraint() == null) {
+	ValueConstraint[] constraints = propDef.getValueConstraints();
+	if (constraints == null || constraints.length == 0) {
 	    return null;
 	} else {
-	    return propDef.getValueConstraint().getDefinition();
+	    return constraints[0].getDefinition();
 	}
     }
 

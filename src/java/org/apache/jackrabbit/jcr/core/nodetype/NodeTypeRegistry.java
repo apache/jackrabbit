@@ -16,13 +16,13 @@
 package org.apache.jackrabbit.jcr.core.nodetype;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.jcr.core.InternalValue;
 import org.apache.jackrabbit.jcr.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr.core.QName;
-import org.apache.jackrabbit.jcr.core.InternalValue;
 import org.apache.jackrabbit.jcr.fs.FileSystem;
 import org.apache.jackrabbit.jcr.fs.FileSystemException;
 import org.apache.jackrabbit.jcr.fs.FileSystemResource;
+import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -485,17 +485,23 @@ public class NodeTypeRegistry {
 		log.error(reason);
 		throw new InvalidNodeTypeDefException(reason);
 	    }
-	    ValueConstraint constraint = pd.getValueConstraint();
-	    if (constraint != null && pd.getDefaultValues() != null) {
-		// check that default values satisfy value constraint
-		InternalValue[] vals = pd.getDefaultValues();
-		for (int j = 0; j < vals.length; j++) {
-		    try {
-			constraint.check(vals[j]);
-		    } catch (ConstraintViolationException cve) {
-			String msg = "default value of property " + (pd.getName() == null ? "[null]" : pd.getName().toString()) + " does not satisfy value constraint " + constraint.getDefinition();
-			log.error(msg, cve);
-			throw new InvalidNodeTypeDefException(msg, cve);
+	    ValueConstraint[] constraints = pd.getValueConstraints();
+	    InternalValue[] defVals = pd.getDefaultValues();
+	    if (constraints != null && constraints.length != 0
+		    && defVals != null && defVals.length != 0) {
+		// check that default values satisfy value constraints
+		for (int j = 0; j < constraints.length; j++) {
+		    for (int k = 0; k < defVals.length; k++) {
+			try {
+			    constraints[j].check(defVals[k]);
+			} catch (ConstraintViolationException cve) {
+			    String msg = "default value of property "
+				    + (pd.getName() == null ? "[null]" : pd.getName().toString())
+				    + " does not satisfy value constraint "
+				    + constraints[j].getDefinition();
+			    log.error(msg, cve);
+			    throw new InvalidNodeTypeDefException(msg, cve);
+			}
 		    }
 		}
 	    }
@@ -649,7 +655,6 @@ public class NodeTypeRegistry {
     }
 
     /**
-     *
      * @return
      */
     public ChildNodeDef getRootNodeDef() {
@@ -1093,7 +1098,19 @@ public class NodeTypeRegistry {
 		ps.println("\t\tName\t\t" + pd[i].getName());
 		String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
 		ps.println("\t\tRequiredType\t\t" + type);
-		ps.println("\t\tValueConstraint\t" + ((pd[i].getValueConstraint() == null) ? "null" : pd[i].getValueConstraint().getDefinition()));
+		ValueConstraint[] vca = pd[i].getValueConstraints();
+		StringBuffer constraints = new StringBuffer();
+		if (vca == null) {
+		    constraints.append("<null>");
+		} else {
+		    for (int n = 0; n < vca.length; n++) {
+			if (constraints.length() > 0) {
+			    constraints.append(", ");
+			}
+			constraints.append(vca[n].getDefinition());
+		    }
+		}
+		ps.println("\t\tValueConstraints\t" + constraints.toString());
 		InternalValue[] defVals = pd[i].getDefaultValues();
 		StringBuffer defaultValues = new StringBuffer();
 		if (defVals == null) {
