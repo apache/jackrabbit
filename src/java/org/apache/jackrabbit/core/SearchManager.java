@@ -127,7 +127,8 @@ public class SearchManager implements SynchronousEventListener {
         try {
             Class handlerClass = Class.forName(config.getHandlerClassName());
             handler = (QueryHandler) handlerClass.newInstance();
-            handler.init(fs, session.getItemStateManager());
+            NodeId rootId = (NodeId) session.hierMgr.resolvePath(Path.ROOT);
+            handler.init(fs, session.getItemStateManager(), rootId.getUUID());
         } catch (Exception e) {
             throw new RepositoryException(e.getMessage(), e);
         }

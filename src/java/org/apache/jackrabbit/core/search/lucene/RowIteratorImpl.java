@@ -156,7 +156,7 @@ class RowIteratorImpl implements RowIterator {
         private Value[] values;
 
         /** Set of select property <code>QName</code>s. */
-        private Set valueSet;
+        private Set propertySet;
 
         /**
          * Creates a new <code>RowImpl</code> instance based on <code>node</code>.
@@ -218,15 +218,15 @@ class RowIteratorImpl implements RowIterator {
          *  valid property name.
          */
         public Value getValue(String propertyName) throws ItemNotFoundException, RepositoryException {
-            if (valueSet == null) {
+            if (propertySet == null) {
                 // create the set first
                 Set tmp = new HashSet();
-                tmp.addAll(Arrays.asList(values));
-                valueSet = tmp;
+                tmp.addAll(Arrays.asList(properties));
+                propertySet = tmp;
             }
             try {
                 QName prop = QName.fromJCRName(propertyName, resolver);
-                if (!valueSet.contains(prop)) {
+                if (!propertySet.contains(prop)) {
                     throw new ItemNotFoundException(propertyName);
                 }
                 if (node.hasProperty(prop)) {

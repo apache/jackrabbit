@@ -95,7 +95,7 @@ public interface QueryConstants {
     public static int OPERATION_NE_GENERAL = OPERATIONS + 4;
 
     /**
-     * less than operation: <
+     * less than operation: &lt;
      */
     public static int OPERATION_LT_VALUE = OPERATIONS + 5;
 

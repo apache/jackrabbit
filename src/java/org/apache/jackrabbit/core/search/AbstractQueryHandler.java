@@ -37,17 +37,24 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     private ItemStateManager stateProvider;
 
     /**
+     * The UUID of the root node.
+     */
+    private String rootUUID;
+
+    /**
      * Initializes this query handler by setting all properties in this class
      * with appropriate parameter values.
      *
      * @param fs            a {@link FileSystem} this
      *                      <code>QueryHandler</code> may use to store its index.
      * @param stateProvider provides persistent item states.
+     * @param rootUUID the uuid of the root node.
      */
-    public final void init(FileSystem fs, ItemStateManager stateProvider)
+    public final void init(FileSystem fs, ItemStateManager stateProvider, String rootUUID)
             throws IOException {
         this.fs = fs;
         this.stateProvider = stateProvider;
+        this.rootUUID = rootUUID;
         doInit();
     }
 
@@ -77,5 +84,13 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      */
     protected FileSystem getFileSystem() {
         return fs;
+    }
+
+    /**
+     * Returns the UUID of the root node.
+     * @return the UUID of the root node.
+     */
+    protected String getRootUUID() {
+        return rootUUID;
     }
 }

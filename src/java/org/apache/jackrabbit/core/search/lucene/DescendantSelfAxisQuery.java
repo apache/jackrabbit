@@ -200,6 +200,11 @@ class DescendantSelfAxisQuery extends Query {
             nextDoc = subHits.nextSetBit(nextDoc + 1);
             while (nextDoc > -1) {
                 // check if nextDoc is really valid
+                String uuid = reader.document(nextDoc).get(FieldNames.UUID);
+                if (contextUUIDs.contains(uuid)) {
+                    return true;
+                }
+                // check if nextDoc is a descendant of one of the context nodes
                 String parentUUID = reader.document(nextDoc).get(FieldNames.PARENT);
                 while (parentUUID != null && !contextUUIDs.contains(parentUUID)) {
                     // traverse

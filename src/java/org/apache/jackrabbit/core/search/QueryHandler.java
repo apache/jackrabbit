@@ -43,9 +43,12 @@ public interface QueryHandler {
      * @param fs a {@link FileSystem} this
      *  <code>QueryHandler</code> may use to store its index.
      * @param stateProvider provides persistent item states.
+     * @param rootUUID the UUID of the root node.
      * @throws IOException if an error occurs during initialization.
      */
-    public void init(FileSystem fs, ItemStateManager stateProvider) throws IOException;
+    public void init(FileSystem fs,
+                     ItemStateManager stateProvider,
+                     String rootUUID) throws IOException;
 
     /**
      * Adds a <code>Node</code> to the search index.

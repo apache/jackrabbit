@@ -23,10 +23,12 @@ import org.apache.jackrabbit.core.search.AbstractQueryHandler;
 import org.apache.jackrabbit.core.search.QueryConstants;
 import org.apache.jackrabbit.core.search.ExecutableQuery;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -89,8 +91,17 @@ public class SearchIndex extends AbstractQueryHandler {
             persistentIndex.setUseCompoundFile(true);
             FileSystemResource mapFile = new FileSystemResource(getFileSystem(), NS_MAPPING_FILE);
             nsMappings = new NamespaceMappings(mapFile);
+            if (create) {
+                // index root node
+                NodeState rootState = (NodeState) getItemStateProvider().getItemState(new NodeId(getRootUUID()));
+                addNode(rootState);
+            }
+        } catch (ItemStateException e) {
+            throw new IOException("Error indexing root node: " + e.getMessage());
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
+        } catch (RepositoryException e) {
+            throw new IOException("Error indexing root node: " + e.getMessage());
         }
     }
 
