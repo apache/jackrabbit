@@ -66,7 +66,7 @@ public class WorkspaceImpl implements Workspace {
      * The persistent state mgr associated with the workspace represented by <i>this</i>
      * <code>Workspace</code> instance.
      */
-    protected final LocalItemStateManager stateMgr;
+    protected final TransactionalItemStateManager stateMgr;
 
     /**
      * The hierarchy mgr that reflects persistent state only
@@ -102,7 +102,7 @@ public class WorkspaceImpl implements Workspace {
                   RepositoryImpl rep, SessionImpl session) {
         this.wspConfig = wspConfig;
         this.rep = rep;
-        this.stateMgr = new LocalItemStateManager(stateMgr);
+        this.stateMgr = new TransactionalItemStateManager(stateMgr);
         this.hierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(),
                 this.stateMgr, session.getNamespaceResolver());
         this.session = session;
@@ -112,7 +112,7 @@ public class WorkspaceImpl implements Workspace {
         return rep;
     }
 
-    LocalItemStateManager getItemStateManager() {
+    public TransactionalItemStateManager getItemStateManager() {
         return stateMgr;
     }
 
@@ -452,9 +452,8 @@ public class WorkspaceImpl implements Workspace {
                                            NodeTypeRegistry ntReg,
                                            HierarchyManagerImpl srcHierMgr,
                                            ItemStateManager srcStateMgr,
-                                           ItemStateManager destStateMgr,
-                                           boolean clone,
-                                           UpdateOperation update)
+                                           UpdatableItemStateManager destStateMgr,
+                                           boolean clone)
             throws RepositoryException {
 
         NodeState newState;
@@ -465,7 +464,7 @@ public class WorkspaceImpl implements Workspace {
             } else {
                 uuid = UUID.randomUUID().toString();	// create new version 4 uuid
             }
-            newState = update.createNew(uuid, srcState.getNodeTypeName(), parentUUID);
+            newState = destStateMgr.createNew(uuid, srcState.getNodeTypeName(), parentUUID);
             // copy node state
             // @todo special handling required for nodes with special semantics (e.g. those defined by mix:versionable, et.al.)
             // FIXME delegate to 'node type instance handler'
@@ -478,9 +477,9 @@ public class WorkspaceImpl implements Workspace {
                 NodeState srcChildState = (NodeState) srcStateMgr.getItemState(new NodeId(entry.getUUID()));
                 // recursive copying of child node
                 NodeState newChildState = copyNodeState(srcChildState, uuid,
-                        ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone, update);
+                        ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
                 // persist new child node
-                update.store(newChildState);
+                destStateMgr.store(newChildState);
                 // add new child node entry to new node
                 newState.addChildNodeEntry(entry.getName(), newChildState.getUUID());
             }
@@ -490,9 +489,9 @@ public class WorkspaceImpl implements Workspace {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
                 PropertyState srcChildState = (PropertyState) srcStateMgr.getItemState(new PropertyId(srcState.getUUID(), entry.getName()));
                 PropertyState newChildState = copyPropertyState(srcChildState, uuid, entry.getName(),
-                        ntReg, srcHierMgr, srcStateMgr, destStateMgr, update);
+                        ntReg, srcHierMgr, srcStateMgr, destStateMgr);
                 // persist new property
-                update.store(newChildState);
+                destStateMgr.store(newChildState);
                 // add new property entry to new node
                 newState.addPropertyEntry(entry.getName());
             }
@@ -510,12 +509,11 @@ public class WorkspaceImpl implements Workspace {
                                                    NodeTypeRegistry ntReg,
                                                    HierarchyManagerImpl srcHierMgr,
                                                    ItemStateManager srcStateMgr,
-                                                   ItemStateManager destStateMgr,
-                                                   UpdateOperation update)
+                                                   UpdatableItemStateManager destStateMgr)
             throws RepositoryException {
 
         // @todo special handling required for properties with special semantics (e.g. those defined by mix:versionable, mix:lockable, et.al.)
-        PropertyState newState = update.createNew(propName, parentUUID);
+        PropertyState newState = destStateMgr.createNew(propName, parentUUID);
         PropDefId defId = srcState.getDefinitionId();
         newState.setDefinitionId(defId);
         newState.setType(srcState.getType());
@@ -545,7 +543,7 @@ public class WorkspaceImpl implements Workspace {
                                      ItemStateManager srcStateMgr,
                                      HierarchyManagerImpl srcHierMgr,
                                      String destAbsPath,
-                                     ItemStateManager destStateMgr,
+                                     UpdatableItemStateManager destStateMgr,
                                      HierarchyManagerImpl destHierMgr,
                                      AccessManagerImpl accessMgr,
                                      NamespaceResolver nsResolver,
@@ -606,11 +604,11 @@ public class WorkspaceImpl implements Workspace {
 
         // 3. do copy operation (modify and persist affected states)
         try {
-            UpdateOperation update = destStateMgr.beginUpdate();
+            destStateMgr.edit();
 
             // create deep copy of source node state
             NodeState newState = copyNodeState(srcState, destParentState.getUUID(),
-                    ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone, update);
+                    ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
 
             // add to new parent
             destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
@@ -620,11 +618,11 @@ public class WorkspaceImpl implements Workspace {
             newState.setDefinitionId(new NodeDefId(newNodeDef));
 
             // persist states
-            update.store(newState);
-            update.store(destParentState);
+            destStateMgr.store(newState);
+            destStateMgr.store(destParentState);
 
             // finish update operations
-            update.end();
+            destStateMgr.update();
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
             log.debug(msg);
@@ -815,7 +813,7 @@ public class WorkspaceImpl implements Workspace {
 
         // 3. do move operation (modify and persist affected states)
         try {
-            UpdateOperation update = stateMgr.beginUpdate();
+            stateMgr.edit();
             boolean renameOnly = srcParentState.getUUID().equals(destParentState.getUUID());
 
             // add to new parent
@@ -837,16 +835,16 @@ public class WorkspaceImpl implements Workspace {
             srcParentState.removeChildNodeEntry(srcName.getName(), srcNameIndex);
 
             // persist states
-            update.store(targetState);
+            stateMgr.store(targetState);
             if (renameOnly) {
-                update.store(srcParentState);
+                stateMgr.store(srcParentState);
             } else {
-                update.store(destParentState);
-                update.store(srcParentState);
+                stateMgr.store(destParentState);
+                stateMgr.store(srcParentState);
             }
 
             // finish update
-            update.end();
+            stateMgr.update();
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
             log.debug(msg);

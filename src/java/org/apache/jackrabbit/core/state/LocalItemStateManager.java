@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
@@ -24,16 +23,13 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Local <code>ItemStateManager</code> that isolates changes to
  * persistent states from other clients.
  */
 public class LocalItemStateManager extends ItemStateCache
-        implements ItemStateManager, ItemStateListener, TransactionListener {
+        implements UpdatableItemStateManager, ItemStateListener {
 
     /**
      * Logger instance
@@ -41,29 +37,19 @@ public class LocalItemStateManager extends ItemStateCache
     private static Logger log = Logger.getLogger(LocalItemStateManager.class);
 
     /**
-     * Known attribute name
-     */
-    private static final String ATTRIBUTE_STATES = "ItemStates";
-
-    /**
-     * Known attribute name
-     */
-    private static final String ATTRIBUTE_REFS = "NodeReferences";
-
-    /**
      * Shared item state manager
      */
-    private final SharedItemStateManager sharedStateMgr;
+    protected final SharedItemStateManager sharedStateMgr;
 
     /**
-     * Currently associated transaction
+     * Flag indicating whether this item state manager is in edit mode
      */
-    private TransactionContext tx;
+    private boolean editMode;
 
     /**
-     * A cache for <code>NodeReferences</code> objects.
+     * Change log
      */
-    private Map refsCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+    private final ChangeLog changeLog = new ChangeLog();
 
     /**
      * Creates a new <code>LocalItemStateManager</code> instance.
@@ -80,23 +66,19 @@ public class LocalItemStateManager extends ItemStateCache
     public void dispose() {
         // clear cache
         evictAll();
-
-        refsCache.clear();
     }
 
     /**
-     * @param id
-     * @return
+     * Retrieve a node state from the parent shared state manager and
+     * wraps it into a intermediate object that helps us handle local
+     * modifications.
+     * @param id node id
+     * @return node state
      * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
     protected NodeState getNodeState(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
-
-        // check cache
-        if (isCached(id)) {
-            return (NodeState) retrieve(id);
-        }
 
         // load from parent manager and wrap
         NodeState state = (NodeState) sharedStateMgr.getItemState(id);
@@ -111,8 +93,11 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @param id
-     * @return
+     * Retrieve a property state from the parent shared state manager and
+     * wraps it into a intermediate object that helps us handle local
+     * modifications.
+     * @param id property id
+     * @return property state
      * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
@@ -137,33 +122,6 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * Set transaction context
-     */
-    public void setTransactionContext(TransactionContext tx) {
-        dispose();
-
-        if (tx != null) {
-            if (tx.getAttribute(ATTRIBUTE_STATES) == null) {
-                tx.setAttribute(ATTRIBUTE_STATES, new ArrayList());
-                tx.setAttribute(ATTRIBUTE_REFS, new ArrayList());
-                tx.addListener(this);
-            } else {
-                List states = (List) tx.getAttribute(ATTRIBUTE_STATES);
-                for (int i = 0; i < states.size(); i++) {
-                    cache((ItemState) states.get(i));
-                }
-
-                List refsCollection = (List) tx.getAttribute(ATTRIBUTE_REFS);
-                for (int i = 0; i < refsCollection.size(); i++) {
-                    NodeReferences refs = (NodeReferences) states.get(i);
-                    refsCache.put(refs.getTargetId(), refs);
-                }
-            }
-        }
-        this.tx = tx;
-    }
-
-    /**
      * Dumps the state of this <code>LocalItemStateManager</code> instance
      * (used for diagnostic purposes).
      *
@@ -183,6 +141,18 @@ public class LocalItemStateManager extends ItemStateCache
     public synchronized ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
+        // check change log
+        ItemState state = changeLog.get(id);
+        if (state != null) {
+            return state;
+        }
+
+        // check cache
+        if (isCached(id)) {
+            return retrieve(id);
+        }
+
+        // regular behaviour
         if (id.denotesNode()) {
             return getNodeState((NodeId) id);
         } else {
@@ -194,204 +164,149 @@ public class LocalItemStateManager extends ItemStateCache
      * @see ItemStateManager#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
+
+        // check items in change log
+        try {
+            ItemState state = changeLog.get(id);
+            if (state != null) {
+                return true;
+            }
+        } catch (NoSuchItemStateException e) {
+            return false;
+        }
+
+        // check cache
         if (isCached(id)) {
             return true;
         }
+
+        // regular behaviour
         return sharedStateMgr.hasItemState(id);
     }
 
     /**
      * @see ItemStateManager#getNodeReferences
      */
-    public synchronized NodeReferences getNodeReferences(NodeId targetId)
+    public synchronized NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        if (refsCache.containsKey(targetId)) {
-            return (NodeReferences) refsCache.get(targetId);
+        // check change log
+        NodeReferences refs = changeLog.get(id);
+        if (refs != null) {
+            return refs;
         }
 
-        NodeReferences refs = sharedStateMgr.getNodeReferences(targetId);
-        refs = new NodeReferences(refs);
-
-        refsCache.put(targetId, refs);
-
-        return refs;
+        return sharedStateMgr.getNodeReferences(id);
     }
 
     /**
-     * @see ItemStateManager#beginUpdate
+     * @see UpdatableItemStateManager#edit
      */
-    public UpdateOperation beginUpdate() throws ItemStateException {
-        return new Update();
+    public void edit() throws ItemStateException {
+        if (editMode) {
+            throw new ItemStateException("Already in edit mode");
+        }
+        changeLog.reset();
+
+        editMode = true;
     }
 
     /**
-     * End an update operation
+     * @see UpdatableItemStateManager#createNew
      */
-    private void endUpdate(List states, List refsCollection)
+    public NodeState createNew(String uuid, QName nodeTypeName, String parentUUID) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+
+        NodeState state = new NodeState(uuid, nodeTypeName, parentUUID,
+                ItemState.STATUS_NEW, false);
+        changeLog.added(state);
+        return state;
+    }
+
+    /**
+     * @see UpdatableItemStateManager#createNew
+     */
+    public PropertyState createNew(QName propName, String parentUUID) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        PropertyState state = new PropertyState(propName, parentUUID,
+                ItemState.STATUS_NEW, false);
+        changeLog.added(state);
+        return state;
+    }
+
+    /**
+     * @see UpdatableItemStateManager#store
+     */
+    public void store(ItemState state) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        changeLog.modified(state);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#store
+     */
+    public void store(NodeReferences refs) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        changeLog.modified(refs);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#destroy
+     */
+    public void destroy(ItemState state) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        changeLog.deleted(state);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#cancel
+     */
+    public void cancel() {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        changeLog.undo(sharedStateMgr);
+
+        editMode = false;
+    }
+
+    /**
+     * @see UpdatableItemStateManager#update
+     */
+    public void update() throws ItemStateException {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        update(changeLog);
+        changeLog.reset();
+
+        editMode = false;
+    }
+
+
+    /**
+     * End an update operation. Fetch the states and references from
+     * the parent (shared) item manager, reconnect them to the items
+     * collected in our (local) change log and overwrite the shared
+     * items with our copies.
+     * @param changeLog change log containing local states and references
+     */
+    protected void update(ChangeLog changeLog)
             throws ItemStateException {
 
-        for (int i = 0; i < states.size(); i++) {
-            ItemState state = (ItemState) states.get(i);
-            state.connect(getOrCreateOverlayed(state));
-            state.push();
-        }
-        for (int i = 0; i < refsCollection.size(); i++) {
-            NodeReferences refs = (NodeReferences) refsCollection.get(i);
-            refs.connect(getOrCreateOverlayed(refs));
-            refs.push();
-        }
-        sharedStateMgr.store(states, refsCollection);
-    }
+        sharedStateMgr.store(changeLog);
 
-    /**
-     * Return the item state inside the shared item state manager
-     * corresponding to a given item state.
-     */
-    private ItemState getOrCreateOverlayed(ItemState state)
-            throws ItemStateException {
-
-        switch (state.getStatus()) {
-            case ItemState.STATUS_NEW:
-                if (state.isNode()) {
-                    NodeState ns = (NodeState) state;
-                    return sharedStateMgr.createInstance(ns.getUUID(),
-                            ns.getNodeTypeName(), ns.getParentUUID());
-                } else {
-                    PropertyState ps = (PropertyState) state;
-                    return sharedStateMgr.createInstance(ps.getName(),
-                            ps.getParentUUID());
-                }
-            default:
-                return sharedStateMgr.getItemState(state.getId());
-        }
-    }
-
-    /**
-     * Return the references object inside the shared item state manager
-     * corresponding to a references object.
-     */
-    private NodeReferences getOrCreateOverlayed(NodeReferences refs)
-            throws ItemStateException {
-
-        switch (refs.getStatus()) {
-            case NodeReferences.STATUS_NEW:
-                return new NodeReferences(refs.getTargetId());
-
-            default:
-                return sharedStateMgr.getNodeReferences(refs.getTargetId());
-        }
-    }
-
-    //--------------------------------------------------< TransactionListener >
-
-    /**
-     * @see TransactionListener#transactionCommitted
-     */
-    public void transactionCommitted(TransactionContext tx)
-            throws TransactionException {
-
-        List states = (List) tx.getAttribute(ATTRIBUTE_STATES);
-        List refsCollection = (List) tx.getAttribute(ATTRIBUTE_REFS);
-
-        try {
-            endUpdate(states, refsCollection);
-        } catch (ItemStateException e) {
-            throw new TransactionException("Unable to end update.", e);
-        }
-    }
-
-    /**
-     * @see TransactionListener#transactionRolledBack
-     */
-    public void transactionRolledBack(TransactionContext tx) {
-    }
-
-    //------------------------------------------------------< UpdateOperation >
-
-    class Update implements UpdateOperation {
-
-        /**
-         * Modified states
-         */
-        private final List states = new ArrayList();
-
-        /**
-         * Modified references
-         */
-        private final List refsCollection = new ArrayList();
-
-        /**
-         * @see UpdateOperation#createNew
-         */
-        public NodeState createNew(String uuid, QName nodeTypeName,
-                                   String parentUUID) {
-
-            NodeState state = new NodeState(uuid, nodeTypeName, parentUUID,
-                    ItemState.STATUS_NEW, false);
-
-            cache(state);
-            state.addListener(LocalItemStateManager.this);
-
-            return state;
-        }
-
-        /**
-         * @see UpdateOperation#createNew
-         */
-        public PropertyState createNew(QName propName, String parentUUID) {
-            PropertyState state = new PropertyState(propName, parentUUID,
-                    ItemState.STATUS_NEW, false);
-
-            cache(state);
-            state.addListener(LocalItemStateManager.this);
-
-            return state;
-        }
-
-        /**
-         * @see UpdateOperation#store
-         */
-        public void store(ItemState state) {
-            state.disconnect();
-            states.add(state);
-            // notify listeners that the specified instance has been modified
-            state.notifyStateUpdated();
-        }
-
-        /**
-         * @see UpdateOperation#store
-         */
-        public void store(NodeReferences refs) {
-            refs.disconnect();
-            refsCollection.add(refs);
-        }
-
-        /**
-         * @see UpdateOperation#destroy
-         */
-        public void destroy(ItemState state) {
-            state.disconnect();
-            state.setStatus(ItemState.STATUS_EXISTING_REMOVED);
-            states.add(state);
-            // notify listeners that the specified instance has been marked 'removed'
-            state.notifyStateDestroyed();
-        }
-
-        /**
-         * @see UpdateOperation#end
-         */
-        public void end() throws ItemStateException {
-            if (tx != null) {
-                List txStates = (List) tx.getAttribute(ATTRIBUTE_STATES);
-                List txRefs = (List) tx.getAttribute(ATTRIBUTE_REFS);
-
-                txStates.addAll(states);
-                txRefs.addAll(refsCollection);
-            } else {
-                endUpdate(states, refsCollection);
-            }
-        }
+        changeLog.persisted();
     }
 
     //----------------------------------------------------< ItemStateListener >
@@ -399,14 +314,12 @@ public class LocalItemStateManager extends ItemStateCache
      * @see ItemStateListener#stateCreated
      */
     public void stateCreated(ItemState created) {
-        // not interested
     }
 
     /**
      * @see ItemStateListener#stateModified
      */
     public void stateModified(ItemState modified) {
-        // not interested
     }
 
     /**

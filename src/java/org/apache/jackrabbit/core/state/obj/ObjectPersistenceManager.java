@@ -466,13 +466,13 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     /**
      * @see PersistenceManager#load
      */
-    public synchronized NodeState load(String uuid)
+    public synchronized NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        String nodeFilePath = buildNodeFilePath(uuid);
+        String nodeFilePath = buildNodeFilePath(id.getUUID());
 
         try {
             if (!itemStateFS.isFile(nodeFilePath)) {
@@ -488,11 +488,11 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             BufferedInputStream in =
                     new BufferedInputStream(itemStateFS.getInputStream(nodeFilePath));
             try {
-                NodeState state = createNew(uuid, null, null);
+                NodeState state = createNew(id);
                 deserialize(state, in);
                 return state;
             } catch (Exception e) {
-                String msg = "failed to read node state: " + uuid;
+                String msg = "failed to read node state: " + id.getUUID();
                 log.debug(msg);
                 throw new ItemStateException(msg, e);
             } finally {
@@ -508,13 +508,14 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     /**
      * @see PersistenceManager#load
      */
-    public synchronized PropertyState load(QName name, String parentUUID)
+    public synchronized PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        String propFilePath = buildPropFilePath(parentUUID, name);
+        String propFilePath = buildPropFilePath(
+                id.getParentUUID(), id.getName());
 
         try {
             if (!itemStateFS.isFile(propFilePath)) {
@@ -530,7 +531,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             BufferedInputStream in =
                     new BufferedInputStream(itemStateFS.getInputStream(propFilePath));
             try {
-                PropertyState state = createNew(name, parentUUID);
+                PropertyState state = createNew(id);
                 deserialize(state, in, this);
                 return state;
             } finally {
@@ -546,20 +547,21 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     /**
      * @see PersistenceManager#load
      */
-    public synchronized NodeReferences load(NodeId targetId)
+    public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
+
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(targetId.getUUID());
+        String refsFilePath = buildNodeReferencesFilePath(id.getUUID());
 
         try {
             if (!itemStateFS.isFile(refsFilePath)) {
-                throw new NoSuchItemStateException(targetId.toString());
+                throw new NoSuchItemStateException(id.toString());
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to load references: " + targetId;
+            String msg = "failed to load references: " + id;
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
@@ -568,14 +570,14 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             BufferedInputStream in =
                     new BufferedInputStream(itemStateFS.getInputStream(refsFilePath));
             try {
-                NodeReferences refs = new NodeReferences(targetId);
+                NodeReferences refs = new NodeReferences(id);
                 deserialize(refs, in);
                 return refs;
             } finally {
                 in.close();
             }
         } catch (Exception e) {
-            String msg = "failed to load references: " + targetId;
+            String msg = "failed to load references: " + id;
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -746,25 +748,17 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#exists(ItemId id)
+     * @see PersistenceManager#exists(PropertyId id)
      */
-    public synchronized boolean exists(ItemId id) throws ItemStateException {
+    public synchronized boolean exists(PropertyId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         try {
-            if (id.denotesNode()) {
-                NodeId nodeId = (NodeId) id;
-                String nodeFilePath = buildNodeFilePath(nodeId.getUUID());
-                FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
-                return nodeFile.exists();
-            } else {
-                PropertyId propId = (PropertyId) id;
-                String propFilePath = buildPropFilePath(propId.getParentUUID(), propId.getName());
-                FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
-                return propFile.exists();
-            }
+            String propFilePath = buildPropFilePath(id.getParentUUID(), id.getName());
+            FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
+            return propFile.exists();
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of item state: " + id;
             log.debug(msg);
@@ -773,20 +767,41 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#referencesExist(NodeId targetId)
+     * @see PersistenceManager#exists(NodeId)
      */
-    public synchronized boolean referencesExist(NodeId targetId) throws ItemStateException {
+    public synchronized boolean exists(NodeId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         try {
-            String uuid = targetId.getUUID();
+            String nodeFilePath = buildNodeFilePath(id.getUUID());
+            FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
+            return nodeFile.exists();
+        } catch (FileSystemException fse) {
+            String msg = "failed to check existence of item state: " + id;
+            log.error(msg, fse);
+            throw new ItemStateException(msg, fse);
+        }
+    }
+
+    /**
+     * @see PersistenceManager#exists(NodeReferencesId)
+     */
+    public synchronized boolean exists(NodeReferencesId id)
+            throws ItemStateException {
+
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
+        try {
+            String uuid = id.getUUID();
             String refsFilePath = buildNodeReferencesFilePath(uuid);
             FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
             return refsFile.exists();
         } catch (FileSystemException fse) {
-            String msg = "failed to check existence of references: " + targetId;
+            String msg = "failed to check existence of references: " + id;
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }

@@ -267,7 +267,7 @@ public class NativePVM implements PersistentVersionManager {
         }
 
         try {
-            UpdateOperation upd = stateMgr.beginUpdate();
+            stateMgr.edit();
 
             // create deep path
             String uuid = UUID.randomUUID().toString();
@@ -275,18 +275,18 @@ public class NativePVM implements PersistentVersionManager {
             for (int i=0; i<3; i++) {
                 QName name = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid.substring(i*2, i*2+2));
                 if (!root.hasNode(name)) {
-                    root.addNode(upd, name, NodeTypeRegistry.NT_UNSTRUCTURED);
-                    root.store(upd);
+                    root.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
+                    root.store();
                 }
                 root = root.getNode(name, 1);
             }
             QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid);
 
             // create new history node in the persistent state
-            hist = InternalVersionHistoryImpl.create(upd, this, root, uuid, historyNodeName, node);
+            hist = InternalVersionHistoryImpl.create(this, root, uuid, historyNodeName, node);
 
             // end update
-            upd.end();
+            stateMgr.update();
 
             initVirtualIds(hist.getId(), hist.getNode().getState());
         } catch (ItemStateException e) {
@@ -496,9 +496,9 @@ public class NativePVM implements PersistentVersionManager {
         }
 
         try {
-            UpdateOperation upd = stateMgr.beginUpdate();
-            InternalVersionImpl v = history.checkin(upd, new QName("", versionName), node);
-            upd.end();
+            stateMgr.edit();
+            InternalVersionImpl v = history.checkin(new QName("", versionName), node);
+            stateMgr.update();
 
             initVirtualIds(v.getId(), v.getNode().getState());
 
@@ -508,39 +508,11 @@ public class NativePVM implements PersistentVersionManager {
         }
     }
 
-    public void removeVersion(InternalVersionHistory hist, QName name) throws VersionException {
-        try {
-            UpdateOperation upd = stateMgr.beginUpdate();
-            ((InternalVersionHistoryImpl) hist).removeVersion(upd, name);
-            upd.end();
-        } catch (ItemStateException e) {
-            throw new VersionException(e);
-        }
-
-    }
-
-    public InternalVersion addVersionLabel(InternalVersionHistory hist, QName versionName, String label, boolean move) throws VersionException {
-        try {
-            UpdateOperation upd = stateMgr.beginUpdate();
-            InternalVersion v =
-                    ((InternalVersionHistoryImpl) hist).addVersionLabel(upd, versionName, label, move);
-            upd.end();
-            return v;
-        } catch (ItemStateException e) {
-            throw new VersionException(e);
-        }
-    }
-
-    public InternalVersion removeVersionLabel(InternalVersionHistory hist, String label) throws VersionException {
-        try {
-            UpdateOperation upd = stateMgr.beginUpdate();
-            InternalVersion v =
-                    ((InternalVersionHistoryImpl) hist).removeVersionLabel(upd, label);
-            upd.end();
-            return v;
-        } catch (ItemStateException e) {
-            throw new VersionException(e);
-        }
+    /**
+     * @see PersistentVersionManager#getItemStateMgr()
+     */
+    public UpdatableItemStateManager getItemStateMgr() {
+        return stateMgr;
     }
 
     /**

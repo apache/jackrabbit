@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.NodeId;
 
 /**
  * The <code>ItemStateManager</code> interface...
@@ -45,18 +44,11 @@ public interface ItemStateManager {
 
     /**
      * Return a node references object, given its target id
-     * @param targetId target id
-     * @return
+     * @param id target id
+     * @return node references object
      * @throws NoSuchItemStateException if the item does not exist
      * @throws ItemStateException if an error occurs
      */
-    public NodeReferences getNodeReferences(NodeId targetId)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
         throws NoSuchItemStateException, ItemStateException;
-
-    /**
-     * Begin an update operation on the provider.
-     * @return update operation
-     * @throws ItemStateException if an error occurs
-     */
-    public UpdateOperation beginUpdate() throws ItemStateException;
 }

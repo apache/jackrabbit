@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.UpdateOperation;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -234,8 +233,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
      * @return
      * @throws RepositoryException
      */
-    protected static PersistentNode checkin(UpdateOperation upd,
-                                            PersistentNode parent, QName name,
+    protected static PersistentNode checkin(PersistentNode parent, QName name,
                                             NodeImpl src, boolean initOnly,
                                             boolean forceCopy)
             throws RepositoryException {
@@ -243,14 +241,14 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
         PersistentNode node;
 
         // create new node
-        node = parent.addNode(upd, name, NativePVM.NT_REP_FROZEN);
+        node = parent.addNode(name, NativePVM.NT_REP_FROZEN);
 
         // initialize the internal properties
         if (src.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-            node.setPropertyValue(upd, VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(src.getUUID()));
+            node.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(src.getUUID()));
         }
 
-        node.setPropertyValue(upd, VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE,
+        node.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE,
                 InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
 
         if (src.hasProperty(NodeImpl.PROPNAME_MIXINTYPES)) {
@@ -259,7 +257,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
             for (int i = 0; i < mixins.length; i++) {
                 ivalues[i] = InternalValue.create(((NodeTypeImpl) mixins[i]).getQName());
             }
-            node.setPropertyValues(upd, VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, ivalues);
+            node.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, ivalues);
         }
 
         if (!initOnly) {
@@ -278,7 +276,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
                         break;
                     case OnParentVersionAction.VERSION:
                     case OnParentVersionAction.COPY:
-                        node.copyFrom(upd, prop);
+                        node.copyFrom(prop);
                         break;
                 }
             }
@@ -299,16 +297,16 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
                     case OnParentVersionAction.VERSION:
                         if (child.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
                             // create frozen versionable child
-                            PersistentNode newChild = node.addNode(upd, child.getQName(), NativePVM.NT_REP_FROZEN_HISTORY);
-                            newChild.setPropertyValue(upd, VersionManager.PROPNAME_VERSION_HISTORY,
+                            PersistentNode newChild = node.addNode(child.getQName(), NativePVM.NT_REP_FROZEN_HISTORY);
+                            newChild.setPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY,
                                     InternalValue.create(child.getVersionHistory().getUUID()));
-                            newChild.setPropertyValue(upd, VersionManager.PROPNAME_BASE_VERSION,
+                            newChild.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION,
                                     InternalValue.create(child.getBaseVersion().getUUID()));
                             break;
                         }
                         // else copy
                     case OnParentVersionAction.COPY:
-                        checkin(upd, node, child.getQName(), child, false, true);
+                        checkin(node, child.getQName(), child, false, true);
                         break;
                 }
             }

@@ -84,17 +84,10 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
     /**
      * @see ItemStateManager#getNodeReferences
      */
-    public NodeReferences getNodeReferences(NodeId targetId)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         throw new ItemStateException("getNodeReferences() not implemented");
-    }
-
-    /**
-     * @see ItemStateManager#beginUpdate
-     */
-    public UpdateOperation beginUpdate() throws ItemStateException {
-        throw new ItemStateException("beginUpdate() not implemented");
     }
 
     //------------------< methods for listing & querying state of cache/attic >
@@ -337,17 +330,10 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         /**
          * @see ItemStateManager#getNodeReferences
          */
-        public NodeReferences getNodeReferences(NodeId targetId)
+        public NodeReferences getNodeReferences(NodeReferencesId id)
                 throws NoSuchItemStateException, ItemStateException {
 
             throw new ItemStateException("getNodeReferences() not implemented");
-        }
-
-        /**
-         * @see ItemStateManager#beginUpdate
-         */
-        public UpdateOperation beginUpdate() throws ItemStateException {
-            throw new ItemStateException("beginUpdate() not implemented");
         }
     }
 }

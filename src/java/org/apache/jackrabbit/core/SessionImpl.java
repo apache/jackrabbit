@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
@@ -215,7 +216,9 @@ public class SessionImpl implements Session {
      *
      * @return session item state manager
      */
-    protected SessionItemStateManager createSessionItemStateManager(ItemStateManager manager) {
+    protected SessionItemStateManager createSessionItemStateManager(
+            UpdatableItemStateManager manager) {
+
         return new SessionItemStateManager(rep.getRootNodeUUID(),
                 manager, getNamespaceResolver());
     }

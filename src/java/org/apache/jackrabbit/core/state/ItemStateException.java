@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.BaseException;
  * The <code>ItemStateException</code> ...
  */
 public class ItemStateException extends BaseException {
+
     /**
      * Constructs a new instance of this class with <code>null</code> as its
      * detail message.

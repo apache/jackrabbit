@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.state.TransactionContext;
-import org.apache.jackrabbit.core.state.TransactionException;
-
 /**
  * Listener on a transaction. Will receive notifications about commit
  * and rollback actions.

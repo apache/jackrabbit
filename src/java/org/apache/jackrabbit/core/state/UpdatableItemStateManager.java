@@ -19,9 +19,20 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.QName;
 
 /**
- * An update operation started inside an <code>ItemStateManager</code>
+ * Identifies an <code>ItemStateManager</code> that allows updating
+ * items.
  */
-public interface UpdateOperation {
+public interface UpdatableItemStateManager extends ItemStateManager {
+
+    /**
+     * Start an edit operation on items inside this manager. This
+     * allows calling the operations defined below. At the end of
+     * this operation, either {@link #update} or {@link #cancel}
+     * must be invoked.
+     * @throws ItemStateException if the manager is already inside
+     *         edit mode.
+     */
+    public void edit() throws ItemStateException;
 
     /**
      * Creates a {@link NodeState} instance representing new,
@@ -66,10 +77,16 @@ public interface UpdateOperation {
     public void destroy(ItemState state);
 
     /**
-     * End this update operation. This will save all items
+     * Cancel an update operation. This will undo all changes
+     * made to objects inside this item state manager.
+     */
+    public void cancel();
+
+    /**
+     * End an update operation. This will save all items
      * added to this update operation in a single step.
      * If this operation fails, no item will have been saved.
-     * @throws ItemStateException if the update operation failed
+     * @throws ItemStateException if the operation failed
      */
-    public void end() throws ItemStateException;
+    public void update() throws ItemStateException;
 }

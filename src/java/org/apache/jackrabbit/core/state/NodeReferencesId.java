@@ -14,52 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core;
+package org.apache.jackrabbit.core.state;
+
+import org.apache.jackrabbit.core.NodeId;
 
 /**
- * <code>NodeId</code> uniquely identifies a node in the repository.
+ * Identifies a <code>NodeReferences</code> object.
  */
-public class NodeId extends ItemId {
-
-    static final long serialVersionUID = 7026219091360041109L;
-
-    protected final String uuid;
-
-    public NodeId(String uuid) {
-        if (uuid == null) {
-            throw new IllegalArgumentException("uuid can not be null");
-        }
-        this.uuid = uuid;
-    }
+public class NodeReferencesId extends NodeId {
 
     /**
-     * @see ItemId#denotesNode
+     * Create a new instance of this class. Takes a UUID as parameter.
+     * @param uuid uuid of node
      */
-    public boolean denotesNode() {
-        return true;
+    public NodeReferencesId(String uuid) {
+        super(uuid);
     }
 
-    public String getUUID() {
-        return uuid;
-    }
 
+    /**
+     * @see Object#equals
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof NodeId) {
-            NodeId other = (NodeId) obj;
+        if (obj instanceof NodeReferencesId) {
+            NodeReferencesId other = (NodeReferencesId) obj;
             return uuid.equals(other.uuid);
         }
         return false;
     }
 
     /**
-     * Returns a <code>NodeId</code> holding the value of the specified
+     * Returns a <code>NodeReferencesId</code> holding the value of the specified
      * string. The string must be in the format returned by the
-     * <code>NodeId.toString()</code> method.
+     * <code>NodeReferencesId.toString()</code> method.
      *
-     * @param s a <code>String</code> containing the <code>NodeId</code>
+     * @param s a <code>String</code> containing the <code>NodeReferencesId</code>
      *          representation to be parsed.
      * @return the <code>NodeId</code> represented by the argument
      * @throws IllegalArgumentException if the specified string can not be parsed
@@ -68,20 +60,8 @@ public class NodeId extends ItemId {
      */
     public static NodeId valueOf(String s) {
         if (s == null) {
-            throw new IllegalArgumentException("invalid NodeId literal");
+            throw new IllegalArgumentException("invalid NodeReferencesId literal");
         }
-        return new NodeId(s);
-    }
-
-    public String toString() {
-        return uuid;
-    }
-
-    public int hashCode() {
-        // NodeId is immutable, we can store the computed hash code value
-        if (hash == 0) {
-            hash = uuid.hashCode();
-        }
-        return hash;
+        return new NodeReferencesId(s);
     }
 }

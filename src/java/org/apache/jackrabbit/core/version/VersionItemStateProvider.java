@@ -114,20 +114,13 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * @see ItemStateManager#getNodeReferences(NodeId)
+     * @see ItemStateManager#getNodeReferences(NodeReferencesId)
      */
-    public NodeReferences getNodeReferences(NodeId targetId)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         //@todo return node references
-        throw new NoSuchItemStateException(targetId.getUUID());
-    }
-
-    /**
-     * @see ItemStateManager#beginUpdate
-     */
-    public UpdateOperation beginUpdate() throws ItemStateException {
-        throw new ItemStateException("Update not available");
+        throw new NoSuchItemStateException(id.getUUID());
     }
 
     //-------------------------------------------< VirtualItemStateProvider >---

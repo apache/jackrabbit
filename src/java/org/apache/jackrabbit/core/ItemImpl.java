@@ -171,7 +171,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
     protected abstract ItemState getOrCreateTransientItemState() throws RepositoryException;
 
-    protected abstract void makePersistent(UpdateOperation update);
+    protected abstract void makePersistent();
 
     /**
      * Marks this instance as 'removed' and notifies its listeners.
@@ -680,20 +680,20 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         InternalValue[] vals = oldPropState.getValues();
                         for (int i = 0; vals != null && i < vals.length; i++) {
                             String uuid = vals[i].toString();
-                            NodeId targetId = new NodeId(uuid);
+                            NodeReferencesId id = new NodeReferencesId(uuid);
                             NodeReferences refs;
-                            if (dirtyNodeRefs.containsKey(targetId)) {
-                                refs = (NodeReferences) dirtyNodeRefs.get(targetId);
+                            if (dirtyNodeRefs.containsKey(id)) {
+                                refs = (NodeReferences) dirtyNodeRefs.get(id);
                             } else {
                                 try {
-                                    refs = stateMgr.getNodeReferences(targetId);
+                                    refs = stateMgr.getNodeReferences(id);
                                 } catch (ItemStateException e) {
-                                    String msg = itemMgr.safeGetJCRPath(targetId)
+                                    String msg = itemMgr.safeGetJCRPath(id)
                                             + ": failed to load node references";
                                     log.debug(msg);
                                     throw new RepositoryException(msg, e);
                                 }
-                                dirtyNodeRefs.put(targetId, refs);
+                                dirtyNodeRefs.put(id, refs);
                             }
                             // remove reference from target node
                             refs.removeReference((PropertyId) propState.getId());
@@ -703,9 +703,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     InternalValue[] vals = propState.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         String uuid = vals[i].toString();
-                        NodeId targetId = new NodeId(uuid);
+                        NodeReferencesId id = new NodeReferencesId(uuid);
                         // verify that target exists
-                        if (!itemMgr.itemExists(targetId)) {
+                        if (!itemMgr.itemExists(id)) {
                             String msg = itemMgr.safeGetJCRPath(propState.getId())
                                     + ": target node of REFERENCE property does not exist";
                             log.warn(msg);
@@ -714,7 +714,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         // target is a new (unsaved) node; make sure that it is
                         // within the scope of the current save operation
                         // (by veryfying that it is a descendant of 'this' item)
-                        NodeImpl target = (NodeImpl) itemMgr.getItem(targetId);
+                        NodeImpl target = (NodeImpl) itemMgr.getItem(id);
                         if (target.isNew()) {
                             try {
                                 if (!target.getPrimaryPath().isDescendantOf(getPrimaryPath())) {
@@ -732,18 +732,18 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             }
                         }
                         NodeReferences refs;
-                        if (dirtyNodeRefs.containsKey(targetId)) {
-                            refs = (NodeReferences) dirtyNodeRefs.get(targetId);
+                        if (dirtyNodeRefs.containsKey(id)) {
+                            refs = (NodeReferences) dirtyNodeRefs.get(id);
                         } else {
                             try {
-                                refs = stateMgr.getNodeReferences(targetId);
+                                refs = stateMgr.getNodeReferences(id);
                             } catch (ItemStateException e) {
-                                String msg = itemMgr.safeGetJCRPath(targetId)
+                                String msg = itemMgr.safeGetJCRPath(id)
                                         + ": failed to load node references";
                                 log.debug(msg);
                                 throw new RepositoryException(msg, e);
                             }
-                            dirtyNodeRefs.put(targetId, refs);
+                            dirtyNodeRefs.put(id, refs);
                         }
                         // add reference to target node
                         refs.addReference((PropertyId) propState.getId());
@@ -770,20 +770,20 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     InternalValue[] vals = propState.getValues();
                     for (int i = 0; i < vals.length; i++) {
                         String uuid = vals[i].toString();
-                        NodeId targetId = new NodeId(uuid);
+                        NodeReferencesId id = new NodeReferencesId(uuid);
                         NodeReferences refs;
-                        if (dirtyNodeRefs.containsKey(targetId)) {
-                            refs = (NodeReferences) dirtyNodeRefs.get(targetId);
+                        if (dirtyNodeRefs.containsKey(id)) {
+                            refs = (NodeReferences) dirtyNodeRefs.get(id);
                         } else {
                             try {
-                                refs = stateMgr.getNodeReferences(targetId);
+                                refs = stateMgr.getNodeReferences(id);
                             } catch (ItemStateException e) {
-                                String msg = itemMgr.safeGetJCRPath(targetId)
+                                String msg = itemMgr.safeGetJCRPath(id)
                                         + ": failed to load node references";
                                 log.debug(msg);
                                 throw new RepositoryException(msg, e);
                             }
-                            dirtyNodeRefs.put(targetId, refs);
+                            dirtyNodeRefs.put(id, refs);
                         }
                         // remove reference to target node
                         refs.removeReference((PropertyId) propState.getId());
@@ -799,15 +799,15 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         while (iter.hasNext()) {
             NodeState nodeState = (NodeState) iter.next();
             // check if node is referenced
-            NodeId targetId = (NodeId) nodeState.getId();
+            NodeReferencesId id = new NodeReferencesId(nodeState.getUUID());
             NodeReferences refs;
-            if (dirtyNodeRefs.containsKey(targetId)) {
-                refs = (NodeReferences) dirtyNodeRefs.get(targetId);
+            if (dirtyNodeRefs.containsKey(id)) {
+                refs = (NodeReferences) dirtyNodeRefs.get(id);
             } else {
                 try {
-                    refs = stateMgr.getNodeReferences(targetId);
+                    refs = stateMgr.getNodeReferences(id);
                 } catch (ItemStateException e) {
-                    String msg = itemMgr.safeGetJCRPath(targetId)
+                    String msg = itemMgr.safeGetJCRPath(id)
                             + ": failed to load node references";
                     log.debug(msg);
                     throw new RepositoryException(msg, e);
@@ -825,8 +825,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         return dirtyNodeRefs.values();
     }
 
-    private void removeTransientItems(UpdateOperation update,
-                                      Iterator iter) {
+    private void removeTransientItems(Iterator iter) {
 
         /**
          * walk through list of transient items marked 'removed' and
@@ -841,12 +840,11 @@ public abstract class ItemImpl implements Item, ItemStateListener {
              * this will indirectly (through stateDestroyed listener method)
              * permanently invalidate all Item instances wrapping it
              */
-            update.destroy(persistentState);
+            stateMgr.destroy(persistentState);
         }
     }
 
-    private void persistTransientItems(UpdateOperation update,
-                                       Iterator iter)
+    private void persistTransientItems(Iterator iter)
             throws RepositoryException {
 
         // walk through list of transient items and persist each one
@@ -854,7 +852,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             ItemState itemState = (ItemState) iter.next();
             ItemImpl item = itemMgr.getItem(itemState.getId());
             // persist state of transient item
-            item.makePersistent(update);
+            item.makePersistent();
         }
     }
 
@@ -1238,10 +1236,10 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
                 try {
                     // start the update operation
-                    UpdateOperation update = stateMgr.beginUpdate();
+                    stateMgr.edit();
 
                     // process transient items marked as 'removed'
-                    removeTransientItems(update, removed.iterator());
+                    removeTransientItems(removed.iterator());
 
                     // initialize version histories for new nodes (might generate new transient state)
                     if (initVersionHistories(dirty.iterator())) {
@@ -1253,15 +1251,15 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     }
 
                     // process 'new' or 'modified' transient states
-                    persistTransientItems(update, dirty.iterator());
+                    persistTransientItems(dirty.iterator());
 
                     // store the references calculated above
                     for (Iterator it = dirtyRefs.iterator(); it.hasNext();) {
-                        update.store((NodeReferences) it.next());
+                        stateMgr.store((NodeReferences) it.next());
                     }
 
                     // end update operation
-                    update.end();
+                    stateMgr.update();
 
                 } catch (ItemStateException e) {
 

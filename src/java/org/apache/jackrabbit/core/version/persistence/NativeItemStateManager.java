@@ -22,12 +22,9 @@ import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.*;
 import org.apache.log4j.Logger;
-import org.apache.commons.collections.ReferenceMap;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.PropertyType;
-import java.util.*;
-import java.io.PrintStream;
 
 /**
  * This Class implements...
@@ -36,7 +33,7 @@ import java.io.PrintStream;
  * @version $Revision:$, $Date:$
  */
 public class NativeItemStateManager extends ItemStateCache
-        implements ItemStateManager, ItemStateListener {
+        implements UpdatableItemStateManager, ItemStateListener {
 
     /**
      * Logger instance
@@ -54,9 +51,14 @@ public class NativeItemStateManager extends ItemStateCache
     private NodeState root;
 
     /**
-     * A cache for <code>NodeReferences</code> objects.
+     * Flag indicating whether this item state manager is in edit mode
      */
-    private Map refsCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+    private boolean editMode;
+
+    /**
+     * Change log
+     */
+    private ChangeLog changeLog;
 
     /**
      * Creates a new <code>DefaultItemStateManager</code> instance.
@@ -119,12 +121,10 @@ public class NativeItemStateManager extends ItemStateCache
         prop.setMultiValued(false);
         prop.setDefinitionId(propDefId);
 
-        ArrayList states = new ArrayList();
-        states.add(rootState);
-        states.add(prop);
-
-        // do persist root node (incl. properties)
-        store(states, Collections.EMPTY_LIST);
+        ChangeLog changeLog = new ChangeLog();
+        changeLog.added(rootState);
+        changeLog.added(prop);
+        store(changeLog);
 
         return rootState;
     }
@@ -144,7 +144,7 @@ public class NativeItemStateManager extends ItemStateCache
         }
 
         // load from persisted state
-        NodeState state = persistMgr.load(id.getUUID());
+        NodeState state = persistMgr.load(id);
         state.setStatus(ItemState.STATUS_EXISTING);
 
         // put it in cache
@@ -170,7 +170,7 @@ public class NativeItemStateManager extends ItemStateCache
         }
 
         // load from persisted state
-        PropertyState state = persistMgr.load(id.getName(), id.getParentUUID());
+        PropertyState state = persistMgr.load(id);
         state.setStatus(ItemState.STATUS_EXISTING);
 
         // put it in cache
@@ -205,7 +205,11 @@ public class NativeItemStateManager extends ItemStateCache
         }
 
         try {
-            return persistMgr.exists(id);
+            if (id.denotesNode()) {
+                return persistMgr.exists((NodeId) id);
+            } else {
+                return persistMgr.exists((PropertyId) id);
+            }
         } catch (ItemStateException ise) {
             return false;
         }
@@ -214,30 +218,100 @@ public class NativeItemStateManager extends ItemStateCache
     /**
      * @see ItemStateManager#getNodeReferences
      */
-    public synchronized NodeReferences getNodeReferences(NodeId targetId)
+    public synchronized NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
-
-        if (refsCache.containsKey(targetId)) {
-            return (NodeReferences) refsCache.get(targetId);
-        }
 
         NodeReferences refs;
 
         try {
-            refs = persistMgr.load(targetId);
+            refs = persistMgr.load(id);
         } catch (NoSuchItemStateException nsise) {
-            refs = new NodeReferences(targetId);
+            refs = new NodeReferences(id);
         }
 
-        refsCache.put(targetId, refs);
         return refs;
     }
 
     /**
-     * @see ItemStateManager#beginUpdate
+     * @see UpdatableItemStateManager#edit
      */
-    public UpdateOperation beginUpdate() throws ItemStateException {
-        return new Update();
+    public void edit() throws ItemStateException {
+        if (editMode) {
+            throw new ItemStateException("Already in edit mode.");
+        }
+        editMode = true;
+
+        changeLog = new ChangeLog();
+    }
+
+    /**
+     * @see UpdatableItemStateManager#createNew
+     */
+    public NodeState createNew(String uuid, QName nodeTypeName,
+                               String parentUUID) {
+
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        return createInstance(uuid, nodeTypeName, parentUUID);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#createNew
+     */
+    public PropertyState createNew(QName propName, String parentUUID) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        return createInstance(propName, parentUUID);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#store
+     */
+    public void store(ItemState state) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        changeLog.modified(state);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#store
+     */
+    public void store(NodeReferences refs) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        changeLog.modified(refs);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#destroy
+     */
+    public void destroy(ItemState state) {
+        if (!editMode) {
+            throw new IllegalStateException("Not in edit mode");
+        }
+        changeLog.deleted(state);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#cancel
+     */
+    public void cancel() {
+        editMode = false;
+
+        changeLog.discard();
+    }
+
+    /**
+     * @see UpdatableItemStateManager#update
+     */
+    public void update() throws ItemStateException {
+        store(changeLog);
+
+        editMode = false;
     }
 
     //-------------------------------------------------------- other operations
@@ -253,7 +327,9 @@ public class NativeItemStateManager extends ItemStateCache
     private NodeState createInstance(String uuid, QName nodeTypeName,
                              String parentUUID) {
 
-        NodeState state = persistMgr.createNew(uuid, nodeTypeName, parentUUID);
+        NodeState state = persistMgr.createNew(new NodeId(uuid));
+        state.setNodeTypeName(nodeTypeName);
+        state.setParentUUID(parentUUID);
         state.setStatus(ItemState.STATUS_NEW);
         state.addListener(this);
         cache(state);
@@ -268,7 +344,7 @@ public class NativeItemStateManager extends ItemStateCache
      * @return new property state instance
      */
     private PropertyState createInstance(QName propName, String parentUUID) {
-        PropertyState state = persistMgr.createNew(propName, parentUUID);
+        PropertyState state = persistMgr.createNew(new PropertyId(parentUUID, propName));
         state.setStatus(ItemState.STATUS_NEW);
         state.addListener(this);
         cache(state);
@@ -276,39 +352,15 @@ public class NativeItemStateManager extends ItemStateCache
     }
 
     /**
-     * Store modified states and node references, atomically.
-     *
-     * @param states         states that have been modified
-     * @param refsCollection collection of refs to store
+     * Save all states and node references, atomically.
+     * @param changeLog change log containing states that were changed
      * @throws ItemStateException if an error occurs
      */
-    private void store(Collection states, Collection refsCollection)
+    private synchronized void store(ChangeLog changeLog)
             throws ItemStateException {
 
-        persistMgr.store(states.iterator(), refsCollection.iterator());
-
-        Iterator iter = states.iterator();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            int status = state.getStatus();
-
-            switch (status) {
-                case ItemState.STATUS_NEW:
-                    //state.notifyStateCreated();
-                    state.setStatus(ItemState.STATUS_EXISTING);
-                    break;
-
-                case ItemState.STATUS_EXISTING_REMOVED:
-                    //state.notifyStateDestroyed();
-                    state.discard();
-                    break;
-
-                default:
-                    //state.notifyStateUpdated();
-                    state.setStatus(ItemState.STATUS_EXISTING);
-                    break;
-            }
-        }
+        persistMgr.store(changeLog);
+        changeLog.persisted();
     }
 
 
@@ -343,63 +395,4 @@ public class NativeItemStateManager extends ItemStateCache
         discarded.removeListener(this);
         evict(discarded.getId());
     }
-
-
-    class Update implements UpdateOperation {
-
-        /**
-         * Modified states
-         */
-        private final List states = new ArrayList();
-
-        /**
-         * Modified references
-         */
-        private final List refsCollection = new ArrayList();
-
-        /**
-         * @see UpdateOperation#createNew
-         */
-        public NodeState createNew(String uuid, QName nodeTypeName,
-                                   String parentUUID) {
-            return createInstance(uuid, nodeTypeName, parentUUID);
-        }
-
-        /**
-         * @see UpdateOperation#createNew
-         */
-        public PropertyState createNew(QName propName, String parentUUID) {
-            return createInstance(propName, parentUUID);
-        }
-
-        /**
-         * @see UpdateOperation#store
-         */
-        public void store(ItemState state) {
-            states.add(state);
-        }
-
-        /**
-         * @see UpdateOperation#store
-         */
-        public void store(NodeReferences refs) {
-            refsCollection.add(refs);
-        }
-
-        /**
-         * @see UpdateOperation#destroy
-         */
-        public void destroy(ItemState state) {
-            state.setStatus(ItemState.STATUS_EXISTING_REMOVED);
-            states.add(state);
-        }
-
-        /**
-         * @see UpdateOperation#end
-         */
-        public void end() throws ItemStateException {
-            NativeItemStateManager.this.store(states, refsCollection);
-        }
-    }
-
 }

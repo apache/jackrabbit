@@ -16,11 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.QName;
-
-import java.util.Iterator;
+import org.apache.jackrabbit.core.PropertyId;
 
 /**
  * <code>PersistenceManager</code> ...
@@ -44,60 +41,64 @@ public interface PersistenceManager {
 
     /**
      * Create a new node state instance.
-     * @param uuid          the UUID of the this node
-     * @param nodeTypeName  node type of this node
-     * @param parentUUID    the UUID of the parent node
+     * @param id node id
      * @return node state instance.
      */
-    public NodeState createNew(String uuid, QName nodeTypeName,
-                               String parentUUID);
+    public NodeState createNew(NodeId id);
 
     /**
      * Create a new property state instance.
-     * @param name          name of the property
-     * @param parentUUID    the uuid of the parent node
+     * @param id property id
      * @return property state instance.
      */
-    public PropertyState createNew(QName name, String parentUUID);
+    public PropertyState createNew(PropertyId id);
 
     /**
      * Load the persistent members of a node state.
-     * @param uuid uuid of the node to load
+     * @param id node id
      * @return loaded node state
      * @throws NoSuchItemStateException if the item does not exist
      * @throws ItemStateException if an error occurs
      */
-    public NodeState load(String uuid)
+    public NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
      * Load the persistent members of a property state.
-     * @param name name of the property
-     * @param parentUUID the uuid of the parent node
+     * @param id property id
      * @return loaded property state
      * @throws NoSuchItemStateException if the item does not exist
      * @throws ItemStateException if an error occurs
      */
-    public PropertyState load(QName name, String parentUUID)
+    public PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
      * Load the persistent members of a node references object.
-     * @param targetId node target id
-     * @return loaded references object
+     * @param id node target id
      * @throws NoSuchItemStateException if the item does not exist
      * @throws ItemStateException if an error occurs
      */
-    public NodeReferences load(NodeId targetId)
+    public NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
-     * Determines if there's <code>ItemState</code> data for the given item.
+     * Determines if there's <code>NodeState</code> data
+     * for the given item.
      * @param id
      * @return
      * @throws ItemStateException
      */
-    public boolean exists(ItemId id) throws ItemStateException;
+    public boolean exists(NodeId id) throws ItemStateException;
+
+    /**
+     * Determines if there's <code>PropertyState</code> data
+     * for the given item.
+     * @param id
+     * @return
+     * @throws ItemStateException
+     */
+    public boolean exists(PropertyId id) throws ItemStateException;
 
     /**
      * Determines if there's <code>NodeReferences</code> data for
@@ -107,15 +108,12 @@ public interface PersistenceManager {
      * @return
      * @throws ItemStateException
      */
-    public boolean referencesExist(NodeId targetId) throws ItemStateException;
+    public boolean exists(NodeReferencesId targetId) throws ItemStateException;
 
     /**
-     * Save all modified states and node references, atomically.
-     * @param states states that have been modified
-     * @param refsIterator refs to store
+     * Save all states and node references, atomically.
+     * @param changeLog change log containing states that were changed
      * @throws ItemStateException if an error occurs
      */
-    public void store(Iterator states, Iterator refsIterator)
-            throws ItemStateException;
-
+    public void store(ChangeLog changeLog) throws ItemStateException;
 }

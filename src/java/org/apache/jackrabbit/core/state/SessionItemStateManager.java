@@ -29,12 +29,12 @@ import java.util.*;
 /**
  * <code>SessionItemStateManager</code> ...
  */
-public class SessionItemStateManager implements ItemStateManager {
+public class SessionItemStateManager implements UpdatableItemStateManager {
 
     private static Logger log = Logger.getLogger(SessionItemStateManager.class);
 
     private final NodeId rootNodeId;
-    private final ItemStateManager persistentStateMgr;
+    private final UpdatableItemStateManager persistentStateMgr;
     private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
     private final TransientItemStateManager transientStateMgr;
     private HierarchyManager hierMgr;
@@ -47,7 +47,7 @@ public class SessionItemStateManager implements ItemStateManager {
      * @param nsResolver
      */
     public SessionItemStateManager(String rootNodeUUID,
-                                   ItemStateManager persistentStateMgr,
+                                   UpdatableItemStateManager persistentStateMgr,
                                    NamespaceResolver nsResolver) {
 
         rootNodeId = new NodeId(rootNodeUUID);
@@ -213,17 +213,66 @@ public class SessionItemStateManager implements ItemStateManager {
     /**
      * @see ItemStateManager#getNodeReferences
      */
-    public NodeReferences getNodeReferences(NodeId targetId)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        return persistentStateMgr.getNodeReferences(targetId);
+        return persistentStateMgr.getNodeReferences(id);
     }
 
     /**
-     * @see ItemStateManager#beginUpdate
+     * @see UpdatableItemStateManager#edit
      */
-    public UpdateOperation beginUpdate() throws ItemStateException {
-        return persistentStateMgr.beginUpdate();
+    public void edit() throws ItemStateException {
+        persistentStateMgr.edit();
+    }
+
+    /**
+     * @see UpdatableItemStateManager#createNew
+     */
+    public NodeState createNew(String uuid, QName nodeTypeName, String parentUUID) {
+        return persistentStateMgr.createNew(uuid, nodeTypeName, parentUUID);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#createNew
+     */
+    public PropertyState createNew(QName propName, String parentUUID) {
+        return persistentStateMgr.createNew(propName, parentUUID);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#store
+     */
+    public void store(ItemState state) {
+        persistentStateMgr.store(state);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#store
+     */
+    public void store(NodeReferences refs) {
+        persistentStateMgr.store(refs);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#destroy
+     */
+    public void destroy(ItemState state) {
+        persistentStateMgr.destroy(state);
+    }
+
+    /**
+     * @see UpdatableItemStateManager#cancel
+     */
+    public void cancel() {
+        persistentStateMgr.cancel();
+    }
+
+    /**
+     * @see UpdatableItemStateManager#update
+     */
+    public void update() throws ItemStateException {
+        persistentStateMgr.update();
     }
 
     //< more methods for listing and retrieving transient ItemState instances >

@@ -39,7 +39,7 @@ public class PersistentNode {
     /**
      * the state manager
      */
-    private final ItemStateManager stateMgr;
+    private final UpdatableItemStateManager stateMgr;
 
     /**
      * the cached name
@@ -52,7 +52,7 @@ public class PersistentNode {
      * @param stateMgr
      * @param nodeState
      */
-    protected PersistentNode(ItemStateManager stateMgr,
+    protected PersistentNode(UpdatableItemStateManager stateMgr,
                              NodeState nodeState) {
         this.nodeState = nodeState;
         this.stateMgr = stateMgr;
@@ -161,9 +161,9 @@ public class PersistentNode {
      * @param value
      * @throws RepositoryException
      */
-    protected void setPropertyValue(UpdateOperation upd, QName name, InternalValue value)
+    protected void setPropertyValue(QName name, InternalValue value)
             throws RepositoryException {
-        setPropertyValues(upd, name, value.getType(), new InternalValue[]{value}, false);
+        setPropertyValues(name, value.getType(), new InternalValue[]{value}, false);
     }
 
     /**
@@ -174,9 +174,9 @@ public class PersistentNode {
      * @param values
      * @throws RepositoryException
      */
-    protected void setPropertyValues(UpdateOperation upd, QName name, int type, InternalValue[] values)
+    protected void setPropertyValues(QName name, int type, InternalValue[] values)
             throws RepositoryException {
-        setPropertyValues(upd, name, type, values, true);
+        setPropertyValues(name, type, values, true);
     }
 
     /**
@@ -187,10 +187,10 @@ public class PersistentNode {
      * @param values
      * @throws RepositoryException
      */
-    protected void setPropertyValues(UpdateOperation upd, QName name, int type, InternalValue[] values, boolean multiple)
+    protected void setPropertyValues(QName name, int type, InternalValue[] values, boolean multiple)
             throws RepositoryException {
 
-        PropertyState prop = getOrCreatePropertyState(upd, name, type, multiple);
+        PropertyState prop = getOrCreatePropertyState(name, type, multiple);
         prop.setValues(values);
     }
 
@@ -204,7 +204,7 @@ public class PersistentNode {
      * @return
      * @throws RepositoryException
      */
-    private PropertyState getOrCreatePropertyState(UpdateOperation upd, QName name, int type, boolean multiValued)
+    private PropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued)
             throws RepositoryException {
 
         PropertyId propId = new PropertyId(nodeState.getUUID(), name);
@@ -224,7 +224,7 @@ public class PersistentNode {
                 throw new RepositoryException("Unable to create property: " + e.toString());
             }
         } else {
-            PropertyState propState = upd.createNew(name, nodeState.getUUID());
+            PropertyState propState = stateMgr.createNew(name, nodeState.getUUID());
             propState.setType(type);
             propState.setMultiValued(multiValued);
             propState.setDefinitionId(PropDefId.valueOf("0"));
@@ -254,8 +254,8 @@ public class PersistentNode {
      * @return
      * @throws RepositoryException
      */
-    protected boolean removeNode(UpdateOperation upd, QName name) throws RepositoryException {
-        return removeNode(upd, name, 1);
+    protected boolean removeNode(QName name) throws RepositoryException {
+        return removeNode(name, 1);
     }
 
     /**
@@ -266,14 +266,14 @@ public class PersistentNode {
      * @return
      * @throws RepositoryException
      */
-    protected boolean removeNode(UpdateOperation upd, QName name, int index) throws RepositoryException {
+    protected boolean removeNode(QName name, int index) throws RepositoryException {
         try {
             NodeState.ChildNodeEntry entry = nodeState.getChildNodeEntry(name, index);
             if (entry == null) {
                 return false;
             } else {
                 ItemState state = stateMgr.getItemState(new NodeId(entry.getUUID()));
-                upd.destroy(state);
+                stateMgr.destroy(state);
                 nodeState.removeChildNodeEntry(name, index);
                 nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 return true;
@@ -331,9 +331,10 @@ public class PersistentNode {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    protected PersistentNode addNode(UpdateOperation upd, QName nodeName, QName nodeTypeName)
+    protected PersistentNode addNode(QName nodeName, QName nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException, RepositoryException {
-        return createChildNode(upd, nodeName, nodeTypeName, null);
+
+        return createChildNode(nodeName, nodeTypeName, null);
     }
 
     /**
@@ -343,14 +344,13 @@ public class PersistentNode {
      * @param uuid
      * @return
      */
-    private PersistentNode createChildNode(UpdateOperation upd, QName name, QName nodeTypeName, String uuid) {
-
+    private PersistentNode createChildNode(QName name, QName nodeTypeName, String uuid) {
         String parentUUID = nodeState.getUUID();
         // create a new node state
         if (uuid == null) {
             uuid = UUID.randomUUID().toString();	// version 4 uuid
         }
-        NodeState state = upd.createNew(uuid, nodeTypeName, parentUUID);
+        NodeState state = stateMgr.createNew(uuid, nodeTypeName, parentUUID);
         state.setDefinitionId(NodeDefId.valueOf("0"));
 
         // create Node instance wrapping new node state
@@ -389,9 +389,9 @@ public class PersistentNode {
      *
      * @throws RepositoryException
      */
-    protected void store(UpdateOperation upd) throws RepositoryException {
+    protected void store() throws RepositoryException {
         try {
-            store(upd, nodeState);
+            store(nodeState);
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
@@ -401,10 +401,9 @@ public class PersistentNode {
      * stores the given persistent state recursively
      *
      * @param state
-     * @param update update operation
      * @throws ItemStateException
      */
-    private void store(UpdateOperation update, NodeState state)
+    private void store(NodeState state)
             throws ItemStateException {
 
         if (state.getStatus()!=ItemState.STATUS_EXISTING) {
@@ -414,7 +413,7 @@ public class PersistentNode {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
                 PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
                 if (pstate.getStatus()!=ItemState.STATUS_EXISTING) {
-                    update.store(pstate);
+                    stateMgr.store(pstate);
                 }
             }
             // now store all child node entries
@@ -422,10 +421,10 @@ public class PersistentNode {
             for (int i = 0; i < nodes.size(); i++) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
                 NodeState nstate = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
-                store(update, nstate);
+                store(nstate);
             }
             // and store itself
-            update.store(state);
+            stateMgr.store(state);
         }
     }
 
@@ -479,13 +478,13 @@ public class PersistentNode {
      * @param prop
      * @throws RepositoryException
      */
-    protected void copyFrom(UpdateOperation upd, PropertyImpl prop) throws RepositoryException {
+    protected void copyFrom(PropertyImpl prop) throws RepositoryException {
         if (prop.getDefinition().isMultiple()) {
             InternalValue[] values = prop.internalGetValues();
             int type = values.length>0 ? values[0].getType() : prop.getDefinition().getRequiredType();
-            setPropertyValues(upd, prop.getQName(), type, values);
+            setPropertyValues(prop.getQName(), type, values);
         } else {
-            setPropertyValue(upd, prop.getQName(), prop.internalGetValue());
+            setPropertyValue(prop.getQName(), prop.internalGetValue());
         }
     }
 

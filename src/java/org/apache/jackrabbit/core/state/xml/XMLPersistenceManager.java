@@ -320,7 +320,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new ItemStateException(msg);
         }
         // check targetId
-        if (!refs.getTargetId().equals(NodeId.valueOf(refsElement.getAttributeValue(TARGETID_ATTRIBUTE)))) {
+        if (!refs.getTargetId().equals(NodeReferencesId.valueOf(refsElement.getAttributeValue(TARGETID_ATTRIBUTE)))) {
             String msg = "invalid serialized state: targetId  mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -389,7 +389,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     /**
      * @see PersistenceManager#load
      */
-    public synchronized NodeState load(String uuid)
+    public synchronized NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -397,11 +397,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
 
         Exception e = null;
-        String nodeFilePath = buildNodeFilePath(uuid);
+        String nodeFilePath = buildNodeFilePath(id.getUUID());
 
         try {
             if (!itemStateStore.isFile(nodeFilePath)) {
-                throw new NoSuchItemStateException(uuid);
+                throw new NoSuchItemStateException(id.toString());
             }
             InputStream in = itemStateStore.getInputStream(nodeFilePath);
 
@@ -410,7 +410,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 Element rootElement = builder.build(in).getRootElement();
                 String ntName = rootElement.getAttributeValue(NODETYPE_ATTRIBUTE);
 
-                NodeState state = createNew(uuid, null, null);
+                NodeState state = createNew(id);
                 state.setNodeTypeName(QName.valueOf(ntName));
                 readState(rootElement, state);
                 return state;
@@ -427,7 +427,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             e = fse;
             // fall through
         }
-        String msg = "failed to read node state: " + uuid;
+        String msg = "failed to read node state: " + id;
         log.debug(msg);
         throw new ItemStateException(msg, e);
     }
@@ -435,7 +435,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     /**
      * @see PersistenceManager#load
      */
-    public synchronized PropertyState load(QName name, String parentUUID)
+    public synchronized PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -443,18 +443,18 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
 
         Exception e = null;
-        String propFilePath = buildPropFilePath(parentUUID, name);
+        String propFilePath = buildPropFilePath(id.getParentUUID(), id.getName());
 
         try {
             if (!itemStateStore.isFile(propFilePath)) {
-                throw new NoSuchItemStateException(parentUUID + "/" + name);
+                throw new NoSuchItemStateException(id.toString());
             }
             InputStream in = itemStateStore.getInputStream(propFilePath);
             try {
                 SAXBuilder builder = new SAXBuilder();
                 Element rootElement = builder.build(in).getRootElement();
 
-                PropertyState state = createNew(name, parentUUID);
+                PropertyState state = createNew(id);
                 readState(rootElement, state);
                 return state;
             } finally {
@@ -470,7 +470,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             e = fse;
             // fall through
         }
-        String msg = "failed to read property state: " + parentUUID + "/" + name;
+        String msg = "failed to read property state: " + id.toString();
         log.debug(msg);
         throw new ItemStateException(msg, e);
     }
@@ -737,7 +737,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     /**
      * @see PersistenceManager#load
      */
-    public synchronized NodeReferences load(NodeId targetId)
+    public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -745,7 +745,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
 
         Exception e = null;
-        String uuid = targetId.getUUID();
+        String uuid = id.getUUID();
 
         String refsFilePath = buildNodeReferencesFilePath(uuid);
         try {
@@ -759,7 +759,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 SAXBuilder builder = new SAXBuilder();
                 Element rootElement = builder.build(in).getRootElement();
 
-                NodeReferences refs = new NodeReferences(targetId);
+                NodeReferences refs = new NodeReferences(id);
                 readState(rootElement, refs);
                 return refs;
             } finally {
@@ -788,7 +788,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String uuid = refs.getTargetId().getUUID();
+        String uuid = refs.getUUID();
         String refsFilePath = buildNodeReferencesFilePath(uuid);
         FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
         try {
@@ -834,7 +834,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String uuid = refs.getTargetId().getUUID();
+        String uuid = refs.getUUID();
         String refsFilePath = buildNodeReferencesFilePath(uuid);
         FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
         try {
@@ -850,25 +850,18 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#exists(ItemId id)
+     * @see PersistenceManager#exists(NodeId)
      */
-    public synchronized boolean exists(ItemId id) throws ItemStateException {
+    public synchronized boolean exists(NodeId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         try {
-            if (id.denotesNode()) {
-                NodeId nodeId = (NodeId) id;
-                String nodeFilePath = buildNodeFilePath(nodeId.getUUID());
-                FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
-                return nodeFile.exists();
-            } else {
-                PropertyId propId = (PropertyId) id;
-                String propFilePath = buildPropFilePath(propId.getParentUUID(), propId.getName());
-                FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
-                return propFile.exists();
-            }
+            NodeId nodeId = (NodeId) id;
+            String nodeFilePath = buildNodeFilePath(nodeId.getUUID());
+            FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
+            return nodeFile.exists();
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of item state: " + id;
             log.debug(msg);
@@ -877,20 +870,41 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#referencesExist(NodeId targetId)
+     * @see PersistenceManager#exists(PropertyId)
      */
-    public synchronized boolean referencesExist(NodeId targetId) throws ItemStateException {
+    public synchronized boolean exists(PropertyId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         try {
-            String uuid = targetId.getUUID();
+            String propFilePath = buildPropFilePath(id.getParentUUID(), id.getName());
+            FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
+            return propFile.exists();
+        } catch (FileSystemException fse) {
+            String msg = "failed to check existence of item state: " + id;
+            log.error(msg, fse);
+            throw new ItemStateException(msg, fse);
+        }
+    }
+
+    /**
+     * @see PersistenceManager#exists(NodeReferencesId id)
+     */
+    public synchronized boolean exists(NodeReferencesId id)
+            throws ItemStateException {
+
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
+        try {
+            String uuid = id.getUUID();
             String refsFilePath = buildNodeReferencesFilePath(uuid);
             FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
             return refsFile.exists();
         } catch (FileSystemException fse) {
-            String msg = "failed to check existence of references: " + targetId;
+            String msg = "failed to check existence of references: " + id;
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }

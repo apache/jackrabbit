@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.TransactionContext;
 import org.apache.jackrabbit.core.state.TransactionException;
 import org.apache.jackrabbit.core.state.TransactionListener;
+import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Credentials;

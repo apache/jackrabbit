@@ -80,7 +80,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         return state;
     }
 
-    protected void makePersistent(UpdateOperation update) {
+    protected void makePersistent() {
         if (!isTransient()) {
             log.debug(safeGetJCRPath() + " (" + id + "): there's no transient state to persist");
             return;
@@ -90,7 +90,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         PropertyState persistentState = (PropertyState) transientState.getOverlayedState();
         if (persistentState == null) {
             // this property is 'new'
-            persistentState = update.createNew(
+            persistentState = stateMgr.createNew(
                     transientState.getName(),
                     transientState.getParentUUID());
         }
@@ -100,7 +100,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         persistentState.setMultiValued(transientState.isMultiValued());
         persistentState.setValues(transientState.getValues());
         // make state persistent
-        update.store(persistentState);
+        stateMgr.store(persistentState);
         // remove listener from transient state
         transientState.removeListener(this);
         // add listener to persistent state

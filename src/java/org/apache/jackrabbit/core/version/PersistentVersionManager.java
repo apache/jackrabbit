@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -142,29 +143,8 @@ public interface PersistentVersionManager {
     public InternalVersion checkin(NodeImpl node) throws RepositoryException;
 
     /**
-     *
-     * @param history
-     * @param versionName
-     * @throws VersionException
+     * Return the item state manager of this version manager
+     * @return item state manager
      */
-    public void removeVersion(InternalVersionHistory history, QName versionName) throws VersionException;
-
-
-    /**
-     *
-     * @param versionName
-     * @param label
-     * @param move
-     * @return
-     * @throws VersionException
-     */
-    public InternalVersion addVersionLabel(InternalVersionHistory history, QName versionName, String label, boolean move) throws VersionException;
-
-    /**
-     *
-     * @param label
-     * @return
-     * @throws VersionException
-     */
-    public InternalVersion removeVersionLabel(InternalVersionHistory history, String label) throws VersionException;
+    public UpdatableItemStateManager getItemStateMgr();
 }

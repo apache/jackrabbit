@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 
 import java.util.Iterator;
 
@@ -29,63 +30,63 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
     /**
      * @see PersistenceManager#createNew
      */
-    public NodeState createNew(String uuid, QName nodeTypeName,
-                               String parentUUID) {
-        return new NodeState(uuid, nodeTypeName, parentUUID,
+    public NodeState createNew(NodeId id) {
+        return new NodeState(id.getUUID(), null, null,
                 NodeState.STATUS_NEW, false);
     }
 
     /**
      * @see PersistenceManager#createNew
      */
-    public PropertyState createNew(QName name, String parentUUID) {
-        return new PropertyState(name, parentUUID,
+    public PropertyState createNew(PropertyId id) {
+        return new PropertyState(id.getName(), id.getParentUUID(),
                 PropertyState.STATUS_NEW, false);
     }
 
     /**
-     * Store modified states and node references, atomically.
+     * @see PersistenceManager#store(ChangeLog)
      *
-     * @param states       states that have been modified
-     * @param refsIterator refs to store
-     * @throws ItemStateException if an error occurs
+     * Right now, this iterates over all items in the changelog and
+     * calls the individual methods that handle single item states
+     * or node references objects. Properly implemented, this method
+     * should ensure that changes are either written completely to
+     * the underlying persistence layer, or not at all.
      */
-    public void store(Iterator states, Iterator refsIterator)
-            throws ItemStateException {
-        while (states.hasNext()) {
-            ItemState state = (ItemState) states.next();
+    public synchronized void store(ChangeLog changeLog) throws ItemStateException {
+        Iterator iter = changeLog.deletedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
             if (state.isNode()) {
-                NodeState ns = (NodeState) state;
-                switch (state.getStatus()) {
-                    case NodeState.STATUS_EXISTING_REMOVED:
-                        destroy(ns);
-                        break;
-                    default:
-                        store(ns);
-                        break;
-                }
+                destroy((NodeState) state);
             } else {
-                PropertyState ps = (PropertyState) state;
-                switch (state.getStatus()) {
-                    case PropertyState.STATUS_EXISTING_REMOVED:
-                        destroy(ps);
-                        break;
-                    default:
-                        store(ps);
-                        break;
-                }
+                destroy((PropertyState) state);
             }
         }
-
-        while (refsIterator.hasNext()) {
-            NodeReferences refs = (NodeReferences) refsIterator.next();
-            switch (refs.getStatus()) {
-                case NodeReferences.STATUS_DESTROYED:
-                    destroy(refs);
-                    break;
-                default:
-                    store(refs);
-                    break;
+        iter = changeLog.addedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            if (state.isNode()) {
+                store((NodeState) state);
+            } else {
+                store((PropertyState) state);
+            }
+        }
+        iter = changeLog.modifiedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            if (state.isNode()) {
+                store((NodeState) state);
+            } else {
+                store((PropertyState) state);
+            }
+        }
+        iter = changeLog.modifiedRefs();
+        while (iter.hasNext()) {
+            NodeReferences refs = (NodeReferences) iter.next();
+            if (refs.hasReferences()) {
+                store(refs);
+            } else {
+                destroy(refs);
             }
         }
     }

@@ -196,7 +196,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
             int n = in.readInt();   // number of entries
             while (n-- > 0) {
                 String s = in.readUTF();    // target id
-                NodeId id = NodeId.valueOf(s);
+                NodeReferencesId id = (NodeReferencesId) NodeReferencesId.valueOf(s);
                 int length = in.readInt();  // data length
                 byte[] data = new byte[length];
                 in.read(data);  // data
@@ -252,7 +252,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
             // entries
             Iterator iterKeys = refsStore.keySet().iterator();
             while (iterKeys.hasNext()) {
-                NodeId id = (NodeId) iterKeys.next();
+                NodeReferencesId id = (NodeReferencesId) iterKeys.next();
                 out.writeUTF(id.toString());    // target id
                 byte[] data = (byte[]) refsStore.get(id);
                 out.writeInt(data.length);  // data length
@@ -380,14 +380,12 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     /**
      * @see PersistenceManager#load
      */
-    public synchronized NodeState load(String uuid)
+    public synchronized NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
-
-        NodeId id = new NodeId(uuid);
 
         byte[] data = (byte[]) stateStore.get(id);
         if (data == null) {
@@ -396,7 +394,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
-            NodeState state = createNew(uuid, null, null);
+            NodeState state = createNew(id);
             ObjectPersistenceManager.deserialize(state, in);
             return state;
         } catch (Exception e) {
@@ -409,14 +407,12 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     /**
      * @see PersistenceManager#load
      */
-    public synchronized PropertyState load(QName name, String parentUUID)
+    public synchronized PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
-
-        PropertyId id = new PropertyId(parentUUID, name);
 
         byte[] data = (byte[]) stateStore.get(id);
         if (data == null) {
@@ -425,7 +421,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
-            PropertyState state = createNew(name, parentUUID);
+            PropertyState state = createNew(id);
             ObjectPersistenceManager.deserialize(state, in, this);
             return state;
         } catch (Exception e) {
@@ -525,25 +521,25 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     /**
      * @see PersistenceManager#load
      */
-    public synchronized NodeReferences load(NodeId targetId)
+    public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        byte[] data = (byte[]) refsStore.get(targetId);
+        byte[] data = (byte[]) refsStore.get(id);
         if (data == null) {
-            throw new NoSuchItemStateException(targetId.toString());
+            throw new NoSuchItemStateException(id.getUUID());
         }
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
-            NodeReferences refs = new NodeReferences(targetId);
+            NodeReferences refs = new NodeReferences(id);
             ObjectPersistenceManager.deserialize(refs, in);
             return refs;
         } catch (Exception e) {
-            String msg = "failed to load references: " + targetId;
+            String msg = "failed to load references: " + id.getUUID();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -586,24 +582,32 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#exists(ItemId id)
+     * @see PersistenceManager#exists(PropertyId id)
      */
-    public boolean exists(ItemId id) throws ItemStateException {
+    public boolean exists(PropertyId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
-
         return stateStore.containsKey(id);
     }
 
     /**
-     * @see PersistenceManager#referencesExist(NodeId targetId)
+     * @see PersistenceManager#exists(PropertyId id)
      */
-    public boolean referencesExist(NodeId targetId) throws ItemStateException {
+    public boolean exists(NodeId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
+        return stateStore.containsKey(id);
+    }
 
-        return refsStore.containsKey(targetId);
+    /**
+     * @see PersistenceManager#exists(NodeReferencesId targetId)
+     */
+    public boolean exists(NodeReferencesId id) throws ItemStateException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+        return refsStore.containsKey(id);
     }
 }

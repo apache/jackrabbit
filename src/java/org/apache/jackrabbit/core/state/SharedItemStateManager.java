@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -52,12 +51,7 @@ public class SharedItemStateManager extends ItemStateCache
     private NodeState root;
 
     /**
-     * A cache for <code>NodeReferences</code> objects.
-     */
-    private Map refsCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
-
-    /**
-     * Creates a new <code>DefaultItemStateManager</code> instance.
+     * Creates a new <code>SharedItemStateManager</code> instance.
      *
      * @param persistMgr
      * @param rootNodeUUID
@@ -117,12 +111,12 @@ public class SharedItemStateManager extends ItemStateCache
         prop.setMultiValued(false);
         prop.setDefinitionId(propDefId);
 
-        ArrayList states = new ArrayList();
-        states.add(rootState);
-        states.add(prop);
+        ChangeLog changeLog = new ChangeLog();
+        changeLog.added(rootState);
+        changeLog.added(prop);
 
-        // do persist root node (incl. properties)
-        store(states, Collections.EMPTY_LIST);
+        persistMgr.store(changeLog);
+        changeLog.persisted();
 
         return rootState;
     }
@@ -154,7 +148,7 @@ public class SharedItemStateManager extends ItemStateCache
         }
 
         // load from persisted state
-        NodeState state = persistMgr.load(id.getUUID());
+        NodeState state = persistMgr.load(id);
         state.setStatus(ItemState.STATUS_EXISTING);
 
         // put it in cache
@@ -180,7 +174,7 @@ public class SharedItemStateManager extends ItemStateCache
         }
 
         // load from persisted state
-        PropertyState state = persistMgr.load(id.getName(), id.getParentUUID());
+        PropertyState state = persistMgr.load(id);
         state.setStatus(ItemState.STATUS_EXISTING);
 
         // put it in cache
@@ -209,13 +203,17 @@ public class SharedItemStateManager extends ItemStateCache
     /**
      * @see ItemStateManager#hasItemState(ItemId)
      */
-    public boolean hasItemState(ItemId id) {
+    public synchronized boolean hasItemState(ItemId id) {
         if (isCached(id)) {
             return true;
         }
 
         try {
-            return persistMgr.exists(id);
+            if (id.denotesNode()) {
+                return persistMgr.exists((NodeId) id);
+            } else {
+                return persistMgr.exists((PropertyId) id);
+            }
         } catch (ItemStateException ise) {
             return false;
         }
@@ -224,30 +222,18 @@ public class SharedItemStateManager extends ItemStateCache
     /**
      * @see ItemStateManager#getNodeReferences
      */
-    public synchronized NodeReferences getNodeReferences(NodeId targetId)
+    public synchronized NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
-
-        if (refsCache.containsKey(targetId)) {
-            return (NodeReferences) refsCache.get(targetId);
-        }
 
         NodeReferences refs;
 
         try {
-            refs = persistMgr.load(targetId);
+            refs = persistMgr.load(id);
         } catch (NoSuchItemStateException nsise) {
-            refs = new NodeReferences(targetId);
+            refs = new NodeReferences(id);
         }
 
-        refsCache.put(targetId, refs);
         return refs;
-    }
-
-    /**
-     * @see ItemStateManager#beginUpdate
-     */
-    public UpdateOperation beginUpdate() throws ItemStateException {
-        throw new ItemStateException("Update not available.");
     }
 
     //-------------------------------------------------------- other operations
@@ -260,14 +246,31 @@ public class SharedItemStateManager extends ItemStateCache
      * @param parentUUID   parent UUID
      * @return new node state instance
      */
-    NodeState createInstance(String uuid, QName nodeTypeName,
-                             String parentUUID) {
+    private NodeState createInstance(String uuid, QName nodeTypeName,
+                                     String parentUUID) {
 
-        NodeState state = persistMgr.createNew(uuid, nodeTypeName, parentUUID);
+        NodeState state = persistMgr.createNew(new NodeId(uuid));
+        state.setNodeTypeName(nodeTypeName);
+        state.setParentUUID(parentUUID);
         state.setStatus(ItemState.STATUS_NEW);
         state.addListener(this);
 
         return state;
+    }
+
+    /**
+     * Create a new node state instance
+     * @param other other state associated with new instance
+     * @return new node state instance
+     */
+    private ItemState createInstance(ItemState other) {
+        if (other.isNode()) {
+            NodeState ns = (NodeState) other;
+            return createInstance(ns.getUUID(), ns.getNodeTypeName(), ns.getParentUUID());
+        } else {
+            PropertyState ps = (PropertyState) other;
+            return createInstance(ps.getName(), ps.getParentUUID());
+        }
     }
 
     /**
@@ -278,7 +281,8 @@ public class SharedItemStateManager extends ItemStateCache
      * @return new property state instance
      */
     PropertyState createInstance(QName propName, String parentUUID) {
-        PropertyState state = persistMgr.createNew(propName, parentUUID);
+        PropertyState state = persistMgr.createNew(
+                new PropertyId(parentUUID, propName));
         state.setStatus(ItemState.STATUS_NEW);
         state.addListener(this);
 
@@ -286,44 +290,53 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
-     * Store modified states and node references, atomically.
-     *
-     * @param states         states that have been modified
-     * @param refsCollection collection of refs to store
+     * Store modifications registered in a <code>ChangeLog</code>. The items
+     * contained in the <tt>ChangeLog</tt> are not states returned by this
+     * item state manager but rather must be reconnected to items provided
+     * by this state manager.
+     * @param local change log containing local items
      * @throws ItemStateException if an error occurs
      */
-    void store(Collection states, Collection refsCollection)
-            throws ItemStateException {
+    public synchronized void store(ChangeLog local) throws ItemStateException {
+        ChangeLog shared = new ChangeLog();
 
-        persistMgr.store(states.iterator(), refsCollection.iterator());
-
-        Iterator iter = states.iterator();
+        /**
+         * Reconnect all items contained in the change log to their
+         * respective shared item and add the shared items to a
+         * new change log.
+         */
+        Iterator iter = local.addedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
-            int status = state.getStatus();
-            // @todo FIXME need to notify listeners on underlying (shared) state
-            if (state.getOverlayedState() != null) {
-                state = state.getOverlayedState();
-            }
-            switch (status) {
-                case ItemState.STATUS_NEW:
-                    state.notifyStateCreated();
-                    state.setStatus(ItemState.STATUS_EXISTING);
-                    break;
-
-                case ItemState.STATUS_EXISTING_REMOVED:
-                    state.notifyStateDestroyed();
-                    state.discard();
-                    break;
-
-                default:
-                    state.notifyStateUpdated();
-                    state.setStatus(ItemState.STATUS_EXISTING);
-                    break;
-            }
+            state.connect(createInstance(state));
+            shared.added(state.getOverlayedState());
         }
-    }
+        iter = local.modifiedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            state.connect(getItemState(state.getId()));
+            shared.modified(state.getOverlayedState());
+        }
+        iter = local.deletedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            state.connect(getItemState(state.getId()));
+            shared.deleted(state.getOverlayedState());
+        }
+        iter = local.modifiedRefs();
+        while (iter.hasNext()) {
+            shared.modified((NodeReferences) iter.next());
+        }
 
+        /* Push all changes from the local items to the shared items */
+        local.push();
+
+        /* Store items in the underlying persistence manager */
+        persistMgr.store(shared);
+
+        /* Let the shared item listeners know about the change */
+        shared.persisted();
+    }
 
     //----------------------------------------------------< ItemStateListener >
 

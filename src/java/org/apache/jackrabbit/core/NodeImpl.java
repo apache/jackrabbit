@@ -787,7 +787,7 @@ public class NodeImpl extends ItemImpl implements Node {
         return session.getNodeTypeManager().getPropDef(new PropDefId(pd));
     }
 
-    protected void makePersistent(UpdateOperation update) {
+    protected void makePersistent() {
         if (!isTransient()) {
             log.debug(safeGetJCRPath() + " (" + id + "): there's no transient state to persist");
             return;
@@ -798,7 +798,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState persistentState = (NodeState) transientState.getOverlayedState();
         if (persistentState == null) {
             // this node is 'new'
-            persistentState = update.createNew(transientState.getUUID(),
+            persistentState = stateMgr.createNew(transientState.getUUID(),
                     transientState.getNodeTypeName(), transientState.getParentUUID());
         }
         // copy state from transient state:
@@ -815,7 +815,7 @@ public class NodeImpl extends ItemImpl implements Node {
         persistentState.setPropertyEntries(transientState.getPropertyEntries());
 
         // make state persistent
-        update.store(persistentState);
+        stateMgr.store(persistentState);
         // remove listener from transient state
         transientState.removeListener(this);
         // add listener to persistent state
@@ -2345,7 +2345,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyIterator getReferences() throws RepositoryException {
         try {
-            NodeReferences refs = stateMgr.getNodeReferences((NodeId) id);
+            NodeReferencesId targetId = new NodeReferencesId(((NodeId) id).getUUID());
+            NodeReferences refs = stateMgr.getNodeReferences(targetId);
             // refs.getReferences returns a list of PropertyId's
             List idList = refs.getReferences();
             return new LazyItemIterator(itemMgr, idList);
