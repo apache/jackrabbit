@@ -516,6 +516,35 @@ public class LockTest extends AbstractJCRTest {
     }
 
     /**
+     * Tests if locks are maintained when child nodes are reordered
+     */
+    public void testReorder() throws Exception {
+        // create three lockable nodes with same name
+        Node testNode = testRootNode.addNode(nodeName1);
+        testNode.addMixin(mixLockable);
+        testNode = testRootNode.addNode(nodeName1);
+        testNode.addMixin(mixLockable);
+        testNode = testRootNode.addNode(nodeName1);
+        testNode.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock last node (3)
+        testNode.lock(false, true);
+
+        // assert: last node locked
+        assertTrue("Third child node locked",
+                testRootNode.getNode(nodeName1 + "[3]").isLocked());
+
+        // move last node in front of first
+        testRootNode.orderBefore(nodeName1 + "[3]", nodeName1 + "[1]");
+        testRootNode.save();
+
+        // assert: first node locked
+        assertTrue("First child node locked",
+                testRootNode.getNode(nodeName1 + "[1]").isLocked());
+    }
+
+    /**
      * Return a flag indicating whether the indicated session contains
      * a specific lock token
      */
