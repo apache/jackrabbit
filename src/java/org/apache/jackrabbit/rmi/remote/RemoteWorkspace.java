@@ -46,69 +46,127 @@ import javax.jcr.RepositoryException;
 public interface RemoteWorkspace extends Remote {
 
     /**
-     * @see javax.jcr.Workspace#getName()
+     * Remote version of the
+     * {@link javax.jcr.Workspace#getName() Workspace.getName()} method.
+     *
+     * @return workspace name
      * @throws RemoteException on RMI errors
      */
     String getName() throws RemoteException;
 
     /**
-     * @see javax.jcr.Workspace#copy(java.lang.String,java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Workspace#copy(String,String) Workspace.copy(String,String)}
+     * method.
+     *
+     * @param from source path
+     * @param to destination path
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void copy(String from, String to)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Workspace#copy(java.lang.String,java.lang.String,java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Workspace#copy(String,String,String) Workspace.copy(String,String,String)}
+     * method.
+     *
+     * @param workspace source workspace
+     * @param from source path
+     * @param to destination path
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    void copy(String from, String to, String workspace)
+    void copy(String workspace, String from, String to)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Workspace#clone(java.lang.String, java.lang.String, java.lang.String, boolean)
+     * Remote version of the
+     * {@link javax.jcr.Workspace#clone(String,String,String,boolean) Workspace.clone(String,String,String,boolean)}
+     * method.
+     *
+     * @param workspace source workspace
+     * @param from source path
+     * @param to destination path
+     * @param removeExisting flag to remove existing items
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    void clone(String from, String to, String workspace, boolean removeExisting)
+    void clone(String workspace, String from, String to, boolean removeExisting)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Workspace#move(java.lang.String, java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Workspace#move(String,String) Workspace.move(String,String)}
+     * method.
+     *
+     * @param from source path
+     * @param to destination path
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void move(String from, String to)
             throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Workspace#getNodeTypeManager()
+     * Remote version of the
+     * {@link javax.jcr.Workspace#getNodeTypeManager() Workspace.getNodeTypeManager()}
+     * method.
+     *
+     * @return node type manager
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteNodeTypeManager getNodeTypeManager()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Workspace#getNamespaceRegistry()
+     * Remote version of the
+     * {@link javax.jcr.Workspace#getNamespaceRegistry() Workspace.getNamespaceRegistry()}
+     * method.
+     *
+     * @return namespace registry
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteNamespaceRegistry getNamespaceRegistry()
             throws RepositoryException, RemoteException;
 
     /**
-     * @seejavax.jcr.Workspace#getQueryManager()
+     * Remote version of the
+     * {@link javax.jcr.Workspace#getQueryManager() Workspace.getQueryManager()}
+     * method.
+     *
+     * @return query manager
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteQueryManager getQueryManager()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Workspace#getAccessibleWorkspaceNames()
+     * Remote version of the
+     * {@link javax.jcr.Workspace#getAccessibleWorkspaceNames() Workspace.getAccessibleWorkspaceNames()}
+     * method.
+     *
+     * @return accessible workspace names
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String[] getAccessibleWorkspaceNames()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Workspace#importXML(java.lang.String, byte[], int)
+     * Remote version of the
+     * {@link javax.jcr.Workspace#importXML(String,java.io.InputStream,int) Workspace.importXML(String,InputStream,int)}
+     * method.
+     *
+     * @param path node path
+     * @param xml imported XML document
+     * @param uuidBehaviour uuid behaviour flag
+     * @throws IOException on IO errors
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void importXML(String path, byte[] xml, int uuidBehaviour)

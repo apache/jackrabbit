@@ -44,39 +44,72 @@ import javax.jcr.RepositoryException;
 public interface RemoteNamespaceRegistry extends Remote {
 
     /**
-     * @see javax.jcr.NamespaceRegistry#registerNamespace(java.lang.String,java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.NamespaceRegistry#registerNamespace(String,String) NamespaceRegistry.registerNamespace(String,String)}
+     * method.
+     *
+     * @param prefix namespace prefix
+     * @param uri namespace uri
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void registerNamespace(String prefix, String uri)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.NamespaceRegistry#unregisterNamespace(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.NamespaceRegistry#unregisterNamespace(String) NamespaceRegistry.unregisterNamespace(String)}
+     * method.
+     *
+     * @param prefix namespace prefix
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void unregisterNamespace(String prefix)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.NamespaceRegistry#getPrefixes()
+     * Remote version of the
+     * {@link javax.jcr.NamespaceRegistry#getPrefixes() NamespaceRegistry.getPrefixes()}
+     * method.
+     *
+     * @return namespace prefixes
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String[] getPrefixes() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.NamespaceRegistry#getURIs()
+     * Remote version of the
+     * {@link javax.jcr.NamespaceRegistry#getURIs() NamespaceRegistry,getURIs()}
+     * method.
+     *
+     * @return namespace uris
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String[] getURIs() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.NamespaceRegistry#getURI(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.NamespaceRegistry#getURI(String) NamespaceRegistry.getURI(String)}
+     * method.
+     *
+     * @param prefix namespace prefix
+     * @return namespace uri
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String getURI(String prefix) throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.NamespaceRegistry#getPrefix(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.NamespaceRegistry#getPrefix(String) NamespaceRegistry.getPrefix(String)}
+     * method.
+     *
+     * @param uri namespace uri
+     * @return namespace prefix
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String getPrefix(String uri) throws RepositoryException, RemoteException;

@@ -48,28 +48,49 @@ import javax.jcr.RepositoryException;
 public interface RemoteNodeTypeManager extends Remote {
 
     /**
-     * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeTypeManager#getNodeType(String) NodeTypeManager.getNodeType(String)}
+     * method.
+     *
+     * @param name node type name
+     * @return node type
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType getNodeType(String name)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeTypeManager#getAllNodeTypes()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeTypeManager#getAllNodeTypes() NodeTypeManager.getAllNodeTypes()}
+     * method.
+     *
+     * @return all node types
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType[] getAllNodeTypes()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes() NodeTypeManager.getPrimaryNodeTypes()}
+     * method.
+     *
+     * @return primary node types
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType[] getPrimaryNodeTypes()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeTypeManager#getMixinNodeTypes()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeTypeManager#getMixinNodeTypes() NodeTypeManager.getMixinNodeTypes()}
+     * method.
+     *
+     * @return mixin node types
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType[] getMixinNodeTypes()

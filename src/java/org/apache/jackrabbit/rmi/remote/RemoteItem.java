@@ -43,64 +43,103 @@ import javax.jcr.RepositoryException;
 public interface RemoteItem extends Remote {
 
     /**
-     * @see javax.jcr.Item#getPath()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#getPath() Item.getPath()} method.
+     *
+     * @return item path
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     String getPath() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Item#getName()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#getName() Item.getName()} method.
+     *
+     * @return item name
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     String getName() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Item#getAncestor(int)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#getAncestor(int) Item.getAncestor(int)} method.
+     *
+     * @param level ancestor level
+     * @return ancestor item
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteItem getAncestor(int level)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Item#getParent()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#getParent() Item.getParent()} method.
+     *
+     * @return parent node
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNode getParent() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Item#getDepth()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#getDepth() Item.getDepth()} method.
+     *
+     * @return item depth
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     int getDepth() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Item#isNew()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#isNew() Item.isNew()} method.
+     *
+     * @return <code>true</code> if the item is new,
+     *         <code>false</code> otherwise
+     * @throws RemoteException on RMI errors
      */
     boolean isNew() throws RemoteException;
 
     /**
-     * @see javax.jcr.Item#isModified()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#isModified() Item.isModified()} method.
+     *
+     * @return <code>true</code> if the item is modified,
+     *         <code>false</code> otherwise
+     * @throws RemoteException on RMI errors
      */
     boolean isModified() throws RemoteException;
 
     /**
-     * @see javax.jcr.Item#save()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#save() Item.save()} method.
+     *
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void save() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Item#refresh(boolean)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#refresh(boolean) Item.refresh(boolean)} method.
+     *
+     * @param keepChanges flag to keep transient changes
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void refresh(boolean keepChanges)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Item#remove()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Item#remove() Item.remove()} method.
+     *
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void remove() throws RepositoryException, RemoteException;
 

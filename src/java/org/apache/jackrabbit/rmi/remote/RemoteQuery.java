@@ -40,7 +40,8 @@ public interface RemoteQuery extends Remote {
      * @see javax.jcr.query.Query#execute()
      *
      * @return a <code>QueryResult</code>
-     * @throws javax.jcr.RepositoryException if an error occurs
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteQueryResult execute() throws RepositoryException, RemoteException;
 
@@ -48,6 +49,7 @@ public interface RemoteQuery extends Remote {
      * @see javax.jcr.query.Query#getStatement()
      *
      * @return the query statement.
+     * @throws RemoteException on RMI errors
      */
     String getStatement() throws RemoteException;
 
@@ -55,6 +57,7 @@ public interface RemoteQuery extends Remote {
      * @see javax.jcr.query.Query#getLanguage()
      *
      * @return the query language.
+     * @throws RemoteException on RMI errors
      */
     String getLanguage() throws RemoteException;
 
@@ -62,7 +65,8 @@ public interface RemoteQuery extends Remote {
      * @see javax.jcr.query.Query#getPersistentQueryPath()
      *
      * @return path of the node representing this query.
-     * @throws RepositoryException if another error occurs.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     String getPersistentQueryPath() throws RepositoryException, RemoteException;
 
@@ -70,7 +74,8 @@ public interface RemoteQuery extends Remote {
      * @see javax.jcr.query.Query#save(String)
      *
      * @param absPath path at which to persist this query.
-     * @throws RepositoryException If another error occurs.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void save(String absPath) throws RepositoryException, RemoteException;
 

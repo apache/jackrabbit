@@ -46,50 +46,72 @@ import javax.jcr.RepositoryException;
 public interface RemoteRepository extends Remote {
 
     /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#getDescriptor(String) Repository.getDescriptor(String)}
+     * method.
+     *
+     * @param key descriptor key
      * @return descriptor value
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Repository#getDescriptor(java.lang.String)
      */
-    String getDescriptor(String name) throws RemoteException;
+    String getDescriptor(String key) throws RemoteException;
 
     /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#getDescriptorKeys() Repository.getDescriptorKeys()}
+     * method.
+     *
      * @return descriptor keys
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Repository#getDescriptorKeys()
      */
     String[] getDescriptorKeys() throws RemoteException;
 
     /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#login() Repository.login(}} method.
+     *
      * @return remote session
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Repository#login()
      */
     RemoteSession login() throws RepositoryException, RemoteException;
 
     /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#login(String) Repository.login(String}}
+     * method.
+     *
+     * @param workspace workspace name
      * @return remote session
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Repository#login(java.lang.String)
      */
     RemoteSession login(String workspace)
             throws RepositoryException, RemoteException;
 
     /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#login(Credentials) Repository.login(Credentials}}
+     * method.
+     *
+     * @param credentials client credentials
      * @return remote session
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Repository#login(javax.jcr.Credentials)
      */
     RemoteSession login(Credentials credentials)
             throws RepositoryException, RemoteException;
 
     /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#login(Credentials,String) Repository.login(Credentials,String}}
+     * method.
+     *
+     * @param credentials client credentials
+     * @param workspace workspace name
      * @return remote session
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Repository#login(javax.jcr.Credentials, java.lang.String)
      */
     RemoteSession login(Credentials credentials, String workspace)
             throws RepositoryException, RemoteException;
