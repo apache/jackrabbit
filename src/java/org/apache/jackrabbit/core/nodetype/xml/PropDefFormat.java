@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.nodetype.xml;
 import java.util.Vector;
 
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
@@ -88,7 +89,7 @@ class PropDefFormat extends ItemDefFormat {
     /**
      * Writes the property definition to the XML element.
      */
-    protected void write() {
+    protected void write() throws RepositoryException {
         super.write();
         writeRequiredType();
         writeValueConstraints();
@@ -138,8 +139,8 @@ class PropDefFormat extends ItemDefFormat {
                 }
             }
 
-            def.setValueConstraints(
-                    (ValueConstraint[]) vector.toArray(new ValueConstraint[0]));
+            def.setValueConstraints((ValueConstraint[])
+                    vector.toArray(new ValueConstraint[vector.size()]));
         }
     }
 
@@ -151,7 +152,7 @@ class PropDefFormat extends ItemDefFormat {
         if (constraints != null && constraints.length > 0) {
             Vector values = new Vector();
             for (int i = 0; i < constraints.length; i++) {
-                values.add(constraints[i].getDefinition());
+                values.add(constraints[i].getDefinition(getNamespaceResolver()));
             }
             setGrandChildContents(
                     VALUECONSTRAINTS_ELEMENT, VALUECONSTRAINT_ELEMENT, values);
@@ -161,7 +162,7 @@ class PropDefFormat extends ItemDefFormat {
     /**
      * Reads and sets the default values of the property definition.
      */
-    private void readDefaultValues() {
+    private void readDefaultValues() throws InvalidNodeTypeDefException {
         String[] defaults = getGrandChildContents(
                 DEFAULTVALUES_ELEMENT, DEFAULTVALUE_ELEMENT);
         if (defaults != null) {
@@ -172,23 +173,27 @@ class PropDefFormat extends ItemDefFormat {
                 type = PropertyType.STRING;
             }
             for (int i = 0; i < defaults.length; i++) {
-                vector.add(InternalValue.valueOf(defaults[i], type));
+                try {
+                    vector.add(InternalValue.create(defaults[i], type, getNamespaceResolver()));
+                } catch (RepositoryException e) {
+                    throw new InvalidNodeTypeDefException(e);
+                }
             }
 
-            def.setDefaultValues(
-                    (InternalValue[]) vector.toArray(new InternalValue[0]));
+            def.setDefaultValues((InternalValue[])
+                    vector.toArray(new InternalValue[vector.size()]));
         }
     }
 
     /**
      * Writes the default values of the property definition.
      */
-    private void writeDefaultValues() {
+    private void writeDefaultValues() throws RepositoryException {
         InternalValue[] defaults = def.getDefaultValues();
         if (defaults != null && defaults.length > 0) {
             Vector values = new Vector();
             for (int i = 0; i < defaults.length; i++) {
-                values.add(defaults[i].toString());
+                values.add(defaults[i].toJCRValue(getNamespaceResolver()).getString());
             }
             setGrandChildContents(
                     DEFAULTVALUES_ELEMENT, DEFAULTVALUE_ELEMENT, values);

@@ -395,7 +395,7 @@ public class TestAll extends TestCase {
         assertEquals("nameProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("nameProperty valueConstraints[0]",
-                "{test-namespace}testName",
+                "test:testName",
                 (def.getValueConstraints())[0].getDefinition());
         assertEquals("nameProperty defaultValues",
                 1, def.getDefaultValues().length);
@@ -411,7 +411,7 @@ public class TestAll extends TestCase {
         assertEquals("pathProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("pathProperty valueConstraints[0]",
-                "/{test-namespace}testPath",
+                "/test:testPath",
                 (def.getValueConstraints())[0].getDefinition());
         assertEquals("pathProperty defaultValues",
                 0, def.getDefaultValues().length);
@@ -425,7 +425,7 @@ public class TestAll extends TestCase {
         assertEquals("referenceProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("referenceProperty valueConstraints[0]",
-                "{test-namespace}testType",
+                "test:testType",
                 (def.getValueConstraints())[0].getDefinition());
         assertEquals("referenceProperty defaultValues",
                 0, def.getDefaultValues().length);

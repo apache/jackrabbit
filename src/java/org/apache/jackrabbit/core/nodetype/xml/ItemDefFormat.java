@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.nodetype.xml;
 
 import javax.jcr.version.OnParentVersionAction;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.nodetype.ChildItemDef;
@@ -74,7 +75,7 @@ class ItemDefFormat extends CommonFormat {
     /**
      * Writes the item definition to the XML element.
      */
-    protected void write() {
+    protected void write() throws RepositoryException{
         writeName();
         writeAutoCreate();
         writeMandatory();

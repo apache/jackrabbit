@@ -168,7 +168,7 @@
         <propertyDef name="jcr:protected" requiredType="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDef name="jcr:requiredPrimaryTypes" requiredType="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="true">
             <defaultValues>
-                <defaultValue>{http://www.jcp.org/jcr/nt/1.0}base</defaultValue>
+                <defaultValue>nt:base</defaultValue>
             </defaultValues>
         </propertyDef>
         <propertyDef name="jcr:defaultPrimaryType" requiredType="Name" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>

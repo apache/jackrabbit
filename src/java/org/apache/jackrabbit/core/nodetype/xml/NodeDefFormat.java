@@ -24,6 +24,8 @@ import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.w3c.dom.Element;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Utility class for reading and writing node definition XML elements.
  */
@@ -78,7 +80,7 @@ class NodeDefFormat extends ItemDefFormat {
     /**
      * Writes the node definition to the XML element.
      */
-    protected void write() {
+    protected void write() throws RepositoryException {
         super.write();
         writeRequiredPrimaryTypes();
         writeDefaultPrimaryType();
