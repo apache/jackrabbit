@@ -18,7 +18,6 @@ package org.apache.jackrabbit.rmi.client;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.Row;
@@ -58,8 +57,7 @@ public class ClientRow implements Row {
     }
 
     /** {@inheritDoc} */
-    public Value getValue(String s)
-            throws ItemNotFoundException, RepositoryException {
+    public Value getValue(String s) throws RepositoryException {
         try {
             return remote.getValue(s);
         } catch (RemoteException ex) {

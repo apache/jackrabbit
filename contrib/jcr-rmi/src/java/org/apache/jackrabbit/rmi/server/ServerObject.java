@@ -203,15 +203,15 @@ public class ServerObject extends UnicastRemoteObject {
      */
     protected RemoteNode[] getRemoteNodeArray(NodeIterator iterator)
             throws RemoteException {
-        if (iterator == null) {
+        if (iterator != null) {
+            RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
+            for (int i = 0; iterator.hasNext(); i++) {
+                remotes[i] = factory.getRemoteNode(iterator.nextNode());
+            }
+            return remotes;
+        } else {
             return new RemoteNode[0]; // for safety
         }
-
-        RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
-        for (int i = 0; iterator != null && iterator.hasNext(); i++) {
-            remotes[i] = factory.getRemoteNode(iterator.nextNode());
-        }
-        return remotes;
     }
 
     /**
@@ -227,15 +227,15 @@ public class ServerObject extends UnicastRemoteObject {
      */
     protected RemoteNodeType[] getRemoteNodeTypeArray(NodeType[] types)
             throws RemoteException {
-        if (types == null) {
+        if (types != null) {
+            RemoteNodeType[] remotes = new RemoteNodeType[types.length];
+            for (int i = 0; i < types.length; i++) {
+                remotes[i] = factory.getRemoteNodeType(types[i]);
+            }
+            return remotes;
+        } else {
             return new RemoteNodeType[0]; // for safety
         }
-
-        RemoteNodeType[] remotes = new RemoteNodeType[types.length];
-        for (int i = 0; i < types.length; i++) {
-            remotes[i] = factory.getRemoteNodeType(types[i]);
-        }
-        return remotes;
     }
 
     /**
@@ -251,15 +251,16 @@ public class ServerObject extends UnicastRemoteObject {
      */
     protected RemoteNodeType[] getRemoteNodeTypeArray(NodeTypeIterator iterator)
             throws RemoteException {
-        if (iterator == null) {
+        if (iterator != null) {
+            RemoteNodeType[] remotes =
+                new RemoteNodeType[(int) iterator.getSize()];
+            for (int i = 0; iterator.hasNext(); i++) {
+                remotes[i] = factory.getRemoteNodeType(iterator.nextNodeType());
+            }
+            return remotes;
+        } else {
             return new RemoteNodeType[0]; // for safety
         }
-
-        RemoteNodeType[] remotes = new RemoteNodeType[(int) iterator.getSize()];
-        for (int i = 0; iterator.hasNext(); i++) {
-            remotes[i] = factory.getRemoteNodeType(iterator.nextNodeType());
-        }
-        return remotes;
     }
 
     /**
@@ -275,15 +276,15 @@ public class ServerObject extends UnicastRemoteObject {
      */
     protected RemoteNodeDef[] getRemoteNodeDefArray(NodeDef[] defs)
             throws RemoteException {
-        if (defs == null) {
+        if (defs != null) {
+            RemoteNodeDef[] remotes = new RemoteNodeDef[defs.length];
+            for (int i = 0; i < defs.length; i++) {
+                remotes[i] = factory.getRemoteNodeDef(defs[i]);
+            }
+            return remotes;
+        } else {
             return new RemoteNodeDef[0]; // for safety
         }
-
-        RemoteNodeDef[] remotes = new RemoteNodeDef[defs.length];
-        for (int i = 0; i < defs.length; i++) {
-            remotes[i] = factory.getRemoteNodeDef(defs[i]);
-        }
-        return remotes;
     }
 
     /**
@@ -299,15 +300,15 @@ public class ServerObject extends UnicastRemoteObject {
      */
     protected RemotePropertyDef[] getRemotePropertyDefArray(PropertyDef[] defs)
             throws RemoteException {
-        if (defs == null) {
+        if (defs != null) {
+            RemotePropertyDef[] remotes = new RemotePropertyDef[defs.length];
+            for (int i = 0; i < defs.length; i++) {
+                remotes[i] = factory.getRemotePropertyDef(defs[i]);
+            }
+            return remotes;
+        } else {
             return new RemotePropertyDef[0]; // for safety
         }
-
-        RemotePropertyDef[] remotes = new RemotePropertyDef[defs.length];
-        for (int i = 0; i < defs.length; i++) {
-            remotes[i] = factory.getRemotePropertyDef(defs[i]);
-        }
-        return remotes;
     }
 
 }

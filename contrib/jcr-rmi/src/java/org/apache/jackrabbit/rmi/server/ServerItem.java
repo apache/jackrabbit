@@ -18,14 +18,8 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -80,9 +74,7 @@ public class ServerItem extends ServerObject implements RemoteItem {
     }
 
     /** {@inheritDoc} */
-    public void save() throws AccessDeniedException, LockException,
-            ConstraintViolationException, InvalidItemStateException,
-            ReferentialIntegrityException, RepositoryException, RemoteException {
+    public void save() throws RepositoryException, RemoteException {
         try {
             item.save();
         } catch (RepositoryException ex) {
@@ -91,8 +83,8 @@ public class ServerItem extends ServerObject implements RemoteItem {
     }
 
     /** {@inheritDoc} */
-    public RemoteItem getAncestor(int level) throws ItemNotFoundException,
-            AccessDeniedException, RepositoryException, RemoteException {
+    public RemoteItem getAncestor(int level)
+            throws RepositoryException, RemoteException {
         try {
             return getRemoteItem(item.getAncestor(level));
         } catch (RepositoryException ex) {
@@ -110,8 +102,7 @@ public class ServerItem extends ServerObject implements RemoteItem {
     }
 
     /** {@inheritDoc} */
-    public RemoteNode getParent() throws ItemNotFoundException,
-            AccessDeniedException, RepositoryException, RemoteException {
+    public RemoteNode getParent() throws RepositoryException, RemoteException {
         try {
             return getFactory().getRemoteNode(item.getParent());
         } catch (RepositoryException ex) {
@@ -130,8 +121,8 @@ public class ServerItem extends ServerObject implements RemoteItem {
     }
 
     /** {@inheritDoc} */
-    public void refresh(boolean keepChanges) throws InvalidItemStateException,
-            RepositoryException, RemoteException {
+    public void refresh(boolean keepChanges)
+            throws RepositoryException, RemoteException {
         try {
             item.refresh(keepChanges);
         } catch (RepositoryException ex) {

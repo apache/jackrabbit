@@ -18,17 +18,10 @@ package org.apache.jackrabbit.rmi.client;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
-import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 
@@ -92,8 +85,7 @@ public class ClientQuery extends ClientObject implements Query {
     }
 
     /** {@inheritDoc} */
-    public String getPersistentQueryPath()
-            throws ItemNotFoundException, RepositoryException {
+    public String getPersistentQueryPath() throws RepositoryException {
         try {
             return remote.getPersistentQueryPath();
         } catch (RemoteException ex) {
@@ -102,10 +94,7 @@ public class ClientQuery extends ClientObject implements Query {
     }
 
     /** {@inheritDoc} */
-    public void save(String absPath) throws ItemExistsException,
-            PathNotFoundException, VersionException,
-            ConstraintViolationException, LockException,
-            UnsupportedRepositoryOperationException, RepositoryException {
+    public void save(String absPath) throws RepositoryException {
         try {
             remote.save(absPath);
         } catch (RemoteException ex) {

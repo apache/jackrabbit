@@ -21,24 +21,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.rmi.RemoteException;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.InvalidSerializedDataException;
-import javax.jcr.ItemExistsException;
 import javax.jcr.NamespaceRegistry;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Workspace;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
@@ -73,7 +63,8 @@ public class ClientWorkspace extends ClientObject implements Workspace {
      * @param remote remote workspace
      * @param factory local adapter factory
      */
-    public ClientWorkspace(Session session, RemoteWorkspace remote,
+    public ClientWorkspace(
+            Session session, RemoteWorkspace remote,
             LocalAdapterFactory factory) {
         super(factory);
         this.session = session;
@@ -99,9 +90,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     }
 
     /** {@inheritDoc} */
-    public void copy(String from, String to) throws
-            ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException {
+    public void copy(String from, String to) throws RepositoryException {
         try {
             remote.copy(from, to);
         } catch (RemoteException ex) {
@@ -110,10 +99,8 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     }
 
     /** {@inheritDoc} */
-    public void copy(String from, String to, String workspace) throws
-            NoSuchWorkspaceException, ConstraintViolationException,
-            AccessDeniedException, PathNotFoundException, ItemExistsException,
-            RepositoryException {
+    public void copy(String from, String to, String workspace)
+            throws RepositoryException {
         try {
             remote.copy(from, to, workspace);
         } catch (RemoteException ex) {
@@ -122,9 +109,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     }
 
     /** {@inheritDoc} */
-    public void move(String from, String to) throws
-            ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException {
+    public void move(String from, String to) throws RepositoryException {
         try {
             remote.move(from, to);
         } catch (RemoteException ex) {
@@ -164,18 +149,16 @@ public class ClientWorkspace extends ClientObject implements Workspace {
 
     /** {@inheritDoc} */
     public ObservationManager getObservationManager()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+            throws RepositoryException {
         // TODO Auto-generated method stub
         // return null;
         throw new UnsupportedOperationException();
     }
 
     /** {@inheritDoc} */
-    public void clone(String workspace, String src, String dst,
-            boolean removeExisting) throws NoSuchWorkspaceException,
-            ConstraintViolationException, VersionException,
-            AccessDeniedException, PathNotFoundException, ItemExistsException,
-            LockException, RepositoryException {
+    public void clone(
+            String workspace, String src, String dst, boolean removeExisting)
+            throws RepositoryException {
         try {
             remote.clone(workspace, src, dst, removeExisting);
         } catch (RemoteException ex) {
@@ -193,18 +176,15 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     }
 
     /** {@inheritDoc} */
-    public ContentHandler getImportContentHandler(String path,
-            int uuidBehaviour) throws PathNotFoundException,
-            ConstraintViolationException, VersionException, LockException,
-            RepositoryException {
+    public ContentHandler getImportContentHandler(
+            String path, int uuidBehaviour)
+            throws RepositoryException {
         return new WorkspaceImportContentHandler(this, path, uuidBehaviour);
     }
 
     /** {@inheritDoc} */
     public void importXML(String path, InputStream xml, int uuidBehaviour)
-            throws IOException, PathNotFoundException, ItemExistsException,
-            ConstraintViolationException, InvalidSerializedDataException,
-            LockException, RepositoryException {
+            throws IOException, RepositoryException {
         try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             byte[] bytes = new byte[4096];
@@ -218,10 +198,8 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     }
 
     /** {@inheritDoc} */
-    public void restore(Version[] versions, boolean removeExisting) throws
-            ItemExistsException, UnsupportedRepositoryOperationException,
-            VersionException, LockException, InvalidItemStateException,
-            RepositoryException {
+    public void restore(Version[] versions, boolean removeExisting)
+            throws RepositoryException {
         // TODO Auto-generated method stub
     }
 

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
@@ -49,15 +48,16 @@ public class ServerNamespaceRegistry extends ServerObject implements
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
      */
-    public ServerNamespaceRegistry(NamespaceRegistry registry,
-            RemoteAdapterFactory factory) throws RemoteException {
+    public ServerNamespaceRegistry(
+            NamespaceRegistry registry, RemoteAdapterFactory factory)
+            throws RemoteException {
         super(factory);
         this.registry = registry;
     }
 
     /** {@inheritDoc} */
     public void registerNamespace(String prefix, String uri)
-            throws NamespaceException, RepositoryException, RemoteException {
+            throws RepositoryException, RemoteException {
         try {
             registry.registerNamespace(prefix, uri);
         } catch (RepositoryException ex) {
@@ -66,8 +66,8 @@ public class ServerNamespaceRegistry extends ServerObject implements
     }
 
     /** {@inheritDoc} */
-    public void unregisterNamespace(String prefix) throws NamespaceException,
-            RepositoryException, RemoteException {
+    public void unregisterNamespace(String prefix)
+            throws RepositoryException, RemoteException {
         try {
             registry.unregisterNamespace(prefix);
         } catch (RepositoryException ex) {
@@ -94,8 +94,8 @@ public class ServerNamespaceRegistry extends ServerObject implements
     }
 
     /** {@inheritDoc} */
-    public String getURI(String prefix) throws NamespaceException,
-            RepositoryException, RemoteException {
+    public String getURI(String prefix)
+            throws RepositoryException, RemoteException {
         try {
             return registry.getURI(prefix);
         } catch (RepositoryException ex) {
@@ -104,8 +104,8 @@ public class ServerNamespaceRegistry extends ServerObject implements
     }
 
     /** {@inheritDoc} */
-    public String getPrefix(String uri) throws NamespaceException,
-            RepositoryException, RemoteException {
+    public String getPrefix(String uri)
+            throws RepositoryException, RemoteException {
         try {
             return registry.getPrefix(uri);
         } catch (RepositoryException ex) {

@@ -21,7 +21,6 @@ import java.rmi.server.UnicastRemoteObject;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 
@@ -71,8 +70,7 @@ public class ServerLock extends UnicastRemoteObject implements RemoteLock {
     }
 
     /** {@inheritDoc} */
-    public void refresh() throws LockException, RepositoryException,
-            RemoteException {
+    public void refresh() throws RepositoryException, RemoteException {
         lock.refresh();
     }
 

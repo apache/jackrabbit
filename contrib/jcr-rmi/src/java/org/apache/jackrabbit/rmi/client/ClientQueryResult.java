@@ -57,7 +57,8 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
      * @param remote remote query result
      * @param factory adapter factory
      */
-    public ClientQueryResult(Session session, RemoteQueryResult remote,
+    public ClientQueryResult(
+            Session session, RemoteQueryResult remote,
             LocalAdapterFactory factory) {
         super(factory);
         this.session = session;
@@ -77,11 +78,15 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
     public RowIterator getRows() throws RepositoryException {
         try {
             RemoteRow[] remotes =  remote.getRows();
-            Row[] rows = new Row[(remotes != null) ? remotes.length : 0];
-            for (int i = 0; i < rows.length; i++) {
-                rows[i] = getFactory().getRow(remotes[i]);
+            if (remotes != null) {
+                Row[] rows = new Row[remotes.length];
+                for (int i = 0; i < rows.length; i++) {
+                    rows[i] = getFactory().getRow(remotes[i]);
+                }
+                return new ArrayRowIterator(rows);
+            } else {
+                return new ArrayRowIterator(new Row[0]);
             }
-            return new ArrayRowIterator(rows);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -91,11 +96,15 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
     public NodeIterator getNodes() throws RepositoryException {
         try {
             RemoteNode[] remotes = remote.getNodes();
-            Node[] nodes = new Node[(remotes != null) ? remotes.length : 0];
-            for (int i = 0; i < nodes.length; i++) {
-                nodes[i] = getFactory().getNode(session, remotes[i]);
+            if (remotes != null) {
+                Node[] nodes = new Node[remotes.length];
+                for (int i = 0; i < nodes.length; i++) {
+                    nodes[i] = getFactory().getNode(session, remotes[i]);
+                }
+                return new ArrayNodeIterator(nodes);
+            } else {
+                return new ArrayNodeIterator(new Node[0]);
             }
-            return new ArrayNodeIterator(nodes);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

@@ -92,7 +92,8 @@ public class ServerNodeType extends ServerObject implements RemoteNodeType {
     }
 
     /** {@inheritDoc} */
-    public RemotePropertyDef[] getDeclaredPropertyDefs() throws RemoteException {
+    public RemotePropertyDef[] getDeclaredPropertyDefs()
+            throws RemoteException {
         PropertyDef[] defs = type.getDeclaredPropertyDefs();
         return getRemotePropertyDefArray(defs);
     }

@@ -24,23 +24,13 @@ import java.io.OutputStream;
 import java.rmi.RemoteException;
 import java.security.AccessControlException;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.LoginException;
-import javax.jcr.NamespaceException;
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -133,8 +123,8 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public Session impersonate(Credentials credentials) throws
-            LoginException, RepositoryException {
+    public Session impersonate(Credentials credentials)
+            throws RepositoryException {
         try {
             RemoteSession session = remote.impersonate(credentials);
             return getFactory().getSession(repository, session);
@@ -153,8 +143,7 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public Node getNodeByUUID(String uuid) throws ItemNotFoundException,
-            RepositoryException {
+    public Node getNodeByUUID(String uuid) throws RepositoryException {
         try {
             return getFactory().getNode(this, remote.getNodeByUUID(uuid));
         } catch (RemoteException ex) {
@@ -163,8 +152,7 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public Item getItem(String path) throws PathNotFoundException,
-            RepositoryException {
+    public Item getItem(String path) throws RepositoryException {
         try {
             return getItem(this, remote.getItem(path));
         } catch (RemoteException ex) {
@@ -182,9 +170,7 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public void move(String from, String to) throws ItemExistsException,
-            PathNotFoundException, ConstraintViolationException,
-            RepositoryException {
+    public void move(String from, String to) throws RepositoryException {
         try {
             remote.move(from, to);
         } catch (RemoteException ex) {
@@ -193,9 +179,7 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public void save() throws AccessDeniedException, LockException,
-            ConstraintViolationException, InvalidItemStateException,
-            RepositoryException {
+    public void save() throws RepositoryException {
         try {
             remote.save();
         } catch (RemoteException ex) {
@@ -232,10 +216,8 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public void importXML(String path, InputStream xml) throws IOException,
-            PathNotFoundException, ItemExistsException,
-            ConstraintViolationException, InvalidSerializedDataException,
-            RepositoryException {
+    public void importXML(String path, InputStream xml)
+            throws IOException, RepositoryException {
         try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             byte[] bytes = new byte[4096];
@@ -249,14 +231,14 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public ContentHandler getImportContentHandler(String path) throws
-            PathNotFoundException, RepositoryException {
+    public ContentHandler getImportContentHandler(String path)
+            throws RepositoryException {
         return new SessionImportContentHandler(this, path);
     }
 
     /** {@inheritDoc} */
-    public void setNamespacePrefix(String prefix, String uri) throws
-            NamespaceException, RepositoryException {
+    public void setNamespacePrefix(String prefix, String uri)
+            throws RepositoryException {
         try {
             remote.setNamespacePrefix(prefix, uri);
         } catch (RemoteException ex) {
@@ -274,8 +256,7 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public String getNamespaceURI(String prefix) throws NamespaceException,
-            RepositoryException {
+    public String getNamespaceURI(String prefix) throws RepositoryException {
         try {
             return remote.getNamespaceURI(prefix);
         } catch (RemoteException ex) {
@@ -284,8 +265,7 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public String getNamespacePrefix(String uri) throws NamespaceException,
-            RepositoryException {
+    public String getNamespacePrefix(String uri) throws RepositoryException {
         try {
             return remote.getNamespacePrefix(uri);
         } catch (RemoteException ex) {
@@ -338,9 +318,10 @@ public class ClientSession extends ClientObject implements Session {
      *
      * {@inheritDoc}
      */
-    public void exportSysView(String path, ContentHandler handler,
-            boolean binaryAsLink, boolean noRecurse) throws
-            PathNotFoundException, SAXException, RepositoryException {
+    public void exportSysView(
+            String path, ContentHandler handler,
+            boolean binaryAsLink, boolean noRecurse)
+            throws SAXException, RepositoryException {
         try {
             byte[] xml = remote.exportSysView(path, binaryAsLink, noRecurse);
 
@@ -369,9 +350,10 @@ public class ClientSession extends ClientObject implements Session {
      *
      * {@inheritDoc}
      */
-    public void exportSysView(String path, OutputStream output,
-            boolean binaryAsLink, boolean noRecurse) throws
-            PathNotFoundException, IOException, RepositoryException {
+    public void exportSysView(
+            String path, OutputStream output,
+            boolean binaryAsLink, boolean noRecurse)
+            throws IOException, RepositoryException {
         try {
             byte[] xml = remote.exportSysView(path, binaryAsLink, noRecurse);
             output.write(xml);
@@ -389,10 +371,10 @@ public class ClientSession extends ClientObject implements Session {
      *
      * {@inheritDoc}
      */
-    public void exportDocView(String path, ContentHandler handler,
-            boolean binaryAsLink, boolean noRecurse) throws
-            InvalidSerializedDataException, PathNotFoundException,
-            SAXException, RepositoryException {
+    public void exportDocView(
+            String path, ContentHandler handler,
+            boolean binaryAsLink, boolean noRecurse)
+            throws SAXException, RepositoryException {
         try {
             byte[] xml = remote.exportDocView(path, binaryAsLink, noRecurse);
 
@@ -421,10 +403,10 @@ public class ClientSession extends ClientObject implements Session {
      *
      * {@inheritDoc}
      */
-    public void exportDocView(String path, OutputStream output,
-            boolean binaryAsLink, boolean noRecurse) throws
-            InvalidSerializedDataException, PathNotFoundException,
-            IOException, RepositoryException {
+    public void exportDocView(
+            String path, OutputStream output,
+            boolean binaryAsLink, boolean noRecurse)
+            throws IOException, RepositoryException {
         try {
             byte[] xml = remote.exportDocView(path, binaryAsLink, noRecurse);
             output.write(xml);

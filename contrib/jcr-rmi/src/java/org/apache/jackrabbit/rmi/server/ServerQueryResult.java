@@ -37,7 +37,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
  * @see javax.jcr.query.QueryResult
  * @see org.apache.jackrabbit.rmi.remote.RemoteQueryResult
  */
-public class ServerQueryResult extends ServerObject implements RemoteQueryResult {
+public class ServerQueryResult extends ServerObject
+        implements RemoteQueryResult {
 
     /** The adapted local query result. */
     private QueryResult result;
@@ -49,42 +50,44 @@ public class ServerQueryResult extends ServerObject implements RemoteQueryResult
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
      */
-    public ServerQueryResult(QueryResult result, RemoteAdapterFactory factory) throws RemoteException {
+    public ServerQueryResult(QueryResult result, RemoteAdapterFactory factory)
+            throws RemoteException {
         super(factory);
         this.result = result;
     }
 
     /** {@inheritDoc} */
-    public String[] getPropertyNames() throws RepositoryException, RemoteException {
+    public String[] getPropertyNames()
+            throws RepositoryException, RemoteException {
         return result.getPropertyNames();
     }
 
     /** {@inheritDoc} */
     public RemoteRow[] getRows() throws RepositoryException, RemoteException {
         RowIterator iterator = result.getRows();
-        if (iterator == null) {
+        if (iterator != null) {
+            RemoteRow[] remotes = new RemoteRow[(int) iterator.getSize()];
+            for (int i = 0; iterator.hasNext(); i++) {
+                remotes[i] = getFactory().getRemoteRow(iterator.nextRow());
+            }
+            return remotes;
+        } else {
             return new RemoteRow[0]; // for safety
         }
-
-        RemoteRow[] remotes = new RemoteRow[(int) iterator.getSize()];
-        for (int i = 0; iterator != null && iterator.hasNext(); i++) {
-            remotes[i] = getFactory().getRemoteRow(iterator.nextRow());
-        }
-        return remotes;
-
     }
 
     /** {@inheritDoc} */
     public RemoteNode[] getNodes() throws RepositoryException, RemoteException {
         NodeIterator iterator = result.getNodes();
-        if (iterator == null) {
+        if (iterator != null) {
+            RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
+            for (int i = 0; iterator.hasNext(); i++) {
+                remotes[i] = getFactory().getRemoteNode(iterator.nextNode());
+            }
+            return remotes;
+        } else {
             return new RemoteNode[0]; // for safety
         }
-
-        RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
-        for (int i = 0; iterator != null && iterator.hasNext(); i++) {
-            remotes[i] = getFactory().getRemoteNode(iterator.nextNode());
-        }
-        return remotes;
     }
+
 }

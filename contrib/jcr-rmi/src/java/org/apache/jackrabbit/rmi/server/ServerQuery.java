@@ -18,15 +18,8 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.Query;
-import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
@@ -53,13 +46,15 @@ public class ServerQuery extends ServerObject implements RemoteQuery {
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
      */
-    public ServerQuery(Query query, RemoteAdapterFactory factory) throws RemoteException {
+    public ServerQuery(Query query, RemoteAdapterFactory factory)
+            throws RemoteException {
         super(factory);
         this.query = query;
     }
 
     /** {@inheritDoc} */
-    public RemoteQueryResult execute() throws RepositoryException, RemoteException {
+    public RemoteQueryResult execute()
+            throws RepositoryException, RemoteException {
         return new ServerQueryResult(query.execute(), getFactory());
     }
 
@@ -74,12 +69,14 @@ public class ServerQuery extends ServerObject implements RemoteQuery {
     }
 
     /** {@inheritDoc} */
-    public String getPersistentQueryPath() throws ItemNotFoundException, RepositoryException, RemoteException {
+    public String getPersistentQueryPath()
+            throws RepositoryException, RemoteException {
         return query.getPersistentQueryPath();
     }
 
     /** {@inheritDoc} */
-    public void save(String absPath) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, UnsupportedRepositoryOperationException, RepositoryException, RemoteException {
+    public void save(String absPath)
+            throws RepositoryException, RemoteException {
         query.save(absPath);
     }
 }

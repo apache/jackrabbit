@@ -103,15 +103,15 @@ public class ClientObject {
      */
     protected PropertyIterator getPropertyIterator(
             Session session, RemoteProperty[] remotes) {
-        if (remotes == null) {
+        if (remotes != null) {
+            Property[] properties = new Property[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                properties[i] = factory.getProperty(session, remotes[i]);
+            }
+            return new ArrayPropertyIterator(properties);
+        } else {
             return new ArrayPropertyIterator(new Property[0]); // for safety
         }
-
-        Property[] properties = new Property[remotes.length];
-        for (int i = 0; i < remotes.length; i++) {
-            properties[i] = factory.getProperty(session, remotes[i]);
-        }
-        return new ArrayPropertyIterator(properties);
     }
 
     /**
@@ -127,15 +127,15 @@ public class ClientObject {
      */
     protected NodeIterator getNodeIterator(
             Session session, RemoteNode[] remotes) {
-        if (remotes == null) {
+        if (remotes != null) {
+            Node[] nodes = new Node[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                nodes[i] = factory.getNode(session, remotes[i]);
+            }
+            return new ArrayNodeIterator(nodes);
+        } else {
             return new ArrayNodeIterator(new Node[0]); // for safety
         }
-
-        Node[] nodes = new Node[remotes.length];
-        for (int i = 0; i < remotes.length; i++) {
-            nodes[i] = factory.getNode(session, remotes[i]);
-        }
-        return new ArrayNodeIterator(nodes);
     }
 
     /**
@@ -149,15 +149,15 @@ public class ClientObject {
      * @return local node type array
      */
     protected NodeType[] getNodeTypeArray(RemoteNodeType[] remotes) {
-        if (remotes == null) {
+        if (remotes != null) {
+            NodeType[] types = new NodeType[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                types[i] = factory.getNodeType(remotes[i]);
+            }
+            return types;
+        } else {
             return new NodeType[0]; // for safety
         }
-
-        NodeType[] types = new NodeType[remotes.length];
-        for (int i = 0; i < remotes.length; i++) {
-            types[i] = factory.getNodeType(remotes[i]);
-        }
-        return types;
     }
 
     /**
@@ -185,15 +185,15 @@ public class ClientObject {
      * @return local node definition array
      */
     protected NodeDef[] getNodeDefArray(RemoteNodeDef[] remotes) {
-        if (remotes == null) {
+        if (remotes != null) {
+            NodeDef[] defs = new NodeDef[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                defs[i] = factory.getNodeDef(remotes[i]);
+            }
+            return defs;
+        } else {
             return new NodeDef[0]; // for safety
         }
-
-        NodeDef[] defs = new NodeDef[remotes.length];
-        for (int i = 0; i < remotes.length; i++) {
-            defs[i] = factory.getNodeDef(remotes[i]);
-        }
-        return defs;
     }
 
     /**
@@ -207,15 +207,15 @@ public class ClientObject {
      * @return local property definition array
      */
     protected PropertyDef[] getPropertyDefArray(RemotePropertyDef[] remotes) {
-        if (remotes == null) {
+        if (remotes != null) {
+            PropertyDef[] defs = new PropertyDef[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                defs[i] = factory.getPropertyDef(remotes[i]);
+            }
+            return defs;
+        } else {
             return new PropertyDef[0]; // for safety
         }
-
-        PropertyDef[] defs = new PropertyDef[remotes.length];
-        for (int i = 0; i < remotes.length; i++) {
-            defs[i] = factory.getPropertyDef(remotes[i]);
-        }
-        return defs;
     }
 
 }
