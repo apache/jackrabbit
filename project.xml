@@ -41,7 +41,7 @@
   <shortDescription>Implementation of the Content Repository for Java</shortDescription>
   <url>http://incubator.apache.org/projects/jackrabbit.html</url>
   <issueTrackingUrl>http://issues.apache.org/jira/browse/JCR</issueTrackingUrl>
-  <siteDirectory>docs</siteDirectory>
+  <siteDirectory>../jackrabbit-site</siteDirectory>
   <distributionSite>incubator.apache.org</distributionSite>
   <distributionDirectory>/www/www.apache.org/dist/java-repository/</distributionDirectory>
   <repository>
