@@ -24,6 +24,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.Session;
 
 /**
  * <code>AddNodeTest</code> contains the test cases for the method
@@ -144,6 +145,89 @@ public class AddNodeTest extends AbstractJCRTest {
             fail("Expected RepositoryException.");
         } catch (RepositoryException e) {
             // correct.
+        }
+    }
+
+    /**
+     * Creates two new nodes using {@link Node#addNode(String)} and
+     * {@link Node#addNode(String,String)}, saves using {@link javax.jcr.Node#save()}
+     * on parent node. Uses a second session to verify if the nodes have been saved.
+     */
+    public void testAddNodeParentSave() throws RepositoryException {
+        // get default workspace test root node using superuser session
+        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
+
+        // add two nodes
+        Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
+        Node testNode2 = defaultRootNode.addNode(nodeName2);
+
+        // save new nodes
+        defaultRootNode.save();
+
+        // use a different session to verify if the node is there
+        Session session = helper.getReadOnlySession();
+        try {
+            testNode = (Node) session.getItem(testNode.getPath());
+            testNode2 = (Node) session.getItem(testNode2.getPath());
+        } finally {
+            session.logout();
+        }
+    }
+
+    /**
+     * Creates new nodes using {@link Node#addNode(String)} and
+     * {@link Node#addNode(String, String)}, saves using
+     * {@link javax.jcr.Session#save()}. Uses a second session to
+     * verify if the node has been safed.
+     */
+    public void testAddNodeSessionSave() throws RepositoryException {
+        // get default workspace test root node using superuser session
+        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
+
+        // add nodes
+        Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
+        Node testNode2 = defaultRootNode.addNode(nodeName2);
+
+        // save new nodes
+        superuser.save();
+
+        // use a different session to verify if the node is there
+        Session session = helper.getReadOnlySession();
+        try {
+            testNode = (Node) session.getItem(testNode.getPath());
+            testNode2 = (Node) session.getItem(testNode2.getPath());
+        } finally {
+            session.logout();
+        }
+    }
+    
+    /**
+     * Creates new nodes using {@link Node#addNode(String)} and
+     * {@link Node#addNode(String, String)}, then tries to call
+     * {@link javax.jcr.Node#save()} on the new nodes. <br/><br/>
+     * This should throw an {@link RepositoryException}.
+     */
+    public void testAddNodeRepositoryExceptionSaveOnNewNode() throws RepositoryException {
+        // get default workspace test root node using superuser session
+        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
+
+        // add a node
+        Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
+        Node testNode2 = defaultRootNode.addNode(nodeName2);
+
+        try {
+            // try to call save on newly created node
+            testNode.save();
+            fail("Calling Node.save() on a newly created node should throw RepositoryException");
+        } catch (RepositoryException e) {
+            // ok, works as expected.
+        }
+        try {
+            // try to call save on newly created node
+            testNode2.save();
+            fail("Calling Node.save() on a newly created node should throw RepositoryException");
+        } catch (RepositoryException e) {
+            // ok, works as expected.
         }
     }
 }
