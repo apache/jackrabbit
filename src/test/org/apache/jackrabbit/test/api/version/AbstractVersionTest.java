@@ -24,7 +24,6 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.version.VersionIterator;
 
 /**
  * <code>AbstractVersionTest</code> is the abstract base class for all
@@ -115,16 +114,7 @@ public class AbstractVersionTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     protected long getNumberOfVersions(VersionHistory vHistory) throws RepositoryException {
-        VersionIterator vIter = vHistory.getAllVersions();
-        long numOfVersions = vIter.getSize();
-        if (numOfVersions == -1) {
-            numOfVersions = 0;
-            while (vIter.hasNext()) {
-                vIter.nextVersion();
-                numOfVersions++;
-            }
-        }
-        return numOfVersions;
+        return getSize(vHistory.getAllVersions());
     }
 
     /**

@@ -21,6 +21,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Session;
 
 /**
  * Test cases for the root node.
@@ -32,12 +33,30 @@ import javax.jcr.ItemNotFoundException;
  */
 public class RootNodeTest extends AbstractJCRTest {
 
-    Node rootNode;
+    /** A readonly session for the default workspace */
+    private Session session;
 
+    /** The root node of the default workspace */
+    private Node rootNode;
+
+    /**
+     * Sets up the fixture for the test cases.
+     */
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        rootNode = helper.getReadOnlySession().getRootNode();
+        session = helper.getReadOnlySession();
+        rootNode = session.getRootNode();
+    }
+
+    /**
+     * Releases the session aquired in {@link #setUp()}.
+     */
+    protected void tearDown() throws Exception {
+        if (session != null) {
+            session.logout();
+        }
+        super.tearDown();
     }
 
     /**

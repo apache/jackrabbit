@@ -37,6 +37,10 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("javax.jcr.nodetype tests");
 
         // ADD TEST CLASSES HERE:
+        suite.addTestSuite(NodeDefTest.class);
+        suite.addTestSuite(NodeTypeManagerTest.class);
+        suite.addTestSuite(NodeTypeTest.class);
+        suite.addTestSuite(PropertyDefTest.class);
 
         return suite;
     }

@@ -123,9 +123,11 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         setUpFullTextTest();
         QueryResult result = execute(getFullTextStatement());
         RowIterator rows = result.getRows();
-        if (rows.getSize() < 1) {
+        if (getSize(rows) < 1) {
             fail("Query result did not return any nodes");
         }
+        // re-aquire rows
+        rows = result.getRows();
 
         // test mere existence
         rows.nextRow().getValue(jcrPath);

@@ -197,9 +197,11 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
                                        boolean descending)
             throws RepositoryException, NotExecutableException {
         RowIterator rows = queryResult.getRows();
-        if (rows.getSize() < 2) {
+        if (getSize(rows) < 2) {
             throw new NotExecutableException("Can not test ordering on less than 2 results");
         }
+        // need to re-aquire rows, {@link #getSize} may consume elements.
+        rows = queryResult.getRows();
         int changeCnt = 0;
         String last = "";
         while (rows.hasNext()) {

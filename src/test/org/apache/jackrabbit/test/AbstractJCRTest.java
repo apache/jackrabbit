@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Repository;
 import javax.jcr.NamespaceException;
+import javax.jcr.RangeIterator;
 import java.util.StringTokenizer;
 
 /**
@@ -59,6 +60,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * JCR Name jcr:primaryType using the namespace resolver of the current session.
      */
     protected String jcrPrimaryType;
+
+    /**
+     * JCR Name jcr:mixinTypes using the namespace resolver of the current session.
+     */
+    protected String jcrMixinTypes;
 
     /**
      * JCR Name jcr:predecessors using the namespace resolver of the current session.
@@ -219,6 +225,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
 
         // setup some common names
         jcrPrimaryType = superuser.getNamespacePrefix(NS_JCR_URI) + ":primaryType";
+        jcrMixinTypes = superuser.getNamespacePrefix(NS_JCR_URI) + ":mixinTypes";
         jcrPredecessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":predecessors";
         jcrBaseVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":baseVersion";
         jcrUUID = superuser.getNamespacePrefix(NS_JCR_URI) + ":uuid";
@@ -337,6 +344,26 @@ public abstract class AbstractJCRTest extends JUnitTest {
 
         // finally try global property
         return helper.getProperty(RepositoryStub.PROP_PREFIX + "." + name);
+    }
+
+    /**
+     * Returns the size of the <code>RangeIterator</code> <code>it</code>.
+     * Note, that the <code>RangeIterator</code> might get consumed, because
+     * {@link RangeIterator#getSize()} might return -1 (information unavailable).
+     * @param it a <code>RangeIterator</code>.
+     * @return the size of the iterator (number of elements).
+     */
+    protected long getSize(RangeIterator it) {
+        long size = it.getSize();
+        if (size != -1) {
+            return size;
+        }
+        size = 0;
+        while (it.hasNext()) {
+            it.next();
+            size++;
+        }
+        return size;
     }
 
 }

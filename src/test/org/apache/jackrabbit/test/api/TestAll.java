@@ -38,14 +38,12 @@ public class TestAll extends TestCase {
 
         // ADD TEST CLASSES HERE:
         suite.addTestSuite(AddNodeTest.class);
-        suite.addTestSuite(GetAncestorTest.class);
         suite.addTestSuite(RootNodeTest.class);
         suite.addTestSuite(NamespaceRegistryTest.class);
         suite.addTestSuite(ReferencesTest.class);
-        suite.addTestSuite(ItemDefTest.class);
-        suite.addTestSuite(ItemReadMethodsTest.class);
         suite.addTestSuite(NodeReadMethodsTest.class);
         suite.addTestSuite(PropertyTypeTest.class);
+        suite.addTestSuite(NodeDiscoveringNodeTypesTest.class);
 
         suite.addTestSuite(BinaryPropertyTest.class);
         suite.addTestSuite(BooleanPropertyTest.class);

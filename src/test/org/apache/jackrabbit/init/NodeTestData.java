@@ -100,6 +100,8 @@ public class NodeTestData extends AbstractJCRTest {
 
         Node resReference = dataRoot.addNode("reference");
         resReference.setProperty("ref", resource);
+        // make this node itself referenceable
+        resReference.addMixin(mixReferenceable);
         log.println("Adding node: " + resReference.getPath());
 
         superuser.save();

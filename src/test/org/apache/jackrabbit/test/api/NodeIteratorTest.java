@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
@@ -40,8 +41,9 @@ public class NodeIteratorTest extends AbstractJCRTest {
     /**
      * Tests if {@link javax.jcr.NodeIterator#getSize()} returns the correct
      * size.
+     * @throws NotExecutableException if getSize() returns -1 (unavailable).
      */
-    public void testGetSize() throws RepositoryException {
+    public void testGetSize() throws RepositoryException, NotExecutableException {
         NodeIterator iter = testRootNode.getNodes();
         long size = testRootNode.getNodes().getSize();
         if (size != -1) {
@@ -52,7 +54,7 @@ public class NodeIteratorTest extends AbstractJCRTest {
             }
             assertEquals("NodeIterator.getSize does not return correct number.", size, count);
         } else {
-            // NodeIterator does not return size information
+            throw new NotExecutableException("NodeIterator.getSize() does not return size information.");
         }
     }
 

@@ -1,0 +1,400 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.test.api.nodetype;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.PropertyUtil;
+
+import javax.jcr.Session;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
+import javax.jcr.Value;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDef;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
+/**
+ * Tests if property definitions are properly defined.
+ *
+ * @test
+ * @sources PropertyDefTest.java
+ * @executeClass org.apache.jackrabbit.test.api.PropertyDefTest
+ * @keywords level1
+ */
+public class PropertyDefTest extends AbstractJCRTest {
+
+    // format: '(<min>, <max>)',  '[<min>, <max>]', '(, <max>)' etc.
+    private static final Pattern CONSTRAINTSPATTERN_BINARY =
+            Pattern.compile("([\\(\\[]) *\\d* *, *\\d* *([\\)\\]])");
+
+    // format: '(<min>, <max>)',  '[<min>, <max>]', '(, <max>)' etc.
+    private static final Pattern CONSTRAINTSPATTERN_LONG =
+            Pattern.compile("([\\(\\[]) *(\\-?\\d*)? *, *(\\-?\\d*)? *([\\)\\]])");
+
+    // format: '(<min>, <max>)',  '[<min>, <max>]', '(, <max>)' etc.
+    private static final Pattern CONSTRAINTSPATTERN_DOUBLE =
+            Pattern.compile("([\\(\\[]) *(\\-?\\d+\\.?\\d*)? *, *(\\-?\\d+\\.?\\d*)? *([\\)\\]])");
+
+    // format: '(<min>, <max>)',  '[<min>, <max>]', '(, <max>)' etc.
+    private static final Pattern CONSTRAINTSPATTERN_DATE =
+            Pattern.compile("([\\(\\[]) *(" + PropertyUtil.PATTERNSTRING_DATE + ")? *, *" +
+            "(" + PropertyUtil.PATTERNSTRING_DATE + ")? *([\\)\\]])");
+
+    private static final Pattern CONSTRAINTSPATTERN_PATH =
+            Pattern.compile(PropertyUtil.PATTERNSTRING_PATH_WITHOUT_LAST_SLASH +
+            "(/|/\\*)?");
+
+    /**
+     * The session we use for the tests
+     */
+    private Session session;
+
+    /**
+     * The node type manager of the session
+     */
+    private NodeTypeManager manager;
+
+    /**
+     * The root node of the default workspace
+     */
+    private Node rootNode;
+
+    /**
+     * If <code>true</code> indicates that the test found a mandatory property
+     */
+    private boolean foundMandatoryProperty = false;
+
+    /**
+     * Sets up the fixture for the test cases.
+     */
+    protected void setUp() throws Exception {
+        isReadOnly = true;
+        super.setUp();
+
+        session = helper.getReadOnlySession();
+        manager = session.getWorkspace().getNodeTypeManager();
+        rootNode = session.getRootNode();
+    }
+
+    /**
+     * Releases the session aquired in {@link #setUp()}.
+     */
+    protected void tearDown() throws Exception {
+        if (session != null) {
+            session.logout();
+        }
+        super.tearDown();
+    }
+
+    /**
+     * Test getDeclaringNodeType() returns the node type which is defining the
+     * requested property def. Test runs for all existing node types.
+     */
+    public void testGetDeclaringNodeType() throws RepositoryException {
+
+        NodeTypeIterator types = manager.getAllNodeTypes();
+        // loop all node types
+        while (types.hasNext()) {
+            NodeType currentType = types.nextNodeType();
+            PropertyDef defsOfCurrentType[] =
+                    currentType.getPropertyDefs();
+
+            // loop all property defs of each node type
+            for (int i = 0; i < defsOfCurrentType.length; i++) {
+                PropertyDef def = defsOfCurrentType[i];
+                NodeType type = def.getDeclaringNodeType();
+
+                // check if def is part of the property defs of the
+                // declaring node type
+                PropertyDef defs[] = type.getPropertyDefs();
+                boolean hasType = false;
+                for (int j = 0; j < defs.length; j++) {
+                    if (defs[j].getName().equals(def.getName())) {
+                        hasType = true;
+                        break;
+                    }
+                }
+                assertTrue("getDeclaringNodeType() must return the node " +
+                        "which defines the corresponding property def.",
+                        hasType);
+            }
+        }
+    }
+
+    /**
+     * Tests if auto create properties are not a residual set definition
+     * (getName() does not return "*")
+     */
+    public void testIsAutoCreate() throws RepositoryException {
+
+        NodeTypeIterator types = manager.getAllNodeTypes();
+        // loop all node types
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            PropertyDef defs[] = type.getPropertyDefs();
+            for (int i = 0; i < defs.length; i++) {
+                if (defs[i].isAutoCreate()) {
+                    assertFalse("An auto create property must not be a " +
+                            "residual set definition.",
+                            defs[i].getName().equals("*"));
+                }
+            }
+        }
+    }
+
+    /**
+     * This test checks if item definitions with mandatory constraints are
+     * respected.
+     * <p/>
+     * If the default workspace does not contain a node with a node type
+     * definition that specifies a mandatory property a {@link
+     * org.apache.jackrabbit.test.NotExecutableException} is thrown.
+     */
+    public void testIsMandatory() throws RepositoryException, NotExecutableException {
+        traverse(rootNode);
+        if (!foundMandatoryProperty) {
+            throw new NotExecutableException("Workspace does not contain any node with a mandatory property definition");
+        }
+    }
+
+    /**
+     * Tests if isRequiredType() returns a valid PropertyType. </p> The test
+     * runs for all available node types.
+     */
+    public void testIsRequiredType()
+            throws RepositoryException {
+
+        NodeTypeIterator types = manager.getAllNodeTypes();
+        // loop all node types
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            PropertyDef defs[] = type.getPropertyDefs();
+            for (int i = 0; i < defs.length; i++) {
+                switch (defs[i].getRequiredType()) {
+                    case PropertyType.STRING:
+                    case PropertyType.BINARY:
+                    case PropertyType.DATE:
+                    case PropertyType.LONG:
+                    case PropertyType.DOUBLE:
+                    case PropertyType.NAME:
+                    case PropertyType.PATH:
+                    case PropertyType.REFERENCE:
+                    case PropertyType.BOOLEAN:
+                    case PropertyType.UNDEFINED:
+                        // success
+                        break;
+                    default:
+                        fail("getRequiredType() returns an " +
+                                "invalid PropertyType.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Tests if value constraints match the pattern specified by the required
+     * property type. </p> The test runs for all value constraints of all
+     * properties of all available node types.
+     */
+    public void testGetValueConstraints() throws RepositoryException {
+
+        NodeTypeIterator types = manager.getAllNodeTypes();
+        // loop all node types
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            PropertyDef defs[] = type.getPropertyDefs();
+            for (int i = 0; i < defs.length; i++) {
+                PropertyDef def = defs[i];
+
+                String constraints[] = def.getValueConstraints();
+                if (constraints != null) {
+
+                    for (int j = 0; j < constraints.length; j++) {
+                        Matcher matcher;
+
+                        switch (defs[i].getRequiredType()) {
+                            case PropertyType.STRING:
+                            case PropertyType.UNDEFINED:
+                                // any value matches
+                                break;
+
+                            case PropertyType.BINARY:
+                                matcher =
+                                        CONSTRAINTSPATTERN_BINARY.matcher(constraints[j]);
+                                assertTrue("Value constraint does not match " +
+                                        "the pattern of PropertyType.BINARY ",
+                                        matcher.matches());
+                                break;
+
+                            case PropertyType.DATE:
+                                matcher =
+                                        CONSTRAINTSPATTERN_DATE.matcher(constraints[j]);
+                                assertTrue("Value constraint does not match " +
+                                        "the pattern of PropertyType.DATE ",
+                                        matcher.matches());
+                                break;
+
+                            case PropertyType.LONG:
+                                matcher =
+                                        CONSTRAINTSPATTERN_LONG.matcher(constraints[j]);
+                                assertTrue("Value constraint does not match " +
+                                        "the pattern of PropertyType.LONG",
+                                        matcher.matches());
+                                break;
+
+                            case PropertyType.DOUBLE:
+                                matcher =
+                                        CONSTRAINTSPATTERN_DOUBLE.matcher(constraints[j]);
+                                assertTrue("Value constraint does not match " +
+                                        "the pattern of PropertyType.DOUBLE",
+                                        matcher.matches());
+                                break;
+
+                            case PropertyType.NAME:
+                                matcher =
+                                        PropertyUtil.PATTERN_NAME.matcher(constraints[j]);
+                                assertTrue("Value constraint does not match " +
+                                        "the pattern of PropertyType.NAME",
+                                        matcher.matches());
+                                break;
+
+                            case PropertyType.PATH:
+                                matcher = CONSTRAINTSPATTERN_PATH.matcher(constraints[j]);
+                                assertTrue("Value constraint does not match " +
+                                        "the pattern of PropertyType.PATH",
+                                        matcher.matches());
+                                break;
+
+                            case PropertyType.REFERENCE:
+                                matcher =
+                                        PropertyUtil.PATTERN_NAME.matcher(constraints[j]);
+                                assertTrue("Value constraint does not match " +
+                                        "the pattern of PropertyType.REFERENCE",
+                                        matcher.matches());
+                                break;
+
+                            case PropertyType.BOOLEAN:
+                                assertTrue("Value constraint does not match " +
+                                        "the pattern of PropertyType.BOOLEAN",
+                                        constraints[j].equals("true") ||
+                                        constraints[j].equals("false"));
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Tests if single-valued properties do have not more than one default value
+     * </p> The test runs for all default values of all properties of all
+     * available node types.
+     */
+    public void testGetDefaultValues()
+            throws RepositoryException {
+
+        NodeTypeIterator types = manager.getAllNodeTypes();
+        // loop all node types
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            PropertyDef defs[] = type.getPropertyDefs();
+            for (int i = 0; i < defs.length; i++) {
+                PropertyDef def = defs[i];
+
+                Value values[] = def.getDefaultValues();
+                if (values != null) {
+
+                    for (int j = 0; j < values.length; j++) {
+
+                        if (!def.isMultiple()) {
+                            assertEquals("Single-valued properties must not " +
+                                    "have more than one default value.",
+                                    1, values.length);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Traverses the node hierarchy and applies
+     * {@link #checkMandatoryConstraint(javax.jcr.Node, javax.jcr.nodetype.NodeType)}
+     * to all descendant nodes of <code>parentNode</code>.
+     */
+    private void traverse(Node parentNode)
+            throws RepositoryException {
+
+        NodeIterator nodes = parentNode.getNodes();
+        while (nodes.hasNext()) {
+            Node node = nodes.nextNode();
+
+            NodeType primeType = node.getPrimaryNodeType();
+            checkMandatoryConstraint(node, primeType);
+
+            NodeType mixins[] = node.getMixinNodeTypes();
+            for (int i = 0; i < mixins.length; i++) {
+                checkMandatoryConstraint(node, mixins[i]);
+            }
+
+            traverse(node);
+        }
+    }
+
+    /**
+     * Checks if mandatory property definitions are respected.
+     */
+    private void checkMandatoryConstraint(Node node, NodeType type)
+            throws RepositoryException {
+
+        // test if node contains all mandatory properties of current type
+        PropertyDef propDefs[] = type.getPropertyDefs();
+        for (int i = 0; i < propDefs.length; i++) {
+            PropertyDef propDef = propDefs[i];
+
+            if (propDef.isMandatory()) {
+                foundMandatoryProperty = true;
+                String name = propDef.getName();
+
+                try {
+                    Property p = node.getProperty(name);
+                    if (propDef.isMultiple()) {
+                        // empty array fails
+                        assertFalse("A mandatory and multiple property " +
+                                "must not be empty.",
+                                p.getValues().length == 0);
+                    } else {
+                        // empty value fails
+                        assertNotNull("A mandatory property must have a value",
+                                p.getValue());
+                    }
+                } catch (PathNotFoundException e) {
+                    fail("Mandatory property " + name + " does not exist.");
+                }
+            }
+        }
+    }
+}
