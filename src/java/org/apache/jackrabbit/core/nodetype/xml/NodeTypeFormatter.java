@@ -53,7 +53,7 @@ import org.w3c.dom.NodeList;
  * <p>
  * This class (and through it the entire .xml subpackage) is used only by the
  * {@link org.apache.jackrabbit.core.nodetype.NodeTypeDefStore NodeTypeDefStore}
- * class. 
+ * class.
  */
 public class NodeTypeFormatter {
 
