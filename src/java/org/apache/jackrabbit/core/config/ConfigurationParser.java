@@ -125,7 +125,7 @@ public class ConfigurationParser {
     /**
      * private constructor.
      *
-     * @param is
+     * @param xml
      * @param repHomeDir
      * @throws RepositoryException
      */
@@ -573,7 +573,7 @@ public class ConfigurationParser {
         // +--+-+--------+-+-----------------+
         int p = 0, q = value.indexOf("${");              // Find first ${
         while (q != -1) {
-            result.append(value, p, q);                  // Text before ${
+            result.append(value.substring(p, q));                  // Text before ${
             p = q;
             q = value.indexOf("}", q + 2);               // Find }
             if (q != -1) {
@@ -588,7 +588,7 @@ public class ConfigurationParser {
                 q = value.indexOf("${", p);              // Find next ${
             }
         }
-        result.append(value, p, value.length());         // Trailing text
+        result.append(value.substring(p, value.length()));         // Trailing text
 
         return result.toString();
     }
