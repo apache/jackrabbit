@@ -137,6 +137,96 @@ public class LockTest extends AbstractJCRTest {
     }
 
     /**
+     * Test to get the lock holding node of a node
+     */
+    public void testGetNode() throws Exception {
+        // create new node with a sub node and lock it
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixLockable);
+        Node n1Sub = n1.addNode(nodeName1, testNodeType);
+        n1Sub.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock node
+        n1.lock(true, true);
+
+        assertEquals("getNode() must return the lock holder",
+                n1.getPath(),
+                n1.getLock().getNode().getPath());
+
+        assertEquals("getNode() must return the lock holder",
+                n1.getPath(),
+                n1Sub.getLock().getNode().getPath());
+
+        n1.unlock();
+    }
+
+    /**
+     * Test if getLockOwner() returns the same value as returned by
+     * Session.getUserId at the time that the lock was placed
+     */
+    public void testGetLockOwnerProperty() throws Exception {
+        // create new node and lock it
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock node
+        Lock lock = n1.lock(false, true);
+
+        if (n1.getSession().getUserId() == null) {
+            assertFalse("jcr:lockOwner must not exist if Session.getUserId() returns null",
+                    n1.hasProperty(jcrLockOwner));
+        } else {
+            assertEquals("getLockOwner() must return the same value as stored " +
+                    "in property " + jcrLockOwner + " of the lock holding " +
+                    "node",
+                    n1.getProperty(jcrLockOwner).getString(),
+                    lock.getLockOwner());
+        }
+        n1.unlock();
+    }
+
+    /**
+     * Test if getLockOwner() returns the same value as returned by
+     * Session.getUserId at the time that the lock was placed
+     */
+    public void testGetLockOwner() throws Exception {
+        // create new node and lock it
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock node
+        Lock lock = n1.lock(false, true);
+
+        assertEquals("getLockOwner() must return the same value as returned " +
+                "by Session.getUserId at the time that the lock was placed",
+                testRootNode.getSession().getUserId(),
+                lock.getLockOwner());
+
+        n1.unlock();
+    }
+
+    /**
+     * Test if a shallow lock does not lock the child nodes of the locked node.
+     */
+    public void testShallowLock() throws Exception {
+        // create new nodes
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixReferenceable);
+        n1.addMixin(mixLockable);
+        Node n2 = n1.addNode(nodeName2, testNodeType);
+        testRootNode.save();
+
+        // lock parent node
+        n1.lock(false, true);
+
+        assertFalse("Shallow lock must not lock the child nodes of a node.",
+                n2.isLocked());
+    }
+
+    /**
      * Test parent/child lock
      */
     public void testParentChildLock() throws Exception {

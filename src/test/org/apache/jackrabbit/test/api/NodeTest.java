@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.Session;
@@ -28,6 +29,8 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
+import javax.jcr.lock.LockException;
 import java.util.StringTokenizer;
 
 /**
@@ -615,6 +618,90 @@ public class NodeTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Tests if <code>Node.remove()</code> does not throw a
+     * <code>LockException</code> if <code>Node</code> is locked.
+     * <p/>
+     * The test creates a node <code>nodeName1</code> of type
+     * <code>testNodeType</code> under <code>testRoot</code> and locks the node
+     * with the superuser session. Then the test removes
+     * <code>nodeName1</code>.
+     */
+    public void testRemoveNodeLockedItself()
+            throws LockException, NotExecutableException, RepositoryException {
+
+        Session session = testRootNode.getSession();
+
+        if (session.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+            throw new NotExecutableException("Locking is not supported.");
+        }
+
+        // create a node that is lockable
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        // or try to make it lockable if it is not
+        if (!node.isNodeType(mixLockable)) {
+            if (node.canAddMixin(mixLockable)) {
+                node.addMixin(mixLockable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not " +
+                        "allow to add mix:lockable");
+            }
+        }
+        testRootNode.save();
+
+        node.lock(true, true);
+
+        // test fails if a LockException is thrown when removing the node
+        // (remove must be possible since the parent is not locked)
+        node.remove();
+    }
+
+    /**
+     * Tests if <code>Node.remove()</code> throws a <code>LockException</code>
+     * if the parent node of <code>Node</code> is locked.
+     * <p/>
+     * The test creates a node <code>nodeName1</code> of type
+     * <code>testNodeType</code> under <code>testRoot</code>, adds a child node
+     * <code>nodeName2</code> and locks it with the superuser session. Then the
+     * test tries to remove the <code>nodeName2</code>.
+     */
+    public void testRemoveNodeParentLocked()
+            throws LockException, NotExecutableException, RepositoryException {
+
+        Session session = testRootNode.getSession();
+
+        if (session.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+            throw new NotExecutableException("Locking is not supported.");
+        }
+
+        // create a node that is lockable
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        // or try to make it lockable if it is not
+        if (!node.isNodeType(mixLockable)) {
+            if (node.canAddMixin(mixLockable)) {
+                node.addMixin(mixLockable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not " +
+                        "allow to add mix:lockable");
+            }
+        }
+        // create a child node
+        Node subNode = node.addNode(nodeName2, testNodeType);
+        testRootNode.save();
+
+        node.lock(true, true);
+
+        try {
+            subNode.remove();
+            fail("Node.remove() must throw a LockException if the parent " +
+                    "of the node is locked");
+        } catch (LockException e) {
+            // success
+        }
+
+        // unlock to remove node at tearDown()
+        node.unlock();
+    }
 
     /**
      * Tests object identity, meaning two nodes objects accuired through the
