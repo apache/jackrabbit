@@ -319,6 +319,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
                     String msg = id + ": the item has been removed externally.";
                     log.debug(msg);
                     throw new InvalidItemStateException(msg);
+                } catch (RepositoryException re) {
+                    // unable to build path, assume that it (or any of
+                    // its ancestors) has been removed externally
+                    String msg = id
+                            + ": the item seems to have been removed externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
                 }
             }
             return descendants.values().iterator();
@@ -350,13 +357,17 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
                      * one of the parents of the specified item has been
                      * removed externally; as we don't know its path,
                      * we can't determine if it is a descendant;
-                     * ItemNotFoundException should only be thrown if
+                     * InvalidItemStateException should only be thrown if
                      * a descendant is affected;
-                     * => log warning and ignore for now
+                     * => throw InvalidItemStateException for now
                      * todo FIXME
                      */
-                    log.warn(id + ": inconsistent hierarchy state", infe);
-                    continue;
+                    // unable to build path, assume that it (or any of
+                    // its ancestors) has been removed externally
+                    String msg = id
+                            + ": the item seems to have been removed externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
                 }
                 boolean isDescendant = false;
                 /**

@@ -338,8 +338,13 @@ class SysViewContentHandler extends DefaultHandler {
             NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
             String[] registeredPrefixes = nsr.getPrefixes();
             // check against the found prefixes
+/*
+            // invalid test: only the referenced namespaces need to be declared;
+            // apart from that, the 'xml' namespace, although registered,
+            // is never declared in the system view xml as this would be illegal
             checkCondition("Size of included prefixes is not the size of " +
                     "registered prefixes", registeredPrefixes.length == prefixes.size()) ;
+*/
             for (int i=0; i<registeredPrefixes.length;i++) {
                 String prefix = registeredPrefixes[1];
                 String uri = nsr.getURI(prefix);
