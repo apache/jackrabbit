@@ -186,14 +186,14 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      * @see javax.jcr.version.Version#getSuccessors()
      */
     public InternalVersion[] getSuccessors() {
-        return (InternalVersion[]) successors.toArray(new InternalVersion[successors.size()]);
+        return (InternalVersionImpl[]) successors.toArray(new InternalVersionImpl[successors.size()]);
     }
 
     /**
      * @see javax.jcr.version.Version#getSuccessors()
      */
     public InternalVersion[] getPredecessors() {
-        return (InternalVersion[]) predecessors.toArray(new InternalVersion[predecessors.size()]);
+        return (InternalVersionImpl[]) predecessors.toArray(new InternalVersionImpl[predecessors.size()]);
     }
 
     /**
@@ -221,22 +221,27 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
             succ[i].internalDetachPredecessor(this);
         }
 
+	// detach cached successors from preds
+	InternalVersionImpl[] preds = (InternalVersionImpl[]) getPredecessors();
+	for (int i=0; i<preds.length; i++) {
+	    preds[i].internalDetachSuccessor(this);
+	}
+
         // clear properties
         successors.clear();
         predecessors.clear();
         labelCache = null;
-        storePredecessors();
     }
 
     /**
-     * Removes the predecessor V of this predecessor list and adds all of Vs
+     * Removes the predecessor V of this predecessors list and adds all of Vs
      * predecessors to it.
      * <p/>
      * please note, that this operation might corrupt the version graph
      *
      * @param v the successor to detach
      */
-    private void internalDetachPredecessor(InternalVersion v) throws RepositoryException {
+    private void internalDetachPredecessor(InternalVersionImpl v) throws RepositoryException {
         // remove 'v' from predecessor list
         for (int i = 0; i < predecessors.size(); i++) {
             if (predecessors.get(i).equals(v)) {
@@ -244,10 +249,30 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
                 break;
             }
         }
-        // attach v's successors
-        predecessors.clear();
+        // attach v's predecessors
         predecessors.addAll(Arrays.asList(v.getPredecessors()));
         storePredecessors();
+	node.store();
+    }
+
+    /**
+     * Removes the successor V of this successors list and adds all of Vs
+     * successors to it.
+     * <p/>
+     * please note, that this operation might corrupt the version graph
+     *
+     * @param v the successor to detach
+     */
+    private void internalDetachSuccessor(InternalVersionImpl v) throws RepositoryException {
+        // remove 'v' from successors list
+        for (int i = 0; i < successors.size(); i++) {
+            if (successors.get(i).equals(v)) {
+                successors.remove(i);
+                break;
+            }
+        }
+        // attach v's successors
+        successors.addAll(Arrays.asList(v.getSuccessors()));
     }
 
     /**

@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.PropertyIterator;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -163,13 +164,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public void removeVersion(String versionName)
             throws UnsupportedRepositoryOperationException, VersionException,
             RepositoryException {
-        try {
-            history.removeVersion(QName.fromJCRName(versionName, session.getNamespaceResolver()));
-        } catch (IllegalNameException e) {
-            throw new VersionException("Unable to remove version.", e);
-        } catch (UnknownPrefixException e) {
-            throw new VersionException("Unable to remove version.", e);
-        }
+
+	// check if any references exist on this version
+	VersionImpl v = (VersionImpl) getVersion(versionName);
+	PropertyIterator iter = v.getReferences();
+	if (iter.hasNext()) {
+	    throw new VersionException("Unable to remove version. At least once referenced: " + ((PropertyImpl) iter.nextProperty()).safeGetJCRPath());
+	}
+	history.removeVersion(v.getQName());
     }
 
     /**

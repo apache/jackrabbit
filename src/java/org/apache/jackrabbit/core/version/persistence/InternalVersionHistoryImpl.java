@@ -251,7 +251,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
             stateMgr.edit();
 
             // remove from persistance state
-            node.removeNode(v.getName());
+            node.removeNode(v.getNode().getName());
 
             // unregister from labels
             String[] labels = v.internalGetLabels();
