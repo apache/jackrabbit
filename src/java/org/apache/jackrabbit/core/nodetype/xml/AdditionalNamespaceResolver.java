@@ -16,15 +16,17 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import java.util.Iterator;
 import java.util.Properties;
 
 import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.NamespaceResolver;
-import org.jdom.Element;
-import org.jdom.Namespace;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 
 /**
  * A simple namespace resolver implementation, that uses the additional
@@ -39,19 +41,35 @@ public class AdditionalNamespaceResolver implements NamespaceResolver {
     private final Properties uriToPrefix = new Properties();
 
     /**
-     * Creates a namespace resolver using the additional namespaces declared
+     * Creates a namespace resolver using the namespaces declared
      * in the given XML element.
      *
      * @param element XML element
      */
     public AdditionalNamespaceResolver(Element element) {
-        Iterator namespaces = element.getAdditionalNamespaces().iterator();
-        while (namespaces.hasNext()) {
-            Namespace namespace = (Namespace) namespaces.next();
-            addNamespace(namespace.getPrefix(), namespace.getURI());
+        NamedNodeMap attributes = element.getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Attr attribute = (Attr) attributes.item(i);
+            if (Constants.NS_XMLNS_PREFIX.equals(attribute.getPrefix())) {
+                addNamespace(attribute.getLocalName(), attribute.getValue());
+            }
         }
-
         addNamespace(Constants.NS_EMPTY_PREFIX, Constants.NS_DEFAULT_URI);
+    }
+
+    /**
+     * Creates a namespace resolver using the namespaces declared
+     * in the given namespace registry.
+     *
+     * @param registry namespace registry
+     * @throws RepositoryException on repository errors
+     */
+    public AdditionalNamespaceResolver(NamespaceRegistry registry)
+            throws RepositoryException {
+        String[] prefixes = registry.getPrefixes();
+        for (int i = 0; i < prefixes.length; i++) {
+            addNamespace(prefixes[i], registry.getURI(prefixes[i]));
+        }
     }
 
     /**

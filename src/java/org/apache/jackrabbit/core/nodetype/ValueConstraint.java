@@ -51,6 +51,16 @@ public abstract class ValueConstraint {
         this.definition = definition;
     }
 
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        } else if (other instanceof ValueConstraint) {
+            return definition.equals(((ValueConstraint) other).definition);
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Returns the original (raw) definition of this constraint.
      *

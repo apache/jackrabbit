@@ -21,7 +21,7 @@ import javax.jcr.version.OnParentVersionAction;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.nodetype.ChildItemDef;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.jdom.Element;
+import org.w3c.dom.Element;
 
 /**
  * Common functionality shared by the property and node definition format

@@ -24,68 +24,43 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.nodetype.xml.NodeTypeFormat;
-import org.apache.jackrabbit.core.nodetype.xml.AdditionalNamespaceResolver;
-import org.apache.log4j.Logger;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.Namespace;
-import org.jdom.input.SAXBuilder;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
+import org.apache.jackrabbit.core.nodetype.xml.NodeTypeFormatter;
 
 /**
  * <code>NodeTypeDefStore</code> ...
  */
 class NodeTypeDefStore {
-    private static Logger log = Logger.getLogger(NodeTypeDefStore.class);
 
-    private static final String ROOT_ELEMENT = "nodeTypes";
+    /** Map of node type names to node type definitions. */
+    private final HashMap ntDefs;
 
-    // map of node type names and node type definitions
-    private HashMap ntDefs;
+    /** The node type definition file formatter. */
+    private final NodeTypeFormatter formatter;
 
     /**
      * Empty default constructor.
      */
-    NodeTypeDefStore() {
+    NodeTypeDefStore() throws RepositoryException {
         ntDefs = new HashMap();
+        formatter = new NodeTypeFormatter();
     }
 
     /**
      * @param in
      * @throws IOException
      * @throws InvalidNodeTypeDefException
-     * @throws RepositoryException
      */
     void load(InputStream in)
-            throws IOException, InvalidNodeTypeDefException, RepositoryException {
-        SAXBuilder builder = new SAXBuilder();
-        Element root;
-        try {
-            Document doc = builder.build(in);
-            root = doc.getRootElement();
-        } catch (JDOMException jde) {
-            String msg = "internal error: failed to parse persistent node type definitions";
-            log.debug(msg);
-            throw new RepositoryException(msg, jde);
-        }
-
-        // read definitions
-        NamespaceResolver resolver = new AdditionalNamespaceResolver(root);
-        Iterator iter =
-            root.getChildren(NodeTypeFormat.NODETYPE_ELEMENT).iterator();
-        while (iter.hasNext()) {
-            NodeTypeFormat format =
-                new NodeTypeFormat(resolver, (Element) iter.next());
-            format.read();
-            add(format.getNodeType());
+            throws IOException, InvalidNodeTypeDefException,
+            RepositoryException {
+        Collection types = formatter.read(in);
+        Iterator iterator = types.iterator();
+        while (iterator.hasNext()) {
+            add((NodeTypeDef) iterator.next());
         }
     }
 
@@ -95,32 +70,9 @@ class NodeTypeDefStore {
      * @throws IOException
      * @throws RepositoryException
      */
-    void store(OutputStream out, NamespaceRegistryImpl nsReg)
+    void store(OutputStream out, NamespaceRegistry registry)
             throws IOException, RepositoryException {
-        Element root = new Element(ROOT_ELEMENT);
-
-        // namespace declarations
-        String[] prefixes = nsReg.getPrefixes();
-        for (int i = 0; i < prefixes.length; i++) {
-            String prefix = prefixes[i];
-            if ("".equals(prefix)) {
-                continue;
-            }
-            String uri = nsReg.getURI(prefix);
-            root.addNamespaceDeclaration(Namespace.getNamespace(prefix, uri));
-        }
-
-        // node type definitions
-        Iterator iter = all().iterator();
-        while (iter.hasNext()) {
-            NodeTypeFormat format =
-                new NodeTypeFormat(nsReg, (NodeTypeDef) iter.next());
-            format.write();
-            root.addContent(format.getElement());
-        }
-
-        XMLOutputter serializer = new XMLOutputter(Format.getPrettyFormat());
-        serializer.output(new Document(root), out);
+        formatter.write(out, registry, ntDefs.values());
     }
 
     /**

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -25,15 +26,18 @@ import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.jdom.Element;
+import org.w3c.dom.Element;
 
 /**
  * Utility class for reading and writing node type definition XML elements.
  */
-public class NodeTypeFormat extends CommonFormat {
+class NodeTypeFormat extends CommonFormat {
 
-    /** Name of the node type definition element. */
-    public static final String NODETYPE_ELEMENT = "nodeType";
+    /** Name of the child node definition element. */
+    private static final String CHILDNODEDEF_ELEMENT = "childNodeDef";
+
+    /** Name of the property definition element. */
+    private static final String PROPERTYDEF_ELEMENT = "propertyDef";
 
     /** Name of the <code>isMixin</code> attribute. */
     private static final String ISMIXIN_ATTRIBUTE = "isMixin";
@@ -56,50 +60,16 @@ public class NodeTypeFormat extends CommonFormat {
     private final NodeTypeDef def;
 
     /**
-     * Creates a node type definition format object. This constructor
-     * is used internally by the public reader and writer constructors.
+     * Creates a node type definition format object.
      *
      * @param resolver namespace resolver
      * @param element node type definition element
      * @param def node type definition
      */
-    private NodeTypeFormat(
+    protected NodeTypeFormat(
             NamespaceResolver resolver, Element element, NodeTypeDef def) {
         super(resolver, element);
         this.def = def;
-    }
-
-    /**
-     * Creates a node type definition reader. An empty node type definition
-     * instance is created. The instance properties are filled in by the
-     * {@link #read() read} method.
-     *
-     * @param resolver namespace resolver
-     * @param element node type definition element
-     */
-    public NodeTypeFormat(NamespaceResolver resolver, Element element) {
-        this(resolver, element, new NodeTypeDef());
-    }
-
-    /**
-     * Creates a node type definition writer. The node type definition
-     * element is instantiated as an empty <code>nodeType</code> element.
-     * The element is filled in by the {@link #write() write} method.
-     *
-     * @param resolver namespace resolver
-     * @param def node type definition
-     */
-    public NodeTypeFormat(NamespaceResolver resolver, NodeTypeDef def) {
-        this(resolver, new Element(NODETYPE_ELEMENT), def);
-    }
-
-    /**
-     * Returns the node type definition object.
-     *
-     * @return node type definition
-     */
-    public NodeTypeDef getNodeType() {
-        return def;
     }
 
     /**
@@ -108,7 +78,7 @@ public class NodeTypeFormat extends CommonFormat {
      * @throws InvalidNodeTypeDefException if the format of the node type
      *                                    definition element is invalid
      */
-    public void read() throws InvalidNodeTypeDefException {
+    protected void read() throws InvalidNodeTypeDefException {
         readName();
         readSupertypes();
         readIsMixin();
@@ -121,7 +91,7 @@ public class NodeTypeFormat extends CommonFormat {
     /**
      * Writes the node type definition to the XML element.
      */
-    public void write() {
+    protected void write() {
         writeName();
         writeSupertypes();
         writeIsMixin();
@@ -155,18 +125,18 @@ public class NodeTypeFormat extends CommonFormat {
      *                                    definition element is invalid
      */
     private void readSupertypes() throws InvalidNodeTypeDefException {
-        Vector vector = new Vector();
-
-        Element types = getChild(SUPERTYPES_ELEMENT);
+        Collection types =
+            getGrandChildContents(SUPERTYPES_ELEMENT, SUPERTYPE_ELEMENT);
         if (types != null) {
-            Iterator iterator = types.getChildren(SUPERTYPE_ELEMENT).iterator();
-            while (iterator.hasNext()) {
-                Element type = (Element) iterator.next();
-                vector.add(fromJCRName(type.getTextTrim()));
-            }
-        }
+            Vector vector = new Vector();
 
-        def.setSupertypes((QName[]) vector.toArray(new QName[0]));
+            Iterator iterator = types.iterator();
+            while (iterator.hasNext()) {
+                vector.add(fromJCRName((String) iterator.next()));
+            }
+
+            def.setSupertypes((QName[]) vector.toArray(new QName[0]));
+        }
     }
 
     /**
@@ -174,14 +144,13 @@ public class NodeTypeFormat extends CommonFormat {
      */
     private void writeSupertypes() {
         QName[] values = def.getSupertypes();
-        if (values.length > 0) {
-            Element types = new Element(SUPERTYPES_ELEMENT);
+        if (values != null && values.length > 0) {
+            Vector types = new Vector();
             for (int i = 0; i < values.length; i++) {
-                Element type = new Element(SUPERTYPE_ELEMENT);
-                type.setText(toJCRName(values[i]));
-                types.addContent(type);
+                types.add(toJCRName(values[i]));
             }
-            addChild(types);
+            setGrandChildContents(
+                    SUPERTYPES_ELEMENT, SUPERTYPE_ELEMENT, types);
         }
     }
 
@@ -263,12 +232,14 @@ public class NodeTypeFormat extends CommonFormat {
     private void readPropertyDefinitions() throws InvalidNodeTypeDefException {
         Vector vector = new Vector();
 
-        Iterator iterator = getChildIterator(PropDefFormat.PROPERTYDEF_ELEMENT);
+        Iterator iterator = getChildElements(PROPERTYDEF_ELEMENT);
         while (iterator.hasNext()) {
-            PropDefFormat format = new PropDefFormat(
-                    getNamespaceResolver(), (Element) iterator.next());
+            PropDef property = new PropDef();
+            Element element = (Element) iterator.next();
+            PropDefFormat format =
+                new PropDefFormat(getNamespaceResolver(), element, property);
             format.read(def.getName());
-            vector.add(format.getPropDef());
+            vector.add(property);
         }
 
         def.setPropertyDefs((PropDef[]) vector.toArray(new PropDef[0]));
@@ -280,10 +251,12 @@ public class NodeTypeFormat extends CommonFormat {
     private void writePropertyDefinitions() {
         PropDef[] defs = def.getPropertyDefs();
         for (int i = 0; i < defs.length; i++) {
+            PropDef property = defs[i];
+            Element element = newElement(PROPERTYDEF_ELEMENT);
             PropDefFormat format =
-                new PropDefFormat(getNamespaceResolver(), defs[i]);
+                new PropDefFormat(getNamespaceResolver(), element, property);
             format.write();
-            addChild(format.getElement());
+            addChild(element);
         }
     }
 
@@ -299,13 +272,14 @@ public class NodeTypeFormat extends CommonFormat {
     private void readChildNodeDefinitions() throws InvalidNodeTypeDefException {
         Vector vector = new Vector();
 
-        Iterator iterator =
-            getChildIterator(NodeDefFormat.CHILDNODEDEF_ELEMENT);
+        Iterator iterator = getChildElements(CHILDNODEDEF_ELEMENT);
         while (iterator.hasNext()) {
-            NodeDefFormat format = new NodeDefFormat(
-                    getNamespaceResolver(), (Element) iterator.next());
+            ChildNodeDef node = new ChildNodeDef();
+            Element element = (Element) iterator.next();
+            NodeDefFormat format =
+                new NodeDefFormat(getNamespaceResolver(), element, node);
             format.read(def.getName());
-            vector.add(format.getNodeDef());
+            vector.add(node);
         }
 
         def.setChildNodeDefs(
@@ -318,10 +292,12 @@ public class NodeTypeFormat extends CommonFormat {
     private void writeChildNodeDefinitions() {
         ChildNodeDef[] defs = def.getChildNodeDefs();
         for (int i = 0; i < defs.length; i++) {
+            ChildNodeDef node = defs[i];
+            Element element = newElement(CHILDNODEDEF_ELEMENT);
             NodeDefFormat format =
-                new NodeDefFormat(getNamespaceResolver(), defs[i]);
+                new NodeDefFormat(getNamespaceResolver(), element, node);
             format.write();
-            addChild(format.getElement());
+            addChild(element);
         }
     }
 

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -28,15 +29,12 @@ import org.apache.jackrabbit.core.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
-import org.jdom.Element;
+import org.w3c.dom.Element;
 
 /**
  * Utility class for reading and writing property definition XML elements.
  */
 class PropDefFormat extends ItemDefFormat {
-
-    /** Name of the property definition element. */
-    public static final String PROPERTYDEF_ELEMENT = "propertyDef";
 
     /** Name of the required type attribute. */
     private static final String REQUIREDTYPE_ATTRIBUTE = "requiredType";
@@ -67,43 +65,10 @@ class PropDefFormat extends ItemDefFormat {
      * @param element property definition element
      * @param def property definition
      */
-    private PropDefFormat(
+    protected PropDefFormat(
             NamespaceResolver resolver, Element element, PropDef def) {
         super(resolver, element, def);
         this.def = def;
-    }
-
-    /**
-     * Creates a property definition reader. The internal property
-     * definition instance is created using the given node type name
-     * as the name of the declaring node type.
-     *
-     * @param resolver namespace resolver
-     * @param element property definition element
-     */
-    public PropDefFormat(NamespaceResolver resolver, Element element) {
-        this(resolver, element, new PropDef());
-    }
-
-    /**
-     * Creates a property definition writer. The internal property
-     * definition element is instantiated as an empty <code>propertyDef</code>
-     * element.
-     *
-     * @param resolver namespace resolver
-     * @param def property definition
-     */
-    public PropDefFormat(NamespaceResolver resolver, PropDef def) {
-        this(resolver, new Element(PROPERTYDEF_ELEMENT), def);
-    }
-
-    /**
-     * Returns the property definition instance.
-     *
-     * @return property definition
-     */
-    public PropDef getPropDef() {
-        return def;
     }
 
     /**
@@ -111,9 +76,9 @@ class PropDefFormat extends ItemDefFormat {
      *
      * @param type name of the declaring node type
      * @throws InvalidNodeTypeDefException if the format of the property
-     *                                    definition element is invalid
+     *                                     definition element is invalid
      */
-    public void read(QName type) throws InvalidNodeTypeDefException {
+    protected void read(QName type) throws InvalidNodeTypeDefException {
         def.setDeclaringNodeType(type);
         super.read();
         readRequiredType();
@@ -125,7 +90,7 @@ class PropDefFormat extends ItemDefFormat {
     /**
      * Writes the property definition to the XML element.
      */
-    public void write() {
+    protected void write() {
         super.write();
         writeRequiredType();
         writeValueConstraints();
@@ -137,7 +102,7 @@ class PropDefFormat extends ItemDefFormat {
      * Reads and sets the required type of the property definition.
      *
      * @throws InvalidNodeTypeDefException if the format of the property
-     *                                    definition element is invalid
+     *                                     definition element is invalid
      */
     private void readRequiredType() throws InvalidNodeTypeDefException {
         String value = getAttribute(REQUIREDTYPE_ATTRIBUTE);
@@ -156,89 +121,84 @@ class PropDefFormat extends ItemDefFormat {
      * Reads and sets the value constraints of the property definition.
      *
      * @throws InvalidNodeTypeDefException if the format of the property
-     *                                    definition element is invalid
+     *                                      definition element is invalid
      */
     private void readValueConstraints() throws InvalidNodeTypeDefException {
-        Vector vector = new Vector();
-
-        Element constraints = getChild(VALUECONSTRAINTS_ELEMENT);
+        Collection constraints = getGrandChildContents(
+                VALUECONSTRAINTS_ELEMENT, VALUECONSTRAINT_ELEMENT);
         if (constraints != null) {
-            int type = def.getRequiredType();
+            Vector vector = new Vector();
 
-            Iterator iterator =
-                constraints.getChildren(VALUECONSTRAINT_ELEMENT).iterator();
+            int type = def.getRequiredType();
+            Iterator iterator = constraints.iterator();
             while (iterator.hasNext()) {
-                Element constraint = (Element) iterator.next();
-                String value = constraint.getTextTrim();
+                String constraint = (String) iterator.next();
                 try {
                     vector.add(ValueConstraint.create(
-                            type, value, getNamespaceResolver()));
+                            type, constraint, getNamespaceResolver()));
                 } catch (InvalidConstraintException e) {
                     throw new InvalidNodeTypeDefException(
-                            "Invalid property value constraint " + value, e);
+                            "Invalid value constraint " + constraint, e);
                 }
             }
-        }
 
-        def.setValueConstraints(
-                (ValueConstraint[]) vector.toArray(new ValueConstraint[0]));
+            def.setValueConstraints(
+                    (ValueConstraint[]) vector.toArray(new ValueConstraint[0]));
+        }
     }
 
     /**
      * Writes the value constraints of the property definition.
      */
     private void writeValueConstraints() {
-        Element values = new Element(VALUECONSTRAINTS_ELEMENT);
-
         ValueConstraint[] constraints = def.getValueConstraints();
-        for (int i = 0; i < constraints.length; i++) {
-            Element value = new Element(VALUECONSTRAINT_ELEMENT);
-            value.setText(constraints[i].getDefinition());
-            values.addContent(value);
+        if (constraints != null && constraints.length > 0) {
+            Vector values = new Vector();
+            for (int i = 0; i < constraints.length; i++) {
+                values.add(constraints[i].getDefinition());
+            }
+            setGrandChildContents(
+                    VALUECONSTRAINTS_ELEMENT, VALUECONSTRAINT_ELEMENT, values);
         }
-
-        addChild(values);
     }
 
     /**
      * Reads and sets the default values of the property definition.
      */
     private void readDefaultValues() {
-        Vector vector = new Vector();
+        Collection defaults = getGrandChildContents(
+                DEFAULTVALUES_ELEMENT, DEFAULTVALUE_ELEMENT);
+        if (defaults != null) {
+            Vector vector = new Vector();
 
-        Element values = getChild(DEFAULTVALUES_ELEMENT);
-        if (values != null) {
             int type = def.getRequiredType();
             if (type == PropertyType.UNDEFINED) {
                 type = PropertyType.STRING;
             }
-
-            Iterator iterator =
-                values.getChildren(DEFAULTVALUE_ELEMENT).iterator();
+            Iterator iterator = defaults.iterator();
             while (iterator.hasNext()) {
-                Element value = (Element) iterator.next();
-                vector.add(InternalValue.valueOf(value.getTextTrim(), type));
+                String value = (String) iterator.next();
+                vector.add(InternalValue.valueOf(value, type));
             }
-        }
 
-        def.setDefaultValues(
-                (InternalValue[]) vector.toArray(new InternalValue[0]));
+            def.setDefaultValues(
+                    (InternalValue[]) vector.toArray(new InternalValue[0]));
+        }
     }
 
     /**
      * Writes the default values of the property definition.
      */
     private void writeDefaultValues() {
-        Element values = new Element(DEFAULTVALUES_ELEMENT);
-
         InternalValue[] defaults = def.getDefaultValues();
-        for (int i = 0; i < defaults.length; i++) {
-            Element value = new Element(DEFAULTVALUE_ELEMENT);
-            value.setText(defaults[i].toString());
-            values.addContent(value);
+        if (defaults != null && defaults.length > 0) {
+            Vector values = new Vector();
+            for (int i = 0; i < defaults.length; i++) {
+                values.add(defaults[i].toString());
+            }
+            setGrandChildContents(
+                    DEFAULTVALUES_ELEMENT, DEFAULTVALUE_ELEMENT, values);
         }
-
-        addChild(values);
     }
 
     /**
@@ -246,7 +206,7 @@ class PropDefFormat extends ItemDefFormat {
      * property definition.
      *
      * @throws InvalidNodeTypeDefException if the format of the property
-     *                                    definition element is invalid
+     *                                     definition element is invalid
      */
     private void readMultiple() throws InvalidNodeTypeDefException {
         String value = getAttribute(MULTIPLE_ATTRIBUTE);

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -23,15 +24,12 @@ import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.jdom.Element;
+import org.w3c.dom.Element;
 
 /**
  * Utility class for reading and writing node definition XML elements.
  */
 class NodeDefFormat extends ItemDefFormat {
-
-    /** Name of the child node definition element. */
-    public static final String CHILDNODEDEF_ELEMENT = "childNodeDef";
 
     /** Name of the required primary types element. */
     private static final String REQUIREDPRIMARYTYPES_ELEMENT =
@@ -52,50 +50,16 @@ class NodeDefFormat extends ItemDefFormat {
     private final ChildNodeDef def;
 
     /**
-     * Creates a node definition format object. This constructor
-     * is used internally by the public reader and writer constructors.
+     * Creates a node definition format object.
      *
      * @param resolver namespace resolver
      * @param element node definition element
      * @param def node definition
      */
-    private NodeDefFormat(
+    protected NodeDefFormat(
             NamespaceResolver resolver, Element element, ChildNodeDef def) {
         super(resolver, element, def);
         this.def = def;
-    }
-
-    /**
-     * Creates a node definition reader. An empty node definition instance
-     * is created. The instance properties are filled in by the
-     * {@link #read(QName) read} method.
-     *
-     * @param resolver namespace resolver
-     * @param element node definition element
-     */
-    public NodeDefFormat(NamespaceResolver resolver, Element element) {
-        this(resolver, element, new ChildNodeDef());
-    }
-
-    /**
-     * Creates a node definition writer. The node definition element is
-     * instantiated as an empty <code>childNodeDef</code> element.
-     * The element is filled in by the {@link #write() write} method.
-     *
-     * @param resolver namespace resolver
-     * @param def node definition
-     */
-    public NodeDefFormat(NamespaceResolver resolver, ChildNodeDef def) {
-        this(resolver, new Element(CHILDNODEDEF_ELEMENT), def);
-    }
-
-    /**
-     * Returns the node definition object.
-     *
-     * @return node definition
-     */
-    public ChildNodeDef getNodeDef() {
-        return def;
     }
 
     /**
@@ -105,7 +69,7 @@ class NodeDefFormat extends ItemDefFormat {
      * @throws InvalidNodeTypeDefException if the format of the node
      *                                    definition element is invalid
      */
-    public void read(QName type) throws InvalidNodeTypeDefException {
+    protected void read(QName type) throws InvalidNodeTypeDefException {
         def.setDeclaringNodeType(type);
         super.read();
         readRequiredPrimaryTypes();
@@ -116,7 +80,7 @@ class NodeDefFormat extends ItemDefFormat {
     /**
      * Writes the node definition to the XML element.
      */
-    public void write() {
+    protected void write() {
         super.write();
         writeRequiredPrimaryTypes();
         writeDefaultPrimaryType();
@@ -130,35 +94,40 @@ class NodeDefFormat extends ItemDefFormat {
      *                                    definition element is invalid
      */
     private void readRequiredPrimaryTypes() throws InvalidNodeTypeDefException {
-        Vector vector = new Vector();
-
-        Element types = getChild(REQUIREDPRIMARYTYPES_ELEMENT);
+        Collection types = getGrandChildContents(
+                REQUIREDPRIMARYTYPES_ELEMENT, REQUIREDPRIMARYTYPE_ELEMENT);
         if (types != null) {
-            Iterator iterator =
-                types.getChildren(REQUIREDPRIMARYTYPE_ELEMENT).iterator();
-            while (iterator.hasNext()) {
-                Element type = (Element) iterator.next();
-                vector.add(fromJCRName(type.getTextTrim()));
-            }
-        }
+            Vector vector = new Vector();
 
-        def.setRequiredPrimaryTypes((QName[]) vector.toArray(new QName[0]));
+            Iterator iterator = types.iterator();
+            while (iterator.hasNext()) {
+                String type = (String) iterator.next();
+                vector.add(fromJCRName(type));
+            }
+
+            def.setRequiredPrimaryTypes((QName[]) vector.toArray(new QName[0]));
+        } else {
+            /* Default to nt:base?
+            throw new InvalidNodeTypeDefException(
+                    "Required primary type(s) not defined for child node "
+                    + def.getName() + " of node type "
+                    + def.getDeclaringNodeType());
+            */
+        }
     }
 
     /**
      * Writes the required primary types of the node definition.
      */
     private void writeRequiredPrimaryTypes() {
-        Element types = new Element(REQUIREDPRIMARYTYPES_ELEMENT);
-
         QName[] values = def.getRequiredPrimaryTypes();
+        Vector types = new Vector();
         for (int i = 0; i < values.length; i++) {
-            Element type = new Element(REQUIREDPRIMARYTYPE_ELEMENT);
-            type.setText(toJCRName(values[i]));
-            types.addContent(type);
+            types.add(toJCRName(values[i]));
         }
-
-        addChild(types);
+        setGrandChildContents(
+                REQUIREDPRIMARYTYPES_ELEMENT, REQUIREDPRIMARYTYPE_ELEMENT,
+                types);
     }
 
     /**
