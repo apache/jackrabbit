@@ -61,7 +61,7 @@ public class ServerNodeTypeManager extends ServerObject
     public RemoteNodeType getNodeType(String name) throws
             NoSuchNodeTypeException, RepositoryException, RemoteException {
         try {
-            return factory.getRemoteNodeType(manager.getNodeType(name));
+            return getFactory().getRemoteNodeType(manager.getNodeType(name));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

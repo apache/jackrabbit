@@ -65,17 +65,27 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
 public class ServerObject extends UnicastRemoteObject {
 
     /** Factory for creating server adapters. */
-    protected RemoteAdapterFactory factory;
+    private RemoteAdapterFactory factory;
 
     /**
      * Creates a basic server adapter that uses the given factory
      * to create new adapters.
      *
      * @param factory remote adapter factory
+     * @throws RemoteException on RMI errors
      */
     protected ServerObject(RemoteAdapterFactory factory)
             throws RemoteException {
         this.factory = factory;
+    }
+
+    /**
+     * Returns the remote adapter factory used to create new adapters.
+     *
+     * @return remote adapter factory
+     */
+    protected RemoteAdapterFactory getFactory() {
+        return factory;
     }
 
     /**
@@ -287,7 +297,7 @@ public class ServerObject extends UnicastRemoteObject {
      * @return remote property definition array
      * @throws RemoteException on RMI errors
      */
-    protected RemotePropertyDef[] getRemotePropertyDefArray(PropertyDef[] defs) 
+    protected RemotePropertyDef[] getRemotePropertyDefArray(PropertyDef[] defs)
             throws RemoteException {
         if (defs == null) {
             return new RemotePropertyDef[0]; // for safety

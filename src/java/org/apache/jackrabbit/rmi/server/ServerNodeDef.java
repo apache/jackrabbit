@@ -59,7 +59,7 @@ public class ServerNodeDef extends ServerItemDef implements RemoteNodeDef {
 
     /** {@inheritDoc} */
     public RemoteNodeType getDefaultPrimaryType() throws RemoteException {
-        return factory.getRemoteNodeType(def.getDefaultPrimaryType());
+        return getFactory().getRemoteNodeType(def.getDefaultPrimaryType());
     }
 
     /** {@inheritDoc} */

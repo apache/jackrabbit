@@ -26,10 +26,12 @@ import javax.jcr.MergeException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -75,7 +77,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             PathNotFoundException, ConstraintViolationException,
             RepositoryException, RemoteException {
         try {
-            return factory.getRemoteNode(node.addNode(path));
+            return getFactory().getRemoteNode(node.addNode(path));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -87,7 +89,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             NoSuchNodeTypeException, ConstraintViolationException,
             RepositoryException, RemoteException {
         try {
-            return factory.getRemoteNode(node.addNode(path, type));
+            return getFactory().getRemoteNode(node.addNode(path, type));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -97,7 +99,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteProperty getProperty(String path) throws PathNotFoundException,
             RepositoryException, RemoteException {
         try {
-            return factory.getRemoteProperty(node.getProperty(path));
+            return getFactory().getRemoteProperty(node.getProperty(path));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -195,7 +197,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteNodeType getPrimaryNodeType() throws RepositoryException,
             RemoteException {
         try {
-            return factory.getRemoteNodeType(node.getPrimaryNodeType());
+            return getFactory().getRemoteNodeType(node.getPrimaryNodeType());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -234,7 +236,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteNode getNode(String path) throws PathNotFoundException,
             RepositoryException, RemoteException {
         try {
-            return factory.getRemoteNode(node.getNode(path));
+            return getFactory().getRemoteNode(node.getNode(path));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -254,7 +256,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteProperty setProperty(String name, Value value)
             throws ValueFormatException, RepositoryException, RemoteException {
         try {
-            return factory.getRemoteProperty(node.setProperty(name, value));
+            return getFactory().getRemoteProperty(node.setProperty(name, value));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -306,7 +308,8 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteProperty setProperty(String name, Value[] values)
             throws ValueFormatException, RepositoryException, RemoteException {
         try {
-            return factory.getRemoteProperty(node.setProperty(name, values));
+            Property property = node.setProperty(name, values);
+            return getFactory().getRemoteProperty(property);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -316,7 +319,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteNodeDef getDefinition() throws RepositoryException,
             RemoteException {
         try {
-            return factory.getRemoteNodeDef(node.getDefinition());
+            return getFactory().getRemoteNodeDef(node.getDefinition());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -432,7 +435,8 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throws ValueFormatException, VersionException, LockException,
             RepositoryException, RemoteException {
         try {
-            return factory.getRemoteProperty(node.setProperty(name, values, type));
+            Property property = node.setProperty(name, values, type);
+            return getFactory().getRemoteProperty(property);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -454,7 +458,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             LockException, AccessDeniedException, RepositoryException,
             RemoteException {
         try {
-            return factory.getRemoteLock(node.getLock());
+            return getFactory().getRemoteLock(node.getLock());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -465,7 +469,8 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throws UnsupportedRepositoryOperationException, LockException,
             AccessDeniedException, RepositoryException, RemoteException {
         try {
-            return factory.getRemoteLock(node.lock(isDeep, isSessionScoped));
+            Lock lock = node.lock(isDeep, isSessionScoped);
+            return getFactory().getRemoteLock(lock);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

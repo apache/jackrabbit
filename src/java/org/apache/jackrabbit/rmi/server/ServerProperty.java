@@ -120,7 +120,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
     public RemotePropertyDef getDefinition() throws RepositoryException,
             RemoteException {
         try {
-            return factory.getRemotePropertyDef(property.getDefinition());
+            return getFactory().getRemotePropertyDef(property.getDefinition());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

@@ -63,7 +63,7 @@ public class ServerQueryManager extends ServerObject
             throws InvalidQueryException, RepositoryException, RemoteException {
         try {
             Query query = manager.createQuery(statement, language);
-            return new ServerQuery(query, factory);
+            return new ServerQuery(query, getFactory());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -74,7 +74,7 @@ public class ServerQueryManager extends ServerObject
             throws InvalidQueryException, RepositoryException, RemoteException {
         try {
             Node node = null; // TODO
-            return new ServerQuery(manager.getQuery(node), factory);
+            return new ServerQuery(manager.getQuery(node), getFactory());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
