@@ -16,43 +16,39 @@
    limitations under the License.
   -->
 <project 
-	default="tck-war" 
-	xmlns:m="jelly:maven"
-	xmlns:ant="jelly:ant"
-	xmlns:j="jelly:core"
->
+        default="tck-war" 
+        xmlns:m="jelly:maven"
+        xmlns:ant="jelly:ant"
+        xmlns:j="jelly:core">
 
-	<goal name="tck-war">
-		<attainGoal name="tck-build" />
-		<attainGoal name="war:war" />
-	</goal>
+    <goal name="tck-war">
+        <attainGoal name="jackrabbit-install" />
+        <attainGoal name="jar:jar" />
+        <attainGoal name="war:war" />
+    </goal>
 
-	<goal name="tck-build">
-		<attainGoal name="jar:install" />
-	</goal>
-
-	<postGoal name="build:start">
-	  <attainGoal name="jackrabbit-install" />
-	</postGoal>
-	
-	<goal name="jackrabbit-install">
-	  <!-- build the dependend sub project -->
-      	  <m:reactor 
+    <goal name="jackrabbit-install">
+    <!-- build the dependend sub project -->
+        <m:reactor 
             basedir="../.."
             includes="project.xml"
             goals="jar:install"
             banner="Building"
             ignoreFailures="false"/>
-	</goal>
+     </goal>
 
-	<!-- post goal for cleaning the subprojects -->
-	<postGoal name="clean">
-    	<m:reactor 
-    		basedir="${basedir}"
+     <!-- post goal for cleaning the subprojects -->
+     <postGoal name="clean">
+         <m:reactor 
+            basedir="${basedir}"
             includes="../../project.xml"
             goals="clean"
             banner="Cleaning"
             ignoreFailures="true"/>
-	</postGoal>
+     </postGoal>
 
+     <postGoal name="war:webapp">
+         <ant:copy file="target/${pom.artifactId}-${pom.currentVersion}.jar" todir="target/tck-webapp/WEB-INF/lib" />
+         <ant:delete dir="target/tck-webapp/WEB-INF/classes/org" />
+     </postGoal>
 </project>
