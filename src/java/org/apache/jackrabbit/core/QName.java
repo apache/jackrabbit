@@ -24,11 +24,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * <code>QName</code> represents the qualified name of a repository item
- * (i.e. <code>Node</code> or <code>Property</code>) or a node type.
- * <p/>
- * The external string representation is specified as follows:
- * <xmp>
+ * Qualified name. A qualified name is a combination of a namespace URI
+ * and a local part. Instances of this class are used by Jackrabbit to
+ * represent the names of JCR content items and other objects.
+ * <p>
+ * A qualified name is immutable once created, although the prefixed JCR
+ * name representation of the qualified name can change depending on the
+ * namespace mappings in effect.
+ *
+ * <h2>String representations</h2>
+ * <p>
+ * The prefixed JCR name format of a qualified name is specified by
+ * JSR 170 as follows:
+ * <pre>
  * name ::= [prefix ':'] simplename
  * prefix ::= << Any valid XML Name >>
  * simplename ::= nonspacestring [[string] nonspacestring]
@@ -41,36 +49,49 @@ import java.util.regex.Pattern;
  * '''(the single quote),
  * '"'(the double quote),
  * any whitespace character >>
- * </xmp>
+ * </pre>
+ * <p>
+ * In addition to the prefixed JCR name format, a qualified name can also
+ * be represented using the format "<code>{namespaceURI}localPart</code>".
  */
 public class QName implements Cloneable, Comparable, Serializable {
 
+    /** Serialization UID of this class. */
     static final long serialVersionUID = -2712313010017755368L;
 
     /**
-     * Pattern used to validate and parse name:<p>
+     * The reqular expression pattern used to validate and parse
+     * qualified names.
+     * <p>
+     * The pattern contains the following groups:
      * <ul>
      * <li>group 1 is namespace prefix incl. delimiter (colon)
      * <li>group 2 is namespace prefix excl. delimiter (colon)
      * <li>group 3 is localName
      * </ul>
      */
-    private static final Pattern NAME_PATTERN =
-            Pattern.compile("(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)");
+    private static final Pattern NAME_PATTERN = Pattern.compile(
+            "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
+            + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)");
 
+    /** The memorized hash code of this qualified name. */
     private transient int hash;
+
+    /** The memorized string representation of this qualified name. */
     private transient String string;
 
+    /** The namespace URI of this qualified name. */
     protected final String namespaceURI;
+
+    /** The local part of this qualified name. */
     protected final String localName;
 
-
     /**
-     * Creates a new <code>QName</code> instance with the given <code>namespaceURI</code>
-     * and <code>localName</code>.
+     * Creates a new qualified name with the given namespace URI and
+     * local part.
      *
-     * @param namespaceURI
-     * @param localName
+     * @param namespaceURI namespace uri
+     * @param localName local part
      */
     public QName(String namespaceURI, String localName) {
         if (namespaceURI == null) {
@@ -86,12 +107,16 @@ public class QName implements Cloneable, Comparable, Serializable {
     }
 
     //------------------------------------------------------< factory methods >
+
     /**
-     * @param rawName
-     * @param resolver
-     * @return
-     * @throws IllegalNameException
-     * @throws UnknownPrefixException
+     * Parses the given prefixed JCR name into a qualified name using the
+     * given namespace resolver.
+     *
+     * @param rawName prefixed JCR name
+     * @param resolver namespace resolver
+     * @return qualified name
+     * @throws IllegalNameException if the given name is not a valid JCR name
+     * @throws UnknownPrefixException if the JCR name prefix does not resolve
      */
     public static QName fromJCRName(String rawName, NamespaceResolver resolver)
             throws IllegalNameException, UnknownPrefixException {
@@ -131,7 +156,7 @@ public class QName implements Cloneable, Comparable, Serializable {
      *                                  as a <code>QName</code>.
      * @see #toString()
      */
-    public static QName valueOf(String s) {
+    public static QName valueOf(String s) throws IllegalArgumentException {
         if ("".equals(s) || s == null) {
             throw new IllegalArgumentException("invalid QName literal");
         }
@@ -218,23 +243,31 @@ public class QName implements Cloneable, Comparable, Serializable {
 
     //-------------------------------------------------------< public methods >
     /**
-     * @return
+     * Returns the local part of the qualified name.
+     *
+     * @return local name
      */
     public String getLocalName() {
         return localName;
     }
 
     /**
-     * @return
+     * Returns the namespace URI of the qualified name.
+     *
+     * @return namespace URI
      */
     public String getNamespaceURI() {
         return namespaceURI;
     }
 
     /**
-     * @param resolver
-     * @return
-     * @throws NoPrefixDeclaredException
+     * Returns the qualified name in the prefixed JCR name format.
+     * The namespace URI is mapped to a prefix using the given
+     * namespace resolver.
+     *
+     * @param resolver namespace resolver
+     * @return prefixed name
+     * @throws NoPrefixDeclaredException if the namespace fails to resolve
      */
     public String toJCRName(NamespaceResolver resolver) throws NoPrefixDeclaredException {
         StringBuffer sb = new StringBuffer();
@@ -273,6 +306,16 @@ public class QName implements Cloneable, Comparable, Serializable {
         return string;
     }
 
+    /**
+     * Compares two qualified names for equality. Returns <code>true</code>
+     * if the given object is a qualified name and has the same namespace URI
+     * and local part as this qualified name.
+     *
+     * @param obj the object to compare this qualified name with
+     * @return <code>true</code> if the object is equal to this qualified name,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -285,6 +328,14 @@ public class QName implements Cloneable, Comparable, Serializable {
         return false;
     }
 
+    /**
+     * Returns the hash code of this qualified name. The hash code is
+     * computed from the namespace URI and local part of the qualified
+     * name and memorized for better performance.
+     *
+     * @return hash code
+     * @see Object#hashCode()
+     */
     public int hashCode() {
         // QName is immutable, we can store the computed hash code value
         int h = hash;
@@ -298,18 +349,27 @@ public class QName implements Cloneable, Comparable, Serializable {
     }
 
     /**
-     * Creates a clone of this <code>QName</code>.
+     * Creates a clone of this qualified name.
      * Overriden in order to make <code>clone()</code> public.
      *
      * @return a clone of this instance
-     * @throws CloneNotSupportedException
+     * @throws CloneNotSupportedException never thrown
+     * @see Object#clone()
      */
     public Object clone() throws CloneNotSupportedException {
         // QName is immutable, no special handling required
         return super.clone();
     }
 
-    public int compareTo(Object o) {
+    /**
+     * Compares two qualified names.
+     *
+     * @param o the object to compare this qualified name with
+     * @return comparison result
+     * @throws ClassCastException if the given object is not a qualified name
+     * @see Comparable#compareTo(Object)
+     */
+    public int compareTo(Object o) throws ClassCastException {
         return toString().compareTo(((QName) o).toString());
     }
 
