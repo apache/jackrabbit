@@ -76,6 +76,9 @@ public class VersionHistoryNodeState extends VirtualNodeState {
      * @see org.apache.jackrabbit.core.state.NodeState#getChildNodeEntry(org.apache.jackrabbit.core.QName, int)
      */
     public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
+        if (super.hasChildNodeEntry(nodeName, index)) {
+            return super.getChildNodeEntry(nodeName, index);
+        }
         try {
             if (index <= 1) {
                 InternalVersion v = vh.getVersion(nodeName);
@@ -86,7 +89,7 @@ public class VersionHistoryNodeState extends VirtualNodeState {
         } catch (RepositoryException e) {
             // ignore
         }
-        return super.getChildNodeEntry(nodeName, index);
+        return null;
     }
 
     /**

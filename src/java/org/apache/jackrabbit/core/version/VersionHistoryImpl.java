@@ -96,11 +96,18 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionByLabel(String)
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
-        InternalVersion v = history.getVersionByLabel(label);
-        if (v == null) {
-            throw new VersionException("No version with label '" + label + "' exists in this version history.");
+        try {
+            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
+            InternalVersion v = history.getVersionByLabel(qLabel);
+            if (v == null) {
+                throw new VersionException("No version with label '" + label + "' exists in this version history.");
+            }
+            return (Version) session.getNodeByUUID(v.getId());
+        } catch (IllegalNameException e) {
+            throw new RepositoryException(e);
+        } catch (UnknownPrefixException e) {
+            throw new RepositoryException(e);
         }
-        return (Version) session.getNodeByUUID(v.getId());
     }
 
     /**
@@ -110,7 +117,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws VersionException, RepositoryException {
         try {
             QName name = QName.fromJCRName(version, session.getNamespaceResolver());
-            history.addVersionLabel(name, label, move);
+            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
+            history.addVersionLabel(name, qLabel, move);
         } catch (IllegalNameException e) {
             throw new RepositoryException(e);
         } catch (UnknownPrefixException e) {
@@ -122,7 +130,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#removeVersionLabel(String)
      */
     public void removeVersionLabel(String label) throws RepositoryException {
-        history.removeVersionLabel(label);
+        try {
+            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
+            history.removeVersionLabel(qLabel);
+        } catch (IllegalNameException e) {
+            throw new RepositoryException(e);
+        } catch (UnknownPrefixException e) {
+            throw new RepositoryException(e);
+        }
     }
 
 
@@ -130,7 +145,16 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionLabels
      */
     public String[] getVersionLabels() {
-        return history.getVersionLabels();
+        try {
+            QName[] labels = history.getVersionLabels();
+            String[] ret = new String[labels.length];
+            for (int i=0; i<labels.length; i++) {
+                ret[i] = labels[i].toJCRName(session.getNamespaceResolver());
+            }
+            return ret;
+        } catch (NoPrefixDeclaredException e) {
+            throw new IllegalArgumentException("Unable to resolve label name: " + e.toString());
+        }
     }
 
     /**
@@ -139,14 +163,30 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public String[] getVersionLabels(Version version)
             throws VersionException, RepositoryException {
         checkOwnVersion(version);
-        return ((VersionImpl) version).getInternalVersion().getLabels();
+        try {
+            QName[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
+            String[] ret = new String[labels.length];
+            for (int i=0; i<labels.length; i++) {
+                ret[i] = labels[i].toJCRName(session.getNamespaceResolver());
+            }
+            return ret;
+        } catch (NoPrefixDeclaredException e) {
+            throw new IllegalArgumentException("Unable to resolve label name: " + e.toString());
+        }
     }
 
     /**
      * @see VersionHistory#hasVersionLabel(String)
      */
     public boolean hasVersionLabel(String label) {
-        return history.getVersionByLabel(label)!=null;
+        try {
+            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
+            return history.getVersionByLabel(qLabel)!=null;
+        } catch (IllegalNameException e) {
+            throw new IllegalArgumentException("Unable to resolve label: " + e);
+        } catch (UnknownPrefixException e) {
+            throw new IllegalArgumentException("Unable to resolve label: " + e);
+        }
     }
 
     /**
@@ -155,7 +195,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public boolean hasVersionLabel(Version version, String label)
             throws VersionException, RepositoryException {
         checkOwnVersion(version);
-        return ((VersionImpl) version).getInternalVersion().hasLabel(label);
+        try {
+            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
+            return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
+        } catch (IllegalNameException e) {
+            throw new RepositoryException(e);
+        } catch (UnknownPrefixException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**

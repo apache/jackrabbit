@@ -74,7 +74,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @see VersionHistory#getVersionByLabel(java.lang.String)
      */
-    public InternalVersion getVersionByLabel(String label);
+    public InternalVersion getVersionByLabel(QName label);
 
     /**
      * Removes the indicated version from this VersionHistory. If the specified
@@ -103,7 +103,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @return the version that was previously assigned by this label or <code>null</code>.
      * @throws VersionException
      */
-    public InternalVersion addVersionLabel(QName name, String label, boolean move)
+    public InternalVersion addVersionLabel(QName name, QName label, boolean move)
             throws VersionException;
 
     /**
@@ -113,7 +113,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @return the version that had the label assigned
      * @throws VersionException if the label does not exist
      */
-    public InternalVersion removeVersionLabel(String label) throws VersionException;
+    public InternalVersion removeVersionLabel(QName label) throws VersionException;
 
     /**
      * Returns an iterator over all versions (not ordered yet), including the
@@ -142,5 +142,5 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * version history
      * @return
      */
-    public String[] getVersionLabels();
+    public QName[] getVersionLabels();
 }

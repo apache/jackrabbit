@@ -199,7 +199,11 @@
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <propertyDef name="*" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" multiple="true" />
+        <propertyDef name="*" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" multiple="false">
+            <valueConstraints>
+                <valueConstraint>nt:version</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
     </nodeType>
     <nodeType name="nt:version" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
         <supertypes>

@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.util.Text;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.*;
 import org.apache.log4j.Logger;
@@ -134,7 +133,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         PersistentNode labels[] = labelNode.getChildNodes();
         for (int i = 0; i < labels.length; i++) {
             PersistentNode lNode = labels[i];
-            String name = (String) lNode.getPropertyValue(NativePVM.PROPNAME_NAME).internalValue();
+            QName name = (QName) lNode.getPropertyValue(NativePVM.PROPNAME_NAME).internalValue();
             String ref = (String) lNode.getPropertyValue(NativePVM.PROPNAME_VERSION).internalValue();
             InternalVersionImpl v = (InternalVersionImpl) getVersion(ref);
             labelCache.put(name, v);
@@ -221,7 +220,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
     /**
      * @see javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)
      */
-    public InternalVersion getVersionByLabel(String label) {
+    public InternalVersion getVersionByLabel(QName label) {
         return (InternalVersion) labelCache.get(label);
     }
 
@@ -254,11 +253,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
             node.removeNode(v.getNode().getName());
 
             // unregister from labels
-            String[] labels = v.internalGetLabels();
+            QName[] labels = v.internalGetLabels();
             for (int i = 0; i < labels.length; i++) {
                 v.internalRemoveLabel(labels[i]);
-                QName name = new QName("", Text.md5(labels[i]));
-                labelNode.removeNode(name);
+                labelNode.removeNode(labels[i]);
             }
             // detach from the version graph
             v.internalDetach();
@@ -278,9 +276,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
     }
 
     /**
-     * @see InternalVersionHistory#addVersionLabel(org.apache.jackrabbit.core.QName, String, boolean)
+     * @see InternalVersionHistory#addVersionLabel(QName, QName, boolean)
      */
-    public InternalVersion addVersionLabel(QName versionName, String label, boolean move)
+    public InternalVersion addVersionLabel(QName versionName, QName label, boolean move)
             throws VersionException {
 
         InternalVersion version = getVersion(versionName);
@@ -301,12 +299,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         }
         labelCache.put(label, version);
         ((InternalVersionImpl) version).internalAddLabel(label);
-        QName name = new QName("", Text.md5(label));
         try {
             UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
             stateMgr.edit();
-
-            PersistentNode lNode = labelNode.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
+            PersistentNode lNode = labelNode.addNode(label, NodeTypeRegistry.NT_UNSTRUCTURED);
             lNode.setPropertyValue(NativePVM.PROPNAME_NAME, InternalValue.create(label));
             lNode.setPropertyValue(NativePVM.PROPNAME_VERSION, InternalValue.create(version.getId()));
             labelNode.store();
@@ -321,9 +317,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
     }
 
     /**
-     * @see InternalVersionHistory#removeVersionLabel(String)
+     * @see InternalVersionHistory#removeVersionLabel(QName)
      */
-    public InternalVersion removeVersionLabel(String label) throws VersionException {
+    public InternalVersion removeVersionLabel(QName label) throws VersionException {
 
 
         InternalVersionImpl v = (InternalVersionImpl) labelCache.remove(label);
@@ -331,12 +327,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
             throw new VersionException("Version label " + label + " is not in version history.");
         }
         v.internalRemoveLabel(label);
-        QName name = new QName("", Text.md5(label));
-
         try {
             UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
             stateMgr.edit();
-            labelNode.removeNode(name);
+            labelNode.removeNode(label);
             labelNode.store();
             stateMgr.update();
         } catch (ItemStateException e) {
@@ -426,8 +420,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
     /**
      * @see org.apache.jackrabbit.core.version.InternalVersionHistory#getVersionLabels()
      */
-    public String[] getVersionLabels() {
-        return (String[]) labelCache.keySet().toArray(new String[labelCache.size()]);
+    public QName[] getVersionLabels() {
+        return (QName[]) labelCache.keySet().toArray(new QName[labelCache.size()]);
     }
 
     protected String getUUID() {

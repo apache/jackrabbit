@@ -263,7 +263,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      *
      * @param v the successor to detach
      */
-    private void internalDetachSuccessor(InternalVersionImpl v) throws RepositoryException {
+    private void internalDetachSuccessor(InternalVersionImpl v) {
         // remove 'v' from successors list
         for (int i = 0; i < successors.size(); i++) {
             if (successors.get(i).equals(v)) {
@@ -309,7 +309,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      * @param label
      * @return
      */
-    protected boolean internalAddLabel(String label) {
+    protected boolean internalAddLabel(QName label) {
         if (labelCache == null) {
             labelCache = new HashSet();
         }
@@ -322,7 +322,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      * @param label
      * @return
      */
-    protected boolean internalRemoveLabel(String label) {
+    protected boolean internalRemoveLabel(QName label) {
         if (labelCache == null) {
             return false;
         } else {
@@ -336,14 +336,14 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      * @param label
      * @return
      */
-    protected boolean internalHasLabel(String label) {
+    protected boolean internalHasLabel(QName label) {
         return labelCache == null ? false : labelCache.contains(label);
     }
 
     /**
-     * @see InternalVersion#hasLabel(String)
+     * @see InternalVersion#hasLabel(QName)
      */
-    public boolean hasLabel(String label) {
+    public boolean hasLabel(QName label) {
         return internalHasLabel(label);
     }
 
@@ -352,14 +352,14 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
      *
      * @return
      */
-    protected String[] internalGetLabels() {
-        return labelCache == null ? new String[0] : (String[]) labelCache.toArray(new String[labelCache.size()]);
+    protected QName[] internalGetLabels() {
+        return labelCache == null ? new QName[0] : (QName[]) labelCache.toArray(new QName[labelCache.size()]);
     }
 
     /**
      * @see InternalVersionImpl#getLabels()
      */
-    public String[] getLabels() {
+    public QName[] getLabels() {
         return internalGetLabels();
     }
 

@@ -95,12 +95,12 @@ public interface InternalVersion extends InternalVersionItem {
      * @return <code>true</code> if the label is assigned to this version;
      *         <code>false</code> otherwise.
      */
-    public boolean hasLabel(String label);
+    public boolean hasLabel(QName label);
 
     /**
      * returns the labels that are assigned to this version
      *
      * @return a string array of labels.
      */
-    public String[] getLabels();
+    public QName[] getLabels();
 }
