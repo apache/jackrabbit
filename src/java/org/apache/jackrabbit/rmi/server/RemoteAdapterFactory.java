@@ -26,6 +26,7 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
+import javax.jcr.nodetype.ItemDef;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -36,6 +37,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -161,6 +163,21 @@ public interface RemoteAdapterFactory {
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType getRemoteNodeType(NodeType type) throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local item definition.
+     * This method will return an adapter that implements <i>only</i> the
+     * {@link ItemDef ItemDef} interface. The caller may want to introspect
+     * the local item definition to determine whether to use either the
+     * {@link #getRemoteNodeDef(NodeDef) getRemoteNodeDef} or the
+     * {@link #getRemotePropertyDef(PropertyDef) getRemotePropertyDef}
+     * method instead.
+     *
+     * @param def local item definition
+     * @return remote item definition adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteItemDef getRemoteItemDef(ItemDef def) throws RemoteException;
 
     /**
      * Returns a remote adapter for the given local node definition.

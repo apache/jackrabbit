@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,25 +24,21 @@ import junit.framework.TestSuite;
  */
 public class TestAll {
 
+    /** This class cannot be instantiated. */
+    private TestAll() {
+    }
+
+    /**
+     * Returns the JCR-RMI test suite.
+     *
+     * @return JCR-RMI test suite
+     */
     public static Test suite() {
         TestSuite suite = new TestSuite("Tests for org.apache.jackrabbit.rmi");
         //$JUnit-BEGIN$
-        suite.addTestSuite(RemoteRepositoryTest.class);
-        suite.addTestSuite(RemoteSessionTest.class);
-        suite.addTestSuite(RemoteWorkspaceTest.class);
-        suite.addTestSuite(RemoteItemTest.class);
-        suite.addTestSuite(RemoteNodeTest.class);
-        suite.addTestSuite(RemotePropertyTest.class);
-        suite.addTestSuite(RemoteNamespaceRegistryTest.class);
-        // .nodetype
-        suite.addTestSuite(RemoteItemDefTest.class);
-        suite.addTestSuite(RemoteNodeDefTest.class);
-        suite.addTestSuite(RemotePropertyDefTest.class);
-        suite.addTestSuite(RemoteNodeTypeTest.class);
-        suite.addTestSuite(RemoteNodeTypeManagerTest.class);
-        // .lock
-        suite.addTestSuite(RemoteLockTest.class);
+        suite.addTestSuite(RemoteAdapterTest.class);
         //$JUnit-END$
         return suite;
     }
+
 }
