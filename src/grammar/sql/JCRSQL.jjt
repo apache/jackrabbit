@@ -93,7 +93,9 @@ TOKEN [ IGNORE_CASE ] :
 | < OR: "OR" >
 | < IS: "IS" >
 | < AND: "AND" >
+| < ASC: "ASC" >
 | < NOT: "NOT" >
+| < DESC: "DESC" >
 | < LIKE: "LIKE" >
 | < NULL: "NULL" >
 | < FROM: "FROM" >
@@ -551,5 +553,23 @@ QName Identifier() :
 void OrderByClause() :
 {}
 {
-  <ORDER> <BY> Identifier() (<COMMA> Identifier())*
+  <ORDER> <BY> OrderSpec() (<COMMA> OrderSpec())*
+}
+
+void OrderSpec() :
+{}
+{
+  Identifier() (AscendingOrderSpec() | DescendingOrderSpec())?
+}
+
+void AscendingOrderSpec() :
+{}
+{
+  <ASC>
+}
+
+void DescendingOrderSpec() :
+{}
+{
+  <DESC>
 }

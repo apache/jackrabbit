@@ -368,14 +368,14 @@ class QueryFormat implements QueryNodeVisitor, Constants {
     public Object visit(OrderQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         sb.append(" ORDER BY");
-        QName[] properties = node.getOrderByProperties();
-        if (properties.length > 0) {
+        OrderQueryNode.OrderSpec[] specs = node.getOrderSpecs();
+        if (specs.length > 0) {
             try {
                 String comma = "";
-                for (int i = 0; i < properties.length; i++) {
+                for (int i = 0; i < specs.length; i++) {
                     sb.append(comma).append(" ");
-                    appendName(properties[i], resolver, sb);
-                    if (!node.isAscending(i)) {
+                    appendName(specs[i].getProperty(), resolver, sb);
+                    if (!specs[i].isAscending()) {
                         sb.append(" DESC");
                     }
                     comma = ",";

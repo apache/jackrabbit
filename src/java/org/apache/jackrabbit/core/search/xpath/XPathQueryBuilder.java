@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.search.RelationQueryNode;
 import org.apache.jackrabbit.core.search.NotQueryNode;
 import org.apache.jackrabbit.core.search.TextsearchQueryNode;
 import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.search.OrderQueryNode;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SearchManager;
@@ -45,7 +46,7 @@ import java.util.Calendar;
 /**
  * Query builder that translates a XPath statement into a query tree structure.
  */
-public class XPathQueryBuilder implements XPathVisitor {
+public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /** QName for 'fn:not' */
     static final QName FN_NOT = new QName(SearchManager.NS_FN_URI, "not");
@@ -117,6 +118,9 @@ public class XPathQueryBuilder implements XPathVisitor {
             throws InvalidQueryException {
         this.resolver = resolver;
         try {
+            // create an XQuery statement because we're actually using an
+            // XQuery parser.
+            statement = "for $v in " + statement + " return $v";
             XPath query = new XPath(new StringReader(statement));
             query.XPath2().jjtAccept(this, root);
         } catch (ParseException e) {
@@ -192,18 +196,19 @@ public class XPathQueryBuilder implements XPathVisitor {
      */
     public Object visit(SimpleNode node, Object data) {
         switch (node.getId()) {
-            case XPathTreeConstants.JJTXPATH:
+            case JJTXPATH2:
                 data = createPathQueryNode(node);
                 break;
-            case XPathTreeConstants.JJTROOT:
+            case JJTROOT:
                 ((PathQueryNode) data).addPathStep(new LocationStepQueryNode((QueryNode) data, new QName("", ""), false));
                 break;
-            case XPathTreeConstants.JJTROOTDESCENDANTS:
+            case JJTROOTDESCENDANTS:
                 ((PathQueryNode) data).addPathStep(new LocationStepQueryNode((QueryNode) data, new QName("", ""), false));
                 break;
-            case XPathTreeConstants.JJTSTEPEXPR:
+            case JJTSTEPEXPR:
                 if (isAttributeAxis(node)) {
-                    if (data instanceof RelationQueryNode) {
+                    if (data instanceof RelationQueryNode
+                            || data instanceof OrderQueryNode) {
                         // traverse
                         node.childrenAccept(this, data);
                     } else if (data instanceof NotQueryNode) {
@@ -232,45 +237,59 @@ public class XPathQueryBuilder implements XPathVisitor {
                     }
                 }
                 break;
-            case XPathTreeConstants.JJTNAMETEST:
+            case JJTNAMETEST:
                 if (data instanceof LocationStepQueryNode
                         || data instanceof RelationQueryNode
                         || data instanceof PathQueryNode) {
                     createNameTest(node, (QueryNode) data);
+                } else if (data instanceof OrderQueryNode) {
+                    data = createOrderSpec(node, (OrderQueryNode) data);
                 } else {
                     // traverse
                     node.childrenAccept(this, data);
                 }
                 break;
-            case XPathTreeConstants.JJTOREXPR:
+            case JJTOREXPR:
                 NAryQueryNode parent = (NAryQueryNode) data;
                 data = new OrQueryNode(parent);
                 parent.addOperand((QueryNode) data);
                 // traverse
                 node.childrenAccept(this, data);
                 break;
-            case XPathTreeConstants.JJTANDEXPR:
+            case JJTANDEXPR:
                 parent = (NAryQueryNode) data;
                 data = new AndQueryNode(parent);
                 parent.addOperand((QueryNode) data);
                 // traverse
                 node.childrenAccept(this, data);
                 break;
-            case XPathTreeConstants.JJTCOMPARISONEXPR:
+            case JJTCOMPARISONEXPR:
                 createExpression(node, (NAryQueryNode) data);
                 break;
-            case XPathTreeConstants.JJTSTRINGLITERAL:
-            case XPathTreeConstants.JJTDECIMALLITERAL:
-            case XPathTreeConstants.JJTDOUBLELITERAL:
-            case XPathTreeConstants.JJTINTEGERLITERAL:
+            case JJTSTRINGLITERAL:
+            case JJTDECIMALLITERAL:
+            case JJTDOUBLELITERAL:
+            case JJTINTEGERLITERAL:
                 if (data instanceof RelationQueryNode) {
                     assignValue(node, (RelationQueryNode) data);
                 } else {
                     exceptions.add(new InvalidQueryException("Internal error: data is not a RelationQueryNode"));
                 }
                 break;
-            case XPathTreeConstants.JJTFUNCTIONCALL:
+            case JJTFUNCTIONCALL:
                 data = createFunction(node, (QueryNode) data);
+                break;
+            case JJTORDERBYCLAUSE:
+                root.setOrderNode(new OrderQueryNode(root));
+                data = root.getOrderNode();
+                node.childrenAccept(this, data);
+                break;
+            case JJTORDERMODIFIER:
+                if (node.jjtGetNumChildren() > 0
+                        && ((SimpleNode) node.jjtGetChild(0)) .getId() == JJTDESCENDING) {
+                    OrderQueryNode.OrderSpec[] specs = ((OrderQueryNode) data).getOrderSpecs();
+                    specs[specs.length - 1].setAscending(false);
+                }
                 break;
             default:
                 // per default traverse
@@ -299,8 +318,8 @@ public class XPathQueryBuilder implements XPathVisitor {
                 parent.addPathStep(queryNode);
                 break;
             }
-            descenant = (c.getId() == XPathTreeConstants.JJTSLASHSLASH
-                    || c.getId() == XPathTreeConstants.JJTROOTDESCENDANTS);
+            descenant = (c.getId() == JJTSLASHSLASH
+                    || c.getId() == JJTROOTDESCENDANTS);
         }
 
         node.childrenAccept(this, queryNode);
@@ -318,7 +337,7 @@ public class XPathQueryBuilder implements XPathVisitor {
     private void createNameTest(SimpleNode node, QueryNode queryNode) {
         if (node.jjtGetNumChildren() > 0) {
             SimpleNode child = (SimpleNode) node.jjtGetChild(0);
-            if (child.getId() == XPathTreeConstants.JJTQNAME) {
+            if (child.getId() == JJTQNAME) {
                 try {
                     if (queryNode instanceof LocationStepQueryNode) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
@@ -329,13 +348,17 @@ public class XPathQueryBuilder implements XPathVisitor {
                     } else if (queryNode instanceof PathQueryNode) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
                         root.addSelectProperty(name);
+                    } else if (queryNode instanceof OrderQueryNode) {
+                        QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
+                        // todo implement properly
+                        root.getOrderNode().addOrderSpec(name, true);
                     }
                 } catch (IllegalNameException e) {
                     exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
                 } catch (UnknownPrefixException e) {
                     exceptions.add(new InvalidQueryException("Unknown prefix: " + child.getValue()));
                 }
-            } else if (child.getId() == XPathTreeConstants.JJTSTAR) {
+            } else if (child.getId() == JJTSTAR) {
                 if (queryNode instanceof LocationStepQueryNode) {
                     ((LocationStepQueryNode) queryNode).setNameTest(null);
                 }
@@ -352,7 +375,7 @@ public class XPathQueryBuilder implements XPathVisitor {
      * @param queryNode the current <code>QueryNode</code>.
      */
     private void createExpression(SimpleNode node, NAryQueryNode queryNode) {
-        if (node.getId() != XPathTreeConstants.JJTCOMPARISONEXPR) {
+        if (node.getId() != JJTCOMPARISONEXPR) {
             throw new IllegalArgumentException("node must be of type ComparisonExpr");
         }
         // get operation type
@@ -424,7 +447,7 @@ public class XPathQueryBuilder implements XPathVisitor {
      * @param queryNode current node in the query tree.
      */
     private void assignValue(SimpleNode node, RelationQueryNode queryNode) {
-        if (node.getId() == XPathTreeConstants.JJTSTRINGLITERAL) {
+        if (node.getId() == JJTSTRINGLITERAL) {
             String value = node.getValue().substring(1, node.getValue().length() - 1);
             if (node.getValue().charAt(0) == '"') {
                 value = value.replaceAll("\"\"", "\"");
@@ -432,11 +455,11 @@ public class XPathQueryBuilder implements XPathVisitor {
                 value = value.replaceAll("''", "'");
             }
             queryNode.setStringValue(value);
-        } else if (node.getId() == XPathTreeConstants.JJTDECIMALLITERAL) {
+        } else if (node.getId() == JJTDECIMALLITERAL) {
             queryNode.setDoubleValue(Double.parseDouble(node.getValue()));
-        } else if (node.getId() == XPathTreeConstants.JJTDOUBLELITERAL) {
+        } else if (node.getId() == JJTDOUBLELITERAL) {
             queryNode.setDoubleValue(Double.parseDouble(node.getValue()));
-        } else if (node.getId() == XPathTreeConstants.JJTINTEGERLITERAL) {
+        } else if (node.getId() == JJTINTEGERLITERAL) {
             queryNode.setLongValue(Long.parseLong(node.getValue()));
         } else {
             exceptions.add(new InvalidQueryException("Unsupported literal type:" + node.toString()));
@@ -476,7 +499,7 @@ public class XPathQueryBuilder implements XPathVisitor {
                     if (queryNode instanceof RelationQueryNode) {
                         RelationQueryNode rel = (RelationQueryNode) queryNode;
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(1).jjtGetChild(0);
-                        if (literal.getId() == XPathTreeConstants.JJTSTRINGLITERAL) {
+                        if (literal.getId() == JJTSTRINGLITERAL) {
                             String value = literal.getValue();
                             // strip quotes
                             value = value.substring(1, value.length() - 1);
@@ -501,7 +524,7 @@ public class XPathQueryBuilder implements XPathVisitor {
                 if (node.jjtGetNumChildren() == 2) {
                     SimpleNode literal = (SimpleNode) node.jjtGetChild(1).jjtGetChild(0);
                     if (queryNode instanceof NAryQueryNode) {
-                        if (literal.getId() == XPathTreeConstants.JJTSTRINGLITERAL) {
+                        if (literal.getId() == JJTSTRINGLITERAL) {
                             String value = literal.getValue();
                             // strip quotes
                             value = value.substring(1, value.length() - 1);
@@ -532,7 +555,7 @@ public class XPathQueryBuilder implements XPathVisitor {
                         }
 
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
-                        if (literal.getId() == XPathTreeConstants.JJTSTRINGLITERAL) {
+                        if (literal.getId() == JJTSTRINGLITERAL) {
                             String value = literal.getValue();
                             // strip quotes
                             value = value.substring(1, value.length() - 1);
@@ -556,6 +579,22 @@ public class XPathQueryBuilder implements XPathVisitor {
         return queryNode;
     }
 
+    private OrderQueryNode.OrderSpec createOrderSpec(SimpleNode node,
+                                                     OrderQueryNode queryNode) {
+        SimpleNode child = (SimpleNode) node.jjtGetChild(0);
+        OrderQueryNode.OrderSpec spec = null;
+        try {
+            QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
+            spec = new OrderQueryNode.OrderSpec(name, true);
+            queryNode.addOrderSpec(spec);
+        } catch (IllegalNameException e) {
+            exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
+        } catch (UnknownPrefixException e) {
+            exceptions.add(new InvalidQueryException("Unknown prefix: " + child.getValue()));
+        }
+        return spec;
+    }
+
     /**
      * Returns true if <code>node</code> has a child node which is the attribute
      * axis.
@@ -564,7 +603,7 @@ public class XPathQueryBuilder implements XPathVisitor {
      */
     private boolean isAttributeAxis(SimpleNode node) {
         for (int i = 0; i < node.jjtGetNumChildren(); i++) {
-            if (((SimpleNode) node.jjtGetChild(i)).getId() == XPathTreeConstants.JJTAT) {
+            if (((SimpleNode) node.jjtGetChild(i)).getId() == JJTAT) {
                 return true;
             }
         }

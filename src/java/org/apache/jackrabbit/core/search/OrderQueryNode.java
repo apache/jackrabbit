@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.search;
 
 import org.apache.jackrabbit.core.QName;
 
+import java.util.List;
+import java.util.ArrayList;
+
 /**
  * Implements a query node that defines the order of nodes according to the
  * values of properties.
@@ -25,33 +28,37 @@ import org.apache.jackrabbit.core.QName;
 public class OrderQueryNode extends QueryNode {
 
     /**
-     * The name of the properties to order
+     * The order spects
      */
-    private QName[] properties;
-
-    /**
-     * Array of flag indicating whether a node is ordered ascending or descending
-     */
-    private boolean[] orderSpecs;
+    private List specs = new ArrayList();
 
     /**
      * Creates a new <code>OrderQueryNode</code> with a reference to a parent
      * node and sort properties.
      *
      * @param parent     the parent node of this query node.
-     * @param properties the names of the properties to sort the result nodes.
-     * @param orderSpecs if <code>true</code> a result node is orderd ascending;
-     *                   otherwise descending.
      */
-    public OrderQueryNode(QueryNode parent, QName[] properties, boolean[] orderSpecs) {
+    public OrderQueryNode(QueryNode parent) {
         super(parent);
-        if (properties.length != orderSpecs.length) {
-            throw new IllegalArgumentException("Number of propertes and orderSpecs must be the same");
-        }
-        this.properties = properties;
-        this.orderSpecs = orderSpecs;
     }
 
+    /**
+     * Adds an order specification to this query node.
+     * @param property the name of the property.
+     * @param ascending if <code>true</code> values of this properties are
+     *   ordered ascending; descending if <code>false</code>.
+     */
+    public void addOrderSpec(QName property, boolean ascending) {
+        specs.add(new OrderSpec(property, ascending));
+    }
+
+    /**
+     * Adds an order specification to this query node.
+     * @param spec the order spec.
+     */
+    public void addOrderSpec(OrderSpec spec) {
+        specs.add(spec);
+    }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
@@ -67,30 +74,73 @@ public class OrderQueryNode extends QueryNode {
      *
      * @return the order spec for the property <code>i</code>.
      *
-     * @exception ArrayIndexOutOfBoundsException if there is no property with
+     * @exception IndexOutOfBoundsException if there is no property with
      * index <code>i</code>.
      */
     public boolean isAscending(int i) {
-        return orderSpecs[i];
+        return ((OrderSpec) specs.get(i)).ascending;
     }
 
     /**
-     * Returns a <code>QName</code> array that contains the name of the properties
-     * to sort the result nodes.
+     * Returns a <code>OrderSpec</code> array that contains order by
+     * specifications.
      *
-     * @return names of order properties.
+     * @return order by specs.
      */
-    public QName[] getOrderByProperties() {
-        return properties;
+    public OrderSpec[] getOrderSpecs() {
+        return (OrderSpec[]) specs.toArray(new OrderSpec[specs.size()]);
     }
+
+    //------------------< OrderSpec class >-------------------------------------
 
     /**
-     * Returns a boolean array that contains the sort order specification
-     * for each property returned by {@link #getOrderByProperties()}.
-     * @return the sort specification.
+     * Implements a single order specification. Contains a property name
+     * and whether it is ordered ascending or descending.
      */
-    public boolean[] getOrderBySpecs() {
-        return orderSpecs;
-    }
+    public static final class OrderSpec {
 
+        /** The name of the property */
+        private QName property;
+
+        /** If <code>true</code> this property is orderd ascending */
+        private boolean ascending;
+
+        /**
+         * Creates a new <code>OrderSpec</code> for <code>property</code>.
+         * @param property the name of the property.
+         * @param ascending if <code>true</code> the property is ordered
+         * ascending, otherwise descending.
+         */
+        public OrderSpec(QName property, boolean ascending) {
+            this.property = property;
+            this.ascending = ascending;
+        }
+
+        /**
+         * Returns the name of the property.
+         * @return the name of the property.
+         */
+        public QName getProperty() {
+            return property;
+        }
+
+        /**
+         * If <code>true</code> the property is ordered ascending, otherwise
+         * descending.
+         * @return <code>true</code> for ascending; <code>false</code> for
+         * descending.
+         */
+        public boolean isAscending() {
+            return ascending;
+        }
+
+        /**
+         * Sets the new value for the ascending property.
+         * @param ascending <code>true</code> for ascending; <code>false</code>
+         * for descending.
+         */
+        public void setAscending(boolean ascending) {
+            this.ascending = ascending;
+        }
+    }
 }

@@ -77,4 +77,16 @@ class DefaultParserVisitor implements JCRSQLParserVisitor {
     public Object visit(ASTContainsExpression node, Object data) {
         return data;
     }
+
+    public Object visit(ASTOrderSpec node, Object data) {
+        return data;
+    }
+
+    public Object visit(ASTAscendingOrderSpec node, Object data) {
+        return data;
+    }
+
+    public Object visit(ASTDescendingOrderSpec node, Object data) {
+        return data;
+    }
 }

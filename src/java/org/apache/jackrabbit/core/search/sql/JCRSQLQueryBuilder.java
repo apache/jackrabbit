@@ -39,8 +39,6 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.util.ISO8601;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
@@ -347,21 +345,42 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     public Object visit(ASTOrderByClause node, Object data) {
         QueryRootNode root = (QueryRootNode) data;
 
-        // list of QNames
-        final List identifiers = new ArrayList();
+        OrderQueryNode order = new OrderQueryNode(root);
+        root.setOrderNode(order);
+        node.childrenAccept(this, order);
+        return root;
+    }
 
-        // collect identifiers
+    public Object visit(ASTOrderSpec node, Object data) {
+        OrderQueryNode order = (OrderQueryNode) data;
+
+        final QName[] identifier = new QName[1];
+
+        // collect identifier
         node.childrenAccept(new DefaultParserVisitor() {
             public Object visit(ASTIdentifier node, Object data) {
-                identifiers.add(node.getName());
+                identifier[0] = node.getName();
                 return data;
             }
-        }, root);
+        }, data);
 
-        QName[] props = (QName[]) identifiers.toArray(new QName[identifiers.size()]);
-        boolean[] orders = new boolean[props.length];
-        root.setOrderNode(new OrderQueryNode(root, props, orders));
-        return root;
+        OrderQueryNode.OrderSpec spec = new OrderQueryNode.OrderSpec(identifier[0], true);
+        order.addOrderSpec(spec);
+
+        node.childrenAccept(this, spec);
+
+        return data;
+    }
+
+    public Object visit(ASTAscendingOrderSpec node, Object data) {
+        // do nothing ascending is default anyway
+        return data;
+    }
+
+    public Object visit(ASTDescendingOrderSpec node, Object data) {
+        OrderQueryNode.OrderSpec spec = (OrderQueryNode.OrderSpec) data;
+        spec.setAscending(false);
+        return data;
     }
 
     public Object visit(ASTContainsExpression node, Object data) {

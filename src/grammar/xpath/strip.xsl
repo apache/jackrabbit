@@ -14,7 +14,7 @@
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0" xmlns:g="http://www.w3.org/2001/03/XPath/grammar">
-  <xsl:param name="spec1" select="'xpath'"/>
+  <xsl:param name="spec1" select="'xquery'"/>
   <xsl:param name="spec2" select="'dummy'"/>
   <xsl:param name="spec3" select="'dummy'"/>
 

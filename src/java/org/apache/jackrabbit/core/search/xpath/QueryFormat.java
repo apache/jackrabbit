@@ -258,7 +258,6 @@ class QueryFormat implements QueryNodeVisitor, Constants {
         StringBuffer sb = (StringBuffer) data;
         try {
 
-            //int propIdx = sb.length();
             String propName = "@" + ISO9075.encode(node.getProperty()).toJCRName(resolver);
 
             if (node.getOperation() == OPERATION_EQ_VALUE) {
@@ -305,12 +304,36 @@ class QueryFormat implements QueryNodeVisitor, Constants {
     }
 
     public Object visit(OrderQueryNode node, Object data) {
-        // @todo implement
+        StringBuffer sb = (StringBuffer) data;
+        sb.append(" order by");
+        OrderQueryNode.OrderSpec[] specs = node.getOrderSpecs();
+        String comma = "";
+        try {
+            for (int i = 0; i < specs.length; i++) {
+                sb.append(comma);
+                QName prop = ISO9075.encode(specs[i].getProperty());
+                sb.append(" @").append(prop.toJCRName(resolver));
+                if (!specs[i].isAscending()) {
+                    sb.append(" descending");
+                }
+                comma = ",";
+            }
+        } catch (NoPrefixDeclaredException e) {
+            exceptions.add(e);
+        }
         return data;
     }
 
     //----------------------------< internal >----------------------------------
 
+    /**
+     * Appends the value of a relation node to the <code>StringBuffer</code>
+     * <code>sb</code>.
+     * @param node the relation node.
+     * @param b where to append the value.
+     * @throws NoPrefixDeclaredException if a prefix declaration is missing for
+     *  a namespace URI. 
+     */
     private void appendValue(RelationQueryNode node, StringBuffer b)
             throws NoPrefixDeclaredException {
         if (node.getType() == TYPE_LONG) {
@@ -327,6 +350,5 @@ class QueryFormat implements QueryNodeVisitor, Constants {
         } else {
             exceptions.add(new InvalidQueryException("Invalid type: " + node.getType()));
         }
-
     }
 }

@@ -142,17 +142,18 @@ class QueryImpl implements javax.jcr.query.Query {
                 session, index.getNamespaceMappings(), index.getAnalyzer());
 
         OrderQueryNode orderNode = root.getOrderNode();
-        // FIXME according to spec this should be descending
-        // by default. this contrasts to standard sql semantics
-        // where default is ascending.
-        boolean[] orderSpecs = null;
-        QName[] orderProperties = null;
+
+        OrderQueryNode.OrderSpec[] orderSpecs = null;
         if (orderNode != null) {
-            orderProperties = orderNode.getOrderByProperties();
-            orderSpecs = orderNode.getOrderBySpecs();
+            orderSpecs = orderNode.getOrderSpecs();
         } else {
-            orderProperties = new QName[0];
-            orderSpecs = new boolean[0];
+            orderSpecs = new OrderQueryNode.OrderSpec[0];
+        }
+        QName[] orderProperties = new QName[orderSpecs.length];
+        boolean[] ascSpecs = new boolean[orderSpecs.length];
+        for (int i = 0; i < orderSpecs.length; i++) {
+            orderProperties[i] = orderSpecs[i].getProperty();
+            ascSpecs[i] = orderSpecs[i].isAscending();
         }
 
 
@@ -161,7 +162,7 @@ class QueryImpl implements javax.jcr.query.Query {
 
         // execute it
         try {
-            Hits result = index.executeQuery(query, orderProperties, orderSpecs);
+            Hits result = index.executeQuery(query, orderProperties, ascSpecs);
             uuids = new ArrayList(result.length());
             for (int i = 0; i < result.length(); i++) {
                 String uuid = result.doc(i).get(FieldNames.UUID);
