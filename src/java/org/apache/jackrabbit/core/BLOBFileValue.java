@@ -200,7 +200,7 @@ public class BLOBFileValue implements Value {
             BLOBFileValue other = (BLOBFileValue) obj;
             return ((file == null ? other.file == null : file.equals(other.file))
                     && (fsResource == null ? other.fsResource == null : fsResource.equals(other.fsResource))
-                    && buffer.equals(other.buffer));
+                    && (buffer == null ? other.buffer == null : buffer.equals(other.buffer)));
         }
         return false;
     }
