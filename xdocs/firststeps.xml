@@ -59,7 +59,7 @@ public class JCRTest {
       
       RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
       Repository r = (Repository) ctx.lookup("repo");
-      Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
+      Session session = r.login(new SimpleCredentials("userid", "".toCharArray()), null);
       Node rn=session.getRootNode();
       
       System.out.println(rn.getPrimaryNodeType().getName());
@@ -136,11 +136,15 @@ workspaces/
      In addition to the repository configuration file, you also need to
      create a
      <a href="http://java.sun.com/security/jaas/doc/api.html">JAAS configuration</a>
-     file used for Jackrabbit login settings. The contents of simple
-     configuration file named <code>jaas.config</code> is shown below:
+     file used for Jackrabbit login settings. The contents of a simple
+     configuration file named <code>jaas.config</code> is shown below. The
+     configuration for the SimpleLoginModule also contains an optional module
+     option to configure the user id of the anonymous user with read-only access
+     to the repository. If the option is omitted the anoymous user id default to
+     'anonymous'.
      <source>
 Jackrabbit {
-org.apache.jackrabbit.core.security.SimpleLoginModule required debug=false;
+org.apache.jackrabbit.core.security.SimpleLoginModule required anonymousId="anonymous";
 };
      </source>
    </p>
@@ -198,7 +202,7 @@ public class JCRTest {
       
       RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
       Repository r = (Repository) ctx.lookup("repo");
-      Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
+      Session session = r.login(new SimpleCredentials("userid", "".toCharArray()), null);
       Node rn=session.getRootNode();
       
       System.out.println(rn.getPrimaryNodeType().getName());
@@ -314,7 +318,7 @@ public class JCRTest {
 
       RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
       Repository r = (Repository) ctx.lookup("repo");
-      Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
+      Session session = r.login(new SimpleCredentials("userid", "".toCharArray()), null);
       Node rn=session.getRootNode();
 
       System.out.println(rn.getPrimaryNodeType().getName());

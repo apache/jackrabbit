@@ -750,7 +750,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         if (!wspInfos.containsKey(workspaceName)) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-/*
+
         if (credentials == null) {
             // null credentials, obtain the identity of the already-authenticated
             // subject from access control context
@@ -761,6 +761,9 @@ public class RepositoryImpl implements Repository, SessionListener,
             } catch (SecurityException se) {
                 throw new LoginException(se.getMessage());
             }
+            if (subject == null) {
+                throw new LoginException("No Subject associated with AccessControlContext");
+            }
             // create session
             try {
                 return createSession(subject, workspaceName);
@@ -769,7 +772,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                 throw new LoginException(ade.getMessage());
             }
         }
-*/
+
         // login through JAAS login context
         CredentialsCallbackHandler cbHandler =
                 new CredentialsCallbackHandler(credentials);
@@ -1036,7 +1039,8 @@ public class RepositoryImpl implements Repository, SessionListener,
         /**
          * Returns the search manager for this workspace
          *
-         * @return the search manager for this workspace
+         * @return the search manager for this workspace, or <code>null</code>
+         *  if no <code>SearchManager</code>
          * @throws RepositoryException if the search manager could not be created
          */
         synchronized SearchManager getSearchManager() throws RepositoryException {

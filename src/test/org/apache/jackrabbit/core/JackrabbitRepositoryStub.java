@@ -115,12 +115,4 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         }
         return repository;
     }
-
-    /**
-     * Returns <code>null</code> to indicate anonymous access.
-     * @return <code>null</code> to indicate anonymous access.
-     */
-    public Credentials getReadOnlyCredentials() {
-        return null;
-    }
 }

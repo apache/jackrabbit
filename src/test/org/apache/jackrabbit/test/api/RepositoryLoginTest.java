@@ -108,21 +108,4 @@ public class RepositoryLoginTest extends AbstractJCRTest {
             s.logout();
         }
     }
-
-    /**
-     * Tests if {@link javax.jcr.Repository#login(Credentials credentials, String workspaceName)}
-     * does return a session, i. e. not null.
-     */
-    public void testSignatureWorkspaceName()
-            throws RepositoryException {
-
-        Session s = repository.login(workspaceName);
-        try {
-            assertNotNull("Repository.login(String workspaceName) " +
-                    "must not return null",
-                    s);
-        } finally {
-            s.logout();
-        }
-    }
 }

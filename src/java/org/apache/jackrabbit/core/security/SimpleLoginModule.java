@@ -39,6 +39,12 @@ public class SimpleLoginModule implements LoginModule {
 
     private static Logger log = Logger.getLogger(SimpleLoginModule.class);
 
+    /** Name of the anonymous user id option in the LoginModule configuration */
+    private static final String OPT_ANONYMOUS = "anonymousId";
+
+    /** The default user id for anonymous login */
+    private static final String DEFAULT_ANONYMOUS_ID = "anonymous";
+
     // initial state
     private Subject subject;
     private CallbackHandler callbackHandler;
@@ -51,6 +57,9 @@ public class SimpleLoginModule implements LoginModule {
     // local authentication state:
     // the principals, i.e. the authenticated identities
     private final Set principals = new HashSet();
+
+    /** Id of an anonymous user login */
+    private String anonymousUserId = DEFAULT_ANONYMOUS_ID;
 
     /**
      * Constructor
@@ -71,6 +80,10 @@ public class SimpleLoginModule implements LoginModule {
 
         // initialize any configured options
         //someOpt = "true".equalsIgnoreCase((String)options.get("someOpt"));
+        String userId = (String) options.get(OPT_ANONYMOUS);
+        if (userId != null) {
+            anonymousUserId = userId;
+        }
     }
 
     /**
@@ -106,14 +119,14 @@ public class SimpleLoginModule implements LoginModule {
                         // @todo implement simple username/password authentication
                     }
 
-                    // assume the user we authenticated is the UserPrincipal
-                    principals.add(new UserPrincipal(sc.getUserId()));
+                    if (anonymousUserId.equals(sc.getUserId())) {
+                        principals.add(new AnonymousPrincipal());
+                    } else {
+                        // else assume the user we authenticated is the UserPrincipal
+                        principals.add(new UserPrincipal(sc.getUserId()));
+                    }
                     authenticated = true;
                 }
-            } else {
-                // null credentials, assume AnonymousPrincipal
-                principals.add(new AnonymousPrincipal());
-                authenticated = true;
             }
         } catch (java.io.IOException ioe) {
             throw new LoginException(ioe.toString());
