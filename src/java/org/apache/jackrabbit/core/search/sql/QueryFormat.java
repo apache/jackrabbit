@@ -254,7 +254,18 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         // escape quote
         String query = node.getQuery().replaceAll("'", "''");
-        sb.append("CONTAINS('").append(query).append("')");
+        sb.append("CONTAINS(");
+        if (node.getPropertyName() == null) {
+            sb.append("*");
+        } else {
+            try {
+                appendName(node.getPropertyName(), resolver, sb);
+            } catch (NoPrefixDeclaredException e) {
+                exceptions.add(e);
+            }
+        }
+        sb.append(", '");
+        sb.append(query).append("')");
         return sb;
     }
 

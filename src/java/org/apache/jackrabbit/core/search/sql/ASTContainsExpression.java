@@ -16,8 +16,13 @@
  */
 package org.apache.jackrabbit.core.search.sql;
 
+import org.apache.jackrabbit.core.QName;
+
 public class ASTContainsExpression extends SimpleNode {
+
     private String query;
+
+    private QName property;
 
     public ASTContainsExpression(int id) {
         super(id);
@@ -35,6 +40,13 @@ public class ASTContainsExpression extends SimpleNode {
         this.query = query;
     }
 
+    public QName getPropertyName() {
+        return property;
+    }
+
+    public void setPropertyName(QName property) {
+        this.property = property;
+    }
 
     /**
      * Accept the visitor. *

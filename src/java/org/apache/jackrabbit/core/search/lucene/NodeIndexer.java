@@ -355,7 +355,7 @@ public class NodeIndexer {
      */
     protected void addStringValue(Document doc, String fieldName, Object internalValue) {
         String stringValue = String.valueOf(internalValue);
-        
+
         // simple String
         doc.add(new Field(fieldName,
                 stringValue,
@@ -365,6 +365,15 @@ public class NodeIndexer {
         // also create fulltext index of this value
         doc.add(new Field(FieldNames.FULLTEXT,
                 stringValue,
+                false,
+                true,
+                true));
+        // create fulltext index on property
+        int idx = fieldName.indexOf(':');
+        fieldName = fieldName.substring(0, idx + 1) +
+                FieldNames.FULLTEXT_PREFIX +
+                fieldName.substring(idx + 1);
+        doc.add(new Field(fieldName, stringValue,
                 false,
                 true,
                 true));

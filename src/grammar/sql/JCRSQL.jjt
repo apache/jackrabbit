@@ -428,9 +428,15 @@ void BracketExpression() :
 void ContainsExpression() :
 {
   Token t = null;
+  QName name = null;
 }
 {
-  <CONTAINS> <LEFT_PAREN> t = <CHAR_STRING_LITERAL> { jjtThis.setQuery(t.image.substring(1, t.image.length() - 1).replaceAll("''", "'")); } <RIGHT_PAREN>
+  <CONTAINS>
+  <LEFT_PAREN>
+  // currently optional
+  ( ( <ASTERISK> | (name = Identifier() { jjtThis.setPropertyName(name); }) ) "," )?
+  t = <CHAR_STRING_LITERAL> { jjtThis.setQuery(t.image.substring(1, t.image.length() - 1).replaceAll("''", "'")); }
+  <RIGHT_PAREN>
 }
 
 void Literal() :
@@ -546,7 +552,7 @@ QName Identifier() :
     )
   )
   {
-    return name;
+    return jjtThis.getName();
   }
 }
 

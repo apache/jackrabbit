@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.search;
 
+import org.apache.jackrabbit.core.QName;
+
 /**
  * Implements a query node that defines a textsearch clause.
  */
@@ -27,15 +29,37 @@ public class TextsearchQueryNode extends QueryNode {
     private final String query;
 
     /**
+     * Limits the scope of this textsearch clause to properties with this name.
+     * If <code>null</code> the scope of this textsearch clause is the fulltext
+     * index of all properties of a node.
+     */
+    private QName propertyName;
+
+    /**
      * Creates a new <code>TextsearchQueryNode</code> with a <code>parent</code>
-     * and a textsearch <code>query</code> statement.
+     * and a textsearch <code>query</code> statement. The scope of the query
+     * is the fulltext index of the node, that contains all properties.
      *
      * @param parent the parent node of this query node.
      * @param query  the textsearch statement.
      */
     public TextsearchQueryNode(QueryNode parent, String query) {
+        this(parent, query, null);
+    }
+
+    /**
+     * Creates a new <code>TextsearchQueryNode</code> with a <code>parent</code>
+     * and a textsearch <code>query</code> statement. The scope of the query
+     * is property with name <code>propertyName</code>.
+     *
+     * @param parent the parent node of this query node.
+     * @param query  the textsearch statement.
+     * @param propertyName scope of the fulltext search.
+     */
+    public TextsearchQueryNode(QueryNode parent, String query, QName propertyName) {
         super(parent);
         this.query = query;
+        this.propertyName = propertyName;
     }
 
     /**
@@ -63,4 +87,23 @@ public class TextsearchQueryNode extends QueryNode {
         return query;
     }
 
+    /**
+     * Returns a property name if the scope is limited to just a single property
+     * or <code>null</code> if the scope is spawned across all properties of a
+     * node.
+     *
+     * @return property name or <code>null</code>.
+     */
+    public QName getPropertyName() {
+        return propertyName;
+    }
+
+    /**
+     * Sets a new name as the search scope for this fulltext query.
+     *
+     * @param property the name of the property.
+     */
+    public void setPropertyName(QName property) {
+        this.propertyName = property;
+    }
 }
