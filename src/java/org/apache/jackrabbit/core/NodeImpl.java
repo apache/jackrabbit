@@ -31,6 +31,7 @@ import javax.jcr.nodetype.*;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.OnParentVersionAction;
 import java.io.InputStream;
 import java.util.*;
 
@@ -208,7 +209,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         // check if versioning allows write
         if (!safeIsCheckedOut()) {
-            String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath();
+            String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath() + "/" + name.toString();
             log.error(msg);
             throw new VersionException(msg);
         }
@@ -2572,11 +2573,12 @@ public class NodeImpl extends ItemImpl implements Node {
         // 2. N’s jcr:baseVersion property will be changed to point to V.
         internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(version.getId())));
 
+        // 4. N's jcr:predecessor property is set to null
+        internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[0]);
+
         // 3. N’s jcr:isCheckedOut property is set to false.
         internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(false));
 
-        // 4. N's jcr:predecessor property is set to null
-        internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[0]);
     }
 
 
@@ -2632,8 +2634,10 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // copy frozen properties
         PersistentProperty[] props = freeze.getFrozenProperties();
+        HashSet propNames = new HashSet();
         for (int i = 0; i < props.length; i++) {
             PersistentProperty prop = props[i];
+            propNames.add(prop.getName());
             if (prop.getValues().length == 1) {
                 try {
                     internalSetProperty(props[i].getName(), prop.getValues()[0]);
@@ -2643,6 +2647,23 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             }
             internalSetProperty(props[i].getName(), prop.getValues());
+        }
+        // remove properties that do not exist the the frozen representation
+        PropertyIterator piter = getProperties();
+        while (piter.hasNext()) {
+            PropertyImpl prop = (PropertyImpl) piter.nextProperty();
+            // ignore some props that are not well guarded by the OPV
+            if (prop.getQName().equals(VersionManager.PROPNAME_VERSION_HISTORY)) {
+                continue;
+            } else if (prop.getQName().equals(VersionManager.PROPNAME_PREDECESSORS)) {
+                continue;
+            }
+            if (prop.getDefinition().getOnParentVersion()==OnParentVersionAction.COPY
+                    || prop.getDefinition().getOnParentVersion()==OnParentVersionAction.VERSION) {
+                if (!propNames.contains(prop.getQName())) {
+                    removeChildProperty(prop.getQName());
+                }
+            }
         }
 
         // restore the frozen nodes

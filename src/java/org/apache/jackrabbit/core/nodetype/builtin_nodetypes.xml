@@ -247,7 +247,7 @@
         <supertypes>
             <supertype>mix:referenceable</supertype>
         </supertypes>
-        <propertyDef name="jcr:versionHistory" type="Reference" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" primaryItem="false" multiple="false">
+        <propertyDef name="jcr:versionHistory" type="Reference" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:versionHistory</valueConstraint>
             </valueConstraints>
