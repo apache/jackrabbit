@@ -16,9 +16,7 @@
  */
 package org.apache.jackrabbit.examples;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Hashtable;
+import org.apache.jackrabbit.core.jndi.RegistryHelper;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -27,12 +25,14 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.naming.Context;
 import javax.naming.InitialContext;
-
-import org.apache.jackrabbit.core.jndi.RegistryHelper;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Hashtable;
 
 /**
  * The First Steps example class.
@@ -47,7 +47,8 @@ public class FirstSteps {
     public static void main(String[] args) {
         try {
             Repository repository = getRepository();
-            Session session = repository.login();
+            SimpleCredentials creds = new SimpleCredentials("anonymous", "".toCharArray());
+            Session session = repository.login(creds);
             Node root = session.getRootNode();
 
             System.out.println(root.getPrimaryNodeType().getName());
@@ -62,7 +63,7 @@ public class FirstSteps {
             if (!root.hasNode("importxml")) {
                 System.out.println("importing xml");
                 Node node = root.addNode("importxml", "nt:unstructured");
-                InputStream xml =  new FileInputStream("repotest/test.xml");
+                InputStream xml = new FileInputStream("repotest/test.xml");
                 session.importXML("/importxml", xml);
                 session.save();
             }
@@ -89,8 +90,7 @@ public class FirstSteps {
         env.put(Context.PROVIDER_URL, "localhost");
         InitialContext ctx = new InitialContext(env);
 
-        RegistryHelper.registerRepository(
-                ctx, "repo", configFile, repHomeDir, true);
+        RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
         return (Repository) ctx.lookup("repo");
     }
 
