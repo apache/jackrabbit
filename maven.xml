@@ -163,11 +163,22 @@
         </ant:java>
     </goal>
 
-  <!-- 
-      Copies all dependencies to ./target/lib 
-      (except the optional runtime dependencies cqfs and cqfs-jackrabbit)  
-  -->
-  <goal name="copy-deps">
-    <deploy:copy-deps todir="./target/lib" excludes="cqfs,cqfs-jackrabbit"/>
-  </goal>
+    <!--
+        Copies all dependencies to ./target/lib
+        (except the optional runtime dependencies cqfs and cqfs-jackrabbit)
+    -->
+    <goal name="copy-deps">
+        <deploy:copy-deps todir="./target/lib" excludes="cqfs,cqfs-jackrabbit"/>
+    </goal>
+
+    <!--
+        Creates a jar file with the JackrabbitRepositoryStub class which is
+        needed for running test cases
+    -->
+    <goal name="jackrabbit:test-stub">
+        <attainGoal name="test:compile"/>
+        <ant:jar destfile="./target/jackrabbit-test-stub.${pom.currentVersion}.jar"
+            basedir="target/test-classes"
+            includes="org/apache/jackrabbit/core/JackrabbitRepositoryStub.class"/>
+    </goal>
 </project>
