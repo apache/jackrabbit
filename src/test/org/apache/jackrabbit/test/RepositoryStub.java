@@ -87,12 +87,12 @@ public abstract class RepositoryStub {
             throw new IllegalArgumentException("Parameter 'env' must not be null!");
         }
         environment = env;
-        superuser = new SimpleCredentials(env.getProperty(PROP_SUPERUSER_NAME, ""),
-                env.getProperty(PROP_SUPERUSER_PWD, "").toCharArray());
-        readonly = new SimpleCredentials(env.getProperty(PROP_READONLY_NAME, ""),
-                env.getProperty(PROP_READONLY_PWD, "").toCharArray());
-        readwrite = new SimpleCredentials(env.getProperty(PROP_READWRITE_NAME, ""),
-                env.getProperty(PROP_READWRITE_PWD, "").toCharArray());
+        superuser = new SimpleCredentials(env.getProperty(PROP_PREFIX + "." + PROP_SUPERUSER_NAME, ""),
+                env.getProperty(PROP_PREFIX + "." + PROP_SUPERUSER_PWD, "").toCharArray());
+        readonly = new SimpleCredentials(env.getProperty(PROP_PREFIX + "." + PROP_READONLY_NAME, ""),
+                env.getProperty(PROP_PREFIX + "." + PROP_READONLY_PWD, "").toCharArray());
+        readwrite = new SimpleCredentials(env.getProperty(PROP_PREFIX + "." + PROP_READWRITE_NAME, ""),
+                env.getProperty(PROP_PREFIX + "." + PROP_READWRITE_PWD, "").toCharArray());
     }
 
     /**
