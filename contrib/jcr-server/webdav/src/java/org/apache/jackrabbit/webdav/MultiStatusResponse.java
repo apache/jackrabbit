@@ -30,7 +30,7 @@ import java.util.Iterator;
 public class MultiStatusResponse implements DavConstants {
 
     /**
-     * The content the 'href' element for this resposne
+     * The content the 'href' element for this response
      */
     private final String href;
 
@@ -45,9 +45,9 @@ public class MultiStatusResponse implements DavConstants {
     private final Element status404;
 
     /**
-     * Hashmap with all stati
+     * Hashmap containing all status
      */
-    private final HashMap stati = new HashMap();
+    private final HashMap statusMap = new HashMap();
 
     /**
      * An optional response description.
@@ -61,8 +61,8 @@ public class MultiStatusResponse implements DavConstants {
         this.href = href;
         status200 = new Element(XML_PROP, NAMESPACE);
         status404 = new Element(XML_PROP, NAMESPACE);
-        stati.put(new Integer(DavServletResponse.SC_OK), status200);
-        stati.put(new Integer(DavServletResponse.SC_NOT_FOUND), status404);
+        statusMap.put(new Integer(DavServletResponse.SC_OK), status200);
+        statusMap.put(new Integer(DavServletResponse.SC_NOT_FOUND), status404);
     }
 
     /**
@@ -129,7 +129,7 @@ public class MultiStatusResponse implements DavConstants {
     */
     public MultiStatusResponse(String href, int status) {
         this(href);
-        stati.put(new Integer(status), new Element(null));
+        statusMap.put(new Integer(status), new Element(null));
     }
 
     /**
@@ -140,10 +140,10 @@ public class MultiStatusResponse implements DavConstants {
      */
     private void add(Element prop, int status) {
         Integer statusKey = new Integer(status);
-        Element propsContainer = (Element) stati.get(statusKey);
+        Element propsContainer = (Element) statusMap.get(statusKey);
         if (propsContainer == null) {
             propsContainer = new Element(XML_PROP, NAMESPACE);
-            stati.put(statusKey, propsContainer);
+            statusMap.put(statusKey, propsContainer);
         }
         propsContainer.addContent(prop);
     }
@@ -214,10 +214,10 @@ public class MultiStatusResponse implements DavConstants {
         response.addContent(XmlUtil.hrefToXml(href));
 
         // add '<propstat>' elements or a single '<status>' element
-        Iterator iter = stati.keySet().iterator();
+        Iterator iter = statusMap.keySet().iterator();
         while (iter.hasNext()) {
             Integer statusKey = (Integer) iter.next();
-	    Element prop = (Element) stati.get(statusKey);
+	    Element prop = (Element) statusMap.get(statusKey);
             if (prop != null) {
                 Element status = new Element(XML_STATUS, NAMESPACE);
                 status.setText("HTTP/1.1 " + statusKey + " " + DavException.getStatusPhrase(statusKey.intValue()));

@@ -49,20 +49,6 @@ public class DavException extends Exception {
      *
      * @param errorCode integer specifying any of the status codes defined by
      * {@link DavServletResponse}.
-     * @param conditionElement
-     */
-    public DavException(int errorCode, Element conditionElement) {
-        super(conditionElement.getText());
-        this.errorCode = errorCode;
-        this.conditionElement = conditionElement;
-        log.debug("DavException: (" + errorCode + ") " + conditionElement.toString());
-    }
-
-    /**
-     * Create a new <code>DavException</code>.
-     *
-     * @param errorCode integer specifying any of the status codes defined by
-     * {@link DavServletResponse}.
      * @param message Human readable error message.
      */
     public DavException(int errorCode, String message) {
@@ -79,6 +65,20 @@ public class DavException extends Exception {
      */
     public DavException(int errorCode) {
         this(errorCode, statusPhrases.getProperty(String.valueOf(errorCode)));
+    }
+
+    /**
+     * Create a new <code>DavException</code>.
+     *
+     * @param errorCode integer specifying any of the status codes defined by
+     * {@link DavServletResponse}.
+     * @param message
+     * @param conditionElement
+     */
+    public DavException(int errorCode, String message, Element conditionElement) {
+        this(errorCode, message);
+        this.conditionElement = conditionElement;
+        log.debug("DavException: (" + errorCode + ") " + conditionElement.toString());
     }
 
     /**

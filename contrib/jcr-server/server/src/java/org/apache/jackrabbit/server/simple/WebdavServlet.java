@@ -18,18 +18,15 @@ package org.apache.jackrabbit.server.simple;
 import org.apache.jackrabbit.server.simple.dav.lock.SimpleLockManager;
 import org.apache.jackrabbit.server.simple.dav.ResourceFactoryImpl;
 import org.apache.jackrabbit.server.simple.dav.LocatorFactoryImpl;
+import org.apache.jackrabbit.server.simple.dav.DavSessionProviderImpl;
 
 import javax.servlet.http.*;
 import javax.servlet.*;
-import javax.jcr.*;
 import java.io.*;
-import java.util.HashSet;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.spi.JcrDavException;
-import org.apache.jackrabbit.client.RepositoryAccessServlet;
 
 /**
  * WebdavServlet provides webdav support (level 1 and 2 complient) for repository
@@ -57,6 +54,9 @@ public class WebdavServlet extends AbstractWebdavServlet {
     /** the locator factory */
     private DavLocatorFactory locatorFactory;
 
+    /** the session provider */
+    private DavSessionProvider sessionProvider;
+
     /** the repository prefix retrieved from config */
     private static String resourcePathPrefix;
 
@@ -77,16 +77,6 @@ public class WebdavServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Returns the configured path prefix
-     *
-     * @return resourcePathPrefix
-     * @see #INIT_PARAM_RESOURCE_PATH_PREFIX
-     */
-    public static String getPathPrefix() {
-	return resourcePathPrefix;
-    }
-
-    /**
      * Service the given request.
      *
      * @param request
@@ -102,10 +92,10 @@ public class WebdavServlet extends AbstractWebdavServlet {
             WebdavResponse webdavResponse = new WebdavResponseImpl(response);
 
             // make sure there is a authenticated user
-	    DavSession session = getSession(webdavRequest);
-	    if (session == null) {
-		return;
-	    }
+	    getDavSessionProvider().acquireSession(webdavRequest);
+	    if (webdavRequest.getDavSession() == null) {
+ 		return;
+ 	    }
 
 	    // check matching if=header for lock-token relevant operations
 	    DavResource resource = createResource(webdavRequest.getRequestLocator(), webdavRequest, webdavResponse);
@@ -159,6 +149,8 @@ public class WebdavServlet extends AbstractWebdavServlet {
 		    // GET, HEAD, TRACE......
 		    super.service(request, response);
 	    }
+	    getDavSessionProvider().releaseSession(webdavRequest);
+
 	} catch (DavException e) {
 	    response.sendError(e.getErrorCode());
 	}
@@ -193,92 +185,35 @@ public class WebdavServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Retrieve the repository session for the given request object and force a header
-     * authentication if necessary.
+     * Returns the configured path prefix
      *
-     * @param request
-     * @return a repository session for the given request or <code>null</code> if the
-     * authentication is missing. In the latter case the authentication is
-     * forces by the response code.
-     * @throws DavException
+     * @return resourcePathPrefix
+     * @see #INIT_PARAM_RESOURCE_PATH_PREFIX
      */
-    private DavSession getSession(WebdavRequest request) throws DavException {
-        try {
-	    Credentials creds = RepositoryAccessServlet.getCredentialsFromHeader(request.getHeader(DavConstants.HEADER_AUTHORIZATION));
-	    if (creds == null) {
-		// generate anonymous login to gain write access
-		creds = new SimpleCredentials("anonymous", "anonymous".toCharArray());
-	    }
-            Session repSession = RepositoryAccessServlet.getRepository().login(creds);
-	    DavSession ds = new DavSessionImpl(repSession);
-	    request.setDavSession(ds);
-	    return ds;
-        } catch (RepositoryException e) {
-	    throw new JcrDavException(e);
-	} catch (ServletException e) {
-	    throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-	}
+    public static String getPathPrefix() {
+	return resourcePathPrefix;
     }
 
     /**
-     * Inner class implementing the DavSession interface
+     * Returns the <code>DavSessionProvider</code>. If no session provider has
+     * been set or created a new instance of {@link DavSessionProviderImpl} is
+     * return.
+     *
+     * @return the session provider
      */
-    private class DavSessionImpl implements DavSession {
-
-	/** the underlaying jcr session */
-        private final Session session;
-
-	/** the lock tokens of this session */
-	private final HashSet lockTokens = new HashSet();
-
-	/**
-	 * Creates a new DavSession based on a jcr session
-	 * @param session
-	 */
-        private DavSessionImpl(Session session) {
-            this.session = session;
-        }
-
-	/**
-	 * @see DavSession#addReference(Object)
-	 */
-        public void addReference(Object reference) {
-            throw new UnsupportedOperationException("No yet implemented.");
-        }
-
-	/**
-	 * @see DavSession#removeReference(Object)
-	 */
-        public void removeReference(Object reference) {
-            throw new UnsupportedOperationException("No yet implemented.");
-        }
-
-	/**
-	 * @see DavSession#getRepositorySession()
-	 */
-        public Session getRepositorySession() {
-            return session;
-        }
-
-	/**
-	 * @see DavSession#addLockToken(String)
-	 */
-	public void addLockToken(String token) {
-	    lockTokens.add(token);
+    public DavSessionProvider getDavSessionProvider() {
+	if (sessionProvider == null) {
+	    sessionProvider = new DavSessionProviderImpl();
 	}
+	return sessionProvider;
+    }
 
-	/**
-	 * @see DavSession#getLockTokens()
-	 */
-	public String[] getLockTokens() {
-	    return (String[]) lockTokens.toArray(new String[lockTokens.size()]);
-	}
-
-	/**
-	 * @see DavSession#removeLockToken(String)
-	 */
-	public void removeLockToken(String token) {
-	    lockTokens.remove(token);
-	}
+    /**
+     * Set the session provider
+     *
+     * @param sessionProvider
+     */
+    public void setDavSessionProvider(DavSessionProvider sessionProvider) {
+	this.sessionProvider = sessionProvider;
     }
 }

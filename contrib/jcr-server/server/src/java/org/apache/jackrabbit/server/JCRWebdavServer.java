@@ -27,7 +27,7 @@ import java.util.HashSet;
 /**
  * <code>JCRWebdavServer</code>...
  */
-public class JCRWebdavServer {
+public class JCRWebdavServer implements DavSessionProvider {
 
     /** the default logger */
     private static Logger log = Logger.getLogger(JCRWebdavServer.class);
@@ -47,6 +47,7 @@ public class JCRWebdavServer {
 	this.repository = repository;
     }
 
+    //---------------------------------------< DavSessionProvider interface >---
     /**
      * Acquires a DavSession either from the session cache or creates a new
      * one by login to the repository.
@@ -54,6 +55,7 @@ public class JCRWebdavServer {
      *
      * @param request
      * @throws DavException if no session could be obtained.
+     * @see DavSessionProvider#acquireSession(org.apache.jackrabbit.webdav.WebdavRequest)
      */
     public void acquireSession(WebdavRequest request)
             throws DavException {
@@ -67,12 +69,15 @@ public class JCRWebdavServer {
      * cache.
      *
      * @param request
+     * @see DavSessionProvider#releaseSession(org.apache.jackrabbit.webdav.WebdavRequest)
      */
     public void releaseSession(WebdavRequest request) {
 	DavSession session = request.getDavSession();
 	if (session != null) {
 	    session.removeReference(request);
 	}
+	// remove the session from the request
+	request.setDavSession(null);
     }
 
     //--------------------------------------------------------------------------

@@ -41,19 +41,19 @@ public class DavMethods {
      * The webdav OPTIONS method and public constant
      */
     public static final int DAV_OPTIONS = 1;
-    private static final String METHOD_OPTIONS = "OPTIONS";
+    public static final String METHOD_OPTIONS = "OPTIONS";
 
     /**
      * The webdav GET method and public constant
      */
     public static final int DAV_GET = DAV_OPTIONS + 1;
-    private static final String METHOD_GET = "GET";
+    public static final String METHOD_GET = "GET";
 
     /**
      * The webdav HEAD method and public constant
      */
     public static final int DAV_HEAD = DAV_GET + 1;
-    private static final String METHOD_HEAD = "HEAD";
+    public static final String METHOD_HEAD = "HEAD";
 
 
     /**
@@ -65,12 +65,12 @@ public class DavMethods {
 
     /** The webdav DELETE method and public constant */
     public static final int DAV_DELETE = DAV_POST + 1;
-    private static final String METHOD_DELETE = "DELETE";
+    public static final String METHOD_DELETE = "DELETE";
 
 
     /** The webdav PUT method and public constant */
     public static final int DAV_PUT = DAV_DELETE + 1;
-    private static final String METHOD_PUT = "PUT";
+    public static final String METHOD_PUT = "PUT";
 
 
     /**
@@ -78,7 +78,7 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>.
      */
     public static final int DAV_PROPFIND = DAV_PUT + 1;
-    private static final String METHOD_PROPFIND = "PROPFIND";
+    public static final String METHOD_PROPFIND = "PROPFIND";
 
 
     /**
@@ -86,7 +86,7 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>
      */
     public static final int DAV_PROPPATCH = DAV_PROPFIND + 1;
-    private static final String METHOD_PROPPATCH = "PROPPATCH";
+    public static final String METHOD_PROPPATCH = "PROPPATCH";
 
 
     /**
@@ -94,7 +94,7 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>
      */
     public static final int DAV_MKCOL = DAV_PROPPATCH + 1;
-    private static final String METHOD_MKCOL = "MKCOL";
+    public static final String METHOD_MKCOL = "MKCOL";
 
 
     /**
@@ -102,7 +102,7 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>
      */
     public static final int DAV_COPY = DAV_MKCOL + 1;
-    private static final String METHOD_COPY = "COPY";
+    public static final String METHOD_COPY = "COPY";
 
 
     /**
@@ -110,7 +110,7 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>
      */
     public static final int DAV_MOVE = DAV_COPY + 1;
-    private static final String METHOD_MOVE = "MOVE";
+    public static final String METHOD_MOVE = "MOVE";
 
 
     /**
@@ -118,7 +118,7 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>
      */
     public static final int DAV_LOCK = DAV_MOVE + 1;
-    private static final String METHOD_LOCK = "LOCK";
+    public static final String METHOD_LOCK = "LOCK";
 
 
     /**
@@ -126,7 +126,7 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>
      */
     public static final int DAV_UNLOCK = DAV_LOCK + 1;
-    private static final String METHOD_UNLOCK = "UNLOCK";
+    public static final String METHOD_UNLOCK = "UNLOCK";
 
 
     /**
@@ -134,7 +134,7 @@ public class DavMethods {
      * defined by <a href="http://www.ietf.org/rfc/rfc3648.txt">RFC 3648</a>.
      */
     public static final int DAV_ORDERPATCH = DAV_UNLOCK + 1;
-    private static final String METHOD_ORDERPATCH = "ORDERPATCH";
+    public static final String METHOD_ORDERPATCH = "ORDERPATCH";
 
 
     /**
@@ -142,7 +142,7 @@ public class DavMethods {
      * NOTE: This method is not defined by any of the Webdav RFCs
      */
     public static final int DAV_SUBSCRIBE = DAV_ORDERPATCH + 1;
-    private static final String METHOD_SUBSCRIBE = "SUBSCRIBE";
+    public static final String METHOD_SUBSCRIBE = "SUBSCRIBE";
 
 
     /**
@@ -150,7 +150,7 @@ public class DavMethods {
      * NOTE: This method is not defined by any of the Webdav RFCs
      */
     public static final int DAV_UNSUBSCRIBE = DAV_SUBSCRIBE + 1;
-    private static final String METHOD_UNSUBSCRIBE = "UNSUBSCRIBE";
+    public static final String METHOD_UNSUBSCRIBE = "UNSUBSCRIBE";
 
 
     /**
@@ -158,7 +158,7 @@ public class DavMethods {
      * NOTE: This method is not defined by any of the Webdav RFCs
      */
     public static final int DAV_POLL = DAV_UNSUBSCRIBE + 1;
-    private static final String METHOD_POLL = "POLL";
+    public static final String METHOD_POLL = "POLL";
 
 
     /**
@@ -166,7 +166,7 @@ public class DavMethods {
      * Webdav Search internet draft.
      */
     public static final int DAV_SEARCH = DAV_POLL + 1;
-    private static final String METHOD_SEARCH = "SEARCH";
+    public static final String METHOD_SEARCH = "SEARCH";
 
 
     /**
@@ -174,7 +174,7 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_REPORT = DAV_SEARCH + 1;
-    private static final String METHOD_REPORT = "REPORT";
+    public static final String METHOD_REPORT = "REPORT";
 
 
     /**
@@ -182,56 +182,56 @@ public class DavMethods {
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_VERSION_CONTROL = DAV_REPORT + 1;
-    private static final String METHOD_VERSION_CONTROL = "VERSION-CONTROL";
+    public static final String METHOD_VERSION_CONTROL = "VERSION-CONTROL";
 
     /**
      * The webdav CHECKIN method and public constant defined by
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_CHECKIN = DAV_VERSION_CONTROL + 1;
-    private static final String METHOD_CHECKIN = "CHECKIN";
+    public static final String METHOD_CHECKIN = "CHECKIN";
 
     /**
      * The webdav CHECKOUT method and public constant defined by
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_CHECKOUT = DAV_CHECKIN + 1;
-    private static final String METHOD_CHECKOUT = "CHECKOUT";
+    public static final String METHOD_CHECKOUT = "CHECKOUT";
 
     /**
      * The webdav UNCHECKOUT method and public constant defined by
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_UNCHECKOUT = DAV_CHECKOUT + 1;
-    private static final String METHOD_UNCHECKOUT = "UNCHECKOUT";
+    public static final String METHOD_UNCHECKOUT = "UNCHECKOUT";
 
     /**
      * The webdav LABEL method and public constant defined by
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_LABEL = DAV_UNCHECKOUT + 1;
-    private static final String METHOD_LABEL = "LABEL";
+    public static final String METHOD_LABEL = "LABEL";
 
     /**
      * The webdav MERGE method and public constant defined by
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_MERGE = DAV_LABEL + 1;
-    private static final String METHOD_MERGE = "MERGE";
+    public static final String METHOD_MERGE = "MERGE";
 
     /**
      * The webdav UPDATE method and public constant defined by
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_UPDATE = DAV_MERGE + 1;
-    private static final String METHOD_UPDATE = "UPDATE";
+    public static final String METHOD_UPDATE = "UPDATE";
 
     /**
      * The webdav MKWORKSPACE method and public constant defined by
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
      */
     public static final int DAV_MKWORKSPACE = DAV_UPDATE + 1;
-    private static final String METHOD_MKWORKSPACE = "MKWORKSPACE";
+    public static final String METHOD_MKWORKSPACE = "MKWORKSPACE";
 
     /**
      * Returns webdav method type code, error result <= 0

@@ -122,7 +122,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 Node n = (Node)item;
                 NodeType[] existingMixin = n.getMixinNodeTypes();
                 NodeTypeProperty mix = new NodeTypeProperty(property);
-                List mixins = mix.getNodeTypeNames();
+                Set mixins = mix.getNodeTypeNames();
 
                 for (int i = 0; i < existingMixin.length; i++) {
                     String name = existingMixin[i].getName();
