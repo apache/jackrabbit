@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.search;
 
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.QName;
 
 /**
  * Implements a query node that defines a node type match.
@@ -29,11 +30,11 @@ public class NodeTypeQueryNode extends ExactQueryNode {
      * @param parent   the parent node for this query node.
      * @param nodeType the name of the node type.
      */
-    public NodeTypeQueryNode(QueryNode parent, String nodeType) {
+    public NodeTypeQueryNode(QueryNode parent, QName nodeType) {
         // we only use the jcr primary type as a dummy value
         // the property name is actually replaced in the query builder
         // when the runtime query is created to search the index.
-        super(parent, NodeTypeRegistry.JCR_PRIMARY_TYPE.toString(), nodeType);
+        super(parent, NodeTypeRegistry.JCR_PRIMARY_TYPE, nodeType);
     }
 
     /**

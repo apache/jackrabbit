@@ -16,10 +16,9 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import javax.jcr.util.ISO8601;
-import java.util.Calendar;
+import org.apache.jackrabbit.core.QName;
+
 import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * Implements a query node that defines property value relation.
@@ -29,7 +28,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
     /**
      * The name of the property
      */
-    private String property;
+    private QName property;
 
     /**
      * The <code>long</code> value of the relation if this is a query is of type
@@ -87,7 +86,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @param value     a property value
      * @param operation the type of the relation.
      */
-    public RelationQueryNode(QueryNode parent, String property, long value, int operation) {
+    public RelationQueryNode(QueryNode parent, QName property, long value, int operation) {
         super(parent);
         this.property = property;
         this.valueLong = value;
@@ -104,7 +103,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @param value     a property value
      * @param operation the type of the relation.
      */
-    public RelationQueryNode(QueryNode parent, String property, double value, int operation) {
+    public RelationQueryNode(QueryNode parent, QName property, double value, int operation) {
         super(parent);
         this.property = property;
         this.valueDouble = value;
@@ -121,7 +120,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @param value     a property value
      * @param operation the type of the relation.
      */
-    public RelationQueryNode(QueryNode parent, String property, Date value, int operation) {
+    public RelationQueryNode(QueryNode parent, QName property, Date value, int operation) {
         super(parent);
         this.property = property;
         this.valueDate = value;
@@ -138,7 +137,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @param value     a property value
      * @param operation the type of the relation.
      */
-    public RelationQueryNode(QueryNode parent, String property, String value, int operation) {
+    public RelationQueryNode(QueryNode parent, QName property, String value, int operation) {
         super(parent);
         this.property = property;
         this.valueString = value;
@@ -167,7 +166,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      *
      * @return the name of the property in this relation query node.
      */
-    public String getProperty() {
+    public QName getProperty() {
         return property;
     }
 
@@ -175,7 +174,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * Sets a new property name for this relation query node.
      * @param name the new property name.
      */
-    public void setProperty(String name) {
+    public void setProperty(QName name) {
         property = name;
     }
 
@@ -264,142 +263,4 @@ public class RelationQueryNode extends QueryNode implements Constants {
         return operation;
     }
 
-    /**
-     * Returns a JCRQL representation for this query node.
-     *
-     * @return a JCRQL representation for this query node.
-     */
-    public String toJCRQLString() {
-        StringBuffer sb = new StringBuffer();
-        if (property.indexOf(' ') > -1) {
-            sb.append("\"" + property + "\"");
-        } else {
-            sb.append(property);
-        }
-
-        if (operation == OPERATION_EQ) {
-            sb.append(" = ");
-        } else if (operation == OPERATION_GE) {
-            sb.append(" >= ");
-        } else if (operation == OPERATION_GT) {
-            sb.append(" > ");
-        } else if (operation == OPERATION_LE) {
-            sb.append(" <= ");
-        } else if (operation == OPERATION_LIKE) {
-            sb.append(" LIKE ");
-        } else if (operation == OPERATION_LT) {
-            sb.append(" < ");
-        } else if (operation == OPERATION_NE) {
-            sb.append(" <> ");
-        } else {
-            throw new RuntimeException("invalid operation: " + operation);
-        }
-
-
-        if (type == TYPE_LONG) {
-            sb.append(valueLong);
-        } else if (type == TYPE_DOUBLE) {
-            sb.append(valueDouble);
-        } else if (type == TYPE_STRING) {
-            sb.append("\"").append(valueString).append("\"");
-        } else if (type == TYPE_DATE || type == TYPE_TIMESTAMP) {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.setTime(valueDate);
-            sb.append(ISO8601.format(cal));
-        } else {
-            throw new RuntimeException("Invalid type: " + type);
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns a JCR SQL representation for this query node.
-     *
-     * @return a JCR SQL representation for this query node.
-     */
-    public String toJCRSQLString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("\"" + property + "\"");
-
-        if (operation == OPERATION_EQ) {
-            sb.append(" = ");
-        } else if (operation == OPERATION_GE) {
-            sb.append(" >= ");
-        } else if (operation == OPERATION_GT) {
-            sb.append(" > ");
-        } else if (operation == OPERATION_LE) {
-            sb.append(" <= ");
-        } else if (operation == OPERATION_LIKE) {
-            sb.append(" LIKE ");
-        } else if (operation == OPERATION_LT) {
-            sb.append(" < ");
-        } else if (operation == OPERATION_NE) {
-            sb.append(" <> ");
-        } else {
-            throw new RuntimeException("invalid operation: " + operation);
-        }
-
-
-        if (type == TYPE_LONG) {
-            sb.append(valueLong);
-        } else if (type == TYPE_DOUBLE) {
-            sb.append(valueDouble);
-        } else if (type == TYPE_STRING) {
-            sb.append("'").append(valueString.replaceAll("'", "''")).append("'");
-        } else if (type == TYPE_DATE || type == TYPE_TIMESTAMP) {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.setTime(valueDate);
-            sb.append("TIMESTAMP '").append(ISO8601.format(cal)).append("'");
-        } else {
-            throw new RuntimeException("Invalid type: " + type);
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns an XPath representation for this query node.
-     *
-     * @return an XPath representation for this query node.
-     */
-    public String toXPathString() {
-        StringBuffer sb = new StringBuffer();
-        // @todo use escaping for property name
-        sb.append("@" + property);
-
-        if (operation == OPERATION_EQ) {
-            sb.append(" = ");
-        } else if (operation == OPERATION_GE) {
-            sb.append(" >= ");
-        } else if (operation == OPERATION_GT) {
-            sb.append(" > ");
-        } else if (operation == OPERATION_LE) {
-            sb.append(" <= ");
-        } else if (operation == OPERATION_LIKE) {
-            // @todo make namespace aware
-            sb.insert(0, "jcrfn:like(").append(",");
-        } else if (operation == OPERATION_LT) {
-            sb.append(" < ");
-        } else if (operation == OPERATION_NE) {
-            sb.append(" != ");
-        } else {
-            throw new RuntimeException("invalid operation: " + operation);
-        }
-
-
-        if (type == TYPE_LONG) {
-            sb.append(valueLong);
-        } else if (type == TYPE_DOUBLE) {
-            sb.append(valueDouble);
-        } else if (type == TYPE_STRING) {
-            sb.append("'").append(valueString.replaceAll("'", "''")).append("'");
-        } else if (type == TYPE_DATE || type == TYPE_TIMESTAMP) {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.setTime(valueDate);
-            // @todo make namespace aware
-            sb.append("xs:dateTime('").append(ISO8601.format(cal)).append("')");
-        } else {
-            throw new RuntimeException("Invalid type: " + type);
-        }
-        return sb.toString();
-    }
 }

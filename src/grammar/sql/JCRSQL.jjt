@@ -41,21 +41,32 @@ PARSER_BEGIN(JCRSQLParser)
  */
 package org.apache.jackrabbit.core.search.sql;
 
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.search.Constants;
 
 public class JCRSQLParser {
 
   private String statement;
 
+  private NamespaceResolver resolver;
+
   public static void main(String args[]) throws ParseException {
   	JCRSQLParser parser = new JCRSQLParser(System.in);
   	parser.Query().dump("");
   }
 
-  public static ASTQuery parse(String statement) throws ParseException {
+  public static ASTQuery parse(String statement, NamespaceResolver resolver) throws ParseException {
   	java.io.StringReader sReader = new java.io.StringReader(statement);
   	JCRSQLParser parser = new JCRSQLParser(sReader);
+  	parser.setNamespaceResolver(resolver);
   	return parser.Query();
+  }
+
+  private void setNamespaceResolver(NamespaceResolver resolver) {
+        this.resolver = resolver;
   }
 
 }
@@ -88,6 +99,7 @@ TOKEN [ IGNORE_CASE ] :
 | < FROM: "FROM" >
 | < ORDER: "ORDER" >
 | < WHERE: "WHERE" >
+| < ESCAPE: "ESCAPE" >
 | < SELECT: "SELECT" >
 | < BETWEEN: "BETWEEN" >
 | < CONTAINS: "CONTAINS" >
@@ -179,7 +191,7 @@ TOKEN:
 
 
 | < REGULAR_IDENTIFIER: <IDENTIFIER_BODY> >
-| < #IDENTIFIER_BODY: <IDENTIFIER_START> (<UNDERSCORE> | <IDENTIFIER_PART>)* >
+| < #IDENTIFIER_BODY: <IDENTIFIER_START> (<UNDERSCORE> | <COLON> | <IDENTIFIER_PART>)* >
 | < #IDENTIFIER_START: <LETTER> > // syntax rules 5.2
 | < #IDENTIFIER_PART: <IDENTIFIER_START> | <DIGIT> >
 
@@ -282,9 +294,9 @@ void WhereClause() :
 void Predicate() :
 {
   int operationType;
-  String identifier;
-  Token t;
+  QName identifier;
   String value;
+  String escapeString;
 }
 {
   identifier = Identifier() { jjtThis.setIdentifier(identifier); }
@@ -306,9 +318,9 @@ void Predicate() :
             ASTLiteral s = new ASTLiteral(JJTLITERAL);
             s.setType(Constants.TYPE_STRING);
             s.setValue(value);
-            s.jjtSetParent(jjtThis);
-            jjtThis.jjtAddChild(s, jjtThis.jjtGetNumChildren());
+            jjtree.pushNode(s);
           }
+          (<ESCAPE> escapeString = CharStringLiteral() { jjtThis.setEscapeString(escapeString); })?
         )
       )
     )
@@ -457,16 +469,34 @@ String CharStringLiteral() #void :
   }
 }
 
-String Identifier() :
+QName Identifier() :
 {
   Token t = null;
-  String name = null;
+  QName name = null;
 }
 {
   (
-    t = <REGULAR_IDENTIFIER> { jjtThis.setName(t.image); }
+    t = <REGULAR_IDENTIFIER>
+      {
+        try {
+          jjtThis.setName(QName.fromJCRName(t.image, resolver));
+        } catch (IllegalNameException e) {
+          throw new ParseException(e.getMessage());
+        } catch (UnknownPrefixException e) {
+          throw new ParseException(e.getMessage());
+        }
+      }
   |
-    t = <DELIMITED_IDENTIFIER> { jjtThis.setName(t.image.substring(1, t.image.length()-1)); }
+    t = <DELIMITED_IDENTIFIER>
+      {
+        try {
+          jjtThis.setName(QName.fromJCRName(t.image.substring(1, t.image.length()-1), resolver));
+        } catch (IllegalNameException e) {
+          throw new ParseException(e.getMessage());
+        } catch (UnknownPrefixException e) {
+          throw new ParseException(e.getMessage());
+        }
+      }
   |
     (
       (
@@ -485,7 +515,15 @@ String Identifier() :
         | t = <SELECT>
         | t = <BETWEEN>
       )
-      { jjtThis.setName(t.image); }
+      {
+        try {
+          jjtThis.setName(QName.fromJCRName(t.image, resolver));
+        } catch (IllegalNameException e) {
+          throw new ParseException(e.getMessage());
+        } catch (UnknownPrefixException e) {
+          throw new ParseException(e.getMessage());
+        }
+      }
     )
   )
   {

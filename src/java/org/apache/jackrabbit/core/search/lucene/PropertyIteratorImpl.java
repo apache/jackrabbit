@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.log4j.Logger;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NamespaceResolver;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -30,9 +32,11 @@ class PropertyIteratorImpl implements PropertyIterator {
 
     private static final Logger log = Logger.getLogger(PropertyIteratorImpl.class);
 
-    private String[] props;
+    private QName[] props;
 
     private NodeIterator nodes;
+
+    private NamespaceResolver resolver;
 
     private Property next;
 
@@ -40,8 +44,9 @@ class PropertyIteratorImpl implements PropertyIterator {
 
     private long pos;
 
-    PropertyIteratorImpl(String[] props, NodeIterator nodes) {
+    PropertyIteratorImpl(QName[] props, NodeIterator nodes, NamespaceResolver resolver) {
         this.nodes = nodes;
+        this.resolver = resolver;
 
         if (props != null && props.length > 0) {
             this.props = props;
@@ -104,7 +109,7 @@ class PropertyIteratorImpl implements PropertyIterator {
             // try to get next PropertyIterator
             if (nodes.hasNext()) {
                 if (props != null) {
-                    currentProps = new FilteredPropertyIterator(props, nodes.nextNode());
+                    currentProps = new FilteredPropertyIterator(props, nodes.nextNode(), resolver);
                 } else {
                     currentProps = nodes.nextNode().getProperties();
                 }

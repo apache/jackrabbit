@@ -16,15 +16,19 @@
  */
 package org.apache.jackrabbit.core.search.sql;
 
+import org.apache.jackrabbit.core.QName;
+
 public class ASTPredicate extends SimpleNode {
 
     private int operationType;
 
     private boolean negate = false;
 
-    private String identifier;
+    private QName identifier;
 
     private String identifierOperand;
+
+    private String escapeString;
 
   public ASTPredicate(int id) {
     super(id);
@@ -50,11 +54,11 @@ public class ASTPredicate extends SimpleNode {
         return this.negate;
     }
 
-    public void setIdentifier(String identifier) {
+    public void setIdentifier(QName identifier) {
         this.identifier = identifier;
     }
 
-    public String getIdentifier() {
+    public QName getIdentifier() {
         return identifier;
     }
 
@@ -64,6 +68,14 @@ public class ASTPredicate extends SimpleNode {
 
     public String getIdentifierOperand() {
         return identifierOperand;
+    }
+
+    public void setEscapeString(String esc) {
+        this.escapeString = esc;
+    }
+
+    public String getEscapeString() {
+        return escapeString;
     }
 
   /** Accept the visitor. **/

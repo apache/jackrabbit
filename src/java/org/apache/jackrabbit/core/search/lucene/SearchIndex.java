@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.search.AbstractQueryHandler;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -205,7 +206,7 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     Hits executeQuery(Query query,
-                             String[] orderProps,
+                             QName[] orderProps,
                              boolean[] orderSpecs) throws IOException {
         try {
             readWriteLock.readLock().acquire();

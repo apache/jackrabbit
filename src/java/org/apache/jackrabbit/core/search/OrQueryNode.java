@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import java.util.Iterator;
-
 /**
  * Implements a query node that defines an OR operation between arbitrary
  * other {@link QueryNode}s.
@@ -53,88 +51,4 @@ public class OrQueryNode extends NAryQueryNode {
         return visitor.visit(this, data);
     }
 
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in JCRQL syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public String toJCRQLString() {
-        StringBuffer sb = new StringBuffer();
-        boolean bracket = false;
-        if (getParent() instanceof LocationStepQueryNode
-                || getParent() instanceof AndQueryNode
-                || getParent() instanceof NotQueryNode) {
-            bracket = true;
-        }
-        if (bracket) {
-            sb.append("(");
-        }
-        String or = "";
-        for (Iterator it = operands.iterator(); it.hasNext();) {
-            sb.append(or);
-            sb.append(((QueryNode) it.next()).toJCRQLString());
-            or = " OR ";
-        }
-        if (bracket) {
-            sb.append(")");
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in JCR SQL syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public String toJCRSQLString() {
-        StringBuffer sb = new StringBuffer();
-        boolean bracket = false;
-        if (getParent() instanceof LocationStepQueryNode 
-                || getParent() instanceof AndQueryNode
-                || getParent() instanceof NotQueryNode) {
-            bracket = true;
-        }
-        if (bracket) {
-            sb.append("(");
-        }
-        String or = "";
-        for (Iterator it = operands.iterator(); it.hasNext();) {
-            sb.append(or);
-            sb.append(((QueryNode) it.next()).toJCRSQLString());
-            or = " OR ";
-        }
-        if (bracket) {
-            sb.append(")");
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in XPath syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public String toXPathString() {
-        StringBuffer sb = new StringBuffer();
-        boolean bracket = false;
-        if (getParent() instanceof AndQueryNode) {
-            bracket = true;
-        }
-        if (bracket) {
-            sb.append("(");
-        }
-        String or = "";
-        for (Iterator it = operands.iterator(); it.hasNext();) {
-            sb.append(or);
-            sb.append(((QueryNode) it.next()).toXPathString());
-            or = " or ";
-        }
-        if (bracket) {
-            sb.append(")");
-        }
-        return sb.toString();
-    }
 }

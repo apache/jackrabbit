@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.log4j.Logger;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -30,15 +33,18 @@ class FilteredPropertyIterator implements PropertyIterator {
 
     private static final Logger log = Logger.getLogger(FilteredPropertyIterator.class);
 
-    private String[] props;
+    private QName[] props;
 
     private Node node;
 
+    private NamespaceResolver resolver;
+
     private int propIndex;
 
-    FilteredPropertyIterator(String[] props, Node node) {
+    FilteredPropertyIterator(QName[] props, Node node, NamespaceResolver resolver) {
         this.props = props;
         this.node = node;
+        this.resolver = resolver;
     }
 
     public Property nextProperty() {
@@ -46,11 +52,14 @@ class FilteredPropertyIterator implements PropertyIterator {
             throw new NoSuchElementException();
         }
         try {
-            return node.getProperty(props[propIndex++]);
+            return node.getProperty(props[propIndex++].toJCRName(resolver));
         } catch (RepositoryException e) {
             // FIXME find better error handling
             log.error("Exception retrieving property with name: "
                     + props[propIndex - 1]);
+            throw new NoSuchElementException();
+        } catch (NoPrefixDeclaredException e) {
+            log.error("Exception resolving property name: " + e.toString());
             throw new NoSuchElementException();
         }
     }

@@ -63,7 +63,7 @@ class WildcardTermEnum extends FilteredTermEnum {
     private Pattern createRegexp(String likePattern) {
         // - escape all non alphabetic characters
         // - escape constructs like \<alphabetic char> into \\<alphabetic char>
-        // - replace non escaped ? _ * % into . and .*
+        // - replace non escaped _ % into . and .*
         StringBuffer regexp = new StringBuffer();
         boolean escaped = false;
         for (int i = 0; i < likePattern.length(); i++) {
@@ -88,11 +88,9 @@ class WildcardTermEnum extends FilteredTermEnum {
                         escaped = false;
                     } else {
                         switch (likePattern.charAt(i)) {
-                            case '?':
                             case '_':
                                 regexp.append('.');
                                 break;
-                            case '*':
                             case '%':
                                 regexp.append(".*");
                                 break;

@@ -27,44 +27,18 @@ import java.util.Calendar;
 public class SimpleQueryTest extends AbstractQueryTest {
 
 
-    public void testSimpleQuery1() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
-        foo.setProperty("bla", new String[]{"bla"});
-
-        testRootNode.save();
-
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "/foo WHERE bla=\"bla\"";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        QueryResult result = q.execute();
-        checkResult(result, 1);
-    }
-
     public void testSimpleQuerySQL1() throws Exception {
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("bla", new String[]{"bla"});
 
         testRootNode.save();
 
-        String sql = "SELECT * FROM \"" + NT_BASE
-                + "\" WHERE \"jcr:path\" LIKE '" + testRoot + "/foo'"
+        String sql = "SELECT * FROM nt:base"
+                + " WHERE jcr:path LIKE '" + testRoot + "/foo'"
                 + " AND bla = 'bla'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
-    }
-
-    public void testSimpleQuery2() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
-        foo.setProperty("bla", new String[]{"bla"});
-        Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
-        bla.setProperty("bla", new String[]{"bla"});
-
-        testRootNode.save();
-
-        String jcrql = "SELECT * FROM nt:file LOCATION " + testRoot + "// WHERE bla=\"bla\"";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        QueryResult result = q.execute();
-        checkResult(result, 0);
     }
 
     public void testSimpleQuerySQL2() throws Exception {
@@ -75,26 +49,12 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         superuser.getRootNode().save();
 
-        String sql = "SELECT * FROM \"nt:file\"" +
-                " WHERE \"jcr:path\" LIKE '" + testRoot + "/%'"
+        String sql = "SELECT * FROM nt:file" +
+                " WHERE jcr:path LIKE '" + testRoot + "/%'"
                 + " AND bla = 'bla'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 0);
-    }
-
-    public void testSimpleQuery3() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
-        foo.setProperty("bla", new String[]{"bla"});
-        Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
-        bla.setProperty("bla", new String[]{"bla"});
-
-        testRootNode.save();
-
-        String jcrql = "SELECT * FROM nt:unstructured LOCATION " + testRoot + "// WHERE bla=\"bla\"";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        QueryResult result = q.execute();
-        checkResult(result, 2);
     }
 
     public void testSimpleQuerySQL3() throws Exception {
@@ -105,15 +65,15 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String sql = "SELECT * FROM \"nt:unstructured\"" +
-                " WHERE \"jcr:path\" LIKE '" + testRoot + "/%'"
+        String sql = "SELECT * FROM nt:unstructured" +
+                " WHERE jcr:path LIKE '" + testRoot + "/%'"
                 + " AND bla = 'bla'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 2);
     }
 
-    public void testSimpleQuery4() throws Exception {
+    public void testSimpleQuerySQL4() throws Exception {
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("bla", new String[]{"bla"});
         Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
@@ -121,8 +81,8 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM nt:unstructured LOCATION " + testRoot + "/*";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM nt:unstructured WHERE jcr:path LIKE '" + testRoot + "/%'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 2);
     }
@@ -140,13 +100,13 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE birth > 1976-01-01T00:00:00.000+01:00";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND birth > TIMESTAMP '1976-01-01T00:00:00.000+01:00'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE birth > 1975-01-01T00:00:00.000+01:00";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND birth > TIMESTAMP '1975-01-01T00:00:00.000+01:00'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2);
     }
@@ -161,18 +121,18 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value > 0.1e-0";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value > 0.1e-0";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value > -0.1";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value > -0.1";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value > -1.5";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value > -1.5";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 3);
     }
@@ -187,18 +147,18 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value > 0";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value > 0";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value > -1";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value > -1";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value > -2";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value > -2";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 3);
     }
@@ -213,28 +173,18 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"ping\"";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'ping'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"?ing\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE '_ing'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"*ing\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 3);
-
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"_ing\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 2);
-
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"%ing\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE '%ing'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 3);
     }
@@ -249,28 +199,18 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"ping\"";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'ping'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"p?ng\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'p_ng'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"p*ng\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 3);
-
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"p_ng\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 2);
-
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"p%ng\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'p%ng'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 3);
     }
@@ -285,64 +225,58 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"bli\"";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'bli'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"bl?\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'bl_'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"bl*\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 3);
-
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"bl_\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 2);
-
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"bl%\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'bl%'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 3);
     }
 
     public void testLikePatternEscaped() throws Exception {
         Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
-        n.setProperty("value", new String[]{"foo\\?bar"});
+        n.setProperty("value", new String[]{"foo\\_bar"});
         n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
         n.setProperty("value", new String[]{"foobar"});
         n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
-        n.setProperty("value", new String[]{"foo?bar"});
+        n.setProperty("value", new String[]{"foo_bar"});
         n = testRootNode.addNode("node4", NT_UNSTRUCTURED);
         n.setProperty("value", new String[]{"foolbar"});
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"foo\\?bar\""; // matches node3
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'foo\\_bar' ESCAPE '\\'"; // matches node3
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 1);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"foo?bar\"";    // matches node3 and node4
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'foo_bar'";    // matches node3 and node4
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"foo*bar\"";  // matches all nodes
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'foo%bar'";  // matches all nodes
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 4);
 
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value LIKE \"foo\\\\\\?bar\"";  // matches node1
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'foo\\\\\\_bar' ESCAPE '\\'";  // matches node1
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 1);
 
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'foo\\_bar'";  // matches node1
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        result = q.execute();
+        checkResult(result, 1);
     }
 
     public void testNotEqual() throws Exception {
@@ -355,8 +289,8 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE value <> \"bar\"";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        String jcrql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value <> 'bar'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, "sql");
         QueryResult result = q.execute();
         checkResult(result, 2);
 

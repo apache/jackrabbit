@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import org.apache.jackrabbit.core.search.jcrql.JCRQLQueryBuilder;
 import org.apache.jackrabbit.core.search.xpath.XPathQueryBuilder;
 import org.apache.jackrabbit.core.search.sql.JCRSQLQueryBuilder;
 import org.apache.jackrabbit.core.NamespaceResolver;
@@ -55,14 +54,45 @@ public class QueryParser {
                                       NamespaceResolver resolver)
             throws InvalidQueryException {
 
-        if (Query.JCRQL.equals(language)) {
-            return JCRQLQueryBuilder.createQuery(statement);
-        } else if (Query.XPATH_DOCUMENT_VIEW.equals(language)) {
+        if (Query.XPATH_DOCUMENT_VIEW.equals(language)) {
             return XPathQueryBuilder.createQuery(statement, resolver);
         } else if ("sql".equals(language)) {
             return JCRSQLQueryBuilder.createQuery(statement, resolver);
         } else {
-            throw new InvalidQueryException("unknown language");
+            throw new InvalidQueryException("Unsupported language: " + language);
+        }
+    }
+
+    /**
+     * Creates a String representation of the QueryNode tree argument
+     * <code>root</code>. The argument <code>language</code> specifies the
+     * syntax.
+     * See also: {@link javax.jcr.query.QueryManager#getSupportedQueryLanguages()}.
+     *
+     * @param root the query node tree.
+     * @param language one of the languages returned by:
+     *   {@link javax.jcr.query.QueryManager#getSupportedQueryLanguages()}.
+     * @param resolver to resolve QNames.
+     *
+     * @return a String representation of the query node tree.
+     *
+     * @throws InvalidQueryException if the query node tree cannot be converted
+     * into a String representation of the given language. This might be due to
+     * syntax restrictions of the given language. This exception is also thrown
+     * if <code>language</code> is not one of the supported query languages
+     * returned by the {@link javax.jcr.query.QueryManager}.
+     */
+    public static String toString(QueryRootNode root,
+                                  String language,
+                                  NamespaceResolver resolver)
+            throws InvalidQueryException {
+
+        if (Query.XPATH_DOCUMENT_VIEW.equals(language)) {
+            return XPathQueryBuilder.toString(root, resolver);
+        } else if ("sql".equals(language)) {
+            return JCRSQLQueryBuilder.toString(root, resolver);
+        } else {
+            throw new InvalidQueryException("Unsupported language: " + language);
         }
     }
 

@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.log4j.Logger;
 
 import javax.jcr.NodeIterator;
@@ -35,14 +37,18 @@ class QueryResultImpl implements QueryResult {
 
     private final String[] uuids;
 
-    private final String[] selectProps;
+    private final QName[] selectProps;
+
+    private final NamespaceResolver resolver;
 
     public QueryResultImpl(ItemManager itemMgr,
                            String[] uuids,
-                           String[] selectProps) {
+                           QName[] selectProps,
+                           NamespaceResolver resolver) {
         this.uuids = uuids;
         this.itemMgr = itemMgr;
         this.selectProps = selectProps;
+        this.resolver = resolver;
     }
 
     /**
@@ -50,7 +56,8 @@ class QueryResultImpl implements QueryResult {
      */
     public PropertyIterator getProperties() throws RepositoryException {
         return new PropertyIteratorImpl(selectProps,
-                new NodeIteratorImpl(itemMgr, uuids));
+                new NodeIteratorImpl(itemMgr, uuids),
+                resolver);
     }
 
     /**

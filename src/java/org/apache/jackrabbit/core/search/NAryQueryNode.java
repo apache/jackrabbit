@@ -54,7 +54,10 @@ public abstract class NAryQueryNode extends QueryNode {
      */
     public NAryQueryNode(QueryNode parent, QueryNode[] operands) {
         super(parent);
-        this.operands.addAll(Arrays.asList(operands));
+        if (operands.length > 0) {
+            this.operands = new ArrayList();
+            this.operands.addAll(Arrays.asList(operands));
+        }
     }
 
     /**
@@ -67,6 +70,20 @@ public abstract class NAryQueryNode extends QueryNode {
             operands = new ArrayList();
         }
         operands.add(operand);
+    }
+
+    /**
+     * Returns an array of currently set <code>QueryNode</code> operands of this
+     * <code>QueryNode</code>. Returns an empty array if no operands are set.
+     *
+     * @return currently set <code>QueryNode</code> operands.
+     */
+    public QueryNode[] getOperands() {
+        if (operands == null) {
+            return new QueryNode[0];
+        } else {
+            return (QueryNode[]) operands.toArray(new QueryNode[operands.size()]);
+        }
     }
 
     /**

@@ -40,6 +40,13 @@ import java.util.*;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
+ *
+ * @todo The SearchManager currently uses the system session to obtain an
+ * ItemStateManager from where it reads persistent ItemStates. This is kind
+ * of nasty, because the system session it is possible to change content through
+ * the system session as well.
+ * After switch to version 0.16 there is a shared ItemStateManager which
+ * represents the persistent view of item states.
  */
 public class SearchManager implements SynchronousEventListener {
 
@@ -54,6 +61,11 @@ public class SearchManager implements SynchronousEventListener {
     /** Namespace URI for XML schema */
     private static final String NS_XS_PREFIX = "xs";
     public static final String NS_XS_URI = "http://www.w3.org/2001/XMLSchema";
+
+    /** Namespace URI for JCR functions */
+    // @todo check if consistent with spec
+    private static final String NS_JCRFN_PREFIX = "jcrfn";
+    public static final String NS_JCRFN_URI = "http://www.jcp.org/jcr/xpath-functions/1.0";
 
     /** HierarchyManager for path resolution */
     private final HierarchyManager hmgr;
@@ -86,6 +98,12 @@ public class SearchManager implements SynchronousEventListener {
         } catch (RepositoryException e) {
             // not yet known
             nsReg.registerNamespace(NS_FN_PREFIX, NS_FN_URI);
+        }
+        try {
+            nsReg.getPrefix(NS_JCRFN_URI);
+        } catch (RepositoryException e) {
+            // not yet known
+            nsReg.registerNamespace(NS_JCRFN_PREFIX, NS_JCRFN_URI);
         }
 
         // initialize query handler

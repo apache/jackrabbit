@@ -16,8 +16,9 @@
  */
 package org.apache.jackrabbit.core.search;
 
+import org.apache.jackrabbit.core.QName;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -31,13 +32,8 @@ public class QueryRootNode extends QueryNode {
     private PathQueryNode locationNode;
 
     /**
-     * The list of nodeType constraints. Might be null
-     * @todo not used anymore, node types can be specified in any predicate.
-     */
-    private List nodeTypes = new ArrayList();
-
-    /**
-     * The list of property names to select. Might be null
+     * The list of property names (as {@link org.apache.jackrabbit.core.QName}s
+     * to select.
      */
     private List selectProperties = new ArrayList();
 
@@ -78,7 +74,7 @@ public class QueryRootNode extends QueryNode {
      *
      * @param propName the name of the property to select.
      */
-    public void addSelectProperty(String propName) {
+    public void addSelectProperty(QName propName) {
         selectProperties.add(propName);
     }
 
@@ -87,8 +83,8 @@ public class QueryRootNode extends QueryNode {
      *
      * @return an array of select properties.
      */
-    public String[] getSelectProperties() {
-        return (String[]) selectProperties.toArray(new String[selectProperties.size()]);
+    public QName[] getSelectProperties() {
+        return (QName[]) selectProperties.toArray(new QName[selectProperties.size()]);
     }
 
     /**
@@ -108,7 +104,6 @@ public class QueryRootNode extends QueryNode {
     public void setOrderNode(OrderQueryNode orderNode) {
         this.orderNode = orderNode;
     }
-    //--------------------------------------------------------------------------
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
@@ -117,89 +112,4 @@ public class QueryRootNode extends QueryNode {
         return visitor.visit(this, data);
     }
 
-
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in JCRQL syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public String toJCRQLString() {
-        StringBuffer sb = new StringBuffer("SELECT *");
-        String comma = "";
-        if (nodeTypes.size() > 0) {
-            sb.append(" FROM");
-        }
-        for (Iterator it = nodeTypes.iterator(); it.hasNext();) {
-            NodeTypeQueryNode nodeType = (NodeTypeQueryNode) it.next();
-            sb.append(comma);
-            sb.append(" ").append(nodeType.getValue());
-            comma = ",";
-        }
-        if (locationNode != null) {
-            sb.append(" ").append(locationNode.toJCRQLString());
-        }
-        LocationStepQueryNode[] steps = locationNode.getPathSteps();
-        QueryNode[] predicates = steps[steps.length - 1].getPredicates();
-        String and = "";
-        for (int i = 0; i < predicates.length; i++) {
-            if (i == 0) {
-                sb.append(" WHERE ");
-            }
-            sb.append(and).append(predicates[i].toJCRQLString());
-            and = " AND ";
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in JCR SQL syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public String toJCRSQLString() {
-        StringBuffer sb = new StringBuffer("SELECT *");
-        sb.append(" FROM");
-        String comma = "";
-        if (nodeTypes.size() > 0) {
-            for (Iterator it = nodeTypes.iterator(); it.hasNext();) {
-                NodeTypeQueryNode nodeType = (NodeTypeQueryNode) it.next();
-                sb.append(comma);
-                sb.append(" \"").append(nodeType.getValue()).append("\"");
-                comma = ",";
-            }
-        } else {
-            sb.append(" nt:base");
-        }
-        LocationStepQueryNode[] steps = locationNode.getPathSteps();
-        QueryNode[] predicates = steps[steps.length - 1].getPredicates();
-        String and = "";
-        for (int i = 0; i < predicates.length; i++) {
-            if (i == 0) {
-                sb.append(" WHERE ");
-            }
-            sb.append(and).append(predicates[i].toJCRSQLString());
-            and = " AND ";
-        }
-
-        if (steps.length == 2
-                && steps[1].getIncludeDescendants()
-                && steps[1].getNameTest() == null) {
-            // then this query selects all paths
-        } else {
-            sb.append(" AND ").append(locationNode.toJCRSQLString());
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in XPath syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public String toXPathString() {
-        return locationNode.toXPathString();
-    }
 }

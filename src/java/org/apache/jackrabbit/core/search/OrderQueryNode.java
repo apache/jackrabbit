@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.search;
 
+import org.apache.jackrabbit.core.QName;
+
 /**
  * Implements a query node that defines the order of nodes according to the
  * values of properties.
@@ -25,7 +27,7 @@ public class OrderQueryNode extends QueryNode {
     /**
      * The name of the properties to order
      */
-    private String[] properties;
+    private QName[] properties;
 
     /**
      * Array of flag indicating whether a node is ordered ascending or descending
@@ -41,9 +43,11 @@ public class OrderQueryNode extends QueryNode {
      * @param orderSpecs if <code>true</code> a result node is orderd ascending;
      *                   otherwise descending.
      */
-    public OrderQueryNode(QueryNode parent, String[] properties, boolean[] orderSpecs) {
+    public OrderQueryNode(QueryNode parent, QName[] properties, boolean[] orderSpecs) {
         super(parent);
-        if (properties.length != orderSpecs.length)
+        if (properties.length != orderSpecs.length) {
+            throw new IllegalArgumentException("Number of propertes and orderSpecs must be the same");
+        }
         this.properties = properties;
         this.orderSpecs = orderSpecs;
     }
@@ -71,12 +75,12 @@ public class OrderQueryNode extends QueryNode {
     }
 
     /**
-     * Returns a String array that contains the name of the properties
+     * Returns a <code>QName</code> array that contains the name of the properties
      * to sort the result nodes.
      *
      * @return names of order properties.
      */
-    public String[] getOrderByProperties() {
+    public QName[] getOrderByProperties() {
         return properties;
     }
 
@@ -89,59 +93,4 @@ public class OrderQueryNode extends QueryNode {
         return orderSpecs;
     }
 
-    /**
-     * Returns a JCRQL representation for this query node.
-     *
-     * @return a JCRQL representation for this query node.
-     */
-    public String toJCRQLString() {
-        StringBuffer sb = new StringBuffer("ORDER BY");
-        if (properties.length > 0) {
-            String comma = "";
-            for (int i = 0; i < properties.length; i++) {
-                sb.append(comma).append(" ");
-                sb.append(properties[i]);
-                if (isAscending(i)) {
-                    // FIXME really default to descending?
-                    sb.append(" ASCENDING");
-                }
-                comma = ",";
-            }
-        } else {
-            sb.append(" SCORE");
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns a JCR SQL representation for this query node.
-     *
-     * @return a JCR SQL representation for this query node.
-     */
-    public String toJCRSQLString() {
-        StringBuffer sb = new StringBuffer("ORDER BY");
-        if (properties.length > 0) {
-            String comma = "";
-            for (int i = 0; i < properties.length; i++) {
-                sb.append(comma).append(" \"");
-                sb.append(properties[i]).append("\"");
-                if (!isAscending(i)) {
-                    sb.append(" DESC");
-                }
-                comma = ",";
-            }
-        } else {
-            sb.append(" SCORE");
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns an XPath representation for this query node.
-     *
-     * @return an XPath representation for this query node.
-     */
-    public String toXPathString() {
-        return "";
-    }
 }

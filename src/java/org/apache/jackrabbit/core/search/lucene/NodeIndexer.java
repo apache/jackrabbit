@@ -41,7 +41,7 @@ import java.util.List;
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
  *
- * @todo add support for indexing of nt:resource. e.g. when mime type is text/*
+ * todo add support for indexing of nt:resource. e.g. when mime type is text/*
  */
 class NodeIndexer {
 

@@ -146,12 +146,12 @@ class QueryImpl implements javax.jcr.query.Query {
         // by default. this contrasts to standard sql semantics
         // where default is ascending.
         boolean[] orderSpecs = null;
-        String[] orderProperties = null;
+        QName[] orderProperties = null;
         if (orderNode != null) {
             orderProperties = orderNode.getOrderByProperties();
             orderSpecs = orderNode.getOrderBySpecs();
         } else {
-            orderProperties = new String[0];
+            orderProperties = new QName[0];
             orderSpecs = new boolean[0];
         }
 
@@ -177,7 +177,8 @@ class QueryImpl implements javax.jcr.query.Query {
         // return QueryResult
         return new QueryResultImpl(itemMgr,
                 (String[]) uuids.toArray(new String[uuids.size()]),
-                root.getSelectProperties());
+                root.getSelectProperties(),
+                session.getNamespaceResolver());
     }
 
     public String getStatement() {

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import java.util.Iterator;
+import org.apache.jackrabbit.core.QName;
 
 /**
  * Defines a location step for querying the path of a node.
@@ -37,7 +37,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * Name test for this location step. A <code>null</code> value indicates
      * a '*' name test.
      */
-    private String nameTest;
+    private QName nameTest;
 
     /**
      * If set to <code>true</code> this location step uses the descendant-or-self
@@ -49,7 +49,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * If <code>index</code> is larger than 0 this location step contains
      * a position index.
      */
-    private int index = -1;
+    private int index = 0;
 
     /**
      * Creates a new <code>LocationStepQueryNode</code> with a reference to
@@ -60,7 +60,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * @param descendants if <code>true</code> this location step uses the
      *   descendant-or-self axis; otherwise the child axis.
      */
-    public LocationStepQueryNode(QueryNode parent, String nameTest, boolean descendants) {
+    public LocationStepQueryNode(QueryNode parent, QName nameTest, boolean descendants) {
         super(parent);
         this.nameTest = nameTest;
         this.includeDescendants = descendants;
@@ -71,7 +71,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * if the name test is '*'.
      * @return the label of the node for this location step.
      */
-    public String getNameTest() {
+    public QName getNameTest() {
         return nameTest;
     }
 
@@ -79,7 +79,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * Sets a new name test.
      * @param nameTest the name test or <code>null</code> to match all names.
      */
-    public void setNameTest(String nameTest) {
+    public void setNameTest(QName nameTest) {
         this.nameTest = nameTest;
     }
 
@@ -126,15 +126,23 @@ public class LocationStepQueryNode extends NAryQueryNode {
     }
 
     /**
-     * Sets the position index for this step.
+     * Sets the position index for this step. A value of 0 (zero) indicates
+     * that this location step has no position index assigned. That is, the
+     * step selects all same name siblings.
      * @param index the position index.
+     * @exception IllegalArgumentException if index < 0.
      */
     public void setIndex(int index) {
+        if (index < 0) {
+            throw new IllegalArgumentException("index < 0");
+        }
         this.index = index;
     }
 
     /**
-     * Returns the position index for this step.
+     * Returns the position index for this step. A value of 0 (zero) indicates
+     * that this location step has no position index assigned. That is, the
+     * step selects all same name siblings.
      * @return the position index for this step.
      */
     public int getIndex() {
@@ -148,66 +156,4 @@ public class LocationStepQueryNode extends NAryQueryNode {
         return visitor.visit(this, data);
     }
 
-    /**
-     * Returns a JCRQL representation for this query node.
-     *
-     * @return a JCRQL representation for this query node.
-     */
-    public String toJCRQLString() {
-        StringBuffer sb = new StringBuffer();
-        if (nameTest == null) {
-            sb.append("*");
-        } else {
-            sb.append(nameTest);
-        }
-        if (index > -1) {
-            sb.append('[').append(index).append(']');
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns a JCR SQL representation for this query node.
-     *
-     * @return a JCR SQL representation for this query node.
-     */
-    public String toJCRSQLString() {
-        StringBuffer sb = new StringBuffer();
-        if (nameTest == null) {
-            sb.append("*");
-        } else {
-            sb.append(nameTest);
-        }
-        if (index > -1) {
-            sb.append('[').append(index).append(']');
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Returns an XPath representation for this query node.
-     *
-     * @return an XPath representation for this query node.
-     */
-    public String toXPathString() {
-        StringBuffer sb = new StringBuffer();
-        if (includeDescendants) {
-            sb.append('/');
-        }
-        if (nameTest == null) {
-            sb.append("*");
-        } else {
-            sb.append(nameTest);
-        }
-        if (index > -1) {
-            sb.append('[').append(index).append(']');
-        }
-        if (operands != null) {
-            for (Iterator it = operands.iterator(); it.hasNext();) {
-                QueryNode predicate = (QueryNode) it.next();
-                sb.append('[').append(predicate.toXPathString()).append(']');
-            }
-        }
-        return sb.toString();
-    }
 }

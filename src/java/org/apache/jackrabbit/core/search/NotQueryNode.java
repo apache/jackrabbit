@@ -49,39 +49,4 @@ public class NotQueryNode extends NAryQueryNode {
         return visitor.visit(this, data);
     }
 
-    /**
-     * Returns a JCRQL representation for this query node.
-     *
-     * @return a JCRQL representation for this query node.
-     */
-    public String toJCRQLString() {
-        if (operands.size() > 0) {
-            return "NOT " + ((QueryNode) operands.get(0)).toJCRQLString();
-        }
-        return "";
-    }
-
-    /**
-     * Returns a JCR SQL representation for this query node.
-     *
-     * @return a JCR SQL representation for this query node.
-     */
-    public String toJCRSQLString() {
-        if (operands.size() > 0) {
-            return "NOT " + ((QueryNode) operands.get(0)).toJCRSQLString();
-        }
-        return "";
-    }
-
-    /**
-     * Returns an XPath representation for this query node.
-     *
-     * @return an XPath representation for this query node.
-     */
-    public String toXPathString() {
-        if (operands.size() > 0) {
-            return "fn:not(" + ((QueryNode) operands.get(0)).toXPathString() + ")";
-        }
-        return "";
-    }
 }

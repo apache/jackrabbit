@@ -53,12 +53,12 @@ class MatchAllQuery extends Query {
     }
 
     /**
-     * Returns the String "*".
+     * Returns the String "%".
      *
      * @param field default field for the query.
-     * @return the String "*".
+     * @return the String "%".
      */
     public String toString(String field) {
-        return "*";
+        return "%";
     }
 }

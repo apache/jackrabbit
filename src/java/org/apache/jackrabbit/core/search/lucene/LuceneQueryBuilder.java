@@ -97,17 +97,16 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     public Object visit(QueryRootNode node, Object data) {
         BooleanQuery root = new BooleanQuery();
 
-        String[] props = node.getSelectProperties();
+        QName[] props = node.getSelectProperties();
         for (int i = 0; i < props.length; i++) {
-            String prop = props[i];
             try {
-                prop = nsMappings.translatePropertyName(prop, session.getNamespaceResolver());
-            } catch (IllegalNameException e) {
-                exceptions.add(e);
-            } catch (UnknownPrefixException e) {
+                String prop = props[i].toJCRName(nsMappings);
+                // @todo really search nodes that have non null values?
+                root.add(new MatchAllQuery(prop), true, false);
+            } catch (NoPrefixDeclaredException e) {
+                // should never happen actually. prefixes are dynamically created
                 exceptions.add(e);
             }
-            root.add(new MatchAllQuery(prop), true, false);
         }
 
         Query wrapped = root;
@@ -160,30 +159,25 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(ExactQueryNode node, Object data) {
-        String field = node.getPropertyName();
+        String field = "";
+        String value = "";
         try {
-            field = nsMappings.translatePropertyName(node.getPropertyName(),
-                    session.getNamespaceResolver());
-        } catch (IllegalNameException e) {
-            exceptions.add(e);
-        } catch (UnknownPrefixException e) {
-            exceptions.add(e);
+            field = node.getPropertyName().toJCRName(nsMappings);
+            value = node.getValue().toJCRName(nsMappings);
+        } catch (NoPrefixDeclaredException e) {
+            // will never happen, prefixes are created when unknown
         }
-        String value = node.getValue();
         return new TermQuery(new Term(field, value));
     }
 
     public Object visit(NodeTypeQueryNode node, Object data) {
-        String field = node.getPropertyName();
+        String field = "";
         List values = new ArrayList();
         try {
-            field = nsMappings.getPrefix(NodeTypeRegistry.JCR_PRIMARY_TYPE.getNamespaceURI())
-                    + ":" + NodeTypeRegistry.JCR_PRIMARY_TYPE.getLocalName();
-
-            values.add(nsMappings.translatePropertyName(node.getValue(),
-                    session.getNamespaceResolver()));
+            field = NodeTypeRegistry.JCR_PRIMARY_TYPE.toJCRName(nsMappings);
+            values.add(node.getValue().toJCRName(nsMappings));
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
-            NodeType base = ntMgr.getNodeType(node.getValue());
+            NodeType base = ntMgr.getNodeType(node.getValue().toJCRName(session.getNamespaceResolver()));
             NodeTypeIterator allTypes = ntMgr.getAllNodeTypes();
             while (allTypes.hasNext()) {
                 NodeType nt = allTypes.nextNodeType();
@@ -196,6 +190,9 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         } catch (IllegalNameException e) {
             exceptions.add(e);
         } catch (UnknownPrefixException e) {
+            exceptions.add(e);
+        } catch (NoPrefixDeclaredException e) {
+            // should never happen
             exceptions.add(e);
         } catch (RepositoryException e) {
             exceptions.add(e);
@@ -275,7 +272,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(LocationStepQueryNode node, Object data) {
-        if (node.getNameTest() != null && node.getNameTest().length() == 0) {
+        if (node.getNameTest() != null && node.getNameTest().getLocalName().length() == 0) {
             // select root node
             return new TermQuery(new Term(FieldNames.PARENT, ""));
         }
@@ -296,12 +293,10 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         TermQuery nameTest = null;
         if (node.getNameTest() != null) {
             try {
-                String internalName = nsMappings.translatePropertyName(node.getNameTest(),
-                        session.getNamespaceResolver());
+                String internalName = node.getNameTest().toJCRName(nsMappings);
                 nameTest = new TermQuery(new Term(FieldNames.LABEL, internalName));
-            } catch (IllegalNameException e) {
-                exceptions.add(e);
-            } catch (UnknownPrefixException e) {
+            } catch (NoPrefixDeclaredException e) {
+                // should never happen
                 exceptions.add(e);
             }
         }
@@ -357,13 +352,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                         + node.getType());
         }
 
-        String field = node.getProperty();
+        String field = "";
         try {
-            field = nsMappings.translatePropertyName(node.getProperty(),
-                    session.getNamespaceResolver());
-        } catch (IllegalNameException e) {
-            exceptions.add(e);
-        } catch (UnknownPrefixException e) {
+            field = node.getProperty().toJCRName(nsMappings);
+        } catch (NoPrefixDeclaredException e) {
+            // should never happen
             exceptions.add(e);
         }
 
@@ -381,8 +374,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 query = new RangeQuery(null, new Term(field, stringValue), true);
                 break;
             case Constants.OPERATION_LIKE:	// LIKE
-                // @todo use MatchAllQuery if stringValue is "*" (or "%" ?)
-                query = new WildcardQuery(new Term(field, stringValue));
+                if (stringValue.equals("%")) {
+                    query = new MatchAllQuery(field);
+                } else {
+                    query = new WildcardQuery(new Term(field, stringValue));
+                }
                 break;
             case Constants.OPERATION_LT:	// <
                 query = new RangeQuery(null, new Term(field, stringValue), false);

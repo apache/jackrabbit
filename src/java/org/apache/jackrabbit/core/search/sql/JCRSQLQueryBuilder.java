@@ -33,6 +33,9 @@ import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.log4j.Logger;
 
 import javax.jcr.query.InvalidQueryException;
@@ -60,7 +63,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     /**
      * QName for jcr:path
      */
-    private static final QName JCR_PATH = new QName(NamespaceRegistryImpl.NS_JCR_URI, "path");
+    static final QName JCR_PATH = new QName(NamespaceRegistryImpl.NS_JCR_URI, "path");
 
     /** The root node of the sql query syntax tree */
     private final ASTQuery stmt;
@@ -68,27 +71,25 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     /** The root query node */
     private QueryRootNode root;
 
+    /** To resolve QNames */
+    private NamespaceResolver resolver;
+
     /** Query node to gather the constraints defined in the WHERE clause */
     private final AndQueryNode constraintNode = new AndQueryNode(null);
 
-    /**
-     * The resolved jcr:path QName using the NamespaceResolver passed in the
-     * constructor.
-     */
-    private final String jcrPathResolved;
+    public JCRSQLQueryBuilder() {
+        stmt = null;
+    }
 
     /**
      * Creates a new <code>JCRSQLQueryBuilder</code>.
      * @param statement the root node of the SQL syntax tree.
      * @param resolver a namespace resolver to use for names in the
      *   <code>statement</code>.
-     * @throws NoPrefixDeclaredException if a prefix in the statement cannot
-     *   be resolved.
      */
-    private JCRSQLQueryBuilder(ASTQuery statement, NamespaceResolver resolver)
-            throws NoPrefixDeclaredException {
+    private JCRSQLQueryBuilder(ASTQuery statement, NamespaceResolver resolver) {
         this.stmt = statement;
-        jcrPathResolved = JCR_PATH.toJCRName(resolver);
+        this.resolver = resolver;
     }
 
     /**
@@ -101,13 +102,26 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     public static QueryRootNode createQuery(String statement, NamespaceResolver resolver)
             throws InvalidQueryException {
         try {
-            JCRSQLQueryBuilder builder = new JCRSQLQueryBuilder(JCRSQLParser.parse(statement), resolver);
+            JCRSQLQueryBuilder builder = new JCRSQLQueryBuilder(JCRSQLParser.parse(statement, resolver), resolver);
             return builder.getRootNode();
         } catch (ParseException e) {
             throw new InvalidQueryException(e.getMessage());
-        } catch (NoPrefixDeclaredException e) {
+        } catch (IllegalArgumentException e) {
             throw new InvalidQueryException(e.getMessage());
         }
+    }
+
+    /**
+     * Creates a String representation of the query node tree in SQL syntax.
+     * @param root the root of the query node tree.
+     * @param resolver to resolve QNames.
+     * @return a String representation of the query node tree.
+     * @throws InvalidQueryException if the query node tree cannot be converted
+     *   into a String representation due to restrictions in SQL.
+     */
+    public static String toString(QueryRootNode root, NamespaceResolver resolver)
+            throws InvalidQueryException {
+        return QueryFormat.toString(root, resolver);
     }
 
     /**
@@ -139,7 +153,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         // use //* if no path has been set
         PathQueryNode pathNode = root.getLocationNode();
         if (pathNode.getPathSteps().length == 0) {
-            pathNode.addPathStep(new LocationStepQueryNode(pathNode, "", false));
+            pathNode.addPathStep(new LocationStepQueryNode(pathNode, new QName("", ""), false));
             pathNode.addPathStep(new LocationStepQueryNode(pathNode, null, true));
         }
 
@@ -168,10 +182,16 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
         return node.childrenAccept(new DefaultParserVisitor() {
             public Object visit(ASTIdentifier node, Object data) {
-                // node is either primary or mixin node type
-                NodeTypeQueryNode nodeType
-                        = new NodeTypeQueryNode(constraintNode, node.getName());
-                constraintNode.addOperand(nodeType);
+                try {
+                    if (!node.getName().equals(NodeTypeRegistry.NT_BASE.toJCRName(resolver))) {
+                        // node is either primary or mixin node type
+                        NodeTypeQueryNode nodeType
+                                = new NodeTypeQueryNode(constraintNode, node.getName());
+                        constraintNode.addOperand(nodeType);
+                    }
+                } catch (NoPrefixDeclaredException e) {
+                    throw new IllegalArgumentException("No prefix declared for name: " + node.getName());
+                }
                 return data;
             }
         }, root);
@@ -191,18 +211,18 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         int type = node.getOperationType();
         QueryNode predicateNode = null;
 
-        String identifier = ((ASTIdentifier) node.children[0]).getName();
-        if (identifier.equals(jcrPathResolved)) {
-            if (node.children[1] instanceof ASTIdentifier) {
-                // simply ignore, this is a join of a mixin node type
-            } else {
-                createPathQuery(((ASTLiteral) node.children[1]).getValue());
-            }
-            // done
-            return data;
-        }
-
         try {
+            QName identifier = ((ASTIdentifier) node.children[0]).getName();
+            if (identifier.equals(JCR_PATH)) {
+                if (node.children[1] instanceof ASTIdentifier) {
+                    // simply ignore, this is a join of a mixin node type
+                } else {
+                    createPathQuery(((ASTLiteral) node.children[1]).getValue());
+                }
+                // done
+                return data;
+            }
+
             if (type == Constants.OPERATION_BETWEEN) {
                 AndQueryNode between = new AndQueryNode(parent);
                 RelationQueryNode rel = createRelationQueryNode(between,
@@ -222,11 +242,27 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             } else if (type == Constants.OPERATION_GE
                     || type == Constants.OPERATION_GT
                     || type == Constants.OPERATION_LE
-                    || type == Constants.OPERATION_LIKE
                     || type == Constants.OPERATION_LT
                     || type == Constants.OPERATION_NE) {
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, (ASTLiteral) node.children[1]);
+            } else if (type == Constants.OPERATION_LIKE) {
+                ASTLiteral pattern = (ASTLiteral) node.children[1];
+                if (node.getEscapeString() != null) {
+                    if (node.getEscapeString().length() == 1) {
+                        // backslash is the escape character we use internally
+                        pattern.setValue(translateEscaping(pattern.getValue(), node.getEscapeString().charAt(0), '\\'));
+                    } else {
+                        throw new IllegalArgumentException("ESCAPE string value must have length 1: '" + node.getEscapeString() + "'");
+                    }
+                } else {
+                    // no escape character specified.
+                    // if the pattern contains any backslash characters we need
+                    // to escape them.
+                    pattern.setValue(pattern.getValue().replaceAll("\\\\", "\\\\\\\\"));
+                }
+                predicateNode = createRelationQueryNode(parent,
+                        identifier, type, pattern);
             } else if (type == Constants.OPERATION_IN) {
                 OrQueryNode in = new OrQueryNode(parent);
                 for (int i = 1; i < node.children.length; i++) {
@@ -238,14 +274,12 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             } else if (type == Constants.OPERATION_NULL) {
                 ASTLiteral star = new ASTLiteral(JCRSQLParserTreeConstants.JJTLITERAL);
                 star.setType(Constants.TYPE_STRING);
-                star.setValue("*");
+                star.setValue("%");
                 predicateNode = createRelationQueryNode(parent,
                         identifier, Constants.OPERATION_LIKE, star);
             }
-        } catch (IllegalArgumentException e) {
-            log.error(e.toString());
         } catch (ArrayIndexOutOfBoundsException e) {
-            log.error("Too few arguments");
+            throw new IllegalArgumentException("Too few arguments in predicate");
         }
 
         if (predicateNode != null) {
@@ -305,7 +339,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     public Object visit(ASTOrderByClause node, Object data) {
         QueryRootNode root = (QueryRootNode) data;
 
+        // list of QNames
         final List identifiers = new ArrayList();
+
         // collect identifiers
         node.childrenAccept(new DefaultParserVisitor() {
             public Object visit(ASTIdentifier node, Object data) {
@@ -314,7 +350,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }
         }, root);
 
-        String[] props = (String[]) identifiers.toArray(new String[identifiers.size()]);
+        QName[] props = (QName[]) identifiers.toArray(new QName[identifiers.size()]);
         boolean[] orders = new boolean[props.length];
         root.setOrderNode(new OrderQueryNode(root, props, orders));
         return root;
@@ -339,7 +375,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      * to its type. E.g. a malformed String representation of a date.
      */
     private RelationQueryNode createRelationQueryNode(QueryNode parent,
-                                                      String propertyName,
+                                                      QName propertyName,
                                                       int operationType,
                                                       ASTLiteral literal)
             throws IllegalArgumentException {
@@ -359,8 +395,6 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 long l = Long.parseLong(stringValue);
                 node = new RelationQueryNode(parent, propertyName, l, operationType);
             } else if (literal.getType() == Constants.TYPE_STRING) {
-                // @todo convert % and _ into * and ? if opType is LIKE
-                // @todo take care of escaping!
                 node = new RelationQueryNode(parent, propertyName, stringValue, operationType);
             } else if (literal.getType() == Constants.TYPE_TIMESTAMP) {
                 Calendar c = ISO8601.parse(stringValue);
@@ -390,7 +424,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             if (names[i].length() == 0) {
                 if (i == 0) {
                     // root
-                    pathNode.addPathStep(new LocationStepQueryNode(pathNode, "", false));
+                    pathNode.addPathStep(new LocationStepQueryNode(pathNode, new QName("", ""), false));
                 } else {
                     // descendant '//'
                     // FIXME this is not possible
@@ -403,26 +437,86 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                     // contains index
                     name = names[i].substring(0, idx);
                     String suffix = names[i].substring(idx);
-                    try {
-                        index = Integer.parseInt(suffix.substring(1, suffix.length() - 1));
-                    } catch (NumberFormatException e) {
-                        log.warn("Unable to parse index for path element: " + names[i]);
+                    String indexStr = suffix.substring(1, suffix.length() - 1);
+                    if (indexStr.equals("%")) {
+                        // select all same name siblings
+                        index = 0;
+                    } else {
+                        try {
+                            index = Integer.parseInt(indexStr);
+                        } catch (NumberFormatException e) {
+                            log.warn("Unable to parse index for path element: " + names[i]);
+                        }
                     }
                 } else {
                     // no index
                     name = names[i];
+                    // in SQL this means index 1
+                    index = 1;
                 }
                 if (name.equals("%")) {
                     name = null;
                 }
+                QName qName = null;
+                if (name != null) {
+                    try {
+                        qName = QName.fromJCRName(name, resolver);
+                    } catch (IllegalNameException e) {
+                        throw new IllegalArgumentException("Illegal name: " + name);
+                    } catch (UnknownPrefixException e) {
+                        throw new IllegalArgumentException("Unknown prefix: " + name);
+                    }
+                }
                 // @todo how to specify descendant-or-self?
-                LocationStepQueryNode step = new LocationStepQueryNode(pathNode, name, false);
+                LocationStepQueryNode step = new LocationStepQueryNode(pathNode, qName, false);
                 if (index > 0) {
                     step.setIndex(index);
                 }
                 pathNode.addPathStep(step);
             }
         }
+    }
+
+    /**
+     * Translates a pattern using the escape character <code>from</code> into
+     * a pattern using the escape character <code>to</code>.
+     * @param pattern the pattern to translate
+     * @param from the currently used escape character.
+     * @param to the new escape character to use.
+     * @return the new pattern using the escape character <code>to</code>.
+     */
+    private static String translateEscaping(String pattern, char from, char to) {
+        // if escape characters are the same OR pattern does not contain any
+        // escape characters -> simply return pattern as is.
+        if (from == to || (pattern.indexOf(from) < 0 && pattern.indexOf(to) < 0)) {
+            return pattern;
+        }
+        StringBuffer translated = new StringBuffer(pattern.length());
+        boolean escaped = false;
+        for (int i = 0; i < pattern.length(); i++) {
+            if (pattern.charAt(i) == from) {
+                if (escaped) {
+                    translated.append(from);
+                    escaped = false;
+                } else {
+                    escaped = true;
+                }
+            } else if (pattern.charAt(i) == to) {
+                if (escaped) {
+                    translated.append(to).append(to);
+                    escaped = false;
+                } else {
+                    translated.append(to).append(to);
+                }
+            } else {
+                if (escaped) {
+                    translated.append(to);
+                    escaped = false;
+                }
+                translated.append(pattern.charAt(i));
+            }
+        }
+        return translated.toString();
     }
 
 }

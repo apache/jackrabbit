@@ -61,27 +61,4 @@ public abstract class QueryNode {
      */
     public abstract Object accept(QueryNodeVisitor visitor, Object data);
 
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in JCRQL syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public abstract String toJCRQLString();
-
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in JCRQL syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public abstract String toJCRSQLString();
-
-    /**
-     * Returns a string representation of this query node including its sub-nodes.
-     * The returned string is formatted in XPath syntax.
-     *
-     * @return a string representation of this query node including its sub-nodes.
-     */
-    public abstract String toXPathString();
 }

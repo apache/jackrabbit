@@ -26,32 +26,6 @@ import javax.jcr.query.QueryResult;
  */
 public class SelectClauseTest extends AbstractQueryTest {
 
-    public void testSelect() throws RepositoryException {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"foo"});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"bar"});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
-        n.setProperty("yourvalue", new String[]{"foo"});
-
-        testRootNode.save();
-
-        String jcrql = "SELECT myvalue FROM * LOCATION " + testRoot + "//";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        QueryResult result = q.execute();
-        checkResult(result, 2);
-
-        jcrql = "SELECT myvalue FROM * LOCATION " + testRoot + "// WHERE yourvalue = \"foo\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 0);
-
-        jcrql = "SELECT myvalue FROM *";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 2);
-    }
-
     public void testSelectSQL() throws RepositoryException {
         Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
         n.setProperty("myvalue", new String[]{"foo"});
@@ -79,37 +53,6 @@ public class SelectClauseTest extends AbstractQueryTest {
         q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2);
-    }
-
-    public void testPropertyCount() throws RepositoryException {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"foo"});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"bar"});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
-        n.setProperty("yourvalue", new String[]{"foo"});
-
-        testRootNode.save();
-
-        String jcrql = "SELECT myvalue FROM * LOCATION " + testRoot + "//";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        QueryResult result = q.execute();
-        checkResult(result, 2, 2);
-
-        jcrql = "SELECT myvalue FROM * LOCATION " + testRoot + "// WHERE yourvalue = \"foo\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 0, 0);
-
-        jcrql = "SELECT myvalue FROM *";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 2, 2);
-
-        jcrql = "SELECT * FROM * LOCATION " + testRoot + "// WHERE myvalue LIKE \"*\"";
-        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        result = q.execute();
-        checkResult(result, 2, 4);
     }
 
     public void testPropertyCountSQL() throws RepositoryException {
@@ -146,23 +89,6 @@ public class SelectClauseTest extends AbstractQueryTest {
         q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
         result = q.execute();
         checkResult(result, 2, 4);
-    }
-
-    public void testSameNameSibling() throws RepositoryException {
-        Node n = testRootNode.addNode("node", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"foo"});
-        n = testRootNode.addNode("node", NT_UNSTRUCTURED);
-        n.setProperty("myvalue", new String[]{"bar"});
-        n = testRootNode.addNode("node", NT_UNSTRUCTURED);
-        n.setProperty("yourvalue", new String[]{"foo"});
-
-        testRootNode.save();
-
-        String jcrql = "SELECT myvalue FROM * LOCATION " + testRoot + "/node";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-        QueryResult result = q.execute();
-        checkResult(result, 2, 2);
-
     }
 
     public void testSameNameSiblingSQL() throws RepositoryException {

@@ -54,25 +54,4 @@ public class TextsearchQueryNode extends QueryNode {
         return query;
     }
 
-    /**
-     * Returns a JCRQL representation for this query node.
-     *
-     * @return a JCRQL representation for this query node.
-     */
-    public String toJCRQLString() {
-        return "TEXTSEARCH \"" + query + "\"";
-    }
-
-    public String toJCRSQLString() {
-        return "CONTAINS('" + query + "')";
-    }
-
-    /**
-     * Returns an XPath representation for this query node.
-     *
-     * @return an XPath representation for this query node.
-     */
-    public String toXPathString() {
-        return "jcrfn:contains('" + query.replaceAll("'", "''") + "')";
-    }
 }

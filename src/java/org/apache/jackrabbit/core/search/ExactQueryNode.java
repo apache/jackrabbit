@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.search;
 
+import org.apache.jackrabbit.core.QName;
+
 /**
  * Implements a query node that defines an exact match of a property and a
  * value.
@@ -25,12 +27,12 @@ public class ExactQueryNode extends QueryNode {
     /**
      * The name of the property to match
      */
-    private final String property;
+    private final QName property;
 
     /**
      * The value of the property to match
      */
-    private final String value;
+    private final QName value;
 
     /**
      * Creates a new <code>ExactQueryNode</code> instance.
@@ -39,7 +41,7 @@ public class ExactQueryNode extends QueryNode {
      * @param property the name of the property to match.
      * @param value    the value of the property to match.
      */
-    public ExactQueryNode(QueryNode parent, String property, String value) {
+    public ExactQueryNode(QueryNode parent, QName property, QName value) {
         super(parent);
         if (parent == null) {
             throw new NullPointerException("parent");
@@ -60,7 +62,7 @@ public class ExactQueryNode extends QueryNode {
      *
      * @return the name of the property to match.
      */
-    public String getPropertyName() {
+    public QName getPropertyName() {
         return property;
     }
 
@@ -69,38 +71,8 @@ public class ExactQueryNode extends QueryNode {
      *
      * @return the value of the property to match.
      */
-    public String getValue() {
+    public QName getValue() {
         return value;
     }
 
-    /**
-     * Returns a JCRQL representation for this query node.
-     *
-     * @return a JCRQL representation for this query node.
-     */
-    public String toJCRQLString() {
-        if (property.indexOf(' ') > -1) {
-            return "\"" + property + "\"=\"" + value + "\"";
-        }
-        return property + "=\"" + value + "\"";
-    }
-
-    /**
-     * Returns a JCR SQL representation for this query node.
-     *
-     * @return a JCR SQL representation for this query node.
-     */
-    public String toJCRSQLString() {
-        return "\"" + property + "\"='" + value + "'";
-    }
-
-    /**
-     * Returns an XPath representation for this query node.
-     *
-     * @return an XPath representation for this query node.
-     */
-    public String toXPathString() {
-        // todo use encoding for property name
-        return "@" + property + "='" + value.replaceAll("'", "''") + "'";
-    }
 }

@@ -27,6 +27,7 @@ import java.util.Date;
  * <li><code>String</code></li>
  * <li><code>Date</code></li>
  * </ul>
+ * @todo remove this class. not used anymore
  */
 public class RangeQueryNode extends QueryNode implements Constants {
 
@@ -167,30 +168,4 @@ public class RangeQueryNode extends QueryNode implements Constants {
         return type;
     }
 
-    /**
-     * Returns a JCRQL representation for this query node.
-     *
-     * @return a JCRQL representation for this query node.
-     */
-    public String toJCRQLString() {
-        return "";
-    }
-
-    /**
-     * Returns a JCR SQL representation for this query node.
-     *
-     * @return a JCR SQL representation for this query node.
-     */
-    public String toJCRSQLString() {
-        return "";
-    }
-
-    /**
-     * Returns an XPath representation for this query node.
-     *
-     * @return an XPath representation for this query node.
-     */
-    public String toXPathString() {
-        return "";
-    }
 }
