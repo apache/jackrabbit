@@ -121,11 +121,6 @@ public class LocalItemStateManager extends ItemStateCache
     protected PropertyState getPropertyState(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        // check cache
-        if (isCached(id)) {
-            return (PropertyState) retrieve(id);
-        }
-
         // load from parent manager and wrap
         PropertyState state = (PropertyState) sharedStateMgr.getItemState(id);
         state = new PropertyState(state, state.getStatus(), false);
@@ -154,7 +149,7 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public synchronized ItemState getItemState(ItemId id)
+    public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
         // check change log
@@ -163,16 +158,18 @@ public class LocalItemStateManager extends ItemStateCache
             return state;
         }
 
-        // check cache
-        if (isCached(id)) {
-            return retrieve(id);
-        }
+        // check cache. synchronized to ensure an entry is not created twice.
+        synchronized (cacheMonitor) {
+            if (isCached(id)) {
+                return retrieve(id);
+            }
 
-        // regular behaviour
-        if (id.denotesNode()) {
-            return getNodeState((NodeId) id);
-        } else {
-            return getPropertyState((PropertyId) id);
+            // regular behaviour
+            if (id.denotesNode()) {
+                return getNodeState((NodeId) id);
+            } else {
+                return getPropertyState((PropertyId) id);
+            }
         }
     }
 
@@ -203,7 +200,7 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences getNodeReferences(NodeReferencesId id)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
         // check change log
@@ -352,6 +349,7 @@ public class LocalItemStateManager extends ItemStateCache
      */
     public void stateDestroyed(ItemState destroyed) {
         destroyed.removeListener(this);
+
         evict(destroyed.getId());
     }
 
@@ -360,6 +358,7 @@ public class LocalItemStateManager extends ItemStateCache
      */
     public void stateDiscarded(ItemState discarded) {
         discarded.removeListener(this);
+
         evict(discarded.getId());
     }
 }

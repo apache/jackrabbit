@@ -66,6 +66,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
+
         ItemState state = retrieve(id);
         if (state != null) {
             return state;
@@ -143,20 +144,26 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      * @return
      * @throws ItemStateException
      */
-    NodeState createNodeState(String uuid, QName nodeTypeName, String parentUUID, int initialStatus)
+    NodeState createNodeState(String uuid, QName nodeTypeName,
+                              String parentUUID, int initialStatus)
             throws ItemStateException {
-        NodeId id = new NodeId(uuid);
-        // check cache
-        if (isCached(id)) {
-            String msg = "there's already a node state instance with id " + id;
-            log.debug(msg);
-            throw new ItemStateException(msg);
-        }
 
-        NodeState state = new NodeState(uuid, nodeTypeName, parentUUID, initialStatus, true);
-        // put it in cache
-        cache(state);
-        return state;
+        NodeId id = new NodeId(uuid);
+
+        // check cache. synchronized to ensure an entry is not created twice.
+        synchronized (cacheMonitor) {
+            if (isCached(id)) {
+                String msg = "there's already a node state instance with id " + id;
+                log.debug(msg);
+                throw new ItemStateException(msg);
+            }
+
+            NodeState state = new NodeState(uuid, nodeTypeName, parentUUID,
+                    initialStatus, true);
+            // put it in cache
+            cache(state);
+            return state;
+        }
     }
 
     /**
@@ -167,18 +174,22 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      */
     NodeState createNodeState(NodeState overlayedState, int initialStatus)
             throws ItemStateException {
-        ItemId id = overlayedState.getId();
-        // check cache
-        if (isCached(id)) {
-            String msg = "there's already a node state instance with id " + id;
-            log.debug(msg);
-            throw new ItemStateException(msg);
-        }
 
-        NodeState state = new NodeState(overlayedState, initialStatus, true);
-        // put it in cache
-        cache(state);
-        return state;
+        ItemId id = overlayedState.getId();
+
+        // check cache. synchronized to ensure an entry is not created twice.
+        synchronized (cacheMonitor) {
+            if (isCached(id)) {
+                String msg = "there's already a node state instance with id " + id;
+                log.debug(msg);
+                throw new ItemStateException(msg);
+            }
+
+            NodeState state = new NodeState(overlayedState, initialStatus, true);
+            // put it in cache
+            cache(state);
+            return state;
+        }
     }
 
     /**
@@ -190,18 +201,22 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      */
     PropertyState createPropertyState(String parentUUID, QName propName, int initialStatus)
             throws ItemStateException {
-        PropertyId id = new PropertyId(parentUUID, propName);
-        // check cache
-        if (isCached(id)) {
-            String msg = "there's already a property state instance with id " + id;
-            log.debug(msg);
-            throw new ItemStateException(msg);
-        }
 
-        PropertyState state = new PropertyState(propName, parentUUID, initialStatus, true);
-        // put it in cache
-        cache(state);
-        return state;
+        PropertyId id = new PropertyId(parentUUID, propName);
+
+        // check cache. synchronized to ensure an entry is not created twice.
+        synchronized (cacheMonitor) {
+            if (isCached(id)) {
+                String msg = "there's already a property state instance with id " + id;
+                log.debug(msg);
+                throw new ItemStateException(msg);
+            }
+
+            PropertyState state = new PropertyState(propName, parentUUID, initialStatus, true);
+            // put it in cache
+            cache(state);
+            return state;
+        }
     }
 
     /**
@@ -212,18 +227,23 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      */
     PropertyState createPropertyState(PropertyState overlayedState, int initialStatus)
             throws ItemStateException {
-        PropertyId id = new PropertyId(overlayedState.getParentUUID(), overlayedState.getName());
-        // check cache
-        if (isCached(id)) {
-            String msg = "there's already a property state instance with id " + id;
-            log.debug(msg);
-            throw new ItemStateException(msg);
-        }
 
-        PropertyState state = new PropertyState(overlayedState, initialStatus, true);
-        // put it in cache
-        cache(state);
-        return state;
+        PropertyId id = new PropertyId(overlayedState.getParentUUID(),
+                overlayedState.getName());
+
+        // check cache. synchronized to ensure an entry is not created twice.
+        synchronized (cacheMonitor) {
+            if (isCached(id)) {
+                String msg = "there's already a property state instance with id " + id;
+                log.debug(msg);
+                throw new ItemStateException(msg);
+            }
+
+            PropertyState state = new PropertyState(overlayedState, initialStatus, true);
+            // put it in cache
+            cache(state);
+            return state;
+        }
     }
 
     /**

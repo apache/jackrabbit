@@ -98,17 +98,27 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
-     * Adds a new virtual item state provider
-     *
+     * Adds a new virtual item state provider.<p/>
+     * NOTE: This method is not synchronized, because it is called right after
+     * creation only by the same thread and therefore concurrency issues
+     * do not occur. Should this ever change, the synchronization status
+     * has to be re-examined.
      * @param prov
      */
-    public synchronized void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
+    public void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
         VirtualItemStateProvider[] provs = new VirtualItemStateProvider[virtualProviders.length + 1];
         System.arraycopy(virtualProviders, 0, provs, 0, virtualProviders.length);
         provs[virtualProviders.length] = prov;
         virtualProviders = provs;
     }
 
+    /**
+     * Create root node state
+     * @param rootNodeUUID root node UUID
+     * @param ntReg node type registry
+     * @return root node state
+     * @throws ItemStateException if an error occurs
+     */
     private NodeState createRootNodeState(String rootNodeUUID,
                                           NodeTypeRegistry ntReg)
             throws ItemStateException {
@@ -178,11 +188,6 @@ public class SharedItemStateManager extends ItemStateCache
     private NodeState getNodeState(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        // check cache
-        if (isCached(id)) {
-            return (NodeState) retrieve(id);
-        }
-
         // load from persisted state
         NodeState state = persistMgr.load(id);
         state.setStatus(ItemState.STATUS_EXISTING);
@@ -204,11 +209,6 @@ public class SharedItemStateManager extends ItemStateCache
     private PropertyState getPropertyState(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        // check cache
-        if (isCached(id)) {
-            return (PropertyState) retrieve(id);
-        }
-
         // load from persisted state
         PropertyState state = persistMgr.load(id);
         state.setStatus(ItemState.STATUS_EXISTING);
@@ -225,7 +225,7 @@ public class SharedItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public synchronized ItemState getItemState(ItemId id)
+    public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
         // check the virtual root ids (needed for overlay)
         for (int i = 0; i < virtualProviders.length; i++) {
@@ -252,17 +252,24 @@ public class SharedItemStateManager extends ItemStateCache
      */
     private ItemState getNonVirtualItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
-        if (id.denotesNode()) {
-            return getNodeState((NodeId) id);
-        } else {
-            return getPropertyState((PropertyId) id);
+
+        // check cache. synchronized to ensure an entry is not created twice.
+        synchronized (cacheMonitor) {
+            if (isCached(id)) {
+                return retrieve(id);
+            }
+            if (id.denotesNode()) {
+                return getNodeState((NodeId) id);
+            } else {
+                return getPropertyState((PropertyId) id);
+            }
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean hasItemState(ItemId id) {
+    public boolean hasItemState(ItemId id) {
         if (isCached(id)) {
             return true;
         }
@@ -308,10 +315,8 @@ public class SharedItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences getNodeReferences(NodeReferencesId id)
+    public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
-
-        // todo: add caching
 
         // check persistence manager
         try {
@@ -390,14 +395,20 @@ public class SharedItemStateManager extends ItemStateCache
      * item state manager but rather must be reconnected to items provided
      * by this state manager.<p/>
      * After successfully storing the states the observation manager is informed
-     * about the changes, if an observation manager is passed to this method.
+     * about the changes, if an observation manager is passed to this method.<p/>
+     * NOTE: This method is not synchronized, because all methods it invokes
+     * on instance members (such as {@link PersistenceManager#store} are
+     * considered to be thread-safe. Should this ever change, the
+     * synchronization status has to be re-examined.
      *
      * @param local  change log containing local items
      * @param obsMgr the observation manager to inform, or <code>null</code> if
      *               no observation manager should be informed.
      * @throws ItemStateException if an error occurs
      */
-    public synchronized void store(ChangeLog local, ObservationManagerImpl obsMgr) throws ItemStateException {
+    public void store(ChangeLog local, ObservationManagerImpl obsMgr)
+            throws ItemStateException {
+
         ChangeLog shared = new ChangeLog();
 
         // set of virtual node references
@@ -428,7 +439,8 @@ public class SharedItemStateManager extends ItemStateCache
                             throw new NoSuchItemStateException();
                         }
                     } catch (NoSuchItemStateException e) {
-                        String msg = "Target node " + id + " of REFERENCE property does not exist";
+                        String msg = "Target node " + id +
+                                " of REFERENCE property does not exist";
                         throw new ItemStateException(msg);
                     }
                 }

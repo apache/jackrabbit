@@ -39,6 +39,13 @@ public abstract class ItemStateCache {
     private final Map cache;
 
     /**
+     * Monitor for cache object. Derived classes should synchronize on
+     * this monitor when the identity of cached objects is critical, i.e.
+     * when object should not be cached more than once.
+     */
+    protected final Object cacheMonitor = new Object();
+
+    /**
      * Creates a new <code>ItemStateCache</code> that will use instance
      * hard references to keys and soft references to values.
      */
