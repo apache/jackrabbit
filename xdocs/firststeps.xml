@@ -83,6 +83,9 @@ public class JCRTest {
     &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
         &lt;param name="path" value="${rep.home}/repository"/&gt;
     &lt;/FileSystem&gt;
+    &lt;Security appName="Jackrabbit"&gt;
+        &lt;AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager"/&gt;
+    &lt;/Security&gt;
     &lt;Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" /&gt;
     &lt;Workspace name="${wsp.name}"&gt;
         &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
@@ -130,6 +133,18 @@ workspaces/
     </source>
    </p>
    <p>
+     In addition to the repository configuration file, you also need to
+     create a
+     <a href="http://java.sun.com/security/jaas/doc/api.html">JAAS configuration</a>
+     file used for Jackrabbit login settings. The contents of simple
+     configuration file named <code>jaas.config</code> is shown below:
+     <source>
+Jackrabbit {
+org.apache.jackrabbit.core.security.SimpleLoginModule required debug=false;
+};
+     </source>
+   </p>
+   <p>
     Make sure that all of the <a href="dependencies.html">dependencies</a> 
     are added to your classpath, as well as the Jackrabbit
     repository implementation (named something like 
@@ -137,7 +152,11 @@ workspaces/
     into the <code>target</code> directory of your checkout.
     By executing <code>maven copy-deps</code> all dependencies except
     the optional runtime <code>cqfs-*</code> libaries are
-    being copied to the <code>target/lib</code> directory.
+    being copied to the <code>target/lib</code> directory. I addition
+    to setting up the classpath, you need to include the JAAS configuration
+    option <code>-Djava.security.auth.login.config==jaas.config</code>
+    (note the double equal sign <code>==</code>) to the <code>java</code>
+    command when running the example code.
    </p>
    <p>
     Now you should be ready to compile the above <code>JCRTest</code>
