@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module version="4" relativePaths="false" type="J2EE_WEB_MODULE">
+  <component name="ModuleRootManager" />
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/target/classes" />
+    <exploded url="file://$MODULE_DIR$/target/jackrabbit-server" />
+    <output-test url="file://$MODULE_DIR$/target/test-classes" />
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="jdk" jdkName="java version &quot;1.4.2_03&quot;" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="jcr-server" />
+    <orderEntry type="module" module-name="jcr-webdav" />
+    <orderEntry type="module" module-name="jcr-client" />
+    <orderEntry type="module-library">
+      <library name="jcr">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/jsr170/jars/jcr-0.16.2.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jackrabbit">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/jackrabbit/jars/jackrabbit-0.16.2-dev.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jdom">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/jdom/jars/jdom-1.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="log4j">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/log4j/jars/log4j-1.2.8.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="junit">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/junit/jars/junit-3.8.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jcr-rmi">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/jcr-rmi/jars/jcr-rmi-0.16.2.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="concurrent">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/concurrent/jars/concurrent-1.3.4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-collections">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/commons-collections/jars/commons-collections-2.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="geronimo-spec-jta">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/geronimo-spec/jars/geronimo-spec-jta-1.0-M1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="lucene">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/lucene/jars/lucene-1.4.3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="xercesImpl">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/xerces/jars/xercesImpl-2.6.2.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="cqfs-jackrabbit">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/cqfs/jars/cqfs-jackrabbit-3.5.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="cqfs">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/cqfs/jars/cqfs-3.5.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-logging">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/commons-logging/jars/commons-logging-1.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="servletapi">
+        <CLASSES>
+          <root url="jar://T:/maven/repository/servletapi/jars/servletapi-2.3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntryProperties />
+  </component>
+  <component name="WebModuleBuildComponent">
+    <setting name="EXPLODED_URL" value="file://$MODULE_DIR$/target/jackrabbit-server" />
+    <setting name="EXPLODED_ENABLED" value="true" />
+    <setting name="JAR_URL" value="file://" />
+    <setting name="JAR_ENABLED" value="false" />
+    <setting name="SYNC_EXPLODED_DIR" value="false" />
+    <setting name="BUILD_ON_FRAME_DEACTIVATION" value="false" />
+    <setting name="RUN_JASPER_VALIDATION" value="false" />
+  </component>
+  <component name="WebModuleProperties">
+    <containerElement type="module" name="jcr-client">
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/classes" />
+    </containerElement>
+    <containerElement type="module" name="jcr-server">
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/classes" />
+    </containerElement>
+    <containerElement type="module" name="jcr-webdav">
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/classes" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/commons-collections/jars/commons-collections-2.1.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/commons-collections-2.1.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/commons-logging/jars/commons-logging-1.0.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/commons-logging-1.0.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/concurrent/jars/concurrent-1.3.4.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/concurrent-1.3.4.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/cqfs/jars/cqfs-3.5.6.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/cqfs-3.5.6.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/cqfs/jars/cqfs-jackrabbit-3.5.6.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/cqfs-jackrabbit-3.5.6.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/geronimo-spec/jars/geronimo-spec-jta-1.0-M1.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/geronimo-spec-jta-1.0-M1.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/jackrabbit/jars/jackrabbit-0.16.2-dev.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/jackrabbit-0.16.2-dev.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/jsr170/jars/jcr-0.16.2.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/jcr-0.16.2.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/jdom/jars/jdom-1.0.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/jdom-1.0.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/junit/jars/junit-3.8.1.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/junit-3.8.1.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/log4j/jars/log4j-1.2.8.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/log4j-1.2.8.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/lucene/jars/lucene-1.4.3.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/lucene-1.4.3.jar" />
+    </containerElement>
+    <containerElement type="library" level="module">
+      <url>jar://T:/maven/repository/xerces/jars/xercesImpl-2.6.2.jar!/</url>
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/xercesImpl-2.6.2.jar" />
+    </containerElement>
+    <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/src/webapp/WEB-INF/web.xml" version="2.3" />
+    <webroots>
+      <root url="file://$MODULE_DIR$/src/webapp" relative="/" />
+    </webroots>
+  </component>
+  <component name="WeblogicWebModuleProperties">
+    <option name="IS_RUN_APPC" value="false" />
+  </component>
+</module>
+
