@@ -1008,9 +1008,15 @@ public class SessionImpl implements Session, Constants {
 
         ImportHandler handler = (ImportHandler) getImportContentHandler(parentAbsPath);
         try {
-            XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+            XMLReader parser =
+                    XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
             parser.setContentHandler(handler);
             parser.setErrorHandler(handler);
+            // being paranoid...
+            parser.setFeature("http://xml.org/sax/features/namespaces", true);
+            parser.setFeature("http://xml.org/sax/features/namespace-prefixes",
+                    false);
+
             parser.parse(new InputSource(in));
         } catch (SAXException se) {
             // check for wrapped repository exception
