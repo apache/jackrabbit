@@ -24,9 +24,9 @@ import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.XMLReader;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.*;
@@ -163,8 +163,8 @@ public class WorkspaceImpl implements Workspace {
      * @param workspaceName name of the new workspace
      * @throws AccessDeniedException if the current session is not allowed to
      *                               create the workspace
-     * @throws RepositoryException if a workspace with the given name
-     *                             already exists or if another error occurs
+     * @throws RepositoryException   if a workspace with the given name
+     *                               already exists or if another error occurs
      * @see #getAccessibleWorkspaceNames()
      */
     public void createWorkspace(String workspaceName)
@@ -879,27 +879,27 @@ public class WorkspaceImpl implements Workspace {
     /**
      * @see Workspace#getQueryManager
      */
-    public QueryManager getQueryManager() throws RepositoryException {
+    public synchronized QueryManager getQueryManager() throws RepositoryException {
 
         // check state of this instance
         sanityCheck();
 
         if (queryManager == null) {
+            SearchManager searchManager;
             try {
-                SearchManager searchManager = rep.getSearchManager(wspConfig.getName());
+                searchManager = rep.getSearchManager(wspConfig.getName());
                 if (searchManager == null) {
-                    throw new UnsupportedOperationException("No search manager configured for this workspace.");
+                    String msg = "no search manager configured for this workspace";
+                    log.error(msg);
+                    throw new RepositoryException(msg);
                 }
-                queryManager = new QueryManagerImpl(session, session.getItemManager(), searchManager);
-            } catch (NoSuchWorkspaceException e) {
+            } catch (NoSuchWorkspaceException nswe) {
+                // should never get here
                 String msg = "internal error: failed to instantiate query manager";
-                log.error(msg, e);
-                return null;
-            } catch (RepositoryException e) {
-                String msg = "internal error: failed to instantiate query manager";
-                log.error(msg, e);
-                return null;
+                log.error(msg, nswe);
+                throw new RepositoryException(msg, nswe);
             }
+            queryManager = new QueryManagerImpl(session, session.getItemManager(), searchManager);
         }
         return queryManager;
     }
