@@ -378,4 +378,28 @@ public class SetValueStringTest extends AbstractJCRTest {
             //success : the property has been deleted by assigning it a null value
         }
     }
+
+    /**
+     * Test the assignment of an empty property by assigning it a null array,
+     * saved from the parent Node
+     */
+    public void testEmptyMultiStringParent() throws RepositoryException {
+        String[] emptyStringArray = new String[]{null};
+        property2.setValue(emptyStringArray);
+        node.save();
+
+        assertEquals("Property.setValue(emptyStringArray) did not set the property to an empty array", 0, property2.getValues().length);
+    }
+
+    /**
+     * Test the assignment of an empty property by assigning it a null array,
+     * saved from the Session
+     */
+    public void testEmptyMultiStringSession() throws RepositoryException {
+        String[] emptyStringArray = new String[]{null};
+        property2.setValue(emptyStringArray);
+        superuser.save();
+
+        assertEquals("Property.setValue(emptyStringArray) did not set the property to an empty array", 0, property2.getValues().length);
+    }
 }
