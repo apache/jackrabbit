@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.core.jndi;
 
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.RepositoryImpl;
 
 import javax.jcr.*;
 import javax.naming.NamingException;
@@ -70,8 +71,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
 
     private void init() throws RepositoryException {
         RepositoryConfig config = RepositoryConfig.create(configFilePath, repHomeDir);
-        // @todo fix repository instantiation
-        //delegatee = new RepositoryImpl(config);
+        delegatee = RepositoryImpl.create(config);
     }
 
     //-----------------------------------------------------------< Repository >

@@ -16,10 +16,10 @@
 package org.apache.jackrabbit.core.state.xml;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.fs.*;
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.state.*;
@@ -361,13 +361,21 @@ public class XMLPersistenceManager implements PersistenceManager {
     /**
      * @see PersistenceManager#init
      */
-    public void init(WorkspaceDef wspDef) throws Exception {
-        itemStateStore = wspDef.getWorkspaceStore();
-        if (wspDef.getBlobStore() != null) {
-            blobStore = wspDef.getBlobStore();
-        } else {
-            blobStore = itemStateStore;
-        }
+    public void init(WorkspaceConfig wspConfig) throws Exception {
+        FileSystem wspFS = wspConfig.getFileSystem();
+        itemStateStore = new BasedFileSystem(wspFS, "/data");
+
+        //blobStore = new BasedFileSystem(wspFS, "/blobs");
+        /**
+         * store blob's in local file system in a sub directory
+         * of the workspace home directory
+         * todo make blob store configurable
+         */
+        LocalFileSystem blobFS = new LocalFileSystem();
+        blobFS.setPath(wspConfig.getHomeDir() + "/blobs");
+        blobFS.init();
+        blobStore = blobFS;
+
         initialized = true;
     }
 

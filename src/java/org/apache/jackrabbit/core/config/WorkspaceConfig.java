@@ -149,8 +149,7 @@ public class WorkspaceConfig extends AbstractConfig {
                 Object value = params.get(name);
                 bm.put(name, value);
             }
-            // @todo fix PersistenceManager initialization
-            //persistMgr.init(this);
+            persistMgr.init(this);
         } catch (Exception e) {
             log.error("Cannot instantiate implementing class " + className, e);
             throw new RepositoryException("Cannot instantiate implementing class " + className, e);

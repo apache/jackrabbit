@@ -15,14 +15,18 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.BeanMap;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.PersistentItemStateManager;
+import org.apache.jackrabbit.core.state.ReferenceManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.log4j.Logger;
@@ -44,9 +48,10 @@ public class RepositoryImpl implements Repository, EventListener {
 
     private static Logger log = Logger.getLogger(RepositoryImpl.class);
 
-    private static final String DEFAULT_WORKSPACE_NAME = "default";
-
-    private static final String VERSION_WORKSPACE_NAME = "default";
+    /**
+     * hardcoded uuid of the repository root node
+     */
+    private static final String ROOT_NODE_UUID = "ac3b5c25-613d-4798-8494-ffbcca9c5c6c";
 
     private static final String ANONYMOUS_USER = "anonymous";
 
@@ -77,6 +82,8 @@ public class RepositoryImpl implements Repository, EventListener {
     private final NodeTypeRegistry ntReg;
     private final VersionManager vMgr;
 
+    // configuration of the repository
+    private final RepositoryConfig repConfig;
     // the master filesystem
     private final FileSystem repStore;
     // sub file system where the repository stores meta data such as uuid of root node, etc.
@@ -84,8 +91,8 @@ public class RepositoryImpl implements Repository, EventListener {
     // sub file system where the repository stores versions
     private final FileSystem versionStore;
 
-    // map of workspace names and workspace definitions
-    private final HashMap wspDefs = new HashMap();
+    // map of workspace names and workspace configurations
+    private final HashMap wspConfigs = new HashMap();
 
     // map of workspace names and workspace item state managers
     // (might be shared among multiple workspace instances representing
@@ -111,13 +118,14 @@ public class RepositoryImpl implements Repository, EventListener {
     private long propsCount = 0;
 
     /**
-     * Package private constructor.
+     * private constructor
      *
-     * @param repStore
-     * @param swda
+     * @param repConfig
      */
-    RepositoryImpl(FileSystem repStore, StableWorkspaceDef[] swda) throws RepositoryException {
+    private RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
+        this.repConfig = repConfig;
         // setup file systems
+        repStore = repConfig.getFileSystem();
         String fsRootPath = "/meta";
         try {
             if (!repStore.exists(fsRootPath) || !repStore.isFolder(fsRootPath)) {
@@ -128,7 +136,6 @@ public class RepositoryImpl implements Repository, EventListener {
             log.error(msg, fse);
             throw new RepositoryException(msg, fse);
         }
-        this.repStore = repStore;
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
 
         fsRootPath = "/versions";
@@ -175,7 +182,14 @@ public class RepositoryImpl implements Repository, EventListener {
                             // ignore
                         }
                     }
-                    rootNodeUUID = new UUID(new String(chars)).toString();
+                    /**
+                     * use hard-coded uuid for root node rather than generating
+                     * a different uuid per repository instance; using a
+                     * hard-coded uuid makes it easier to copy/move entire
+                     * workspaces from one repository instance to another.
+                     */
+                    //rootNodeUUID = new UUID(new String(chars)).toString();
+                    rootNodeUUID = ROOT_NODE_UUID;
 
                 } catch (Exception e) {
                     String msg = "failed to load persisted repository state";
@@ -225,30 +239,10 @@ public class RepositoryImpl implements Repository, EventListener {
         }
 
         // workspaces
-        for (int i = 0; i < swda.length; i++) {
-            StableWorkspaceDef swd = swda[i];
-            if (wspDefs.containsKey(swd.getName())) {
-                String msg = "workspace '" + swd.getName() + "' already defined";
-                log.error(msg);
-                throw new RepositoryException(msg);
-            }
-            wspDefs.put(swd.getName(), swd);
-            DynamicWorkspaceDef[] dwda = swd.getDynWorkspaces();
-            for (int j = 0; j < dwda.length; j++) {
-                DynamicWorkspaceDef dwd = dwda[j];
-                if (wspDefs.containsKey(dwd.getName())) {
-                    String msg = "workspace '" + dwd.getName() + "' already defined";
-                    log.error(msg);
-                    throw new RepositoryException(msg);
-                }
-                wspDefs.put(dwd.getName(), dwd);
-            }
-        }
-        WorkspaceDef wd = (WorkspaceDef) wspDefs.get(DEFAULT_WORKSPACE_NAME);
-        if (wd == null || wd.isDynamic()) {
-            String msg = "mandatory stable workspace 'default' not defined";
-            log.error(msg);
-            throw new RepositoryException(msg);
+        Iterator iter = repConfig.getWorkspaceConfigs().iterator();
+        while (iter.hasNext()) {
+            WorkspaceConfig config = (WorkspaceConfig) iter.next();
+            wspConfigs.put(config.getName(), config);
         }
 
         nsReg = new NamespaceRegistryImpl(new BasedFileSystem(repStore, "/namespaces"));
@@ -265,7 +259,7 @@ public class RepositoryImpl implements Repository, EventListener {
          */
 
         // check system root node of system workspace
-        SessionImpl sysSession = getSystemSession(DEFAULT_WORKSPACE_NAME);
+        SessionImpl sysSession = getSystemSession(repConfig.getDefaultWorkspaceName());
         NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
         if (!rootNode.hasNode(SYSTEM_ROOT_NAME)) {
             rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
@@ -274,11 +268,11 @@ public class RepositoryImpl implements Repository, EventListener {
 
         // init version manager
         // todo: as soon as dynamic workspaces are available, base on system ws
-        SessionImpl verSession = getSystemSession(VERSION_WORKSPACE_NAME);
+        SessionImpl verSession = getSystemSession(repConfig.getDefaultWorkspaceName());
         NodeImpl vRootNode = (NodeImpl) verSession.getRootNode();
         try {
             if (!vRootNode.hasNode(SYSTEM_ROOT_NAME)) {
-                verSession.getWorkspace().clone(DEFAULT_WORKSPACE_NAME,
+                verSession.getWorkspace().clone(repConfig.getDefaultWorkspaceName(),
                         SYSTEM_ROOT_NAME.toJCRName(verSession.getNamespaceResolver()),
                         SYSTEM_ROOT_NAME.toJCRName(verSession.getNamespaceResolver()));
             }
@@ -295,9 +289,9 @@ public class RepositoryImpl implements Repository, EventListener {
 
         // get the system session for every defined workspace and
         // register as an event listener
-        Iterator iter = wspDefs.values().iterator();
+        iter = wspConfigs.values().iterator();
         while (iter.hasNext()) {
-            String wspName = ((WorkspaceDef) iter.next()).getName();
+            String wspName = ((WorkspaceConfig) iter.next()).getName();
             Session s = getSystemSession(wspName);
             s.getWorkspace().getObservationManager().addEventListener(this,
                     EventType.CHILD_NODE_ADDED | EventType.CHILD_NODE_REMOVED
@@ -315,6 +309,24 @@ public class RepositoryImpl implements Repository, EventListener {
                         "/", true, null, null, false);
             }
         }
+    }
+
+    /**
+     * Creates a new <code>RepositoryImpl</code> instance.
+     * <p/>
+     * todo prevent multiple instantiation from same configuration as this could lead to data corruption/loss
+     *
+     * @param config the configuration of the repository
+     * @return a new <code>RepositoryImpl</code> instance
+     * @throws RepositoryException If an error occurs
+     */
+    public static RepositoryImpl create(RepositoryConfig config)
+            throws RepositoryException {
+        return new RepositoryImpl(config);
+    }
+
+    RepositoryConfig getConfig() {
+        return repConfig;
     }
 
     NamespaceRegistryImpl getNamespaceRegistry() {
@@ -335,35 +347,21 @@ public class RepositoryImpl implements Repository, EventListener {
 
     synchronized PersistentItemStateManager getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
-        WorkspaceDef wd = (WorkspaceDef) wspDefs.get(workspaceName);
-        if (wd == null) {
+        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
+        if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
         // get/create per named workspace (i.e. per physical storage) item state manager
         PersistentItemStateManager stateMgr =
                 (PersistentItemStateManager) wspStateMgrs.get(workspaceName);
         if (stateMgr == null) {
-            if (wd.isDynamic()) {
-/*
-		// create dynamic (i.e. transparent) state manager backed
-		// by a 'master' state manager
-		DynamicWorkspaceDef dwd = (DynamicWorkspaceDef) wd;
-		StableWorkspaceDef swd = (StableWorkspaceDef) wspDefs.get(dwd.getStableWorkspace());
-		stateMgr = new TransparentItemStateManager(dwd.getFS(), getWorkspaceStateManager(swd));
-*/
-                // @todo implement dynamic workspace support
-                throw new RepositoryException("dynamic workspaces are not supported");
-            } else {
-                // create stable (i.e. opaque) state manager
-                StableWorkspaceDef swd = (StableWorkspaceDef) wd;
-                PersistenceManager persistMgr = createPersistenceManager(swd);
-                try {
-                    stateMgr = new PersistentItemStateManager(persistMgr, rootNodeUUID, ntReg);
-                } catch (ItemStateException ise) {
-                    String msg = "failed to instantiate the persistent state manager";
-                    log.error(msg, ise);
-                    throw new RepositoryException(msg, ise);
-                }
+            // create state manager
+            try {
+                stateMgr = new PersistentItemStateManager(wspConfig.getPersistenceManager(), rootNodeUUID, ntReg);
+            } catch (ItemStateException ise) {
+                String msg = "failed to instantiate the persistent state manager";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
             }
             wspStateMgrs.put(workspaceName, stateMgr);
         }
@@ -372,8 +370,8 @@ public class RepositoryImpl implements Repository, EventListener {
 
     synchronized ReferenceManager getWorkspaceReferenceManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
-        WorkspaceDef wd = (WorkspaceDef) wspDefs.get(workspaceName);
-        if (wd == null) {
+        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
+        if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
         ReferenceManager refMgr
@@ -381,7 +379,7 @@ public class RepositoryImpl implements Repository, EventListener {
         if (refMgr == null) {
             // create reference mgr that uses the perstistence mgr configured
             // in the workspace definition
-            refMgr = new ReferenceManager(createPersistenceManager(wd));
+            refMgr = new ReferenceManager(wspConfig.getPersistenceManager());
             wspRefMgrs.put(workspaceName, refMgr);
         }
         return refMgr;
@@ -389,7 +387,7 @@ public class RepositoryImpl implements Repository, EventListener {
 
     synchronized ObservationManagerFactory getObservationManagerFactory(String workspaceName)
             throws NoSuchWorkspaceException {
-        if (!wspDefs.containsKey(workspaceName)) {
+        if (!wspConfigs.containsKey(workspaceName)) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
         ObservationManagerFactory obsMgr
@@ -416,19 +414,19 @@ public class RepositoryImpl implements Repository, EventListener {
      */
     synchronized SearchManager getSearchManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
+        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
         SearchManager searchMgr
                 = (SearchManager) wspSearchMgrs.get(workspaceName);
         if (searchMgr == null) {
             try {
-                StableWorkspaceDef wspDef = (StableWorkspaceDef) wspDefs.get(workspaceName);
-                if (wspDef.getSearchIndexPath() == null) {
+                if (wspConfig.getSearchIndexDir() == null) {
                     // no search index location configured
                     return null;
                 }
                 ItemStateProvider stateProvider = getWorkspaceStateManager(workspaceName);
                 SystemSession s = getSystemSession(workspaceName);
                 searchMgr = new SearchManager(stateProvider, s.hierMgr, s,
-                        wspDef.getWorkspaceStore(), wspDef.getSearchIndexPath());
+                        wspConfig.getFileSystem(), wspConfig.getSearchIndexDir());
             } catch (IOException e) {
                 throw new RepositoryException("Exception opening search index.", e);
             }
@@ -439,43 +437,17 @@ public class RepositoryImpl implements Repository, EventListener {
 
     synchronized SystemSession getSystemSession(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
+        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
+        if (wspConfig == null) {
+            throw new NoSuchWorkspaceException(workspaceName);
+        }
         SystemSession systemSession
                 = (SystemSession) wspSystemSessions.get(workspaceName);
         if (systemSession == null) {
-            systemSession = new SystemSession(this, workspaceName);
+            systemSession = new SystemSession(this, wspConfig);
             wspSystemSessions.put(workspaceName, systemSession);
         }
         return systemSession;
-    }
-
-    /**
-     * @param wspDef
-     * @return
-     * @throws RepositoryException
-     */
-    private PersistenceManager createPersistenceManager(WorkspaceDef wspDef) throws RepositoryException {
-        PersistenceManager persistMgr;
-        String className = wspDef.getPersistenceManagerClass();
-        try {
-            // Create the persistence manager object
-            Class c = Class.forName(className);
-            persistMgr = (PersistenceManager) c.newInstance();
-            // set the properties of the persistence manager object from the
-            // param hashmap
-            BeanMap bm = new BeanMap(persistMgr);
-            HashMap params = wspDef.getPersistenceManagerParams();
-            Iterator iter = params.keySet().iterator();
-            while (iter.hasNext()) {
-                Object name = iter.next();
-                Object value = params.get(name);
-                bm.put(name, value);
-            }
-            persistMgr.init(wspDef);
-        } catch (Exception e) {
-            log.error("Cannot instantiate implementing class " + className, e);
-            throw new RepositoryException("Cannot instantiate implementing class " + className, e);
-        }
-        return persistMgr;
     }
 
     /**
@@ -598,19 +570,20 @@ public class RepositoryImpl implements Repository, EventListener {
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
         if (workspaceName == null) {
-            workspaceName = DEFAULT_WORKSPACE_NAME;
+            workspaceName = repConfig.getDefaultWorkspaceName();
         }
-        if (!wspDefs.containsKey(workspaceName)) {
+        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
+        if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
         if (credentials == null) {
             // anonymous login
-            return new SessionImpl(this, ANONYMOUS_CREDENTIALS, workspaceName);
+            return new SessionImpl(this, ANONYMOUS_CREDENTIALS, wspConfig);
         } else if (credentials instanceof SimpleCredentials) {
             // username/password credentials
 
             // @todo implement authentication/authorization
-            return new SessionImpl(this, credentials, workspaceName);
+            return new SessionImpl(this, credentials, wspConfig);
         } else {
             String msg = "login failed: incompatible credentials";
             log.error(msg);

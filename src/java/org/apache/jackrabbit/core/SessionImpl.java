@@ -19,6 +19,7 @@ import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -98,9 +99,9 @@ public class SessionImpl implements Session {
      *
      * @param rep
      * @param credentials
-     * @param wspName
+     * @param wspConfig
      */
-    SessionImpl(RepositoryImpl rep, Credentials credentials, String wspName)
+    SessionImpl(RepositoryImpl rep, Credentials credentials, WorkspaceConfig wspConfig)
             throws RepositoryException {
         this.rep = rep;
 
@@ -125,7 +126,8 @@ public class SessionImpl implements Session {
         nsMappings = new TransientNamespaceMappings(rep.getNamespaceRegistry());
 
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
-        wsp = new WorkspaceImpl(wspName, rep.getWorkspaceStateManager(wspName),
+        String wspName = wspConfig.getName();
+        wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
                 rep.getWorkspaceReferenceManager(wspName), rep, this);
         itemStateMgr = new SessionItemStateManager(rep.getRootNodeUUID(), wsp.getPersistentStateManager(), getNamespaceResolver());
         hierMgr = itemStateMgr.getHierarchyMgr();
@@ -138,9 +140,9 @@ public class SessionImpl implements Session {
      *
      * @param rep
      * @param userId
-     * @param wspName
+     * @param wspConfig
      */
-    protected SessionImpl(RepositoryImpl rep, String userId, String wspName)
+    protected SessionImpl(RepositoryImpl rep, String userId, WorkspaceConfig wspConfig)
             throws RepositoryException {
         this.rep = rep;
 
@@ -149,7 +151,8 @@ public class SessionImpl implements Session {
         nsMappings = new TransientNamespaceMappings(rep.getNamespaceRegistry());
 
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
-        wsp = new WorkspaceImpl(wspName, rep.getWorkspaceStateManager(wspName),
+        String wspName = wspConfig.getName();
+        wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
                 rep.getWorkspaceReferenceManager(wspName), rep, this);
         itemStateMgr = new SessionItemStateManager(rep.getRootNodeUUID(), wsp.getPersistentStateManager(), getNamespaceResolver());
         hierMgr = itemStateMgr.getHierarchyMgr();

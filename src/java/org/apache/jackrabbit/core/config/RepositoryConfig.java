@@ -157,6 +157,12 @@ public class RepositoryConfig extends AbstractConfig {
         if (wspConfigs.isEmpty()) {
             // create initial default workspace
             createWorkspaceConfig(defaultWspName);
+        } else {
+            if (!wspConfigs.containsKey(defaultWspName)) {
+                String msg = "no configuration found for default workspace: " + defaultWspName;
+                log.error(msg);
+                throw new RepositoryException(msg);
+            }
         }
     }
 

@@ -16,7 +16,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.WorkspaceDef;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 
 /**
  * <code>PersistenceManager</code> ...
@@ -24,10 +24,10 @@ import org.apache.jackrabbit.core.WorkspaceDef;
 public interface PersistenceManager {
 
     /**
-     * @param wspDef
+     * @param wspConfig
      * @throws Exception
      */
-    public void init(WorkspaceDef wspDef) throws Exception;
+    public void init(WorkspaceConfig wspConfig) throws Exception;
 
     /**
      * @param uuid

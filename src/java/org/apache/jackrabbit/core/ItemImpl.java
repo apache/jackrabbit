@@ -1224,6 +1224,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * @see Item#isSame(Item)
      */
     public boolean isSame(Item otherItem) {
+        if (this == otherItem) {
+            return true;
+        }
         if (otherItem instanceof ItemImpl) {
             ItemImpl other = (ItemImpl) otherItem;
             return id.equals(other.id);

@@ -15,6 +15,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PathNotFoundException;
@@ -33,11 +34,11 @@ class SystemSession extends SessionImpl {
      * Package private constructor.
      *
      * @param rep
-     * @param wspName
+     * @param wspConfig
      */
-    SystemSession(RepositoryImpl rep, String wspName)
+    SystemSession(RepositoryImpl rep, WorkspaceConfig wspConfig)
             throws RepositoryException {
-        super(rep, SYSTEM_USER_ID, wspName);
+        super(rep, SYSTEM_USER_ID, wspConfig);
 
         accessMgr = new SystemAccessManqager();
     }

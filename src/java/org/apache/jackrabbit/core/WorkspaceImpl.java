@@ -15,6 +15,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.search.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.*;
@@ -53,9 +54,9 @@ public class WorkspaceImpl implements Workspace {
     private static Logger log = Logger.getLogger(WorkspaceImpl.class);
 
     /**
-     * The name of this <code>Workspace</code>
+     * The configuration of this <code>Workspace</code>
      */
-    protected final String wspName;
+    protected final WorkspaceConfig wspConfig;
 
     /**
      * The repository that created this workspace instance
@@ -99,14 +100,14 @@ public class WorkspaceImpl implements Workspace {
     /**
      * Package private constructor.
      *
-     * @param wspName
+     * @param wspConfig
      * @param persistentStateMgr
      * @param rep
      * @param session
      */
-    WorkspaceImpl(String wspName, PersistentItemStateManager persistentStateMgr,
+    WorkspaceImpl(WorkspaceConfig wspConfig, PersistentItemStateManager persistentStateMgr,
                   ReferenceManager refMgr, RepositoryImpl rep, SessionImpl session) {
-        this.wspName = wspName;
+        this.wspConfig = wspConfig;
         this.rep = rep;
         this.persistentStateMgr = persistentStateMgr;
         this.refMgr = refMgr;
@@ -134,7 +135,7 @@ public class WorkspaceImpl implements Workspace {
      * @throws RepositoryException
      */
     void dump(PrintStream ps) throws RepositoryException {
-        ps.println("Workspace: " + wspName + " (" + this + ")");
+        ps.println("Workspace: " + wspConfig.getName() + " (" + this + ")");
         ps.println();
         persistentStateMgr.dump(ps);
     }
@@ -654,7 +655,7 @@ public class WorkspaceImpl implements Workspace {
      * @see Workspace#getName
      */
     public String getName() {
-        return wspName;
+        return wspConfig.getName();
     }
 
     /**
@@ -865,7 +866,7 @@ public class WorkspaceImpl implements Workspace {
             throws UnsupportedRepositoryOperationException, RepositoryException {
         if (obsMgr == null) {
             try {
-                obsMgr = rep.getObservationManagerFactory(wspName).createObservationManager(session, session.getItemManager());
+                obsMgr = rep.getObservationManagerFactory(wspConfig.getName()).createObservationManager(session, session.getItemManager());
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";
@@ -882,7 +883,7 @@ public class WorkspaceImpl implements Workspace {
     public QueryManager getQueryManager() throws RepositoryException {
         if (queryManager == null) {
             try {
-                SearchManager searchManager = rep.getSearchManager(wspName);
+                SearchManager searchManager = rep.getSearchManager(wspConfig.getName());
                 if (searchManager == null) {
                     throw new UnsupportedOperationException("No search manager configured for this workspace.");
                 }

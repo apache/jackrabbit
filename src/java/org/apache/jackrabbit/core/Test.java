@@ -28,7 +28,6 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.util.TraversingItemVisitor;
 import javax.naming.InitialContext;
 import javax.naming.Context;
-import javax.naming.Reference;
 import java.io.*;
 import java.util.*;
 
@@ -37,42 +36,38 @@ public class Test {
     private static final String LOG_CONFIG_FILE_NAME = "log4j.properties";
 
     public static void main(String[] args) throws Exception {
-        // location of config.xml & log4j.properties
+        // config dir: location of repository.xml & log4j.properties
         String configDir = System.getProperty("config.dir");
         if (configDir == null) {
             // fallback to cwd
             configDir = System.getProperty("user.dir");
         }
         PropertyConfigurator.configure(configDir + "/" + LOG_CONFIG_FILE_NAME);
-        String configFile = configDir + "/" + RepositoryFactory.DEFAULT_CONFIG_FILE;
+        String configFile = configDir + "/" + RepositoryConfig.CONFIG_FILE_NAME;
 
-        // repository factory home dir
-        String factoryHomeDir = System.getProperty("repository.factory.home");
-        if (factoryHomeDir == null) {
+        // repository home dir
+        String repHomeDir = System.getProperty("repository.home");
+        if (repHomeDir == null) {
             // fallback to cwd
-            factoryHomeDir = System.getProperty("user.dir");
+            repHomeDir = System.getProperty("user.dir");
         }
-/*
-        RepositoryConfig repConf = RepositoryConfig.create(configDir + "/" + "repository.xml", factoryHomeDir);
-        Collection wspConfigs = repConf.getWorkspaceConfigs();
-*/
+
+        RepositoryConfig repConf = RepositoryConfig.create(configDir + "/" + "repository.xml", repHomeDir);
+        Repository r = RepositoryImpl.create(repConf);
 /*
         // Set up the environment for creating the initial context
         Hashtable env = new Hashtable();
         //env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.fscontext.RefFSContextFactory");
         //env.put(Context.PROVIDER_URL, "file:./jndi");
 
-        //env.put(Context.INITIAL_CONTEXT_FACTORY, "com.ervacon.xnam.XMLInitialContextFactory");
-        //env.put(Context.PROVIDER_URL, "d:/temp/jndi.xml");
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.ervacon.xnam.XMLInitialContextFactory");
+        env.put(Context.PROVIDER_URL, "d:/temp/jndi.xml");
 
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "org.codehaus.spice.jndikit.memory.StaticMemoryInitialContextFactory");
+        //env.put(Context.INITIAL_CONTEXT_FACTORY, "org.codehaus.spice.jndikit.memory.StaticMemoryInitialContextFactory");
         InitialContext ctx = new InitialContext(env);
-        RegistryHelper.registerRepository(ctx, "blah", configFile, factoryHomeDir, true);
-        Repository repo1 = (Repository) ctx.lookup("blah");
-        Repository repo2 = (Repository) ctx.lookup("blah");
+        RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
+        Repository r = (Repository) ctx.lookup("repo");
 */
-        RepositoryFactory rf = RepositoryFactory.create(configFile, factoryHomeDir);
-        Repository r = rf.getRepository("localfs");
         Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
         Workspace wsp = session.getWorkspace();
 
@@ -93,12 +88,13 @@ public class Test {
 	String dvExportFilePath = "d:/temp/dv_export0.xml";
 	String importTargetName = "sandbox";
 
-	wsp.exportSysView("/", new FileOutputStream(svExportFilePath), true, false);
-	wsp.exportDocView("/", new FileOutputStream(dvExportFilePath), true, false);
+	//wsp.exportSysView("/", new FileOutputStream(svExportFilePath), true, false);
+	//wsp.exportDocView("/", new FileOutputStream(dvExportFilePath), true, false);
 	if (!root.hasNode(importTargetName)) {
 	    root.addNode(importTargetName, "nt:unstructured");
 	}
-	FileInputStream fin = new FileInputStream(svExportFilePath);
+	//FileInputStream fin = new FileInputStream(svExportFilePath);
+        FileInputStream fin = new FileInputStream("d:/temp/test.xml");
 	session.importXML("/" + importTargetName, fin);
 	session.save();
 */
@@ -140,7 +136,7 @@ public class Test {
         root.addNode("blu", "nt:folder");
         root.addNode("blu");
 
-        Properties repProps = ((RepositoryImpl) r).getProperties();
+        Properties repProps = r.getProperties();
         System.out.println("repository properties:");
         System.out.println(repProps);
 
@@ -274,11 +270,11 @@ public class Test {
         //wsp.exportSysView("/", new FileOutputStream("d:/temp/sv_export1.xml"), false, false);
         wsp.exportDocView("/", new FileOutputStream("d:/temp/dv_export1.xml"), false, false);
 
-        repProps = ((RepositoryImpl) r).getProperties();
+        repProps = r.getProperties();
         System.out.println("repository properties:");
         System.out.println(repProps);
 
-        ((RepositoryImpl) r).shutdown();
+        //((RepositoryImpl) r).shutdown();
     }
 
     public static void importNode(File file, Node parent) throws Exception {

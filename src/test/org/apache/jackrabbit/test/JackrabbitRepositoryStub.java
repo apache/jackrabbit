@@ -15,10 +15,14 @@
  */
 package org.apache.jackrabbit.test;
 
-import org.apache.jackrabbit.core.RepositoryFactory;
+import org.apache.jackrabbit.core.jndi.RegistryHelper;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.RepositoryImpl;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.util.Properties;
 
 /**
@@ -27,18 +31,23 @@ import java.util.Properties;
 public class JackrabbitRepositoryStub extends RepositoryStub {
 
     /**
-     * Property for the repositry name
+     * Property for the repository name (used for jndi lookup)
      */
     public static final String PROP_REPOSITORY_NAME = "org.apache.jackrabbit.repository.name";
 
-    public static final String PROP_REPOSITRY_HOME = "org.apache.jackrabbit.repository.home";
+    /**
+     * Property for the repository configuration file (used for repository instantiation)
+     */
+    public static final String PROP_REPOSITORY_CONFIG = "org.apache.jackrabbit.repository.config";
+    /**
+     * Property for the repository home directory (used for repository instantiation)
+     */
+    public static final String PROP_REPOSITORY_HOME = "org.apache.jackrabbit.repository.home";
 
     /**
      * The repository instance
      */
     private Repository repository;
-
-    private RepositoryFactory factory;
 
     /**
      * Constructor as required by the JCR TCK.
@@ -52,7 +61,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
     /**
      * Returns the configured <code>Repository</code> instance.
      * <br>
-     * The default repository name is 'localfs'.
+     * The default repository name is 'repo'.
      *
      * @return the configured <code>Repository</code> instance.
      * @throws RepositoryStubException if an error occurs while
@@ -61,15 +70,25 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
     public synchronized Repository getRepository() throws RepositoryStubException {
         if (repository == null) {
             try {
-                String repName = environment.getProperty(PROP_REPOSITORY_NAME, "localfs");
-                String repHome = environment.getProperty(PROP_REPOSITRY_HOME);
-                factory = RepositoryFactory.create(repHome + "/config.xml", repHome);
-                repository = factory.getRepository(repName);
+                String repName = environment.getProperty(PROP_REPOSITORY_NAME, "repo");
+                String repConfig = environment.getProperty(PROP_REPOSITORY_CONFIG);
+                String repHome = environment.getProperty(PROP_REPOSITORY_HOME);
+/*
+                RepositoryConfig repConf = RepositoryConfig.create(repConfig, repHome);
+                repository = RepositoryImpl.create(repConf);
+*/
+                InitialContext ctx = new InitialContext();
+                RegistryHelper.registerRepository(ctx, "repo", repConfig, repHome, true);
+                repository = (Repository) ctx.lookup("repo");
+/*
                 Runtime.getRuntime().addShutdownHook(new Thread() {
                     public void run() {
-                        factory.shutdown();
+                        repository.shutdown();
                     }
                 });
+*/
+            } catch (NamingException e) {
+                throw new RepositoryStubException(e.toString());
             } catch (RepositoryException e) {
                 throw new RepositoryStubException(e.toString());
             }
