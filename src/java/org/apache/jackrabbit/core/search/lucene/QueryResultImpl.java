@@ -63,6 +63,11 @@ class QueryResultImpl implements QueryResult {
     private final NamespaceResolver resolver;
 
     /**
+     * If <code>true</code> nodes are returned in document order.
+     */
+    private final boolean docOrder;
+
+    /**
      * Creates a new query result.
      *
      * @param itemMgr     the item manager of the session executing the query.
@@ -70,17 +75,21 @@ class QueryResultImpl implements QueryResult {
      * @param scores      the score values of the result nodes.
      * @param selectProps the select properties of the query.
      * @param resolver    the namespace resolver of the session executing the query.
+     * @param docOrder    if <code>true</code> the result is returned in document
+     *  order.
      */
     public QueryResultImpl(ItemManager itemMgr,
                            String[] uuids,
                            Float[] scores,
                            QName[] selectProps,
-                           NamespaceResolver resolver) {
+                           NamespaceResolver resolver,
+                           boolean docOrder) {
         this.uuids = uuids;
         this.scores = scores;
         this.itemMgr = itemMgr;
         this.selectProps = selectProps;
         this.resolver = resolver;
+        this.docOrder = docOrder;
     }
 
     /**
@@ -105,13 +114,25 @@ class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public NodeIterator getNodes() throws RepositoryException {
-        return new NodeIteratorImpl(itemMgr, uuids, scores);
+        return getNodeIterator();
     }
 
     /**
      * {@inheritDoc}
      */
     public RowIterator getRows() throws RepositoryException {
-        return new RowIteratorImpl(new NodeIteratorImpl(itemMgr, uuids, scores), selectProps, resolver);
+        return new RowIteratorImpl(getNodeIterator(), selectProps, resolver);
+    }
+
+    /**
+     * Creates a node iterator over the result nodes.
+     * @return a node iterator over the result nodes.
+     */
+    private NodeIteratorImpl getNodeIterator() {
+        if (docOrder) {
+            return new DocOrderNodeIteratorImpl(itemMgr, uuids, scores);
+        } else {
+            return new NodeIteratorImpl(itemMgr, uuids, scores);
+        }
     }
 }

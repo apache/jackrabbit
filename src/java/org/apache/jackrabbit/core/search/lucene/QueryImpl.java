@@ -116,7 +116,7 @@ class QueryImpl implements ExecutableQuery {
     public QueryResult execute() throws RepositoryException {
         // build lucene query
         Query query = LuceneQueryBuilder.createQuery(root, session,
-                index.getItemStateProvider(), index.getNamespaceMappings(), 
+                index.getItemStateProvider(), index.getNamespaceMappings(),
                 index.getAnalyzer(), propReg);
 
         OrderQueryNode orderNode = root.getOrderNode();
@@ -190,6 +190,7 @@ class QueryImpl implements ExecutableQuery {
                 (String[]) uuids.toArray(new String[uuids.size()]),
                 (Float[]) scores.toArray(new Float[scores.size()]),
                 selectProps,
-                session.getNamespaceResolver());
+                session.getNamespaceResolver(),
+                orderNode == null);
     }
 }
