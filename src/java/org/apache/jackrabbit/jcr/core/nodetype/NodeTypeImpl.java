@@ -104,13 +104,15 @@ public class NodeTypeImpl implements NodeType {
      *
      * @param propertyName
      * @param type
+     * @param multiValued
      * @return
      * @throws RepositoryException if no applicable property definition
      *                             could be found
      */
-    public PropertyDefImpl getApplicablePropertyDef(QName propertyName, int type)
+    public PropertyDefImpl getApplicablePropertyDef(QName propertyName, int type,
+						    boolean multiValued)
 	    throws RepositoryException {
-	return new PropertyDefImpl(ent.getApplicablePropertyDef(propertyName, type),
+	return new PropertyDefImpl(ent.getApplicablePropertyDef(propertyName, type, multiValued),
 		ntMgr, nsResolver);
     }
 
@@ -378,14 +380,59 @@ public class NodeTypeImpl implements NodeType {
      * @see NodeType#canSetProperty(String, Value)
      */
     public boolean canSetProperty(String propertyName, Value value) {
+	if (value == null) {
+	    // setting a property to null is equivalent of removing it
+	    return canRemoveItem(propertyName);
+	}
 	try {
 	    QName name = QName.fromJCRName(propertyName, nsResolver);
-	    PropertyDefImpl def = getApplicablePropertyDef(name, value == null ? PropertyType.UNDEFINED : value.getType());
+	    int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
+	    PropertyDefImpl def = getApplicablePropertyDef(name, type, false);
 	    if (def.isProtected()) {
+		return false;
+	    }
+	    if (def.isMultiple()) {
 		return false;
 	    }
 	    InternalValue internalValue = InternalValue.create(value, nsResolver);
 	    checkSetPropertyValueConstraints(def, new InternalValue[]{internalValue});
+	    return true;
+	} catch (BaseException be) {
+	    // implementation specific exception, fall through
+	} catch (RepositoryException re) {
+	    // fall through
+	}
+	return false;
+    }
+
+    /**
+     * @see NodeType#canSetProperty(String, Value[])
+     */
+    public boolean canSetProperty(String propertyName, Value values[]) {
+	if (values == null) {
+	    // setting a property to null is equivalent of removing it
+	    return canRemoveItem(propertyName);
+	}
+	try {
+	    QName name = QName.fromJCRName(propertyName, nsResolver);
+	    int type = (values == null || values.length == 0) ? PropertyType.UNDEFINED : values[0].getType();
+	    PropertyDefImpl def = getApplicablePropertyDef(name, type, true);
+	    if (def.isProtected()) {
+		return false;
+	    }
+	    if (!def.isMultiple()) {
+		return false;
+	    }
+	    ArrayList list = new ArrayList();
+	    // convert values and compact array (purge null entries)
+	    for (int i = 0; i < values.length; i++) {
+		if (values[i] != null) {
+		    InternalValue internalValue = InternalValue.create(values[i], nsResolver);
+		    list.add(internalValue);
+		}
+	    }
+	    InternalValue[] internalValues = (InternalValue[]) list.toArray(new InternalValue[list.size()]);
+	    checkSetPropertyValueConstraints(def, internalValues);
 	    return true;
 	} catch (BaseException be) {
 	    // implementation specific exception, fall through

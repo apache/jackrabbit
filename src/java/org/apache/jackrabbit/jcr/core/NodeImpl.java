@@ -15,7 +15,6 @@
  */
 package org.apache.jackrabbit.jcr.core;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.jcr.core.nodetype.*;
 import org.apache.jackrabbit.jcr.core.state.*;
 import org.apache.jackrabbit.jcr.core.version.FrozenNode;
@@ -25,6 +24,7 @@ import org.apache.jackrabbit.jcr.core.version.VersionSelector;
 import org.apache.jackrabbit.jcr.util.ChildrenCollector;
 import org.apache.jackrabbit.jcr.util.IteratorHelper;
 import org.apache.jackrabbit.jcr.util.uuid.UUID;
+import org.apache.log4j.Logger;
 
 import javax.jcr.*;
 import javax.jcr.access.AccessDeniedException;
@@ -173,7 +173,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	return genValues;
     }
 
-    protected PropertyImpl getOrCreateProperty(String name, int type)
+    protected PropertyImpl getOrCreateProperty(String name, int type, boolean multiValued)
 	    throws RepositoryException {
 	try {
 	    return (PropertyImpl) getProperty(name);
@@ -190,18 +190,18 @@ public class NodeImpl extends ItemImpl implements Node {
 	    throw new RepositoryException("invalid property name: " + name, upe);
 	}
 	// find definition for the specified property and create property
-	PropertyDefImpl def = getApplicablePropertyDef(qName, type);
+	PropertyDefImpl def = getApplicablePropertyDef(qName, type, multiValued);
 	return createChildProperty(qName, type, def);
     }
 
-    protected PropertyImpl getOrCreateProperty(QName name, int type)
+    protected PropertyImpl getOrCreateProperty(QName name, int type, boolean multiValued)
 	    throws RepositoryException {
 	try {
 	    return (PropertyImpl) getProperty(name);
 	} catch (ItemNotFoundException e) {
 	    // does not exist yet:
 	    // find definition for the specified property and create property
-	    PropertyDefImpl def = getApplicablePropertyDef(name, type);
+	    PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
 	    return createChildProperty(name, type, def);
 	}
     }
@@ -533,7 +533,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	    prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), PROPNAME_MIXINTYPES));
 	} else {
 	    // find definition for the jcr:mixinTypes property and create property
-	    PropertyDefImpl def = getApplicablePropertyDef(PROPNAME_MIXINTYPES, PropertyType.NAME);
+	    PropertyDefImpl def = getApplicablePropertyDef(PROPNAME_MIXINTYPES, PropertyType.NAME, true);
 	    prop = createChildProperty(PROPNAME_MIXINTYPES, PropertyType.NAME, def);
 	}
 
@@ -599,13 +599,15 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @param propertyName
      * @param type
+     * @param multiValued
      * @return
      * @throws RepositoryException if no applicable property definition
      *                             could be found
      */
-    protected PropertyDefImpl getApplicablePropertyDef(QName propertyName, int type)
+    protected PropertyDefImpl getApplicablePropertyDef(QName propertyName,
+						       int type, boolean multiValued)
 	    throws RepositoryException {
-	PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(propertyName, type);
+	PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(propertyName, type, multiValued);
 	return session.getNodeTypeManager().getPropDef(new PropDefId(pd));
     }
 
@@ -656,6 +658,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Checks if this node is the root node.
      * todo: is this the root node of this workspace?
+     *
      * @return
      */
     protected boolean isRepositoryRoot() {
@@ -677,11 +680,22 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property internalSetProperty(QName name, InternalValue value)
 	    throws ValueFormatException, RepositoryException {
+	// check state of this instance
+	checkItemState();
+
+	int type;
 	if (value == null) {
-	    return internalSetProperty(name, (InternalValue[]) null);
+	    type = PropertyType.STRING;
 	} else {
-	    return internalSetProperty(name, new InternalValue[]{value});
+	    type = value.getType();
 	}
+	PropertyImpl prop = getOrCreateProperty(name, type, false);
+	if (value == null) {
+	    prop.internalSetValue((InternalValue[]) null, type);
+	} else {
+	    prop.internalSetValue(new InternalValue[]{value}, type);
+	}
+	return prop;
     }
 
     /**
@@ -708,7 +722,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	} else {
 	    type = values[0].getType();
 	}
-	PropertyImpl prop = getOrCreateProperty(name, type);
+	PropertyImpl prop = getOrCreateProperty(name, type, true);
 	prop.internalSetValue(values, type);
 	return prop;
     }
@@ -885,7 +899,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -905,7 +919,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, true);
 	prop.setValue(values);
 	return prop;
     }
@@ -932,8 +946,30 @@ public class NodeImpl extends ItemImpl implements Node {
 	} else {
 	    type = values[0].getType();
 	}
-	PropertyImpl prop = getOrCreateProperty(name, type);
+	PropertyImpl prop = getOrCreateProperty(name, type, true);
 	prop.setValue(values);
+	return prop;
+    }
+
+    /**
+     * Same as <code>{@link Node#setProperty(String, Value)}</code> except that
+     * this method takes a <code>QName</code> name argument instead of a
+     * <code>String</code>.
+     *
+     * @param name
+     * @param value
+     * @return
+     * @throws ValueFormatException
+     * @throws RepositoryException
+     */
+    public PropertyImpl setProperty(QName name, Value value)
+	    throws ValueFormatException, RepositoryException {
+	// check state of this instance
+	checkItemState();
+
+	int type = (value == null) ? PropertyType.STRING : value.getType();
+	PropertyImpl prop = getOrCreateProperty(name, type, false);
+	prop.setValue(value);
 	return prop;
     }
 
@@ -1254,7 +1290,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	} else {
 	    type = values[0].getType();
 	}
-	PropertyImpl prop = getOrCreateProperty(name, type);
+	PropertyImpl prop = getOrCreateProperty(name, type, true);
 	prop.setValue(values);
 	return prop;
     }
@@ -1267,7 +1303,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, true);
 	prop.setValue(values);
 	return prop;
     }
@@ -1279,7 +1315,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.STRING, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -1293,7 +1329,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	checkItemState();
 
 	int type = (value == null) ? PropertyType.STRING : value.getType();
-	PropertyImpl prop = getOrCreateProperty(name, type);
+	PropertyImpl prop = getOrCreateProperty(name, type, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -1306,7 +1342,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.BINARY);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.BINARY, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -1319,7 +1355,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.BOOLEAN);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.BOOLEAN, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -1332,7 +1368,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.DOUBLE);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.DOUBLE, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -1345,7 +1381,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.LONG);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.LONG, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -1358,7 +1394,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.DATE);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.DATE, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -1371,7 +1407,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// check state of this instance
 	checkItemState();
 
-	PropertyImpl prop = getOrCreateProperty(name, PropertyType.REFERENCE);
+	PropertyImpl prop = getOrCreateProperty(name, PropertyType.REFERENCE, false);
 	prop.setValue(value);
 	return prop;
     }
@@ -2163,7 +2199,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	    RepositoryException {
 
 	NodeImpl srcNode = getCorrespondingNode(srcWorkspaceName);
-	if (srcNode==null) {
+	if (srcNode == null) {
 	    throw new ItemNotFoundException("No corresponding node for " + safeGetJCRPath());
 	}
 	// not sure, if clone overrides 'this' node.
@@ -2173,25 +2209,26 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Returns the corresponding node in the <code>scrWorkspaceName</code> of
      * this node.
-     * <p>
+     * <p/>
      * Given a node N1 in workspace W1, its corresponding node N2 in workspace
      * W2 is defined as follows:
      * <ul>
      * <li>If N1 is the root node of W1 then N2 is the root node of W2.
      * <li>If N1 is referenceable (has a UUID) then N2 is the node in W2 with
-     *     the same UUID.
+     * the same UUID.
      * <li>If N1 is not referenceable (does not have a UUID) then there is some
-     *     node M1 which is either the nearest ancestor of N1 that is
-     *     referenceable, or is the root node of W1. If the corresponding node
-     *     of M1 is M2 in W2, then N2 is the node with the same relative path
-     *     from M2 as N1 has from M1.
+     * node M1 which is either the nearest ancestor of N1 that is
+     * referenceable, or is the root node of W1. If the corresponding node
+     * of M1 is M2 in W2, then N2 is the node with the same relative path
+     * from M2 as N1 has from M1.
      * </ul>
+     *
      * @param srcWorkspaceName
      * @return the corresponding node or <code>null</code> if no corresponding
      *         node exists.
      * @throws NoSuchWorkspaceException If <code>srcWorkspace</code> does not exist.
-     * @throws AccessDeniedException If the current session does not have sufficient rights to perform the operation.
-     * @throws RepositoryException If another error occurs.
+     * @throws AccessDeniedException    If the current session does not have sufficient rights to perform the operation.
+     * @throws RepositoryException      If another error occurs.
      */
     private NodeImpl getCorrespondingNode(String srcWorkspaceName)
 	    throws NoSuchWorkspaceException, AccessDeniedException,
@@ -2229,7 +2266,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	// n1.getPath() = /foo/bar/something[1]
 	// m1.getPath() = /foo
 	//      relpath = bar/something[1]
-	String relPath = getPath().substring(m1.getPath().length()+1);
+	String relPath = getPath().substring(m1.getPath().length() + 1);
 	try {
 	    return (NodeImpl) srcSession.getNodeByUUID(m1.getUUID()).getNode(relPath);
 	} catch (ItemNotFoundException e) {
@@ -2245,7 +2282,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	    AccessDeniedException, MergeException, RepositoryException {
 
 	NodeImpl srcNode = doMergeTest(srcWorkspace, bestEffort);
-	if (srcNode!=null) {
+	if (srcNode != null) {
 	    // remove properties
 	    PropertyIterator pi = getProperties();
 	    while (pi.hasNext()) {
@@ -2315,7 +2352,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
 	// If N does not have a corresponding node then the merge result for N is leave.
 	NodeImpl srcNode = getCorrespondingNode(srcWorkspace);
-	if (srcNode==null) {
+	if (srcNode == null) {
 	    return null;
 	}
 
@@ -2350,7 +2387,7 @@ public class NodeImpl extends ItemImpl implements Node {
 		// add 'offending' version to jcr:mergeFailed property
 		if (hasProperty(ItemImpl.PROPNAME_MERGE_FAILED)) {
 		    Value[] values = getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues();
-		    Value[] newValues = new Value[values.length+1];
+		    Value[] newValues = new Value[values.length + 1];
 		    System.arraycopy(values, 0, newValues, 0, values.length);
 		    newValues[values.length] = new ReferenceValue(vp);
 		    setProperty(ItemImpl.PROPNAME_MERGE_FAILED, newValues);
@@ -2554,11 +2591,14 @@ public class NodeImpl extends ItemImpl implements Node {
      * Little helper to retrieve the opv value for a property. depends on the
      * implementaion. if nt:frozen is used, need to lookup prop def.
      *
-     * @param prop
+     * @param name
+     * @param type
+     * @param multiValued
      * @return
+     * @throws RepositoryException
      */
-    private int getOPV(PropertyImpl prop) throws RepositoryException {
-	PropertyDefImpl def = getApplicablePropertyDef(prop.getQName(), PropertyType.UNDEFINED);
+    private int guessOPV(QName name, int type, boolean multiValued) throws RepositoryException {
+	PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
 	return def.getOnParentVersion();
     }
 
@@ -2629,7 +2669,16 @@ public class NodeImpl extends ItemImpl implements Node {
 		// ignore
 	    } else {
 		// normal property
-		int opv = getOPV(prop);
+		int type = PropertyType.UNDEFINED;
+		if (prop.getDefinition().isMultiple()) {
+		    Value[] values = prop.getValues();
+		    if (values.length != 0) {
+			type = values[0].getType();
+		    }
+		} else {
+		    type = prop.getValue().getType();
+		}
+		int opv = guessOPV(prop.getQName(), type, prop.getDefinition().isMultiple());
 		switch (opv) {
 		    case OnParentVersionAction.ABORT:
 			throw new RepositoryException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
@@ -2652,7 +2701,7 @@ public class NodeImpl extends ItemImpl implements Node {
 	    if (child.isNodeType(NodeTypeRegistry.NT_FROZEN)) {
 		FrozenNode f = (FrozenNode) child;
 		// if frozen node exist, replace
-		// todo: make work for samename siblings
+		// todo: make work for same name siblings
 		if (hasNode(child.getName())) {
 		    remove(child.getName());
 		}

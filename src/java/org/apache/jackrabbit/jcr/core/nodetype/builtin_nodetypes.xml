@@ -64,6 +64,7 @@
     <nodeType name="nt:unstructured" mixin="false" orderableChildNodes="true" supertypes="nt:base">
 	<childNodeDef name="" requiredPrimaryTypes="nt:base" defaultPrimaryType="nt:unstructured" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" sameNameSibs="true"/>
 	<propertyDef name="" type="undefined" valueConstraint="" defaultValues="" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
+	<propertyDef name="" type="undefined" valueConstraint="" defaultValues="" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:hierarchyNode" mixin="false" orderableChildNodes="false" supertypes="nt:base">
 	<propertyDef name="jcr:created" type="Date" valueConstraint="" defaultValues="" autoCreate="true" mandatory="true" onParentVersion="INITIALIZE" protected="true" primaryItem="false" multiple="false"/>
@@ -124,6 +125,7 @@
 	<propertyDef name="jcr:frozenMixinTypes" type="Name" valueConstraint="" defaultValues="" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
 	<propertyDef name="jcr:frozenUUID" type="String" valueConstraint="" defaultValues="" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
 	<propertyDef name="" type="undefined" valueConstraint="" defaultValues="" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
+	<propertyDef name="" type="undefined" valueConstraint="" defaultValues="" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
 	<childNodeDef name="" requiredPrimaryTypes="nt:base" defaultPrimaryType="nt:frozen" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="true"/>
     </nodeType>
     <nodeType name="nt:version" mixin="false" orderableChildNodes="false" supertypes="nt:frozen,mix:referenceable">

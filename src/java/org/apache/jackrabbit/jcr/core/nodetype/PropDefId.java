@@ -34,7 +34,7 @@ public class PropDefId implements Serializable {
 	if (def == null) {
 	    throw new IllegalArgumentException("PropDef argument can not be null");
 	}
-	// build key (format: <declaring node type>/<name>/<type>/<multiple flag>)
+	// build key (format: <declaringNodeType>/<name>/<requiredType>/<multiple>)
 	StringBuffer sb = new StringBuffer();
 
 	sb.append(def.getDeclaringNodeType().toString());

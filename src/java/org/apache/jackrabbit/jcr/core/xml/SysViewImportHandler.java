@@ -28,6 +28,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.jcr.*;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -272,10 +273,25 @@ class SysViewImportHandler extends DefaultHandler {
 		    }
 		    if (current.node.hasProperty(currentPropName)) {
 			PropertyDef def = current.node.getProperty(currentPropName).getDefinition();
-			if (!def.isProtected()) {
+			if (def.isProtected()) {
+			    // ignore protected property
+			    // reset temp fields and get outta here
+			    currentPropValues = null;
+			    return;
+			}
+		    }
+		    // multi- or single-valued property?
+		    if (vals.length == 1) {
+			// could be single- or multi-valued (n == 1)
+			try {
+			    // try setting single-value
+			    current.node.setProperty(currentPropName, vals[0]);
+			} catch (ConstraintViolationException cve) {
+			    // try setting value array
 			    current.node.setProperty(currentPropName, vals);
 			}
 		    } else {
+			// can only be multi-valued (n == 0 || n > 1)
 			current.node.setProperty(currentPropName, vals);
 		    }
 		}

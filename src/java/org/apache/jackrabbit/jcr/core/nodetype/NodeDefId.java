@@ -37,6 +37,7 @@ public class NodeDefId implements Serializable {
 	if (def == null) {
 	    throw new IllegalArgumentException("ChildNodeDef argument can not be null");
 	}
+	// build key (format: <declaringNodeType>/<name>/<defaultPrimaryType>/<requiredPrimaryTypes>)
 	StringBuffer sb = new StringBuffer();
 
 	sb.append(def.getDeclaringNodeType().toString());

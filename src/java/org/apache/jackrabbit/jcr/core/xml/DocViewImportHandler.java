@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.jcr.core.xml;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.jcr.core.*;
 import org.apache.jackrabbit.jcr.core.nodetype.NodeTypeRegistry;
+import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -25,7 +25,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.StringValue;
-import javax.jcr.Value;
 import java.util.Stack;
 
 /**
@@ -87,7 +86,7 @@ class DocViewImportHandler extends DefaultHandler {
 		    }
 		}
 		StringValue val = new StringValue(atts.getValue(i));
-		currentParent.setProperty(propName, new Value[]{val});
+		currentParent.setProperty(propName, val);
 	    }
 	} catch (RepositoryException re) {
 	    throw new SAXException(re);
@@ -105,8 +104,7 @@ class DocViewImportHandler extends DefaultHandler {
 	    NodeImpl currentParent = (NodeImpl) parents.peek();
 	    NodeImpl txtNode = (NodeImpl) currentParent.addNode(DocViewSAXEventGenerator.NODENAME_XMLTEXT);
 	    StringValue val = new StringValue(new String(ch, start, length));
-	    txtNode.setProperty(DocViewSAXEventGenerator.PROPNAME_XMLCHARACTERS,
-		    new Value[]{val});
+	    txtNode.setProperty(DocViewSAXEventGenerator.PROPNAME_XMLCHARACTERS, val);
 	} catch (RepositoryException re) {
 	    throw new SAXException(re);
 	}

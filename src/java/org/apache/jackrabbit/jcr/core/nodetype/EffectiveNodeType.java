@@ -455,11 +455,12 @@ public class EffectiveNodeType implements Cloneable {
      *
      * @param name
      * @param type
+     * @param multiValued
      * @return
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
      */
-    public PropDef getApplicablePropertyDef(QName name, int type)
+    public PropDef getApplicablePropertyDef(QName name, int type, boolean multiValued)
 	    throws ConstraintViolationException {
 	ChildItemDef def = (ChildItemDef) namedItemDefs.get(name);
 	if (def == null) {
@@ -473,8 +474,11 @@ public class EffectiveNodeType implements Cloneable {
 		if (reqType == PropertyType.UNDEFINED ||
 			type == PropertyType.UNDEFINED ||
 			reqType == type) {
-		    // found match
-		    return pd;
+		    // match multiValued flag
+		    if (multiValued == pd.isMultiple()) {
+			// found match
+			return pd;
+		    }
 		}
 	    }
 	} else {
@@ -486,8 +490,11 @@ public class EffectiveNodeType implements Cloneable {
 		if (reqType == PropertyType.UNDEFINED ||
 			type == PropertyType.UNDEFINED ||
 			reqType == type) {
-		    // found match
-		    return pd;
+		    // match multiValued flag
+		    if (multiValued == pd.isMultiple()) {
+			// found match
+			return pd;
+		    }
 		}
 	    }
 	}
@@ -617,13 +624,28 @@ public class EffectiveNodeType implements Cloneable {
 		ChildItemDef existing = (ChildItemDef) iter.next();
 		// compare with existing definition
 		if (def.definesNode() == existing.definesNode()) {
-		    // conflict
-		    String msg = "An item definition in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existing.getDeclaringNodeType() + "': ambiguos residual item definition";
-		    log.error(msg);
-		    throw new NodeTypeConflictException(msg);
+		    if (!def.definesNode()) {
+			// property definition
+			PropDef pd = (PropDef) def;
+			PropDef epd = (PropDef) existing;
+			// compare type & multiValued flag
+			if (pd.getRequiredType() == epd.getRequiredType() &&
+				pd.isMultiple() == epd.isMultiple()) {
+			    // conflict
+			    String msg = "A property definition in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existing.getDeclaringNodeType() + "': ambiguos residual property definition";
+			    log.error(msg);
+			    throw new NodeTypeConflictException(msg);
+			}
+		    } else {
+			// child node definition
+			// conflict
+			String msg = "A child node definition in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existing.getDeclaringNodeType() + "': ambiguos residual child node definition";
+			log.error(msg);
+			throw new NodeTypeConflictException(msg);
+		    }
 		}
 	    }
-	    // @todo check for ambiguous definitions & other conflicts
+	    // @todo do further checks for ambiguous definitions & other conflicts
 	    unnamedItemDefs.add(def);
 	}
 	// @todo implement further validations

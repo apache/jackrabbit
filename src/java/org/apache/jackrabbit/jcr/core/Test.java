@@ -99,9 +99,12 @@ public class Test {
 
 	//root.setProperty("blob", new FileInputStream(new File("d:/temp/jckrabbit.zip")));
 
-	//root.setProperty("blah", 1);
-	//root.setProperty("blah", 1.4);
-	//root.setProperty("blah", "blahblah");
+	if (root.hasProperty("blah")) {
+	    root.remove("blah");
+	}
+	root.setProperty("blah", 1);
+	root.setProperty("blah", 1.4);
+	root.setProperty("blah", "blahblah");
 	Node file = root.addNode("blu", "nt:file");
 	file.addNode("jcr:content", "nt:unstructured");
 	root.addNode("blu", "nt:folder");
@@ -123,8 +126,8 @@ public class Test {
 
 	root.save();
 
-	if (root.hasProperty("bla")) {
-	    root.setProperty("bla", (String) null);
+	if (root.hasProperty("blah")) {
+	    root.setProperty("blah", (String) null);
 	}
 	if (!root.hasProperty("blah")) {
 	    String[] strings = new String[]{"huey", "louie", null, "dewey"};
@@ -160,18 +163,17 @@ public class Test {
 
 	Node misc = root.addNode("misc", "nt:unstructured");
 	misc.addMixin("mix:referenceable");
-	Property link = misc.setProperty("link", new Value[]{PathValue.valueOf("../blu[2]")});
+	Property link = misc.setProperty("link", PathValue.valueOf("../blu[2]"));
 	root.save();
-	Node linkTarget = link.getParent().getNode(link.getValues()[0].getString());
+	Node linkTarget = link.getParent().getNode(link.getValue().getString());
 	System.out.println(link.getPath() + " refers to " + linkTarget.getPath());
 
-	root.setProperty("ref", new Value[]{new ReferenceValue(misc)});
+	root.setProperty("ref", new ReferenceValue(misc));
 	root.save();
 	PropertyIterator pi = misc.getReferences();
 	while (pi.hasNext()) {
 	    Property prop = pi.nextProperty();
-	    String uuid = prop.getValues()[0].getString();
-	    Node target = session.getNodeByUUID(uuid);
+	    Node target = prop.getNode();
 	    System.out.println(prop.getPath() + " is a reference to " + target.getPath());
 	}
 /*
@@ -184,9 +186,9 @@ public class Test {
 	}
 */
 	String date1 = "2003-07-28T06:18:57.848+01:00";
-	root.setProperty("date", new Value[]{new DateValue(new StringValue(date1).getDate())});
+	root.setProperty("date", new DateValue(new StringValue(date1).getDate()));
 	Property p = root.getProperty("date");
-	Value val = p.getValues()[0];
+	Value val = p.getValue();
 	Calendar d = val.getDate();
 
 	Node imported = null;
@@ -196,7 +198,7 @@ public class Test {
 	    imported = root.getNode("imported");
 	}
 
-	importNode(new File("d:/dev/jackrabbit/src/java"), imported);
+	importNode(new File("d:/dev/jsr170/jackrabbit/src/java"), imported);
 
 	if (root.hasNode("foo")) {
 	    root.remove("foo");
@@ -205,8 +207,8 @@ public class Test {
 	Node n = root.addNode("foo", "nt:folder");
 	Node n2 = n.addNode("foofile", "nt:file");
 	Node n3 = n2.addNode("jcr:content", "nt:unstructured");
-	Property prop1 = n3.setProperty("prop1", new Value[]{new LongValue(123)});
-	Property prop2 = n3.setProperty("prop2", new Value[]{new StringValue("blahblah")});
+	Property prop1 = n3.setProperty("prop1", new LongValue(123));
+	Property prop2 = n3.setProperty("prop2", new StringValue("blahblah"));
 
 	System.out.println("before save()...");
 	System.out.println();
