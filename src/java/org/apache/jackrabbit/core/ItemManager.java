@@ -24,7 +24,9 @@ import javax.jcr.*;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.PropertyDef;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * There's one <code>ItemManager</code> instance per <code>Session</code>
@@ -43,7 +45,7 @@ import java.util.*;
  * <code>Node</code> or <code>Property</code> associated with the same
  * <code>Session</code> instance.
  * <li>maintaining a cache of the item instances it created.
- * <li>checking access rights of associated <code>Session</code> in all methods.
+ * <li>respecting access rights of associated <code>Session</code> in all methods.
  * </ul>
  * <p/>
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
@@ -143,36 +145,96 @@ public class ItemManager implements ItemLifeCycleListener {
 
     //--------------------------------------------------< item access methods >
     /**
-     * @param path
-     * @return
+     * Checks if the item with the given path exists.
+     *
+     * @param path path to the item to be checked
+     * @return true if the specified item exists
      */
     boolean itemExists(Path path) {
+/*
         try {
             getItem(path);
             return true;
         } catch (PathNotFoundException pnfe) {
             return false;
         } catch (AccessDeniedException ade) {
+            // item exists but the session has not been granted read access
+            return false;
+        } catch (RepositoryException re) {
+            return false;
+        }
+*/
+        try {
+            // check sanity of session
+            session.sanityCheck();
+
+            ItemId id = hierMgr.resolvePath(path);
+
+            // check if state exists for the given item
+            if (!itemStateProvider.hasItemState(id)) {
+                return false;
+            }
+
+            // check privileges
+            if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
+                // clear cache
+                if (isCached(id)) {
+                    evictItem(id);
+                }
+                // item exists but the session has not been granted read access
+                return false;
+            }
             return true;
+        } catch (PathNotFoundException pnfe) {
+            return false;
+        } catch (ItemNotFoundException infe) {
+            return false;
         } catch (RepositoryException re) {
             return false;
         }
     }
 
     /**
-     * Checks if the item with the given id exists
+     * Checks if the item with the given id exists.
      *
-     * @param id
-     * @return
+     * @param id id of the item to be checked
+     * @return true if the specified item exists
      */
     boolean itemExists(ItemId id) {
+/*
         try {
             getItem(id);
             return true;
         } catch (ItemNotFoundException infe) {
             return false;
         } catch (AccessDeniedException ade) {
+            // item exists but the session has not been granted read access
+            return false;
+        } catch (RepositoryException re) {
+            return false;
+        }
+*/
+        try {
+            // check sanity of session
+            session.sanityCheck();
+
+            // check if state exists for the given item
+            if (!itemStateProvider.hasItemState(id)) {
+                return false;
+            }
+
+            // check privileges
+            if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
+                // clear cache
+                if (isCached(id)) {
+                    evictItem(id);
+                }
+                // item exists but the session has not been granted read access
+                return false;
+            }
             return true;
+        } catch (ItemNotFoundException infe) {
+            return false;
         } catch (RepositoryException re) {
             return false;
         }

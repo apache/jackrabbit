@@ -248,10 +248,34 @@ public class SessionItemStateManager implements ItemStateProvider {
      * @see ItemStateProvider#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
-        return transientStateMgr.hasItemStateInAttic(id)
-                || transientStateMgr.hasItemState(id)
-                || persistentStateMgr.hasItemState(id)
-                || hasVirtualItemState(id);
+	// first check if the specified item has been transiently removed
+	if (transientStateMgr.hasItemStateInAttic(id)) {
+	    /**
+	     * check if there's new transient state for the specified item
+	     * (e.g. if a property with name 'x' has been removed and a new
+	     * property with same name has been created);
+	     */
+	    return transientStateMgr.hasItemState(id);
+	}
+
+	// check if there's transient state for the specified item
+	if (transientStateMgr.hasItemState(id)) {
+	    return true;
+	}
+
+	// check if there is a virtual state for the specified item
+	for (int i = 0; i < virtualProviders.length; i++) {
+	    if (virtualProviders[i].hasItemState(id)) {
+		return true;
+	    }
+	}
+
+	// check if there's persistent state for the specified item
+	if (persistentStateMgr.hasItemState(id)) {
+	    return true;
+	}
+
+	return false;
     }
 
     /**
