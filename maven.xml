@@ -58,6 +58,7 @@
    <goal name="test:clean">
       <ant:delete dir="applications/test/repository"/>
       <ant:delete dir="applications/test/tx"/>
+      <ant:delete dir="applications/test/version"/>
       <ant:delete dir="applications/test/workspaces"/>
    </goal>
    
