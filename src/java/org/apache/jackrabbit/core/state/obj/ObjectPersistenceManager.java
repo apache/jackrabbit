@@ -46,9 +46,6 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
      */
     private static final char[] HEXDIGITS = "0123456789abcdef".toCharArray();
 
-    /**
-     * The default encoding used in serialization
-     */
     private static final String NODEFILENAME = ".node";
 
     private static final String NODEREFSFILENAME = ".references";
@@ -77,7 +74,7 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
             }
             //if (cnt > 0 && cnt % 4 == 0) {
             if (cnt == 2 || cnt == 4) {
-                sb.append('/');
+                sb.append(FileSystem.SEPARATOR_CHAR);
             }
             sb.append(chars[i]);
             cnt++;
@@ -104,20 +101,20 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
             log.fatal(msg, nsae);
             throw new InternalError(msg + nsae);
         }
-        return buildNodeFolderPath(parentUUID) + "/" + fileName;
+        return buildNodeFolderPath(parentUUID) + FileSystem.SEPARATOR + fileName;
     }
 
     private static String buildBlobFilePath(String parentUUID, QName propName, int i) {
-        return buildNodeFolderPath(parentUUID) + "/"
+        return buildNodeFolderPath(parentUUID) + FileSystem.SEPARATOR
                 + FileSystemPathUtil.escapeName(propName.toString()) + "." + i + ".bin";
     }
 
     private static String buildNodeFilePath(String uuid) {
-        return buildNodeFolderPath(uuid) + "/" + NODEFILENAME;
+        return buildNodeFolderPath(uuid) + FileSystem.SEPARATOR + NODEFILENAME;
     }
 
     private static String buildNodeReferencesFilePath(String uuid) {
-        return buildNodeFolderPath(uuid) + "/" + NODEREFSFILENAME;
+        return buildNodeFolderPath(uuid) + FileSystem.SEPARATOR + NODEREFSFILENAME;
     }
 
     //------------------------------------------------< static helper methods >
