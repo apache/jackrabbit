@@ -45,7 +45,7 @@ import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.search.QueryConstants;
 
 public class JCRSQLParser {
 
@@ -312,13 +312,13 @@ void Predicate() :
       |
         ((<NOT> { jjtThis.setNegate(true); })?
           (
-            (<BETWEEN> { jjtThis.setOperationType(Constants.OPERATION_BETWEEN); } Literal() <AND> Literal())
+            (<BETWEEN> { jjtThis.setOperationType(QueryConstants.OPERATION_BETWEEN); } Literal() <AND> Literal())
           |
             (
-              <LIKE> { jjtThis.setOperationType(Constants.OPERATION_LIKE); } value = CharStringLiteral()
+              <LIKE> { jjtThis.setOperationType(QueryConstants.OPERATION_LIKE); } value = CharStringLiteral()
               {
                 ASTLiteral s = new ASTLiteral(JJTLITERAL);
-                s.setType(Constants.TYPE_STRING);
+                s.setType(QueryConstants.TYPE_STRING);
                 s.setValue(value);
                 jjtree.pushNode(s);
               }
@@ -329,7 +329,7 @@ void Predicate() :
       |
         (<IS> (<NOT> { jjtThis.setNegate(true); })? <NULL>
           {
-            jjtThis.setOperationType(jjtThis.isNegate() ? Constants.OPERATION_NOT_NULL : Constants.OPERATION_NULL);
+            jjtThis.setOperationType(jjtThis.isNegate() ? QueryConstants.OPERATION_NOT_NULL : QueryConstants.OPERATION_NULL);
           }
         )
       )
@@ -341,7 +341,7 @@ void Predicate() :
         identifier = Identifier()
         {
           jjtThis.setIdentifier(identifier);
-          jjtThis.setOperationType(jjtThis.isNegate() ? Constants.OPERATION_NE_GENERAL : Constants.OPERATION_EQ_GENERAL);
+          jjtThis.setOperationType(jjtThis.isNegate() ? QueryConstants.OPERATION_NE_GENERAL : QueryConstants.OPERATION_EQ_GENERAL);
         }
       )
     )
@@ -355,12 +355,12 @@ int ComparisonOperation() #void :
 }
 {
   (
-      <EQ_OPERATOR> { operationType = Constants.OPERATION_EQ_VALUE; }
-    | <NE_OPERATOR> { operationType = Constants.OPERATION_NE_VALUE; }
-    | <LT_OPERATOR> { operationType = Constants.OPERATION_LT_VALUE; }
-    | <GT_OPERATOR> { operationType = Constants.OPERATION_GT_VALUE; }
-    | <LE_OPERATOR> { operationType = Constants.OPERATION_LE_VALUE; }
-    | <GE_OPERATOR> { operationType = Constants.OPERATION_GE_VALUE; }
+      <EQ_OPERATOR> { operationType = QueryConstants.OPERATION_EQ_VALUE; }
+    | <NE_OPERATOR> { operationType = QueryConstants.OPERATION_NE_VALUE; }
+    | <LT_OPERATOR> { operationType = QueryConstants.OPERATION_LT_VALUE; }
+    | <GT_OPERATOR> { operationType = QueryConstants.OPERATION_GT_VALUE; }
+    | <LE_OPERATOR> { operationType = QueryConstants.OPERATION_LE_VALUE; }
+    | <GE_OPERATOR> { operationType = QueryConstants.OPERATION_GE_VALUE; }
   )
   {
     return operationType;
@@ -440,34 +440,34 @@ void Literal() :
 }
 {
   (
-    t = <APPROXIMATE_NUMERIC_LITERAL> { jjtThis.setType(Constants.TYPE_DOUBLE); jjtThis.setValue(t.image); }
+    t = <APPROXIMATE_NUMERIC_LITERAL> { jjtThis.setType(QueryConstants.TYPE_DOUBLE); jjtThis.setValue(t.image); }
   |
     // can contain a dot -> use double
     t = <EXACT_NUMERIC_LITERAL>
     {
       if (t.image.indexOf('.') > -1) {
-        jjtThis.setType(Constants.TYPE_DOUBLE);
+        jjtThis.setType(QueryConstants.TYPE_DOUBLE);
       } else {
-        jjtThis.setType(Constants.TYPE_LONG);
+        jjtThis.setType(QueryConstants.TYPE_LONG);
       }
       jjtThis.setValue(t.image);
     }
   |
-    value = CharStringLiteral() { jjtThis.setType(Constants.TYPE_STRING); jjtThis.setValue(value); }
+    value = CharStringLiteral() { jjtThis.setType(QueryConstants.TYPE_STRING); jjtThis.setValue(value); }
   |
     t = <DATETIME_LITERAL>
     {
       if (t.image.startsWith("TIMESTAMP")) {
         jjtThis.setValue(t.image.substring(t.image.indexOf('\'') + 1, t.image.length() - 1));
-        jjtThis.setType(Constants.TYPE_TIMESTAMP);
+        jjtThis.setType(QueryConstants.TYPE_TIMESTAMP);
       /*
       } else if (t.image.startsWith("TIME")) {
         jjtThis.setValue(t.image.substring(t.image.indexOf('\'') + 1, t.image.length() - 1));
-        jjtThis.setType(Constants.TYPE_TIME);
+        jjtThis.setType(QueryConstants.TYPE_TIME);
       */
       } else {
         jjtThis.setValue(t.image.substring(t.image.indexOf('\'') + 1, t.image.length() - 1));
-        jjtThis.setType(Constants.TYPE_DATE);
+        jjtThis.setType(QueryConstants.TYPE_DATE);
       }
     }
   )
