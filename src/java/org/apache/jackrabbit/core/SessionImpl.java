@@ -60,8 +60,8 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Workspace;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
@@ -74,12 +74,12 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.security.AccessControlException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.ArrayList;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -698,6 +698,9 @@ public class SessionImpl implements Session, Constants {
             String msg = "impersonate failed";
             log.error(msg, nswe);
             throw new RepositoryException(msg, nswe);
+        } finally {
+            // make sure IMPERSONATOR_ATTRIBUTE is removed
+            creds.removeAttribute(IMPERSONATOR_ATTRIBUTE);
         }
     }
 
