@@ -146,8 +146,6 @@ public abstract class AbstractJCRTest extends JUnitTest {
         if ((idx = testClassName.lastIndexOf('.')) > -1) {
             testClassName = testClassName.substring(idx + 1);
         }
-        log.println("getProperty: testClassName=" + testClassName
-                + "; testCaseName=" + testCaseName);
 
         // check test case specific property first
         String value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
