@@ -48,6 +48,13 @@ public class RootNodeTest extends AbstractJCRTest {
     }
 
     /**
+     * Test if the path of the root node is '/' (slash)
+     */
+    public void testGetPath() throws RepositoryException {
+        assertEquals("The path of the root node must be a single slash.", "/", rootNode.getPath());
+    }
+
+    /**
      * Test if depth of root node is 0.
      */
     public void testGetDepth() throws RepositoryException {
