@@ -73,6 +73,14 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeUUIDTest.class);
         suite.addTestSuite(NodeOrderableChildNodesTest.class);
 
+        suite.addTestSuite(SetValueBinaryTest.class);
+        suite.addTestSuite(SetValueBooleanTest.class);
+        suite.addTestSuite(SetValueDateTest.class);
+        suite.addTestSuite(SetValueDoubleTest.class);
+        suite.addTestSuite(SetValueLongTest.class);
+        suite.addTestSuite(SetValueReferenceTest.class);
+        suite.addTestSuite(SetValueStringTest.class);
+
         return suite;
     }
 }
