@@ -30,7 +30,6 @@ public class LocalFileSystem implements FileSystem {
 
     private static Logger log = Logger.getLogger(LocalFileSystem.class);
 
-    private String rootPath;
     private File root;
 
     /**
@@ -40,15 +39,22 @@ public class LocalFileSystem implements FileSystem {
     }
 
     public String getPath() {
-        return rootPath;
+        return root == null ? null : root.getPath();
     }
 
-    public void setPath(String path) {
-        rootPath = osPath(path);
+    /**
+     * Sets the path to the root directory of this local filesystem. please note
+     * that this method can be called via reflection during initialization and
+     * must not be altered.
+     *
+     * @param rootPath the path to the root directory
+     */
+    public void setPath(String rootPath) {
+        setRoot(new File(osPath(rootPath)));
     }
 
-    public void setPath(File path) {
-        rootPath = path.getAbsolutePath();
+    public void setRoot(File root) {
+        this.root = root;
     }
 
     private String osPath(String genericPath) {
@@ -65,8 +71,7 @@ public class LocalFileSystem implements FileSystem {
         }
         if (obj instanceof LocalFileSystem) {
             LocalFileSystem other = (LocalFileSystem) obj;
-            return (root == null ? other.root == null : root.equals(other.root))
-                    && (rootPath == null ? other.rootPath == null : rootPath.equals(other.rootPath));
+            return (root == null ? other.root == null : root.equals(other.root));
         }
         return false;
     }
@@ -76,12 +81,11 @@ public class LocalFileSystem implements FileSystem {
      * @see FileSystem#init()
      */
     public void init() throws FileSystemException {
-        if (rootPath == null) {
-            String msg = "path not set";
+        if (root == null) {
+            String msg = "root directory not set";
             log.error(msg);
             throw new FileSystemException(msg);
         }
-        root = new File(rootPath);
 
         if (root.exists()) {
             if (!root.isDirectory()) {

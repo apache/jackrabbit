@@ -434,7 +434,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
          * of the workspace home directory
          */
         LocalFileSystem blobFS = new LocalFileSystem();
-        blobFS.setPath(new File(context.getHomeDir(), "blobs"));
+        blobFS.setRoot(new File(context.getHomeDir(), "blobs"));
         blobFS.init();
         this.blobFS = blobFS;
 

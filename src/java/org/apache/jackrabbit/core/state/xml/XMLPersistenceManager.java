@@ -355,7 +355,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
          * todo make blob store configurable
          */
         LocalFileSystem blobFS = new LocalFileSystem();
-        blobFS.setPath(new File(context.getHomeDir(), "blobs"));
+        blobFS.setRoot(new File(context.getHomeDir(), "blobs"));
         blobFS.init();
         blobStore = blobFS;
 
