@@ -16,24 +16,77 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.nodetype.*;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.*;
+import org.apache.jackrabbit.core.version.GenericVersionSelector;
+import org.apache.jackrabbit.core.version.InternalFreeze;
+import org.apache.jackrabbit.core.version.InternalFrozenNode;
+import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.version.VersionHistoryImpl;
+import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
+import javax.jcr.MergeException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.ReferenceValue;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.*;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
@@ -359,7 +412,7 @@ public class NodeImpl extends ItemImpl implements Node {
         String parentUUID = ((NodeState) state).getUUID();
 
         // create a new property state
-        PropertyState propState = null;
+        PropertyState propState;
         try {
             propState = stateMgr.createTransientPropertyState(parentUUID, name, ItemState.STATUS_NEW);
             propState.setType(type);
@@ -402,7 +455,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws RepositoryException {
         String parentUUID = ((NodeState) state).getUUID();
         // create a new node state
-        NodeState nodeState = null;
+        NodeState nodeState;
         try {
             if (uuid == null) {
                 uuid = UUID.randomUUID().toString();	// version 4 uuid
@@ -705,7 +758,7 @@ public class NodeImpl extends ItemImpl implements Node {
     private void setMixinTypesProperty(Set mixinNames) throws RepositoryException {
         NodeState thisState = (NodeState) state;
         // get or create jcr:mixinTypes property
-        PropertyImpl prop = null;
+        PropertyImpl prop;
         if (thisState.hasPropertyEntry(JCR_MIXINTYPES)) {
             prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), JCR_MIXINTYPES));
         } else {
@@ -835,6 +888,222 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean isRepositoryRoot() {
         return ((NodeState) state).getUUID().equals(rep.getRootNodeUUID());
+    }
+
+    /**
+     * Same as {@link Node#addMixin(String)}, but takes a <code>QName</code>
+     * instad of a <code>String</code>.
+     *
+     * @see Node#addMixin(String)
+     */
+    public void addMixin(QName mixinName)
+            throws NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath() + ": cannot add a mixin node type to a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
+        // check protected flag
+        if (definition.isProtected()) {
+            String msg = safeGetJCRPath() + ": cannot add a mixin node type to a protected node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
+        if (!mixin.isMixin()) {
+            throw new RepositoryException(mixinName + ": not a mixin node type");
+        }
+        if (nodeType.isDerivedFrom(mixinName)) {
+            throw new RepositoryException(mixinName + ": already contained in primary node type");
+        }
+
+        // build effective node type of mixin's & primary type in order to detect conflicts
+        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+        EffectiveNodeType entExisting;
+        try {
+            // existing mixin's
+            HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+            // primary type
+            set.add(nodeType.getQName());
+            // build effective node type representing primary type including existing mixin's
+            entExisting = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            if (entExisting.includesNodeType(mixinName)) {
+                throw new RepositoryException(mixinName + ": already contained in mixin types");
+            }
+            // add new mixin
+            set.add(mixinName);
+            // try to build new effective node type (will throw in case of conflicts)
+            ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+        } catch (NodeTypeConflictException ntce) {
+            throw new ConstraintViolationException(ntce.getMessage());
+        }
+
+        // do the actual modifications implied by the new mixin;
+        // try to revert the changes in case an excpetion occurs
+        try {
+            // modify the state of this node
+            NodeState thisState = (NodeState) getOrCreateTransientItemState();
+            // add mixin name
+            Set mixins = new HashSet(thisState.getMixinTypeNames());
+            mixins.add(mixinName);
+            thisState.setMixinTypeNames(mixins);
+
+            // set jcr:mixinTypes property
+            setMixinTypesProperty(mixins);
+
+            // add 'auto-create' properties defined in mixin type
+            PropertyDef[] pda = mixin.getAutoCreatePropertyDefs();
+            for (int i = 0; i < pda.length; i++) {
+                PropertyDefImpl pd = (PropertyDefImpl) pda[i];
+                // make sure that the property is not already defined by primary type
+                // or existing mixin's
+                NodeTypeImpl declaringNT = (NodeTypeImpl) pd.getDeclaringNodeType();
+                if (!entExisting.includesNodeType(declaringNT.getQName())) {
+                    createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
+                }
+            }
+
+            // recursively add 'auto-create' child nodes defined in mixin type
+            NodeDef[] nda = mixin.getAutoCreateNodeDefs();
+            for (int i = 0; i < nda.length; i++) {
+                NodeDefImpl nd = (NodeDefImpl) nda[i];
+                // make sure that the child node is not already defined by primary type
+                // or existing mixin's
+                NodeTypeImpl declaringNT = (NodeTypeImpl) nd.getDeclaringNodeType();
+                if (!entExisting.includesNodeType(declaringNT.getQName())) {
+                    createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+                }
+            }
+        } catch (RepositoryException re) {
+            // try to undo the modifications by removing the mixin
+            try {
+                removeMixin(mixinName);
+            } catch (RepositoryException re1) {
+                // silently ignore & fall through
+            }
+            throw re;
+        }
+    }
+
+    /**
+     * Same as {@link Node#removeMixin(String)}, but takes a <code>QName</code>
+     * instad of a <code>String</code>.
+     *
+     * @see Node#removeMixin(String)
+     */
+    public void removeMixin(QName mixinName)
+            throws NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
+        // check protected flag
+        if (definition.isProtected()) {
+            String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a protected node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
+        // check if mixin is assigned
+        if (!((NodeState) state).getMixinTypeNames().contains(mixinName)) {
+            throw new NoSuchNodeTypeException();
+        }
+
+        if (MIX_REFERENCEABLE.equals(mixinName)) {
+            /**
+             * mix:referenceable needs special handling because it has
+             * special semantics:
+             * it can only be removed if there no more references to this node
+             */
+            PropertyIterator iter = getReferences();
+            if (iter.hasNext()) {
+                throw new ConstraintViolationException(mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
+            }
+        }
+
+        // modify the state of this node
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        // remove mixin name
+        Set mixins = new HashSet(thisState.getMixinTypeNames());
+        mixins.remove(mixinName);
+        thisState.setMixinTypeNames(mixins);
+
+        // set jcr:mixinTypes property
+        setMixinTypesProperty(mixins);
+
+        // build effective node type of remaining mixin's & primary type
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+        EffectiveNodeType entRemaining;
+        try {
+            // remaining mixin's
+            HashSet set = new HashSet(mixins);
+            // primary type
+            set.add(nodeType.getQName());
+            // build effective node type representing primary type including remaining mixin's
+            entRemaining = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+        } catch (NodeTypeConflictException ntce) {
+            throw new ConstraintViolationException(ntce.getMessage());
+        }
+
+        NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType(mixinName);
+
+        // shortcut
+        if (mixin.getChildNodeDefs().length == 0
+                && mixin.getPropertyDefs().length == 0) {
+            // the node type has neither property nor child node definitions,
+            // i.e. we're done
+            return;
+        }
+
+        // walk through properties and child nodes and remove those that have been
+        // defined by the specified mixin type
+
+        // use temp array to avoid ConcurrentModificationException
+        ArrayList tmp = new ArrayList(thisState.getPropertyEntries());
+        Iterator iter = tmp.iterator();
+        while (iter.hasNext()) {
+            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
+            PropertyImpl prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), entry.getName()));
+            // check if property has been defined by mixin type (or one of its supertypes)
+            NodeTypeImpl declaringNT = (NodeTypeImpl) prop.getDefinition().getDeclaringNodeType();
+            if (!entRemaining.includesNodeType(declaringNT.getQName())) {
+                // the remaining effective node type doesn't include the
+                // node type that declared this property, it is thus safe
+                // to remove it
+                removeChildProperty(entry.getName());
+            }
+        }
+        // use temp array to avoid ConcurrentModificationException
+        tmp = new ArrayList(thisState.getChildNodeEntries());
+        iter = tmp.iterator();
+        while (iter.hasNext()) {
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            NodeImpl node = (NodeImpl) itemMgr.getItem(new NodeId(entry.getUUID()));
+            // check if node has been defined by mixin type (or one of its supertypes)
+            NodeTypeImpl declaringNT = (NodeTypeImpl) node.getDefinition().getDeclaringNodeType();
+            if (!entRemaining.includesNodeType(declaringNT.getQName())) {
+                // the remaining effective node type doesn't include the
+                // node type that declared this child node, it is thus safe
+                // to remove it
+                removeChildNode(entry.getName(), entry.getIndex());
+            }
+        }
     }
 
     /**
@@ -1106,42 +1375,20 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Same as <code>{@link Node#addNode(String)}</code> except that
-     * this method takes a <code>QName</code> name argument instead of a
-     * <code>String</code>.
-     *
-     * @param nodeName
-     * @return
-     * @throws ItemExistsException
-     * @throws VersionException
-     * @throws ConstraintViolationException
-     * @throws LockException
-     * @throws RepositoryException
-     */
-    public synchronized NodeImpl addNode(QName nodeName)
-            throws ItemExistsException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot add node to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        return internalAddChildNode(nodeName, null);
-    }
-
-    /**
      * Same as <code>{@link Node#addNode(String, String)}</code> except that
-     * this method takes a <code>QName</code> arguments instead of a
-     * <code>String</code>s.
+     * this method takes <code>QName</code> arguments instead of
+     * <code>String</code>s and has an additional <code>uuid</code> argument.
+     * <p/>
+     * <b>Important Notice:</b> This method is for internal use only! Passing
+     * already assigned uuid's might lead to unexpected results and
+     * data corruption in the worst case.
      *
-     * @param nodeName
-     * @param nodeTypeName
-     * @return
+     * @param nodeName     name of the new node
+     * @param nodeTypeName name of the new node's node type or <code>null</code>
+     *                     if it should be determined automatically
+     * @param uuid         uuid of the new node or <code>null</code> if a new
+     *                     uuid should be assigned
+     * @return the newly added node
      * @throws ItemExistsException
      * @throws NoSuchNodeTypeException
      * @throws VersionException
@@ -1149,7 +1396,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws LockException
      * @throws RepositoryException
      */
-    public synchronized NodeImpl addNode(QName nodeName, QName nodeTypeName)
+    public synchronized NodeImpl addNode(QName nodeName, QName nodeTypeName,
+                                         String uuid)
             throws ItemExistsException, NoSuchNodeTypeException, VersionException,
             ConstraintViolationException, LockException, RepositoryException {
         // check state of this instance
@@ -1162,8 +1410,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
-        NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
-        return internalAddChildNode(nodeName, nt);
+        NodeTypeImpl nt = (nodeTypeName == null) ?
+                null : session.getNodeTypeManager().getNodeType(nodeTypeName);
+        return internalAddChildNode(nodeName, nt, uuid);
     }
 
     /**
@@ -1182,6 +1431,32 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyImpl setProperty(QName name, Value[] values)
             throws ValueFormatException, VersionException, LockException,
             RepositoryException {
+        int type;
+        if (values == null || values.length == 0) {
+            type = PropertyType.UNDEFINED;
+        } else {
+            type = values[0].getType();
+        }
+        return setProperty(name, values, type);
+    }
+
+    /**
+     * Same as <code>{@link Node#setProperty(String, Value[], int)}</code> except
+     * that this method takes a <code>QName</code> name argument instead of a
+     * <code>String</code>.
+     *
+     * @param name
+     * @param values
+     * @param type
+     * @return
+     * @throws ValueFormatException
+     * @throws VersionException
+     * @throws LockException
+     * @throws RepositoryException
+     */
+    public PropertyImpl setProperty(QName name, Value[] values, int type)
+            throws ValueFormatException, VersionException, LockException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1192,12 +1467,6 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
-        int type;
-        if (values == null || values.length == 0) {
-            type = PropertyType.UNDEFINED;
-        } else {
-            type = values[0].getType();
-        }
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
         try {
@@ -2043,23 +2312,6 @@ public class NodeImpl extends ItemImpl implements Node {
     public void addMixin(String mixinName)
             throws NoSuchNodeTypeException, VersionException,
             ConstraintViolationException, LockException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot add a mixin node type to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            String msg = safeGetJCRPath() + ": cannot add a mixin node type to a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
         QName ntName;
         try {
             ntName = QName.fromJCRName(mixinName, session.getNamespaceResolver());
@@ -2069,81 +2321,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException("invalid mixin type name: " + mixinName, upe);
         }
 
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        NodeTypeImpl mixin = ntMgr.getNodeType(ntName);
-        if (!mixin.isMixin()) {
-            throw new RepositoryException(mixinName + ": not a mixin node type");
-        }
-        if (nodeType.isDerivedFrom(ntName)) {
-            throw new RepositoryException(mixinName + ": already contained in primary node type");
-        }
-
-        // build effective node type of mixin's & primary type in order to detect conflicts
-        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
-        EffectiveNodeType entExisting;
-        try {
-            // existing mixin's
-            HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
-            // primary type
-            set.add(nodeType.getQName());
-            // build effective node type representing primary type including existing mixin's
-            entExisting = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
-            if (entExisting.includesNodeType(ntName)) {
-                throw new RepositoryException(mixinName + ": already contained in mixin types");
-            }
-            // add new mixin
-            set.add(ntName);
-            // try to build new effective node type (will throw in case of conflicts)
-            ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
-        } catch (NodeTypeConflictException ntce) {
-            throw new ConstraintViolationException(ntce.getMessage());
-        }
-
-        // do the actual modifications implied by the new mixin;
-        // try to revert the changes in case an excpetion occurs
-        try {
-            // modify the state of this node
-            NodeState thisState = (NodeState) getOrCreateTransientItemState();
-            // add mixin name
-            Set mixins = new HashSet(thisState.getMixinTypeNames());
-            mixins.add(ntName);
-            thisState.setMixinTypeNames(mixins);
-
-            // set jcr:mixinTypes property
-            setMixinTypesProperty(mixins);
-
-            // add 'auto-create' properties defined in mixin type
-            PropertyDef[] pda = mixin.getAutoCreatePropertyDefs();
-            for (int i = 0; i < pda.length; i++) {
-                PropertyDefImpl pd = (PropertyDefImpl) pda[i];
-                // make sure that the property is not already defined by primary type
-                // or existing mixin's
-                NodeTypeImpl declaringNT = (NodeTypeImpl) pd.getDeclaringNodeType();
-                if (!entExisting.includesNodeType(declaringNT.getQName())) {
-                    createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
-                }
-            }
-
-            // recursively add 'auto-create' child nodes defined in mixin type
-            NodeDef[] nda = mixin.getAutoCreateNodeDefs();
-            for (int i = 0; i < nda.length; i++) {
-                NodeDefImpl nd = (NodeDefImpl) nda[i];
-                // make sure that the child node is not already defined by primary type
-                // or existing mixin's
-                NodeTypeImpl declaringNT = (NodeTypeImpl) nd.getDeclaringNodeType();
-                if (!entExisting.includesNodeType(declaringNT.getQName())) {
-                    createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
-                }
-            }
-        } catch (RepositoryException re) {
-            // try to undo the modifications by removing the mixin
-            try {
-                removeMixin(mixinName);
-            } catch (RepositoryException re1) {
-                // silently ignore & fall through
-            }
-            throw re;
-        }
+        addMixin(ntName);
     }
 
     /**
@@ -2152,23 +2330,6 @@ public class NodeImpl extends ItemImpl implements Node {
     public void removeMixin(String mixinName)
             throws NoSuchNodeTypeException, VersionException,
             ConstraintViolationException, LockException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            String msg = safeGetJCRPath() + ": cannot remove a mixin node type from a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
         QName ntName;
         try {
             ntName = QName.fromJCRName(mixinName, session.getNamespaceResolver());
@@ -2178,91 +2339,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException("invalid mixin type name: " + mixinName, upe);
         }
 
-        // check if mixin is assigned
-        if (!((NodeState) state).getMixinTypeNames().contains(ntName)) {
-            throw new NoSuchNodeTypeException(mixinName);
-        }
-
-        if (MIX_REFERENCEABLE.equals(ntName)) {
-            /**
-             * mix:referenceable needs special handling because it has
-             * special semantics:
-             * it can only be removed if there no more references to this node
-             */
-            PropertyIterator iter = getReferences();
-            if (iter.hasNext()) {
-                throw new ConstraintViolationException(mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
-            }
-        }
-
-        // modify the state of this node
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        // remove mixin name
-        Set mixins = new HashSet(thisState.getMixinTypeNames());
-        mixins.remove(ntName);
-        thisState.setMixinTypeNames(mixins);
-
-        // set jcr:mixinTypes property
-        setMixinTypesProperty(mixins);
-
-        // build effective node type of remaining mixin's & primary type
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
-        EffectiveNodeType entRemaining;
-        try {
-            // remaining mixin's
-            HashSet set = new HashSet(mixins);
-            // primary type
-            set.add(nodeType.getQName());
-            // build effective node type representing primary type including remaining mixin's
-            entRemaining = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
-        } catch (NodeTypeConflictException ntce) {
-            throw new ConstraintViolationException(ntce.getMessage());
-        }
-
-        NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType(ntName);
-
-        // shortcut
-        if (mixin.getChildNodeDefs().length == 0
-                && mixin.getPropertyDefs().length == 0) {
-            // the node type has neither property nor child node definitions,
-            // i.e. we're done
-            return;
-        }
-
-        // walk through properties and child nodes and remove those that have been
-        // defined by the specified mixin type
-
-        // use temp array to avoid ConcurrentModificationException
-        ArrayList tmp = new ArrayList(thisState.getPropertyEntries());
-        Iterator iter = tmp.iterator();
-        while (iter.hasNext()) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-            PropertyImpl prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), entry.getName()));
-            // check if property has been defined by mixin type (or one of its supertypes)
-            NodeTypeImpl declaringNT = (NodeTypeImpl) prop.getDefinition().getDeclaringNodeType();
-            if (!entRemaining.includesNodeType(declaringNT.getQName())) {
-                // the remaining effective node type doesn't include the
-                // node type that declared this property, it is thus safe
-                // to remove it
-                removeChildProperty(entry.getName());
-            }
-        }
-        // use temp array to avoid ConcurrentModificationException
-        tmp = new ArrayList(thisState.getChildNodeEntries());
-        iter = tmp.iterator();
-        while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-            NodeImpl node = (NodeImpl) itemMgr.getItem(new NodeId(entry.getUUID()));
-            // check if node has been defined by mixin type (or one of its supertypes)
-            NodeTypeImpl declaringNT = (NodeTypeImpl) node.getDefinition().getDeclaringNodeType();
-            if (!entRemaining.includesNodeType(declaringNT.getQName())) {
-                // the remaining effective node type doesn't include the
-                // node type that declared this child node, it is thus safe
-                // to remove it
-                removeChildNode(entry.getName(), entry.getIndex());
-            }
-        }
+        removeMixin(ntName);
     }
 
     /**
@@ -3049,11 +3126,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // todo: also respect mixing types on creation?
         QName[] mxNames = frozen.getFrozenMixinTypes();
         for (int i = 0; i < mxNames.length; i++) {
-            try {
-                node.addMixin(mxNames[i].toJCRName(session.getNamespaceResolver()));
-            } catch (NoPrefixDeclaredException e) {
-                throw new NoSuchNodeTypeException("Unable to resolve mixin: " + e.toString());
-            }
+            node.addMixin(mxNames[i]);
         }
         return node;
     }
@@ -3097,11 +3170,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // todo: also respect mixing types on creation?
         QName[] mxNames = frozen.getFrozenMixinTypes();
         for (int i = 0; i < mxNames.length; i++) {
-            try {
-                node.addMixin(mxNames[i].toJCRName(session.getNamespaceResolver()));
-            } catch (NoPrefixDeclaredException e) {
-                throw new NoSuchNodeTypeException("Unable to resolve mixin: " + e.toString());
-            }
+            node.addMixin(mxNames[i]);
         }
         return node;
     }
@@ -3204,13 +3273,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             }
             if (!found) {
-                try {
-                    addMixin(values[i].toJCRName(session.getNamespaceResolver()));
-                } catch (NoPrefixDeclaredException e) {
-                    String msg = "Unable to add mixin for restored node: " + e.getMessage();
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
-                }
+                addMixin(values[i]);
             }
         }
         // remove additional mixins

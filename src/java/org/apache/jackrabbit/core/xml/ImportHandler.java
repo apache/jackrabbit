@@ -16,39 +16,64 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.BaseException;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
-import org.xml.sax.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.NamespaceSupport;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 
 /**
  * An <code>ImportHandler</code> instance can be used to import serialized
- * data in System View XML or Document View XML. The actual task of importing
- * is delegated to specialized <code>ContentHandler</code>s (i.e.
- * <code>SysViewImportHandler</code> and <code>DocViewImportHandler</code>).
+ * data in System View XML or Document View XML. Processing of the XML is handled
+ * by specialized <code>ContentHandler</code>s (i.e. <code>SysViewImportHandler</code>
+ * and <code>DocViewImportHandler</code>).
+ * <p/>
+ * The actual task of importing though is delegated to the implementation of
+ * the <code>{@link Importer}</code> interface.
  */
 public class ImportHandler extends DefaultHandler {
 
     private static Logger log = Logger.getLogger(ImportHandler.class);
 
+    protected final Importer importer;
+    protected final NamespaceRegistryImpl nsReg;
+    protected final NamespaceResolver nsResolver;
+
     protected Locator locator;
     protected ContentHandler targetHandler;
-
-    protected SessionImpl session;
-    protected NodeImpl importTargetNode;
-    protected NamespaceRegistryImpl nsReg;
     protected boolean systemViewXML;
     protected boolean initialized;
 
-    public ImportHandler(NodeImpl importTargetNode,
-                         NamespaceRegistryImpl nsReg,
-                         SessionImpl session) {
-        this.importTargetNode = importTargetNode;
-        this.session = session;
+    protected final NamespaceContext nsContext;
+
+    /**
+     * this flag is used to determine whether a namespace context needs to be
+     * started in the startElement event or if the namespace context has already
+     * been started in a preceeding startPrefixMapping event;
+     * the flag is set per element in the first startPrefixMapping event and is
+     * cleared again in the following startElement event;
+     */
+    protected boolean nsContextStarted;
+
+    public ImportHandler(Importer importer, NamespaceResolver nsResolver,
+                         NamespaceRegistryImpl nsReg) {
+        this.importer = importer;
+        this.nsResolver = nsResolver;
         this.nsReg = nsReg;
+
+        nsContext = new NamespaceContext();
     }
 
     //---------------------------------------------------------< ErrorHandler >
@@ -91,6 +116,24 @@ public class ImportHandler extends DefaultHandler {
         systemViewXML = false;
         initialized = false;
         targetHandler = null;
+
+        /**
+         * start initial context containing existing mappings reflected
+         * by nsResolver
+         */
+        nsContext.reset();
+        nsContext.pushContext();
+        try {
+            String[] uris = nsReg.getURIs();
+            for (int i = 0; i < uris.length; i++) {
+                nsContext.declarePrefix(nsResolver.getPrefix(uris[i]), uris[i]);
+            }
+        } catch (RepositoryException re) {
+            throw new SAXException(re);
+        }
+
+        // initialize flag
+        nsContextStarted = false;
     }
 
     /**
@@ -99,6 +142,8 @@ public class ImportHandler extends DefaultHandler {
     public void endDocument() throws SAXException {
         // delegate to target handler
         targetHandler.endDocument();
+        // cleanup
+        nsContext.reset();
     }
 
     /**
@@ -106,39 +151,49 @@ public class ImportHandler extends DefaultHandler {
      */
     public void startPrefixMapping(String prefix, String uri)
             throws SAXException {
+        // check if new context needs to be started
+        if (!nsContextStarted) {
+            // entering new namespace context
+            nsContext.pushContext();
+            nsContextStarted = true;
+        }
+
         try {
-            String oldPrefix = session.getNamespacePrefix(uri);
-            // namespace is already registered; check prefix
-            if (!"".equals(prefix) && !oldPrefix.equals(prefix)) {
-                /**
-                 * namespace is mapped to different prefix;
-                 * try to remap it to given prefix
-                 */
-                try {
-                    session.setNamespacePrefix(prefix, uri);
-                } catch (RepositoryException re) {
-                    throw new SAXException("failed to remap namespace " + uri
-                            + " to prefix " + prefix, re);
-                }
-            }
+            // this will trigger NamespaceException if namespace is unknown
+            nsContext.getPrefix(uri);
         } catch (NamespaceException nse) {
-            // namespace is not yet registered, try to register it
+            // namespace is not yet registered ...
+            String newPrefix;
             if ("".equals(prefix)) {
                 /**
-                 * the xml document specifies a default namespace (i.e. an empty prefix);
-                 * we need to create a random prefix as the empty prefix is reserved
-                 * according to the JCR spec.
+                 * the xml document specifies a default namespace
+                 * (i.e. an empty prefix); we need to create a random
+                 * prefix as the empty prefix is reserved according
+                 * to the JCR spec.
                  */
-                prefix = nsReg.getUniquePrefix(uri);
+                newPrefix = nsReg.getUniquePrefix(uri);
+            } else {
+                newPrefix = prefix;
             }
+            // register new namespace
             try {
-                nsReg.registerNamespace(prefix, uri);
+                nsReg.registerNamespace(newPrefix, uri);
             } catch (RepositoryException re) {
-                throw new SAXException("failed to register namespace " + uri + " with prefix " + prefix, re);
+                throw new SAXException(re);
             }
-        } catch (RepositoryException re) {
-            throw new SAXException("failed to check prefix for namespace " + uri, re);
         }
+        // map namespace in this context to given prefix
+        nsContext.declarePrefix(prefix, uri);
+    }
+
+    /**
+     * @see ContentHandler#endPrefixMapping(String)
+     */
+    public void endPrefixMapping(String prefix) throws SAXException {
+        /**
+         * nothing to do here as namespace context has already been popped
+         * in endElement event
+         */
     }
 
     /**
@@ -146,6 +201,16 @@ public class ImportHandler extends DefaultHandler {
      */
     public void startElement(String namespaceURI, String localName, String qName,
                              Attributes atts) throws SAXException {
+        // check if new context needs to be started
+        if (!nsContextStarted) {
+            // there hasn't been a preceeding startPrefixMapping event
+            // so enter new namespace context
+            nsContext.pushContext();
+        } else {
+            // reset flag
+            nsContextStarted = false;
+        }
+
         if (!initialized) {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
@@ -154,7 +219,7 @@ public class ImportHandler extends DefaultHandler {
                 nsURI = namespaceURI;
             } else {
                 try {
-                    nsURI = QName.fromJCRName(qName, session.getNamespaceResolver()).getNamespaceURI();
+                    nsURI = QName.fromJCRName(qName, nsResolver).getNamespaceURI();
                 } catch (BaseException e) {
                     // should never happen...
                     String msg = "internal error: failed to parse/resolve element name " + qName;
@@ -165,9 +230,9 @@ public class ImportHandler extends DefaultHandler {
             systemViewXML = Constants.NS_SV_URI.equals(nsURI);
 
             if (systemViewXML) {
-                targetHandler = new SysViewImportHandler(importTargetNode, session);
+                targetHandler = new SysViewImportHandler(importer, nsContext);
             } else {
-                targetHandler = new DocViewImportHandler(importTargetNode, session);
+                targetHandler = new DocViewImportHandler(importer, nsContext);
             }
             targetHandler.startDocument();
             initialized = true;
@@ -190,6 +255,9 @@ public class ImportHandler extends DefaultHandler {
      */
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
+        // leaving element, pop namespace context
+        nsContext.popContext();
+
         // delegate to target handler
         targetHandler.endElement(namespaceURI, localName, qName);
     }
@@ -199,5 +267,86 @@ public class ImportHandler extends DefaultHandler {
      */
     public void setDocumentLocator(Locator locator) {
         this.locator = locator;
+    }
+
+    //--------------------------------------------------------< inner classes >
+    class NamespaceContext implements NamespaceResolver {
+
+        private final NamespaceSupport nsContext;
+
+        /**
+         * NamespaceSupport doesn't accept "" as default uri;
+         * internally we're using " " instead
+         */
+        private static final String DUMMY_DEFAULT_URI = " ";
+        private static final String DEFAULT_URI = Constants.NS_DEFAULT_URI;
+
+        private static final String EMPTY_PREFIX = "";
+
+        NamespaceContext() {
+            nsContext = new NamespaceSupport();
+        }
+
+        /**
+         * @see NamespaceSupport#popContext()
+         */
+        void popContext() {
+            nsContext.popContext();
+        }
+
+        /**
+         * @see NamespaceSupport#pushContext()
+         */
+        void pushContext() {
+            nsContext.pushContext();
+        }
+
+        /**
+         * @see NamespaceSupport#reset()
+         */
+        void reset() {
+            nsContext.reset();
+        }
+
+        /**
+         * @see NamespaceSupport#declarePrefix(String, String)
+         */
+        boolean declarePrefix(String prefix, String uri) {
+            uri = DEFAULT_URI.equals(uri) ? DUMMY_DEFAULT_URI : uri;
+            return nsContext.declarePrefix(prefix, uri);
+        }
+
+        //------------------------------------------------< NamespaceResolver >
+        /**
+         * @see NamespaceResolver#getURI(String)
+         */
+        public String getURI(String prefix) throws NamespaceException {
+            String uri = nsContext.getURI(prefix);
+            if (uri == null) {
+                throw new NamespaceException("unknown prefix");
+            }
+            return DUMMY_DEFAULT_URI.equals(uri) ? DEFAULT_URI : uri;
+        }
+
+        /**
+         * @see NamespaceResolver#getPrefix(String)
+         */
+        public String getPrefix(String uri) throws NamespaceException {
+            uri = DEFAULT_URI.equals(uri) ? DUMMY_DEFAULT_URI : uri;
+            String prefix = nsContext.getPrefix(uri);
+            if (prefix == null) {
+                /**
+                 * NamespaceSupport#getPrefix will never return the empty
+                 * (default) prefix; we have to do a reverse-lookup to check
+                 * whether it's the current default namespace
+                 */
+                if (uri.equals(nsContext.getURI(EMPTY_PREFIX))) {
+                    return EMPTY_PREFIX;
+                }
+                throw new NamespaceException("unknown uri");
+            }
+            return prefix;
+        }
+
     }
 }

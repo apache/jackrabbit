@@ -57,16 +57,14 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      */
     public NodeType getDefaultPrimaryType() {
         QName ntName = nodeDef.getDefaultPrimaryType();
+        if (ntName == null) {
+            return null;
+        }
         try {
-            if (ntName == null) {
-                // return "nt:unstructured"
-                return ntMgr.getNodeType(Constants.NT_UNSTRUCTURED);
-            } else {
-                return ntMgr.getNodeType(ntName);
-            }
+            return ntMgr.getNodeType(ntName);
         } catch (NoSuchNodeTypeException e) {
             // should never get here
-            log.error("default node type does not exist", e);
+            log.error("invalid default node type " + ntName, e);
             return null;
         }
     }

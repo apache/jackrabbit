@@ -95,7 +95,23 @@ public class QName implements Cloneable, Comparable, Serializable {
         if (resolver == null) {
             throw new NullPointerException("resolver must not be null");
         }
-        return internalFromJCRName(rawName, resolver);
+
+        if (rawName == null || rawName.length() == 0) {
+            throw new IllegalNameException("empty name");
+        }
+
+        // parts[0]: prefix
+        // parts[1]: localName
+        String[] parts = parse(rawName);
+
+        String uri;
+        try {
+            uri = resolver.getURI(parts[0]);
+        } catch (NamespaceException nse) {
+            throw new UnknownPrefixException(parts[0]);
+        }
+
+        return new QName(uri, parts[1]);
     }
 
     /**
@@ -143,36 +159,29 @@ public class QName implements Cloneable, Comparable, Serializable {
      *                              JCR-style name.
      */
     public static void checkFormat(String jcrName) throws IllegalNameException {
-        try {
-            internalFromJCRName(jcrName, null);
-        } catch (UnknownPrefixException e) {
-            // ignore, will never happen
-        }
+        parse(jcrName);
     }
 
     /**
-     * Parses the <code>jcrName</code>, resolves the prefix using the namespace
-     * resolver and returns a new QName instance. this method is also used
-     * internally just to check the format of the given string by passing a
-     * <code>null</code> value as <code>resolver</code>
+     * Parses the <code>jcrName</code> and returns an array of two strings:
+     * the first array element contains the prefix (or empty string),
+     * the second the local name.     
      *
-     * @param rawName  the jcr name to parse
-     * @param resolver the namespace resolver or <code>null</code>
-     * @return a new resolved QName
-     * @throws IllegalNameException
-     * @throws UnknownPrefixException
+     * @param jcrName the name to be parsed
+     * @return An array holding two strings: the first array element contains
+     *         the prefix (or empty string), the second the local name.
+     * @throws IllegalNameException If <code>jcrName</code> is not a valid
+     *                              JCR-style name.
      */
-    public static QName internalFromJCRName(String rawName, NamespaceResolver resolver)
-            throws IllegalNameException, UnknownPrefixException {
-
-        if (rawName == null || rawName.length() == 0) {
+    public static String[] parse(String jcrName) throws IllegalNameException {
+        if (jcrName == null || jcrName.length() == 0) {
             throw new IllegalNameException("empty name");
         }
 
-        String prefix = null;
-        String localName = null;
+        String prefix;
+        String localName;
 
-        Matcher matcher = NAME_PATTERN.matcher(rawName);
+        Matcher matcher = NAME_PATTERN.matcher(jcrName);
         if (matcher.matches()) {
             // check for prefix (group 1)
             if (matcher.group(1) != null) {
@@ -188,23 +197,11 @@ public class QName implements Cloneable, Comparable, Serializable {
             localName = matcher.group(3);
         } else {
             // illegal syntax for name
-            throw new IllegalNameException("'" + rawName + "' is not a valid name");
+            throw new IllegalNameException("'" + jcrName + "' is not a valid name");
         }
 
-        if (resolver == null) {
-            return null;
-        } else {
-            String uri;
-            try {
-                uri = resolver.getURI(prefix);
-            } catch (NamespaceException nse) {
-                throw new UnknownPrefixException(prefix);
-            }
-
-            return new QName(uri, localName);
-        }
+        return new String[]{prefix, localName};
     }
-
 
     //-------------------------------------------------------< public methods >
     /**
