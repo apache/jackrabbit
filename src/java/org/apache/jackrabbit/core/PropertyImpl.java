@@ -119,9 +119,6 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     protected void internalSetValue(InternalValue[] values, int type)
             throws ConstraintViolationException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
         // check for null value
         if (values == null) {
             // setting a property to null removes it automatically

@@ -571,15 +571,15 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     protected NodeImpl internalAddNode(String relPath, NodeTypeImpl nodeType)
-            throws ItemExistsException, PathNotFoundException,
-            ConstraintViolationException, RepositoryException {
+            throws ItemExistsException, PathNotFoundException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
         return internalAddNode(relPath, nodeType, null);
     }
 
     protected NodeImpl internalAddNode(String relPath, NodeTypeImpl nodeType,
                                        String uuid)
-            throws ItemExistsException, PathNotFoundException,
-            ConstraintViolationException, RepositoryException {
+            throws ItemExistsException, PathNotFoundException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
         Path nodePath;
         QName nodeName;
         Path parentPath;
@@ -609,6 +609,13 @@ public class NodeImpl extends ItemImpl implements Node {
             parentNode = (NodeImpl) parent;
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(relPath);
+        }
+
+        // make sure that parent node is checked-out
+        if (!parentNode.internalIsCheckedOut()) {
+            String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
+            log.error(msg);
+            throw new VersionException(msg);
         }
 
         // delegate the creation of the child node to the parent node
@@ -887,12 +894,9 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property internalSetProperty(QName name, InternalValue value)
             throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
         int type;
         if (value == null) {
-            type = PropertyType.STRING;
+            type = PropertyType.UNDEFINED;
         } else {
             type = value.getType();
         }
@@ -931,16 +935,32 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     protected Property internalSetProperty(QName name, InternalValue[] values)
             throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
         int type;
         if (values == null || values.length == 0) {
-            type = PropertyType.STRING;
+            type = PropertyType.UNDEFINED;
         } else {
             type = values[0].getType();
         }
+        return internalSetProperty(name, values, type);
+    }
 
+    /**
+     * Sets the internal value of a property without checking any constraints.
+     * <p/>
+     * Note that no type conversion is being performed, i.e. it's the caller's
+     * responsibility to make sure that the type of the given values is compatible
+     * with the specified property's definition.
+     *
+     * @param name
+     * @param values
+     * @param type
+     * @return
+     * @throws ValueFormatException
+     * @throws RepositoryException
+     */
+    protected Property internalSetProperty(QName name, InternalValue[] values,
+                                           int type)
+            throws ValueFormatException, RepositoryException {
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
         try {
@@ -1083,88 +1103,64 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#addNode(String)
+     * Same as <code>{@link Node#addNode(String)}</code> except that
+     * this method takes a <code>QName</code> name argument instead of a
+     * <code>String</code>.
+     *
+     * @param nodeName
+     * @return
+     * @throws ItemExistsException
+     * @throws VersionException
+     * @throws ConstraintViolationException
+     * @throws LockException
+     * @throws RepositoryException
      */
     public synchronized NodeImpl addNode(QName nodeName)
-            throws ItemExistsException, ConstraintViolationException,
-            RepositoryException {
+            throws ItemExistsException, VersionException,
+            ConstraintViolationException, LockException,  RepositoryException {
         // check state of this instance
         sanityCheck();
+
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath() + ": cannot add node to a checked-in node";
+            log.error(msg);
+            throw new VersionException(msg);
+        }
 
         return internalAddChildNode(nodeName, null);
     }
 
     /**
-     * @see Node#addNode(String, String)
+     * Same as <code>{@link Node#addNode(String, String)}</code> except that
+     * this method takes a <code>QName</code> arguments instead of a
+     * <code>String</code>s.
+     *
+     * @param nodeName
+     * @param nodeTypeName
+     * @return
+     * @throws ItemExistsException
+     * @throws NoSuchNodeTypeException
+     * @throws VersionException
+     * @throws ConstraintViolationException
+     * @throws LockException
+     * @throws RepositoryException
      */
     public synchronized NodeImpl addNode(QName nodeName, QName nodeTypeName)
-            throws ItemExistsException, NoSuchNodeTypeException,
-            ConstraintViolationException, RepositoryException {
+            throws ItemExistsException, NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
+
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath() + ": cannot add node to a checked-in node";
+            log.error(msg);
+            throw new VersionException(msg);
+        }
 
         NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
         return internalAddChildNode(nodeName, nt);
-    }
-
-    /**
-     * Same as <code>{@link Node#setProperty(String, String)}</code> except that
-     * this method takes a <code>QName</code> instead of a <code>String</code>
-     * value.
-     *
-     * @param name
-     * @param value
-     * @return
-     * @throws ValueFormatException
-     * @throws RepositoryException
-     */
-    public PropertyImpl setProperty(String name, QName value) throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, false, status);
-        try {
-            prop.setValue(value);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
-        return prop;
-    }
-
-    /**
-     * Same as <code>{@link Node#setProperty(String, String[])}</code> except that
-     * this method takes an array of  <code>QName</code> instead of a
-     * <code>String</code> values.
-     *
-     * @param name
-     * @param values
-     * @return
-     * @throws ValueFormatException
-     * @throws RepositoryException
-     */
-    public PropertyImpl setProperty(String name, QName[] values) throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.NAME, true, status);
-        try {
-            prop.setValue(values);
-        } catch (RepositoryException re) {
-            if (status.get(CREATED)) {
-                // setting value failed, get rid of newly created property
-                removeChildProperty(name);
-            }
-            // rethrow
-            throw re;
-        }
-        return prop;
     }
 
     /**
@@ -1176,16 +1172,26 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param values
      * @return
      * @throws ValueFormatException
+     * @throws VersionException
+     * @throws LockException
      * @throws RepositoryException
      */
     public PropertyImpl setProperty(QName name, Value[] values)
-            throws ValueFormatException, RepositoryException {
+            throws ValueFormatException, VersionException, LockException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
+            log.error(msg);
+            throw new VersionException(msg);
+        }
+
         int type;
         if (values == null || values.length == 0) {
-            type = PropertyType.STRING;
+            type = PropertyType.UNDEFINED;
         } else {
             type = values[0].getType();
         }
@@ -1213,14 +1219,24 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param value
      * @return
      * @throws ValueFormatException
+     * @throws VersionException
+     * @throws LockException
      * @throws RepositoryException
      */
     public PropertyImpl setProperty(QName name, Value value)
-            throws ValueFormatException, RepositoryException {
+            throws ValueFormatException, VersionException, LockException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        int type = (value == null) ? PropertyType.STRING : value.getType();
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
+            log.error(msg);
+            throw new VersionException(msg);
+        }
+
+        int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
@@ -1313,13 +1329,6 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
-            log.error(msg);
-            throw new VersionException(msg);
-        }
-
         return internalAddNode(relPath, null);
     }
 
@@ -1332,13 +1341,6 @@ public class NodeImpl extends ItemImpl implements Node {
             ConstraintViolationException, LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
-            log.error(msg);
-            throw new VersionException(msg);
-        }
 
         NodeTypeImpl nt = (NodeTypeImpl) session.getNodeTypeManager().getNodeType(nodeTypeName);
         return internalAddNode(relPath, nt);
@@ -1605,7 +1607,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
-        int type = (value == null) ? PropertyType.STRING : value.getType();
+        int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
