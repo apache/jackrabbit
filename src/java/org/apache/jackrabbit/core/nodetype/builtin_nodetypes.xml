@@ -230,7 +230,7 @@
         </supertypes>
         <propertyDef name="jcr:frozenPrimaryType" requiredType="Name" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" multiple="false"/>
         <propertyDef name="jcr:frozenMixinTypes" requiredType="Name" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" multiple="true"/>
-        <propertyDef name="jcr:frozenUUID" requiredType="String" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" multiple="false"/>
+        <propertyDef name="jcr:frozenUuid" requiredType="String" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" multiple="false"/>
         <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" multiple="false"/>
         <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" multiple="true"/>
         <childNodeDef name="*" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" sameNameSibs="true">

@@ -191,8 +191,9 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Determines if there are pending unsaved changes either on <i>this</i>
      * node or on any node or property in the subtree below it.
+     *
      * @return <code>true</code> if there are pending unsaved changes,
-     * <code>false</code> otherwise.
+     *         <code>false</code> otherwise.
      * @throws RepositoryException if an error occured
      */
     protected boolean hasPendingChanges() throws RepositoryException {
@@ -839,6 +840,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Same as {@link Node#isNodeType(String)}, but takes a <code>QName</code>
      * instad of a <code>String</code>.
+     *
      * @param ntName name of node type
      * @return <code>true</code> if this node is of the specified node type;
      *         otherwise <code>false</code>
@@ -873,6 +875,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /**
      * Returns the (internal) uuid of this node.
+     *
      * @return the uuid of this node
      */
     public String internalGetUUID() {
@@ -1117,7 +1120,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public synchronized NodeImpl addNode(QName nodeName)
             throws ItemExistsException, VersionException,
-            ConstraintViolationException, LockException,  RepositoryException {
+            ConstraintViolationException, LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2511,7 +2514,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check if not merge failed
-        if (hasProperty(ItemImpl.PROPNAME_MERGE_FAILED) && getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues().length>0) {
+        if (hasProperty(ItemImpl.PROPNAME_MERGE_FAILED) && getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues().length > 0) {
             String msg = "Unable to checkin node. Node has unresolved merge operation. " + safeGetJCRPath();
             log.debug(msg);
             throw new VersionException(msg);
@@ -2853,7 +2856,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new UnsupportedRepositoryOperationException(msg);
         }
     }
-/**
+
+    /**
      * Returns the corresponding node in the workspace of the given session.
      * <p/>
      * Given a node N1 in workspace W1, its corresponding node N2 in workspace
@@ -2879,39 +2883,39 @@ public class NodeImpl extends ItemImpl implements Node {
     private NodeImpl getCorrespondingNode(Session srcSession)
             throws AccessDeniedException, RepositoryException {
 
-    // search nearest ancestor that is referenceable
-    NodeImpl m1 = this;
-    while (!m1.isRepositoryRoot() && !m1.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-        m1 = (NodeImpl) m1.getParent();
-    }
-
-    try {
-        // get corresponding ancestor
-        NodeImpl m2 = (NodeImpl) srcSession.getNodeByUUID(m1.getUUID());
-
-        // return path of m2, if m1 == n1
-        if (m1 == this) {
-            return m2;
+        // search nearest ancestor that is referenceable
+        NodeImpl m1 = this;
+        while (!m1.isRepositoryRoot() && !m1.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+            m1 = (NodeImpl) m1.getParent();
         }
 
-        // calculate relative path from the referenceable ancestor to this node.
-        // please note, that this cannot be done
-        // iteratively in the 'while' loop above, since getName() does not
-        // return the relative path, but just the name (without path indices)
-        // n1.getPath() = /foo/bar/something[1]
-        // m1.getPath() = /foo
-        //      relpath = bar/something[1]
+        try {
+            // get corresponding ancestor
+            NodeImpl m2 = (NodeImpl) srcSession.getNodeByUUID(m1.getUUID());
 
-        // @todo: replace as soon as implemented
-        // Path relPath = m1.getPrimaryPath().getRelativePath(getPrimaryPath());
+            // return path of m2, if m1 == n1
+            if (m1 == this) {
+                return m2;
+            }
 
-        String relPath = getPath().substring(m1.getPath().length() + 1);
-        return (NodeImpl) m2.getNode(relPath);
+            // calculate relative path from the referenceable ancestor to this node.
+            // please note, that this cannot be done
+            // iteratively in the 'while' loop above, since getName() does not
+            // return the relative path, but just the name (without path indices)
+            // n1.getPath() = /foo/bar/something[1]
+            // m1.getPath() = /foo
+            //      relpath = bar/something[1]
 
-    } catch (ItemNotFoundException e) {
-        return null;
+            // @todo: replace as soon as implemented
+            // Path relPath = m1.getPrimaryPath().getRelativePath(getPrimaryPath());
+
+            String relPath = getPath().substring(m1.getPath().length() + 1);
+            return (NodeImpl) m2.getNode(relPath);
+
+        } catch (ItemNotFoundException e) {
+            return null;
+        }
     }
-}
 
     /**
      * Performs the merge test. If the result is 'update', then the corresponding
@@ -2980,6 +2984,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /**
      * Determines the checked-out status of this node.
+     *
      * @return a boolean
      * @see Node#isCheckedOut()
      */
@@ -3128,10 +3133,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * Internal method to restore a version.
      *
      * @param version
-     * @param vsel    the version selector that will select the correct version for
-     *                OPV=Version childnodes.
+     * @param vsel           the version selector that will select the correct version for
+     *                       OPV=Version childnodes.
      * @param removeExisting
-     *
      * @throws RepositoryException
      */
     private void internalRestore(InternalVersion version, VersionSelector vsel,
@@ -3248,7 +3252,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeIterator iter = getNodes();
         while (iter.hasNext()) {
             NodeImpl n = (NodeImpl) iter.nextNode();
-            if (n.getDefinition().getOnParentVersion()==OnParentVersionAction.COPY) {
+            if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY) {
                 n.remove();
             }
         }
@@ -3259,7 +3263,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (child instanceof InternalFrozenNode) {
                 InternalFrozenNode f = (InternalFrozenNode) child;
                 // check for existing
-                if (f.getFrozenUUID()!=null) {
+                if (f.getFrozenUUID() != null) {
                     try {
                         NodeImpl existing = (NodeImpl) session.getNodeByUUID(f.getFrozenUUID());
                         if (removeExisting) {
@@ -3288,7 +3292,7 @@ public class NodeImpl extends ItemImpl implements Node {
                         // so order at end
                         // orderBefore(n.getName(), "");
                     } else {
-                        session.move(n.getPath(), getPath()+ "/" + n.getName());
+                        session.move(n.getPath(), getPath() + "/" + n.getName());
                     }
                 } else {
                     // get desired version from version selector
@@ -3408,7 +3412,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Checks if this node is lockable, i.e. has 'mix:lockable'.
      *
      * @throws UnsupportedRepositoryOperationException
-     *          if this node is not lockable
+     *                             if this node is not lockable
      * @throws RepositoryException if another error occurs
      */
     private void checkLockable()

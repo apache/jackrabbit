@@ -46,9 +46,9 @@ public interface VersionManager {
      */
     public static final QName NODENAME_VERSION_LABELS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
     /**
-     * name of the 'jcr:frozenUUID' property
+     * name of the 'jcr:frozenUuid' property
      */
-    public static final QName PROPNAME_FROZEN_UUID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenUUID");
+    public static final QName PROPNAME_FROZEN_UUID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenUuid");
     /**
      * name of the 'jcr:frozenPrimaryType' property
      */

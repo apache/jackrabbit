@@ -59,7 +59,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ErrorHandler#error(org.xml.sax.SAXParseException)
+     * @see ErrorHandler#error(SAXParseException)
      */
     public void error(SAXParseException e) throws SAXException {
         // log exception and carry on...
