@@ -20,7 +20,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.*;
 
 /**
- * Test cases for <code>Item</code>.
+ * Test cases for <code>Item.getAncestor(int)</code>.
  *
  * @test
  * @sources GetAncestorTest.java
