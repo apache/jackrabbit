@@ -1228,7 +1228,7 @@ public class NodeTypeRegistry {
          *    existing node type constraints
 	 * 7. re-register node type definition and update caches
 	 * 8. notify listeners on re-registration
-	 * 9. apply and persist changes to affected nodes (e.g. update
+	 * 9. apply and persist changes to affected nodes (e.g. update 
          *    definition id's, etc.)
 	 * 10. what else?
 	 */
