@@ -6,9 +6,6 @@
   <body>
 
     <category name="General">
-        <task creator="stefan" assignedto="all" startdate="2004/10/09" enddate="2004/10/09" effort="?" status="?">
-        	search
-        </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
         	locking
         </task>
@@ -16,7 +13,7 @@
         	jta support
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-        	access control
+        	access control (jaas)
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
 		current persistence model (nodes and properties are stored in separate
@@ -46,11 +43,6 @@
   		update cache on hierarchy changes (move, hardlink, remove, etc) 
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
         	inline @todo comments: resolve/implement
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-  		gracefull repository shutdown: shutdown repository, close workspaces,
-		close abstract file systems (e.g. flush dirty buffers, etc.),
-		trap JVM shutdown in RepositoryFactory (Runtime#addShutdownHook)?
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
     		ItemState: hide STATUS_* flags, use set* and is* methods instead
