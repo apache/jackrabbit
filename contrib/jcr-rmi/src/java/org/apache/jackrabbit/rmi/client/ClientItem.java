@@ -42,22 +42,22 @@ import org.apache.jackrabbit.rmi.remote.RemoteItem;
  * {@link org.apache.jackrabbit.rmi.client.ClientProperty ClientProperty}
  * and
  * {@link org.apache.jackrabbit.rmi.client.ClientNode ClientNode} adapters.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Item
  * @see org.apache.jackrabbit.rmi.remote.RemoteItem
  */
 public class ClientItem extends ClientObject implements Item {
-    
+
     /** Current session. */
-    protected Session session;
+    private Session session;
 
     /** The adapted remote item. */
     private RemoteItem remote;
-    
+
     /**
      * Creates a local adapter for the given remote item.
-     * 
+     *
      * @param session current session
      * @param remote  remote item
      * @param factory local adapter factory
@@ -71,7 +71,7 @@ public class ClientItem extends ClientObject implements Item {
 
     /**
      * Returns the current session without contacting the remote item.
-     * 
+     *
      * {@inheritDoc}
      */
     public Session getSession() {
@@ -100,7 +100,7 @@ public class ClientItem extends ClientObject implements Item {
     public Item getAncestor(int level) throws ItemNotFoundException,
             AccessDeniedException, RepositoryException {
         try {
-            return getItem(session, remote.getAncestor(level));
+            return getItem(getSession(), remote.getAncestor(level));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -110,7 +110,7 @@ public class ClientItem extends ClientObject implements Item {
     public Node getParent() throws ItemNotFoundException,
             AccessDeniedException, RepositoryException {
         try {
-            return factory.getNode(session, remote.getParent());
+            return factory.getNode(getSession(), remote.getParent());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -128,8 +128,10 @@ public class ClientItem extends ClientObject implements Item {
     /**
      * Returns false by default without contacting the remote item.
      * This method should be overridden by {@link Node Node} subclasses.
-     * 
+     *
      * {@inheritDoc}
+     *
+     * @return false
      */
     public boolean isNode() {
         return false;
@@ -159,9 +161,9 @@ public class ClientItem extends ClientObject implements Item {
      * some generic conditions (null values, instance equality, type equality),
      * after which the <em>item paths</em> are compared to determine sameness.
      * A RuntimeException is thrown if the item paths cannot be retrieved.
-     *  
+     *
      * {@inheritDoc}
-     * 
+     *
      * @see Item#getPath()
      */
     public boolean isSame(Item item) {
@@ -187,12 +189,12 @@ public class ClientItem extends ClientObject implements Item {
      * {@link Property Property} subclasses should override this method
      * to call the appropriate {@link ItemVisitor ItemVisitor} methods,
      * as the default implementation does nothing.
-     * 
+     *
      * {@inheritDoc}
      */
     public void accept(ItemVisitor visitor) throws RepositoryException {
     }
-    
+
     /** {@inheritDoc} */
     public void save() throws AccessDeniedException, LockException,
             ConstraintViolationException, InvalidItemStateException,

@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,7 +62,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * base class provides a number of utility methods designed to work with
  * a local adapter factory. Adapter implementations may want to inherit
  * that functionality by subclassing from ClientObject.
- * 
+ *
  * @author Jukka Zitting
  * @author Philipp Koch
  * @see org.apache.jackrabbit.rmi.server.RemoteAdapterFactory
@@ -70,15 +70,15 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * @see org.apache.jackrabbit.rmi.client.ClientObject
  */
 public interface LocalAdapterFactory {
-    
+
     /**
      * Factory method for creating a local adapter for a remote repository.
      *
      * @param remote remote repository
      * @return local repository adapter
      */
-    public Repository getRepository(RemoteRepository remote);
-    
+    Repository getRepository(RemoteRepository remote);
+
     /**
      * Factory method for creating a local adapter for a remote session.
      *
@@ -86,7 +86,7 @@ public interface LocalAdapterFactory {
      * @param remote remote session
      * @return local session adapter
      */
-    public Session getSession(Repository repository, RemoteSession remote);
+    Session getSession(Repository repository, RemoteSession remote);
 
     /**
      * Factory method for creating a local adapter for a remote workspace.
@@ -95,7 +95,7 @@ public interface LocalAdapterFactory {
      * @param remote remote workspace
      * @return local workspace adapter
      */
-    public Workspace getWorkspace(Session session, RemoteWorkspace remote);
+    Workspace getWorkspace(Session session, RemoteWorkspace remote);
 
     /**
      * Factory method for creating a local adapter for a remote namespace
@@ -104,8 +104,7 @@ public interface LocalAdapterFactory {
      * @param remote remote namespace registry
      * @return local namespace registry adapter
      */
-    public NamespaceRegistry getNamespaceRegistry(
-            RemoteNamespaceRegistry remote);
+    NamespaceRegistry getNamespaceRegistry(RemoteNamespaceRegistry remote);
 
     /**
      * Factory method for creating a local adapter for a remote node type
@@ -114,7 +113,7 @@ public interface LocalAdapterFactory {
      * @param remote remote node type manager
      * @return local node type manager adapter
      */
-    public NodeTypeManager getNodeTypeManager(RemoteNodeTypeManager remote);
+    NodeTypeManager getNodeTypeManager(RemoteNodeTypeManager remote);
 
     /**
      * Factory method for creating a local adapter for a remote item.
@@ -124,56 +123,56 @@ public interface LocalAdapterFactory {
      * {@link #getProperty(Session, RemoteProperty) getProperty} method
      * instead, as the adapter returned by this method will only cover
      * the basic {@link Item Item} interface.
-     * 
+     *
      * @param session current session
      * @param remote remote item
      * @return local item adapter
      */
-    public Item getItem(Session session, RemoteItem remote);
+    Item getItem(Session session, RemoteItem remote);
 
     /**
      * Factory method for creating a local adapter for a remote property.
-     * 
+     *
      * @param session current session
      * @param remote remote property
      * @return local property adapter
      */
-    public Property getProperty(Session session, RemoteProperty remote);
+    Property getProperty(Session session, RemoteProperty remote);
 
     /**
      * Factory method for creating a local adapter for a remote node.
-     * 
+     *
      * @param session current session
      * @param remote remote node
      * @return local node adapter
      */
-    public Node getNode(Session session, RemoteNode remote);
+    Node getNode(Session session, RemoteNode remote);
 
     /**
      * Factory method for creating a local adapter for a remote node type.
-     * 
+     *
      * @param remote remote node type
      * @return local node type adapter
      */
-    public NodeType getNodeType(RemoteNodeType remote);
-    
+    NodeType getNodeType(RemoteNodeType remote);
+
     /**
      * Factory method for creating a local adapter for a remote node
      * definition.
-     * 
+     *
      * @param remote remote node definition
      * @return local node definition adapter
      */
-    public NodeDef getNodeDef(RemoteNodeDef remote);
+    NodeDef getNodeDef(RemoteNodeDef remote);
 
     /**
      * Factory method for creating a local adapter for a remote property
      * definition.
-     * 
+     *
      * @param remote remote property definition
      * @return local property definition adapter
      */
-    public PropertyDef getPropertyDef(RemotePropertyDef remote);
+    PropertyDef getPropertyDef(RemotePropertyDef remote);
 
     /**
      * Factory method for creating a local adapter for a remote lock.
@@ -182,7 +181,7 @@ public interface LocalAdapterFactory {
      * @param remote remote lock
      * @return local lock adapter
      */
-    public Lock getLock(Node node, RemoteLock remote);
+    Lock getLock(Node node, RemoteLock remote);
 
     /**
      * Factory method for creating a local adapter for a remote query manager.
@@ -191,8 +190,7 @@ public interface LocalAdapterFactory {
      * @param remote remote query manager
      * @return local query manager adapter
      */
-    public QueryManager getQueryManager(
-            Session session, RemoteQueryManager remote);
+    QueryManager getQueryManager(Session session, RemoteQueryManager remote);
 
     /**
      * Factory method for creating a local adapter for a remote query.
@@ -201,7 +199,7 @@ public interface LocalAdapterFactory {
      * @param remote remote query
      * @return local query adapter
      */
-    public Query getQuery(Session session, RemoteQuery remote);
+    Query getQuery(Session session, RemoteQuery remote);
 
     /**
      * Factory method for creating a local adapter for a remote query result.
@@ -210,15 +208,14 @@ public interface LocalAdapterFactory {
      * @param remote remote query result
      * @return local query result adapter
      */
-    public QueryResult getQueryResult(
-            Session session, RemoteQueryResult remote);
+    QueryResult getQueryResult(Session session, RemoteQueryResult remote);
 
     /**
      * Factory method for creating a local adapter for a remote query row.
-     * 
+     *
      * @param remote remote query row
      * @return local query row adapter
      */
-    public Row getRow(RemoteRow remote);
+    Row getRow(RemoteRow remote);
 
 }

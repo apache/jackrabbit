@@ -44,19 +44,19 @@ import org.apache.jackrabbit.rmi.remote.SerialValue;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteProperty RemoteProperty}
  * inteface. This class makes a remote property locally available using
  * the JCR {@link javax.jcr.Property Property} interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Property
  * @see org.apache.jackrabbit.rmi.remote.RemoteProperty
  */
 public class ClientProperty extends ClientItem implements Property {
-    
+
     /** The adapted remote property. */
     private RemoteProperty remote;
-    
+
     /**
      * Creates a local adapter for the given remote property.
-     * 
+     *
      * @param session current session
      * @param remote  remote property
      * @param factory local adapter factory
@@ -71,7 +71,7 @@ public class ClientProperty extends ClientItem implements Property {
      * Calls the {@link ItemVisitor#visit(Property) ItemVisitor.visit(Property}
      * method of the given visitor. Does not contact the remote property, but
      * the visitor may invoke other methods that do contact the remote property.
-     * 
+     *
      * {@inheritDoc}
      */
     public void accept(ItemVisitor visitor) throws RepositoryException {
@@ -81,7 +81,7 @@ public class ClientProperty extends ClientItem implements Property {
     /**
      * Returns the boolean value of this property. Implemented as
      * getValue().getBoolean().
-     * 
+     *
      * {@inheritDoc}
      */
     public boolean getBoolean() throws ValueFormatException,
@@ -92,48 +92,48 @@ public class ClientProperty extends ClientItem implements Property {
     /**
      * Returns the date value of this property. Implemented as
      * getValue().getDate().
-     * 
+     *
      * {@inheritDoc}
      */
     public Calendar getDate() throws ValueFormatException, RepositoryException {
         return getValue().getDate();
     }
-    
+
     /**
      * Returns the double value of this property. Implemented as
      * getValue().getDouble().
-     * 
+     *
      * {@inheritDoc}
      */
     public double getDouble() throws ValueFormatException, RepositoryException {
         return getValue().getDouble();
     }
-    
+
     /**
      * Returns the long value of this property. Implemented as
      * getValue().getLong().
-     * 
+     *
      * {@inheritDoc}
      */
     public long getLong() throws ValueFormatException, RepositoryException {
         return getValue().getLong();
     }
-    
+
     /**
      * Returns the binary value of this property. Implemented as
      * getValue().getStream().
-     * 
+     *
      * {@inheritDoc}
      */
     public InputStream getStream() throws ValueFormatException,
             RepositoryException {
         return getValue().getStream();
     }
-    
+
     /**
      * Returns the string value of this property. Implemented as
      * getValue().getString().
-     * 
+     *
      * {@inheritDoc}
      */
     public String getString() throws ValueFormatException, RepositoryException {
@@ -148,7 +148,7 @@ public class ClientProperty extends ClientItem implements Property {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public Value[] getValues() throws ValueFormatException, RepositoryException {
         try {
@@ -157,11 +157,11 @@ public class ClientProperty extends ClientItem implements Property {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /**
      * Sets the boolean value of this property. Implemented as
      * setValue(new BooleanValue(value)).
-     * 
+     *
      * {@inheritDoc}
      */
     public void setValue(boolean value) throws ValueFormatException,
@@ -172,18 +172,18 @@ public class ClientProperty extends ClientItem implements Property {
     /**
      * Sets the date value of this property. Implemented as
      * setValue(new DateValue(value)).
-     * 
+     *
      * {@inheritDoc}
      */
     public void setValue(Calendar value) throws ValueFormatException,
             RepositoryException {
         setValue(new DateValue(value));
     }
-    
+
     /**
      * Sets the double value of this property. Implemented as
      * setValue(new DoubleValue(value)).
-     * 
+     *
      * {@inheritDoc}
      */
     public void setValue(double value) throws ValueFormatException,
@@ -194,51 +194,51 @@ public class ClientProperty extends ClientItem implements Property {
     /**
      * Sets the binary value of this property. Implemented as
      * setValue(new BinaryValue(value)).
-     * 
+     *
      * {@inheritDoc}
      */
     public void setValue(InputStream value) throws ValueFormatException,
             RepositoryException {
         setValue(new BinaryValue(value));
     }
-    
+
     /**
      * Sets the long value of this property. Implemented as
      * setValue(new LongValue(value)).
-     * 
+     *
      * {@inheritDoc}
      */
     public void setValue(long value) throws ValueFormatException,
             RepositoryException {
         setValue(new LongValue(value));
     }
-    
+
     /**
      * Sets the reference value of this property. Implemented as
      * setValue(new ReferenceValue(value)).
-     * 
+     *
      * {@inheritDoc}
      */
     public void setValue(Node value) throws ValueFormatException,
             RepositoryException {
         setValue(new ReferenceValue(value));
     }
-    
+
     /**
      * Sets the string value of this property. Implemented as
      * setValue(new StringValue(value)).
-     * 
+     *
      * {@inheritDoc}
      */
     public void setValue(String value) throws ValueFormatException,
             RepositoryException {
         setValue(new StringValue(value));
     }
-    
+
     /**
      * Sets the string values of this property. Implemented as
      * setValue(new Value[] { new StringValue(strings[0]), ... }).
-     * 
+     *
      * {@inheritDoc}
      */
     public void setValue(String[] strings) throws ValueFormatException,
@@ -259,7 +259,7 @@ public class ClientProperty extends ClientItem implements Property {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void setValue(Value[] values) throws ValueFormatException,
             RepositoryException {
@@ -269,12 +269,12 @@ public class ClientProperty extends ClientItem implements Property {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /**
      * Returns the reference value of this property. Implemented by
      * converting the reference value to an UUID string and using the
-     * current session to look up the referenced node. 
-     * 
+     * current session to look up the referenced node.
+     *
      * {@inheritDoc}
      */
     public Node getNode() throws ValueFormatException, RepositoryException {
@@ -302,12 +302,12 @@ public class ClientProperty extends ClientItem implements Property {
     /** {@inheritDoc} */
     public PropertyDef getDefinition() throws RepositoryException {
         try {
-            return factory.getPropertyDef(remote.getDefinition()); 
+            return factory.getPropertyDef(remote.getDefinition());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public int getType() throws RepositoryException {
         try {

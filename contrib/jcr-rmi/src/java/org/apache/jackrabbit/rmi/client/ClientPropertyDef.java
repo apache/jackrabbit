@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,7 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
  * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDef RemotePropertyDef}
  * inteface. This class makes a remote property definition locally available
  * using the JCR {@link javax.jcr.nodetype.PropertyDef PropertyDef} interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.nodetype.PropertyDef
  * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDef
@@ -37,10 +37,10 @@ public class ClientPropertyDef extends ClientItemDef implements PropertyDef {
 
     /** The adapted remote property. */
     private RemotePropertyDef remote;
-    
+
     /**
      * Creates a local adapter for the given remote property definition.
-     * 
+     *
      * @param remote remote property definition
      * @param factory local adapter factory
      */
@@ -49,7 +49,7 @@ public class ClientPropertyDef extends ClientItemDef implements PropertyDef {
         super(remote, factory);
         this.remote = remote;
     }
-    
+
     /** {@inheritDoc} */
     public int getRequiredType() {
         try {

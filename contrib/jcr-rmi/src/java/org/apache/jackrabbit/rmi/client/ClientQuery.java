@@ -46,7 +46,7 @@ public class ClientQuery extends ClientObject implements Query {
 
     /** The current session */
     private Session session;
-    
+
     /** The adapted remote query manager. */
     private RemoteQuery remote;
 
@@ -100,7 +100,7 @@ public class ClientQuery extends ClientObject implements Query {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void save(String absPath) throws ItemExistsException,
             PathNotFoundException, VersionException,

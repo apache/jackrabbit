@@ -24,20 +24,20 @@ import javax.jcr.query.RowIterator;
  * {@link javax.jcr.query.RowIterator RowIterator} interface.
  * This class is used by the JCR-RMI client adapters to convert
  * node arrays to iterators.
- * 
+ *
  * @author Philipp Koch
  */
 public class ArrayRowIterator extends ArrayIterator implements RowIterator {
-    
+
     /**
      * Creates an iterator for the given array of rows.
-     * 
+     *
      * @param rows the rows to iterate
      */
     public ArrayRowIterator(Row[] rows) {
         super(rows);
     }
-    
+
     /** {@inheritDoc} */
     public Row nextRow() {
         return (Row) next();

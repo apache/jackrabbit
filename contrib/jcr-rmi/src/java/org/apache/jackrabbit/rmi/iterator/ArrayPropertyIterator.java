@@ -24,21 +24,21 @@ import javax.jcr.PropertyIterator;
  * {@link javax.jcr.PropertyIterator PropertyIterator} interface.
  * This class is used by the JCR-RMI client adapters to convert
  * property arrays to iterators.
- * 
+ *
  * @author Jukka Zitting
  */
 public class ArrayPropertyIterator extends ArrayIterator
         implements PropertyIterator {
-    
+
     /**
      * Creates an iterator for the given array of properties.
-     * 
+     *
      * @param properties the properties to iterate
      */
     public ArrayPropertyIterator(Property[] properties) {
         super(properties);
     }
-    
+
     /** {@inheritDoc} */
     public Property nextProperty() {
         return (Property) next();

@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
  * inteface. This class makes a remote namespace registry locally available
  * using the JCR {@link javax.jcr.NamespaceRegistry NamespaceRegistry}
  * interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.NamespaceRegistry
  * @see org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry
@@ -40,10 +40,10 @@ public class ClientNamespaceRegistry extends ClientObject implements
 
     /** The adapted remote namespace registry. */
     private RemoteNamespaceRegistry remote;
-    
+
     /**
      * Creates a local adapter for the given remote namespace registry.
-     * 
+     *
      * @param remote remote namespace registry
      * @param factory local adapter factory
      */
@@ -52,7 +52,7 @@ public class ClientNamespaceRegistry extends ClientObject implements
         super(factory);
         this.remote = remote;
     }
-    
+
     /** {@inheritDoc} */
     public void registerNamespace(String prefix, String uri)
             throws NamespaceException, RepositoryException {

@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,25 +59,25 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
  * Base class for remote adapters. The purpose of this class is to
  * centralize the handling of the RemoteAdapterFactory instance used
  * to instantiate new server adapters.
- * 
+ *
  * @author Jukka Zitting
  */
 public class ServerObject extends UnicastRemoteObject {
-    
+
     /** Factory for creating server adapters. */
     protected RemoteAdapterFactory factory;
 
     /**
      * Creates a basic server adapter that uses the given factory
      * to create new adapters.
-     * 
+     *
      * @param factory remote adapter factory
      */
     protected ServerObject(RemoteAdapterFactory factory)
             throws RemoteException {
         this.factory = factory;
     }
-    
+
     /**
      * Returns a cleaned version of the given exception. In some cases
      * the underlying repository implementation may throw exceptions
@@ -88,7 +88,7 @@ public class ServerObject extends UnicastRemoteObject {
      * the message string from the original exception, and uses the public
      * JCR exception class that most specifically matches the original
      * exception.
-     * 
+     *
      * @param ex the original exception
      * @return clean exception
      */
@@ -141,7 +141,7 @@ public class ServerObject extends UnicastRemoteObject {
      * method introspects the type of the local item and returns the
      * corresponding node, property, or item remote reference using the
      * remote adapter factory.
-     * 
+     *
      * @param item local node, property, or item
      * @return remote node, property, or item reference
      * @throws RemoteException on RMI errors
@@ -155,14 +155,14 @@ public class ServerObject extends UnicastRemoteObject {
             return factory.getRemoteItem(item);
         }
     }
-    
+
     /**
      * Utility method for creating an array of remote references for
      * local properties. The remote references are created using the
      * remote adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty iterator.
-     * 
+     *
      * @param iterator local property iterator
      * @return remote property array
      * @throws RemoteException on RMI errors
@@ -172,21 +172,21 @@ public class ServerObject extends UnicastRemoteObject {
         if (iterator == null) {
             return new RemoteProperty[0]; // for safety
         }
-        
+
         RemoteProperty[] remotes = new RemoteProperty[(int) iterator.getSize()];
         for (int i = 0; iterator.hasNext(); i++) {
             remotes[i] = factory.getRemoteProperty(iterator.nextProperty());
         }
         return remotes;
     }
-    
+
     /**
      * Utility method for creating an array of remote references for
      * local nodes. The remote references are created using the
      * remote adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty iterator.
-     * 
+     *
      * @param iterator local node iterator
      * @return remote node array
      * @throws RemoteException on RMI errors
@@ -196,7 +196,7 @@ public class ServerObject extends UnicastRemoteObject {
         if (iterator == null) {
             return new RemoteNode[0]; // for safety
         }
-        
+
         RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
         for (int i = 0; iterator != null && iterator.hasNext(); i++) {
             remotes[i] = factory.getRemoteNode(iterator.nextNode());
@@ -210,7 +210,7 @@ public class ServerObject extends UnicastRemoteObject {
      * remote adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     * 
+     *
      * @param types local node type array
      * @return remote node type array
      * @throws RemoteException on RMI errors
@@ -220,21 +220,21 @@ public class ServerObject extends UnicastRemoteObject {
         if (types == null) {
             return new RemoteNodeType[0]; // for safety
         }
-        
+
         RemoteNodeType[] remotes = new RemoteNodeType[types.length];
         for (int i = 0; i < types.length; i++) {
             remotes[i] = factory.getRemoteNodeType(types[i]);
         }
         return remotes;
     }
-    
+
     /**
      * Utility method for creating an array of remote references for
      * local node types. The remote references are created using the
      * remote adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty iterator.
-     * 
+     *
      * @param iterator local node type iterator
      * @return remote node type array
      * @throws RemoteException on RMI errors
@@ -244,7 +244,7 @@ public class ServerObject extends UnicastRemoteObject {
         if (iterator == null) {
             return new RemoteNodeType[0]; // for safety
         }
-        
+
         RemoteNodeType[] remotes = new RemoteNodeType[(int) iterator.getSize()];
         for (int i = 0; iterator.hasNext(); i++) {
             remotes[i] = factory.getRemoteNodeType(iterator.nextNodeType());
@@ -258,7 +258,7 @@ public class ServerObject extends UnicastRemoteObject {
      * remote adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     * 
+     *
      * @param defs local node definition array
      * @return remote node definition array
      * @throws RemoteException on RMI errors
@@ -268,21 +268,21 @@ public class ServerObject extends UnicastRemoteObject {
         if (defs == null) {
             return new RemoteNodeDef[0]; // for safety
         }
-        
+
         RemoteNodeDef[] remotes = new RemoteNodeDef[defs.length];
         for (int i = 0; i < defs.length; i++) {
             remotes[i] = factory.getRemoteNodeDef(defs[i]);
         }
         return remotes;
     }
-    
+
     /**
      * Utility method for creating an array of remote references for
      * local property definitions. The remote references are created using the
      * remote adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     * 
+     *
      * @param defs local property definition array
      * @return remote property definition array
      * @throws RemoteException on RMI errors

@@ -49,23 +49,23 @@ import org.xml.sax.ContentHandler;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteWorkspace RemoteWorkspace}
  * inteface. This class makes a remote workspace locally available using
  * the JCR {@link javax.jcr.Workspace Workspace} interface.
- * 
+ *
  * @author Jukka Zitting
  * @author Philipp Koch
  * @see javax.jcr.Workspace
  * @see org.apache.jackrabbit.rmi.remote.RemoteWorkspace
  */
 public class ClientWorkspace extends ClientObject implements Workspace {
-    
+
     /** The current session. */
     private Session session;
-    
+
     /** The adapted remote workspace. */
     private RemoteWorkspace remote;
-    
+
     /**
      * Creates a client adapter for the given remote workspace.
-     * 
+     *
      * @param session current session
      * @param remote remote workspace
      * @param factory local adapter factory
@@ -76,10 +76,10 @@ public class ClientWorkspace extends ClientObject implements Workspace {
         this.session = session;
         this.remote = remote;
     }
-    
+
     /**
      * Returns the current session without contacting the remote workspace.
-     * 
+     *
      * {@inheritDoc}
      */
     public Session getSession() {
@@ -164,7 +164,6 @@ public class ClientWorkspace extends ClientObject implements Workspace {
         throw new UnsupportedOperationException();
     }
 
-    
     /** {@inheritDoc} */
     public void clone(String workspace, String src, String dst,
             boolean removeExisting) throws NoSuchWorkspaceException,
@@ -177,7 +176,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public String[] getAccessibleWorkspaceNames() throws RepositoryException {
         try {
@@ -186,7 +185,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public ContentHandler getImportContentHandler(String path,
             int uuidBehaviour) throws PathNotFoundException,
@@ -194,7 +193,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
             RepositoryException {
         return new WorkspaceImportContentHandler(this, path, uuidBehaviour);
     }
-    
+
     /** {@inheritDoc} */
     public void importXML(String path, InputStream xml, int uuidBehaviour)
             throws IOException, PathNotFoundException, ItemExistsException,
@@ -211,7 +210,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void restore(Version[] versions, boolean removeExisting) throws
             ItemExistsException, UnsupportedRepositoryOperationException,
@@ -219,5 +218,5 @@ public class ClientWorkspace extends ClientObject implements Workspace {
             RepositoryException {
         // TODO Auto-generated method stub
     }
-    
+
 }

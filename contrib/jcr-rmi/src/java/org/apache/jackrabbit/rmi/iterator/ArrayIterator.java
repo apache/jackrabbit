@@ -24,27 +24,27 @@ import javax.jcr.RangeIterator;
  * implements the RangeIterator functionality for an underlying array
  * of objects. Used as the base class for the type-specific iterator
  * classes defined in this package.
- * 
+ *
  * @author Jukka Zitting
  */
 public class ArrayIterator implements RangeIterator {
 
     /** The current iterator position. */
     private int position;
-    
+
     /** The underlying array of objects. */
     private Object[] array;
-    
+
     /**
      * Creates an iterator for the given array of objects.
-     * 
+     *
      * @param array the objects to iterate
      */
     public ArrayIterator(Object[] array) {
         this.position = 0;
         this.array = array;
     }
-    
+
     /** {@inheritDoc} */
     public boolean hasNext() {
         return (position < array.length);

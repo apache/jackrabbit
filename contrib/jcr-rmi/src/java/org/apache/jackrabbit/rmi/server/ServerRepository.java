@@ -34,19 +34,19 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
  * using the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteRepository RemoteRepository}
  * interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
  */
 public class ServerRepository extends ServerObject implements RemoteRepository {
-    
+
     /** The adapted local repository. */
-    protected Repository repository;
-    
+    private Repository repository;
+
     /**
      * Creates a remote adapter for the given local repository.
-     * 
+     *
      * @param repository local repository
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
@@ -56,17 +56,17 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
         super(factory);
         this.repository = repository;
     }
-    
+
     /** {@inheritDoc} */
     public String getDescriptor(String name) throws RemoteException {
         return repository.getDescriptor(name);
     }
-    
+
     /** {@inheritDoc} */
     public String[] getDescriptorKeys() throws RemoteException {
         return repository.getDescriptorKeys();
     }
-    
+
     /** {@inheritDoc} */
     public RemoteSession login() throws LoginException,
             NoSuchWorkspaceException, RepositoryException, RemoteException {
@@ -77,7 +77,7 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteSession login(String workspace) throws LoginException,
             NoSuchWorkspaceException, RepositoryException, RemoteException {
@@ -99,7 +99,7 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteSession login(Credentials credentials, String workspace)
             throws LoginException, NoSuchWorkspaceException,

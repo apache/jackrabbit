@@ -33,7 +33,7 @@ import org.apache.jackrabbit.rmi.remote.SerialValue;
  * using the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteProperty RemoteProperty}
  * interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Property
  * @see org.apache.jackrabbit.rmi.remote.RemoteProperty
@@ -41,11 +41,11 @@ import org.apache.jackrabbit.rmi.remote.SerialValue;
 public class ServerProperty extends ServerItem implements RemoteProperty {
 
     /** The adapted local property. */
-    protected Property property;
-    
+    private Property property;
+
     /**
      * Creates a remote adapter for the given local property.
-     * 
+     *
      * @param property local property
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
@@ -65,7 +65,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public Value[] getValues() throws ValueFormatException,
             RepositoryException, RemoteException {
@@ -75,7 +75,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void setValue(Value value) throws ValueFormatException,
             RepositoryException, RemoteException {
@@ -85,7 +85,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void setValue(Value[] values) throws ValueFormatException,
             RepositoryException, RemoteException {
@@ -95,7 +95,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public long getLength() throws ValueFormatException, RepositoryException,
             RemoteException {
@@ -105,7 +105,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public long[] getLengths() throws ValueFormatException,
             RepositoryException, RemoteException {
@@ -115,7 +115,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemotePropertyDef getDefinition() throws RepositoryException,
             RemoteException {
@@ -134,5 +134,5 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
             throw getRepositoryException(ex);
         }
     }
-    
+
 }

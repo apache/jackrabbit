@@ -33,7 +33,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteRepository RemoteRepository}
  * inteface. This class makes a remote repository locally available using
  * the JCR {@link javax.jcr.Repository Repository} interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
@@ -42,10 +42,10 @@ public class ClientRepository extends ClientObject implements Repository {
 
     /** The adapted remote repository. */
     private RemoteRepository remote;
-    
+
     /**
      * Creates a client adapter for the given remote repository.
-     * 
+     *
      * @param remote remote repository
      * @param factory local adapter factory
      */
@@ -54,7 +54,7 @@ public class ClientRepository extends ClientObject implements Repository {
         super(factory);
         this.remote = remote;
     }
-    
+
     /** {@inheritDoc} */
     public String getDescriptor(String name) {
         try {
@@ -72,7 +72,7 @@ public class ClientRepository extends ClientObject implements Repository {
             throw new RemoteRuntimeException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public Session login() throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
@@ -83,7 +83,7 @@ public class ClientRepository extends ClientObject implements Repository {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public Session login(String workspace) throws LoginException,
             NoSuchWorkspaceException, RepositoryException {
@@ -105,7 +105,7 @@ public class ClientRepository extends ClientObject implements Repository {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public Session login(Credentials credentials, String workspace) throws
             LoginException, NoSuchWorkspaceException, RepositoryException {

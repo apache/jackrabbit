@@ -27,14 +27,14 @@ import javax.jcr.RepositoryException;
  * Note that if a RemoteException is received by call with no declared
  * exceptions, then the RemoteException is wrapped into a
  * RemoteRuntimeException.
- * 
+ *
  * @author Jukka Zitting
  */
 public class RemoteRepositoryException extends RepositoryException {
-    
+
     /**
      * Creates a RemoteRepositoryException based on the given RemoteException.
-     * 
+     *
      * @param ex the remote exception
      */
     public RemoteRepositoryException(RemoteException ex) {

@@ -86,7 +86,7 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public NodeIterator getNodes() throws RepositoryException {
         try {

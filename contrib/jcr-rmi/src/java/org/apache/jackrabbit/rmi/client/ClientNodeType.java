@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,7 @@ import org.apache.jackrabbit.rmi.remote.SerialValue;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeType RemoteNodeType}
  * inteface. This class makes a remote node type locally available using
  * the JCR {@link javax.jcr.nodetype.NodeType NodeType} interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeType
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeType
@@ -41,10 +41,10 @@ public class ClientNodeType extends ClientObject implements NodeType {
 
     /** The adapted remote node type. */
     private RemoteNodeType remote;
-    
+
     /**
      * Creates a local adapter for the given remote node type.
-     * 
+     *
      * @param remote remote node type
      * @param factory local adapter factory
      */
@@ -52,7 +52,7 @@ public class ClientNodeType extends ClientObject implements NodeType {
         super(factory);
         this.remote = remote;
     }
-    
+
     /** {@inheritDoc} */
     public String getName() {
         try {

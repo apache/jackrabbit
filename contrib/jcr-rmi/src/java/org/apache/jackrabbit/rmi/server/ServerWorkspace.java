@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,24 +39,21 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 
 /**
- * Remote adapter for the JCR {@link javax.jcr.Workspace Workspace} interface.
+ * Remote adapter for the JCR {@link Workspace Workspace} interface.
  * This class makes a local workspace available as an RMI service using the
- * {@link org.apache.jackrabbit.rmi.remote.RemoteWorkspace RemoteWorkspace}
- * interface.
- * 
- * @author Jukka Zitting
- * @author Philipp Koch
- * @see javax.jcr.Workspace
- * @see org.apache.jackrabbit.rmi.remote.RemoteWorkspace
+ * {@link RemoteWorkspace RemoteWorkspace} interface.
+ *
+ * @see Workspace
+ * @see RemoteWorkspace
  */
 public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
 
     /** The adapted local workspace. */
-    protected Workspace workspace;
-    
+    private Workspace workspace;
+
     /**
      * Creates a remote adapter for the given local workspace.
-     * 
+     *
      * @param workspace local workspace
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
@@ -66,7 +63,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
         super(factory);
         this.workspace = workspace;
     }
-    
+
     /** {@inheritDoc} */
     public String getName() throws RemoteException {
         return workspace.getName();
@@ -120,7 +117,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNodeTypeManager getNodeTypeManager()
             throws RepositoryException, RemoteException {
@@ -131,7 +128,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNamespaceRegistry getNamespaceRegistry()
             throws RepositoryException, RemoteException {

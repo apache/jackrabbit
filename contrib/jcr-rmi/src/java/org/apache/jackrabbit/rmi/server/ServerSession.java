@@ -46,7 +46,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * This class makes a local session available as an RMI service using the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteSession RemoteSession}
  * interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Session
  * @see org.apache.jackrabbit.rmi.remote.RemoteSession
@@ -54,11 +54,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 public class ServerSession extends ServerObject implements RemoteSession {
 
     /** The adapted local session. */
-    protected Session session;
-    
+    private Session session;
+
     /**
      * Creates a remote adapter for the given local session.
-     * 
+     *
      * @param session local session
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
@@ -68,7 +68,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
         super(factory);
         this.session = session;
     }
-    
+
     /** {@inheritDoc} */
     public String getUserId() throws RemoteException {
         return session.getUserId();
@@ -78,7 +78,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public Object getAttribute(String name) throws RemoteException {
         return session.getAttribute(name);
     }
-    
+
     /** {@inheritDoc} */
     public String[] getAttributeNames() throws RemoteException {
         return session.getAttributeNames();
@@ -104,7 +104,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throws AccessControlException, RemoteException {
         session.checkPermission(path, actions);
     }
-    
+
     /** {@inheritDoc} */
     public String getNamespacePrefix(String uri) throws NamespaceException,
             RepositoryException, RemoteException {
@@ -114,7 +114,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public String[] getNamespacePrefixes() throws RepositoryException,
             RemoteException {
@@ -124,7 +124,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public String getNamespaceURI(String prefix) throws NamespaceException,
             RepositoryException, RemoteException {
@@ -149,7 +149,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public boolean itemExists(String path) throws RemoteException {
         return session.itemExists(path);
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNode getNodeByUUID(String uuid) throws ItemNotFoundException,
             RepositoryException, RemoteException {
@@ -179,7 +179,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public boolean hasPendingChanges() throws RepositoryException,
             RemoteException {
@@ -189,7 +189,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void move(String from, String to) throws ItemExistsException,
             PathNotFoundException, ConstraintViolationException,
@@ -200,7 +200,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void save() throws AccessDeniedException, LockException,
             ConstraintViolationException, InvalidItemStateException,
@@ -211,7 +211,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void refresh(boolean keepChanges) throws RepositoryException,
             RemoteException {
@@ -221,7 +221,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void logout() throws RemoteException {
         session.logout();
@@ -243,7 +243,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public void addLockToken(String token) throws RemoteException {
         session.addLockToken(token);
     }
-    
+
     /** {@inheritDoc} */
     public String[] getLockTokens() throws RemoteException {
         return session.getLockTokens();
@@ -253,7 +253,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public void removeLockToken(String token) throws RemoteException {
         session.removeLockToken(token);
     }
-    
+
     /** {@inheritDoc} */
     public byte[] exportDocView(String path, boolean binaryAsLink,
             boolean noRecurse) throws InvalidSerializedDataException,
@@ -267,7 +267,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public byte[] exportSysView(String path, boolean binaryAsLink,
             boolean noRecurse) throws PathNotFoundException, IOException,

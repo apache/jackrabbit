@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,7 +53,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * package as the default adapter implementations. Subclasses can
  * easily override or extend the default adapters by implementing the
  * corresponding factory methods.
- * 
+ *
  * @author Jukka Zitting
  * @author Philipp Koch
  */
@@ -61,59 +61,59 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /**
      * Creates and returns a {@link ServerRepository ServerRepository} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteRepository getRemoteRepository(Repository repository)
             throws RemoteException {
         return new ServerRepository(repository, this);
     }
-    
+
     /**
      * Creates and returns a {@link ServerSession ServerSession} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteSession getRemoteSession(Session session)
             throws RemoteException {
         return new ServerSession(session, this);
     }
-    
+
     /**
      * Creates and returns a {@link ServerWorkspace ServerWorkspace} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteWorkspace getRemoteWorkspace(Workspace workspace)
             throws RemoteException {
         return new ServerWorkspace(workspace, this);
     }
-    
+
     /**
      * Creates and returns a
      * {@link ServerNamespaceRegistry ServerNamespaceRegistry} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteNamespaceRegistry getRemoteNamespaceRegistry(
             NamespaceRegistry registry) throws RemoteException {
         return new ServerNamespaceRegistry(registry, this);
     }
-    
+
     /**
      * Creates and returns a
      * {@link ServerNodeTypeManager ServerNodeTypeManager} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteNodeTypeManager getRemoteNodeTypeManager(
             NodeTypeManager manager) throws RemoteException {
         return new ServerNodeTypeManager(manager, this);
     }
-    
+
     /**
      * Creates and returns a {@link ServerItem ServerItem} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteItem getRemoteItem(Item item) throws RemoteException {
@@ -122,7 +122,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /**
      * Creates and returns a {@link ServerProperty ServerProperty} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteProperty getRemoteProperty(Property property)
@@ -132,7 +132,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /**
      * Creates and returns a {@link ServerNode ServerNode} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteNode getRemoteNode(Node node) throws RemoteException {
@@ -141,7 +141,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /**
      * Creates and returns a {@link ServerNodeType ServerNodeType} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteNodeType getRemoteNodeType(NodeType type)
@@ -151,28 +151,28 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /**
      * Creates and returns a {@link ServerNodeDef ServerNodeDef} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteNodeDef getRemoteNodeDef(NodeDef def)
             throws RemoteException {
         return new ServerNodeDef(def, this);
     }
-        
+
     /**
      * Creates and returns a {@link ServerPropertyDef ServerPropertyDef}
      * instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemotePropertyDef getRemotePropertyDef(PropertyDef def)
             throws RemoteException {
         return new ServerPropertyDef(def, this);
     }
-    
+
     /**
      * Creates and returns a {@link ServerLock ServerLock} instance.
-     * 
+     *
      * {@inheritDoc}
      */
     public RemoteLock getRemoteLock(Lock lock) throws RemoteException {
