@@ -69,7 +69,7 @@ public class VersionIteratorImpl implements VersionIterator {
         if (successors.isEmpty()) {
             throw new NoSuchElementException();
         }
-        InternalVersion ret = (InternalVersion) successors.peek();
+        InternalVersion ret = (InternalVersion) successors.pop();
         visited.add(ret);
         pos++;
         push(ret.getSuccessors());
