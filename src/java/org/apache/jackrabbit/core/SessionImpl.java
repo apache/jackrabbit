@@ -447,6 +447,16 @@ public class SessionImpl implements Session {
     }
 
     /**
+     * Returns the names of all workspaces of this repository with respect of the
+     * access rights of this session.
+     *
+     * @return the names of all workspaces of this repository.
+     */
+    public String[] getWorkspaceNames() {
+        return rep.getWorkspaceNames();
+    }
+
+    /**
      * @see Session#impersonate(Credentials)
      */
     public Session impersonate(Credentials otherCredentials)

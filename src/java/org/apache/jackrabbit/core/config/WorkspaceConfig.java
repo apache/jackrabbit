@@ -112,7 +112,14 @@ public class WorkspaceConfig extends AbstractConfig {
     protected void init(Document config) throws RepositoryException {
         Element wspElem = config.getRootElement();
         // name
-        wspName = replaceVars(wspElem.getAttributeValue(NAME_ATTRIB), vars);
+        wspName = wspElem.getAttributeValue(NAME_ATTRIB);
+        if (wspName==null) {
+            // init with wsp home dirname
+            wspName = new File(wspHomeDir).getName();
+        } else {
+            wspName = replaceVars(wspName, vars);
+        }
+        
         // set name variable
         vars.put(WORKSPACE_NAME_VARIABLE, wspName);
 

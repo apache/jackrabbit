@@ -394,6 +394,14 @@ public class RepositoryImpl implements Repository, EventListener {
         return rootNodeUUID;
     }
 
+    /**
+     * Returns the names of all workspaces of this repository.
+     * @return the names of all workspaces of this repository.
+     */
+    protected String[] getWorkspaceNames() {
+        return (String[] ) wspConfigs.keySet().toArray(new String[wspConfigs.keySet().size()]);
+    }
+    
     synchronized PersistentItemStateProvider getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
