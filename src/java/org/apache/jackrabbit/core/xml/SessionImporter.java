@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ItemExistsException;
@@ -54,13 +55,10 @@ public class SessionImporter implements Importer {
     private Stack parents;
 
     /**
-     * mapping <original uuid> to <new uuid> of mix:referenceable nodes
+     * helper object that keeps track of remapped uuid's and imported reference
+     * properties that might need correcting depending on the uuid mappings
      */
-    private final HashMap uuidMap;
-    /**
-     * list of imported reference properties that might need correcting
-     */
-    private final ArrayList references;
+    private final ReferenceChangeTracker refTracker;
 
     public SessionImporter(NodeImpl importTargetNode,
                            SessionImpl session,
@@ -69,8 +67,7 @@ public class SessionImporter implements Importer {
         this.session = session;
         this.uuidBehavior = uuidBehavior;
 
-        uuidMap = new HashMap();
-        references = new ArrayList();
+        refTracker = new ReferenceChangeTracker();
 
         parents = new Stack();
         parents.push(importTargetNode);
@@ -105,7 +102,7 @@ public class SessionImporter implements Importer {
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
             if (node.isNodeType(Constants.MIX_REFERENCEABLE)) {
-                uuidMap.put(nodeInfo.getUUID(), node.getUUID());
+                refTracker.mappedUUID(nodeInfo.getUUID(), node.getUUID());
             }
         } else if (uuidBehavior == IMPORT_UUID_COLLISION_THROW) {
             String msg = "a node with uuid " + nodeInfo.getUUID() + " already exists!";
@@ -256,7 +253,7 @@ public class SessionImporter implements Importer {
             }
             if (type == PropertyType.REFERENCE) {
                 // store reference for later resolution
-                references.add(node.getProperty(propName));
+                refTracker.processedReference(node.getProperty(propName));
             }
         }
 
@@ -276,9 +273,9 @@ public class SessionImporter implements Importer {
     public void end() throws RepositoryException {
         /**
          * adjust references that refer to uuid's which have been mapped to
-         * newly gererated uuid's on import
+         * newly generated uuid's on import
          */
-        Iterator iter = references.iterator();
+        Iterator iter = refTracker.getProcessedReferences();
         while (iter.hasNext()) {
             Property prop = (Property) iter.next();
             // being paranoid...
@@ -291,7 +288,7 @@ public class SessionImporter implements Importer {
                 for (int i = 0; i < values.length; i++) {
                     Value val = values[i];
                     String original = val.getString();
-                    String adjusted = (String) uuidMap.get(original);
+                    String adjusted = refTracker.getMappedUUID(original);
                     if (adjusted != null) {
                         newVals[i] = new ReferenceValue(session.getNodeByUUID(adjusted));
                     } else {
@@ -303,11 +300,12 @@ public class SessionImporter implements Importer {
             } else {
                 Value val = prop.getValue();
                 String original = val.getString();
-                String adjusted = (String) uuidMap.get(original);
+                String adjusted = refTracker.getMappedUUID(original);
                 if (adjusted != null) {
                     prop.setValue(session.getNodeByUUID(adjusted));
                 }
             }
         }
+        refTracker.clear();
     }
 }

@@ -38,6 +38,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.version.GenericVersionSelector;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.VersionImpl;
@@ -833,6 +834,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      *                     <li><code>CLONE</code></li>
      *                     <li><code>CLONE_REMOVE_EXISTING</code></li>
      *                     </ul>
+     * @param refTracker   tracks uuid mappings and processed reference properties
      * @return a deep copy of the given node state and its children
      * @throws RepositoryException if an error occurs
      */
@@ -840,7 +842,8 @@ public class WorkspaceImpl implements Workspace, Constants {
                                     String parentUUID,
                                     ItemStateManager srcStateMgr,
                                     AccessManager srcAccessMgr,
-                                    int flag)
+                                    int flag,
+                                    ReferenceChangeTracker refTracker)
             throws RepositoryException {
 
         NodeState newState;
@@ -851,12 +854,12 @@ public class WorkspaceImpl implements Workspace, Constants {
             boolean referenceable = ent.includesNodeType(MIX_REFERENCEABLE);
             switch (flag) {
                 case COPY:
-                    /**
-                     * todo FIXME check mix:referenceable
-                     * make sure that copied reference properties are
-                     * refering to new uuid
-                     */
+                    // always create new uuid
                     uuid = UUID.randomUUID().toString();    // create new version 4 uuid
+                    if (referenceable) {
+                        // remember uuid mapping
+                        refTracker.mappedUUID(srcState.getUUID(), uuid);
+                    }
                     break;
                 case CLONE:
                     if (!referenceable) {
@@ -864,6 +867,7 @@ public class WorkspaceImpl implements Workspace, Constants {
                         uuid = UUID.randomUUID().toString();    // create new version 4 uuid
                         break;
                     }
+                    // use same uuid as source node
                     uuid = srcState.getUUID();
                     id = new NodeId(uuid);
                     if (stateMgr.hasItemState(id)) {
@@ -877,6 +881,7 @@ public class WorkspaceImpl implements Workspace, Constants {
                         uuid = UUID.randomUUID().toString();    // create new version 4 uuid
                         break;
                     }
+                    // use same uuid as source node
                     uuid = srcState.getUUID();
                     id = new NodeId(uuid);
                     if (stateMgr.hasItemState(id)) {
@@ -908,7 +913,7 @@ public class WorkspaceImpl implements Workspace, Constants {
                 NodeState srcChildState = (NodeState) srcStateMgr.getItemState(nodeId);
                 // recursive copying of child node
                 NodeState newChildState = copyNodeState(srcChildState, uuid,
-                        srcStateMgr, srcAccessMgr, flag);
+                        srcStateMgr, srcAccessMgr, flag, refTracker);
                 // store new child node
                 stateMgr.store(newChildState);
                 // add new child node entry to new node
@@ -926,6 +931,9 @@ public class WorkspaceImpl implements Workspace, Constants {
                         (PropertyState) srcStateMgr.getItemState(propId);
                 PropertyState newChildState =
                         copyPropertyState(srcChildState, uuid, entry.getName());
+                if (newChildState.getType() == PropertyType.REFERENCE) {
+                    refTracker.processedReference(newChildState);
+                }
                 // store new property
                 stateMgr.store(newChildState);
                 // add new property entry to new node
@@ -1071,9 +1079,11 @@ public class WorkspaceImpl implements Workspace, Constants {
         try {
             stateMgr.edit();
 
+            ReferenceChangeTracker refTracker = new ReferenceChangeTracker();
+
             // create deep copy of source node state
             NodeState newState = copyNodeState(srcState, destParentState.getUUID(),
-                    srcWsp.getItemStateManager(), srcAccessMgr, flag);
+                    srcWsp.getItemStateManager(), srcAccessMgr, flag, refTracker);
 
             // add to new parent
             destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
@@ -1083,6 +1093,37 @@ public class WorkspaceImpl implements Workspace, Constants {
                     findApplicableDefinition(destName.getName(),
                             srcState.getNodeTypeName(), destParentState);
             newState.setDefinitionId(new NodeDefId(newNodeDef));
+
+            // adjust references that refer to uuid's which have been mapped to
+            // newly generated uuid's on copy/clone
+            Iterator iter = refTracker.getProcessedReferences();
+            while (iter.hasNext()) {
+                PropertyState prop = (PropertyState) iter.next();
+                // being paranoid...
+                if (prop.getType() != PropertyType.REFERENCE) {
+                    continue;
+                }
+                boolean modified = false;
+                InternalValue[] values = prop.getValues();
+                InternalValue[] newVals = new InternalValue[values.length];
+                for (int i = 0; i < values.length; i++) {
+                    InternalValue val = values[i];
+                    String original = ((UUID) val.internalValue()).toString();
+                    String adjusted = refTracker.getMappedUUID(original);
+                    if (adjusted != null) {
+                        newVals[i] = InternalValue.create(UUID.fromString(adjusted));
+                        modified = true;
+                    } else {
+                        // reference doesn't need adjusting, just copy old value
+                        newVals[i] = val;
+                    }
+                }
+                if (modified) {
+                    prop.setValues(newVals);
+                    stateMgr.store(prop);
+                }
+            }
+            refTracker.clear();
 
             // store states
             stateMgr.store(newState);
@@ -1175,8 +1216,6 @@ public class WorkspaceImpl implements Workspace, Constants {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-
-        // @todo re-implement Workspace#clone (respect new removeExisting flag, etc)
 
         // check authorization for specified workspace
         if (!session.getAccessManager().canAccess(srcWorkspace)) {
