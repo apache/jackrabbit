@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Node;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -310,5 +311,22 @@ public class VersionLabelTest extends AbstractVersionTest {
         } catch (UnsupportedRepositoryOperationException e) {
             //success
         }
+    }
+
+    /**
+     * Test if versionHistory.getVersionLabels(Version) throws a VersionException if the
+     * specified version is not in this version history.
+     */
+    public void testGetVersionLabelsForInvalidVersion() throws Exception {
+	// build a second versionable node below the testroot to get it's version.
+	Node versionableNode2 = createVersionableNode(testRootNode, nodeName2, versionableNodeType);
+	Version invalidV = versionableNode2.checkin();
+
+	try {
+	    vHistory.getVersionLabels(invalidV);
+	    fail("VersionHistory.getVersionLabels(Version) must throw a VersionException if the specified version is not in this version history");
+	} catch (VersionException ve) {
+	    // success
+	}
     }
 }
