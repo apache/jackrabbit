@@ -319,6 +319,127 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         return session.getHierarchyManager().getPath(id);
     }
 
+    /**
+     * Builds a list of transient (i.e. new or modified) item states that are
+     * within the scope of <code>this.{@link #save()}</code>.
+     *
+     * @return list of transient item states
+     * @throws InvalidItemStateException
+     * @throws RepositoryException
+     */
+    private Collection getTransientStates()
+            throws InvalidItemStateException, RepositoryException {
+        // list of transient states that should be persisted
+        ArrayList dirty = new ArrayList();
+        ItemState transientState;
+
+        // check status of this item's state
+        if (isTransient()) {
+            switch (state.getStatus()) {
+                case ItemState.STATUS_EXISTING_MODIFIED:
+                    // add this item's state to the list
+                    dirty.add(state);
+                    break;
+
+                case ItemState.STATUS_NEW:
+                    {
+                        String msg = safeGetJCRPath() + ": cannot save a new item.";
+                        log.error(msg);
+                        throw new RepositoryException(msg);
+                    }
+
+                case ItemState.STATUS_STALE_MODIFIED:
+                    {
+                        String msg = safeGetJCRPath() + ": the item cannot be saved because it has been modified externally.";
+                        log.error(msg);
+                        throw new InvalidItemStateException(msg);
+                    }
+
+                case ItemState.STATUS_STALE_DESTROYED:
+                    {
+                        String msg = safeGetJCRPath() + ": the item cannot be saved because it has been deleted externally.";
+                        log.error(msg);
+                        throw new InvalidItemStateException(msg);
+                    }
+
+                default:
+                    log.debug("unexpected state status (" + state.getStatus() + ")");
+                    // ignore
+                    break;
+            }
+        }
+
+        if (isNode()) {
+            // build list of 'new' or 'modified' descendents
+            Iterator iter = itemStateMgr.getDescendantTransientItemStates(id);
+            while (iter.hasNext()) {
+                transientState = (ItemState) iter.next();
+                switch (transientState.getStatus()) {
+                    case ItemState.STATUS_NEW:
+                    case ItemState.STATUS_EXISTING_MODIFIED:
+                        // add modified state to the list
+                        dirty.add(transientState);
+                        break;
+
+                    case ItemState.STATUS_STALE_MODIFIED:
+                        {
+                            String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
+                            log.error(msg);
+                            throw new InvalidItemStateException(msg);
+                        }
+
+                    case ItemState.STATUS_STALE_DESTROYED:
+                        {
+                            String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
+                            log.error(msg);
+                            throw new InvalidItemStateException(msg);
+                        }
+
+                    default:
+                        log.debug("unexpected state status (" + transientState.getStatus() + ")");
+                        // ignore
+                        break;
+                }
+            }
+        }
+        return dirty;
+    }
+
+    /**
+     * Builds a list of transient descendant item states in the attic
+     * (i.e. those marked as 'removed') that are within the scope of
+     * <code>this.{@link #save()}</code>.
+     *
+     * @return list of transient item states
+     * @throws InvalidItemStateException
+     * @throws RepositoryException
+     */
+    private Collection getRemovedStates()
+            throws InvalidItemStateException, RepositoryException {
+        ArrayList removed = new ArrayList();
+        ItemState transientState;
+
+        if (isNode()) {
+            Iterator iter = itemStateMgr.getDescendantTransientItemStatesInAttic(id);
+            while (iter.hasNext()) {
+                transientState = (ItemState) iter.next();
+                // check if stale
+                if (transientState.getStatus() == ItemState.STATUS_STALE_MODIFIED) {
+                    String msg = transientState.getId() + ": the item cannot be removed because it has been modified externally.";
+                    log.error(msg);
+                    throw new InvalidItemStateException(msg);
+                }
+                if (transientState.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
+                    String msg = transientState.getId() + ": the item cannot be removed because it has already been deleted externally.";
+                    log.error(msg);
+                    throw new InvalidItemStateException(msg);
+                }
+                removed.add(transientState);
+            }
+        }
+        return removed;
+    }
+
     private void validateTransientItems(Iterator iter)
             throws AccessDeniedException, ConstraintViolationException, RepositoryException {
         /**
@@ -646,7 +767,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * @throws RepositoryException
      */
     private void initVersionHistories(Iterator iter) throws RepositoryException {
-        // todo centralize version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
+        // todo consolidate version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
         // walk through list of transient items and
         // search for new versionable nodes
         while (iter.hasNext()) {
@@ -841,98 +962,20 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // check state of this instance
         checkItemState();
 
-        // list of transient states that should be persisted
-        ArrayList dirty = new ArrayList();
-        ItemState transientState;
-
-        // list of events that are generated by saved changes
-        WorkspaceImpl wsp = (WorkspaceImpl) session.getWorkspace();
-        ObservationManagerFactory obsFactory = rep.getObservationManagerFactory(wsp.getName());
-        EventStateCollection events = obsFactory.createEventStateCollection(session,
-                session.getItemStateManager(), session.getHierarchyManager());
-
-        // check status of this item's state
-        if (isTransient()) {
-            switch (state.getStatus()) {
-                case ItemState.STATUS_EXISTING_MODIFIED:
-                    // add this item's state to the list
-                    dirty.add(state);
-                    // create event
-                    events.createEventStates(state);
-                    break;
-
-                case ItemState.STATUS_NEW:
-                    {
-                        String msg = safeGetJCRPath() + ": cannot save a new item.";
-                        log.error(msg);
-                        throw new RepositoryException(msg);
-                    }
-
-                case ItemState.STATUS_STALE_MODIFIED:
-                    {
-                        String msg = safeGetJCRPath() + ": the item cannot be saved because it has been modified externally.";
-                        log.error(msg);
-                        throw new InvalidItemStateException(msg);
-                    }
-
-                case ItemState.STATUS_STALE_DESTROYED:
-                    {
-                        String msg = safeGetJCRPath() + ": the item cannot be saved because it has been deleted externally.";
-                        log.error(msg);
-                        throw new InvalidItemStateException(msg);
-                    }
-
-                default:
-                    log.debug("unexpected state status (" + state.getStatus() + ")");
-                    // ignore
-                    break;
-            }
-        }
-
-        if (isNode()) {
-            // build list of 'new' or 'modified' descendents
-            Iterator iter = itemStateMgr.getDescendantTransientItemStates(id);
-            while (iter.hasNext()) {
-                transientState = (ItemState) iter.next();
-                switch (transientState.getStatus()) {
-                    case ItemState.STATUS_NEW:
-                    case ItemState.STATUS_EXISTING_MODIFIED:
-                        // add modified state to the list
-                        dirty.add(transientState);
-                        // create events
-                        events.createEventStates(transientState);
-                        break;
-
-                    case ItemState.STATUS_STALE_MODIFIED:
-                        {
-                            String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
-                            log.error(msg);
-                            throw new InvalidItemStateException(msg);
-                        }
-
-                    case ItemState.STATUS_STALE_DESTROYED:
-                        {
-                            String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
-                            log.error(msg);
-                            throw new InvalidItemStateException(msg);
-                        }
-
-                    default:
-                        log.debug("unexpected state status (" + transientState.getStatus() + ")");
-                        // ignore
-                        break;
-                }
-            }
-        }
-
+        // build list of transient states that should be persisted
+        Collection dirty = getTransientStates();
         if (dirty.size() == 0) {
             // no transient items, nothing to do here
             return;
         }
 
-        // check that parent node is also included in the dirty items list
-        // if dirty node was removed or added (adding/removing a parent/child
-        // link requires that both parent and child are saved)
+        ItemState transientState;
+
+        /**
+         * check that parent node is also included in the dirty items list
+         * if dirty node was removed or added (adding/removing a parent/child
+         * link requires that both parent and child are saved)
+         */
         Iterator iter = dirty.iterator();
         while (iter.hasNext()) {
             transientState = (ItemState) iter.next();
@@ -966,45 +1009,48 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             }
         }
 
-        // validate access and node type constraints
-        // (this will also validate child removals)
+        /**
+         * validate access and node type constraints
+         * (this will also validate child removals)
+         */
         validateTransientItems(dirty.iterator());
 
-        // we need to make sure that we are not interrupted while
-        // verifying/persisting node references
+        WorkspaceImpl wsp = (WorkspaceImpl) session.getWorkspace();
+
+        // list of events that are generated by saved changes
+        ObservationManagerFactory obsFactory = rep.getObservationManagerFactory(wsp.getName());
+        EventStateCollection events = obsFactory.createEventStateCollection(session,
+                session.getItemStateManager(), session.getHierarchyManager());
+
+        /**
+         * we need to make sure that we are not interrupted while
+         * verifying/persisting node references
+         */
         ReferenceManager refMgr = wsp.getReferenceManager();
         synchronized (refMgr) {
 
-            // build list of transient descendents in the attic
-            // (i.e. those marked as 'removed')
-            ArrayList removed = new ArrayList();
-            if (isNode()) {
-                iter = itemStateMgr.getDescendantTransientItemStatesInAttic(id);
-                while (iter.hasNext()) {
-                    transientState = (ItemState) iter.next();
-                    // check if stale
-                    if (transientState.getStatus() == ItemState.STATUS_STALE_MODIFIED) {
-                        String msg = transientState.getId() + ": the item cannot be removed because it has been modified externally.";
-                        log.error(msg);
-                        throw new InvalidItemStateException(msg);
-                    }
-                    if (transientState.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
-                        String msg = transientState.getId() + ": the item cannot be removed because it has already been deleted externally.";
-                        log.error(msg);
-                        throw new InvalidItemStateException(msg);
-                    }
-                    removed.add(transientState);
-                    events.createEventStates(transientState);
-                }
-            }
+            /**
+             * build list of transient descendents in the attic
+             * (i.e. those marked as 'removed')
+             */
+            Collection removed = getRemovedStates();
 
-            // referential integrity checks:
-            // make sure that a referenced node cannot be removed and
-            // that all references are updated and persisted
+            /**
+             * referential integrity checks:
+             * make sure that a referenced node cannot be removed and
+             * that all references are updated and persisted
+             */
             checkReferences(dirty.iterator(), removed.iterator(), refMgr);
 
-            // prepare for event dispatch
-            // this will check access rights on items that will be removed
+            /**
+             * create event states for the affected item states and
+             * prepare them for event dispatch (this step is necessary in order
+             * to check access rights on items that will be removed)
+             *
+             * todo consolidate event generating and dispatching code (ideally one method call after save has succeeded)
+             */
+            events.createEventStates(dirty);
+            events.createEventStates(removed);
             events.prepare();
 
             // definitively remove transient items marked as 'removed'
@@ -1014,14 +1060,19 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             iter = removed.iterator();
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
-                // dispose the transient state, it is no longer used
-                // this will indirectly (through stateDiscarded listener method)
-                // permanently invalidate the wrapping Item instance
+                /**
+                 * dispose the transient state, it is no longer used
+                 * this will indirectly (through stateDiscarded listener method)
+                 * permanently invalidate the wrapping Item instance
+                 */
                 itemStateMgr.disposeTransientItemStateInAttic(transientState);
             }
 
-            // initialize version histories for new nodes
+            // initialize version histories for new nodes (might create new transient state)
             initVersionHistories(dirty.iterator());
+
+            // re-build the list of transient states (might have changed by now)
+            dirty = getTransientStates();
 
             // persist 'new' or 'modified' transient states
             persistTransientItems(dirty.iterator());

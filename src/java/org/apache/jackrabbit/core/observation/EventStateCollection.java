@@ -24,6 +24,7 @@ import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Collection;
 
 /**
  * The <code>EventStateCollection</code> class implements how {@link EventState}
@@ -75,6 +76,22 @@ public final class EventStateCollection {
         this.session = session;
         this.provider = provider;
         this.hmgr = hmgr;
+    }
+
+    /**
+     * Creates {@link EventState}s for the {@link org.apache.jackrabbit.core.state.ItemState state}
+     * instances contained in the specified collection.
+     *
+     * @param states collection of transient <code>ItemState</code> for whom
+     *               to create {@link EventState}s.
+     * @see #createEventStates(org.apache.jackrabbit.core.state.ItemState)
+     */
+    public void createEventStates(Collection states)
+            throws RepositoryException {
+        Iterator iter = states.iterator();
+        while (iter.hasNext()) {
+            createEventStates((ItemState) iter.next());
+        }
     }
 
     /**

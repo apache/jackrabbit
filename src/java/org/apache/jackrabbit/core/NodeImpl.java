@@ -17,10 +17,10 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.state.*;
-import org.apache.jackrabbit.core.version.*;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.util.ChildrenCollector;
 import org.apache.jackrabbit.core.util.IteratorHelper;
+import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.version.*;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
@@ -109,7 +109,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 genValues = new InternalValue[]{InternalValue.create(((NodeState) state).getUUID())};
             }
 /*
-	todo centralize version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
+	todo consolidate version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
 	} else if (nt.getQName().equals(NodeTypeRegistry.MIX_VERSIONABLE)) {
 	    // mix:versionable node type
 	    VersionHistory hist = rep.getVersionManager().getOrCreateVersionHistory(this);
@@ -1681,7 +1681,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // build effective node type of mixin's & primary type in order to detect conflicts
         NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
-        EffectiveNodeType entExisting;
+        EffectiveNodeType entExisting, entNew;
         try {
             // existing mixin's
             HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
@@ -1695,7 +1695,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // add new mixin
             set.add(ntName);
             // try to build new effective node type (will throw in case of conflicts)
-            ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            entNew = ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             throw new ConstraintViolationException(ntce.getMessage());
         }
@@ -1738,8 +1738,10 @@ public class NodeImpl extends ItemImpl implements Node {
             }
 
             // check for special node types
-            // todo centralize version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
-            if (ntName.equals(NodeTypeRegistry.MIX_VERSIONABLE)) {
+            // todo consolidate version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
+            if (!entExisting.includesNodeType(NodeTypeRegistry.MIX_VERSIONABLE) &&
+                    entNew.includesNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
+                // node has become 'versionable', initialize version history
                 VersionHistory hist = rep.getVersionManager().createVersionHistory(this);
                 internalSetProperty(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
                 internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
@@ -2668,7 +2670,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check uuid
         if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
             String uuid = freeze.getFrozenUUID();
-            if (uuid!=null && !uuid.equals(getUUID())) {
+            if (uuid != null && !uuid.equals(getUUID())) {
                 throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". UUID changed.");
             }
         }
