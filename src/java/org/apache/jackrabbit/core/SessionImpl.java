@@ -297,6 +297,16 @@ public class SessionImpl implements Session {
         getItemManager().dump(ps);
     }
 
+    /**
+     * Returns the names of all workspaces of this repository with respect of the
+     * access rights of this session.
+     *
+     * @return the names of all workspaces of this repository.
+     */
+    public String[] getWorkspaceNames() {
+        return rep.getWorkspaceNames();
+    }
+
     //--------------------------------------------------------------< Session >
     /**
      * @see Session#checkPermission(String, String)
@@ -444,16 +454,6 @@ public class SessionImpl implements Session {
      */
     public Workspace getWorkspace() {
         return wsp;
-    }
-
-    /**
-     * Returns the names of all workspaces of this repository with respect of the
-     * access rights of this session.
-     *
-     * @return the names of all workspaces of this repository.
-     */
-    public String[] getWorkspaceNames() {
-        return rep.getWorkspaceNames();
     }
 
     /**

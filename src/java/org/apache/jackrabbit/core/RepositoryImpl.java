@@ -407,6 +407,24 @@ public class RepositoryImpl implements Repository, EventListener {
         return (String[]) wspConfigs.keySet().toArray(new String[wspConfigs.keySet().size()]);
     }
 
+    /**
+     * Creates a workspace with the given name.
+     *
+     * @param workspaceName name of the new workspace
+     * @throws RepositoryException if a workspace with the given name
+     *                             already exists or if another error occurs
+     */
+    public void createWorkspace(String workspaceName) throws RepositoryException {
+        if (wspConfigs.containsKey(workspaceName)) {
+            throw new RepositoryException("workspace '" + workspaceName + "' already exists.");
+        }
+
+        // create the workspace configuration
+        repConfig.createWorkspaceConfig(workspaceName);
+        // add new configuration to map of workspace configs
+        wspConfigs.put(workspaceName, repConfig.getWorkspaceConfig(workspaceName));
+    }
+
     synchronized PersistentItemStateProvider getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
