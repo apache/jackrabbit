@@ -73,13 +73,14 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                 String repName = environment.getProperty(PROP_REPOSITORY_NAME, "repo");
                 String repConfig = environment.getProperty(PROP_REPOSITORY_CONFIG);
                 String repHome = environment.getProperty(PROP_REPOSITORY_HOME);
-/*
+
                 RepositoryConfig repConf = RepositoryConfig.create(repConfig, repHome);
                 repository = RepositoryImpl.create(repConf);
-*/
+/*
                 InitialContext ctx = new InitialContext();
-                RegistryHelper.registerRepository(ctx, "repo", repConfig, repHome, true);
-                repository = (Repository) ctx.lookup("repo");
+                RegistryHelper.registerRepository(ctx, repName, repConfig, repHome, true);
+                repository = (Repository) ctx.lookup(repName);
+*/
 /*
                 Runtime.getRuntime().addShutdownHook(new Thread() {
                     public void run() {
@@ -87,9 +88,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                     }
                 });
 */
-            } catch (NamingException e) {
-                throw new RepositoryStubException(e.toString());
-            } catch (RepositoryException e) {
+            } catch (Exception e) {
                 throw new RepositoryStubException(e.toString());
             }
         }

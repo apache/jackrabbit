@@ -1202,7 +1202,11 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             // Path.getAncestor requires relative degree, i.e. we need
             // to convert absolute to relative ancestor degree
             Path path = getPrimaryPath();
-            Path ancestorPath = path.getAncestor(path.getAncestorCount() - degree);
+            int relDegree = path.getAncestorCount() - degree;
+            if (relDegree < 0) {
+                throw new ItemNotFoundException();
+            }
+            Path ancestorPath = path.getAncestor(relDegree);
             return itemMgr.getItem(ancestorPath);
         } catch (PathNotFoundException pnfe) {
             throw new ItemNotFoundException();
