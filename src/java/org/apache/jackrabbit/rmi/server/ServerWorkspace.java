@@ -1,0 +1,132 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.rmi.server;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.rmi.RemoteException;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidSerializedDataException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeTypeManager;
+
+import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
+import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+
+/**
+ * Remote adapter for the JCR {@link javax.jcr.Workspace Workspace} interface.
+ * This class makes a local workspace available as an RMI service using the
+ * {@link org.apache.jackrabbit.rmi.remote.RemoteWorkspace RemoteWorkspace}
+ * interface.
+ * 
+ * @author Jukka Zitting
+ * @see javax.jcr.Workspace
+ * @see org.apache.jackrabbit.rmi.remote.RemoteWorkspace
+ */
+public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
+
+    /** The adapted local workspace. */
+    protected Workspace workspace;
+    
+    /**
+     * Creates a remote adapter for the given local workspace.
+     * 
+     * @param workspace local workspace
+     * @param factory remote adapter factory
+     * @throws RemoteException on RMI errors
+     */
+    public ServerWorkspace(Workspace workspace, RemoteAdapterFactory factory)
+            throws RemoteException {
+        super(factory);
+        this.workspace = workspace;
+    }
+    
+    /** {@inheritDoc} */
+    public String getName() throws RemoteException {
+        return workspace.getName();
+    }
+
+    /** {@inheritDoc} */
+    public void copy(String from, String to)
+            throws ConstraintViolationException, AccessDeniedException,
+            PathNotFoundException, ItemExistsException, RepositoryException,
+            RemoteException {
+        workspace.copy(from, to);
+    }
+
+    /** {@inheritDoc} */
+    public void copy(String from, String to, String workspace)
+            throws NoSuchWorkspaceException, ConstraintViolationException,
+            AccessDeniedException, PathNotFoundException, ItemExistsException,
+            RepositoryException, RemoteException {
+        this.workspace.copy(from, to, workspace);
+    }
+
+    /** {@inheritDoc} */
+    public void clone(String workspace, String from, String to,
+            boolean removeExisting) throws NoSuchWorkspaceException,
+            ConstraintViolationException, AccessDeniedException,
+            PathNotFoundException, ItemExistsException, RepositoryException,
+            RemoteException {
+        this.workspace.clone(workspace, from, to, removeExisting);
+    }
+
+    /** {@inheritDoc} */
+    public void move(String from, String to)
+            throws ConstraintViolationException, AccessDeniedException,
+            PathNotFoundException, ItemExistsException, RepositoryException,
+            RemoteException {
+        workspace.move(from, to);
+    }
+    
+    /** {@inheritDoc} */
+    public RemoteNodeTypeManager getNodeTypeManager()
+            throws RepositoryException, RemoteException {
+        NodeTypeManager manager = workspace.getNodeTypeManager();
+        return factory.getRemoteNodeTypeManager(manager);
+    }
+    
+    /** {@inheritDoc} */
+    public RemoteNamespaceRegistry getNamespaceRegistry()
+            throws RepositoryException, RemoteException {
+        NamespaceRegistry registry = workspace.getNamespaceRegistry();
+        return factory.getRemoteNamespaceRegistry(registry);
+    }
+
+    /** {@inheritDoc} */
+    public String[] getAccessibleWorkspaceNames() throws RepositoryException,
+            RemoteException {
+        return workspace.getAccessibleWorkspaceNames();
+    }
+
+    /** {@inheritDoc} */
+    public void importXML(String path, byte[] xml, int uuidBehaviour)
+            throws IOException, PathNotFoundException, ItemExistsException,
+            ConstraintViolationException, InvalidSerializedDataException,
+            LockException, RepositoryException, RemoteException {
+        workspace.importXML(path, new ByteArrayInputStream(xml), uuidBehaviour);
+    }
+}
