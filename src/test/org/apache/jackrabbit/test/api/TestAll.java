@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(AddNodeTest.class);
         suite.addTestSuite(GetAncestorTest.class);
         suite.addTestSuite(RootNodeTest.class);
+        suite.addTestSuite(NamespaceRegistryTest.class);
 
         return suite;
     }
