@@ -944,7 +944,7 @@ public class XMLPersistenceManager implements PersistenceManager {
 	    NodeReferences refs = createNodeReferencesInstance(uuid);
 
 	    InputStream in = itemStateStore.getInputStream(refsFilePath);
-	    Reader reader = null;
+	    BufferedReader reader = null;
 	    try {
 		String encoding = DEFAULT_ENCODING;
 		try {
@@ -956,24 +956,12 @@ public class XMLPersistenceManager implements PersistenceManager {
 		    reader = new BufferedReader(isw);
 		}
 		// read references (i.e. the id's of the REFERENCE properties)
-		StringBuffer tmp = new StringBuffer();
-		int c;
-		while ((c = reader.read()) != -1) {
-		    if (c != '\n') {
-			tmp.append((char) c);
-			continue;
-		    }
-		    String s = tmp.toString();
+		String s;
+		while ((s = reader.readLine()) != null) {
 		    if (s.length() > 0) {
 			PropertyId propId = PropertyId.valueOf(s);
 			refs.addReference(propId);
-			tmp.setLength(0);
 		    }
-		}
-		String s = tmp.toString();
-		if (s.length() > 0) {
-		    PropertyId propId = PropertyId.valueOf(s);
-		    refs.addReference(propId);
 		}
 	    } finally {
 		reader.close();
@@ -1011,7 +999,7 @@ public class XMLPersistenceManager implements PersistenceManager {
 	    refs.clearAllReferences();
 
 	    InputStream in = itemStateStore.getInputStream(refsFilePath);
-	    Reader reader = null;
+	    BufferedReader reader = null;
 	    try {
 		String encoding = DEFAULT_ENCODING;
 		try {
@@ -1023,24 +1011,12 @@ public class XMLPersistenceManager implements PersistenceManager {
 		    reader = new BufferedReader(isw);
 		}
 		// read references (i.e. the id's of the REFERENCE properties)
-		StringBuffer tmp = new StringBuffer();
-		int c;
-		while ((c = reader.read()) != -1) {
-		    if (c != '\n') {
-			tmp.append((char) c);
-			continue;
-		    }
-		    String s = tmp.toString();
+		String s;
+		while ((s = reader.readLine()) != null) {
 		    if (s.length() > 0) {
 			PropertyId propId = PropertyId.valueOf(s);
 			refs.addReference(propId);
-			tmp.setLength(0);
 		    }
-		}
-		String s = tmp.toString();
-		if (s.length() > 0) {
-		    PropertyId propId = PropertyId.valueOf(s);
-		    refs.addReference(propId);
 		}
 	    } finally {
 		reader.close();
@@ -1073,7 +1049,7 @@ public class XMLPersistenceManager implements PersistenceManager {
 	try {
 	    refsFile.makeParentDirs();
 	    OutputStream os = refsFile.getOutputStream();
-	    Writer writer = null;
+	    BufferedWriter writer = null;
 	    try {
 		String encoding = DEFAULT_ENCODING;
 		try {
@@ -1088,7 +1064,9 @@ public class XMLPersistenceManager implements PersistenceManager {
 		Iterator iter = refs.getReferences().iterator();
 		while (iter.hasNext()) {
 		    PropertyId propId = (PropertyId) iter.next();
-		    writer.write(propId.toString() + '\n');
+		    writer.write(propId.toString());
+		    writer.newLine();
+
 		}
 	    } finally {
 		writer.close();

@@ -78,8 +78,8 @@ public class Test {
 	    root.addNode(importTargetName, "nt:unstructured");
 	}
 	FileInputStream fin = new FileInputStream(svExportFilePath);
-	t.importXML("/" + importTargetName, fin);
-	t.save();
+	session.importXML("/" + importTargetName, fin);
+	session.save();
 */
 	String ntName = root.getProperty("jcr:primaryType").getString();
 	session.setNamespacePrefix("bla", "http://www.jcp.org/jcr/nt/1.0");
@@ -90,7 +90,6 @@ public class Test {
 	System.out.println();
 	dumpTree(root, System.out);
 
-	//t.move("/foo", "/misc/bla");
 	System.out.println("after move...");
 	System.out.println();
 	dumpTree(root, System.out);
