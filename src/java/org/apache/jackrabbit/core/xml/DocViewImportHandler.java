@@ -36,12 +36,36 @@ class DocViewImportHandler extends DefaultHandler {
 
     private Stack parents;
     private SessionImpl session;
+    // buffer used to merge adjacent character data
+    private StringBuffer text;
 
     DocViewImportHandler(NodeImpl importTargetNode, SessionImpl session) {
         this.session = session;
         parents = new Stack();
 
         parents.push(importTargetNode);
+
+        text = new StringBuffer();
+    }
+
+    /**
+     * Stores character data encountered in <code>{@link #characters(char[], int, int)}</code>
+     * as <code>jcr:xmlcharacters</code> property of <code>jcr:xmltext</code>
+     * child node.
+     * @param parent
+     * @param text
+     * @throws SAXException
+     */
+    protected void addTextNode(NodeImpl parent, String text) throws SAXException {
+        if (text.length() > 0) {
+            try {
+                NodeImpl txtNode = (NodeImpl) parent.addNode(DocViewSAXEventGenerator.NODENAME_XMLTEXT);
+                StringValue val = new StringValue(text.toString());
+                txtNode.setProperty(DocViewSAXEventGenerator.PROPNAME_XMLCHARACTERS, val);
+            } catch (RepositoryException re) {
+                throw new SAXException(re);
+            }
+        }
     }
 
     //-------------------------------------------------------< ContentHandler >
@@ -49,6 +73,13 @@ class DocViewImportHandler extends DefaultHandler {
      * @see ContentHandler#startElement(String, String, String, Attributes)
      */
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
+        if (text.length() > 0) {
+            // there is character data that needs to be added to the current node
+            addTextNode((NodeImpl) parents.peek(), text.toString());
+            // reset buffer
+            text.setLength(0);
+        }
+
         try {
             QName nodeName;
             if (namespaceURI != null && !"".equals(namespaceURI)) {
@@ -100,26 +131,22 @@ class DocViewImportHandler extends DefaultHandler {
      */
     public void characters(char[] ch, int start, int length) throws SAXException {
         /**
-         * character data in document view:
-         * store as jcr:xmlcharacters property of jcr:xmltext node
-         * (need to store as node in order to maintain ordering)
-         *
-         * todo merge contiguous character data into one jcr:xmltext node
+         * buffer character data; will be processed
+         * in endElement and startElement method
          */
-        try {
-            NodeImpl currentParent = (NodeImpl) parents.peek();
-            NodeImpl txtNode = (NodeImpl) currentParent.addNode(DocViewSAXEventGenerator.NODENAME_XMLTEXT);
-            StringValue val = new StringValue(new String(ch, start, length));
-            txtNode.setProperty(DocViewSAXEventGenerator.PROPNAME_XMLCHARACTERS, val);
-        } catch (RepositoryException re) {
-            throw new SAXException(re);
-        }
+        text.append(ch, start, length);
     }
 
     /**
      * @see ContentHandler#endElement(String, String, String)
      */
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
+        if (text.length() > 0) {
+            // there is character data that needs to be added to the current node
+            addTextNode((NodeImpl) parents.peek(), text.toString());
+            // reset buffer
+            text.setLength(0);
+        }
         parents.pop();
     }
 }
