@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.search;
 
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.util.ISO9075;
-import org.apache.xml.utils.XMLChar;
+import org.apache.xerces.util.XMLChar;
 import junit.framework.TestCase;
 
 /**
