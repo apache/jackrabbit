@@ -120,7 +120,12 @@ public class NativePVM implements PersistentVersionManager {
     /**
      * the state manager for the version storage
      */
-    private NativeItemStateManager stateMgr;
+    private LocalItemStateManager stateMgr;
+
+    /**
+     * the persistence manager
+     */
+    private PersistenceManager pMgr;
 
     /**
      * mapping from virtual uuids to persistent ids of the persistent nodes
@@ -154,7 +159,10 @@ public class NativePVM implements PersistentVersionManager {
     public NativePVM(PersistenceManager pMgr, NodeTypeRegistry ntReg) throws RepositoryException {
         try {
             long t1 = System.currentTimeMillis();
-            this.stateMgr = new NativeItemStateManager(pMgr, PERSISTENT_ROOT_ID.getUUID(), ntReg);
+            //this.stateMgr = new NativeItemStateManager(pMgr, PERSISTENT_ROOT_ID.getUUID(), ntReg);
+            this.pMgr = pMgr;
+            SharedItemStateManager sharedStateMgr = new SharedItemStateManager(pMgr, PERSISTENT_ROOT_ID.getUUID(), ntReg);
+            stateMgr = new LocalItemStateManager(sharedStateMgr);
             NodeState nodeState = (NodeState) stateMgr.getItemState(PERSISTENT_ROOT_ID);
             historyRoot = new PersistentNode(stateMgr, nodeState);
             initVirtualIds(historyRoot.getState());
@@ -173,7 +181,7 @@ public class NativePVM implements PersistentVersionManager {
      */
     public void close() throws Exception {
         // @todo check proper shutdown sequence
-        this.stateMgr.persistMgr.close();
+        this.pMgr.close();
         this.stateMgr = null;
     }
 
@@ -211,7 +219,7 @@ public class NativePVM implements PersistentVersionManager {
             }
             if (id.type == PersistentId.TYPE_HISTORY) {
                 // need to retrieve the versioned uuid in order to avoid collisions
-                PropertyState ps = stateMgr.getPropertyState(new PropertyId(state.getUUID(), PROPNAME_VERSIONABLE_ID));
+                PropertyState ps = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), PROPNAME_VERSIONABLE_ID));
                 String vid = (String) ps.getValues()[0].internalValue();
                 versionedUUIDs.put(vid, id.externalId);
             }

@@ -228,7 +228,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
 
             // add state to cache
             nodes.put(id, state);
-            log.info("item added to cache. size=" + nodes.size());
+            log.debug("item added to cache. size=" + nodes.size());
         }
         return state;
     }
