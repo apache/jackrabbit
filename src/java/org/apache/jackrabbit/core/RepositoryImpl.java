@@ -274,7 +274,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             String wspName = (String) wspNames.next();
             NodeImpl rootNode = (NodeImpl) getSystemSession(wspName).getRootNode();
             if (!rootNode.hasNode(SYSTEM_ROOT_NAME)) {
-                rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
+                rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.REP_SYSTEM);
                 rootNode.save();
             }
         }

@@ -72,16 +72,15 @@ public class PersistentItemStateManager extends ItemStateCache
     private PersistentNodeState createPersistentRootNodeState(String rootNodeUUID,
                                                               NodeTypeRegistry ntReg)
             throws ItemStateException {
-        PersistentNodeState rootState = createNodeState(rootNodeUUID, NodeTypeRegistry.NT_UNSTRUCTURED, null);
+        PersistentNodeState rootState = createNodeState(rootNodeUUID, NodeTypeRegistry.REP_ROOT, null);
 
         // @todo FIXME need to manually setup root node by creating mandatory jcr:primaryType property
         NodeDefId nodeDefId = null;
         PropDefId propDefId = null;
 
         try {
-            // FIXME relies on definition of nt:unstructured and nt:base:
-            // first (and only) child node definition in nt:unstructured is applied to root node
-            nodeDefId = new NodeDefId(ntReg.getNodeTypeDef(NodeTypeRegistry.NT_UNSTRUCTURED).getChildNodeDefs()[0]);
+            nodeDefId = new NodeDefId(ntReg.getRootNodeDef());
+            // FIXME relies on definition of nt:base:
             // first property definition in nt:base is jcr:primaryType
             propDefId = new PropDefId(ntReg.getNodeTypeDef(NodeTypeRegistry.NT_BASE).getPropertyDefs()[0]);
         } catch (NoSuchNodeTypeException nsnte) {
@@ -95,7 +94,7 @@ public class PersistentItemStateManager extends ItemStateCache
         rootState.addPropertyEntry(propName);
 
         PersistentPropertyState prop = createPropertyState(rootNodeUUID, propName);
-        prop.setValues(new InternalValue[]{InternalValue.create(NodeTypeRegistry.NT_UNSTRUCTURED)});
+        prop.setValues(new InternalValue[]{InternalValue.create(NodeTypeRegistry.REP_ROOT)});
         prop.setType(PropertyType.NAME);
         prop.setMultiValued(false);
         prop.setDefinitionId(propDefId);

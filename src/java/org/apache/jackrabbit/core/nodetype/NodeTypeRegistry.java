@@ -42,6 +42,12 @@ public class NodeTypeRegistry {
     private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
 
     // some well known node type names
+    // rep:root
+    public static final QName REP_ROOT =
+            new QName(NamespaceRegistryImpl.NS_REP_URI, "root");
+    // rep:system
+    public static final QName REP_SYSTEM =
+            new QName(NamespaceRegistryImpl.NS_REP_URI, "system");
     // nt:unstructured
     public static final QName NT_UNSTRUCTURED =
             new QName(NamespaceRegistryImpl.NS_NT_URI, "unstructured");
@@ -255,8 +261,8 @@ public class NodeTypeRegistry {
 
         // FIXME need a fake declaring node type
         def.setDeclaringNodeType(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, ""));
-        def.setRequiredPrimaryTypes(new QName[]{NT_BASE});
-        def.setDefaultPrimaryType(NT_UNSTRUCTURED);
+        def.setRequiredPrimaryTypes(new QName[]{REP_ROOT});
+        def.setDefaultPrimaryType(REP_ROOT);
         def.setMandatory(true);
         def.setProtected(false);
         def.setOnParentVersion(OnParentVersionAction.VERSION);

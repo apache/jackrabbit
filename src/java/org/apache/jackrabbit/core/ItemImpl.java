@@ -801,15 +801,19 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     }
 
     private void removeTransientItems(Iterator iter) throws RepositoryException {
-        // walk through list of transient items marked 'removed'
-        // and definitively remove each one
+        /**
+         * walk through list of transient items marked 'removed' and
+         * definitively remove each one
+         */
         while (iter.hasNext()) {
             ItemState transientState = (ItemState) iter.next();
             PersistableItemState persistentState = (PersistableItemState) transientState.getOverlayedState();
-            // remove persistent state (incl. descendents, if there are any)
-
-            // this will indirectly (through stateDestroyed listener method)
-            // permanently invalidate all Item instances wrapping it
+            /**
+             * remove persistent state (incl. descendents, if there are any)
+             *
+             * this will indirectly (through stateDestroyed listener method)
+             * permanently invalidate all Item instances wrapping it
+             */
             try {
                 persistentState.destroy();
             } catch (ItemStateException ise) {
@@ -842,8 +846,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      */
     private boolean initVersionHistories(Iterator iter) throws RepositoryException {
         // todo consolidate version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
-        // walk through list of transient items and
-        // search for new versionable nodes
+        // walk through list of transient items and search for new versionable nodes
         boolean createdTransientState = false;
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();

@@ -40,7 +40,11 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
     public static final String NS_EMPTY_PREFIX = "";
     public static final String NS_DEFAULT_URI = "";
 
-    // reserved namespace for items defined within built-in node types
+    // reserved namespace for repository internal node types
+    public static final String NS_REP_PREFIX = "rep";
+    public static final String NS_REP_URI = "internal";
+
+    // reserved namespace for items defined by built-in node types
     public static final String NS_JCR_PREFIX = "jcr";
     public static final String NS_JCR_URI = "http://www.jcp.org/jcr/1.0";
 
@@ -51,10 +55,6 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
     // reserved namespace for built-in mixin node types
     public static final String NS_MIX_PREFIX = "mix";
     public static final String NS_MIX_URI = "http://www.jcp.org/jcr/mix/1.0";
-
-    // reserved namespace for the names of property types
-    public static final String NS_PT_PREFIX = "pt";
-    public static final String NS_PT_URI = "http://www.jcp.org/jcr/pt/1.0";
 
     // reserved namespace used in the system view XML serialization format
     public static final String NS_SV_PREFIX = "sv";
@@ -76,19 +76,19 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
         reservedPrefixes.add(NS_XML_PREFIX);
         reservedPrefixes.add(NS_XMLNS_PREFIX);
         // predefined (e.g. built-in) prefixes
+        reservedPrefixes.add(NS_REP_PREFIX);
         reservedPrefixes.add(NS_JCR_PREFIX);
         reservedPrefixes.add(NS_NT_PREFIX);
         reservedPrefixes.add(NS_MIX_PREFIX);
-        reservedPrefixes.add(NS_PT_PREFIX);
         reservedPrefixes.add(NS_SV_PREFIX);
         // reserved namespace URI's
         reservedURIs.add(NS_XML_URI);
         reservedURIs.add(NS_XMLNS_URI);
         // predefined (e.g. built-in) namespace URI's
+        reservedURIs.add(NS_REP_URI);
         reservedURIs.add(NS_JCR_URI);
         reservedURIs.add(NS_NT_URI);
         reservedURIs.add(NS_MIX_URI);
-        reservedURIs.add(NS_PT_URI);
         reservedURIs.add(NS_SV_URI);
     }
 
@@ -120,6 +120,9 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
                 prefixToURI.put(NS_EMPTY_PREFIX, NS_DEFAULT_URI);
                 uriToPrefix.put(NS_DEFAULT_URI, NS_EMPTY_PREFIX);
                 // declare the predefined mappings
+                // rep:
+                prefixToURI.put(NS_REP_PREFIX, NS_REP_URI);
+                uriToPrefix.put(NS_REP_URI, NS_REP_PREFIX);
                 // jcr:
                 prefixToURI.put(NS_JCR_PREFIX, NS_JCR_URI);
                 uriToPrefix.put(NS_JCR_URI, NS_JCR_PREFIX);
@@ -129,9 +132,6 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
                 // mix:
                 prefixToURI.put(NS_MIX_PREFIX, NS_MIX_URI);
                 uriToPrefix.put(NS_MIX_URI, NS_MIX_PREFIX);
-                // pt:
-                prefixToURI.put(NS_PT_PREFIX, NS_PT_URI);
-                uriToPrefix.put(NS_PT_URI, NS_PT_PREFIX);
                 // sv:
                 prefixToURI.put(NS_SV_PREFIX, NS_SV_URI);
                 uriToPrefix.put(NS_SV_URI, NS_SV_PREFIX);
@@ -230,17 +230,20 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
         if (reservedURIs.contains(uri)) {
-            throw new NamespaceException("failed to register namespace " + prefix + " -> " + uri + ": reserved URI");
+            throw new NamespaceException("failed to register namespace "
+                    + prefix + " -> " + uri + ": reserved URI");
         }
         if (reservedPrefixes.contains(prefix)) {
-            throw new NamespaceException("failed to register namespace " + prefix + " -> " + uri + ": reserved prefix");
+            throw new NamespaceException("failed to register namespace "
+                    + prefix + " -> " + uri + ": reserved prefix");
         }
 
         String oldPrefix = (String) uriToPrefix.get(uri);
         if (oldPrefix != null) {
             // existing namespace
             if (oldPrefix.equals(prefix)) {
-                throw new NamespaceException("failed to register namespace " + prefix + " -> " + uri + ": mapping already exists");
+                throw new NamespaceException("failed to register namespace "
+                        + prefix + " -> " + uri + ": mapping already exists");
             }
             // remove old prefix
             prefixToURI.remove(oldPrefix);
@@ -252,7 +255,8 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
             // remove the previously assigned namespace;
             // as we can't guarantee that there are no references to this namespace
             // (in names of nodes/properties/node types etc.) we simply don't allow it.
-            throw new NamespaceException("failed to register namespace " + prefix + " -> " + uri + ": remapping existing prefixes is not supported.");
+            throw new NamespaceException("failed to register namespace "
+                    + prefix + " -> " + uri + ": remapping existing prefixes is not supported.");
         }
 
         prefixToURI.put(prefix, uri);

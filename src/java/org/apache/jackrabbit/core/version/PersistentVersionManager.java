@@ -142,7 +142,7 @@ public class PersistentVersionManager {
     }
 
     /**
-     * Creates a new Version History..
+     * Creates a new Version History.
      *
      * @param node the node for which the version history is to be initialized
      * @return the newly created version history.

@@ -59,6 +59,7 @@
 		<!ELEMENT requiredPrimaryType (CDATA)>
 ]>
 <nodeTypes
+    xmlns:rep="internal"
     xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
     xmlns:mix="http://www.jcp.org/jcr/mix/1.0"
     xmlns:jcr="http://www.jcp.org/jcr/1.0">
@@ -273,4 +274,27 @@
             </valueConstraints>
         </propertyDef>
     </nodeType>
+
+    <!-- internal node types -->
+    <nodeType name="rep:root" mixin="false" orderableChildNodes="true">
+        <supertypes>
+            <supertype>nt:unstructured</supertype>
+        </supertypes>
+        <childNodeDef name="jcr:system" defaultPrimaryType="rep:system" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" primaryItem="false" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:system</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
+    </nodeType>
+    <nodeType name="rep:system" mixin="false" orderableChildNodes="true">
+        <supertypes>
+            <supertype>nt:unstructured</supertype>
+        </supertypes>
+        <childNodeDef name="jcr:versionStorage" defaultPrimaryType="nt:unstructured" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" primaryItem="false" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:base</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
+    </nodeType>
+
 </nodeTypes>
