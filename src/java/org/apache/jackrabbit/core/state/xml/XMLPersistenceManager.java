@@ -26,6 +26,8 @@ import org.apache.jackrabbit.core.state.*;
 import org.apache.log4j.Logger;
 import org.jdom.Element;
 import org.jdom.JDOMException;
+import org.jdom.filter.ContentFilter;
+import org.jdom.filter.Filter;
 import org.jdom.input.SAXBuilder;
 
 import javax.jcr.PropertyType;
@@ -72,13 +74,20 @@ public class XMLPersistenceManager implements PersistenceManager {
     private static final String PROPERTY_ELEMENT = "property";
     private static final String NAME_ATTRIBUTE = "name";
     private static final String TYPE_ATTRIBUTE = "type";
-    private static final String COUNT_ATTRIBUTE = "count";
+
+    private static final String VALUES_ELEMENT = "values";
+    private static final String VALUE_ELEMENT = "value";
 
     private static final String NODES_ELEMENT = "nodes";
 
+    private static final String NODEREFERENCES_ELEMENT = "references";
+    private static final String TARGETID_ATTRIBUTE = "targetId";
+    private static final String NODEREFERENCE_ELEMENT = "reference";
+    private static final String PROPERTYID_ATTRIBUTE = "propertyId";
+
     private static final String NODEFILENAME = ".node.xml";
 
-    private static final String NODEREFSFILENAME = ".references";
+    private static final String NODEREFSFILENAME = ".references.xml";
 
     private boolean initialized;
 
@@ -124,11 +133,10 @@ public class XMLPersistenceManager implements PersistenceManager {
                 chars[j++] = HEXDIGITS[(bytes[i] >> 4) & 0x0f];
                 chars[j++] = HEXDIGITS[bytes[i] & 0x0f];
             }
-            //fileName = new String(chars) + ".xml";
-            fileName = new String(chars);
+            fileName = new String(chars) + ".xml";
         } catch (NoSuchAlgorithmException nsae) {
             // should never get here as MD5 should always be available in the JRE
-            String msg = "MD5 not available: ";
+            String msg = "MD5 not available";
             log.fatal(msg, nsae);
             throw new InternalError(msg + nsae);
         }
@@ -226,10 +234,32 @@ public class XMLPersistenceManager implements PersistenceManager {
         }
     }
 
-    private void readState(Properties props, PersistentPropertyState state)
+    private void readState(Element propElement, PersistentPropertyState state)
             throws ItemStateException {
+        // first do some paranoid sanity checks
+        if (!propElement.getName().equals(PROPERTY_ELEMENT)) {
+            String msg = "invalid serialization format (unexpected element: " + propElement.getName() + ")";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+        // check name
+        if (!state.getName().equals(QName.valueOf(propElement.getAttributeValue(NAME_ATTRIBUTE)))) {
+            String msg = "invalid serialized state: name mismatch";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+        // check parentUUID
+        String parentUUID = propElement.getAttributeValue(PARENTUUID_ATTRIBUTE);
+        if (!parentUUID.equals(state.getParentUUID())) {
+            String msg = "invalid serialized state: parentUUID mismatch";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+
+        // now we're ready to read state
+
         // type
-        String typeName = props.getProperty(TYPE_ATTRIBUTE);
+        String typeName = propElement.getAttributeValue(TYPE_ATTRIBUTE);
         int type;
         try {
             type = PropertyType.valueFromName(typeName);
@@ -240,46 +270,66 @@ public class XMLPersistenceManager implements PersistenceManager {
         state.setType(type);
 
         // definition id
-        if (props.containsKey(DEFINITIONID_ATTRIBUTE)) {
-            state.setDefinitionId(PropDefId.valueOf(props.getProperty(DEFINITIONID_ATTRIBUTE)));
-        }
-
-        // # of values
-        int cnt = Integer.parseInt(props.getProperty(COUNT_ATTRIBUTE));
+        String definitionId = propElement.getAttributeValue(DEFINITIONID_ATTRIBUTE);
+        state.setDefinitionId(PropDefId.valueOf(definitionId));
 
         // values
-        InternalValue[] values = new InternalValue[cnt];
-        Enumeration names = props.propertyNames();
-        while (names.hasMoreElements()) {
-            String name = (String) names.nextElement();
-            if (TYPE_ATTRIBUTE.equals(name) || COUNT_ATTRIBUTE.equals(name)
-                    || DEFINITIONID_ATTRIBUTE.equals(name)) {
-                continue;
-            }
-            int i = Integer.parseInt(name);
+        Iterator iter = propElement.getChild(VALUES_ELEMENT).getChildren(VALUE_ELEMENT).iterator();
+        ArrayList values = new ArrayList();
+        while (iter.hasNext()) {
+            Element valueElement = (Element) iter.next();
+            Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
+            List content = valueElement.getContent(filter);
+
             InternalValue val;
-            String text = props.getProperty(name);
-            if (text != null) {
+            if (!content.isEmpty()) {
+                // read serialized value
+                String text = valueElement.getTextTrim();
                 if (type == PropertyType.BINARY) {
                     // special handling required for binary value:
                     // the value stores the path to the actual binary file in the blob store
                     try {
                         val = InternalValue.create(new FileSystemResource(blobStore, text));
                     } catch (IOException ioe) {
-                        String msg = "error while reading serialized binary value";
+                        String msg = "error while reading serialized binary valuey";
                         log.error(msg, ioe);
                         throw new ItemStateException(msg, ioe);
                     }
                 } else {
                     val = InternalValue.valueOf(text, type);
                 }
+                values.add(val);
             } else {
-                // null value
-                val = null;
+                continue;
             }
-            values[i] = val;
         }
-        state.setValues(values);
+        state.setValues((InternalValue[]) values.toArray(new InternalValue[values.size()]));
+    }
+
+    private void readState(Element refsElement, NodeReferences refs)
+            throws ItemStateException {
+        // first do some paranoid sanity checks
+        if (!refsElement.getName().equals(NODEREFERENCES_ELEMENT)) {
+            String msg = "invalid serialization format (unexpected element: " + refsElement.getName() + ")";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+        // check targetId
+        if (!refs.getTargetId().equals(NodeId.valueOf(refsElement.getAttributeValue(TARGETID_ATTRIBUTE)))) {
+            String msg = "invalid serialized state: targetId  mismatch";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+
+        // now we're ready to read the references data
+
+        // property id's
+        refs.clearAllReferences();
+        Iterator iter = refsElement.getChildren(NODEREFERENCE_ELEMENT).iterator();
+        while (iter.hasNext()) {
+            Element elem = (Element) iter.next();
+            refs.addReference(PropertyId.valueOf(elem.getAttributeValue(PROPERTYID_ATTRIBUTE)));
+        }
     }
 
     //---------------------------------------------------< PersistenceManager >
@@ -397,13 +447,17 @@ public class XMLPersistenceManager implements PersistenceManager {
             }
             InputStream in = itemStateStore.getInputStream(propFilePath);
             try {
-                Properties props = new Properties();
-                props.load(in);
-                readState(props, state);
+                SAXBuilder builder = new SAXBuilder();
+                Element rootElement = builder.build(in).getRootElement();
+
+                readState(rootElement, state);
                 return;
             } finally {
                 in.close();
             }
+        } catch (JDOMException jde) {
+            e = jde;
+            // fall through
         } catch (IOException ioe) {
             e = ioe;
             // fall through
@@ -411,7 +465,6 @@ public class XMLPersistenceManager implements PersistenceManager {
             e = fse;
             // fall through
         }
-
         String msg = "failed to read property state: " + parentUUID + "/" + propName;
         log.error(msg, e);
         throw new ItemStateException(msg, e);
@@ -515,172 +568,98 @@ public class XMLPersistenceManager implements PersistenceManager {
         try {
             propFile.makeParentDirs();
             OutputStream os = propFile.getOutputStream();
-/*
             // write property state to xml file
-	    Writer writer = null;
-	    try {
-		String encoding = DEFAULT_ENCODING;
-		try {
-		    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
-		} catch (UnsupportedEncodingException e) {
-		    // should never get here!
-		    OutputStreamWriter osw = new OutputStreamWriter(os);
-		    encoding = osw.getEncoding();
-		    writer = new BufferedWriter(osw);
-		}
-
-		String typeName;
-		int type = state.getType();
-		try {
-		    typeName = PropertyType.nameFromValue(type);
-		} catch (IllegalArgumentException iae) {
-		    // should never be getting here
-		    throw new ItemStateException("unexpected property-type ordinal: " + type, iae);
-		}
-
-		writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
-		writer.write("<" + PROPERTY_ELEMENT + " " +
-			NAME_ATTRIBUTE + "=\"" + state.getName() + "\" " +
-			PARENTUUID_ATTRIBUTE + "=\"" + state.getParentUUID() + "\" " +
-	    		DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" " +
-			TYPE_ATTRIBUTE + "=\"" + typeName + "\">\n");
-		// values
-		writer.write("\t<" + VALUES_ELEMENT + ">\n");
-		InternalValue[] values = state.getValues();
-		if (values != null) {
-		    for (int i = 0; i < values.length; i++) {
-			writer.write("\t\t<" + VALUE_ELEMENT + ">");
-			InternalValue val = values[i];
-			if (val != null) {
-			    if (type == PropertyType.BINARY) {
-				// special handling required for binary value:
-				// spool binary value to file in blob store
-				BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
-				String binPath = buildBlobFilePath(state.getParentUUID(), state.getName(), i);
-				OutputStream binOut = null;
-			        FileSystemResource internalBlobFile = new FileSystemResource(blobStore, binPath);
-				internalBlobFile.makeParentDirs();
-				try {
-				    binOut = internalBlobFile.getOutputStream();
-				    blobVal.spool(binOut);
-				} finally {
-				    try {
-					if (binOut != null) {
-					    binOut.close();
-					}
-				    } catch (IOException ioe) {
-				    }
-				}
-				// store path to binary file as property value
-				writer.write(binPath);
-				// FIXME: hack!
-				// replace value instance with value
-				// backed by internal file and delete temp file
-				values[i] = InternalValue.create(internalBlobFile);
-				if (blobVal.isTempFile()) {
-				    blobVal.delete();
-				    blobVal = null;
-				}
-			    } else {
-				// escape '<' and '&'
-				char chars[] = val.toString().toCharArray();
-				int j = 0, last = 0;
-				while (j < chars.length) {
-				    char c = chars[j];
-				    if (c == '<') {
-					writer.write(chars, last, j - last);
-					writer.write("&lt;");
-					last = j + 1;
-				    } else if (c == '&') {
-					writer.write(chars, last, j - last);
-					writer.write("&amp;");
-					last = j + 1;
-				    }
-				    j++;
-				}
-				writer.write(chars, last, j - last);
-			    }
-			}
-			writer.write("</" + VALUE_ELEMENT + ">\n");
-		    }
-		}
-		writer.write("\t</" + VALUES_ELEMENT + ">\n");
-		writer.write("</" + PROPERTY_ELEMENT + ">\n");
-	    } finally {
-		writer.close();
-	    }
-*/
-            // write property state to java.util.Properties file
-            Properties props = new Properties();
-
-            // type
-            String typeName;
-            int type = state.getType();
+            Writer writer = null;
             try {
-                typeName = PropertyType.nameFromValue(type);
-            } catch (IllegalArgumentException iae) {
-                // should never be getting here
-                throw new ItemStateException("unexpected property-type ordinal: " + type, iae);
-            }
-            props.setProperty(TYPE_ATTRIBUTE, typeName);
+                String encoding = DEFAULT_ENCODING;
+                try {
+                    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
+                } catch (UnsupportedEncodingException e) {
+                    // should never get here!
+                    OutputStreamWriter osw = new OutputStreamWriter(os);
+                    encoding = osw.getEncoding();
+                    writer = new BufferedWriter(osw);
+                }
 
-            // definition id
-            props.setProperty(DEFINITIONID_ATTRIBUTE, state.getDefinitionId().toString());
+                String typeName;
+                int type = state.getType();
+                try {
+                    typeName = PropertyType.nameFromValue(type);
+                } catch (IllegalArgumentException iae) {
+                    // should never be getting here
+                    throw new ItemStateException("unexpected property-type ordinal: " + type, iae);
+                }
 
-            InternalValue[] values = state.getValues();
-
-            // # of values
-            props.setProperty(COUNT_ATTRIBUTE, Integer.toString(values == null ? 0 : values.length));
-
-            // values
-            if (values != null) {
-                for (int i = 0; i < values.length; i++) {
-                    InternalValue val = values[i];
-                    if (val != null) {
-                        if (type == PropertyType.BINARY) {
-                            // special handling required for binary value:
-                            // spool binary value to file in blob store
-                            BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
-
-                            String binPath = buildBlobFilePath(state.getParentUUID(), state.getName(), i);
-                            OutputStream binOut = null;
-                            FileSystemResource internalBlobFile = new FileSystemResource(blobStore, binPath);
-                            internalBlobFile.makeParentDirs();
-                            try {
-                                binOut = internalBlobFile.getOutputStream();
-                                blobVal.spool(binOut);
-                            } finally {
+                writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
+                writer.write("<" + PROPERTY_ELEMENT + " " +
+                        NAME_ATTRIBUTE + "=\"" + state.getName() + "\" " +
+                        PARENTUUID_ATTRIBUTE + "=\"" + state.getParentUUID() + "\" " +
+                        DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" " +
+                        TYPE_ATTRIBUTE + "=\"" + typeName + "\">\n");
+                // values
+                writer.write("\t<" + VALUES_ELEMENT + ">\n");
+                InternalValue[] values = state.getValues();
+                if (values != null) {
+                    for (int i = 0; i < values.length; i++) {
+                        writer.write("\t\t<" + VALUE_ELEMENT + ">");
+                        InternalValue val = values[i];
+                        if (val != null) {
+                            if (type == PropertyType.BINARY) {
+                                // special handling required for binary value:
+                                // spool binary value to file in blob store
+                                BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                                String binPath = buildBlobFilePath(state.getParentUUID(), state.getName(), i);
+                                OutputStream binOut = null;
+                                FileSystemResource internalBlobFile = new FileSystemResource(blobStore, binPath);
+                                internalBlobFile.makeParentDirs();
                                 try {
-                                    if (binOut != null) {
-                                        binOut.close();
+                                    binOut = internalBlobFile.getOutputStream();
+                                    blobVal.spool(binOut);
+                                } finally {
+                                    try {
+                                        if (binOut != null) {
+                                            binOut.close();
+                                        }
+                                    } catch (IOException ioe) {
                                     }
-                                } catch (IOException ioe) {
                                 }
+                                // store path to binary file as property value
+                                writer.write(binPath);
+                                // FIXME: hack!
+                                // replace value instance with value
+                                // backed by internal file and delete temp file
+                                values[i] = InternalValue.create(internalBlobFile);
+                                if (blobVal.isTempFile()) {
+                                    blobVal.delete();
+                                    blobVal = null;
+                                }
+                            } else {
+                                // escape '<' and '&'
+                                char chars[] = val.toString().toCharArray();
+                                int j = 0, last = 0;
+                                while (j < chars.length) {
+                                    char c = chars[j];
+                                    if (c == '<') {
+                                        writer.write(chars, last, j - last);
+                                        writer.write("&lt;");
+                                        last = j + 1;
+                                    } else if (c == '&') {
+                                        writer.write(chars, last, j - last);
+                                        writer.write("&amp;");
+                                        last = j + 1;
+                                    }
+                                    j++;
+                                }
+                                writer.write(chars, last, j - last);
                             }
-                            // store path to binary file as property value
-                            props.setProperty(Integer.toString(i), binPath);
-                            // replace value instance with value
-                            // backed by internal file and delete temp file
-                            values[i] = InternalValue.create(internalBlobFile);
-                            if (blobVal.isTempFile()) {
-                                blobVal.delete();
-                                blobVal = null;
-                            }
-                        } else {
-                            props.setProperty(Integer.toString(i), val.toString());
                         }
-                    } else {
-                        // null value
-                        props.setProperty(Integer.toString(i), null);
+                        writer.write("</" + VALUE_ELEMENT + ">\n");
                     }
                 }
-            }
-
-            try {
-                props.store(os, null);
+                writer.write("\t</" + VALUES_ELEMENT + ">\n");
+                writer.write("</" + PROPERTY_ELEMENT + ">\n");
             } finally {
-                // make sure stream is closed
-                os.close();
+                writer.close();
             }
         } catch (Exception e) {
             String msg = "failed to store property state: " + state.getParentUUID() + "/" + state.getName();
@@ -770,30 +749,19 @@ public class XMLPersistenceManager implements PersistenceManager {
             refs.clearAllReferences();
 
             InputStream in = itemStateStore.getInputStream(refsFilePath);
-            BufferedReader reader = null;
-            try {
-                String encoding = DEFAULT_ENCODING;
-                try {
-                    reader = new BufferedReader(new InputStreamReader(in, encoding));
-                } catch (UnsupportedEncodingException uee) {
-                    // should never get here!
-                    InputStreamReader isw = new InputStreamReader(in);
-                    encoding = isw.getEncoding();
-                    reader = new BufferedReader(isw);
-                }
-                // read references (i.e. the id's of the REFERENCE properties)
-                String s;
-                while ((s = reader.readLine()) != null) {
-                    if (s.length() > 0) {
-                        PropertyId propId = PropertyId.valueOf(s);
-                        refs.addReference(propId);
-                    }
-                }
-                return;
 
+            try {
+                SAXBuilder builder = new SAXBuilder();
+                Element rootElement = builder.build(in).getRootElement();
+
+                readState(rootElement, refs);
+                return;
             } finally {
-                reader.close();
+                in.close();
             }
+        } catch (JDOMException jde) {
+            e = jde;
+            // fall through
         } catch (IOException ioe) {
             e = ioe;
             // fall through
@@ -831,13 +799,17 @@ public class XMLPersistenceManager implements PersistenceManager {
                     encoding = osw.getEncoding();
                     writer = new BufferedWriter(osw);
                 }
+                writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
+                writer.write("<" + NODEREFERENCES_ELEMENT + " "
+                        + TARGETID_ATTRIBUTE + "=\"" + refs.getTargetId() + "\">\n");
                 // write references (i.e. the id's of the REFERENCE properties)
                 Iterator iter = refs.getReferences().iterator();
                 while (iter.hasNext()) {
                     PropertyId propId = (PropertyId) iter.next();
-                    writer.write(propId.toString());
-                    writer.newLine();
+                    writer.write("\t<" + NODEREFERENCE_ELEMENT + " "
+                    + PROPERTYID_ATTRIBUTE+ "=\"" + propId +  "\"/>\n");
                 }
+                writer.write("</" + NODEREFERENCES_ELEMENT + ">\n");
             } finally {
                 writer.close();
             }

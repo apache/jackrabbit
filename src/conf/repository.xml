@@ -114,7 +114,7 @@
             class: FQN of class implementing PersistenceManager interface
         -->
         <!--
-        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager">
+        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager"/>
         -->
         <!--
         <PersistenceManager class="org.apache.jackrabbit.core.state.mem.InMemPersistenceManager">
