@@ -1,4 +1,4 @@
-﻿<project default="package" basedir=".">
+<project default="package" basedir=".">
 
 	<!-- =================================================================== -->
 	<!-- Initialization target                                               -->
@@ -89,4 +89,3 @@
 	</target>
 
 </project>
-
