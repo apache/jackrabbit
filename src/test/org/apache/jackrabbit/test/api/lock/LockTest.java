@@ -27,12 +27,10 @@ import javax.jcr.lock.Lock;
  * <code>LockTest</code> contains the test cases for the lock support in
  * the JCR specification.
  * <p/>
- * Configuration requirements:<br/>
- * The node at {@link #testRoot} must allow child nodes of type
- * {@link #testNodeType} with name {@link #nodeName1}. The {@link #testNodeType}
- * must allow child nodes of the same node type. If {@link #testNodeType} is not
- * mix:referenceable and mix:lockable the two mixin types are added to the node
- * instance created with {@link #testNodeType}.
+ * @tck.config testroot must allow child nodes of type <code>nodetype</code>
+ * @tck.config nodetype nodetype which is lockable or allows to add mix:lockable.
+ * The node must also allow child nodes with the same node type as itself. 
+ * @tck.config nodename1 name of a lockable child node of type <code>nodetype</code>.
  *
  * @test
  * @sources LockTest.java
@@ -47,7 +45,6 @@ public class LockTest extends AbstractJCRTest {
     public void testAddRemoveLockToken() throws Exception {
         // create new node
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addMixin(mixReferenceable);
         n.addMixin(mixLockable);
         testRootNode.save();
 
@@ -104,7 +101,6 @@ public class LockTest extends AbstractJCRTest {
     public void testNodeLocked() throws Exception {
         // create new node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         n1.addMixin(mixLockable);
         testRootNode.save();
 
@@ -118,7 +114,7 @@ public class LockTest extends AbstractJCRTest {
         Session otherSuperuser = helper.getSuperuserSession();
 
         // get same node
-        Node n2 = otherSuperuser.getNodeByUUID(n1.getUUID());
+        Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
         // assert: lock token must be null for other session
         assertNull("Lock token must be null for other session",
@@ -214,7 +210,6 @@ public class LockTest extends AbstractJCRTest {
     public void testShallowLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         n1.addMixin(mixLockable);
         Node n2 = n1.addNode(nodeName2, testNodeType);
         testRootNode.save();
@@ -232,10 +227,8 @@ public class LockTest extends AbstractJCRTest {
     public void testParentChildLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         n1.addMixin(mixLockable);
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixReferenceable);
         n2.addMixin(mixLockable);
         testRootNode.save();
 
@@ -258,10 +251,8 @@ public class LockTest extends AbstractJCRTest {
     public void testParentChildDeepLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         n1.addMixin(mixLockable);
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixReferenceable);
         n2.addMixin(mixLockable);
         testRootNode.save();
 
@@ -283,7 +274,6 @@ public class LockTest extends AbstractJCRTest {
     public void testLogout() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         n1.addMixin(mixLockable);
         testRootNode.save();
 
@@ -291,7 +281,7 @@ public class LockTest extends AbstractJCRTest {
         Session otherSuperuser = helper.getSuperuserSession();
 
         // get node created above
-        Node n2 = otherSuperuser.getNodeByUUID(n1.getUUID());
+        Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
         // lock node
         Lock lock = n2.lock(false, true);
@@ -318,7 +308,6 @@ public class LockTest extends AbstractJCRTest {
     public void testLockTransfer() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         n1.addMixin(mixLockable);
         testRootNode.save();
 
@@ -326,7 +315,7 @@ public class LockTest extends AbstractJCRTest {
         Session otherSuperuser = helper.getSuperuserSession();
 
         // get node created above
-        Node n2 = otherSuperuser.getNodeByUUID(n1.getUUID());
+        Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
         // lock node
         Lock lock = n2.lock(false, true);
@@ -356,7 +345,6 @@ public class LockTest extends AbstractJCRTest {
     public void testOpenScopedLocks() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         n1.addMixin(mixLockable);
         testRootNode.save();
 
@@ -364,7 +352,7 @@ public class LockTest extends AbstractJCRTest {
         Session otherSuperuser = helper.getSuperuserSession();
 
         // get node created above
-        Node n2 = otherSuperuser.getNodeByUUID(n1.getUUID());
+        Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
         // lock node
         Lock lock = n2.lock(false, false);
@@ -387,7 +375,6 @@ public class LockTest extends AbstractJCRTest {
     public void testRefresh() throws Exception {
         // create new node
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addMixin(mixReferenceable);
         n.addMixin(mixLockable);
         testRootNode.save();
 
@@ -424,10 +411,8 @@ public class LockTest extends AbstractJCRTest {
     public void testGetLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         n1.addMixin(mixLockable);
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixReferenceable);
         n2.addMixin(mixLockable);
         testRootNode.save();
 
