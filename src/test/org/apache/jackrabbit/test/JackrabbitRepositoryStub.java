@@ -76,6 +76,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                 // register repository instance
                 Hashtable env = new Hashtable();
                 env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
+                env.put(Context.PROVIDER_URL, "localhost");
                 InitialContext ctx = new InitialContext(env);
                 RegistryHelper.registerRepository(ctx, repName, repConfig, repHome, true);
 
