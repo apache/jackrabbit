@@ -350,7 +350,6 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         root.addSelectProperty(name);
                     } else if (queryNode instanceof OrderQueryNode) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
-                        // todo implement properly
                         root.getOrderNode().addOrderSpec(name, true);
                     }
                 } catch (IllegalNameException e) {

@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -31,6 +32,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.Sort;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
@@ -215,16 +218,25 @@ public class SearchIndex extends AbstractQueryHandler {
             return null;
         }
 
-        /*
         SortField[] sortFields = new SortField[orderProps.length];
         for (int i = 0; i < orderProps.length; i++) {
-            sortFields[i] = new SortField(orderProps[i], SortField.STRING, !ascending);
+            String prop = null;
+            try {
+                prop = orderProps[i].toJCRName(nsMappings);
+            } catch (NoPrefixDeclaredException e) {
+                // will never happen
+            }
+            sortFields[i] = new SortField(prop, SortField.STRING, !orderSpecs[i]);
         }
-*/
+
         Hits hits = null;
         try {
-            hits = persistentIndex.getIndexSearcher().search(query
-                    /*, new Sort(sortFields) */);
+            if (sortFields.length > 0) {
+                hits = persistentIndex.getIndexSearcher().search(query,
+                        new Sort(sortFields));
+            } else {
+                hits = persistentIndex.getIndexSearcher().search(query);
+            }
         } finally {
             readWriteLock.readLock().release();
         }

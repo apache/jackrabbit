@@ -158,7 +158,7 @@ class ChildAxisQuery extends Query {
         private List uuids = null;
 
         /** The next document id to return */
-        private int nextDoc = 0;
+        private int nextDoc = -1;
 
         /**
          * Creates a new <code>ChildAxisScorer</code>.
@@ -172,9 +172,48 @@ class ChildAxisQuery extends Query {
         }
 
         /**
-         * @see Scorer#score(org.apache.lucene.search.HitCollector, int)
+         * @see Scorer#score(org.apache.lucene.search.HitCollector)
          */
-        public void score(HitCollector hc, int maxDoc) throws IOException {
+        public void score(HitCollector hc) throws IOException {
+            calculateChildren();
+
+            int next = hits.nextSetBit(0);
+            while (next > -1) {
+                hc.collect(next, 1.0f);
+                // move to next doc
+                next = hits.nextSetBit(next + 1);
+            }
+        }
+
+        public boolean next() throws IOException {
+            calculateChildren();
+            nextDoc = hits.nextSetBit(nextDoc + 1);
+            return nextDoc > -1;
+        }
+
+        public int doc() {
+            return nextDoc;
+        }
+
+        public float score() throws IOException {
+            // todo implement
+            return 1.0f;
+        }
+
+        public boolean skipTo(int target) throws IOException {
+            nextDoc = hits.nextSetBit(target);
+            return nextDoc > -1;
+        }
+
+        /**
+         * @exception UnsupportedOperationException this implementation always
+         * throws an <code>UnsupportedOperationException</code>.
+         */
+        public Explanation explain(int doc) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        private void calculateChildren() throws IOException {
             if (uuids == null) {
                 uuids = new ArrayList();
                 contextScorer.score(new HitCollector() {
@@ -182,7 +221,7 @@ class ChildAxisQuery extends Query {
                         // @todo maintain cache of doc id hierarchy
                         hits.set(doc);
                     }
-                }, reader.maxDoc()); // find all
+                }); // find all
                 for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
                     String uuid = reader.document(i).get(FieldNames.UUID);
                     uuids.add(uuid);
@@ -195,22 +234,7 @@ class ChildAxisQuery extends Query {
                         hits.set(children.doc());
                     }
                 }
-                nextDoc = hits.nextSetBit(0);
             }
-
-            while (nextDoc > -1 && nextDoc < maxDoc) {
-                hc.collect(nextDoc, 1.0f);
-                // move to next doc
-                nextDoc = hits.nextSetBit(nextDoc + 1);
-            }
-        }
-
-        /**
-         * @exception UnsupportedOperationException this implementation always
-         * throws an <code>UnsupportedOperationException</code>.
-         */
-        public Explanation explain(int doc) throws IOException {
-            throw new UnsupportedOperationException();
         }
     }
 }

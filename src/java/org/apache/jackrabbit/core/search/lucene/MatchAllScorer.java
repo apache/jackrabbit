@@ -34,9 +34,9 @@ import java.util.BitSet;
 class MatchAllScorer extends Scorer {
 
     /**
-     * current doc number
+     * next doc number
      */
-    private int docNo = 0;
+    private int nextDoc = 0;
 
     /**
      * IndexReader giving access to index
@@ -86,23 +86,43 @@ class MatchAllScorer extends Scorer {
     }
 
     /**
-     * Scores documents until <code>maxDoc</code> has reached.
-     *
-     * @param hc     the <code>HitCollector</code> from the underlying
-     *               lucene query.
-     * @param maxDoc collect hits until <code>maxDoc</code> has reached.
+     * @see Scorer#score(org.apache.lucene.search.HitCollector)
      */
-    public void score(HitCollector hc, int maxDoc) {
-        float score = getSimilarity().tf(1) * weight.getValue();
-        while (docNo < maxDoc) {
-            if (!reader.isDeleted(docNo)) {
-                // check docFilter
-                if (docFilter.get(docNo)) {
-                    hc.collect(docNo, score);
-                }
-            }
-            docNo++;
+    public void score(HitCollector hc) throws IOException {
+        while (next()) {
+            hc.collect(doc(), score());
         }
+    }
+
+
+    /**
+     * @see org.apache.lucene.search.Scorer#next()
+     */
+    public boolean next() throws IOException {
+        nextDoc = docFilter.nextSetBit(nextDoc + 1);
+        return nextDoc > -1;
+    }
+
+    /**
+     * @see org.apache.lucene.search.Scorer#doc()
+     */
+    public int doc() {
+        return nextDoc;
+    }
+
+    /**
+     * @see org.apache.lucene.search.Scorer#score()
+     */
+    public float score() throws IOException {
+        return 1.0f;
+    }
+
+    /**
+     * @see org.apache.lucene.search.Scorer#skipTo(int)
+     */
+    public boolean skipTo(int target) throws IOException {
+        nextDoc = target - 1;
+        return next();
     }
 
     /**

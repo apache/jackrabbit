@@ -172,7 +172,7 @@ class DescendantSelfAxisQuery extends Query {
         private Set contextUUIDs = null;
 
         /** The next document id to return */
-        private int nextDoc = 0;
+        private int nextDoc = -1;
 
         /**
          * Creates a new <code>DescendantSelfAxisScorer</code>.
@@ -187,34 +187,18 @@ class DescendantSelfAxisQuery extends Query {
         }
 
         /**
-         * @see Scorer#score(org.apache.lucene.search.HitCollector, int)
+         * @see Scorer#score(org.apache.lucene.search.HitCollector)
          */
-        public void score(HitCollector hc, int maxDoc) throws IOException {
-            if (contextUUIDs == null) {
-                contextUUIDs = new HashSet();
-                contextScorer.score(new HitCollector() {
-                    public void collect(int doc, float score) {
-                        // @todo maintain cache of doc id hierarchy
-                        hits.set(doc);
-                    }
-                }, reader.maxDoc()); // find all
-                for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
-                    contextUUIDs.add(reader.document(i).get(FieldNames.UUID));
-                }
-
-                // reuse for final hits
-                hits.clear();
-
-                subScorer.score(new HitCollector() {
-                    public void collect(int doc, float score) {
-                        subHits.set(doc);
-                    }
-                }, reader.maxDoc());
-
-                nextDoc = subHits.nextSetBit(0);
+        public void score(HitCollector hc) throws IOException {
+            while (next()) {
+                hc.collect(doc(), score());
             }
+        }
 
-            while (nextDoc > -1 && nextDoc < maxDoc) {
+        public boolean next() throws IOException {
+            calculateSubHits();
+            nextDoc = subHits.nextSetBit(nextDoc + 1);
+            while (nextDoc > -1) {
                 // check if nextDoc is really valid
                 String parentUUID = reader.document(nextDoc).get(FieldNames.PARENT);
                 while (parentUUID != null && !contextUUIDs.contains(parentUUID)) {
@@ -230,12 +214,48 @@ class DescendantSelfAxisQuery extends Query {
                     }
                 }
                 if (parentUUID != null) {
-                    // match
-                    hc.collect(nextDoc, 1.0f);
+                    return true;
                 }
-                // move to next doc
+                // try next
                 nextDoc = subHits.nextSetBit(nextDoc + 1);
+            }
+            return false;
+        }
 
+        public int doc() {
+            return nextDoc;
+        }
+
+        public float score() throws IOException {
+            return 1.0f;
+        }
+
+        public boolean skipTo(int target) throws IOException {
+            nextDoc = target - 1;
+            return next();
+        }
+
+        private void calculateSubHits() throws IOException {
+            if (contextUUIDs == null) {
+                contextUUIDs = new HashSet();
+                contextScorer.score(new HitCollector() {
+                    public void collect(int doc, float score) {
+                        // @todo maintain cache of doc id hierarchy
+                        hits.set(doc);
+                    }
+                }); // find all
+                for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
+                    contextUUIDs.add(reader.document(i).get(FieldNames.UUID));
+                }
+
+                // reuse for final hits
+                hits.clear();
+
+                subScorer.score(new HitCollector() {
+                    public void collect(int doc, float score) {
+                        subHits.set(doc);
+                    }
+                });
             }
         }
 

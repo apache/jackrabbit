@@ -34,12 +34,20 @@ class WildcardTermEnum extends FilteredTermEnum {
     private boolean endEnum = false;
 
     public WildcardTermEnum(IndexReader reader, Term term) throws IOException {
-        super(reader, term);
         pattern = createRegexp(term.text());
         field = term.field();
 
-        // FIXME optimize term enum. find start term text
-        setEnum(reader.terms(new Term(term.field(), "")));
+        int idx = 0;
+        while (idx < term.text().length()
+                && Character.isLetterOrDigit(term.text().charAt(idx))) {
+            idx++;
+        }
+        // because IndexReader.terms() starts with the term after the given
+        // one start with idx - 1
+        if (idx > 0) {
+            idx--;
+        }
+        setEnum(reader.terms(new Term(term.field(), term.text().substring(0, idx))));
     }
 
     protected boolean termCompare(Term term) {
