@@ -6,8 +6,6 @@ is it complete :(
 
 - locking
 - access control (jaas)
-- use jdbc as an alternative to virtual filesystem persistence layer
-- use an alternative journaling store as (transactional) persistence layer 
 - provide clean abstraction for persistence grouping (nodes & properties 
   that should be stored/loaded together in the persistence layer);
   (e.g. properties are stored within .node.xml)
@@ -22,7 +20,8 @@ is it complete :(
   update cache on hierarchy changes (move, hardlink, remove, etc) 
 - inline @todo comments: resolve/implement
 - javaDoc, javaDoc, javaDoc
-- logging: use commons logging instead of log4j
+- logging: use commons logging (JCL) instead of log4j 
+  (patch supplied by manoj is available pending a JCL/UGLI decision)
 - logging: remove unnecessary output, check log categories/verbosity, 
   use 'debug' whenever possible
     
