@@ -130,10 +130,8 @@ class EventConsumer {
      * enough access rights to see the event.
      *
      * @param events the collection of {@link EventState}s.
-     * @throws RepositoryException if an error occurs while checking access
-     *                             rights on the {@link EventStateCollection}.
      */
-    void prepareEvents(EventStateCollection events) throws RepositoryException {
+    void prepareEvents(EventStateCollection events) {
         Iterator it = events.iterator();
         Set denied = null;
         while (it.hasNext()) {
@@ -151,12 +149,18 @@ class EventConsumer {
                 ItemId targetId;
                 if (state.getChildUUID() == null) {
                     // target is a property
-                    targetId = new PropertyId(state.getParentUUID(), state.getChildRelPath().getElements()[0].getName());
+                    targetId = new PropertyId(state.getParentUUID(), state.getChildRelPath().getName());
                 } else {
                     // target is a node
                     targetId = new NodeId(state.getChildUUID());
                 }
-                if (!session.getAccessManager().isGranted(targetId, AccessManager.READ)) {
+                boolean granted = false;
+                try {
+                    granted = session.getAccessManager().isGranted(targetId, AccessManager.READ);
+                } catch (RepositoryException e) {
+                    log.warn("Unable to check access rights for item: " + targetId);
+                }
+                if (!granted) {
                     if (denied == null) {
                         denied = new HashSet();
                     }
@@ -186,7 +190,7 @@ class EventConsumer {
                 ItemId targetId;
                 if (state.getChildUUID() == null) {
                     // target is a property
-                    targetId = new PropertyId(state.getParentUUID(), state.getChildRelPath().getElements()[0].getName());
+                    targetId = new PropertyId(state.getParentUUID(), state.getChildRelPath().getName());
                 } else {
                     // target is a node
                     targetId = new NodeId(state.getChildUUID());

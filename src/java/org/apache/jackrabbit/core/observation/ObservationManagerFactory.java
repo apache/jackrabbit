@@ -19,16 +19,11 @@ package org.apache.jackrabbit.core.observation;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.UnboundedFifoBuffer;
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.log4j.Logger;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.ItemManager;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventListenerIterator;
-import javax.jcr.observation.ObservationManager;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -119,7 +114,7 @@ public final class ObservationManagerFactory implements Runnable {
      *
      * @return <code>Set</code> of <code>EventConsumer</code>s.
      */
-    private Set getAsynchronousConsumers() {
+    Set getAsynchronousConsumers() {
         synchronized (consumerChange) {
             if (readOnlyConsumers == null) {
                 readOnlyConsumers = Collections.unmodifiableSet(new HashSet(activeConsumers));
@@ -128,7 +123,7 @@ public final class ObservationManagerFactory implements Runnable {
         }
     }
 
-    private Set getSynchronousConsumers() {
+    Set getSynchronousConsumers() {
         synchronized (consumerChange) {
             if (synchronousReadOnlyConsumers == null) {
                 synchronousReadOnlyConsumers = Collections.unmodifiableSet(new HashSet(synchronousConsumers));
@@ -145,15 +140,10 @@ public final class ObservationManagerFactory implements Runnable {
      * @param itemMgr the <code>ItemManager</code> of the <code>session</code>.
      * @return an <code>ObservationManager</code>.
      */
-    public ObservationManager createObservationManager(SessionImpl session,
-                                                       ItemManager itemMgr) {
-        return new SessionLocalObservationManager(session, itemMgr);
-    }
-
-    public EventStateCollection createEventStateCollection(SessionImpl session,
-                                                           ItemStateManager provider,
-                                                           HierarchyManager hmgr) {
-        return new EventStateCollection(this, session, provider, hmgr);
+    public ObservationManagerImpl createObservationManager(SessionImpl session,
+                                                           HierarchyManager hmgr,
+                                                           ItemManager itemMgr) {
+        return new ObservationManagerImpl(this, session, hmgr, itemMgr);
     }
 
     /**
@@ -187,8 +177,7 @@ public final class ObservationManagerFactory implements Runnable {
      *
      * @param events the {@link EventState}s to prepare.
      */
-    void prepareEvents(EventStateCollection events)
-            throws RepositoryException {
+    void prepareEvents(EventStateCollection events) {
         Set consumers = new HashSet();
         consumers.addAll(getSynchronousConsumers());
         consumers.addAll(getAsynchronousConsumers());
@@ -222,142 +211,46 @@ public final class ObservationManagerFactory implements Runnable {
         eventQueue.add(new DispatchAction(events, getAsynchronousConsumers()));
     }
 
-    //----------------------------< adapter class >-----------------------------
-
     /**
-     * Each <code>Session</code> instance has its own <code>ObservationManager</code>
-     * instance. The class <code>SessionLocalObservationManager</code> implements
-     * this behaviour.
+     * Adds or replaces an event consumer.
+     * @param consumer the <code>EventConsumer</code> to add or replace.
      */
-    class SessionLocalObservationManager implements ObservationManager {
-
-        /**
-         * The <code>Session</code> this <code>ObservationManager</code>
-         * belongs to.
-         */
-        private SessionImpl session;
-
-        /**
-         * The <code>ItemManager</code> for this <code>ObservationManager</code>.
-         */
-        private ItemManager itemMgr;
-
-        /**
-         * Creates an <code>ObservationManager</code> instance.
-         *
-         * @param session the <code>Session</code> this ObservationManager
-         *                belongs to.
-         * @param itemMgr {@link org.apache.jackrabbit.core.ItemManager} of the passed
-         *                <code>Session</code>.
-         * @throws NullPointerException if <code>session</code> or <code>itemMgr</code>
-         *                              is <code>null</code>.
-         */
-        SessionLocalObservationManager(SessionImpl session,
-                                       ItemManager itemMgr) {
-            if (session == null) {
-                throw new NullPointerException("session");
-            }
-            if (itemMgr == null) {
-                throw new NullPointerException("itemMgr");
-            }
-
-            this.session = session;
-            this.itemMgr = itemMgr;
-        }
-
-        /**
-         * @see ObservationManager#addEventListener
-         */
-        public void addEventListener(EventListener listener,
-                                     int eventTypes,
-                                     String absPath,
-                                     boolean isDeep,
-                                     String[] uuid,
-                                     String[] nodeTypeName,
-                                     boolean noLocal)
-                throws RepositoryException {
-
-            // create NodeType instances from names
-            NodeTypeImpl[] nodeTypes;
-            if (nodeTypeName == null) {
-                nodeTypes = null;
+    void addConsumer(EventConsumer consumer) {
+        synchronized (consumerChange) {
+            if (consumer.getEventListener() instanceof SynchronousEventListener) {
+                // remove existing if any
+                synchronousConsumers.remove(consumer);
+                // re-add it
+                synchronousConsumers.add(consumer);
+                // reset read only consumer set
+                synchronousReadOnlyConsumers = null;
             } else {
-                NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-                nodeTypes = new NodeTypeImpl[nodeTypeName.length];
-                for (int i = 0; i < nodeTypes.length; i++) {
-                    nodeTypes[i] = (NodeTypeImpl) ntMgr.getNodeType(nodeTypeName[i]);
-                }
+                // remove existing if any
+                activeConsumers.remove(consumer);
+                // re-add it
+                activeConsumers.add(consumer);
+                // reset read only consumer set
+                readOnlyConsumers = null;
             }
-
-            Path path;
-            try {
-                path = Path.create(absPath, session.getNamespaceResolver(), true);
-            } catch (MalformedPathException mpe) {
-                String msg = "invalid path syntax: " + absPath;
-                log.debug(msg);
-                throw new RepositoryException(msg, mpe);
-            }
-            // create filter
-            EventFilter filter = new EventFilter(itemMgr,
-                    session,
-                    eventTypes,
-                    path,
-                    isDeep,
-                    uuid,
-                    nodeTypes,
-                    noLocal);
-
-            EventConsumer consumer =
-                    new EventConsumer(session, listener, filter);
-
-            synchronized (consumerChange) {
-                if (listener instanceof SynchronousEventListener) {
-                    // remove existing if any
-                    synchronousConsumers.remove(consumer);
-                    // re-add it
-                    synchronousConsumers.add(consumer);
-                    // reset read only consumer set
-                    synchronousReadOnlyConsumers = null;
-                } else {
-                    // remove existing if any
-                    activeConsumers.remove(consumer);
-                    // re-add it
-                    activeConsumers.add(consumer);
-                    // reset read only consumer set
-                    readOnlyConsumers = null;
-                }
-            }
-        }
-
-        /**
-         * @see ObservationManager#removeEventListener(javax.jcr.observation.EventListener)
-         */
-        public void removeEventListener(EventListener listener)
-                throws RepositoryException {
-            EventConsumer consumer =
-                    new EventConsumer(session, listener, EventFilter.BLOCK_ALL);
-
-            synchronized (consumerChange) {
-                if (listener instanceof SynchronousEventListener) {
-                    synchronousConsumers.remove(consumer);
-                    // reset read only listener set
-                    synchronousReadOnlyConsumers = null;
-                } else {
-                    activeConsumers.remove(consumer);
-                    // reset read only listener set
-                    readOnlyConsumers = null;
-                }
-            }
-        }
-
-        /**
-         * @see ObservationManager#getRegisteredEventListeners()
-         */
-        public EventListenerIterator getRegisteredEventListeners()
-                throws RepositoryException {
-            return new EventListenerIteratorImpl(session,
-                    getSynchronousConsumers(),
-                    getAsynchronousConsumers());
         }
     }
+
+    /**
+     * Unregisters an event consumer from event notification.
+     * @param consumer the consumer to deregister.
+     */
+    void removeConsumer(EventConsumer consumer) {
+        synchronized (consumerChange) {
+            if (consumer.getEventListener() instanceof SynchronousEventListener) {
+                synchronousConsumers.remove(consumer);
+                // reset read only listener set
+                synchronousReadOnlyConsumers = null;
+            } else {
+                activeConsumers.remove(consumer);
+                // reset read only listener set
+                readOnlyConsumers = null;
+            }
+        }
+    }
+
 }

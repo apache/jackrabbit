@@ -100,6 +100,8 @@ public class AbstractVersionTest extends AbstractJCRTest {
         try {
             versionableNode.remove();
             testRootNode.save();
+        } catch (Exception e) {
+            log.println("Exception in tearDown: " + e.toString());
         } finally {
             super.tearDown();
         }

@@ -54,7 +54,7 @@ class EventState {
      * The relative path of the child item associated with this event.
      * This is basically the name of the item with an optional index.
      */
-    private final Path childRelPath;
+    private final Path.PathElement childRelPath;
 
     /**
      * The node type of the parent node.
@@ -97,7 +97,7 @@ class EventState {
                        String parentUUID,
                        Path parentPath,
                        String childUUID,
-                       Path childPath,
+                       Path.PathElement childPath,
                        NodeTypeImpl nodeType,
                        Session session) {
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
@@ -138,7 +138,7 @@ class EventState {
     public static EventState childNodeAdded(String parentUUID,
                                             Path parentPath,
                                             String childUUID,
-                                            Path childPath,
+                                            Path.PathElement childPath,
                                             NodeTypeImpl nodeType,
                                             Session session) {
         return new EventState(Event.NODE_ADDED,
@@ -167,7 +167,7 @@ class EventState {
     public static EventState childNodeRemoved(String parentUUID,
                                               Path parentPath,
                                               String childUUID,
-                                              Path childPath,
+                                              Path.PathElement childPath,
                                               NodeTypeImpl nodeType,
                                               Session session) {
         return new EventState(Event.NODE_REMOVED,
@@ -194,7 +194,7 @@ class EventState {
      */
     public static EventState propertyAdded(String parentUUID,
                                            Path parentPath,
-                                           Path childPath,
+                                           Path.PathElement childPath,
                                            NodeTypeImpl nodeType,
                                            Session session) {
         return new EventState(Event.PROPERTY_ADDED,
@@ -221,7 +221,7 @@ class EventState {
      */
     public static EventState propertyRemoved(String parentUUID,
                                              Path parentPath,
-                                             Path childPath,
+                                             Path.PathElement childPath,
                                              NodeTypeImpl nodeType,
                                              Session session) {
         return new EventState(Event.PROPERTY_REMOVED,
@@ -248,7 +248,7 @@ class EventState {
      */
     public static EventState propertyChanged(String parentUUID,
                                              Path parentPath,
-                                             Path childPath,
+                                             Path.PathElement childPath,
                                              NodeTypeImpl nodeType,
                                              Session session) {
         return new EventState(Event.PROPERTY_CHANGED,
@@ -300,9 +300,9 @@ class EventState {
      * Returns the relative {@link Path} of the child
      * {@link javax.jcr.Item} associated with this event.
      *
-     * @return the <code>Path</code> associated with this event.
+     * @return the <code>Path.PathElement</code> associated with this event.
      */
-    public Path getChildRelPath() {
+    public Path.PathElement getChildRelPath() {
         return childRelPath;
     }
 

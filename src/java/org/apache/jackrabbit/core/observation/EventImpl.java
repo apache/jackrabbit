@@ -81,7 +81,12 @@ public final class EventImpl implements Event {
      */
     public String getPath() throws RepositoryException {
         try {
-            Path p = Path.create(eventState.getParentPath(), eventState.getChildRelPath(), false);
+            Path p = null;
+            if (eventState.getChildRelPath().getIndex() > 0) {
+                p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), eventState.getChildRelPath().getIndex(), false);
+            } else {
+                p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), false);
+            }
             return p.toJCRPath(session.getNamespaceResolver());
         } catch (MalformedPathException e) {
             String msg = "internal error: malformed path for event";

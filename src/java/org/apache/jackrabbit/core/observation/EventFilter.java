@@ -21,14 +21,21 @@ import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.observation.Event;
 
 /**
  * The <code>EventFilter</code> class implements the filter logic based
  * on the session's access rights and the specified filter rules.
  */
 class EventFilter {
+
+    /**
+     * Logger instance for this class.
+     */
+    private static final Logger log = Logger.getLogger(EventFilter.class);
 
     static final EventFilter BLOCK_ALL = new BlockAllFilter();
 
@@ -173,21 +180,11 @@ class EventFilter {
             }
         }
 
-        /*
-        Node parent = null;
-        try {
-            parent = (Node) itemMgr.getItem(new NodeId(eventState.getParentUUID()));
-        } catch (AccessDeniedException e) {
-            log.debug("Access denied for " + eventState.getParentPath());
-            return true;
-        }
-        */
-
         // check node types
         if (nodeTypes != null) {
             boolean match = false;
             for (int i = 0; i < nodeTypes.length && !match; i++) {
-                match |= eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
+                match |= eventState.getNodeType().equals(nodeTypes[i]) || eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
             }
             if (!match) {
                 return true;
@@ -196,10 +193,25 @@ class EventFilter {
 
         // finally check path
         try {
-            //parentPath = Path.create(parent.getPath(), session.getNamespaceResolver(), false);
-            boolean match = eventState.getParentPath().equals(path);
+            // the relevant path for the path filter depends on the event type
+            // for node events, the relevant path is the one returned by
+            // Event.getPath().
+            // for property events, the relevant path is the path of the
+            // node where the property belongs to.
+            Path eventPath = null;
+            if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
+                Path.PathElement nameElem = eventState.getChildRelPath();
+                if (nameElem.getIndex() == 0) {
+                    eventPath = Path.create(eventState.getParentPath(), nameElem.getName(), false);
+                } else {
+                    eventPath = Path.create(eventState.getParentPath(), nameElem.getName(), nameElem.getIndex(), false);
+                }
+            } else {
+                eventPath = eventState.getParentPath();
+            }
+            boolean match = eventPath.equals(path);
             if (!match && isDeep) {
-                match = eventState.getParentPath().isDescendantOf(path);
+                match = eventPath.isDescendantOf(path);
             }
 
             return !match;

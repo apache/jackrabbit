@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.log4j.Logger;
 
 /**
@@ -37,6 +38,16 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     private static final String ATTRIBUTE_CHANGE_LOG = "ChangeLog";
 
     /**
+     * ThreadLocal that holds the ChangeLog while this item state manager
+     * is in commit().
+     */
+    private static ThreadLocal commitLog = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            return new CommitLog();
+        }
+    };
+
+    /**
      * Current transactional change log
      */
     private transient ChangeLog txLog;
@@ -46,8 +57,8 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
      *
      * @param sharedStateMgr shared state manager
      */
-    public TransactionalItemStateManager(SharedItemStateManager sharedStateMgr) {
-        super(sharedStateMgr);
+    public TransactionalItemStateManager(SharedItemStateManager sharedStateMgr, WorkspaceImpl wspImpl) {
+        super(sharedStateMgr, wspImpl);
     }
 
     /**
@@ -75,10 +86,15 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
         ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
         if (changeLog != null) {
             try {
+                // set changeLog in ThreadLocal
+                ((CommitLog) commitLog.get()).setChanges(changeLog);
                 super.update(changeLog);
             } catch (ItemStateException e) {
+                log.error(e);
                 changeLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to end update.", e);
+            } finally {
+                ((CommitLog) commitLog.get()).setChanges(null);
             }
             changeLog.reset();
             tx.notifyCommitted();
@@ -102,13 +118,22 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     /**
      * @see ItemStateManager#getItemState(org.apache.jackrabbit.core.ItemId)
      *
-     * If associated to a transaction, check our transactional
-     * change log first.
+     * If this state manager is committing changes, this method first checks
+     * the commitLog ThreadLocal. Else if associated to a transaction check
+     * the transactional change log. Fallback is always the call to the base
+     * class.
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        if (txLog != null) {
+        ChangeLog changeLog = ((CommitLog) commitLog.get()).getChanges();
+        if (changeLog != null) {
+            // check items in commit log
+            ItemState state = changeLog.get(id);
+            if (state != null) {
+                return state;
+            }
+        } else if (txLog != null) {
             // check items in change log
             ItemState state = txLog.get(id);
             if (state != null) {
@@ -121,11 +146,24 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     /**
      * @see ItemStateManager#hasItemState(org.apache.jackrabbit.core.ItemId)
      *
-     * If associated to a transaction, check our transactional
-     * change log first.
+     * If this state manager is committing changes, this method first checks
+     * the commitLog ThreadLocal. Else if associated to a transaction check
+     * the transactional change log. Fallback is always the call to the base
+     * class.
      */
     public boolean hasItemState(ItemId id) {
-        if (txLog != null) {
+        ChangeLog changeLog = ((CommitLog) commitLog.get()).getChanges();
+        if (changeLog != null) {
+            // check items in commit log
+            try {
+                ItemState state = changeLog.get(id);
+                if (state != null) {
+                    return true;
+                }
+            } catch (NoSuchItemStateException e) {
+                return false;
+            }
+        } else if (txLog != null) {
             // check items in change log
             try {
                 ItemState state = txLog.get(id);
@@ -142,13 +180,22 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     /**
      * @see ItemStateManager#getNodeReferences
      *
-     * If associated to a transaction, check our transactional
-     * change log first.
+     * If this state manager is committing changes, this method first
+     * checks the commitLog ThreadLocal. Else if associated to a transaction
+     * check the transactional change log. Fallback is always the call to
+     * the base class.
      */
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        if (txLog != null) {
+        ChangeLog changeLog = ((CommitLog) commitLog.get()).getChanges();
+        if (changeLog != null) {
+            // check commit log
+            NodeReferences refs = changeLog.get(id);
+            if (refs != null) {
+                return refs;
+            }
+        } else if (txLog != null) {
             // check change log
             NodeReferences refs = txLog.get(id);
             if (refs != null) {
@@ -170,6 +217,39 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
             txLog.merge(changeLog);
         } else {
             super.update(changeLog);
+        }
+    }
+
+    //--------------------------< inner classes >-------------------------------
+
+    /**
+     * Helper class that serves as a container for a ChangeLog in a ThreadLocal.
+     * The <code>CommitLog</code> is associated with a <code>ChangeLog</code>
+     * while the <code>TransactionalItemStateManager</code> is in the commit
+     * method.
+     */
+    private static class CommitLog {
+
+        /** The changes that are about to be committed */
+        private ChangeLog changes;
+
+        /**
+         * Sets changes that are about to be committed.
+         * @param changes that are about to be committed, or <code>null</code>
+         * if changes have been committed and the commit log should be reset.
+         */
+        private void setChanges(ChangeLog changes) {
+            this.changes = changes;
+        }
+
+        /**
+         * The changes that are about to be committed, or <code>null</code> if
+         * the <code>TransactionalItemStateManager</code> is currently not
+         * committing any changes.
+         * @return the changes about to be committed.
+         */
+        private ChangeLog getChanges() {
+            return changes;
         }
     }
 }

@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version.persistence;
 
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -165,7 +166,8 @@ public class NativePVM implements PersistentVersionManager, Constants {
             //this.stateMgr = new NativeItemStateManager(pMgr, PERSISTENT_ROOT_ID.getUUID(), ntReg);
             this.pMgr = pMgr;
             SharedItemStateManager sharedStateMgr = new SharedItemStateManager(pMgr, PERSISTENT_ROOT_ID.getUUID(), ntReg);
-            stateMgr = new LocalItemStateManager(sharedStateMgr);
+            // todo versioning is not attached to any workspace!! how do we trigger observation?
+            stateMgr = new LocalItemStateManager(sharedStateMgr, null);
             NodeState nodeState = (NodeState) stateMgr.getItemState(PERSISTENT_ROOT_ID);
             historyRoot = new PersistentNode(stateMgr, nodeState);
             initVirtualIds(historyRoot.getState());

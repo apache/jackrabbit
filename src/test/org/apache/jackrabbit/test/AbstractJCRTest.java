@@ -76,6 +76,16 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String jcrUUID;
 
     /**
+     * JCR Name jcr:lockOwner using the namespace resolver of the current session.
+     */
+    protected String jcrLockOwner;
+
+    /**
+     * JCR Name jcr:lockIsDeep using the namespace resolver of the current session.
+     */
+    protected String jcrlockIsDeep;
+
+    /**
      * JCR Name nt:base using the namespace resolver of the current session.
      */
     protected String ntBase;
@@ -212,6 +222,8 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrPredecessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":predecessors";
         jcrBaseVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":baseVersion";
         jcrUUID = superuser.getNamespacePrefix(NS_JCR_URI) + ":uuid";
+        jcrLockOwner = superuser.getNamespacePrefix(NS_JCR_URI) + ":lockOwner";
+        jcrlockIsDeep = superuser.getNamespacePrefix(NS_JCR_URI) + ":lockIsDeep";
         ntBase = superuser.getNamespacePrefix(NS_NT_URI) + ":base";
         mixReferenceable = superuser.getNamespacePrefix(NS_MIX_URI) + ":referenceable";
         mixVersionable = superuser.getNamespacePrefix(NS_MIX_URI) + ":versionable";
@@ -284,6 +296,8 @@ public abstract class AbstractJCRTest extends JUnitTest {
                         root.save();
                     }
                 }
+            } catch (Exception e) {
+                log.println("Exception in tearDown: " + e.toString());
             } finally {
                 superuser.logout();
             }

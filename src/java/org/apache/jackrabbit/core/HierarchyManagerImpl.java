@@ -289,7 +289,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     // to the same child node, always use the first one
                     NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
                     // add to path
-                    builder.addFirst(entry.getName(), entry.getIndex());
+                    if (entry.getIndex() == 1) {
+                        builder.addFirst(entry.getName());
+                    } else {
+                        builder.addFirst(entry.getName(), entry.getIndex());
+                    }
                 } else {
                     PropertyState propState = (PropertyState) state;
                     QName name = propState.getName();
@@ -538,7 +542,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     // get a path builder clone from the tail of the queue
                     Path.PathBuilder pb = (Path.PathBuilder) queue.removeLast();
                     // add entry to path
-                    pb.addFirst(entry.getName(), entry.getIndex());
+                    if (entry.getIndex() == 1) {
+                        pb.addFirst(entry.getName());
+                    } else {
+                        pb.addFirst(entry.getName(), entry.getIndex());
+                    }
 
                     // recurse
                     recursiveBuildPaths(new NodeId(parentUUID), pb, builders, includeZombies);

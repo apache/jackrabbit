@@ -16,13 +16,12 @@
  */
 package org.apache.jackrabbit.test.api.observation;
 
-import junit.framework.TestCase;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all testcases for the package
- * <code>javax.jcr.observation</code>.
+ * Test suite that includes all testcases for the Observation module.
  */
 public class TestAll extends TestCase {
 
@@ -34,9 +33,20 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("javax.jcr.observation tests");
+        TestSuite suite = new TestSuite("Observation tests");
 
-        // ADD TEST CLASSES HERE:
+        suite.addTestSuite(EventIteratorTest.class);
+        suite.addTestSuite(EventTest.class);
+        suite.addTestSuite(GetRegisteredEventListenersTest.class);
+        suite.addTestSuite(LockingTest.class);
+        suite.addTestSuite(NodeAddedTest.class);
+        suite.addTestSuite(NodeRemovedTest.class);
+        suite.addTestSuite(NodeMovedTest.class);
+        suite.addTestSuite(PropertyAddedTest.class);
+        suite.addTestSuite(PropertyChangedTest.class);
+        suite.addTestSuite(PropertyRemovedTest.class);
+        suite.addTestSuite(AddEventListenerTest.class);
+        suite.addTestSuite(WorkspaceOperationTest.class);
 
         return suite;
     }

@@ -20,8 +20,10 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.log4j.Logger;
 
+import javax.jcr.RepositoryException;
 import java.io.PrintStream;
 
 /**
@@ -42,6 +44,11 @@ public class LocalItemStateManager extends ItemStateCache
     protected final SharedItemStateManager sharedStateMgr;
 
     /**
+     * Local WorkspaceImpl instance.
+     */
+    protected final WorkspaceImpl wspImpl;
+
+    /**
      * Flag indicating whether this item state manager is in edit mode
      */
     private boolean editMode;
@@ -53,11 +60,18 @@ public class LocalItemStateManager extends ItemStateCache
 
     /**
      * Creates a new <code>LocalItemStateManager</code> instance.
+     * todo LocalItemStateManager without a wspImpl will not generate observation events!
      *
      * @param sharedStateMgr shared state manager
+     * @param wspImpl the workspace instance where this item state manager
+     * belongs to, or <code>null</code> if this item state manager is not
+     * associated with a workspace. This is the case for the version item state
+     * manager. Version item states are not associated with a specific workspace
+     * instance.
      */
-    public LocalItemStateManager(SharedItemStateManager sharedStateMgr) {
+    public LocalItemStateManager(SharedItemStateManager sharedStateMgr, WorkspaceImpl wspImpl) {
         this.sharedStateMgr = sharedStateMgr;
+        this.wspImpl = wspImpl;
     }
 
     /**
@@ -304,7 +318,14 @@ public class LocalItemStateManager extends ItemStateCache
     protected void update(ChangeLog changeLog)
             throws ItemStateException {
 
-        sharedStateMgr.store(changeLog);
+        try {
+            sharedStateMgr.store(changeLog, (wspImpl != null) ? wspImpl.getObservationManagerImpl() : null);
+        } catch (RepositoryException e) {
+            // should never get here
+            String msg = "ObservationManager unavailable";
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        }
 
         changeLog.persisted();
     }

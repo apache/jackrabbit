@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
@@ -293,11 +295,15 @@ public class SharedItemStateManager extends ItemStateCache
      * Store modifications registered in a <code>ChangeLog</code>. The items
      * contained in the <tt>ChangeLog</tt> are not states returned by this
      * item state manager but rather must be reconnected to items provided
-     * by this state manager.
+     * by this state manager.<p/>
+     * After successfully storing the states the observation manager is informed
+     * about the changes, if an observation manager is passed to this method.
      * @param local change log containing local items
+     * @param obsMgr the observation manager to inform, or <code>null</code> if
+     *  no observation manager should be informed.
      * @throws ItemStateException if an error occurs
      */
-    public synchronized void store(ChangeLog local) throws ItemStateException {
+    public synchronized void store(ChangeLog local, ObservationManagerImpl obsMgr) throws ItemStateException {
         ChangeLog shared = new ChangeLog();
 
         /**
@@ -346,6 +352,14 @@ public class SharedItemStateManager extends ItemStateCache
             shared.deleted(state.getOverlayedState());
         }
 
+        /* prepare the events */
+        EventStateCollection events = null;
+        if (obsMgr != null) {
+            events = obsMgr.createEventStateCollection();
+            events.createEventStates(local, this);
+            events.prepare();
+        }
+
         /* Push all changes from the local items to the shared items */
         local.push();
 
@@ -354,6 +368,11 @@ public class SharedItemStateManager extends ItemStateCache
 
         /* Let the shared item listeners know about the change */
         shared.persisted();
+
+        /* dispatch the events */
+        if (events != null) {
+            events.dispatch();
+        }
     }
 
     //----------------------------------------------------< ItemStateListener >

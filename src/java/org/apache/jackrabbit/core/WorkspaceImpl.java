@@ -36,6 +36,7 @@ import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -103,7 +104,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     /**
      * The <code>ObservationManager</code> instance for this session.
      */
-    protected ObservationManager obsMgr;
+    protected ObservationManagerImpl obsMgr;
 
     /**
      * The <code>QueryManager</code> for this <code>Workspace</code>.
@@ -123,11 +124,13 @@ public class WorkspaceImpl implements Workspace, Constants {
      * @param rep
      * @param session
      */
-    WorkspaceImpl(WorkspaceConfig wspConfig, SharedItemStateManager stateMgr,
-                  RepositoryImpl rep, SessionImpl session) {
+    WorkspaceImpl(WorkspaceConfig wspConfig,
+                  SharedItemStateManager stateMgr,
+                  RepositoryImpl rep,
+                  SessionImpl session) {
         this.wspConfig = wspConfig;
         this.rep = rep;
-        this.stateMgr = new TransactionalItemStateManager(stateMgr);
+        this.stateMgr = new TransactionalItemStateManager(stateMgr, this);
         this.hierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(),
                 this.stateMgr, session.getNamespaceResolver());
         this.session = session;
@@ -933,7 +936,16 @@ public class WorkspaceImpl implements Workspace, Constants {
     /**
      * @see Workspace#getObservationManager
      */
-    public synchronized ObservationManager getObservationManager()
+    public ObservationManager getObservationManager()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        return getObservationManagerImpl();
+    }
+
+    /**
+     * Returns the ObservationManagerImpl for this workspace instance.
+     * @return the ObservationManagerImpl for this workspace instance.
+     */
+    public synchronized ObservationManagerImpl getObservationManagerImpl()
             throws UnsupportedRepositoryOperationException, RepositoryException {
 
         // check state of this instance
@@ -941,7 +953,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         if (obsMgr == null) {
             try {
-                obsMgr = rep.getObservationManagerFactory(wspConfig.getName()).createObservationManager(session, session.getItemManager());
+                obsMgr = rep.getObservationManagerFactory(wspConfig.getName()).createObservationManager(session, session.hierMgr, session.getItemManager());
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";
