@@ -40,13 +40,12 @@
   <shortDescription>Implementation of the Content Repository for Java</shortDescription>
   <url>http://incubator.apache.org/projects/jackrabbit.html</url>
   <issueTrackingUrl>http://issues.apache.org/jira/browse/JCR</issueTrackingUrl>
-  <siteAddress>incubator.apache.org</siteAddress>
-  <siteDirectory>/www/incubator.apache.org/jackrabbit/docs/</siteDirectory>
+  <siteDirectory>docs</siteDirectory>
   <distributionSite>incubator.apache.org</distributionSite>
   <distributionDirectory>/www/www.apache.org/dist/java-repository/</distributionDirectory>
   <repository>
-    <connection>scm:subversion:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/</connection>
-    <developerConnection>scm:subversion:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/</developerConnection>
+    <connection>scm:subversion:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</connection>
+    <developerConnection>scm:subversion:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</developerConnection>
     <url>http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/?root=Apache-SVN</url>
   </repository>
   <versions/>
@@ -83,7 +82,7 @@
         <role>Mentor</role>
         <role>Java Developer</role>
       </roles>
-      <timezone>-6</timezone>
+      <timezone>-7</timezone>
     </developer>
     <developer>
       <name>Stefan Guggisberg</name>
