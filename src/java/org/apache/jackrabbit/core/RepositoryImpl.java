@@ -15,6 +15,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
@@ -23,13 +24,15 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PersistentItemStateManager;
+import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
+import org.apache.jackrabbit.core.state.ReferenceManager;
 import org.apache.jackrabbit.core.state.tx.TransactionManager;
 import org.apache.jackrabbit.core.state.tx.XASessionImpl;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.log4j.Logger;
-import org.apache.commons.collections.ReferenceMap;
 
 import javax.jcr.*;
 import javax.jcr.observation.Event;
@@ -436,7 +439,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         wspConfigs.put(workspaceName, repConfig.getWorkspaceConfig(workspaceName));
     }
 
-    synchronized PersistentItemStateProvider getWorkspaceStateManager(String workspaceName)
+    PersistentItemStateProvider getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
         if (disposed) {
@@ -447,24 +450,27 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-        // get/create per named workspace (i.e. per physical storage) item state manager
-        PersistentItemStateProvider stateMgr =
-                (PersistentItemStateProvider) wspStateMgrs.get(workspaceName);
-        if (stateMgr == null) {
-            // create state manager
-            try {
-                stateMgr = new PersistentItemStateManager(wspConfig.getPersistenceManager(), rootNodeUUID, ntReg);
-            } catch (ItemStateException ise) {
-                String msg = "failed to instantiate the persistent state manager";
-                log.error(msg, ise);
-                throw new RepositoryException(msg, ise);
+
+        synchronized (wspStateMgrs) {
+            // get/create per named workspace (i.e. per physical storage) item state manager
+            PersistentItemStateProvider stateMgr =
+                    (PersistentItemStateProvider) wspStateMgrs.get(workspaceName);
+            if (stateMgr == null) {
+                // create state manager
+                try {
+                    stateMgr = new PersistentItemStateManager(wspConfig.getPersistenceManager(), rootNodeUUID, ntReg);
+                } catch (ItemStateException ise) {
+                    String msg = "failed to instantiate the persistent state manager";
+                    log.error(msg, ise);
+                    throw new RepositoryException(msg, ise);
+                }
+                wspStateMgrs.put(workspaceName, stateMgr);
             }
-            wspStateMgrs.put(workspaceName, stateMgr);
+            return stateMgr;
         }
-        return stateMgr;
     }
 
-    synchronized ReferenceManager getWorkspaceReferenceManager(String workspaceName)
+    ReferenceManager getWorkspaceReferenceManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
         if (disposed) {
@@ -475,18 +481,21 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-        ReferenceManager refMgr
-                = (ReferenceManager) wspRefMgrs.get(workspaceName);
-        if (refMgr == null) {
-            // create reference mgr that uses the perstistence mgr configured
-            // in the workspace definition
-            refMgr = new ReferenceManager(wspConfig.getPersistenceManager());
-            wspRefMgrs.put(workspaceName, refMgr);
+
+        synchronized (wspRefMgrs) {
+            ReferenceManager refMgr
+                    = (ReferenceManager) wspRefMgrs.get(workspaceName);
+            if (refMgr == null) {
+                // create reference mgr that uses the perstistence mgr configured
+                // in the workspace definition
+                refMgr = new ReferenceManager(wspConfig.getPersistenceManager());
+                wspRefMgrs.put(workspaceName, refMgr);
+            }
+            return refMgr;
         }
-        return refMgr;
     }
 
-    synchronized ObservationManagerFactory getObservationManagerFactory(String workspaceName)
+    ObservationManagerFactory getObservationManagerFactory(String workspaceName)
             throws NoSuchWorkspaceException {
         // check state
         if (disposed) {
@@ -496,13 +505,16 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         if (!wspConfigs.containsKey(workspaceName)) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-        ObservationManagerFactory obsMgr
-                = (ObservationManagerFactory) wspObsMgrFactory.get(workspaceName);
-        if (obsMgr == null) {
-            obsMgr = new ObservationManagerFactory();
-            wspObsMgrFactory.put(workspaceName, obsMgr);
+
+        synchronized (wspObsMgrFactory) {
+            ObservationManagerFactory obsMgr
+                    = (ObservationManagerFactory) wspObsMgrFactory.get(workspaceName);
+            if (obsMgr == null) {
+                obsMgr = new ObservationManagerFactory();
+                wspObsMgrFactory.put(workspaceName, obsMgr);
+            }
+            return obsMgr;
         }
-        return obsMgr;
     }
 
     /**
@@ -518,33 +530,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      * @throws RepositoryException      if an error occurs while opening the
      *                                  search index.
      */
-    synchronized SearchManager getSearchManager(String workspaceName)
-            throws NoSuchWorkspaceException, RepositoryException {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
-
-        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
-        SearchManager searchMgr
-                = (SearchManager) wspSearchMgrs.get(workspaceName);
-        if (searchMgr == null) {
-            try {
-                if (wspConfig.getSearchConfig() == null) {
-                    // no search index configured
-                    return null;
-                }
-                SystemSession s = getSystemSession(workspaceName);
-                searchMgr = new SearchManager(s, wspConfig.getSearchConfig());
-            } catch (IOException e) {
-                throw new RepositoryException("Exception opening search index.", e);
-            }
-            wspSearchMgrs.put(workspaceName, searchMgr);
-        }
-        return searchMgr;
-    }
-
-    synchronized SystemSession getSystemSession(String workspaceName)
+    SearchManager getSearchManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
         if (disposed) {
@@ -555,13 +541,48 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         if (wspConfig == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-        SystemSession systemSession
-                = (SystemSession) wspSystemSessions.get(workspaceName);
-        if (systemSession == null) {
-            systemSession = new SystemSession(this, wspConfig);
-            wspSystemSessions.put(workspaceName, systemSession);
+
+        synchronized (wspSearchMgrs) {
+            SearchManager searchMgr
+                    = (SearchManager) wspSearchMgrs.get(workspaceName);
+            if (searchMgr == null) {
+                try {
+                    if (wspConfig.getSearchConfig() == null) {
+                        // no search index configured
+                        return null;
+                    }
+                    SystemSession s = getSystemSession(workspaceName);
+                    searchMgr = new SearchManager(s, wspConfig.getSearchConfig());
+                } catch (IOException e) {
+                    throw new RepositoryException("Exception opening search index.", e);
+                }
+                wspSearchMgrs.put(workspaceName, searchMgr);
+            }
+            return searchMgr;
         }
-        return systemSession;
+    }
+
+    SystemSession getSystemSession(String workspaceName)
+            throws NoSuchWorkspaceException, RepositoryException {
+        // check state
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
+        WorkspaceConfig wspConfig = (WorkspaceConfig) wspConfigs.get(workspaceName);
+        if (wspConfig == null) {
+            throw new NoSuchWorkspaceException(workspaceName);
+        }
+
+        synchronized (wspSystemSessions) {
+            SystemSession systemSession
+                    = (SystemSession) wspSystemSessions.get(workspaceName);
+            if (systemSession == null) {
+                systemSession = new SystemSession(this, wspConfig);
+                wspSystemSessions.put(workspaceName, systemSession);
+            }
+            return systemSession;
+        }
     }
 
     /**
@@ -801,31 +822,33 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     /**
      * @see EventListener#onEvent(EventIterator)
      */
-    public synchronized void onEvent(EventIterator events) {
+    public void onEvent(EventIterator events) {
         // check state
         if (disposed) {
             // ignore, repository instance has been shut down
             return;
         }
 
-        while (events.hasNext()) {
-            Event event = events.nextEvent();
-            long type = event.getType();
-            if ((type & Event.NODE_ADDED) == Event.NODE_ADDED) {
-                nodesCount++;
-                repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
-            }
-            if ((type & Event.NODE_REMOVED) == Event.NODE_REMOVED) {
-                nodesCount--;
-                repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
-            }
-            if ((type & Event.PROPERTY_ADDED) == Event.PROPERTY_ADDED) {
-                propsCount++;
-                repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
-            }
-            if ((type & Event.PROPERTY_REMOVED) == Event.PROPERTY_REMOVED) {
-                propsCount--;
-                repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
+        synchronized (repProps) {
+            while (events.hasNext()) {
+                Event event = events.nextEvent();
+                long type = event.getType();
+                if ((type & Event.NODE_ADDED) == Event.NODE_ADDED) {
+                    nodesCount++;
+                    repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
+                }
+                if ((type & Event.NODE_REMOVED) == Event.NODE_REMOVED) {
+                    nodesCount--;
+                    repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
+                }
+                if ((type & Event.PROPERTY_ADDED) == Event.PROPERTY_ADDED) {
+                    propsCount++;
+                    repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
+                }
+                if ((type & Event.PROPERTY_REMOVED) == Event.PROPERTY_REMOVED) {
+                    propsCount--;
+                    repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
+                }
             }
         }
     }
