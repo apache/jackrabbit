@@ -105,7 +105,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
                 labelNode = child;
                 continue;
             }
-            InternalVersionImpl v = new InternalVersionImpl(getVersionManager(), this, child);
+            InternalVersionImpl v = new InternalVersionImpl(this, child);
             versionCache.put(v.getId(), v);
             if (v.isRootVersion()) {
                 rootVersion = v;
@@ -356,7 +356,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         store();
 
         // update version graph
-        InternalVersionImpl version = new InternalVersionImpl(getVersionManager(), this, vNode);
+        InternalVersionImpl version = new InternalVersionImpl(this, vNode);
         version.resolvePredecessors();
 
         // update cache

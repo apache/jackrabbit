@@ -418,7 +418,7 @@ public class NativePVM implements PersistentVersionManager {
                 } else if (pid.type == PersistentId.TYPE_FROZEN_HISTORY) {
                     item = new InternalFrozenVHImpl(this, pNode, pid.externalId, parent);
                 } else if (pid.type == PersistentId.TYPE_VERSION) {
-                    item = new InternalVersionImpl(this, (InternalVersionHistory) parent, pNode);
+                    item = ((InternalVersionHistory) parent).getVersion(pid.externalId);
                 } else if (pid.type == PersistentId.TYPE_HISTORY) {
                     item = new InternalVersionHistoryImpl(this, pNode);
                 } else {

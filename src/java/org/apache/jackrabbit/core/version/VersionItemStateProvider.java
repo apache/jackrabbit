@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.version.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.state.*;
@@ -52,9 +51,9 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
      */
     private final NodeTypeManagerImpl ntMgr;
     /**
-     * the version histories. key=ItemId, value=ItemState
+     * the cache node states. key=ItemId, value=ItemState
      */
-    private Map items = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+    private Map nodes = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
     /**
      * node def id for a unstructured node state
      */
@@ -92,11 +91,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
      * @see ItemStateProvider#hasItemState(org.apache.jackrabbit.core.ItemId)
      */
     public boolean hasItemState(ItemId id) {
-
-        // check cache
-        if (items.containsKey(id)) {
-            return true;
-        } else if (id instanceof NodeId) {
+        if (id instanceof NodeId) {
             return hasNodeState((NodeId) id);
         } else {
             return hasPropertyState((PropertyId) id);
@@ -109,18 +104,11 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        ItemState state = (ItemState) items.get(id);
-        if (state==null) {
-            if (id instanceof NodeId) {
-                state = getNodeState((NodeId) id);
-            } else {
-                state = getPropertyState((PropertyId) id);
-            }
-            // add state to cache
-            items.put(id, state);
-            log.info("item added to cache. size=" + items.size());
+        if (id instanceof NodeId) {
+            return getNodeState((NodeId) id);
+        } else {
+            return getPropertyState((PropertyId) id);
         }
-        return state;
     }
 
     /**
@@ -163,10 +151,13 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
      * @see VirtualItemStateProvider#hasNodeState(NodeId)
      */
     public boolean hasNodeState(NodeId id) {
-        if (id.equals(root.getId())) {
+        if (nodes.containsKey(id)) {
             return true;
+        } else if (id.equals(root.getId())) {
+            return true;
+        } else {
+            return vMgr.hasItem(id.getUUID());
         }
-        return vMgr.hasItem(id.getUUID());
     }
 
     /**
@@ -180,55 +171,60 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
             return root;
         }
 
-        try {
-            InternalVersionItem vi = vMgr.getItem(id.getUUID());
-            if (vi instanceof InternalVersionHistory) {
-                VersionHistoryNodeState ns = new VersionHistoryNodeState(this, (InternalVersionHistory) vi, root.getUUID());
-                ns.setDefinitionId(NDEF_VERSION_HISTORY);
-                return ns;
+        // check cache
+        VirtualNodeState state = (VirtualNodeState) nodes.get(id);
+        if (state==null) {
+            try {
+                InternalVersionItem vi = vMgr.getItem(id.getUUID());
+                if (vi instanceof InternalVersionHistory) {
+                    state = new VersionHistoryNodeState(this, (InternalVersionHistory) vi, root.getUUID());
+                    state.setDefinitionId(NDEF_VERSION_HISTORY);
 
-            } else if (vi instanceof InternalVersion) {
-                InternalVersion v = (InternalVersion) vi;
-                VersionNodeState ns = new VersionNodeState(this, v, vi.getParent().getId());
-                ns.setDefinitionId(NDEF_VERSION);
-                ns.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(v.getCreated()));
-                ns.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(v.getFrozenNode().getFrozenUUID()));
-                ns.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE, InternalValue.create(v.getFrozenNode().getFrozenPrimaryType()));
-                ns.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, InternalValue.create(v.getFrozenNode().getFrozenMixinTypes()));
-                ns.setPropertyValues(VersionManager.PROPNAME_VERSION_LABELS, PropertyType.STRING, InternalValue.create(v.getLabels()));
-                ns.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
-                ns.setPropertyValues(VersionManager.PROPNAME_SUCCESSORS, PropertyType.REFERENCE, new InternalValue[0]);
-                return ns;
+                } else if (vi instanceof InternalVersion) {
+                    InternalVersion v = (InternalVersion) vi;
+                    state = new VersionNodeState(this, v, vi.getParent().getId());
+                    state.setDefinitionId(NDEF_VERSION);
+                    state.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(v.getCreated()));
+                    state.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(v.getFrozenNode().getFrozenUUID()));
+                    state.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE, InternalValue.create(v.getFrozenNode().getFrozenPrimaryType()));
+                    state.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, InternalValue.create(v.getFrozenNode().getFrozenMixinTypes()));
+                    state.setPropertyValues(VersionManager.PROPNAME_VERSION_LABELS, PropertyType.STRING, InternalValue.create(v.getLabels()));
+                    state.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
+                    state.setPropertyValues(VersionManager.PROPNAME_SUCCESSORS, PropertyType.REFERENCE, new InternalValue[0]);
 
-            } else if (vi instanceof InternalFrozenNode) {
-                InternalFrozenNode fn = (InternalFrozenNode) vi;
-                VirtualNodeState parent = getNodeState(new NodeId(fn.getParent().getId()));
-                VirtualNodeState state = createNodeState(
-                                parent,
-                                VersionManager.NODENAME_FROZEN,
-                                id.getUUID(),
-                                fn.getFrozenPrimaryType());
-                mapFrozenNode(state, fn);
-                return state;
+                } else if (vi instanceof InternalFrozenNode) {
+                    InternalFrozenNode fn = (InternalFrozenNode) vi;
+                    VirtualNodeState parent = getNodeState(new NodeId(fn.getParent().getId()));
+                    state = createNodeState(
+                            parent,
+                            VersionManager.NODENAME_FROZEN,
+                            id.getUUID(),
+                            fn.getFrozenPrimaryType());
+                    mapFrozenNode(state, fn);
 
-            } else if (vi instanceof InternalFrozenVersionHistory) {
-                InternalFrozenVersionHistory fn = (InternalFrozenVersionHistory) vi;
-                VirtualNodeState parent = getNodeState(new NodeId(fn.getParent().getId()));
-                VirtualNodeState state = createNodeState(
-                                parent,
-                                VersionManager.NODENAME_FROZEN,
-                                id.getUUID(),
-                                NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD);
-                mapFrozenNode(state, fn);
-                return state;
+                } else if (vi instanceof InternalFrozenVersionHistory) {
+                    InternalFrozenVersionHistory fn = (InternalFrozenVersionHistory) vi;
+                    VirtualNodeState parent = getNodeState(new NodeId(fn.getParent().getId()));
+                    state = createNodeState(
+                            parent,
+                            VersionManager.NODENAME_FROZEN,
+                            id.getUUID(),
+                            NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD);
+                    mapFrozenNode(state, fn);
+                } else {
+                    // not found, throw
+                    throw new NoSuchItemStateException(id.toString());
+                }
+            } catch (RepositoryException e) {
+                log.error("Unable to check for item:" + e.toString());
+                throw new ItemStateException(e);
             }
-        } catch (RepositoryException e) {
-            log.error("Unable to check for item:" + e.toString());
-            throw new ItemStateException(e);
-        }
 
-        // not found, throw
-        throw new NoSuchItemStateException(id.toString());
+            // add state to cache
+            nodes.put(id, state);
+            log.info("item added to cache. size=" + nodes.size());
+        }
+        return state;
     }
 
     /**
@@ -278,7 +274,6 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         prop.setType(type);
         prop.setMultiValued(multiValued);
         prop.setDefinitionId(new PropDefId(def.unwrap()));
-        items.put(prop.getId(), prop);
         return prop;
     }
 
@@ -318,7 +313,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         state = new VirtualNodeState(this, parent.getUUID(), uuid, nodeTypeName, new QName[0]);
         state.setDefinitionId(new NodeDefId(def.unwrap()));
 
-        items.put(state.getId(), state);
+        nodes.put(state.getId(), state);
         return state;
     }
 

@@ -79,12 +79,13 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
 
     /**
      * Creates a new internal version with the given version history and
-     * persistance node
+     * persistance node. please note, that versions must be created by the
+     * version history.
      *
      * @param node
      */
-    InternalVersionImpl(PersistentVersionManager vMgr, InternalVersionHistory vh, PersistentNode node) {
-        super(vMgr);
+    InternalVersionImpl(InternalVersionHistoryImpl vh, PersistentNode node) {
+        super(vh.getVersionManager());
         this.versionHistory = vh;
         this.node = node;
 
