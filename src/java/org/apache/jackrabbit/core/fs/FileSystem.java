@@ -43,7 +43,7 @@ public interface FileSystem {
     /**
      * Initialize the file system
      *
-     * @throws FileSystemException
+     * @throws FileSystemException if the file system initialization fails
      */
     public void init() throws FileSystemException;
 
@@ -60,7 +60,8 @@ public interface FileSystem {
      *
      * @param filePath the path of the file.
      * @return an input stream of the contents of the file.
-     * @throws FileSystemException
+     * @throws FileSystemException if the file does not exist
+     *                             or if it cannot be read from
      */
     public InputStream getInputStream(String filePath) throws FileSystemException;
 
@@ -71,7 +72,7 @@ public interface FileSystem {
      *
      * @param filePath the path of the file.
      * @return an output stream for writing bytes to the file.
-     * @throws FileSystemException
+     * @throws FileSystemException if the file cannot be written to or created
      */
     public OutputStream getOutputStream(String filePath) throws FileSystemException;
 
@@ -90,7 +91,7 @@ public interface FileSystem {
      *                                      {@link RandomAccessOutputStream}.
      */
     public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
-            throws FileSystemException;
+            throws FileSystemException, UnsupportedOperationException;
 
     /**
      * Creates the folder named by this path, including any necessary but
@@ -230,7 +231,7 @@ public interface FileSystem {
      *
      * @param srcPath  the path of the file or folder to be moved.
      * @param destPath the destination path to which the file or folder is to be moved.
-     * @throws FileSystemException
+     * @throws FileSystemException if the move fails
      */
     public void move(String srcPath, String destPath) throws FileSystemException;
 
@@ -239,7 +240,7 @@ public interface FileSystem {
      *
      * @param srcPath  the path of the file or folder to be copied.
      * @param destPath the destination path to which the file or folder is to be copied.
-     * @throws FileSystemException
+     * @throws FileSystemException if the copy fails
      */
     public void copy(String srcPath, String destPath) throws FileSystemException;
 
