@@ -312,5 +312,10 @@
             <supertype>nt:unstructured</supertype>
         </supertypes>
     </nodeType>
+    <nodeType name="rep:frozenVersionHistory" mixin="false" orderableChildNodes="true">
+        <supertypes>
+            <supertype>nt:unstructured</supertype>
+        </supertypes>
+    </nodeType>
 
 </nodeTypes>

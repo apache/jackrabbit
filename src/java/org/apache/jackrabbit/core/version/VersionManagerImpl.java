@@ -236,7 +236,7 @@ public class VersionManagerImpl implements VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized Version checkin(NodeImpl node) throws RepositoryException {
+    public Version checkin(NodeImpl node) throws RepositoryException {
         InternalVersion version = vMgr.checkin(node);
         return (Version) node.getSession().getNodeByUUID(version.getId());
     }

@@ -207,10 +207,11 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
                     VirtualNodeState parent = getNodeState(new NodeId(fn.getParent().getId()));
                     state = createNodeState(
                             parent,
-                            VersionManager.NODENAME_FROZEN,
+                            fn.getName(),
                             id.getUUID(),
                             NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD);
-                    mapFrozenNode(state, fn);
+                    state.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(UUID.fromString(fn.getBaseVersionId())));
+                    state.setPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(UUID.fromString(fn.getVersionHistoryId())));
                 } else {
                     // not found, throw
                     throw new NoSuchItemStateException(id.toString());
@@ -358,23 +359,6 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         for (int i=0; i<nodes.length; i++) {
             state.addChildNodeEntry(nodes[i].getName(), nodes[i].getId());
         }
-        return state;
-    }
-
-    /**
-     * maps a frozen node
-     * @param state
-     * @param node
-     * @return
-     * @throws RepositoryException
-     */
-    private VirtualNodeState mapFrozenNode(VirtualNodeState state,
-                                           InternalFrozenVersionHistory node)
-            throws RepositoryException {
-
-        // map properties
-        state.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(node.getBaseVersionId()));
-        state.setPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(node.getVersionHistoryId()));
         return state;
     }
 

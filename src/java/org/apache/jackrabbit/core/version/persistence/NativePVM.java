@@ -49,6 +49,8 @@ import java.util.Iterator;
  * <p>
  * on startup, the entire structure is traversed, in order to get a mapping
  * from real to persistent uuids.
+ * <p>
+ * todo: the persistence is not synchronized yet and could lead to multi-threading issues
  */
 public class NativePVM implements PersistentVersionManager {
 
@@ -106,6 +108,11 @@ public class NativePVM implements PersistentVersionManager {
      * the nodetype name of a persistent frozen node
      */
     protected static final QName NT_REP_FROZEN = new QName(NamespaceRegistryImpl.NS_REP_URI, "frozen");
+
+    /**
+     * the nodetype name of a persistent frozen history
+     */
+    protected static final QName NT_REP_FROZEN_HISTORY = new QName(NamespaceRegistryImpl.NS_REP_URI, "frozenVersionHistory");
 
     /**
      * the persistent root node of the version histories
@@ -212,8 +219,10 @@ public class NativePVM implements PersistentVersionManager {
             throws ItemStateException, RepositoryException {
         PersistentId id = new PersistentId(realUUID, state);
         if (id.type != PersistentId.TYPE_UNDEFINED) {
-            idsByExternal.put(id.externalId, id);
-            idsByInternal.put(id.internalId, id);
+            synchronized(idsByExternal) {
+                idsByExternal.put(id.externalId, id);
+                idsByInternal.put(id.internalId, id);
+            }
             if (id.type == PersistentId.TYPE_HISTORY) {
                 histories.add(id.externalId);
             }
@@ -227,7 +236,9 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      */
     private PersistentId getIdByExternal(String uuid) {
-        return (PersistentId) idsByExternal.get(uuid);
+        synchronized(idsByExternal) {
+            return (PersistentId) idsByExternal.get(uuid);
+        }
     }
 
     /**
@@ -246,8 +257,10 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      */
     private PersistentId getIdByExternal(String uuid, int type) {
-        PersistentId id = (PersistentId) idsByExternal.get(uuid);
-        return id != null && id.type == type ? id : null;
+        synchronized(idsByExternal) {
+            PersistentId id = (PersistentId) idsByExternal.get(uuid);
+            return id != null && id.type == type ? id : null;
+        }
     }
 
     /**
@@ -257,7 +270,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return the newly created version history.
      * @throws RepositoryException
      */
-    public synchronized InternalVersionHistory createVersionHistory(NodeImpl node)
+    public InternalVersionHistory createVersionHistory(NodeImpl node)
             throws RepositoryException {
 
         // create deep path
@@ -292,7 +305,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized InternalVersionHistory getVersionHistory(String histId)
+    public InternalVersionHistory getVersionHistory(String histId)
             throws RepositoryException {
 
         PersistentId pid = getIdByExternal(histId, PersistentId.TYPE_HISTORY);
@@ -305,7 +318,7 @@ public class NativePVM implements PersistentVersionManager {
      * @param histId
      * @return
      */
-    public synchronized boolean hasVersionHistory(String histId) {
+    public boolean hasVersionHistory(String histId) {
         return getIdByExternal(histId, PersistentId.TYPE_HISTORY) != null;
     }
 
@@ -315,7 +328,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized Iterator getVersionHistoryIds() throws RepositoryException {
+    public Iterator getVersionHistoryIds() throws RepositoryException {
         return histories.iterator();
     }
 
@@ -325,7 +338,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized int getNumVersionHistories() throws RepositoryException {
+    public int getNumVersionHistories() throws RepositoryException {
         return histories.size();
     }
 
@@ -336,7 +349,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized InternalVersion getVersion(String histId, String versionId)
+    public InternalVersion getVersion(String histId, String versionId)
             throws RepositoryException {
         InternalVersionHistory history = getVersionHistory(histId);
         return history.getVersion(versionId);
@@ -349,7 +362,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized InternalVersion getVersion(String versionId)
+    public InternalVersion getVersion(String versionId)
             throws RepositoryException {
 
         PersistentId pid = getIdByExternal(versionId, PersistentId.TYPE_VERSION);
@@ -362,7 +375,7 @@ public class NativePVM implements PersistentVersionManager {
      * @param versionId
      * @return
      */
-    public synchronized boolean hasVersion(String versionId) {
+    public boolean hasVersion(String versionId) {
         return getIdByExternal(versionId, PersistentId.TYPE_VERSION) != null;
     }
 
@@ -371,7 +384,7 @@ public class NativePVM implements PersistentVersionManager {
      * @param externalId
      * @return
      */
-    public synchronized boolean hasItem(String externalId) {
+    public boolean hasItem(String externalId) {
         return getIdByExternal(externalId) != null;
     }
 
@@ -381,7 +394,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized InternalVersionItem getItemByExternal(String externalId)
+    public InternalVersionItem getItemByExternal(String externalId)
             throws RepositoryException {
         PersistentId pid = getIdByExternal(externalId);
         return pid==null ? null : getItem(pid);
@@ -393,7 +406,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized InternalVersionItem getItemByInternal(String internalId)
+    public InternalVersionItem getItemByInternal(String internalId)
             throws RepositoryException {
         PersistentId pid = getIdByInternal(internalId);
         return pid==null ? null : getItem(pid);
@@ -405,7 +418,7 @@ public class NativePVM implements PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    synchronized private InternalVersionItem getItem(PersistentId pid)
+    private InternalVersionItem getItem(PersistentId pid)
             throws RepositoryException {
 
         InternalVersionItem item =(InternalVersionItem) items.get(pid);
@@ -440,7 +453,7 @@ public class NativePVM implements PersistentVersionManager {
      * @throws RepositoryException
      * @see javax.jcr.Node#checkin()
      */
-    public synchronized InternalVersion checkin(NodeImpl node) throws RepositoryException {
+    public InternalVersion checkin(NodeImpl node) throws RepositoryException {
         // assuming node is versionable and checkout (check in nodeimpl)
         // To create a new version of a versionable node N, the client calls N.checkin.
         // This causes the following series of events:
@@ -501,7 +514,7 @@ public class NativePVM implements PersistentVersionManager {
         private static final int TYPE_HISTORY = 1;
         private static final int TYPE_VERSION = 2;
         private static final int TYPE_FROZEN = 3;
-        private static final int TYPE_FROZEN_HISTORY = 3;
+        private static final int TYPE_FROZEN_HISTORY = 4;
 
         /** the type of the persistent node */
         private final int type;
@@ -530,7 +543,7 @@ public class NativePVM implements PersistentVersionManager {
                 // ignore given externalid, and generate new one
                 this.externalId = UUID.randomUUID().toString();
                 type = TYPE_FROZEN;
-            } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD)) {
+            } else if (state.getNodeTypeName().equals(NT_REP_FROZEN_HISTORY)) {
                 // ignore given externalid, and generate new one
                 this.externalId = UUID.randomUUID().toString();
                 type = TYPE_FROZEN_HISTORY;

@@ -289,11 +289,11 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
                     case OnParentVersionAction.VERSION:
                         if (child.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
                             // create frozen versionable child
-                            PersistentNode newChild = node.addNode(child.getQName(), NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD);
+                            PersistentNode newChild = node.addNode(child.getQName(), NativePVM.NT_REP_FROZEN_HISTORY);
                             newChild.setPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY,
-                                    InternalValue.create(UUID.fromString(child.getVersionHistory().getUUID())));
+                                    InternalValue.create(child.getVersionHistory().getUUID()));
                             newChild.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION,
-                                    InternalValue.create(UUID.fromString(child.getBaseVersion().getUUID())));
+                                    InternalValue.create(child.getBaseVersion().getUUID()));
                             break;
                         }
                         // else copy
