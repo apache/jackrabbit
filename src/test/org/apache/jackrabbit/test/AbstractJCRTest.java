@@ -125,6 +125,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String jcrMergeFailed;
 
     /**
+     * JCR Name jcr:system using the namespace resolver of the current session.
+     */
+    protected String jcrSystem;
+
+    /**
      * JCR Name nt:base using the namespace resolver of the current session.
      */
     protected String ntBase;
@@ -290,6 +295,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrLockOwner = superuser.getNamespacePrefix(NS_JCR_URI) + ":lockOwner";
         jcrlockIsDeep = superuser.getNamespacePrefix(NS_JCR_URI) + ":lockIsDeep";
         jcrMergeFailed = superuser.getNamespacePrefix(NS_JCR_URI) + ":mergeFailed";
+        jcrSystem = superuser.getNamespacePrefix(NS_JCR_URI) + ":system";
         ntBase = superuser.getNamespacePrefix(NS_NT_URI) + ":base";
         ntVersion = superuser.getNamespacePrefix(NS_NT_URI) + ":version";
         ntVersionHistory = superuser.getNamespacePrefix(NS_NT_URI) + ":versionHistory";

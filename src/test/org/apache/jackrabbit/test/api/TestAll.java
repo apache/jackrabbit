@@ -116,6 +116,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(WorkspaceMoveTest.class);
         suite.addTestSuite(WorkspaceMoveVersionableTest.class);
 
+        suite.addTestSuite(ImpersonateTest.class);
+        suite.addTestSuite(CheckPermissionTest.class);
+
         return suite;
     }
 }

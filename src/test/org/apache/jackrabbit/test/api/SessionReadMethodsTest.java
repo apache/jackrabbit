@@ -27,6 +27,8 @@ import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
 
+import java.security.AccessControlException;
+
 /**
  * <code>SessionReadMethodsTest</code>...
  *
