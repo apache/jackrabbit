@@ -42,6 +42,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SQLQueryLevel2Test.class);
         suite.addTestSuite(SQLJoinTest.class);
         suite.addTestSuite(SQLJcrPathTest.class);
+        suite.addTestSuite(SQLPathTest.class);
         suite.addTestSuite(XPathPosIndexTest.class);
         suite.addTestSuite(XPathDocOrderTest.class);
         suite.addTestSuite(XPathOrderByTest.class);

@@ -30,6 +30,8 @@ import javax.jcr.Session;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Abstract base class for query test cases.
@@ -296,5 +298,18 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      */
     protected boolean hasDescriptor(String descriptor) {
         return superuser.getRepository().getDescriptor(descriptor) != null;
+    }
+
+    /**
+     * Returns the nodes in <code>it</code> as an array of Nodes.
+     * @param it the NodeIterator.
+     * @return the elements of the iterator as an array of Nodes.
+     */
+    protected Node[] toArray(NodeIterator it) {
+        List nodes = new ArrayList();
+        while (it.hasNext()) {
+            nodes.add(it.nextNode());
+        }
+        return (Node[]) nodes.toArray(new Node[nodes.size()]);
     }
 }
