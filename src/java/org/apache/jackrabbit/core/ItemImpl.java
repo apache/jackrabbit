@@ -1023,133 +1023,144 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // check state of this instance
         checkItemState();
 
-        // build list of transient states that should be persisted
-        Collection dirty = getTransientStates();
-        if (dirty.size() == 0) {
-            // no transient items, nothing to do here
-            return;
-        }
+        try {
+            /**
+             * turn on temporary path caching for better performance
+             * (assuming that the paths won't change during the save() call)
+             */
+            itemStateMgr.enablePathCaching(true);
 
-        ItemState transientState;
+            // build list of transient states that should be persisted
+            Collection dirty = getTransientStates();
+            if (dirty.size() == 0) {
+                // no transient items, nothing to do here
+                return;
+            }
 
-        /**
-         * check that parent node is also included in the dirty items list
-         * if dirty node was removed or added (adding/removing a parent/child
-         * link requires that both parent and child are saved)
-         */
-        Iterator iter = dirty.iterator();
-        while (iter.hasNext()) {
-            transientState = (ItemState) iter.next();
-            if (transientState.isNode()) {
-                NodeState nodeState = (NodeState) transientState;
-                ArrayList dirtyParents = new ArrayList();
-                // removed parents
-                dirtyParents.addAll(nodeState.getRemovedParentUUIDs());
-                // added parents
-                dirtyParents.addAll(nodeState.getAddedParentUUIDs());
-                Iterator parentsIter = dirtyParents.iterator();
-                while (parentsIter.hasNext()) {
-                    NodeId id = new NodeId((String) parentsIter.next());
-                    NodeState parentState = null;
-                    try {
-                        parentState = (NodeState) itemStateMgr.getTransientItemState(id);
-                    } catch (ItemStateException ise) {
-                        // should never get here...
-                        String msg = "inconsistency: failed to retrieve transient state for " + itemMgr.safeGetJCRPath(id);
-                        log.error(msg);
-                        throw new RepositoryException(msg);
-                    }
-                    // check if parent is also going to be saved
-                    if (!dirty.contains(parentState)) {
-                        // need to save the parent too
-                        String msg = itemMgr.safeGetJCRPath(id) + " needs to be saved also.";
-                        log.error(msg);
-                        throw new RepositoryException(msg);
+            ItemState transientState;
+
+            /**
+             * check that parent node is also included in the dirty items list
+             * if dirty node was removed or added (adding/removing a parent/child
+             * link requires that both parent and child are saved)
+             */
+            Iterator iter = dirty.iterator();
+            while (iter.hasNext()) {
+                transientState = (ItemState) iter.next();
+                if (transientState.isNode()) {
+                    NodeState nodeState = (NodeState) transientState;
+                    ArrayList dirtyParents = new ArrayList();
+                    // removed parents
+                    dirtyParents.addAll(nodeState.getRemovedParentUUIDs());
+                    // added parents
+                    dirtyParents.addAll(nodeState.getAddedParentUUIDs());
+                    Iterator parentsIter = dirtyParents.iterator();
+                    while (parentsIter.hasNext()) {
+                        NodeId id = new NodeId((String) parentsIter.next());
+                        NodeState parentState = null;
+                        try {
+                            parentState = (NodeState) itemStateMgr.getTransientItemState(id);
+                        } catch (ItemStateException ise) {
+                            // should never get here...
+                            String msg = "inconsistency: failed to retrieve transient state for " + itemMgr.safeGetJCRPath(id);
+                            log.error(msg);
+                            throw new RepositoryException(msg);
+                        }
+                        // check if parent is also going to be saved
+                        if (!dirty.contains(parentState)) {
+                            // need to save the parent too
+                            String msg = itemMgr.safeGetJCRPath(id) + " needs to be saved also.";
+                            log.error(msg);
+                            throw new RepositoryException(msg);
+                        }
                     }
                 }
             }
-        }
-
-        /**
-         * validate access and node type constraints
-         * (this will also validate child removals)
-         */
-        validateTransientItems(dirty.iterator());
-
-        WorkspaceImpl wsp = (WorkspaceImpl) session.getWorkspace();
-
-        // list of events that are generated by saved changes
-        ObservationManagerFactory obsFactory = rep.getObservationManagerFactory(wsp.getName());
-        EventStateCollection events = obsFactory.createEventStateCollection(session,
-                session.getItemStateManager(), session.getHierarchyManager());
-
-        /**
-         * we need to make sure that we are not interrupted while
-         * verifying/persisting node references
-         */
-        ReferenceManager refMgr = wsp.getReferenceManager();
-        synchronized (refMgr) {
-            /**
-             * build list of transient descendents in the attic
-             * (i.e. those marked as 'removed')
-             */
-            Collection removed = getRemovedStates();
 
             /**
-             * referential integrity checks:
-             * make sure that a referenced node cannot be removed and
-             * that all references are updated and persisted
+             * validate access and node type constraints
+             * (this will also validate child removals)
              */
-            checkReferences(dirty.iterator(), removed.iterator(), refMgr);
+            validateTransientItems(dirty.iterator());
+
+            WorkspaceImpl wsp = (WorkspaceImpl) session.getWorkspace();
+
+            // list of events that are generated by saved changes
+            ObservationManagerFactory obsFactory = rep.getObservationManagerFactory(wsp.getName());
+            EventStateCollection events = obsFactory.createEventStateCollection(session,
+                    session.getItemStateManager(), session.getHierarchyManager());
 
             /**
-             * create event states for the affected item states and
-             * prepare them for event dispatch (this step is necessary in order
-             * to check access rights on items that will be removed)
-             *
-             * todo consolidate event generating and dispatching code (ideally one method call after save has succeeded)
+             * we need to make sure that we are not interrupted while
+             * verifying/persisting node references
              */
-            events.createEventStates(dirty);
-            events.createEventStates(removed);
-            events.prepare();
+            ReferenceManager refMgr = wsp.getReferenceManager();
+            synchronized (refMgr) {
+                /**
+                 * build list of transient descendents in the attic
+                 * (i.e. those marked as 'removed')
+                 */
+                Collection removed = getRemovedStates();
 
-            // definitively remove transient items marked as 'removed'
-            removeTransientItems(removed.iterator());
+                /**
+                 * referential integrity checks:
+                 * make sure that a referenced node cannot be removed and
+                 * that all references are updated and persisted
+                 */
+                checkReferences(dirty.iterator(), removed.iterator(), refMgr);
 
-            // dispose the transient states marked 'removed'
-            iter = removed.iterator();
+                /**
+                 * create event states for the affected item states and
+                 * prepare them for event dispatch (this step is necessary in order
+                 * to check access rights on items that will be removed)
+                 *
+                 * todo consolidate event generating and dispatching code (ideally one method call after save has succeeded)
+                 */
+                events.createEventStates(dirty);
+                events.createEventStates(removed);
+                events.prepare();
+
+                // definitively remove transient items marked as 'removed'
+                removeTransientItems(removed.iterator());
+
+                // dispose the transient states marked 'removed'
+                iter = removed.iterator();
+                while (iter.hasNext()) {
+                    transientState = (ItemState) iter.next();
+                    /**
+                     * dispose the transient state, it is no longer used
+                     * this will indirectly (through stateDiscarded listener method)
+                     * permanently invalidate the wrapping Item instance
+                     */
+                    itemStateMgr.disposeTransientItemStateInAttic(transientState);
+                }
+
+                // initialize version histories for new nodes (might create new transient state)
+                initVersionHistories(dirty.iterator());
+
+                // re-build the list of transient states (might have changed by now)
+                dirty = getTransientStates();
+
+                // persist 'new' or 'modified' transient states
+                persistTransientItems(dirty.iterator());
+            } // synchronized(refMgr)
+
+            // now it is safe to dispose the transient states
+            iter = dirty.iterator();
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
-                /**
-                 * dispose the transient state, it is no longer used
-                 * this will indirectly (through stateDiscarded listener method)
-                 * permanently invalidate the wrapping Item instance
-                 */
-                itemStateMgr.disposeTransientItemStateInAttic(transientState);
+                // dispose the transient state, it is no longer used
+                itemStateMgr.disposeTransientItemState(transientState);
             }
 
-            // initialize version histories for new nodes (might create new transient state)
-            initVersionHistories(dirty.iterator());
-
-            // re-build the list of transient states (might have changed by now)
-            dirty = getTransientStates();
-
-            // persist 'new' or 'modified' transient states
-            persistTransientItems(dirty.iterator());
-        } // synchronized(refMgr)
-
-        // now it is safe to dispose the transient states
-        iter = dirty.iterator();
-        while (iter.hasNext()) {
-            transientState = (ItemState) iter.next();
-            // dispose the transient state, it is no longer used
-            itemStateMgr.disposeTransientItemState(transientState);
+            // all changes are persisted, now dispatch events
+            // forward this to the session to let it decide on the right time for those
+            // events to be dispatched in case of transactional support
+            session.dispatch(events);
+        } finally {
+            // turn off temporary path caching
+            itemStateMgr.enablePathCaching(false);
         }
-
-        // all changes are persisted, now dispatch events
-        // forward this to the session to let it decide on the right time for those
-        // events to be dispatched in case of transactional support
-        session.dispatch(events);
     }
 
     /**

@@ -15,17 +15,17 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.*;
+import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Arrays;
 
 /**
  * This Class implements a virtual item state provider.
@@ -57,7 +57,8 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * Creates a new item state provider.
-     * @param ntMgr the nodetype manager
+     *
+     * @param ntMgr         the nodetype manager
      * @param overlayedRoot the node state that is overlayed
      */
     public DefaultItemStateProvider(NodeTypeManagerImpl ntMgr, NodeState overlayedRoot) {
@@ -68,6 +69,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * Returns the nodestate of the relative root of this provider
+     *
      * @return
      */
     public VirtualNodeState getRootState() {
@@ -79,7 +81,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
      */
     public ItemState getItemState(ItemId id) throws NoSuchItemStateException {
         ItemState state = (ItemState) items.get(id);
-        if (state==null) {
+        if (state == null) {
             throw new NoSuchItemStateException(id.toString());
         }
         return state;
@@ -94,6 +96,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * virtual item state provider do not have attics.
+     *
      * @throws NoSuchItemStateException always
      */
     public ItemState getItemStateInAttic(ItemId id) throws NoSuchItemStateException {
@@ -103,6 +106,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * virtual item state provider do not have attics.
+     *
      * @return <code>false</code>
      */
     public boolean hasItemStateInAttic(ItemId id) {
@@ -112,6 +116,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * Adds a node state
+     *
      * @param parentId
      * @param name
      * @param id
@@ -131,6 +136,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * Adds a node state
+     *
      * @param parent
      * @param name
      * @param id
@@ -142,7 +148,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
      */
     public VirtualNodeState addNode(VirtualNodeState parent, QName name, String id, QName nodeTypeName, QName[] mixins)
             throws ItemStateException, RepositoryException {
-        NodeTypeImpl nodeType = nodeTypeName==null ? null : ntMgr.getNodeType(nodeTypeName);
+        NodeTypeImpl nodeType = nodeTypeName == null ? null : ntMgr.getNodeType(nodeTypeName);
         NodeDefImpl def;
         try {
             def = getApplicableChildNodeDef(parent, name, nodeType == null ? null : nodeType.getQName());
@@ -158,7 +164,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
         // default properties
         VirtualNodeState ns = createChildNode(parent, name, def, nodeType, id);
         setPropertyValue(ns, ItemImpl.PROPNAME_PRIMARYTYPE, InternalValue.create(nodeType.getQName()));
-        if (mixins!=null) {
+        if (mixins != null) {
             ns.setMixinTypeNames(new HashSet(Arrays.asList(mixins)));
         }
         if (getEffectiveNodeType(ns).includesNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
@@ -170,6 +176,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * returns the child node of the given parent
+     *
      * @param parent
      * @param name
      * @param index
@@ -178,7 +185,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
      */
     public VirtualNodeState getNode(VirtualNodeState parent, QName name, int index) throws NoSuchItemStateException {
         NodeState.ChildNodeEntry entry = parent.getChildNodeEntry(name, index);
-        if (entry==null) {
+        if (entry == null) {
             throw new NoSuchItemStateException(name.toString());
         }
         return (VirtualNodeState) getItemState(new NodeId(entry.getUUID()));
@@ -286,6 +293,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * Creates a property state
+     *
      * @param parentUUID
      * @param propName
      * @return
@@ -305,6 +313,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
         return propState;
 
     }
+
     /**
      * retrieves the property definition for the given contraints
      *

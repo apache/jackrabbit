@@ -118,12 +118,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
      * @see ItemStateProvider#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
-        try {
-            getItemState(id);
-            return true;
-        } catch (ItemStateException ise) {
-            return false;
-        }
+        return isCached(id);
     }
 
     /**
@@ -143,12 +138,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
      * @see ItemStateProvider#hasItemStateInAttic(ItemId)
      */
     public boolean hasItemStateInAttic(ItemId id) {
-        try {
-            getItemStateInAttic(id);
-            return true;
-        } catch (ItemStateException ise) {
-            return false;
-        }
+        return attic.isCached(id);
     }
 
     //------------------< methods for listing & querying state of cache/attic >

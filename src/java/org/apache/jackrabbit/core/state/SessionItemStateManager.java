@@ -33,7 +33,7 @@ public class SessionItemStateManager implements ItemStateProvider {
     private final PersistentItemStateProvider persistentStateMgr;
     private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
     private final TransientItemStateManager transientStateMgr;
-    private final HierarchyManager hierMgr;
+    private HierarchyManager hierMgr;
 
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
@@ -51,11 +51,37 @@ public class SessionItemStateManager implements ItemStateProvider {
     }
 
     /**
+     * En-/Disable chaching of path values.
+     * <p/>
+     * Please keep in mind that the cache of <code>Path</code>s is not automatically
+     * updated when the underlying hierarchy is changing. Therefore it should only be
+     * turned on with caution and in special situations (usually only locally
+     * within a narrow scope) where the underlying hierarchy is not expected to
+     * change.
+     *
+     * @param enable
+     */
+    public void enablePathCaching(boolean enable) {
+        if (enable) {
+            if (!(hierMgr instanceof CachingHierarchyManager)) {
+                hierMgr = new CachingHierarchyManager(hierMgr);
+            }
+        } else {
+            if (hierMgr instanceof CachingHierarchyManager) {
+                CachingHierarchyManager chm = (CachingHierarchyManager) hierMgr;
+                chm.clearCache();
+                hierMgr = chm.unwrap();
+            }
+        }
+    }
+
+    /**
      * Adds a new virtual item state provider
+     *
      * @param prov
      */
     public synchronized void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
-        VirtualItemStateProvider[] provs = new VirtualItemStateProvider[virtualProviders.length+1];
+        VirtualItemStateProvider[] provs = new VirtualItemStateProvider[virtualProviders.length + 1];
         System.arraycopy(virtualProviders, 0, provs, 0, virtualProviders.length);
         provs[virtualProviders.length] = prov;
         virtualProviders = provs;
@@ -186,7 +212,7 @@ public class SessionItemStateManager implements ItemStateProvider {
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
         // check if there is a virtual state for the specified item
-        for (int i=0; i<virtualProviders.length; i++) {
+        for (int i = 0; i < virtualProviders.length; i++) {
             if (virtualProviders[i].hasItemState(id)) {
                 return virtualProviders[i].getItemState(id);
             }
@@ -229,11 +255,12 @@ public class SessionItemStateManager implements ItemStateProvider {
 
     /**
      * Checks if there is a virtual item state
+     *
      * @param id
      * @return
      */
     private boolean hasVirtualItemState(ItemId id) {
-        for (int i=0; i<virtualProviders.length; i++) {
+        for (int i = 0; i < virtualProviders.length; i++) {
             if (virtualProviders[i].hasItemState(id)) {
                 return true;
             }

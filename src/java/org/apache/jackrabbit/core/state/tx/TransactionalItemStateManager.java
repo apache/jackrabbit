@@ -110,7 +110,6 @@ public class TransactionalItemStateManager extends ItemStateCache
      */
     public synchronized ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
-
         if (isCached(id)) {
             return retrieve(id);
         }
@@ -131,6 +130,10 @@ public class TransactionalItemStateManager extends ItemStateCache
      * @see PersistentItemStateProvider#hasItemState
      */
     public boolean hasItemState(ItemId id) {
+        // try shortcut first
+        if (isCached(id)) {
+            return true;
+        }
         try {
             getItemState(id);
             return true;
