@@ -11,14 +11,12 @@
  * accordance with the terms of the license agreement you entered into
  * with Day.
  */
-
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.log4j.Logger;
@@ -45,11 +43,6 @@ public class ObservationManagerImpl implements ObservationManager {
     private final SessionImpl session;
 
     /**
-     * The <code>HierarchyManager</code> of the session.
-     */
-    private final HierarchyManager hmgr;
-
-    /**
      * The <code>ItemManager</code> for this <code>ObservationManager</code>.
      */
     private final ItemManager itemMgr;
@@ -62,7 +55,6 @@ public class ObservationManagerImpl implements ObservationManager {
      *
      * @param session the <code>Session</code> this ObservationManager
      *                belongs to.
-     * @param hmgr    the <code>HierarchyManager</code> of the <code>session</code>.
      * @param itemMgr {@link org.apache.jackrabbit.core.ItemManager} of the passed
      *                <code>Session</code>.
      * @throws NullPointerException if <code>session</code> or <code>itemMgr</code>
@@ -70,7 +62,6 @@ public class ObservationManagerImpl implements ObservationManager {
      */
     ObservationManagerImpl(ObservationManagerFactory obsMgrFactory,
                            SessionImpl session,
-                           HierarchyManager hmgr,
                            ItemManager itemMgr) {
         if (session == null) {
             throw new NullPointerException("session");
@@ -81,7 +72,6 @@ public class ObservationManagerImpl implements ObservationManager {
 
         this.obsMgrFactory = obsMgrFactory;
         this.session = session;
-        this.hmgr = hmgr;
         this.itemMgr = itemMgr;
     }
 
@@ -159,7 +149,7 @@ public class ObservationManagerImpl implements ObservationManager {
      * @return a new <code>EventStateCollection</code>.
      */
     public EventStateCollection createEventStateCollection() {
-        return new EventStateCollection(obsMgrFactory, session, hmgr);
+        return new EventStateCollection(obsMgrFactory, session);
     }
 
 }

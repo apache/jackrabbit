@@ -954,7 +954,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         if (obsMgr == null) {
             try {
-                obsMgr = rep.getObservationManagerFactory(wspConfig.getName()).createObservationManager(session, session.hierMgr, session.getItemManager());
+                obsMgr = rep.getObservationManagerFactory(wspConfig.getName()).createObservationManager(session, session.getItemManager());
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";

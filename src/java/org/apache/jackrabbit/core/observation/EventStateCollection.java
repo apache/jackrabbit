@@ -66,33 +66,32 @@ public final class EventStateCollection {
     private final SessionImpl session;
 
     /**
-     * The HierarchyManager of the session that creates the events.
-     */
-    private final HierarchyManager hmgr;
-
-    /**
      * Creates a new empty <code>EventStateCollection</code>.
      *
      * @param session the session that created these events.
      */
     EventStateCollection(ObservationManagerFactory dispatcher,
-                         SessionImpl session,
-                         HierarchyManager hmgr) {
+                         SessionImpl session) {
         this.dispatcher = dispatcher;
         this.session = session;
-        this.hmgr = hmgr;
     }
 
     /**
      * Creates {@link EventState} instances from <code>ItemState</code>
      * <code>changes</code>.
+     * @param rootNodeUUID the UUID of the root node.
      * @param changes the changes on <code>ItemState</code>s.
      * @param provider an <code>ItemStateProvider</code> to provide <code>ItemState</code>
      * of items that are not contained in the <code>changes</code> collection.
      * @throws ItemStateException if an error occurs while creating events
      * states for the item state changes.
      */
-    public void createEventStates(ChangeLog changes, ItemStateManager provider) throws ItemStateException {
+    public void createEventStates(String rootNodeUUID, ChangeLog changes, ItemStateManager provider) throws ItemStateException {
+        // create a hierarchy manager, that is based on the ChangeLog and
+        // the ItemStateProvider
+        // todo use CachingHierarchyManager ?
+        HierarchyManager hmgr = new ChangeLogBasedHierarchyMgr(rootNodeUUID, provider, changes, session.getNamespaceResolver());
+
         for (Iterator it = changes.modifiedStates(); it.hasNext();) {
             ItemState state = (ItemState) it.next();
             if (state.isNode()) {

@@ -43,7 +43,7 @@ public class NodeRemovedTest extends AbstractObservationTest {
     public void testSingleNodeRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_REMOVED);
-        Node foo = testRootNode.addNode(nodeName1);
+        Node foo = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
         foo.remove();
         testRootNode.save();
@@ -59,7 +59,7 @@ public class NodeRemovedTest extends AbstractObservationTest {
     public void testMultiNodesRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_REMOVED);
-        Node n1 = testRootNode.addNode(nodeName1);
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         n1.addNode(nodeName2);
         testRootNode.save();
         n1.remove();

@@ -440,7 +440,7 @@ public class SharedItemStateManager extends ItemStateCache
         EventStateCollection events = null;
         if (obsMgr != null) {
             events = obsMgr.createEventStateCollection();
-            events.createEventStates(local, this);
+            events.createEventStates(root.getUUID(), local, this);
             events.prepare();
         }
 

@@ -46,7 +46,7 @@ public class PropertyAddedTest extends AbstractObservationTest {
     public void testSystemGenerated() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);
-        testRootNode.addNode(nodeName1);
+        testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -64,7 +64,7 @@ public class PropertyAddedTest extends AbstractObservationTest {
      * @throws RepositoryException
      */
     public void testSinglePropertyAdded() throws RepositoryException {
-        Node foo = testRootNode.addNode(nodeName1);
+        Node foo = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);
@@ -80,7 +80,7 @@ public class PropertyAddedTest extends AbstractObservationTest {
      * when multiple properties are added.
      */
     public void testMultiPropertyAdded() throws RepositoryException {
-        Node foo = testRootNode.addNode(nodeName1);
+        Node foo = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);

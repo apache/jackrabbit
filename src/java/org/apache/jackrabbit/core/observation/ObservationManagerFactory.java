@@ -21,7 +21,6 @@ import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.UnboundedFifoBuffer;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
 
 import java.util.Collections;
@@ -141,9 +140,8 @@ public final class ObservationManagerFactory implements Runnable {
      * @return an <code>ObservationManager</code>.
      */
     public ObservationManagerImpl createObservationManager(SessionImpl session,
-                                                           HierarchyManager hmgr,
                                                            ItemManager itemMgr) {
-        return new ObservationManagerImpl(this, session, hmgr, itemMgr);
+        return new ObservationManagerImpl(this, session, itemMgr);
     }
 
     /**
