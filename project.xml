@@ -79,7 +79,7 @@
       <name>Roy T. Fielding</name>
       <id>fielding</id>
       <email/>
-      <organization/>
+      <organization>Day Software</organization>
       <roles>
         <role>Mentor</role>
         <role>Java Developer</role>
@@ -90,7 +90,7 @@
       <name>Stefan Guggisberg</name>
       <id>stefan</id>
       <email/>
-      <organization/>
+      <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -110,7 +110,7 @@
       <name>David Nuescheler</name>
       <id>uncled</id>
       <email/>
-      <organization/>
+      <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -120,7 +120,7 @@
       <name>Peeter Piegaze</name>
       <id>ppiegaze</id>
       <email/>
-      <organization/>
+      <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -140,7 +140,7 @@
       <name>Tim Reilly</name>
       <id>treilly</id>
       <email>treilly at apache dot org</email>
-      <organization></organization>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -150,7 +150,7 @@
       <name>Marcel Reutegger</name>
       <id>mreutegg</id>
       <email/>
-      <organization/>
+      <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -160,7 +160,7 @@
       <name>Paul Russell</name>
       <id>prussell</id>
       <email></email>
-      <organization></organization>
+      <organization/>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -180,7 +180,7 @@
       <name>Tobias Strasser</name>
       <id>tripod</id>
       <email/>
-      <organization/>
+      <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -210,7 +210,7 @@
     <contributor>
       <name>Felix Meschberger</name>
       <email/>
-      <organization/>
+      <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -219,7 +219,7 @@
     <contributor>
       <name>Dominique Pfister</name>
       <email/>
-      <organization/>
+      <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
