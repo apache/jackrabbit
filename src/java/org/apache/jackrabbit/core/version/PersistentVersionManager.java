@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.Workspace;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,16 +78,6 @@ public class PersistentVersionManager {
     private final PersistentNode historyRoot;
 
     /**
-     * the virtual root node of the version histories
-     */
-    private final String virtHistoryRootId;
-
-    /**
-     * the system root id
-     */
-    private final String systemRootId;
-
-    /**
      * the state manager for the version storage
      */
     private PersistentItemStateProvider stateMgr;
@@ -97,9 +88,9 @@ public class PersistentVersionManager {
     private NodeTypeManagerImpl ntMgr;
 
     /**
-     * The representation version manager
+     * The representation version managers (per workspace)
      */
-    private VersionManager versionManager;
+    private HashMap versionManagers = new HashMap();
 
     /**
      * the version histories
@@ -118,17 +109,11 @@ public class PersistentVersionManager {
 
         // check for versionhistory root
         NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
-        systemRootId = systemRoot.internalGetUUID();
         if (!systemRoot.hasNode(VERSION_HISTORY_ROOT_NAME)) {
             // if not exist, create
             systemRoot.addNode(VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
         }
-        if (!systemRoot.hasNode(VersionManager.VERSION_HISTORY_ROOT_NAME)) {
-            // if not exist, create
-            systemRoot.addNode(VersionManager.VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
-        }
         systemRoot.save();
-        virtHistoryRootId = systemRoot.getNode(VersionManager.VERSION_HISTORY_ROOT_NAME).internalGetUUID();
 
         try {
             PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(new NodeId(systemRoot.getNode(VERSION_HISTORY_ROOT_NAME).internalGetUUID()));
@@ -159,6 +144,9 @@ public class PersistentVersionManager {
         // create new history node in the persistent state
         InternalVersionHistory hist = InternalVersionHistory.create(this, historyRoot, uuid, historyNodeName, node);
         histories.put(hist.getId(), hist);
+
+        // notify version managers
+        onVersionHistoryModified(hist);
         return hist;
     }
 
@@ -216,8 +204,21 @@ public class PersistentVersionManager {
      */
     protected void onVersionModified(InternalVersion version)  throws RepositoryException {
         // check if version manager already generated item states
-        if (versionManager!=null) {
-            versionManager.onVersionModified(version);
+        Iterator iter = versionManagers.values().iterator();
+        while (iter.hasNext()) {
+            ((VersionManager) iter.next()).onVersionModified(version);
+        }
+    }
+
+    /**
+     * is informed by the versions if they were modified
+     * @param vh
+     */
+    protected void onVersionHistoryModified(InternalVersionHistory vh)  throws RepositoryException {
+        // check if version manager already generated item states
+        Iterator iter = versionManagers.values().iterator();
+        while (iter.hasNext()) {
+            ((VersionManager) iter.next()).onVersionHistoryModified(vh);
         }
     }
 
@@ -279,11 +280,13 @@ public class PersistentVersionManager {
      * returns the version manager
      * @return
      */
-    public synchronized VersionManager getVersionManager() {
-        if (versionManager==null) {
-            versionManager = new VersionManager(this, virtHistoryRootId);
+    public synchronized VersionManager getVersionManager(Workspace wsp) {
+        VersionManager vm = (VersionManager) versionManagers.get(wsp.getName());
+        if (vm==null) {
+            vm = new VersionManager(this);
+            versionManagers.put(wsp.getName(), vm);
         }
-        return versionManager;
+        return vm;
     }
 
     /**

@@ -274,11 +274,15 @@ public class RepositoryImpl implements Repository, EventListener {
          */
 
         // check system root node of system workspace
-        SessionImpl sysSession = getSystemSession(repConfig.getDefaultWorkspaceName());
-        NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
-        if (!rootNode.hasNode(SYSTEM_ROOT_NAME)) {
-            rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
-            rootNode.save();
+        // (by now, we just create a system root node in all workspaces)
+        Iterator wspNames = wspConfigs.keySet().iterator();
+        while (wspNames.hasNext()) {
+            String wspName = (String) wspNames.next();
+            NodeImpl rootNode = (NodeImpl) getSystemSession(wspName).getRootNode();
+            if (!rootNode.hasNode(SYSTEM_ROOT_NAME)) {
+                rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
+                rootNode.save();
+            }
         }
 
         // init version manager

@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
@@ -100,11 +101,6 @@ public class VersionManager {
     private final PersistentVersionManager vMgr;
 
     /**
-     * the uuid of the system root node
-     */
-    private final String rootId;
-
-    /**
      * The virtual item manager that exposes the versions to the content
      */
     private DefaultItemStateProvider virtProvider;
@@ -117,11 +113,9 @@ public class VersionManager {
 
     /**
      * @param vMgr
-     * @param rootId the uuid of the version history root
      */
-    protected VersionManager(PersistentVersionManager vMgr, String rootId) {
+    protected VersionManager(PersistentVersionManager vMgr) {
         this.vMgr = vMgr;
-        this.rootId = rootId;
     }
 
     /**
@@ -130,9 +124,18 @@ public class VersionManager {
      * @param base
      * @return
      */
-    public VirtualItemStateProvider getVirtualItemStateProvider(ItemStateProvider base) {
+    public VirtualItemStateProvider getVirtualItemStateProvider(SessionImpl session, ItemStateProvider base) {
         if (virtProvider==null) {
             try {
+                // check, if workspace of session has history root
+                NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
+                if (!systemRoot.hasNode(VersionManager.VERSION_HISTORY_ROOT_NAME)) {
+                    // if not exist, create
+                    systemRoot.addNode(VersionManager.VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
+                }
+                systemRoot.save();
+                String rootId = systemRoot.getNode(VersionManager.VERSION_HISTORY_ROOT_NAME).internalGetUUID();
+
                 virtProvider = new DefaultItemStateProvider(vMgr.getNodeTypeManager());
                 // create a duplicate of the version history root name
                 NodeState virtRootState = (NodeState) base.getItemState(new NodeId(rootId));
@@ -162,7 +165,6 @@ public class VersionManager {
      */
     public VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException {
         InternalVersionHistory history = vMgr.createVersionHistory(node);
-        mapVersionHistory(history);
         return (VersionHistory) node.getSession().getNodeByUUID(history.getId());
     }
 
@@ -256,8 +258,10 @@ public class VersionManager {
     public Version checkin(NodeImpl node) throws RepositoryException {
         try {
             InternalVersion version = vMgr.checkin(node);
+            vMgr.onVersionHistoryModified(version.getVersionHistory());
+
             VirtualNodeState vhNode = (VirtualNodeState) virtProvider.getItemState(new NodeId(version.getVersionHistory().getId()));
-            mapVersion(vhNode, version);
+
             // invalidate predecessors 'sucessors' properties
             InternalVersion[] pred = version.getPredecessors();
             for (int i=0; i<pred.length; i++) {
@@ -285,6 +289,16 @@ public class VersionManager {
     }
 
     /**
+     * Called when a internal version history has changed its internal structure,
+     * and the structure has to be remapped to the content.
+     * @param vh
+     * @throws RepositoryException
+     */
+    protected void onVersionHistoryModified(InternalVersionHistory vh) throws RepositoryException {
+        mapVersionHistory(vh);
+    }
+
+    /**
      * Maps the version history and it's versions to the content representation.
      * @param vh
      * @throws RepositoryException
@@ -308,7 +322,12 @@ public class VersionManager {
             }
 
             historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid.substring(4));
-            VirtualNodeState vhNode = virtProvider.addNode(parent, historyNodeName, vh.getId(), NodeTypeRegistry.NT_VERSION_HISTORY, null);
+            VirtualNodeState vhNode;
+            if (parent.hasChildNodeEntry(historyNodeName)) {
+                vhNode = virtProvider.getNode(parent, historyNodeName, 1);
+            } else {
+                vhNode = virtProvider.addNode(parent, historyNodeName, vh.getId(), NodeTypeRegistry.NT_VERSION_HISTORY, null);
+            }
 
             // add the versions
             Iterator iter = vh.getVersions();
@@ -331,24 +350,27 @@ public class VersionManager {
     private void mapVersion(VirtualNodeState vhNode, InternalVersion version)
             throws RepositoryException {
         try {
-            VirtualNodeState vNode = virtProvider.addNode(vhNode, version.getName(), version.getId(), NodeTypeRegistry.NT_VERSION, null);
+            VirtualNodeState vNode;
+            if (vhNode.hasChildNodeEntry(version.getName())) {
+                vNode = virtProvider.getNode(vhNode, version.getName(), 1);
+            } else {
+                vNode = virtProvider.addNode(vhNode, version.getName(), version.getId(), NodeTypeRegistry.NT_VERSION, null);
+                // initialize the version
+                virtProvider.setPropertyValue(vNode, VersionManager.PROPNAME_CREATED, InternalValue.create(version.getCreated()));
 
-            // initialize the version
-            virtProvider.setPropertyValue(vNode, VersionManager.PROPNAME_CREATED, InternalValue.create(version.getCreated()));
-
-            // initialize the primary properties
-            InternalFrozenNode fNode = version.getFrozenNode();
-            virtProvider.setPropertyValue(vNode, VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(fNode.getFrozenUUID()));
-            virtProvider.setPropertyValue(vNode, VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE, InternalValue.create(fNode.getFrozenPrimaryType()));
-            virtProvider.setPropertyValues(vNode, VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, InternalValue.create(fNode.getFrozenMixinTypes()));
+                // initialize the primary properties
+                InternalFrozenNode fNode = version.getFrozenNode();
+                virtProvider.setPropertyValue(vNode, VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(fNode.getFrozenUUID()));
+                virtProvider.setPropertyValue(vNode, VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE, InternalValue.create(fNode.getFrozenPrimaryType()));
+                virtProvider.setPropertyValues(vNode, VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, InternalValue.create(fNode.getFrozenMixinTypes()));
+                if (!version.isRootVersion()) {
+                    // don't map for root verion
+                    mapFrozenNode(vNode, PersistentVersionManager.NODENAME_FROZEN, fNode);
+                }
+            }
 
             // map dynamic ones
             mapDynamicProperties(vNode, version);
-
-            if (!version.isRootVersion()) {
-                // don't map for root verion
-                mapFrozenNode(vNode, PersistentVersionManager.NODENAME_FROZEN, fNode);
-            }
 
         } catch (ItemStateException e) {
             throw new RepositoryException(e);

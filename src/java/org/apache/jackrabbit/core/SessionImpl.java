@@ -147,12 +147,12 @@ public class SessionImpl implements Session {
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(credentials, hierMgr);
-        versionMgr = rep.getPersistentVersionManager()==null?null:rep.getPersistentVersionManager().getVersionManager();
+        versionMgr = rep.getPersistentVersionManager()==null?null:rep.getPersistentVersionManager().getVersionManager(wsp);
 
         // add virtual item managers only for normal sessions
         if (!(this instanceof SystemSession)) {
             try {
-                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(itemStateMgr));
+                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
             } catch (Exception e) {
                 log.error("Unable to add vmgr: " + e.toString(), e);
             }
@@ -178,12 +178,12 @@ public class SessionImpl implements Session {
         itemStateMgr = new SessionItemStateManager(rep.getRootNodeUUID(), wsp.getPersistentStateManager(), getNamespaceResolver());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
-        versionMgr = rep.getPersistentVersionManager()==null?null:rep.getPersistentVersionManager().getVersionManager();
+        versionMgr = rep.getPersistentVersionManager()==null?null:rep.getPersistentVersionManager().getVersionManager(wsp);
 
         // add virtual item managers only for normal sessions
         if (!(this instanceof SystemSession)) {
             try {
-                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(itemStateMgr));
+                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
             } catch (Exception e) {
                 log.error("Unable to add vmgr: " + e.toString(), e);
             }
