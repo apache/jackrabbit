@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 The Apache Software Foundation.
- *
+  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -99,9 +99,11 @@ public class ImportHandler extends DefaultHandler {
         try {
             String oldPrefix = session.getNamespacePrefix(uri);
             // namespace is already registered; check prefix
-            if (!oldPrefix.equals(prefix)) {
-                // namespace is mapped to different prefix;
-                // try to remap it to given prefix
+            if (!"".equals(prefix) && !oldPrefix.equals(prefix)) {
+                /**
+                 * namespace is mapped to different prefix;
+                 * try to remap it to given prefix
+                 */
                 try {
                     session.setNamespacePrefix(prefix, uri);
                 } catch (RepositoryException re) {
@@ -110,6 +112,14 @@ public class ImportHandler extends DefaultHandler {
             }
         } catch (NamespaceException nse) {
             // namespace is not yet registered, try to register it
+            if ("".equals(prefix)) {
+                /**
+                 * the xml document specifies a default namespace (i.e. an empty prefix);
+                 * we need to create a random prefix as the empty prefix is reserved
+                 * according to the JCR spec.
+                 */
+                prefix = nsReg.getUniquePrefix(uri);
+            }
             try {
                 nsReg.registerNamespace(prefix, uri);
             } catch (RepositoryException re) {
@@ -126,7 +136,7 @@ public class ImportHandler extends DefaultHandler {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
             String nsURI;
-            if (qName == null || "".equals(qName)) {
+            if (namespaceURI != null && !"".equals(namespaceURI)) {
                 nsURI = namespaceURI;
             } else {
                 try {

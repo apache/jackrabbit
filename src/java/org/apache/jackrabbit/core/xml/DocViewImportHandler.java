@@ -51,7 +51,7 @@ class DocViewImportHandler extends DefaultHandler {
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
         try {
             QName nodeName;
-            if (qName == null || "".equals(qName)) {
+            if (namespaceURI != null && !"".equals(namespaceURI)) {
                 nodeName = new QName(namespaceURI, localName);
             } else {
                 try {
@@ -70,8 +70,13 @@ class DocViewImportHandler extends DefaultHandler {
 
             // properties
             for (int i = 0; i < atts.getLength(); i++) {
+                if (atts.getQName(i).startsWith("xml:")) {
+                    // skipping xml:space, xml:lang, etc.
+                    log.debug("skipping reserved/system attribute " + atts.getQName(i));
+                    continue;
+                }
                 QName propName;
-                if (atts.getQName(i) == null || "".equals(atts.getQName(i))) {
+                if (atts.getURI(i) != null && !"".equals(atts.getURI(i))) {
                     propName = new QName(atts.getURI(i), atts.getLocalName(i));
                 } else {
                     try {
@@ -94,9 +99,13 @@ class DocViewImportHandler extends DefaultHandler {
      * @see ContentHandler#characters(char[], int, int)
      */
     public void characters(char[] ch, int start, int length) throws SAXException {
-        // character data in document view:
-        // store as jcr:xmlcharacters property of jcr:xmltext node
-        // (need to store as node in order to maintain ordering)
+        /**
+         * character data in document view:
+         * store as jcr:xmlcharacters property of jcr:xmltext node
+         * (need to store as node in order to maintain ordering)
+         *
+         * todo merge contiguous character data into one jcr:xmltext node
+         */
         try {
             NodeImpl currentParent = (NodeImpl) parents.peek();
             NodeImpl txtNode = (NodeImpl) currentParent.addNode(DocViewSAXEventGenerator.NODENAME_XMLTEXT);

@@ -73,7 +73,7 @@ class SysViewImportHandler extends DefaultHandler {
         try {
             String elemName;
             String nsURI;
-            if (qName == null || "".equals(qName)) {
+            if (namespaceURI != null && !"".equals(namespaceURI)) {
                 nsURI = namespaceURI;
                 elemName = localName;
             } else {
@@ -183,7 +183,7 @@ class SysViewImportHandler extends DefaultHandler {
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
         try {
             String elemName;
-            if (qName == null || "".equals(qName)) {
+            if (localName != null && !"".equals(localName)) {
                 elemName = localName;
             } else {
                 try {

@@ -197,6 +197,25 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
         }
     }
 
+    /**
+     * Returns a prefix that is unique among the already registered prefixes.
+     * @param uriHint namespace uri that serves as hint for the prefix generation
+     * @return a unique prefix
+     */
+    public String getUniquePrefix(String uriHint) {
+        // @todo smarter prefix generation
+/*
+        int number;
+        if (uriHint == null || uriHint.length() == 0) {
+            number = prefixToURI.size() + 1;
+        } else {
+            number = uriHint.hashCode();
+        }
+        return "_pre" + number;
+*/
+        return "_pre" + (prefixToURI.size() + 1);
+    }
+
     //----------------------------------------------------< NamespaceRegistry >
     /**
      * @see NamespaceRegistry#registerNamespace
