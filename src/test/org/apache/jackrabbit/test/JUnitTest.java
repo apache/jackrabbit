@@ -31,11 +31,6 @@ public abstract class JUnitTest extends TestCase {
     /**
      * Output stream for general messages from tests.
      */
-    protected LogPrintWriter log = new LogPrintWriter(logger);
-
-    /**
-     * Output stream for reference output from tests.
-     */
-    protected LogPrintWriter ref = new LogPrintWriter(logger);
+    public final LogPrintWriter log = new LogPrintWriter(logger);
 
 }
