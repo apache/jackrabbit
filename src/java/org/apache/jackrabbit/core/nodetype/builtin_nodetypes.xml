@@ -269,22 +269,25 @@
         <supertypes>
             <supertype>mix:referenceable</supertype>
         </supertypes>
-        <propertyDef name="jcr:versionHistory" requiredType="Reference" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false">
+        <!-- spec defines this property as mandatory, but jackrabbit implementation needs it non-mandatory for proper initialization -->
+        <propertyDef name="jcr:versionHistory" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:versionHistory</valueConstraint>
             </valueConstraints>
         </propertyDef>
-        <propertyDef name="jcr:baseVersion" requiredType="Reference" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="true" multiple="false">
+        <!-- spec defines this property as mandatory, but jackrabbit implementation needs it non-mandatory for proper initialization -->
+        <propertyDef name="jcr:baseVersion" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>
         </propertyDef>
-        <propertyDef name="jcr:isCheckedOut" requiredType="Boolean" autoCreate="true" mandatory="true" onParentVersion="IGNORE" protected="true" multiple="false">
+        <propertyDef name="jcr:isCheckedOut" requiredType="Boolean" autoCreate="true" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="false">
             <defaultValues>
                 <defaultValue>true</defaultValue>
             </defaultValues>
         </propertyDef>
-        <propertyDef name="jcr:predecessors" requiredType="Reference" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="true">
+        <!-- spec defines this property as mandatory, but jackrabbit implementation needs it non-mandatory for proper initialization -->
+        <propertyDef name="jcr:predecessors" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="true">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>
