@@ -102,7 +102,7 @@ public class SharedItemStateManager extends ItemStateCache
         }
         rootState.setDefinitionId(nodeDefId);
 
-        QName propName = new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
+        QName propName = NodeTypeRegistry.JCR_PRIMARY_TYPE;
         rootState.addPropertyEntry(propName);
 
         PropertyState prop = createInstance(propName, rootNodeUUID);

@@ -215,8 +215,7 @@ public class SessionImpl implements Session {
      *
      * @return session item state manager
      */
-    protected SessionItemStateManager createSessionItemStateManager(
-            UpdatableItemStateManager manager) {
+    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager manager) {
 
         return new SessionItemStateManager(rep.getRootNodeUUID(),
                 manager, getNamespaceResolver());
@@ -693,7 +692,7 @@ public class SessionImpl implements Session {
      */
     public void move(String srcAbsPath, String destAbsPath)
             throws ItemExistsException, PathNotFoundException,
-            VersionException, RepositoryException {
+            VersionException, LockException, RepositoryException {
         // check sanity of this session
         sanityCheck();
 
@@ -728,6 +727,11 @@ public class SessionImpl implements Session {
         NodeImpl destParentNode;
         try {
             destPath = Path.create(destAbsPath, getNamespaceResolver(), true);
+            if (srcPath.isAncestorOf(destPath)) {
+                String msg = destAbsPath + ": invalid destination path (cannot be descendant of source path)";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
             destName = destPath.getNameElement();
             destParentPath = destPath.getAncestor(1);
             destParentNode = (NodeImpl) getItemManager().getItem(destParentPath);
@@ -744,6 +748,18 @@ public class SessionImpl implements Session {
             String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
             log.debug(msg);
             throw new RepositoryException(msg);
+        }
+
+        // verify that both source and destination parent nodes are checked-out
+        if (!srcParentNode.internalIsCheckedOut()) {
+            String msg = srcAbsPath + ": cannot move a child of a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+        if (!destParentNode.internalIsCheckedOut()) {
+            String msg = destAbsPath + ": cannot move a target to a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
         }
 
         // check for name collisions
@@ -828,9 +844,7 @@ public class SessionImpl implements Session {
             throw new PathNotFoundException(parentAbsPath);
         }
         if (!item.isNode()) {
-            String msg = parentAbsPath + ": node expected";
-            log.debug(msg);
-            throw new RepositoryException(msg);
+            throw new PathNotFoundException(parentAbsPath);
         }
         NodeImpl parent = (NodeImpl) item;
 

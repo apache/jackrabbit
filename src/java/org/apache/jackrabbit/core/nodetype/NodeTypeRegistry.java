@@ -42,7 +42,7 @@ import java.util.*;
 public class NodeTypeRegistry {
     private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
 
-    // some well known node type names
+    // some well known node type names:
     // rep:root
     public static final QName REP_ROOT =
             new QName(NamespaceRegistryImpl.NS_REP_URI, "root");
@@ -50,7 +50,7 @@ public class NodeTypeRegistry {
     public static final QName REP_SYSTEM =
             new QName(NamespaceRegistryImpl.NS_REP_URI, "system");
     // rep:versionStorage
-    public static final QName REP_VERSION_STORAGE=
+    public static final QName REP_VERSION_STORAGE =
             new QName(NamespaceRegistryImpl.NS_REP_URI, "versionStorage");
     // nt:unstructured
     public static final QName NT_UNSTRUCTURED =
@@ -91,13 +91,14 @@ public class NodeTypeRegistry {
     // nt:frozenNode
     public static final QName NT_FROZEN_NODE =
             new QName(NamespaceRegistryImpl.NS_NT_URI, "frozenNode");
+
+    // some well known item names:
     // jcr:primaryType
     public static final QName JCR_PRIMARY_TYPE =
             new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
 
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
             "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";
-
     private static final String CUSTOM_NODETYPES_RESOURCE_NAME = "custom_nodetypes.xml";
 
     // file system where node type registrations are persisted
@@ -889,7 +890,6 @@ public class NodeTypeRegistry {
     }
 
     /**
-     *
      * @param ntName
      * @return
      * @throws NoSuchNodeTypeException
@@ -922,7 +922,6 @@ public class NodeTypeRegistry {
     }
 
     /**
-     *
      * @param ntNames
      * @return
      * @throws NodeTypeConflictException

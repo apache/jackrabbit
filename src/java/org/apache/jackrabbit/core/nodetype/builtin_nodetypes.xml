@@ -269,24 +269,25 @@
         <supertypes>
             <supertype>mix:referenceable</supertype>
         </supertypes>
-        <!-- spec defines this property as mandatory, but jackrabbit implementation needs it non-mandatory for proper initialization -->
+        <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
         <propertyDef name="jcr:versionHistory" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:versionHistory</valueConstraint>
             </valueConstraints>
         </propertyDef>
-        <!-- spec defines this property as mandatory, but jackrabbit implementation needs it non-mandatory for proper initialization -->
+        <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
         <propertyDef name="jcr:baseVersion" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>
         </propertyDef>
+        <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
         <propertyDef name="jcr:isCheckedOut" requiredType="Boolean" autoCreate="true" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="false">
             <defaultValues>
                 <defaultValue>true</defaultValue>
             </defaultValues>
         </propertyDef>
-        <!-- spec defines this property as mandatory, but jackrabbit implementation needs it non-mandatory for proper initialization -->
+        <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
         <propertyDef name="jcr:predecessors" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="true">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>

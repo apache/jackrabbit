@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.search.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
@@ -261,6 +262,56 @@ public class WorkspaceImpl implements Workspace {
                                             ItemStateManager stateMgr)
             throws NoSuchItemStateException, ItemStateException {
         return (NodeState) stateMgr.getItemState(id);
+    }
+
+    /**
+     * Verifies that the node at <code>nodePath</code> is checked-out; throws a
+     * <code>VersionException</code> if that's not the case.
+     * <p/>
+     * A node is considered <i>checked-out</i> if it is versionable and
+     * checked-out, or is non-versionable but its nearest versionable ancestor
+     * is checked-out, or is non-versionable and there are no versionable
+     * ancestors.
+     *
+     * @param nodePath
+     * @param hierMgr
+     * @param stateMgr
+     * @throws VersionException
+     * @throws RepositoryException
+     */
+    protected static void verifyCheckedOut(Path nodePath,
+                                           HierarchyManagerImpl hierMgr,
+                                           ItemStateManager stateMgr)
+            throws VersionException, RepositoryException {
+        // search nearest ancestor that is versionable, start with node at nodePath
+        /**
+         * FIXME should not only rely on existence of jcr:isCheckedOut property
+         * but also verify that node.isNodeType("mix:versionable")==true;
+         * this would have a negative impact on performance though...
+         */
+        NodeState nodeState = getNodeState(nodePath, hierMgr, stateMgr);
+        while (!nodeState.hasPropertyEntry(VersionManager.PROPNAME_IS_CHECKED_OUT)) {
+            if (nodePath.denotesRoot()) {
+                return;
+            }
+            nodePath = nodePath.getAncestor(1);
+            nodeState = getNodeState(nodePath, hierMgr, stateMgr);
+        }
+        PropertyId propId =
+                new PropertyId(nodeState.getUUID(), VersionManager.PROPNAME_IS_CHECKED_OUT);
+        PropertyState propState;
+        try {
+            propState = (PropertyState) stateMgr.getItemState(propId);
+        } catch (ItemStateException ise) {
+            String msg = "internal error: failed to retrieve state of "
+                    + hierMgr.safeGetJCRPath(propId);
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+        boolean checkedOut = ((Boolean) propState.getValues()[0].internalValue()).booleanValue();
+        if (!checkedOut) {
+            throw new VersionException(hierMgr.safeGetJCRPath(nodePath) + " is checked-in");
+        }
     }
 
     /**
@@ -550,7 +601,8 @@ public class WorkspaceImpl implements Workspace {
                                      NodeTypeRegistry ntReg,
                                      boolean clone)
             throws ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException {
+            VersionException, PathNotFoundException, ItemExistsException,
+            LockException, RepositoryException {
 
         // 1. check paths & retrieve state
 
@@ -586,6 +638,11 @@ public class WorkspaceImpl implements Workspace {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
+
+        // make sure destination parent node is checked-out
+        verifyCheckedOut(destParentPath, destHierMgr, destStateMgr);
+
+        // @todo check locked-status
 
         // 2. check access rights & node type constraints
 
@@ -678,8 +735,6 @@ public class WorkspaceImpl implements Workspace {
         sanityCheck();
 
         // @todo reimplement Workspace#clone according to new spec
-        // @todo check ckecked-out status
-        // @todo check locked-status status
 
         // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
@@ -705,10 +760,6 @@ public class WorkspaceImpl implements Workspace {
         // check state of this instance
         sanityCheck();
 
-        // @todo reimplement Workspace#copy according to new spec
-        // @todo check ckecked-out status
-        // @todo check locked-status status
-
         // do intra-workspace copy
         internalCopy(srcAbsPath, stateMgr, hierMgr,
                 destAbsPath, stateMgr, hierMgr,
@@ -726,10 +777,6 @@ public class WorkspaceImpl implements Workspace {
 
         // check state of this instance
         sanityCheck();
-
-        // @todo reimplement Workspace#copy according to new spec
-        // @todo check ckecked-out status
-        // @todo check locked-status status
 
         // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
@@ -753,10 +800,6 @@ public class WorkspaceImpl implements Workspace {
 
         // check state of this instance
         sanityCheck();
-
-        // @todo reimplement Workspace#move according to new spec
-        // @todo check ckecked-out status
-        // @todo check locked-status status
 
         // intra-workspace move...
 
@@ -786,6 +829,11 @@ public class WorkspaceImpl implements Workspace {
 
         try {
             destPath = Path.create(destAbsPath, session.getNamespaceResolver(), true);
+            if (srcPath.isAncestorOf(destPath)) {
+                String msg = destAbsPath + ": invalid destination path (cannot be descendant of source path)";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
             destName = destPath.getNameElement();
             destParentPath = destPath.getAncestor(1);
             destParentState = getNodeState(destParentPath, hierMgr, stateMgr);
@@ -802,6 +850,12 @@ public class WorkspaceImpl implements Workspace {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
+
+        // make sure both source & destination parent nodes are checked-out
+        verifyCheckedOut(srcParentPath, hierMgr, stateMgr);
+        verifyCheckedOut(destParentPath, hierMgr, stateMgr);
+
+        // @todo check locked-status
 
         // 2. check node type constraints & access rights
 

@@ -2984,6 +2984,11 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /**
      * Determines the checked-out status of this node.
+     * <p/>
+     * A node is considered <i>checked-out</i> if it is versionable and
+     * checked-out, or is non-versionable but its nearest versionable ancestor
+     * is checked-out, or is non-versionable and there are no versionable
+     * ancestors.
      *
      * @return a boolean
      * @see Node#isCheckedOut()

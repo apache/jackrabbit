@@ -16,12 +16,7 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.search.*;
 import org.apache.log4j.Logger;
@@ -33,16 +28,16 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.RangeQuery;
 import org.apache.lucene.search.TermQuery;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.query.InvalidQueryException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Arrays;
 
 /**
  * Implements a query builder that takes an abstract query tree and creates
@@ -52,33 +47,48 @@ import java.util.Arrays;
  */
 class LuceneQueryBuilder implements QueryNodeVisitor {
 
-    /** Logger for this class */
+    /**
+     * Logger for this class
+     */
     private static final Logger log = Logger.getLogger(LuceneQueryBuilder.class);
 
-    /** QName for jcr:primaryType */
-    private static QName primaryType = new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
+    /**
+     * QName for jcr:primaryType
+     */
+    private static QName primaryType = NodeTypeRegistry.JCR_PRIMARY_TYPE;
 
-    /** Root node of the abstract query tree */
+    /**
+     * Root node of the abstract query tree
+     */
     private QueryRootNode root;
 
-    /** Session of the user executing this query */
+    /**
+     * Session of the user executing this query
+     */
     private SessionImpl session;
 
-    /** Namespace mappings to internal prefixes */
+    /**
+     * Namespace mappings to internal prefixes
+     */
     private NamespaceMappings nsMappings;
 
-    /** The analyzer instance to use for contains function query parsing */
+    /**
+     * The analyzer instance to use for contains function query parsing
+     */
     private Analyzer analyzer;
 
-    /** Exceptions thrown during tree translation */
+    /**
+     * Exceptions thrown during tree translation
+     */
     private List exceptions = new ArrayList();
 
     /**
      * Creates a new <code>LuceneQueryBuilder</code> instance.
-     * @param root the root node of the abstract query tree.
-     * @param session of the user executing this query.
+     *
+     * @param root       the root node of the abstract query tree.
+     * @param session    of the user executing this query.
      * @param nsMappings namespace resolver for internal prefixes.
-     * @param analyzer for parsing the query statement of the contains function.
+     * @param analyzer   for parsing the query statement of the contains function.
      */
     private LuceneQueryBuilder(QueryRootNode root,
                                SessionImpl session,
@@ -93,10 +103,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * Creates a lucene {@link org.apache.lucene.search.Query} tree from an
      * abstract query tree.
-     * @param root the root node of the abstract query tree.
-     * @param session of the user executing the query.
+     *
+     * @param root       the root node of the abstract query tree.
+     * @param session    of the user executing the query.
      * @param nsMappings namespace resolver for internal prefixes.
-     * @param analyzer for parsing the query statement of the contains function.
+     * @param analyzer   for parsing the query statement of the contains function.
      * @return the lucene query tree.
      * @throws RepositoryException if an error occurs during the translation.
      */
@@ -123,6 +134,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * Starts the tree traversal and returns the lucene
      * {@link org.apache.lucene.search.Query}.
+     *
      * @return the lucene <code>Query</code>.
      */
     private Query createLuceneQuery() {
@@ -199,7 +211,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         String field = "";
         List values = new ArrayList();
         try {
-            field = NodeTypeRegistry.JCR_PRIMARY_TYPE.toJCRName(nsMappings);
+            field = primaryType.toJCRName(nsMappings);
             values.add(node.getValue().toJCRName(nsMappings));
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
             NodeType base = ntMgr.getNodeType(node.getValue().toJCRName(session.getNamespaceResolver()));
@@ -230,7 +242,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         } else {
             BooleanQuery b = new BooleanQuery();
             for (Iterator it = values.iterator(); it.hasNext();) {
-                b.add(new TermQuery(new Term(field, (String)it.next())), false, false);
+                b.add(new TermQuery(new Term(field, (String) it.next())), false, false);
             }
             return b;
         }
