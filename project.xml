@@ -199,6 +199,15 @@
   </developers>
   <contributors>
     <contributor>
+      <name>Jukka Zitting</name>
+      <email>jz@yukatan.fi</email>
+      <organization>Yukatan</organization>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+2</timezone>
+    </contributor>
+    <contributor>
       <name>Felix Meschberger</name>
       <email/>
       <organization/>
