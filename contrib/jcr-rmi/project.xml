@@ -72,6 +72,10 @@
       <id>easymock</id>
       <version>1.1</version>
     </dependency>
+    <dependency>
+      <id>junit</id>
+      <version>3.8.1</version>
+    </dependency>
   </dependencies>
 
   <build>
