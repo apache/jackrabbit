@@ -42,4 +42,6 @@ public interface QueryNodeVisitor {
     public Object visit(RelationQueryNode node, Object data);
 
     public Object visit(OrderQueryNode node, Object data);
+
+    public Object visit(DerefQueryNode node, Object data);
 }

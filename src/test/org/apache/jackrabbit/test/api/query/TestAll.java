@@ -45,6 +45,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(XPathOrderByTest.class);
         suite.addTestSuite(XPathQueryLevel2Test.class);
 
+        suite.addTestSuite(DerefQueryLevel1Test.class);
+
         return suite;
     }
 }

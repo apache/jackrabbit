@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.search.RelationQueryNode;
 import org.apache.jackrabbit.core.search.OrderQueryNode;
 import org.apache.jackrabbit.core.search.QueryNode;
 import org.apache.jackrabbit.core.search.QueryConstants;
+import org.apache.jackrabbit.core.search.DerefQueryNode;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
@@ -350,6 +351,11 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             }
         }
         return sb;
+    }
+
+    public Object visit(DerefQueryNode node, Object data) {
+        exceptions.add(new InvalidQueryException("jcrfn:deref() function not supported in SQL"));
+        return data;
     }
 
     public Object visit(RelationQueryNode node, Object data) {

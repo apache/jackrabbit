@@ -21,7 +21,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 
 /**
- * Performs tests with the <code>TEXTSEARCH</code> clause.
+ * Performs tests with the <code>CONTAINS</code> function.
  */
 public class FulltextQueryTest extends AbstractQueryTest {
 

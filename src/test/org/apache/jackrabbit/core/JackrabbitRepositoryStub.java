@@ -71,6 +71,10 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
      */
     public JackrabbitRepositoryStub(Properties env) {
         super(env);
+        // set some attributes on the sessions
+        superuser.setAttribute("jackrabbit", "jackrabbit");
+        readwrite.setAttribute("jackrabbit", "jackrabbit");
+        readonly.setAttribute("jackrabbit", "jackrabbit");
     }
 
     /**

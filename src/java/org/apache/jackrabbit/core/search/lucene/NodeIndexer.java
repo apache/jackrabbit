@@ -225,7 +225,7 @@ class NodeIndexer {
                 String uuid = internalValue.toString();
                 doc.add(new Field(fieldName,
                         uuid,
-                        false,
+                        true, // store
                         true,
                         false));
                 break;

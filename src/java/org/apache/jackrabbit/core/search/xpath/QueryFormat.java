@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.search.QueryNodeVisitor;
 import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.search.RelationQueryNode;
 import org.apache.jackrabbit.core.search.TextsearchQueryNode;
+import org.apache.jackrabbit.core.search.DerefQueryNode;
 import org.apache.jackrabbit.core.util.ISO9075;
 
 import javax.jcr.query.InvalidQueryException;
@@ -260,6 +261,25 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             sb.append('[');
             predicates[i].accept(this, sb);
             sb.append(']');
+        }
+        return sb;
+    }
+
+    public Object visit(DerefQueryNode node, Object data) {
+        StringBuffer sb = (StringBuffer) data;
+        try {
+            sb.append(XPathQueryBuilder.JCRFN_DEREF.toJCRName(resolver));
+            sb.append("(@");
+            sb.append(ISO9075.encode(node.getRefProperty()).toJCRName(resolver));
+            sb.append(", '");
+            if (node.getNameTest() == null) {
+                sb.append("*");
+            } else {
+                sb.append(ISO9075.encode(node.getNameTest()).toJCRName(resolver));
+            }
+            sb.append("')");
+        } catch (NoPrefixDeclaredException e) {
+            exceptions.add(e);
         }
         return sb;
     }

@@ -37,6 +37,7 @@ import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.search.RelationQueryNode;
 import org.apache.jackrabbit.core.search.TextsearchQueryNode;
 import org.apache.jackrabbit.core.search.QueryConstants;
+import org.apache.jackrabbit.core.search.DerefQueryNode;
 import org.apache.jackrabbit.core.util.ISO9075;
 
 import javax.jcr.query.InvalidQueryException;
@@ -276,86 +277,89 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      *         <code>data</code>.
      */
     public Object visit(SimpleNode node, Object data) {
+        QueryNode queryNode = (QueryNode) data;
         switch (node.getId()) {
             case JJTXPATH2:
-                data = createPathQueryNode(node);
+                queryNode = createPathQueryNode(node);
                 break;
             case JJTROOT:
             case JJTROOTDESCENDANTS:
-                ((PathQueryNode) data).setAbsolute(true);
+                ((PathQueryNode) queryNode).setAbsolute(true);
                 break;
             case JJTSTEPEXPR:
                 if (isAttributeAxis(node)) {
-                    if (data instanceof RelationQueryNode
-                            || data instanceof OrderQueryNode
-                            || data instanceof PathQueryNode) {
+                    if (queryNode.getType() == QueryNode.TYPE_RELATION
+                            || queryNode.getType() == QueryNode.TYPE_DEREF
+                            || queryNode.getType() == QueryNode.TYPE_ORDER
+                            || queryNode.getType() == QueryNode.TYPE_PATH) {
                         // traverse
-                        node.childrenAccept(this, data);
-                    } else if (data instanceof NotQueryNode) {
+                        node.childrenAccept(this, queryNode);
+                    } else if (queryNode.getType() == QueryNode.TYPE_NOT) {
                         // is null expression
                         RelationQueryNode isNull
-                                = new RelationQueryNode((QueryNode) data,
+                                = new RelationQueryNode(queryNode,
                                         RelationQueryNode.OPERATION_NULL);
                         node.childrenAccept(this, isNull);
-                        NotQueryNode notNode = (NotQueryNode) data;
+                        NotQueryNode notNode = (NotQueryNode) queryNode;
                         NAryQueryNode parent = (NAryQueryNode) notNode.getParent();
                         parent.removeOperand(notNode);
                         parent.addOperand(isNull);
                     } else {
                         // not null expression
                         RelationQueryNode notNull
-                                = new RelationQueryNode((QueryNode) data,
+                                = new RelationQueryNode(queryNode,
                                         RelationQueryNode.OPERATION_NOT_NULL);
                         node.childrenAccept(this, notNull);
-                        ((NAryQueryNode) data).addOperand(notNull);
+                        ((NAryQueryNode) queryNode).addOperand(notNull);
                     }
                 } else {
-                    if (data instanceof PathQueryNode) {
-                        data = createLocationStep(node, (PathQueryNode) data);
+                    if (queryNode.getType() == QueryNode.TYPE_PATH) {
+                        queryNode = createLocationStep(node, (PathQueryNode) queryNode);
                     } else {
                         exceptions.add(new InvalidQueryException("Only attribute axis is allowed in predicate"));
                     }
                 }
                 break;
             case JJTNAMETEST:
-                if (data instanceof LocationStepQueryNode
-                        || data instanceof RelationQueryNode
-                        || data instanceof PathQueryNode) {
-                    createNameTest(node, (QueryNode) data);
-                } else if (data instanceof OrderQueryNode) {
-                    data = createOrderSpec(node, (OrderQueryNode) data);
+                if (queryNode.getType() == QueryNode.TYPE_LOCATION
+                        || queryNode.getType() == QueryNode.TYPE_DEREF
+                        || queryNode.getType() == QueryNode.TYPE_RELATION
+                        || queryNode.getType() == QueryNode.TYPE_PATH) {
+                    createNodeTest(node, queryNode);
+                } else if (queryNode.getType() == QueryNode.TYPE_ORDER) {
+                    createOrderSpec(node, (OrderQueryNode) queryNode);
                 } else {
                     // traverse
-                    node.childrenAccept(this, data);
+                    node.childrenAccept(this, queryNode);
                 }
                 break;
             case JJTOREXPR:
-                NAryQueryNode parent = (NAryQueryNode) data;
-                data = new OrQueryNode(parent);
-                parent.addOperand((QueryNode) data);
+                NAryQueryNode parent = (NAryQueryNode) queryNode;
+                queryNode = new OrQueryNode(parent);
+                parent.addOperand(queryNode);
                 // traverse
-                node.childrenAccept(this, data);
+                node.childrenAccept(this, queryNode);
                 break;
             case JJTANDEXPR:
-                parent = (NAryQueryNode) data;
-                data = new AndQueryNode(parent);
-                parent.addOperand((QueryNode) data);
+                parent = (NAryQueryNode) queryNode;
+                queryNode = new AndQueryNode(parent);
+                parent.addOperand(queryNode);
                 // traverse
-                node.childrenAccept(this, data);
+                node.childrenAccept(this, queryNode);
                 break;
             case JJTCOMPARISONEXPR:
-                createExpression(node, (NAryQueryNode) data);
+                createExpression(node, (NAryQueryNode) queryNode);
                 break;
             case JJTSTRINGLITERAL:
             case JJTDECIMALLITERAL:
             case JJTDOUBLELITERAL:
             case JJTINTEGERLITERAL:
-                if (data instanceof RelationQueryNode) {
-                    assignValue(node, (RelationQueryNode) data);
-                } else if (data instanceof LocationStepQueryNode) {
+                if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                    assignValue(node, (RelationQueryNode) queryNode);
+                } else if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
                     if (node.getId() == JJTINTEGERLITERAL) {
                         int index = Integer.parseInt(node.getValue());
-                        ((LocationStepQueryNode) data).setIndex(index);
+                        ((LocationStepQueryNode) queryNode).setIndex(index);
                     } else {
                         exceptions.add(new InvalidQueryException("LocationStep only allows integer literal as position index"));
                     }
@@ -364,25 +368,25 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 }
                 break;
             case JJTFUNCTIONCALL:
-                data = createFunction(node, (QueryNode) data);
+                queryNode = createFunction(node, queryNode);
                 break;
             case JJTORDERBYCLAUSE:
                 root.setOrderNode(new OrderQueryNode(root));
-                data = root.getOrderNode();
-                node.childrenAccept(this, data);
+                queryNode = root.getOrderNode();
+                node.childrenAccept(this, queryNode);
                 break;
             case JJTORDERMODIFIER:
                 if (node.jjtGetNumChildren() > 0
                         && ((SimpleNode) node.jjtGetChild(0)).getId() == JJTDESCENDING) {
-                    OrderQueryNode.OrderSpec[] specs = ((OrderQueryNode) data).getOrderSpecs();
+                    OrderQueryNode.OrderSpec[] specs = ((OrderQueryNode) queryNode).getOrderSpecs();
                     specs[specs.length - 1].setAscending(false);
                 }
                 break;
             default:
                 // per default traverse
-                node.childrenAccept(this, data);
+                node.childrenAccept(this, queryNode);
         }
-        return data;
+        return queryNode;
     }
 
     //----------------------< internal >----------------------------------------
@@ -416,31 +420,34 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     }
 
     /**
-     * Creates a name test either for a <code>LocationStepQueryNode</code> or
-     * for a <code>RelationQueryNode</code>.
+     * Assigns a QName to one of the follwing QueryNodes:
+     * {@link RelationQueryNode}, {@link DerefQueryNode}, {@link RelationQueryNode},
+     * {@link PathQueryNode}, {@link OrderQueryNode}.
      *
      * @param node      the current node in the xpath syntax tree.
-     * @param queryNode either a <code>LocationStepQueryNode</code> or a
-     *                  <code>RelationQueryNode</code>.
+     * @param queryNode the query node.
      */
-    private void createNameTest(SimpleNode node, QueryNode queryNode) {
+    private void createNodeTest(SimpleNode node, QueryNode queryNode) {
         if (node.jjtGetNumChildren() > 0) {
             SimpleNode child = (SimpleNode) node.jjtGetChild(0);
             if (child.getId() == JJTQNAME) {
                 try {
-                    if (queryNode instanceof LocationStepQueryNode) {
+                    if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
                         if (name.equals(JCR_ROOT)) {
                             name = new QName("", "");
                         }
                         ((LocationStepQueryNode) queryNode).setNameTest(name);
-                    } else if (queryNode instanceof RelationQueryNode) {
+                    } else if (queryNode.getType() == QueryNode.TYPE_DEREF) {
+                        QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
+                        ((DerefQueryNode) queryNode).setRefProperty(name);
+                    } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
                         ((RelationQueryNode) queryNode).setProperty(name);
-                    } else if (queryNode instanceof PathQueryNode) {
+                    } else if (queryNode.getType() == QueryNode.TYPE_PATH) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
                         root.addSelectProperty(name);
-                    } else if (queryNode instanceof OrderQueryNode) {
+                    } else if (queryNode.getType() == QueryNode.TYPE_ORDER) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
                         root.getOrderNode().addOrderSpec(name, true);
                     }
@@ -450,7 +457,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     exceptions.add(new InvalidQueryException("Unknown prefix: " + child.getValue()));
                 }
             } else if (child.getId() == JJTSTAR) {
-                if (queryNode instanceof LocationStepQueryNode) {
+                if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
                     ((LocationStepQueryNode) queryNode).setNameTest(null);
                 }
             } else {
@@ -721,7 +728,43 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     exceptions.add(new InvalidQueryException("Unsupported location for last()"));
                 }
             } else if (JCRFN_DEREF.toJCRName(resolver).equals(fName)) {
-                exceptions.add(new InvalidQueryException("Unsupported function: " + fName));
+                // check number of arguments
+                if (node.jjtGetNumChildren() == 3) {
+                    if (queryNode.getType() == QueryNode.TYPE_PATH) {
+                        PathQueryNode pathNode = (PathQueryNode) queryNode;
+                        DerefQueryNode derefNode = new DerefQueryNode(pathNode, null, false);
+
+                        // assign property name
+                        node.jjtGetChild(1).jjtAccept(this, derefNode);
+                        // check property name
+                        if (derefNode.getRefProperty() == null) {
+                            exceptions.add(new InvalidQueryException("Wrong first argument type for jcrfn:deref"));
+                        }
+
+                        SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
+                        if (literal.getId() == JJTSTRINGLITERAL) {
+                            String value = literal.getValue();
+                            // strip quotes
+                            value = value.substring(1, value.length() - 1);
+                            if (!value.equals("*")) {
+                                QName name = null;
+                                try {
+                                    name = ISO9075.decode(QName.fromJCRName(value, resolver));
+                                } catch (IllegalNameException e) {
+                                    exceptions.add(new InvalidQueryException("Illegal name: " + value));
+                                } catch (UnknownPrefixException e) {
+                                    exceptions.add(new InvalidQueryException("Unknown prefix: " + value));
+                                }
+                                derefNode.setNameTest(name);
+                            }
+                        } else {
+                            exceptions.add(new InvalidQueryException("Wrong second argument type for jcrfn:like"));
+                        }
+                        pathNode.addPathStep(derefNode);
+                    } else {
+                        exceptions.add(new InvalidQueryException("Unsupported location for jcrfn:deref()"));
+                    }
+                }
             } else {
                 exceptions.add(new InvalidQueryException("Unsupported function: " + fName));
             }

@@ -40,6 +40,7 @@ import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.search.RelationQueryNode;
 import org.apache.jackrabbit.core.search.TextsearchQueryNode;
 import org.apache.jackrabbit.core.search.QueryNode;
+import org.apache.jackrabbit.core.search.DerefQueryNode;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
@@ -450,6 +451,26 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         return andQuery;
     }
 
+    public Object visit(DerefQueryNode node, Object data) {
+        Query context = (Query) data;
+        if (context == null) {
+            exceptions.add(new IllegalArgumentException("Unsupported query"));
+        }
+        try {
+            String refProperty = node.getRefProperty().toJCRName(nsMappings);
+            String nameTest = null;
+            if (node.getNameTest() != null) {
+                nameTest = node.getNameTest().toJCRName(nsMappings);
+            }
+            return new DerefQuery(context, refProperty, nameTest);
+        } catch (NoPrefixDeclaredException e) {
+            // should never happen
+            exceptions.add(e);
+        }
+        // fallback in case of exception
+        return context;
+    }
+
     public Object visit(RelationQueryNode node, Object data) {
         Query query;
         String stringValues[] = new String[1];
@@ -614,7 +635,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     public Object visit(OrderQueryNode node, Object data) {
         return data;
     }
-    
+
     //---------------------------< internal >-----------------------------------
     
     /**

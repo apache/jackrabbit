@@ -24,6 +24,12 @@ import javax.jcr.query.RowIterator;
 import javax.jcr.query.Query;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Session;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Abstract base class for query test cases.
@@ -56,6 +62,11 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected String jcrfnContains;
 
     /**
+     * Resolved QName for jcrfn:deref
+     */
+    protected String jcrfnDeref;
+
+    /**
      * Set-up the configuration values used for the test. Per default retrieves
      * a session, configures testRoot, and nodetype and checks if the query
      * language for the current language is available.<br>
@@ -66,6 +77,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         jcrPath = superuser.getNamespacePrefix(NS_JCR_URI) + ":path";
         jcrRoot = superuser.getNamespacePrefix(NS_JCR_URI) + ":root";
         jcrfnContains = superuser.getNamespacePrefix(NS_JCRFN_URI) + ":contains";
+        jcrfnDeref = superuser.getNamespacePrefix(NS_JCRFN_URI) + ":deref";
     }
 
     /**
@@ -223,6 +235,46 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Executes the <code>xpath</code> query and checks the results against
+     * the specified <code>nodes</code>.
+     * @param session the session to use for the query.
+     * @param xpath the xpath query.
+     * @param nodes the expected result nodes.
+     */
+    protected void executeXPathQuery(Session session, String xpath, Node[] nodes)
+            throws RepositoryException {
+        QueryResult res = session.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH).execute();
+        checkResult(res, nodes);
+    }
+
+    /**
+     * Checks if the result set contains exactly the <code>nodes</code>.
+     * @param result the query result.
+     * @param nodes the expected nodes in the result set.
+     */
+    protected void checkResult(QueryResult result, Node[] nodes)
+            throws RepositoryException {
+        // collect paths
+        Set expectedPaths = new HashSet();
+        for (int i = 0; i < nodes.length; i++) {
+            expectedPaths.add(nodes[i].getPath());
+        }
+        Set resultPaths = new HashSet();
+        for (NodeIterator it = result.getNodes(); it.hasNext();) {
+            resultPaths.add(it.nextNode().getPath());
+        }
+        // check if all expected are in result
+        for (Iterator it = expectedPaths.iterator(); it.hasNext();) {
+            String path = (String) it.next();
+            assertTrue(path + " is not part of the result set", resultPaths.contains(path));
+        }
+        // check result does not contain more than expected
+        for (Iterator it = resultPaths.iterator(); it.hasNext();) {
+            String path = (String) it.next();
+            assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
+        }
+    }
     /**
      * Test if the requested Descriptor is registred at repository
      *

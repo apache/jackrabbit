@@ -378,6 +378,39 @@ public class PropertyUtil {
             for (NodeIterator nodes = node.getNodes(); nodes.hasNext();) {
                 Node n = nodes.nextNode();
                 multiVal = searchMultivalProp(n);
+                if (multiVal != null) {
+                    break;
+                }
+            }
+        }
+        return multiVal;
+    }
+
+    /**
+     * Helper method to find a multivalue property of a given type.
+     *
+     * @param node the node to start the search from.
+     * @param type the property type.
+     * @return a multivalue property or null if not found any.
+     */
+    public static Property searchMultivalProp(Node node, int type) throws RepositoryException {
+        Property multiVal = null;
+        for (PropertyIterator props = node.getProperties(); props.hasNext();) {
+            Property property = props.nextProperty();
+            if (property.getDefinition().isMultiple()
+                    && property.getType() == type) {
+                multiVal = property;
+                break;
+            }
+        }
+
+        if (multiVal == null) {
+            for (NodeIterator nodes = node.getNodes(); nodes.hasNext();) {
+                Node n = nodes.nextNode();
+                multiVal = searchMultivalProp(n, type);
+                if (multiVal != null) {
+                    break;
+                }
             }
         }
         return multiVal;
