@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.SimpleAccessManager;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
@@ -29,9 +31,9 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
-import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.xml.Importer;
+import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.log4j.Logger;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
@@ -56,20 +58,23 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.security.AccessControlException;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -102,6 +107,12 @@ public class SessionImpl implements Session, Constants {
     protected final String userId;
 
     /**
+     * the LoginContext of this session (can be null if this
+     * session was not instantiated through a login process)
+     */
+    protected LoginContext loginContext;
+
+    /**
      * the attibutes of this session
      */
     protected final HashMap attributes = new HashMap();
@@ -114,7 +125,7 @@ public class SessionImpl implements Session, Constants {
     /**
      * the AccessManager associated with this session
      */
-    protected AccessManagerImpl accessMgr;
+    protected AccessManager accessMgr;
 
     /**
      * the item state mgr associated with this session
@@ -155,64 +166,38 @@ public class SessionImpl implements Session, Constants {
      * Protected constructor.
      *
      * @param rep
-     * @param credentials
+     * @param loginContext
      * @param wspConfig
      */
-    protected SessionImpl(RepositoryImpl rep, Credentials credentials,
+    protected SessionImpl(RepositoryImpl rep, LoginContext loginContext,
                           WorkspaceConfig wspConfig)
             throws RepositoryException {
-        alive = true;
-        this.rep = rep;
-        if (credentials instanceof SimpleCredentials) {
-            SimpleCredentials sc = (SimpleCredentials) credentials;
-            // clear password for security reasons
-            char[] pwd = sc.getPassword();
-            if (pwd != null) {
-                for (int i = 0; i < pwd.length; i++) {
-                    pwd[i] = 0;
-                }
-            }
-            userId = sc.getUserId();
-            String[] names = sc.getAttributeNames();
-            for (int i = 0; i < names.length; i++) {
-                attributes.put(names[i], sc.getAttribute(names[i]));
-            }
-        } else {
-            userId = null;
-        }
-        nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
-        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
-        String wspName = wspConfig.getName();
-        wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
-                rep, this);
-        itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
-        hierMgr = itemStateMgr.getHierarchyMgr();
-        itemMgr = createItemManager(itemStateMgr, hierMgr);
-        accessMgr = createAccessManager(credentials, hierMgr);
-        versionMgr = rep.getVersionManager();
-
-        // add virtual item managers only for normal sessions
-        if (!(this instanceof SystemSession)) {
-            try {
-                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
-            } catch (Exception e) {
-                log.error("Unable to add vmgr: " + e.toString(), e);
-            }
-        }
+        this(rep, loginContext.getSubject(), wspConfig);
+        this.loginContext = loginContext;
     }
 
     /**
      * Protected constructor.
      *
      * @param rep
-     * @param userId
+     * @param subject
      * @param wspConfig
      */
-    protected SessionImpl(RepositoryImpl rep, String userId, WorkspaceConfig wspConfig)
+    protected SessionImpl(RepositoryImpl rep, Subject subject,
+                          WorkspaceConfig wspConfig)
             throws RepositoryException {
         alive = true;
         this.rep = rep;
-        this.userId = userId;
+        Set principals = subject.getPrincipals();
+        if (principals.isEmpty()) {
+            String msg = "unable to instantiate Session: no principals found";
+            log.error(msg);
+            throw new RepositoryException(msg);
+        } else {
+            // use 1st principal in case there are more that one
+            Principal principal = (Principal) principals.iterator().next();
+            userId = principal.getName();
+        }
         nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
         String wspName = wspConfig.getName();
@@ -221,9 +206,10 @@ public class SessionImpl implements Session, Constants {
         itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
+        accessMgr = createAccessManager(subject, hierMgr);
         versionMgr = rep.getVersionManager();
 
-        // add virtual item managers only for normal sessions
+        // add virtual item managers (only for non-system sessions)
         if (!(this instanceof SystemSession)) {
             try {
                 itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
@@ -239,7 +225,6 @@ public class SessionImpl implements Session, Constants {
      * @return session item state manager
      */
     protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager manager) {
-
         return new SessionItemStateManager(rep.getRootNodeUUID(),
                 manager, getNamespaceResolver());
     }
@@ -260,9 +245,9 @@ public class SessionImpl implements Session, Constants {
      *
      * @return access manager
      */
-    protected AccessManagerImpl createAccessManager(Credentials credentials,
-                                                    HierarchyManager hierMgr) {
-        return new AccessManagerImpl(credentials, hierMgr);
+    protected AccessManager createAccessManager(Subject subject,
+                                                HierarchyManager hierMgr) {
+        return new SimpleAccessManager(subject, hierMgr);
     }
 
     /**
@@ -284,7 +269,7 @@ public class SessionImpl implements Session, Constants {
      *
      * @return the <code>AccessManager</code> associated with this session
      */
-    public AccessManagerImpl getAccessManager() {
+    public AccessManager getAccessManager() {
         return accessMgr;
     }
 
@@ -1018,6 +1003,15 @@ public class SessionImpl implements Session, Constants {
         // invalidate session
         alive = false;
 
+        // logout jaas subject
+        if (loginContext != null) {
+            try {
+                loginContext.logout();
+            } catch (javax.security.auth.login.LoginException le) {
+                log.warn("failed to logout current subject: " + le.getMessage());
+            }
+            loginContext = null;
+        }
         // finally notify listeners that session has been closed
         notifyLoggedOut();
     }

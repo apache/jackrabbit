@@ -17,9 +17,23 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.nodetype.*;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.search.QueryManagerImpl;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
@@ -29,7 +43,18 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.jcr.*;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.InvalidSerializedDataException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -328,7 +353,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      */
     protected static void checkAddNode(Path nodePath, QName nodeTypeName,
                                        NodeTypeRegistry ntReg,
-                                       AccessManagerImpl accessMgr,
+                                       AccessManager accessMgr,
                                        HierarchyManagerImpl hierMgr,
                                        ItemStateManager stateMgr)
             throws ConstraintViolationException, AccessDeniedException,
@@ -406,7 +431,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      */
     protected static void checkRemoveNode(Path nodePath,
                                           NodeTypeRegistry ntReg,
-                                          AccessManagerImpl accessMgr,
+                                          AccessManager accessMgr,
                                           HierarchyManagerImpl hierMgr,
                                           ItemStateManager stateMgr)
             throws ConstraintViolationException, AccessDeniedException,
@@ -595,7 +620,7 @@ public class WorkspaceImpl implements Workspace, Constants {
                                      String destAbsPath,
                                      UpdatableItemStateManager destStateMgr,
                                      HierarchyManagerImpl destHierMgr,
-                                     AccessManagerImpl accessMgr,
+                                     AccessManager accessMgr,
                                      NamespaceResolver nsResolver,
                                      NodeTypeRegistry ntReg,
                                      boolean clone)

@@ -16,13 +16,22 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * <code>HierarchyManagerImpl</code> ...
@@ -40,7 +49,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
     public HierarchyManagerImpl(String rootNodeUUID,
                                 ItemStateManager provider,
                                 NamespaceResolver nsResolver) {
-
         this(rootNodeUUID, provider, nsResolver, null);
     }
 
@@ -48,7 +56,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
                                 ItemStateManager provider,
                                 NamespaceResolver nsResolver,
                                 ItemStateManager attic) {
-
         this.rootNodeId = new NodeId(rootNodeUUID);
         this.provider = provider;
         this.attic = attic;

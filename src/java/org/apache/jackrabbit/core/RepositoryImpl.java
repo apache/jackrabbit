@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.security.CredentialsCallbackHandler;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
@@ -40,12 +41,28 @@ import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.version.persistence.NativePVM;
 import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
-import java.io.*;
-import java.util.*;
+import javax.security.auth.login.LoginContext;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -63,13 +80,11 @@ public class RepositoryImpl implements Repository, SessionListener,
     private static final String SYSTEM_ROOT_NODE_UUID = "deadbeef-cafe-babe-cafe-babecafebabe";
     private static final String VERSION_STORAGE_NODE_UUID = "deadbeef-face-babe-cafe-babecafebabe";
 
-    private static final String ANONYMOUS_USER = "anonymous";
-
-    private static final Credentials ANONYMOUS_CREDENTIALS =
-            new SimpleCredentials(ANONYMOUS_USER, new char[0]);
-
     private static final String PROPERTIES_RESOURCE = "rep.properties";
     private final Properties repProps;
+
+    // name of jaas config entry
+    public static final String JAAS_CONFIG_APPNAME = "Jackrabbit";
 
     // names of well known repository properties
     public static final String STATS_NODE_COUNT_PROPERTY = "jcr.repository.stats.nodes.count";
@@ -650,22 +665,20 @@ public class RepositoryImpl implements Repository, SessionListener,
         if (wspInfo == null) {
             throw new NoSuchWorkspaceException(workspaceName);
         }
-        if (credentials == null) {
-            // anonymous login
-            SessionImpl ses = new XASessionImpl(this, ANONYMOUS_CREDENTIALS, wspInfo.getConfig());
-            activeSessions.put(ses, ses);
-            return ses;
-        } else if (credentials instanceof SimpleCredentials) {
-            // username/password credentials
-            // @todo implement authentication/authorization
-            Session ses = new XASessionImpl(this, credentials, wspInfo.getConfig());
-            activeSessions.put(ses, ses);
-            return ses;
-        } else {
-            String msg = "login failed: incompatible credentials";
-            log.debug(msg);
-            throw new RepositoryException(msg);
+
+        CredentialsCallbackHandler cbHandler =
+                new CredentialsCallbackHandler(credentials);
+        LoginContext lc;
+        try {
+            lc = new LoginContext(JAAS_CONFIG_APPNAME, cbHandler);
+            lc.login();
+        } catch (javax.security.auth.login.LoginException le) {
+            throw new LoginException(le.getMessage());
         }
+
+        Session ses = new XASessionImpl(this, lc, wspInfo.getConfig());
+        activeSessions.put(ses, ses);
+        return ses;
     }
 
     /**
@@ -854,7 +867,7 @@ public class RepositoryImpl implements Repository, SessionListener,
          */
         synchronized SystemSession getSystemSession() throws RepositoryException {
             if (systemSession == null) {
-                systemSession = new SystemSession(RepositoryImpl.this, config);
+                systemSession = SystemSession.create(RepositoryImpl.this, config);
             }
             return systemSession;
         }

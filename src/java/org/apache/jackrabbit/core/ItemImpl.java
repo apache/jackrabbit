@@ -22,11 +22,29 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateListener;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeDef;
@@ -34,7 +52,12 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * <code>ItemImpl</code> implements the <code>Item</code> interface.
@@ -417,17 +440,15 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         /**
          * the following validations/checks are performed on transient items:
          *
+         * for every transient item:
+         * - if it is 'modified' check the WRITE permission
+         *
          * for every transient node:
-         * - if it is 'new', check that its node type satisfies the
+         * - if it is 'new' check that its node type satisfies the
          *   'required node type' constraint specified in its definition
-         * - if new child nodes have been added to the node in question,
-         *   check the WRITE permission
-         * - if child items have been removed from the node in question,
-         *   check the WRITE permission
          * - check if 'mandatory' child items exist
          *
          * for every transient property:
-         * - check the WRITE permission
          * - check if the property value satisfies the value constraints
          *   specified in the property's definition
          *
@@ -437,10 +458,22 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
          * and in Property.setValue (for properties to be modified).
          */
 
-        AccessManagerImpl accessMgr = session.getAccessManager();
+        AccessManager accessMgr = session.getAccessManager();
         // walk through list of transient items and validate each
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
+
+            if (itemState.getStatus() != ItemState.STATUS_NEW) {
+                // transient item is not 'new', therefore it has to be 'modified'
+
+                // check WRITE permission
+                ItemId id = itemState.getId();
+                if (!accessMgr.isGranted(itemState.getId(), AccessManager.WRITE)) {
+                    String msg = itemMgr.safeGetJCRPath(id) + ": not allowed modify item";
+                    log.debug(msg);
+                    throw new AccessDeniedException(msg);
+                }
+            }
 
             if (itemState.isNode()) {
                 // the transient item is a node
@@ -470,37 +503,6 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     }
                 }
 
-                // check child removals
-                if (!nodeState.getRemovedChildNodeEntries().isEmpty() || !nodeState.getRemovedPropertyEntries().isEmpty()) {
-                    // check WRITE permission
-                    if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
-                        String msg = node.safeGetJCRPath() + ": not allowed to remove a child item";
-                        log.debug(msg);
-                        throw new AccessDeniedException(msg);
-                    }
-
-                    /**
-                     * no need to check the protected flag as this is checked
-                     * in NodeImpl.remove(String)
-                     */
-                }
-
-                // check child additions
-                // added child nodes
-                Iterator addedIter = nodeState.getAddedChildNodeEntries().iterator();
-                while (addedIter.hasNext()) {
-                    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) addedIter.next();
-                    Node childNode = (Node) itemMgr.getItem(new NodeId(entry.getUUID()));
-                    NodeDef childDef = childNode.getDefinition();
-                    if (!childDef.isAutoCreate()) {
-                        // check WRITE permission
-                        if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
-                            String msg = node.safeGetJCRPath() + ": not allowed to add node " + childNode.getName();
-                            log.debug(msg);
-                            throw new AccessDeniedException(msg);
-                        }
-                    }
-                }
                 // mandatory child properties
                 PropertyDef[] propDefs = nt.getMandatoryPropertyDefs();
                 for (int i = 0; i < propDefs.length; i++) {
@@ -525,26 +527,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 // the transient item is a property
                 PropertyState propState = (PropertyState) itemState;
                 ItemId propId = propState.getId();
-                NodeId nodeId = new NodeId(propState.getParentUUID());
                 PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propId);
                 PropertyDefImpl def = (PropertyDefImpl) prop.getDefinition();
-
-                if (!def.isAutoCreate()) {
-                    // check WRITE permission on property
-                    if (!accessMgr.isGranted(propId, AccessManager.WRITE)) {
-                        String msg = itemMgr.safeGetJCRPath(nodeId) + ": not allowed to set property " + prop.getName();
-                        log.debug(msg);
-                        throw new AccessDeniedException(msg);
-                    }
-                    if (propState.getOverlayedState() == null) {
-                        // property has been added, check WRITE permission on parent
-                        if (!accessMgr.isGranted(nodeId, AccessManager.WRITE)) {
-                            String msg = itemMgr.safeGetJCRPath(nodeId) + ": not allowed to set property " + prop.getName();
-                            log.debug(msg);
-                            throw new AccessDeniedException(msg);
-                        }
-                    }
-                }
 
                 /**
                  * check value constraints

@@ -1,0 +1,157 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.security;
+
+import org.apache.log4j.Logger;
+
+import javax.jcr.Credentials;
+import javax.jcr.SimpleCredentials;
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.FailedLoginException;
+import javax.security.auth.login.LoginException;
+import javax.security.auth.spi.LoginModule;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * A <code>SimpleLoginModule</code> ...
+ */
+public class SimpleLoginModule implements LoginModule {
+
+    private static Logger log = Logger.getLogger(SimpleLoginModule.class);
+
+    // initial state
+    private Subject subject;
+    private CallbackHandler callbackHandler;
+    private Map sharedState;
+    private Map options;
+
+    // configurable options
+    //private boolean someOpt = false;
+
+    // local authentication state:
+    // the principals, i.e. the authenticated identities
+    private final Set principals = new HashSet();
+
+    /**
+     * Constructor
+     */
+    public SimpleLoginModule() {
+    }
+
+    //----------------------------------------------------------< LoginModule >
+    /**
+     * @see LoginModule#initialize(Subject, CallbackHandler, Map, Map)
+     */
+    public void initialize(Subject subject, CallbackHandler callbackHandler,
+                           Map sharedState, Map options) {
+        this.subject = subject;
+        this.callbackHandler = callbackHandler;
+        this.sharedState = sharedState;
+        this.options = options;
+
+        // initialize any configured options
+        //someOpt = "true".equalsIgnoreCase((String)options.get("someOpt"));
+    }
+
+    /**
+     * @see LoginModule#login()
+     */
+    public boolean login() throws LoginException {
+        // prompt for a user name and password
+        if (callbackHandler == null) {
+            throw new LoginException("no CallbackHandler available");
+        }
+
+        Callback[] callbacks = new Callback[]{
+            new CredentialsCallback()
+        };
+
+        boolean authenticated = false;
+        principals.clear();
+        try {
+            callbackHandler.handle(callbacks);
+            // credentials
+            CredentialsCallback ccb = (CredentialsCallback) callbacks[0];
+            Credentials creds = ccb.getCredentials();
+            if (creds != null) {
+                if (creds instanceof SimpleCredentials) {
+                    SimpleCredentials sc = (SimpleCredentials) creds;
+                    // authenticate
+                    // @todo implement simple username/password authentication
+                    // assume the user we authenticated is the UserPrincipal
+                    principals.add(new UserPrincipal(sc.getUserId()));
+                    authenticated = true;
+                }
+            } else {
+                // null credentials, assume AnonymousPrincipal
+                principals.add(new AnonymousPrincipal());
+                authenticated = true;
+            }
+        } catch (java.io.IOException ioe) {
+            throw new LoginException(ioe.toString());
+        } catch (UnsupportedCallbackException uce) {
+            throw new LoginException(uce.getCallback().toString() + " not available");
+        }
+
+        if (authenticated) {
+            return !principals.isEmpty();
+        } else {
+            // authentication failed: clean out state
+            principals.clear();
+            throw new FailedLoginException();
+        }
+    }
+
+    /**
+     * @see LoginModule#commit()
+     */
+    public boolean commit() throws LoginException {
+        if (principals.isEmpty()) {
+            return false;
+        } else {
+            // add a principals (authenticated identities) to the Subject
+            subject.getPrincipals().addAll(principals);
+            return true;
+        }
+    }
+
+    /**
+     * @see LoginModule#abort()
+     */
+    public boolean abort() throws LoginException {
+        if (principals.isEmpty()) {
+            return false;
+        } else {
+            logout();
+        }
+        return true;
+    }
+
+    /**
+     * @see LoginModule#logout()
+     */
+    public boolean logout() throws LoginException {
+        subject.getPrincipals().removeAll(principals);
+        principals.clear();
+        return true;
+    }
+}

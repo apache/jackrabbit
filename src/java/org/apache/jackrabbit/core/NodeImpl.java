@@ -402,16 +402,6 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        // make sure this node is checked-out
-        /*
-         to internal place to check this
-
-        if (!internalIsCheckedOut()) {
-            String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath() + "/" + name.toString();
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-        */
 
         String parentUUID = ((NodeState) state).getUUID();
 
@@ -2689,12 +2679,13 @@ public class NodeImpl extends ItemImpl implements Node {
         } catch (RepositoryException e) {
             session.refresh(false);
             throw e;
-    }
+        }
         session.save();
     }
 
     /**
      * updates this node with the state given by <code>srcNode</code>
+     *
      * @param srcNode
      * @param removeExisting
      * @param replaceExisting
@@ -2725,8 +2716,8 @@ public class NodeImpl extends ItemImpl implements Node {
             PropertyImpl p = (PropertyImpl) iter.nextProperty();
             // ignore system types
             if (p.getQName().equals(JCR_PRIMARYTYPE)
-                || p.getQName().equals(JCR_MIXINTYPES)
-                || p.getQName().equals(JCR_UUID)) {
+                    || p.getQName().equals(JCR_MIXINTYPES)
+                    || p.getQName().equals(JCR_UUID)) {
                 continue;
             }
             if (p.getDefinition().isMultiple()) {
@@ -2789,7 +2780,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), uuid);
                 // add mixins
                 NodeType[] mixins = child.getMixinNodeTypes();
-                for (int i=0; i<mixins.length; i++) {
+                for (int i = 0; i < mixins.length; i++) {
                     dstNode.addMixin(mixins[i].getName());
                 }
             }
@@ -3398,19 +3389,16 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
-        // check primarty type
+        // check primary type
         if (!freeze.getFrozenPrimaryType().equals(nodeType.getQName())) {
             // todo: check with spec what should happen here
             throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". PrimaryType changed.");
         }
 
         // adjust mixins
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
         QName[] mixinNames = freeze.getFrozenMixinTypes();
-        Set mixins = new HashSet(Arrays.asList(mixinNames));
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        thisState.setMixinTypeNames(mixins);
-        internalSetProperty(JCR_MIXINTYPES, InternalValue.create(mixinNames));
+        setMixinTypesProperty(new HashSet(Arrays.asList(mixinNames)));
+
         // copy frozen properties
         PropertyState[] props = freeze.getFrozenProperties();
         HashSet propNames = new HashSet();
@@ -3423,7 +3411,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 internalSetProperty(props[i].getName(), prop.getValues()[0]);
             }
         }
-        // remove properties that do not exist the the frozen representation
+        // remove properties that do not exist in the frozen representation
         PropertyIterator piter = getProperties();
         while (piter.hasNext()) {
             PropertyImpl prop = (PropertyImpl) piter.nextProperty();
@@ -3441,8 +3429,9 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
-        // adjust autocreate properties, that do not exist yet
-        for (int j=0; j<mixinNames.length; j++) {
+        // add 'auto-create' properties that do not exist yet
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        for (int j = 0; j < mixinNames.length; j++) {
             NodeTypeImpl mixin = ntMgr.getNodeType(mixinNames[j]);
             PropertyDef[] pda = mixin.getAutoCreatePropertyDefs();
             for (int i = 0; i < pda.length; i++) {

@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core;
+package org.apache.jackrabbit.core.security;
+
+import org.apache.jackrabbit.core.ItemId;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;

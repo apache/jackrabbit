@@ -16,11 +16,22 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
-import org.apache.jackrabbit.core.search.*;
+import org.apache.jackrabbit.core.search.DefaultQueryNodeVisitor;
+import org.apache.jackrabbit.core.search.ExecutableQuery;
+import org.apache.jackrabbit.core.search.LocationStepQueryNode;
+import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.search.OrderQueryNode;
+import org.apache.jackrabbit.core.search.PropertyTypeRegistry;
+import org.apache.jackrabbit.core.search.QueryParser;
+import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.log4j.Logger;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
@@ -125,7 +136,7 @@ class QueryImpl implements ExecutableQuery {
 
         List uuids;
         List scores;
-        AccessManagerImpl accessMgr = session.getAccessManager();
+        AccessManager accessMgr = session.getAccessManager();
 
         // execute it
         try {

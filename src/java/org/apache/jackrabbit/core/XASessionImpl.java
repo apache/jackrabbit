@@ -28,6 +28,7 @@ import javax.jcr.RepositoryException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
+import javax.security.auth.login.LoginContext;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,15 +62,15 @@ public class XASessionImpl extends SessionImpl
      * Create a new instance of this class.
      *
      * @param rep         repository
-     * @param credentials credentials
+     * @param loginContext credentials
      * @param wspConfig   workspace configuration
-     * @throws javax.jcr.RepositoryException if an error occurs
+     * @throws RepositoryException if an error occurs
      */
-    public XASessionImpl(RepositoryImpl rep, Credentials credentials,
+    public XASessionImpl(RepositoryImpl rep, LoginContext loginContext,
                          WorkspaceConfig wspConfig)
             throws RepositoryException {
 
-        super(rep, credentials, wspConfig);
+        super(rep, loginContext, wspConfig);
     }
 
     //-------------------------------------------------------------< XASession >

@@ -17,11 +17,18 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.SimpleAccessManager;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.security.auth.Subject;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A <code>SystemTicket</code> ...
@@ -30,26 +37,53 @@ class SystemSession extends SessionImpl {
 
     private static Logger log = Logger.getLogger(SystemSession.class);
 
-    private static final String SYSTEM_USER_ID = "system";
+    /**
+     * Package private factory method
+     *
+     * @param rep
+     * @param wspConfig
+     * @return
+     * @throws RepositoryException
+     */
+    static SystemSession create(RepositoryImpl rep, WorkspaceConfig wspConfig)
+            throws RepositoryException {
+        // create subject with SystemPrincipal
+        Set principals = new HashSet();
+        principals.add(new SystemPrincipal());
+        Subject subject =
+                new Subject(true, principals, Collections.EMPTY_SET,
+                        Collections.EMPTY_SET);
+        return new SystemSession(rep, subject, wspConfig);
+    }
 
     /**
-     * Package private constructor.
+     * private constructor
      *
      * @param rep
      * @param wspConfig
      */
-    SystemSession(RepositoryImpl rep, WorkspaceConfig wspConfig)
+    private SystemSession(RepositoryImpl rep, Subject subject,
+                          WorkspaceConfig wspConfig)
             throws RepositoryException {
-        super(rep, SYSTEM_USER_ID, wspConfig);
+        super(rep, subject, wspConfig);
+    }
 
-        accessMgr = new SystemAccessManqager(hierMgr);
+    /**
+     * Overridden in order to create custom access manager
+     *
+     * @return access manager
+     */
+    protected AccessManager createAccessManager(Subject subject,
+                                                HierarchyManager hierMgr) {
+        //return new SystemAccessManager(subject, hierMgr);
+        return super.createAccessManager(subject, hierMgr);
     }
 
     //--------------------------------------------------------< inner classes >
-    private class SystemAccessManqager extends AccessManagerImpl {
+    private class SystemAccessManager extends SimpleAccessManager {
 
-        SystemAccessManqager(HierarchyManager hierMgr) {
-            super(null, hierMgr);
+        SystemAccessManager(Subject subject, HierarchyManager hierMgr) {
+            super(subject, hierMgr);
         }
 
         //----------------------------------------------------< AccessManager >
