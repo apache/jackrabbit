@@ -57,6 +57,7 @@ class FileSystemInputStream extends InputStream {
         checkOpen();
         if (pos >= position) {
             in.skip(pos - position);
+            position = pos;
         } else {
             // seeking backwards
             in.close();
@@ -66,6 +67,7 @@ class FileSystemInputStream extends InputStream {
                 throw new IOException(e.getMessage());
             }
             in.skip(pos);
+            position = pos;
         }
     }
 
