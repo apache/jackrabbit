@@ -28,7 +28,8 @@ public class SearchConfig extends BeanConfig {
     /** The <code>FileSystem</code> for the search index. */
     private final FileSystem fs;
 
-    public SearchConfig(FileSystem fs, String className, Properties properties) {
+    public SearchConfig(
+            String className, Properties properties, FileSystem fs) {
         super(className, properties);
         this.fs = fs;
     }

@@ -31,7 +31,9 @@ public class WorkspaceConfigTest extends TestCase {
     private ConfigurationParser parser;
 
     protected void setUp() {
-        parser = new ConfigurationParser(new Properties());
+        Properties variables = new Properties();
+        variables.setProperty("wsp.home", "target");
+        parser = new ConfigurationParser(variables);
     }
 
     /**
@@ -43,8 +45,8 @@ public class WorkspaceConfigTest extends TestCase {
     public void testWorkspaceXml() throws Exception {
         InputStream xml = getClass().getClassLoader().getResourceAsStream(
                 "org/apache/jackrabbit/core/config/workspace.xml");
-        WorkspaceConfig config = parser.parseWorkspaceConfig(
-                new InputSource(xml), "target");
+        WorkspaceConfig config =
+            parser.parseWorkspaceConfig(new InputSource(xml));
 
         assertEquals("target", config.getHomeDir());
         assertEquals("default", config.getName());

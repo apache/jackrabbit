@@ -30,7 +30,7 @@ import org.jdom.Document;
  * A <code>RepositoryConfig</code> ...
  */
 public class RepositoryConfig {
-    
+
     public static RepositoryConfig create(String file, String home)
             throws RepositoryException {
         ConfigurationParser parser = new ConfigurationParser(new Properties());
@@ -42,7 +42,7 @@ public class RepositoryConfig {
         ConfigurationParser parser = new ConfigurationParser(new Properties());
         return parser.parseRepositoryConfig(is, home);
     }
-   
+
     private Document config;
     private ConfigurationParser parser;
 
@@ -104,7 +104,7 @@ public class RepositoryConfig {
         this.amConfig = amc;
         this.vConfig = vc;
     }
-    
+
     /**
      * Creates a new workspace configuration with the specified name.
      *

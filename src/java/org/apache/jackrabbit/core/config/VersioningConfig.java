@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 public class VersioningConfig {
 
     /** the homedir for the versioning */
-    private final File homeDir;
+    private final String home;
 
     /** The <code>FileSystem</code> for the versioing. */
     private final FileSystem fs;
@@ -34,10 +34,14 @@ public class VersioningConfig {
     /** The <code>PersistenceManagerConfig</code> for the versioning */
     private final BeanConfig pmc;
 
-    public VersioningConfig(File homeDir, FileSystem fs, BeanConfig pmc) {
-        this.homeDir = homeDir;
+    public VersioningConfig(String home, FileSystem fs, BeanConfig pmc) {
+        this.home = home;
         this.fs = fs;
         this.pmc = pmc;
+    }
+
+    public File getHomeDir() {
+        return new File(home);
     }
 
     /**
@@ -56,10 +60,6 @@ public class VersioningConfig {
      */
     public PersistenceManagerConfig getPersistenceManagerConfig() {
         return new PersistenceManagerConfig(pmc);
-    }
-
-    public File getHomeDir() {
-        return homeDir;
     }
 
 }
