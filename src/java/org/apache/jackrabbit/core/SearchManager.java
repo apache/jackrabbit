@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.search.QueryImpl;
 import org.apache.jackrabbit.core.search.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.log4j.Logger;
 
@@ -42,16 +43,11 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
- *
- * todo The SearchManager currently uses the system session to obtain an
- * ItemStateManager from where it reads persistent ItemStates. This is kind
- * of nasty, because the system session it is possible to change content through
- * the system session as well.
- * After switch to version 0.16 there is a shared ItemStateManager which
- * represents the persistent view of item states.
  */
 public class SearchManager implements SynchronousEventListener {
 
@@ -79,14 +75,9 @@ public class SearchManager implements SynchronousEventListener {
     public static final String NS_JCRFN_URI = "http://www.jcp.org/jcr/xpath-functions/1.0";
 
     /**
-     * HierarchyManager for path resolution
+     * The shared item state manager instance for the workspace.
      */
-    private final HierarchyManager hmgr;
-
-    /**
-     * Session for accessing Nodes
-     */
-    private final SessionImpl session;
+    private final ItemStateManager itemMgr;
 
     /**
      * Storage for search index
@@ -98,12 +89,20 @@ public class SearchManager implements SynchronousEventListener {
      */
     private final QueryHandler handler;
 
-    public SearchManager(SessionImpl session, SearchConfig config, NodeTypeRegistry ntReg)
-            throws RepositoryException {
-        this.session = session;
-        this.hmgr = session.getHierarchyManager();
+    /**
+     * Creates a new <code>SearchManager</code>.
+     * @param session the system session.
+     * @param config the search configuration.
+     * @param ntReg the node type registry.
+     * @param itemMgr the shared item state manager.
+     * @throws RepositoryException
+     */
+    public SearchManager(SessionImpl session,
+                         SearchConfig config,
+                         NodeTypeRegistry ntReg,
+                         ItemStateManager itemMgr) throws RepositoryException {
         this.fs = config.getFileSystem();
-
+        this.itemMgr = itemMgr;
         // register namespaces
         NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
         try {
@@ -150,29 +149,21 @@ public class SearchManager implements SynchronousEventListener {
      * Adds a <code>Node</code> to the search index.
      *
      * @param node the NodeState to add.
-     * @param path the path of the node.
      * @throws RepositoryException if an error occurs while indexing the node.
      * @throws IOException         if an error occurs while adding the node to the index.
      */
-    public void addNode(NodeState node, Path path)
+    public void addNode(NodeState node)
             throws RepositoryException, IOException {
-        if (log.isDebugEnabled()) {
-            log.debug("add node to index: " + path);
-        }
         handler.addNode(node);
     }
 
     /**
      * Deletes the Node with <code>UUID</code> from the search index.
      *
-     * @param path the path of the node to delete.
      * @param uuid the <code>UUID</code> of the node to delete.
      * @throws IOException if an error occurs while deleting the node.
      */
-    public void deleteNode(Path path, String uuid) throws IOException {
-        if (log.isDebugEnabled()) {
-            log.debug("remove node from index: " + path.toString());
-        }
+    public void deleteNode(String uuid) throws IOException {
         handler.deleteNode(uuid);
     }
 
@@ -234,80 +225,67 @@ public class SearchManager implements SynchronousEventListener {
     //---------------< EventListener interface >--------------------------------
 
     public void onEvent(EventIterator events) {
-        Set modified = new HashSet();
-        Set added = new HashSet();
         log.debug("onEvent: indexing started");
         long time = System.currentTimeMillis();
 
-        // remember nodes we have to index at the end.
-        Set pendingNodes = new HashSet();
+        // nodes that need to be removed from the index.
+        Set removedNodes = new HashSet();
+        // nodes that need to be added to the index.
+        Set addedNodes = new HashSet();
+        // property events
+        List propEvents = new ArrayList();
 
-        // delete removed and modified nodes from index
         while (events.hasNext()) {
-            try {
-                EventImpl e = (EventImpl) events.nextEvent();
-                long type = e.getType();
-                if (type == Event.NODE_ADDED) {
-
-                    // @todo use UUIDs for pending nodes?
-                    Path path = Path.create(e.getPath(),
-                            session.getNamespaceResolver(),
-                            true);
-                    pendingNodes.add(path);
-                    added.add(e.getChildUUID());
-                } else if (type == Event.NODE_REMOVED) {
-
-                    Path path = Path.create(e.getPath(),
-                            session.getNamespaceResolver(),
-                            true);
-                    deleteNode(path, e.getChildUUID());
-
-                } else if (type == Event.PROPERTY_ADDED
-                        || type == Event.PROPERTY_CHANGED
-                        || type == Event.PROPERTY_REMOVED) {
-
-                    Path path = Path.create(e.getPath(),
-                            session.getNamespaceResolver(),
-                            true).getAncestor(1);
-
-                    if (type == Event.PROPERTY_ADDED) {
-                        // do not delete and re-add if associated node got added too
-                        if (!added.contains(e.getParentUUID())) {
-                            deleteNode(path, e.getParentUUID());
-                            modified.add(e.getParentUUID());
-                            pendingNodes.add(path);
-                        }
-                    } else {
-                        if (!modified.contains(e.getParentUUID())) {
-                            deleteNode(path, e.getParentUUID());
-                            modified.add(e.getParentUUID());
-                            pendingNodes.add(path);
-                        } else {
-                            // already deleted
-                        }
-                    }
-
-                }
-            } catch (MalformedPathException e) {
-                log.error("error indexing node.", e);
-            } catch (RepositoryException e) {
-                log.error("error indexing node.", e);
-            } catch (IOException e) {
-                log.error("error indexing node.", e);
+            EventImpl e = (EventImpl) events.nextEvent();
+            long type = e.getType();
+            if (type == Event.NODE_ADDED) {
+                addedNodes.add(e.getChildUUID());
+            } else if (type == Event.NODE_REMOVED) {
+                removedNodes.add(e.getChildUUID());
+            } else {
+                propEvents.add(e);
             }
         }
 
-        for (Iterator it = pendingNodes.iterator(); it.hasNext();) {
+        // sort out property events
+        for (int i = 0; i < propEvents.size(); i++) {
+            EventImpl event = (EventImpl) propEvents.get(i);
+            String nodeUUID = event.getParentUUID();
+            if (event.getType() == Event.PROPERTY_ADDED) {
+                if (addedNodes.add(nodeUUID)) {
+                    // only property added
+                    // need to re-index
+                    removedNodes.add(nodeUUID);
+                } else {
+                    // the node where this prop belongs to is also new
+                }
+            } else if (event.getType() == Event.PROPERTY_CHANGED) {
+                // need to re-index
+                addedNodes.add(nodeUUID);
+                removedNodes.add(nodeUUID);
+            } else {
+                // property removed event is only generated when node still exists
+                addedNodes.add(nodeUUID);
+                removedNodes.add(nodeUUID);
+            }
+        }
+
+        for (Iterator it = removedNodes.iterator(); it.hasNext();) {
             try {
-                Path path = (Path) it.next();
-                ItemId id = hmgr.resolvePath(path);
-                addNode((NodeState) session.getItemStateManager().getItemState(id), path);
-            } catch (ItemStateException e) {
-                log.error("error indexing node.", e);
-            } catch (RepositoryException e) {
-                log.error("error indexing node.", e);
+                deleteNode((String) it.next());
             } catch (IOException e) {
-                log.error("error indexing node.", e);
+                log.error("Error deleting node from index.", e);
+            }
+        }
+        for (Iterator it = addedNodes.iterator(); it.hasNext();) {
+            try {
+                addNode((NodeState) itemMgr.getItemState(new NodeId((String) it.next())));
+            } catch (ItemStateException e) {
+                log.error("Error indexing node.", e);
+            } catch (RepositoryException e) {
+                log.error("Error indexing node.", e);
+            } catch (IOException e) {
+                log.error("Error indexing node.", e);
             }
         }
         if (log.isDebugEnabled()) {
