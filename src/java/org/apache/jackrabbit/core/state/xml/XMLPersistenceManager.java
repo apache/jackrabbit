@@ -288,6 +288,10 @@ public class XMLPersistenceManager implements PersistenceManager {
      * @see PersistenceManager#init
      */
     public void init(WorkspaceConfig wspConfig) throws Exception {
+        if (initialized) {
+            throw new IllegalStateException("already initialized");
+        }
+
         FileSystem wspFS = wspConfig.getFileSystem();
         itemStateStore = new BasedFileSystem(wspFS, "/data");
 
@@ -310,12 +314,13 @@ public class XMLPersistenceManager implements PersistenceManager {
      */
     public synchronized void close() throws Exception {
         if (!initialized) {
-            return;
+            throw new IllegalStateException("not initialized");
         }
 
         try {
             // close blob store
             blobStore.close();
+            blobStore = null;
             /**
              * there's no need close the item state store because it
              * is based in the workspace's file system which is
@@ -697,13 +702,9 @@ public class XMLPersistenceManager implements PersistenceManager {
         String nodeFilePath = buildNodeFilePath(uuid);
         FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
         try {
-            nodeFile.delete();
-            // prune empty folders
-            String parentDir = FileSystemPathUtil.getParentDir(nodeFilePath);
-            while (!parentDir.equals(FileSystem.SEPARATOR)
-                    && !itemStateStore.hasChildren(parentDir)) {
-                itemStateStore.deleteFolder(parentDir);
-                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            if (nodeFile.exists()) {
+                // delete resource and prune empty parent folders
+                nodeFile.delete(true);
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete node state: " + uuid;
@@ -728,7 +729,8 @@ public class XMLPersistenceManager implements PersistenceManager {
                 if (val != null) {
                     if (val.getType() == PropertyType.BINARY) {
                         BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
-                        blobVal.delete();
+                        // delete blob file and prune empty parent folders
+                        blobVal.delete(true);
                     }
                 }
             }
@@ -737,13 +739,9 @@ public class XMLPersistenceManager implements PersistenceManager {
         String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
         FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
         try {
-            propFile.delete();
-            // prune empty folders
-            String parentDir = FileSystemPathUtil.getParentDir(propFilePath);
-            while (!parentDir.equals(FileSystem.SEPARATOR)
-                    && !itemStateStore.hasChildren(parentDir)) {
-                itemStateStore.deleteFolder(parentDir);
-                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            if (propFile.exists()) {
+                // delete resource and prune empty parent folders
+                propFile.delete(true);
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete property state: " + state.getParentUUID() + "/" + state.getName();
@@ -863,13 +861,9 @@ public class XMLPersistenceManager implements PersistenceManager {
         String refsFilePath = buildNodeReferencesFilePath(uuid);
         FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
         try {
-            refsFile.delete();
-            // prune empty folders
-            String parentDir = FileSystemPathUtil.getParentDir(refsFilePath);
-            while (!parentDir.equals(FileSystem.SEPARATOR)
-                    && !itemStateStore.hasChildren(parentDir)) {
-                itemStateStore.deleteFolder(parentDir);
-                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            if (refsFile.exists()) {
+                // delete resource and prune empty parent folders
+                refsFile.delete(true);
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete references: " + uuid;

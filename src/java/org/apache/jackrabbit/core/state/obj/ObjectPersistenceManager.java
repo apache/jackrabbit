@@ -395,14 +395,8 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
         if (!res.exists()) {
             return false;
         }
-        res.delete();
-        // prune empty folders
-        String parentDir = FileSystemPathUtil.getParentDir(blobId);
-        while (!parentDir.equals(FileSystem.SEPARATOR)
-                && !blobFS.hasChildren(parentDir)) {
-            blobFS.deleteFolder(parentDir);
-            parentDir = FileSystemPathUtil.getParentDir(parentDir);
-        }
+        // delete resource and prune empty parent folders
+        res.delete(true);
         return true;
     }
 
@@ -411,6 +405,10 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
      * @see PersistenceManager#init
      */
     public void init(WorkspaceConfig wspConfig) throws Exception {
+        if (initialized) {
+            throw new IllegalStateException("already initialized");
+        }
+
         FileSystem wspFS = wspConfig.getFileSystem();
         itemStateFS = new BasedFileSystem(wspFS, "/data");
 
@@ -431,12 +429,13 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
      */
     public synchronized void close() throws Exception {
         if (!initialized) {
-            return;
+            throw new IllegalStateException("not initialized");
         }
 
         try {
             // close blob store
             blobFS.close();
+            blobFS = null;
             /**
              * there's no need close the item state store because it
              * is based in the workspace's file system which is
@@ -456,15 +455,14 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String uuid = state.getUUID();
-        String nodeFilePath = buildNodeFilePath(uuid);
+        String nodeFilePath = buildNodeFilePath(state.getUUID());
 
         try {
             if (!itemStateFS.isFile(nodeFilePath)) {
-                throw new NoSuchItemStateException(uuid);
+                throw new NoSuchItemStateException(state.getId().toString());
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to read node state: " + uuid;
+            String msg = "failed to read node state: " + state.getId();
             log.error(msg, fse);
             throw new ItemStateException(msg, fse);
         }
@@ -476,14 +474,14 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
                 deserialize(state, in);
                 return;
             } catch (Exception e) {
-                String msg = "failed to read node state: " + uuid;
+                String msg = "failed to read node state: " + state.getId();
                 log.error(msg, e);
                 throw new ItemStateException(msg, e);
             } finally {
                 in.close();
             }
         } catch (Exception e) {
-            String msg = "failed to read node state: " + uuid;
+            String msg = "failed to read node state: " + state.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -498,16 +496,14 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String parentUUID = state.getParentUUID();
-        QName propName = state.getName();
-        String propFilePath = buildPropFilePath(parentUUID, propName);
+        String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
 
         try {
             if (!itemStateFS.isFile(propFilePath)) {
-                throw new NoSuchItemStateException(parentUUID + "/" + propName);
+                throw new NoSuchItemStateException(state.getId().toString());
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to read property state: " + parentUUID + "/" + propName;
+            String msg = "failed to read property state: " + state.getId();
             log.error(msg, fse);
             throw new ItemStateException(msg, fse);
         }
@@ -522,7 +518,7 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
                 in.close();
             }
         } catch (Exception e) {
-            String msg = "failed to read property state: " + parentUUID + "/" + propName;
+            String msg = "failed to read property state: " + state.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -595,13 +591,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
         String nodeFilePath = buildNodeFilePath(uuid);
         FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
         try {
-            nodeFile.delete();
-            // prune empty folders
-            String parentDir = FileSystemPathUtil.getParentDir(nodeFilePath);
-            while (!parentDir.equals(FileSystem.SEPARATOR)
-                    && !itemStateFS.hasChildren(parentDir)) {
-                itemStateFS.deleteFolder(parentDir);
-                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            if (nodeFile.exists()) {
+                // delete resource and prune empty parent folders
+                nodeFile.delete(true);
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete node state: " + uuid;
@@ -626,7 +618,8 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
                 if (val != null) {
                     if (val.getType() == PropertyType.BINARY) {
                         BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
-                        blobVal.delete();
+                        // delete blob file and prune empty parent folders
+                        blobVal.delete(true);
                     }
                 }
             }
@@ -635,13 +628,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
         String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
         FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
         try {
-            propFile.delete();
-            // prune empty folders
-            String parentDir = FileSystemPathUtil.getParentDir(propFilePath);
-            while (!parentDir.equals(FileSystem.SEPARATOR)
-                    && !itemStateFS.hasChildren(parentDir)) {
-                itemStateFS.deleteFolder(parentDir);
-                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            if (propFile.exists()) {
+                // delete resource and prune empty parent folders
+                propFile.delete(true);
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete property state: " + state.getParentUUID() + "/" + state.getName();
@@ -659,15 +648,14 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String uuid = refs.getTargetId().getUUID();
-        String refsFilePath = buildNodeReferencesFilePath(uuid);
+        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId().getUUID());
 
         try {
             if (!itemStateFS.isFile(refsFilePath)) {
-                throw new NoSuchItemStateException(uuid);
+                throw new NoSuchItemStateException(refs.getTargetId().toString());
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to load references: " + uuid;
+            String msg = "failed to load references: " + refs.getTargetId();
             log.error(msg, fse);
             throw new ItemStateException(msg, fse);
         }
@@ -682,7 +670,7 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
                 in.close();
             }
         } catch (Exception e) {
-            String msg = "failed to load references: " + uuid;
+            String msg = "failed to load references: " + refs.getTargetId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -726,13 +714,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
         String refsFilePath = buildNodeReferencesFilePath(uuid);
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
-            refsFile.delete();
-            // prune empty folders
-            String parentDir = FileSystemPathUtil.getParentDir(refsFilePath);
-            while (!parentDir.equals(FileSystem.SEPARATOR)
-                    && !itemStateFS.hasChildren(parentDir)) {
-                itemStateFS.deleteFolder(parentDir);
-                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            if (refsFile.exists()) {
+                // delete resource and prune empty parent folders
+                refsFile.delete(true);
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete references: " + uuid;

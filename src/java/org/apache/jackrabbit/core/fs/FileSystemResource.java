@@ -97,10 +97,34 @@ public class FileSystemResource {
     }
 
     /**
+     * Deletes this resource.
+     * Same as <code>{@link #delete(false)}</code>.
+     *
      * @see FileSystem#deleteFile
      */
     public void delete() throws FileSystemException {
         fs.deleteFile(path);
+    }
+
+    /**
+     * Deletes this resource.
+     *
+     * @param pruneEmptyParentDirs if <code>true</code>, empty parent folders will
+     *                             automatically be deleted
+     * @see FileSystem#deleteFile
+     */
+    public void delete(boolean pruneEmptyParentDirs) throws FileSystemException {
+        fs.deleteFile(path);
+        if (pruneEmptyParentDirs) {
+            // prune empty parent folders
+            String parentDir = FileSystemPathUtil.getParentDir(path);
+            while (!parentDir.equals(FileSystem.SEPARATOR)
+                    && fs.exists(parentDir)
+                    && !fs.hasChildren(parentDir)) {
+                fs.deleteFolder(parentDir);
+                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            }
+        }
     }
 
     /**

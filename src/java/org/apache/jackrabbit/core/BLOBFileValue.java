@@ -170,15 +170,33 @@ public class BLOBFileValue implements Value {
 
     /**
      * Deletes the file backing this <code>BLOBFileValue</code>.
+     * Same as <code>{@link #delete(false)}</code>.
      */
     public void delete() {
+        delete(false);
+    }
+
+    /**
+     * Deletes the file backing this <code>BLOBFileValue</code>.
+     *
+     * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories will
+     *                             automatically be deleted
+     */
+    public void delete(boolean pruneEmptyParentDirs) {
         if (file != null) {
             // this instance is backed by a 'real' file
             file.delete();
+            if (pruneEmptyParentDirs) {
+                // prune empty parent directories
+                File parent = file.getParentFile();
+                while (parent != null && parent.delete()) {
+                    parent = parent.getParentFile();
+                }
+            }
         } else {
             // this instance is backed by a resource in the virtual file system
             try {
-                fsResource.delete();
+                fsResource.delete(pruneEmptyParentDirs);
             } catch (FileSystemException fse) {
                 // ignore
             }
