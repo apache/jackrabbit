@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.test.api.version;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Node;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import java.util.HashSet;
-import java.util.Arrays;
+import javax.jcr.version.VersionHistory;
 
 /**
  * <code>VersionLabelTest</code> covers methods related to version label such as
@@ -51,18 +51,25 @@ public class VersionLabelTest extends AbstractVersionTest {
     protected VersionHistory vHistory;
     protected Version rootVersion;
 
+    /**
+     * JCR Name jcr:versionLabels using the namespace resolver of the current session.
+     */
+    protected String jcrVersionLabels;
+
     protected void setUp() throws Exception {
         super.setUp();
+
+        jcrVersionLabels = superuser.getNamespacePrefix(NS_JCR_URI) + ":versionLabels";
 
         vHistory = versionableNode.getVersionHistory();
         rootVersion = vHistory.getRootVersion();
 
         if (vHistory.hasVersionLabel(versionLabel)) {
-            fail("Version label '"+versionLabel+"' is already present in this version history. Label test cannot be performed.");
+            fail("Version label '" + versionLabel + "' is already present in this version history. Label test cannot be performed.");
         }
 
         if (vHistory.hasVersionLabel(versionLabel2)) {
-            fail("Version label '"+versionLabel2+"' is already present in this version history. Label test cannot be performed.");
+            fail("Version label '" + versionLabel2 + "' is already present in this version history. Label test cannot be performed.");
         }
     }
 
@@ -111,6 +118,24 @@ public class VersionLabelTest extends AbstractVersionTest {
             }
         }
         assertTrue("The version label that has been successfully added must be present in the array containing all labels.", found);
+    }
+
+    /**
+     * Test if the a label added with VersionHistory.addVersionLabel(String,
+     * String, boolean) corresponds to adding a reference property to the
+     * jcr:versionLabels node of this history node, with the label as name of
+     * the property, and the reference targeting the version.
+     *
+     * @see VersionHistory#addVersionLabel(String, String, boolean)
+     */
+    public void testAddVersionCheckVersionLabelsNode() throws RepositoryException {
+        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+
+        // get jcr:versionLabels node
+        vHistory = versionableNode.getVersionHistory();
+        Node versionLabelNode = vHistory.getNode(jcrVersionLabels);
+
+        assertTrue("The version label that has been successfully added must be present in the node '" + jcrVersionLabels + "'.", versionLabelNode.getProperty(versionLabel).getString().equals(rootVersion.getUUID()));
     }
 
     /**
@@ -184,7 +209,7 @@ public class VersionLabelTest extends AbstractVersionTest {
             vHistory.addVersionLabel(v.getName(), versionLabel, true);
 
             if (!vHistory.hasVersionLabel(v, versionLabel)) {
-               fail("If 'moveLabel' is true, an existing version label must be moved to the indicated version.");
+                fail("If 'moveLabel' is true, an existing version label must be moved to the indicated version.");
             }
 
         } catch (VersionException e) {
@@ -199,7 +224,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testRemoveNonExistingLabel() throws RepositoryException {
         if (vHistory.hasVersionLabel(versionLabel)) {
-            fail("Testing the removal on a non-existing version label failed: '"+versionLabel+"' exists on version history.");
+            fail("Testing the removal on a non-existing version label failed: '" + versionLabel + "' exists on version history.");
         }
         try {
             vHistory.removeVersionLabel(versionLabel);
@@ -270,7 +295,7 @@ public class VersionLabelTest extends AbstractVersionTest {
     /**
      * Test VersionHistory.getVersionLabels(Version) only returns all labels present
      * for the specified version.
-     * 
+     *
      * @throws RepositoryException
      * @see VersionHistory#getVersionLabels(javax.jcr.version.Version)
      */
