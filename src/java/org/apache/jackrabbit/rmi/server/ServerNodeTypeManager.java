@@ -60,25 +60,41 @@ public class ServerNodeTypeManager extends ServerObject
     /** {@inheritDoc} */
     public RemoteNodeType getNodeType(String name) throws
             NoSuchNodeTypeException, RepositoryException, RemoteException {
-        return factory.getRemoteNodeType(manager.getNodeType(name));
+        try {
+            return factory.getRemoteNodeType(manager.getNodeType(name));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteNodeType[] getAllNodeTypes() throws RepositoryException,
             RemoteException {
-        return getRemoteNodeTypeArray(manager.getAllNodeTypes());
+        try {
+            return getRemoteNodeTypeArray(manager.getAllNodeTypes());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteNodeType[] getPrimaryNodeTypes() throws RepositoryException,
             RemoteException {
-        return getRemoteNodeTypeArray(manager.getPrimaryNodeTypes());
+        try {
+            return getRemoteNodeTypeArray(manager.getPrimaryNodeTypes());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteNodeType[] getMixinNodeTypes() throws RepositoryException,
             RemoteException {
-        return getRemoteNodeTypeArray(manager.getMixinNodeTypes());
+        try {
+            return getRemoteNodeTypeArray(manager.getMixinNodeTypes());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
 }

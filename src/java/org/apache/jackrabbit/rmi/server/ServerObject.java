@@ -19,15 +19,34 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.LoginException;
+import javax.jcr.MergeException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -57,6 +76,63 @@ public class ServerObject extends UnicastRemoteObject {
     protected ServerObject(RemoteAdapterFactory factory)
             throws RemoteException {
         this.factory = factory;
+    }
+    
+    /**
+     * Returns a cleaned version of the given exception. In some cases
+     * the underlying repository implementation may throw exceptions
+     * that are either unserializable, use exception subclasses that are
+     * only locally available, contain references to unserializable or
+     * only locally available classes. This method returns a cleaned
+     * version of such an exception. The returned exception contains only
+     * the message string from the original exception, and uses the public
+     * JCR exception class that most specifically matches the original
+     * exception.
+     * 
+     * @param ex the original exception
+     * @return clean exception
+     */
+    protected RepositoryException getRepositoryException(
+            RepositoryException ex) {
+        if (ex instanceof AccessDeniedException) {
+            return new AccessDeniedException(ex.getMessage());
+        } else if (ex instanceof ConstraintViolationException) {
+            return new ConstraintViolationException(ex.getMessage());
+        } else if (ex instanceof InvalidItemStateException) {
+            return new InvalidItemStateException(ex.getMessage());
+        } else if (ex instanceof InvalidQueryException) {
+            return new InvalidQueryException(ex.getMessage());
+        } else if (ex instanceof InvalidSerializedDataException) {
+            return new InvalidSerializedDataException(ex.getMessage());
+        } else if (ex instanceof ItemExistsException) {
+            return new ItemExistsException(ex.getMessage());
+        } else if (ex instanceof ItemNotFoundException) {
+            return new ItemNotFoundException(ex.getMessage());
+        } else if (ex instanceof LockException) {
+            return new LockException(ex.getMessage());
+        } else if (ex instanceof LoginException) {
+            return new LoginException(ex.getMessage());
+        } else if (ex instanceof MergeException) {
+            return new MergeException(ex.getMessage());
+        } else if (ex instanceof NamespaceException) {
+            return new NamespaceException(ex.getMessage());
+        } else if (ex instanceof NoSuchNodeTypeException) {
+            return new NoSuchNodeTypeException(ex.getMessage());
+        } else if (ex instanceof NoSuchWorkspaceException) {
+            return new NoSuchWorkspaceException(ex.getMessage());
+        } else if (ex instanceof PathNotFoundException) {
+            return new PathNotFoundException(ex.getMessage());
+        } else if (ex instanceof ReferentialIntegrityException) {
+            return new ReferentialIntegrityException(ex.getMessage());
+        } else if (ex instanceof UnsupportedRepositoryOperationException) {
+            return new UnsupportedRepositoryOperationException(ex.getMessage());
+        } else if (ex instanceof ValueFormatException) {
+            return new ValueFormatException(ex.getMessage());
+        } else if (ex instanceof VersionException) {
+            return new VersionException(ex.getMessage());
+        } else {
+            return new RepositoryException(ex.getMessage());
+        }
     }
 
     /**

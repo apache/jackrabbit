@@ -59,48 +59,80 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
     /** {@inheritDoc} */
     public Value getValue() throws ValueFormatException, RepositoryException,
             RemoteException {
-        return new SerialValue(property.getValue());
+        try {
+            return new SerialValue(property.getValue());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public Value[] getValues() throws ValueFormatException,
             RepositoryException, RemoteException {
-        return SerialValue.makeSerialValueArray(property.getValues());
+        try {
+            return SerialValue.makeSerialValueArray(property.getValues());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void setValue(Value value) throws ValueFormatException,
             RepositoryException, RemoteException {
-        property.setValue(value);
+        try {
+            property.setValue(value);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void setValue(Value[] values) throws ValueFormatException,
             RepositoryException, RemoteException {
-        property.setValue(values);
+        try {
+            property.setValue(values);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public long getLength() throws ValueFormatException, RepositoryException,
             RemoteException {
-        return property.getLength();
+        try {
+            return property.getLength();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public long[] getLengths() throws ValueFormatException,
             RepositoryException, RemoteException {
-        return property.getLengths();
+        try {
+            return property.getLengths();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemotePropertyDef getDefinition() throws RepositoryException,
             RemoteException {
-        return factory.getRemotePropertyDef(property.getDefinition());
+        try {
+            return factory.getRemotePropertyDef(property.getDefinition());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public int getType() throws RepositoryException, RemoteException {
-        return property.getType();
+        try {
+            return property.getType();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
 }

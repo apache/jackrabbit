@@ -70,30 +70,46 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
     /** {@inheritDoc} */
     public RemoteSession login() throws LoginException,
             NoSuchWorkspaceException, RepositoryException, RemoteException {
-        Session session = repository.login();
-        return factory.getRemoteSession(session);
+        try {
+            Session session = repository.login();
+            return factory.getRemoteSession(session);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteSession login(String workspace) throws LoginException,
             NoSuchWorkspaceException, RepositoryException, RemoteException {
-        Session session = repository.login(workspace);
-        return factory.getRemoteSession(session);
+        try {
+            Session session = repository.login(workspace);
+            return factory.getRemoteSession(session);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteSession login(Credentials credentials) throws LoginException,
             NoSuchWorkspaceException, RepositoryException, RemoteException {
-        Session session = repository.login(credentials);
-        return factory.getRemoteSession(session);
+        try {
+            Session session = repository.login(credentials);
+            return factory.getRemoteSession(session);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteSession login(Credentials credentials, String workspace)
             throws LoginException, NoSuchWorkspaceException,
             RepositoryException, RemoteException {
-        Session session = repository.login(credentials, workspace);
-        return factory.getRemoteSession(session);
+        try {
+            Session session = repository.login(credentials, workspace);
+            return factory.getRemoteSession(session);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
 }

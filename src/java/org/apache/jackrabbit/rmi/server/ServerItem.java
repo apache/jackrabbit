@@ -63,36 +63,60 @@ public class ServerItem extends ServerObject implements RemoteItem {
     
     /** {@inheritDoc} */
     public String getPath() throws RepositoryException, RemoteException {
-        return item.getPath();
+        try {
+            return item.getPath();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public String getName() throws RepositoryException, RemoteException {
-        return item.getName();
+        try {
+            return item.getName();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public void save() throws AccessDeniedException, LockException,
             ConstraintViolationException, InvalidItemStateException,
             ReferentialIntegrityException, RepositoryException, RemoteException {
-        item.save();
+        try {
+            item.save();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteItem getAncestor(int level) throws ItemNotFoundException,
             AccessDeniedException, RepositoryException, RemoteException {
-        return getRemoteItem(item.getAncestor(level));
+        try {
+            return getRemoteItem(item.getAncestor(level));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public int getDepth() throws RepositoryException, RemoteException {
-        return item.getDepth();
+        try {
+            return item.getDepth();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteNode getParent() throws ItemNotFoundException,
             AccessDeniedException, RepositoryException, RemoteException {
-        return factory.getRemoteNode(item.getParent());
+        try {
+            return factory.getRemoteNode(item.getParent());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -108,12 +132,20 @@ public class ServerItem extends ServerObject implements RemoteItem {
     /** {@inheritDoc} */
     public void refresh(boolean keepChanges) throws InvalidItemStateException,
             RepositoryException, RemoteException {
-        item.refresh(keepChanges);
+        try {
+            item.refresh(keepChanges);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void remove() throws RepositoryException, RemoteException {
-        item.remove();
+        try {
+            item.remove();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
 }
