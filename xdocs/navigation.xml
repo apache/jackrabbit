@@ -28,7 +28,7 @@
       </item>
     </item>
     <item name="First&#xA0;Steps"       href="/firststeps.html" />
-    <item name="API&#xA0;Documentation" href="http://www.day.com/maven/jsr170/javadocs/jcr-0.16.1/" target="_blank"/>
+    <item name="API&#xA0;Documentation" href="http://www.day.com/maven/jsr170/javadocs/jcr-0.16.1-pfd/" target="_blank"/>
     <item name="Layout"                 href="/layout.html"/>
     <item name="Downloads"              href="/downloads.html"/>
   </menu>
