@@ -229,9 +229,9 @@ public class SessionItemStateManager implements ItemStateProvider {
             return transientStateMgr.getItemState(id);
         }
 
-        // check if there is a virtual state for the specified item
+        // check the virtual root ids (needed for overlay)
         for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasItemState(id)) {
+            if (virtualProviders[i].isVirtualRoot(id)) {
                 return virtualProviders[i].getItemState(id);
             }
         }
@@ -239,6 +239,13 @@ public class SessionItemStateManager implements ItemStateProvider {
         // check if there's persistent state for the specified item
         if (persistentStateMgr.hasItemState(id)) {
             return persistentStateMgr.getItemState(id);
+        }
+
+        // check if there is a virtual state for the specified item
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].hasItemState(id)) {
+                return virtualProviders[i].getItemState(id);
+            }
         }
 
         throw new NoSuchItemStateException(id.toString());
@@ -263,34 +270,25 @@ public class SessionItemStateManager implements ItemStateProvider {
 	    return true;
 	}
 
-	// check if there is a virtual state for the specified item
-	for (int i = 0; i < virtualProviders.length; i++) {
-	    if (virtualProviders[i].hasItemState(id)) {
-		return true;
-	    }
-	}
-
+        // check the virtual root ids (needed for overlay)
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].isVirtualRoot(id)) {
+                return true;
+            }
+        }
 	// check if there's persistent state for the specified item
 	if (persistentStateMgr.hasItemState(id)) {
 	    return true;
 	}
 
-	return false;
-    }
-
-    /**
-     * Checks if there is a virtual item state
-     *
-     * @param id
-     * @return
-     */
-    private boolean hasVirtualItemState(ItemId id) {
+        // check if there is a virtual state for the specified item
         for (int i = 0; i < virtualProviders.length; i++) {
             if (virtualProviders[i].hasItemState(id)) {
                 return true;
             }
         }
-        return false;
+
+	return false;
     }
 
     /**

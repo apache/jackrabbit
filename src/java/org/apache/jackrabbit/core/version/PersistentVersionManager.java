@@ -105,7 +105,7 @@ public class PersistentVersionManager {
     /**
      * the version histories. key=uuid, value=version history
      */
-    private Map histories = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+    private Map histories = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
     /**
      * Creates a new PersistentVersionManager.

@@ -19,6 +19,8 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.ItemId;
 
 /**
  * This Interface defines a virtual item state provider.
@@ -39,4 +41,8 @@ public interface VirtualItemStateProvider extends ItemStateProvider {
      * @return
      */
     public PropDefId getPropDefId(QName propname);
+
+    public boolean isVirtualRoot(ItemId id);
+
+    public NodeId getVirtualRootId();
 }

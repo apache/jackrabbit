@@ -25,8 +25,10 @@ import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.log4j.Logger;
+import org.apache.commons.collections.ReferenceMap;
 
 import javax.jcr.RepositoryException;
+import java.util.Map;
 
 /**
  * This Class implements...
@@ -42,6 +44,12 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
 
     private final VersionManager vMgr;
 
+    /**
+     * the version histories. key=ItemId, value=ItemState
+     */
+    private Map items = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+
+
     public VersionItemStateProvider(VersionManager vMgr, String rootId, String parentId) {
         this.vMgr = vMgr;
         this.root = new HistoryRootNodeState(this, rootId, parentId);
@@ -51,19 +59,35 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         return vMgr;
     }
 
+    public boolean isVirtualRoot(ItemId id) {
+        return id.equals(root.getId());
+    }
+
+    public NodeId getVirtualRootId() {
+        return (NodeId) root.getId();
+    }
+
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
-        if (id instanceof NodeId) {
-            return getNodeState((NodeId) id);
-        } else {
-            return getPropertyState((PropertyId) id);
+
+        ItemState state = (ItemState) items.get(id);
+        if (state==null) {
+            if (id instanceof NodeId) {
+                state = getNodeState((NodeId) id);
+            } else {
+                state = getPropertyState((PropertyId) id);
+            }
+            // add state to cache
+            items.put(id, state);
         }
+        return state;
     }
 
     public boolean hasNodeState(NodeId id) {
         if (id.equals(root.getId())) {
             return true;
         }
+
         // check version history
         if (vMgr.hasVersionHistory(id.getUUID())) {
             return true;
@@ -140,7 +164,11 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     public boolean hasItemState(ItemId id) {
-        if (id instanceof NodeId) {
+
+        // check cache
+        if (items.containsKey(id)) {
+            return true;
+        } else if (id instanceof NodeId) {
             return hasNodeState((NodeId) id);
         } else {
             return hasPropertyState((PropertyId) id);
