@@ -19,6 +19,7 @@ package org.apache.jackrabbit.test;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Credentials;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -148,5 +149,41 @@ public class RepositoryHelper {
         // force assignment of repoStub
         getRepository();
         return repoStub.getProperty(name);
+    }
+
+    /**
+     * Returns the read-only credentials created from the username
+     * and password specified in the configuration properties.
+     * Configuration properties are defined in the file:
+     * <code>repositoryStubImpl.properties</code>.
+     *
+     * @return read-only <code>Credentials</code>
+     */
+    public Credentials getReadOnlyCredentials() {
+        return repoStub.getReadOnlyCredentials();
+    }
+
+    /**
+     * Returns the read-write credentials created from the username
+     * and password specified in the configuration properties.
+     * Configuration properties are defined in the file:
+     * <code>repositoryStubImpl.properties</code>.
+     *
+     * @return read-write <code>Credentials</code>
+     */
+    public Credentials getReadWriteCredentials() {
+        return repoStub.getReadWriteCredentials();
+    }
+
+    /**
+     * Returns the superuser credentials created from the username
+     * and password specified in the configuration properties.
+     * Configuration properties are defined in the file:
+     * <code>repositoryStubImpl.properties</code>.
+     *
+     * @return superuser <code>Credentials</code>
+     */
+    public Credentials getSuperuserCredentials() {
+        return repoStub.getSuperuserCredentials();
     }
 }

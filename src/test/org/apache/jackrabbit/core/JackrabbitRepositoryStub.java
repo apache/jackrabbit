@@ -21,6 +21,7 @@ import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
 import javax.jcr.Repository;
+import javax.jcr.Credentials;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.util.Hashtable;
@@ -113,5 +114,13 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
             }
         }
         return repository;
+    }
+
+    /**
+     * Returns <code>null</code> to indicate anonymous access.
+     * @return <code>null</code> to indicate anonymous access.
+     */
+    public Credentials getReadOnlyCredentials() {
+        return null;
     }
 }
