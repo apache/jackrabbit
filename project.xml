@@ -196,9 +196,7 @@
       </roles>
       <timezone>+1</timezone>
     </developer>
-  </developers>
-  <contributors>
-    <contributor>
+    <developer>
       <name>Jukka Zitting</name>
       <email>jz@yukatan.fi</email>
       <organization>Yukatan</organization>
@@ -206,7 +204,9 @@
         <role>Java Developer</role>
       </roles>
       <timezone>+2</timezone>
-    </contributor>
+    </developer>
+  </developers>
+  <contributors>
     <contributor>
       <name>Felix Meschberger</name>
       <email/>
@@ -218,15 +218,6 @@
     </contributor>
     <contributor>
       <name>Dominique Pfister</name>
-      <email/>
-      <organization/>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </contributor>
-    <contributor>
-      <name>Jukka Zitting</name>
       <email/>
       <organization/>
       <roles>
