@@ -466,8 +466,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
          *
          * for every transient property:
          * - check the WRITE permission
-         * - check if the property value satisfies the value constraints specified
-         *   in the property's definition
+         * - check if the property value satisfies the value constraints
+         *   specified in the property's definition
          *
          * note that the protected flag is checked in Node.addNode/Node.remove
          * (for adding/removing child entries of a node), in
@@ -487,17 +487,21 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 NodeImpl node = (NodeImpl) itemMgr.getItem(id);
                 NodeDef def = node.getDefinition();
                 NodeTypeImpl nt = (NodeTypeImpl) node.getPrimaryNodeType();
-                // if the transient node was added (i.e. if it is 'new'),
-                // check its node's node type against the required node type
-                // in its definition
+                /**
+                 * if the transient node was added (i.e. if it is 'new'),
+                 * check its node's node type against the required node type
+                 * in its definition
+                 */
                 NodeType[] nta = def.getRequiredPrimaryTypes();
                 for (int i = 0; i < nta.length; i++) {
                     NodeTypeImpl ntReq = (NodeTypeImpl) nta[i];
                     if (nodeState.getStatus() == ItemState.STATUS_NEW
                             && !(nt.getQName().equals(ntReq.getQName())
                             || nt.isDerivedFrom(ntReq.getQName()))) {
-                        // the transient node's node type does not satisfy the
-                        // 'required primary types' constraint
+                        /**
+                         * the transient node's node type does not satisfy the
+                         * 'required primary types' constraint
+                         */
                         String msg = node.safeGetJCRPath() + " must be of node type " + ntReq.getName();
                         log.warn(msg);
                         throw new ConstraintViolationException(msg);
@@ -513,8 +517,10 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         throw new AccessDeniedException(msg);
                     }
 
-                    // no need to check the protected flag
-                    // as this is checked in NodeImpl.remove(String)
+                    /**
+                     * no need to check the protected flag as this is checked
+                     * in NodeImpl.remove(String)
+                     */
                 }
 
                 // check child additions
@@ -578,10 +584,12 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     }
                 }
 
-                // check value constraints
-                // (no need to check value constraints of protected properties
-                // as those are set by the implementation only, i.e. they
-                // cannot be set by the user through the api)
+                /**
+                 * check value constraints
+                 * (no need to check value constraints of protected properties
+                 * as those are set by the implementation only, i.e. they
+                 * cannot be set by the user through the api)
+                 */
                 if (!def.isProtected()) {
                     String[] constraints = def.getValueConstraints();
                     if (constraints != null) {
@@ -595,21 +603,28 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             throw new ConstraintViolationException(msg);
                         }
 
-                        // need to manually check REFERENCE value constraints
-                        // as this requires a session (target node needs to
-                        // be checked)
-                        if (def.getRequiredType() == PropertyType.REFERENCE) {
+                        /**
+                         * need to manually check REFERENCE value constraints
+                         * as this requires a session (target node needs to
+                         * be checked)
+                         */
+                        if (constraints.length > 0
+                                && def.getRequiredType() == PropertyType.REFERENCE) {
                             for (int i = 0; i < values.length; i++) {
                                 boolean satisfied = false;
                                 try {
                                     UUID targetUUID = (UUID) values[i].internalValue();
                                     Node targetNode = session.getNodeByUUID(targetUUID.toString());
-                                    // constraints are OR-ed, i.e. at least one
-                                    // has to be satisfied
+                                    /**
+                                     * constraints are OR-ed, i.e. at least one
+                                     * has to be satisfied
+                                     */
                                     for (int j = 0; j < constraints.length; j++) {
-                                        // a REFERENCE value constraint specifies
-                                        // the name of the required node type of
-                                        // the target node
+                                        /**
+                                         * a REFERENCE value constraint specifies
+                                         * the name of the required node type of
+                                         * the target node
+                                         */
                                         String ntName = constraints[j];
                                         if (targetNode.isNodeType(ntName)) {
                                             satisfied = true;
@@ -634,8 +649,10 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     }
                 }
 
-                // no need to check the protected flag
-                // as this is checked in PropertyImpl.setValue(Value)
+                /**
+                 * no need to check the protected flag* as this is checked
+                 * in PropertyImpl.setValue(Value)
+                 */
             }
         }
     }
@@ -1220,9 +1237,12 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     itemStateMgr.disposeTransientItemState(transientState);
                 }
 
-                // all changes are persisted, now dispatch events
-                // forward this to the session to let it decide on the right time for those
-                // events to be dispatched in case of transactional support
+                /**
+                 * all changes are persisted, now dispatch events;
+                 * forward this to the session to let it decide on the right
+                 * time for those events to be dispatched in case of
+                 * transactional support
+                 */
                 session.dispatch(events);
             } finally {
                 // turn off temporary path caching
