@@ -427,4 +427,8 @@ public class SearchIndex extends AbstractQueryHandler {
     public void setRedoSize(int size) {
         mergeSize = size;
     }
+
+    public void setBufferSize(int size) {
+        volatileIndex.setBufferSize(size);
+    }
 }

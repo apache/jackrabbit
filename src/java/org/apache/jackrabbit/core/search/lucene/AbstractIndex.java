@@ -21,7 +21,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.log4j.Logger;
 
@@ -94,16 +93,6 @@ abstract class AbstractIndex {
      */
     Directory getDirectory() throws IOException {
         return directory;
-    }
-
-    /**
-     * Returns an <code>IndexSearcher</code> based on the <code>IndexReader</code>
-     * returned by {@link #getIndexReader()}.
-     * @return an <code>IndexSearcher</code> on this index.
-     * @throws IOException if an error occurs.
-     */
-    IndexSearcher getIndexSearcher() throws IOException {
-        return new IndexSearcher(getIndexReader());
     }
 
     /**
