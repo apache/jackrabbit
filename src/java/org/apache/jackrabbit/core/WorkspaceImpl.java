@@ -37,11 +37,11 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.Importer;
-import org.apache.jackrabbit.core.xml.WorkspaceImporter;
 import org.apache.log4j.Logger;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
+import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
@@ -1084,6 +1084,73 @@ public class WorkspaceImpl implements Workspace, Constants {
             throws PathNotFoundException, ConstraintViolationException,
             VersionException, LockException, RepositoryException {
 
+        /**
+         * the following code (importing through temporary session) is
+         * just a work-around; a specialized WorkspaceImporter that by-passes
+         * the transient layer should be used instead.
+         *
+         * todo replace with specialized WorkspaceImporter once fully implemented
+         */
+
+        // create temporary session in order to prevent state changes
+        // of the current session
+        final SessionImpl tmpSession = rep.createSession(session.getSubject(), getName());
+        final ContentHandler handler =
+                tmpSession.getImportContentHandler(parentAbsPath);
+        return new ContentHandler() {
+            public void endDocument() throws SAXException {
+                handler.endDocument();
+                // save changes & logout
+                try {
+                    tmpSession.save();
+                } catch (RepositoryException re) {
+                    throw new SAXException(re);
+                } finally {
+                    tmpSession.logout();
+                }
+            }
+
+            public void startDocument() throws SAXException {
+                handler.startDocument();
+            }
+
+            public void characters(char ch[], int start, int length) throws SAXException {
+                handler.characters(ch, start, length);
+            }
+
+            public void ignorableWhitespace(char ch[], int start, int length) throws SAXException {
+                handler.ignorableWhitespace(ch, start, length);
+            }
+
+            public void endPrefixMapping(String prefix) throws SAXException {
+                handler.endPrefixMapping(prefix);
+            }
+
+            public void skippedEntity(String name) throws SAXException {
+                handler.endPrefixMapping(name);
+            }
+
+            public void setDocumentLocator(Locator locator) {
+                handler.setDocumentLocator(locator);
+            }
+
+            public void processingInstruction(String target, String data) throws SAXException {
+                handler.processingInstruction(target, data);
+            }
+
+            public void startPrefixMapping(String prefix, String uri) throws SAXException {
+                handler.startPrefixMapping(prefix, uri);
+            }
+
+            public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
+                handler.endElement(namespaceURI, localName, qName);
+            }
+
+            public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
+                handler.startElement(namespaceURI, localName, qName, atts);
+            }
+        };
+/*
         // check state of this instance
         sanityCheck();
 
@@ -1109,6 +1176,7 @@ public class WorkspaceImpl implements Workspace, Constants {
         Importer importer = new WorkspaceImporter(parentState, this, uuidBehavior);
         return new ImportHandler(importer, session.getNamespaceResolver(),
                 rep.getNamespaceRegistry());
+*/
     }
 
     /**
