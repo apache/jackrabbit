@@ -353,6 +353,7 @@ public interface RemoteNode extends RemoteItem {
      * Remote version of the
      * {@link javax.jcr.Node#checkin() Node.checkin()} method.
      *
+     * @return checked in version
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */

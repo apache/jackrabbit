@@ -49,42 +49,40 @@ public interface RemoteVersion extends RemoteNode {
      * {@link javax.jcr.version.Version#getContainingHistory() Version.getContainingHistory()} method.
      *
      * @return a <code>RemoteVersionHistory</code> object.
-     * 
+     *
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-//     public RemoteVersionHistory getContainingHistory() throws RepositoryException;
+//     RemoteVersionHistory getContainingHistory() throws RepositoryException;
 
     /**
      * Remote version of the
      * {@link javax.jcr.version.Version#getCreated() Version.getCreated()} method.
      *
      * @return a <code>Calendar</code> object.
-     * 
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    public Calendar getCreated() throws RepositoryException, RemoteException;
+    Calendar getCreated() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
      * {@link javax.jcr.version.Version#getSuccessors() Version.getSuccessors()} method.
      *
      * @return a <code>RemoteVersion</code> array.
-     * 
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    public RemoteVersion[] getSuccessors() throws RepositoryException, RemoteException;
+    RemoteVersion[] getSuccessors() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
      * {@link javax.jcr.version.Version#getPredecessors() Version.getPredecessors()} method.
      *
      * @return a <code>RemoteVersion</code> array.
-     * 
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    public RemoteVersion[] getPredecessors() throws RepositoryException, RemoteException;
+    RemoteVersion[] getPredecessors() throws RepositoryException, RemoteException;
+
 }

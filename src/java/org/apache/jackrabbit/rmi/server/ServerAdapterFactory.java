@@ -150,7 +150,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     public RemoteVersion getRemoteVersion(Version version) throws RemoteException {
         return new ServerVersion(version, this);
     }
-    
+
     /**
      * Creates a {@link ServerVersionHistory ServerVersionHistory} instance.
      * {@inheritDoc}
@@ -159,7 +159,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
             throws RemoteException {
         return new ServerVersionHistory(versionHistory, this);
     }
-    
+
     /**
      * Creates a {@link ServerNodeType ServerNodeType} instance.
      * {@inheritDoc}
