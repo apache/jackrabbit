@@ -145,7 +145,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public RemoteNode getNodeByUUID(String uuid)
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteNode(session.getNodeByUUID(uuid));
+            return getRemoteNode(session.getNodeByUUID(uuid));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -155,7 +155,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     public RemoteNode getRootNode()
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteNode(session.getRootNode());
+            return getRemoteNode(session.getRootNode());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

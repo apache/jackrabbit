@@ -351,6 +351,15 @@ public interface RemoteNode extends RemoteItem {
 
     /**
      * Remote version of the
+     * {@link javax.jcr.Node#checkin() Node.checkin()} method.
+     *
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    RemoteVersion checkin() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
      * {@link javax.jcr.Node#checkout() Node.checkout()} method.
      *
      * @throws RepositoryException on repository errors
@@ -379,6 +388,30 @@ public interface RemoteNode extends RemoteItem {
      * @throws RemoteException on RMI errors
      */
     void merge(String workspace, boolean bestEffort)
+            throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#cancelMerge(javax.jcr.version.Version) Node.cancelMerge(Version)}
+     * method.
+     *
+     * @param versionUUID The UUID of the version whose labels are to be returned.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    void cancelMerge(String versionUUID)
+            throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#doneMerge(javax.jcr.version.Version) Node.doneMerge(Version)}
+     * method.
+     *
+     * @param versionUUID The UUID of the version whose labels are to be returned.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    void doneMerge(String versionUUID)
             throws RepositoryException, RemoteException;
 
     /**
@@ -415,6 +448,36 @@ public interface RemoteNode extends RemoteItem {
      * @throws RemoteException on RMI errors
      */
     void restore(String version, boolean removeExisting)
+            throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#restore(javax.jcr.version.Version, boolean) Node.restore(Version,boolean)}
+     * method.
+     * <p>
+     * This method has been rename to prevent a naming clash with
+     * {@link #restore(String, boolean)}.
+     *
+     * @param versionUUID The UUID of the version whose labels are to be returned.
+     * @param removeExisting flag to remove conflicting nodes
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    void restoreByUUID(String versionUUID, boolean removeExisting)
+            throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#restore(javax.jcr.version.Version, String, boolean) Node.restore(Version,String,boolean)}
+     * method.
+     *
+     * @param versionUUID The UUID of the version whose labels are to be returned.
+     * @param path the path to which the version is to be restored
+     * @param removeExisting flag to remove conflicting nodes
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    void restore(String versionUUID, String path, boolean removeExisting)
             throws RepositoryException, RemoteException;
 
     /**
@@ -471,6 +534,26 @@ public interface RemoteNode extends RemoteItem {
      * @throws RemoteException on RMI errors
      */
     boolean isCheckedOut() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#getVersionHistory() Node.getVersionHistory()} method.
+     *
+     * @return the remote version history.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    RemoteVersionHistory getVersionHistory() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#getBaseVersion() Node.getBaseVersion()} method.
+     *
+     * @return the remote base version
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    RemoteVersion getBaseVersion() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the

@@ -33,6 +33,8 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
@@ -50,6 +52,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
+import org.apache.jackrabbit.rmi.remote.RemoteVersion;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
 /**
@@ -149,6 +153,24 @@ public interface LocalAdapterFactory {
      * @return local node adapter
      */
     Node getNode(Session session, RemoteNode remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote version.
+     *
+     * @param session current session
+     * @param remote remote version
+     * @return local version adapter
+     */
+    Version getVersion(Session session, RemoteVersion remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote version history.
+     *
+     * @param session current session
+     * @param remote remote version history
+     * @return local version history adapter
+     */
+    VersionHistory getVersionHistory(Session session, RemoteVersionHistory remote);
 
     /**
      * Factory method for creating a local adapter for a remote node type.

@@ -35,6 +35,8 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
@@ -52,6 +54,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
+import org.apache.jackrabbit.rmi.remote.RemoteVersion;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
 /**
@@ -155,6 +159,25 @@ public interface RemoteAdapterFactory {
      */
     RemoteNode getRemoteNode(Node node) throws RemoteException;
 
+    /**
+     * Returns a remote adapter for the given local version.
+     *
+     * @param version local version
+     * @return remote version adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteVersion getRemoteVersion(Version version) throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local version history.
+     *
+     * @param versionHistory local version history
+     * @return remote version history adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteVersionHistory getRemoteVersionHistory(VersionHistory versionHistory) 
+            throws RemoteException;
+    
     /**
      * Returns a remote adapter for the given local node type.
      *

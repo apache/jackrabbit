@@ -33,6 +33,8 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
@@ -50,6 +52,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
+import org.apache.jackrabbit.rmi.remote.RemoteVersion;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
 /**
@@ -139,6 +143,25 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      */
     public Node getNode(Session session, RemoteNode remote) {
         return new ClientNode(session, remote, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientVersion ClientVersion} instance.
+     *
+     * {@inheritDoc}
+     */
+    public Version getVersion(Session session, RemoteVersion remote) {
+        return new ClientVersion(session, remote, this);
+    }
+    
+    /**
+     * Creates and returns a {@link ClientVersionHistory ClientVersionHistory}
+     * instance.
+     *
+     * {@inheritDoc}
+     */
+    public VersionHistory getVersionHistory(Session session, RemoteVersionHistory remote) {
+        return new ClientVersionHistory(session, remote, this);
     }
 
     /**

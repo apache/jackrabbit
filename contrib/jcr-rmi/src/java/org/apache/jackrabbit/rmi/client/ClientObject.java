@@ -26,16 +26,21 @@ import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.rmi.iterator.ArrayNodeIterator;
 import org.apache.jackrabbit.rmi.iterator.ArrayNodeTypeIterator;
 import org.apache.jackrabbit.rmi.iterator.ArrayPropertyIterator;
+import org.apache.jackrabbit.rmi.iterator.ArrayVersionIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemoteVersion;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
 /**
  * Base class for client adapter objects. The only purpose of
@@ -75,6 +80,9 @@ public class ClientObject {
      * whether to instantiate a {@link Property Property},
      * a {@link Node Node}, or an {@link Item Item} adapter using
      * the local adapter factory.
+     * <p>
+     * If the remote item is a {@link RemoteNode}, this method delegates
+     * to {@link #getNode(Session, RemoteNode)}.
      *
      * @param session current session
      * @param remote remote item
@@ -84,9 +92,31 @@ public class ClientObject {
         if (remote instanceof RemoteProperty) {
             return factory.getProperty(session, (RemoteProperty) remote);
         } else if (remote instanceof RemoteNode) {
-            return factory.getNode(session, (RemoteNode) remote);
+            return getNode(session, (RemoteNode) remote);
         } else {
             return factory.getItem(session, remote);
+        }
+    }
+
+    /**
+     * Utility method to create a local adapter for a remote node.
+     * This method introspects the remote reference to determine
+     * whether to instantiate a {@link Node Node},
+     * a {@link javax.jcr.version.VersionHistory VersionHistory}, or a
+     *  {@link Version Version} adapter using
+     * the local adapter factory.
+     *
+     * @param session current session
+     * @param remote remote node
+     * @return local node, version, or version history adapter
+     */
+    protected Node getNode(Session session, RemoteNode remote) {
+        if (remote instanceof RemoteVersion) {
+            return factory.getVersion(session, (RemoteVersion) remote);
+        } else if (remote instanceof RemoteVersionHistory) {
+            return factory.getVersionHistory(session, (RemoteVersionHistory) remote);
+        } else {
+            return factory.getNode(session, (RemoteNode) remote);
         }
     }
 
@@ -130,12 +160,52 @@ public class ClientObject {
         if (remotes != null) {
             Node[] nodes = new Node[remotes.length];
             for (int i = 0; i < remotes.length; i++) {
-                nodes[i] = factory.getNode(session, remotes[i]);
+                nodes[i] = getNode(session, remotes[i]);
             }
             return new ArrayNodeIterator(nodes);
         } else {
             return new ArrayNodeIterator(new Node[0]); // for safety
         }
+    }
+
+    /**
+     * Utility method for creating a version array for an array
+     * of remote versions. The versions in the returned array
+     * are created using the local adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param session current session
+     * @param remotes remote versions
+     * @return local version array
+     */
+    protected Version[] getVersionArray(
+            Session session, RemoteVersion[] remotes) {
+        if (remotes != null) {
+            Version[] versions = new Version[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                versions[i] = factory.getVersion(session, remotes[i]);
+            }
+            return versions;
+        } else {
+            return new Version[0]; // for safety
+        }
+    }
+
+    /**
+     * Utility method for creating a version iterator for an array
+     * of remote versions. The versions in the returned iterator
+     * are created using the local adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param session current session
+     * @param remotes remote versions
+     * @return local version iterator
+     */
+    protected VersionIterator getVersionIterator(
+            Session session, RemoteVersion[] remotes) {
+        return new ArrayVersionIterator(getVersionArray(session, remotes));
     }
 
     /**
