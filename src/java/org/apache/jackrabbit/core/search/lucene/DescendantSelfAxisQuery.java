@@ -48,6 +48,12 @@ class DescendantSelfAxisQuery extends Query {
     /** The sub query to filter */
     private final Query subQuery;
 
+    /**
+     * If <code>true</code> this query acts on the descendant-or-self axis.
+     * If <code>false</code> this query acts on the descendant axis.
+     */
+    private final boolean includeSelf;
+
     /** The scorer of the sub query to filter */
     private Scorer subScorer;
 
@@ -58,8 +64,22 @@ class DescendantSelfAxisQuery extends Query {
      * @param sub the sub query.
      */
     public DescendantSelfAxisQuery(Query context, Query sub) {
+        this(context, sub, true);
+    }
+
+    /**
+     * Creates a new <code>DescendantSelfAxisQuery</code> based on a
+     * <code>context</code> query and filtering the <code>sub</code> query.
+     * @param context the context for this query.
+     * @param sub the sub query.
+     * @param includeSelf if <code>true</code> this query acts like a
+     * descendant-or-self axis. If <code>false</code> this query acts like
+     * a descendant axis.
+     */
+    public DescendantSelfAxisQuery(Query context, Query sub, boolean includeSelf) {
         this.contextQuery = context;
         this.subQuery = sub;
+        this.includeSelf = includeSelf;
     }
 
     /**
@@ -199,11 +219,16 @@ class DescendantSelfAxisQuery extends Query {
             calculateSubHits();
             nextDoc = subHits.nextSetBit(nextDoc + 1);
             while (nextDoc > -1) {
-                // check if nextDoc is really valid
-                String uuid = reader.document(nextDoc).get(FieldNames.UUID);
-                if (contextUUIDs.contains(uuid)) {
-                    return true;
+                // check if nextDoc is really valid against the context query
+
+                // check self if necessary
+                if (includeSelf) {
+                    String uuid = reader.document(nextDoc).get(FieldNames.UUID);
+                    if (contextUUIDs.contains(uuid)) {
+                        return true;
+                    }
                 }
+
                 // check if nextDoc is a descendant of one of the context nodes
                 String parentUUID = reader.document(nextDoc).get(FieldNames.PARENT);
                 while (parentUUID != null && !contextUUIDs.contains(parentUUID)) {

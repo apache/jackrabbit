@@ -487,7 +487,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                     }
                 }
                 // @todo how to specify descendant-or-self?
-                LocationStepQueryNode step = new LocationStepQueryNode(pathNode, qName, false);
+                // if name test is % this means also search descendants
+                boolean descendant = name == null;
+                LocationStepQueryNode step = new LocationStepQueryNode(pathNode, qName, descendant);
                 if (index > 0) {
                     step.setIndex(index);
                 }

@@ -375,13 +375,14 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 if (predicates.length > 0) {
                     // if we have a predicate attached, the condition acts as
                     // the sub query.
-                    Query subQuery = new DescendantSelfAxisQuery(context, andQuery);
+                    Query subQuery = new DescendantSelfAxisQuery(context, andQuery, false);
                     andQuery = new BooleanQuery();
                     andQuery.add(subQuery, true, false);
                 } else {
                     // @todo this will traverse the whole index, optimize!
                     Query subQuery = new MatchAllQuery(FieldNames.UUID);
-                    andQuery.add(new DescendantSelfAxisQuery(context, subQuery), true, false);
+                    context = new DescendantSelfAxisQuery(context, subQuery);
+                    andQuery.add(new ChildAxisQuery(context), true, false);
                 }
             }
         } else {

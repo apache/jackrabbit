@@ -18,10 +18,18 @@ package org.apache.jackrabbit.test.search;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
-import javax.jcr.*;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
-import javax.jcr.query.Row;
+import javax.jcr.query.Query;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.Value;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Abstract base class for query test cases.
@@ -86,4 +94,68 @@ public class AbstractQueryTest extends AbstractJCRTest {
         assertEquals("Wrong property count.", properties, count);
     }
 
+    /**
+     * Returns the nodes in <code>it</code> as an array of Nodes.
+     * @param it the NodeIterator.
+     * @return the elements of the iterator as an array of Nodes.
+     */
+    protected Node[] toArray(NodeIterator it) {
+        List nodes = new ArrayList();
+        while (it.hasNext()) {
+            nodes.add(it.nextNode());
+        }
+        return (Node[]) nodes.toArray(new Node[nodes.size()]);
+    }
+
+    /**
+     * Executes the <code>xpath</code> query and checks the results against
+     * the specified <code>nodes</code>.
+     * @param xpath the xpath query.
+     * @param nodes the expected result nodes.
+     */
+    protected void executeXPathQuery(String xpath, Node[] nodes)
+            throws RepositoryException {
+        QueryResult res = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH).execute();
+        checkResult(res, nodes);
+    }
+
+    /**
+     * Executes the <code>sql</code> query and checks the results against
+     * the specified <code>nodes</code>.
+     * @param sql the sql query.
+     * @param nodes the expected result nodes.
+     */
+    protected void executeSQLQuery(String sql, Node[] nodes)
+            throws RepositoryException {
+        QueryResult res = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL).execute();
+        checkResult(res, nodes);
+    }
+
+    /**
+     * Checks if the result set contains exactly the <code>nodes</code>.
+     * @param result the query result.
+     * @param nodes the expected nodes in the result set.
+     */
+    protected void checkResult(QueryResult result, Node[] nodes)
+            throws RepositoryException {
+        // collect paths
+        Set expectedPaths = new HashSet();
+        for (int i = 0; i < nodes.length; i++) {
+            expectedPaths.add(nodes[i].getPath());
+        }
+        Set resultPaths = new HashSet();
+        for (NodeIterator it = result.getNodes(); it.hasNext();) {
+            resultPaths.add(it.nextNode().getPath());
+        }
+        // check if all expected are in result
+        for (Iterator it = expectedPaths.iterator(); it.hasNext();) {
+            String path = (String) it.next();
+            assertTrue(path + " is not part of the result set", resultPaths.contains(path));
+        }
+        // check result does not contain more than expected
+        for (Iterator it = resultPaths.iterator(); it.hasNext();) {
+            String path = (String) it.next();
+            assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
+        }
+    }
 }

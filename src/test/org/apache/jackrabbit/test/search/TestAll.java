@@ -41,6 +41,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SelectClauseTest.class);
         suite.addTestSuite(SQLTest.class);
         suite.addTestSuite(OrderByTest.class);
+        suite.addTestSuite(XPathAxisTest.class);
+        suite.addTestSuite(SQLPathTest.class);
 
         return suite;
     }
