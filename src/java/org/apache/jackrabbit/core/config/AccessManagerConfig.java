@@ -17,13 +17,22 @@
 package org.apache.jackrabbit.core.config;
 
 /**
- * A <code>AccessManagerConfig</code> represents the configuration of an
- * <code>AccessManager</code>.
+ * Access manager configuration. This bean configuration class
+ * is used to create configured access manager objects.
+ * <p>
+ * This class is currently only used to assign a static type to
+ * more generic bean configuration information.
  *
  * @see RepositoryConfig#getAccessManagerConfig()
  */
 public class AccessManagerConfig extends BeanConfig {
 
+    /**
+     * Creates an access manager configuration object from the
+     * given bean configuration.
+     *
+     * @param config bean configuration
+     */
     public AccessManagerConfig(BeanConfig config) {
         super(config);
     }

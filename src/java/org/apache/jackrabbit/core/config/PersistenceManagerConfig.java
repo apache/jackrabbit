@@ -16,15 +16,23 @@
  */
 package org.apache.jackrabbit.core.config;
 
-
 /**
- * A <code>PersistenceManagerConfig</code> represents the configuration of a
- * <code>PersistenceManager</code>.
+ * Persistence manager configuration. This bean configuration class
+ * is used to create configured persistence manager objects.
+ * <p>
+ * This class is currently only used to assign a static type to
+ * more generic bean configuration information.
  *
  * @see WorkspaceConfig#getPersistenceManagerConfig()
  */
 public class PersistenceManagerConfig extends BeanConfig {
 
+    /**
+     * Creates a persistence manager configuration object from the
+     * given bean configuration.
+     *
+     * @param config bean configuration
+     */
     public PersistenceManagerConfig(BeanConfig config) {
         super(config);
     }

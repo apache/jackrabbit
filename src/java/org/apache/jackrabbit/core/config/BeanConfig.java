@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -32,24 +31,32 @@ public class BeanConfig {
     /**
      * The class name of the configured bean.
      */
-    private String className;
+    private final String className;
 
     /**
      * The initial properties of the configured bean.
      */
-    private Properties properties;
+    private final Properties properties;
 
     /**
-     * Creates a bean configuration.
+     * Creates a bean configuration. Note that a copy of the given
+     * bean properties is stored as a part of the created configuration
+     * object. Thus the caller is free to modify the given properties
+     * once the configuration object has been created.
      *
      * @param className class name of the bean
      * @param properties initial properties of the bean
      */
     protected BeanConfig(String className, Properties properties) {
         this.className = className;
-        this.properties = properties;
+        this.properties = new Properties(properties);
     }
 
+    /**
+     * Copies a bean configuration.
+     *
+     * @param config the configuration to be copied
+     */
     protected BeanConfig(BeanConfig config) {
         this(config.getClassName(), config.getParameters());
     }
@@ -72,6 +79,14 @@ public class BeanConfig {
         return properties;
     }
 
+    /**
+     * Creates a new instance of the configured bean class.
+     *
+     * @return new bean instance
+     * @throws ClassNotFoundException if the bean class is not found
+     * @throws InstantiationException if the bean could not be instantiated
+     * @throws IllegalAccessException if the bean methods are protected
+     */
     public Object newInstance()
             throws ClassNotFoundException, InstantiationException,
             IllegalAccessException {
@@ -80,7 +95,8 @@ public class BeanConfig {
         Iterator iterator = map.keyIterator();
         while (iterator.hasNext()) {
             String name = (String) iterator.next();
-            if (properties.containsKey(name)) {
+            String value = properties.getProperty(name);
+            if (value != null) {
                 map.put(name, properties.getProperty(name));
             }
         }

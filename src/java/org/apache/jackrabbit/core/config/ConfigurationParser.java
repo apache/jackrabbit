@@ -28,7 +28,6 @@ import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.log4j.Logger;
@@ -149,8 +148,6 @@ public class ConfigurationParser {
 
             // file system
             BeanConfig fsc = parseBeanConfig(root, FILE_SYSTEM_ELEMENT);
-            FileSystem repFS = (FileSystem) fsc.newInstance();
-            repFS.init();
 
             // security & access manager config
             Element secEleme = root.getChild(SECURITY_ELEMENT);
@@ -212,20 +209,13 @@ public class ConfigurationParser {
             Element vElement = config.getRootElement().getChild(VERSIONING_ELEMENT);
             VersioningConfig vc = parseVersioningConfig(vElement);
 
-            return new RepositoryConfig(config, this, home, appName, wspConfigs, repFS, wspConfigRootDir, defaultWspName, amc, vc);
-        } catch (FileSystemException ex) {
-            throw new RepositoryException(ex);
+            return new RepositoryConfig(
+                    config, this, home, appName, wspConfigs,
+                    createFileSystem(fsc), wspConfigRootDir,
+                    defaultWspName, amc, vc);
         } catch (JDOMException ex) {
             throw new RepositoryException(ex);
         } catch (IOException ex) {
-            throw new RepositoryException(ex);
-        } catch (ClassNotFoundException ex) {
-            throw new RepositoryException(ex);
-        } catch (InstantiationException ex) {
-            throw new RepositoryException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RepositoryException(ex);
-        } catch (ClassCastException ex) {
             throw new RepositoryException(ex);
         }
     }
