@@ -221,7 +221,8 @@ public class ImportHandler extends DefaultHandler {
                     nsURI = QName.fromJCRName(qName, nsResolver).getNamespaceURI();
                 } catch (BaseException e) {
                     // should never happen...
-                    String msg = "internal error: failed to parse/resolve element name " + qName;
+                    String msg = "internal error: failed to parse/resolve element name "
+                            + qName;
                     log.debug(msg);
                     throw new SAXException(msg, e);
                 }

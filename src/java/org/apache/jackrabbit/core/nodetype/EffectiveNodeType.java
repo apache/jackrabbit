@@ -441,7 +441,7 @@ public class EffectiveNodeType implements Cloneable {
             // no constraints to check
             return;
         }
-        if (values != null || values.length > 0) {
+        if (values != null && values.length > 0) {
             // check value constraints on every value
             for (int i = 0; i < values.length; i++) {
                 // constraints are OR-ed together
@@ -572,7 +572,7 @@ public class EffectiveNodeType implements Cloneable {
 
     /**
      * Returns the applicable property definition for a property with the
-     * specified name and type.
+     * specified name, type and multiValued characteristic.
      *
      * @param name
      * @param type
@@ -581,7 +581,8 @@ public class EffectiveNodeType implements Cloneable {
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
      */
-    public PropDef getApplicablePropertyDef(QName name, int type, boolean multiValued)
+    public PropDef getApplicablePropertyDef(QName name, int type,
+                                            boolean multiValued)
             throws ConstraintViolationException {
         // try named property definitions first
         ChildItemDef[] defs = getNamedItemDefs(name);

@@ -429,8 +429,8 @@ public class NodeTypeImpl implements NodeType {
         }
         try {
             QName name = QName.fromJCRName(propertyName, nsResolver);
-            int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
-            PropertyDefImpl def = getApplicablePropertyDef(name, type, false);
+            PropertyDefImpl def =
+                    getApplicablePropertyDef(name, value.getType(), false);
             if (def.isProtected()) {
                 return false;
             }
@@ -458,7 +458,7 @@ public class NodeTypeImpl implements NodeType {
         }
         try {
             QName name = QName.fromJCRName(propertyName, nsResolver);
-            int type = (values == null || values.length == 0) ? PropertyType.UNDEFINED : values[0].getType();
+            int type = (values.length == 0) ? PropertyType.UNDEFINED : values[0].getType();
             PropertyDefImpl def = getApplicablePropertyDef(name, type, true);
             if (def.isProtected()) {
                 return false;

@@ -839,7 +839,6 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      * @throws RepositoryException
      */
     private boolean initVersionHistories(Iterator iter) throws RepositoryException {
-        // todo consolidate version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
         // walk through list of transient items and search for new versionable nodes
         boolean createdTransientState = false;
         while (iter.hasNext()) {
@@ -1315,7 +1314,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
         if (isNode()) {
             // check if this is the root node
-            if (((NodeImpl) this).getDepth() == 0) {
+            if (getDepth() == 0) {
                 // optimization
                 stateMgr.disposeAllTransientItemStates();
                 return;

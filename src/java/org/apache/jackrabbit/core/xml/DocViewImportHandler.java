@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.core.BaseException;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
@@ -30,8 +31,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.StringValue;
-import javax.jcr.Value;
 import java.util.ArrayList;
 import java.util.Stack;
 
@@ -80,11 +79,12 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
             try {
                 Importer.NodeInfo node =
                         new Importer.NodeInfo(JCR_XMLTEXT, null, null, null);
-                Value[] values =
-                        new Value[]{new StringValue(text.toString())};
+                InternalValue[] values = new InternalValue[1];
+                values[0] = InternalValue.create(text.toString());
                 ArrayList props = new ArrayList();
                 Importer.PropInfo prop =
-                        new Importer.PropInfo(JCR_XMLCHARACTERS, PropertyType.STRING, values);
+                        new Importer.PropInfo(JCR_XMLCHARACTERS,
+                                PropertyType.STRING, values);
                 props.add(prop);
                 // call Importer
                 importer.startNode(node, props, nsContext);
@@ -150,9 +150,11 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
                     try {
                         propName = QName.fromJCRName(atts.getQName(i), nsContext);
                     } catch (IllegalNameException ine) {
-                        throw new SAXException("illegal property name: " + atts.getQName(i), ine);
+                        throw new SAXException("illegal property name: "
+                                + atts.getQName(i), ine);
                     } catch (UnknownPrefixException upe) {
-                        throw new SAXException("illegal property name: " + atts.getQName(i), upe);
+                        throw new SAXException("illegal property name: "
+                                + atts.getQName(i), upe);
                     }
                 }
                 // decode property name
@@ -160,7 +162,7 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
 
                 // value(s)
                 String attrValue = atts.getValue(i);
-                Value[] propValues;
+                InternalValue[] propValues;
 /*
                 // @todo should attribute value be interpreted as LIST type (i.e. multi-valued property)?
                 String[] strings = Text.explode(attrValue, ' ', true);
@@ -168,29 +170,40 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
                 for (int j = 0; j < strings.length; j++) {
                     // decode encoded blanks in value
                     strings[j] = Text.replace(strings[j], "_x0020_", " ");
-                    propValues[j] = new StringValue(strings[j]);
+                    propValues[j] = InternalValue.create(strings[j]);
                 }
 */
                 if (propName.equals(JCR_PRIMARYTYPE)) {
                     // jcr:primaryType
-                    try {
-                        nodeTypeName = QName.fromJCRName(attrValue, nsContext);
-                    } catch (BaseException be) {
-                        throw new SAXException("illegal jcr:primaryType value: " + attrValue, be);
+                    if (attrValue.length() > 0) {
+                        try {
+                            nodeTypeName = QName.fromJCRName(attrValue, nsContext);
+                        } catch (BaseException be) {
+                            throw new SAXException("illegal jcr:primaryType value: "
+                                    + attrValue, be);
+                        }
                     }
                 } else if (propName.equals(JCR_MIXINTYPES)) {
                     // jcr:mixinTypes
-                    try {
-                        mixinTypes = new QName[]{QName.fromJCRName(attrValue, nsContext)};
-                    } catch (BaseException be) {
-                        throw new SAXException("illegal jcr:mixinTypes value: " + attrValue, be);
+                    if (attrValue.length() > 0) {
+                        try {
+                            mixinTypes =
+                                    new QName[]{QName.fromJCRName(attrValue, nsContext)};
+                        } catch (BaseException be) {
+                            throw new SAXException("illegal jcr:mixinTypes value: "
+                                    + attrValue, be);
+                        }
                     }
                 } else if (propName.equals(JCR_UUID)) {
                     // jcr:uuid
-                    uuid = attrValue;
+                    if (attrValue.length() > 0) {
+                        uuid = attrValue;
+                    }
                 } else {
-                    propValues = new Value[]{new StringValue(atts.getValue(i))};
-                    props.add(new Importer.PropInfo(propName, PropertyType.STRING, propValues));
+                    propValues = new InternalValue[1];
+                    propValues[0] = InternalValue.create(atts.getValue(i));
+                    props.add(new Importer.PropInfo(propName,
+                            PropertyType.UNDEFINED, propValues));
                 }
             }
 

@@ -17,11 +17,15 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
+import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ItemExistsException;
@@ -33,10 +37,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.nodetype.NodeDef;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -81,7 +82,7 @@ public class SessionImporter implements Importer {
             throws RepositoryException {
         NodeImpl node;
         // add node
-        node = (NodeImpl) parent.addNode(nodeName, nodeTypeName, uuid);
+        node = parent.addNode(nodeName, nodeTypeName, uuid);
         // add mixins
         if (mixinNames != null) {
             for (int i = 0; i < mixinNames.length; i++) {
@@ -224,32 +225,79 @@ public class SessionImporter implements Importer {
         while (iter.hasNext()) {
             PropInfo pi = (PropInfo) iter.next();
             QName propName = pi.getName();
-            Value[] vals = pi.getValues();
+            InternalValue[] iva = pi.getValues();
             int type = pi.getType();
-            if (node.hasProperty(propName)) {
-                PropertyDef def = node.getProperty(propName).getDefinition();
-                if (def.isProtected()) {
-                    // skip protected property
-                    log.debug("skipping protected property " + propName);
-                    continue;
-                }
-            }
+
+            // find applicable definition
+            EffectiveNodeType ent = node.getEffectiveNodeType();
+            PropDef def;
             // multi- or single-valued property?
-            if (vals.length == 1) {
+            if (iva.length == 1) {
                 // could be single- or multi-valued (n == 1)
                 try {
-                    // try setting single-value
-                    node.setProperty(propName, vals[0]);
-                } catch (ValueFormatException vfe) {
-                    // try setting value array
-                    node.setProperty(propName, vals, type);
-                } catch (ConstraintViolationException vfe) {
-                    // try setting value array
-                    node.setProperty(propName, vals, type);
+                    // try single-valued
+                    def = ent.getApplicablePropertyDef(propName, type, false);
+                } catch (ConstraintViolationException cve) {
+                    // try multi-valued
+                    def = ent.getApplicablePropertyDef(propName, type, true);
                 }
             } else {
                 // can only be multi-valued (n == 0 || n > 1)
-                node.setProperty(propName, vals, type);
+                def = ent.getApplicablePropertyDef(propName, type, true);
+            }
+
+            if (def.isProtected()) {
+                // skip protected property
+                log.debug("skipping protected property " + propName);
+                continue;
+            }
+
+            // convert InternalValue objects to Value objects using this
+            // session's namespace mappings
+            Value[] va = new Value[iva.length];
+            // check whether type conversion is required
+            if (def.getRequiredType() != PropertyType.UNDEFINED
+                    && def.getRequiredType() != type) {
+                // type doesn't match required type,
+                // type conversion required
+                // FIXME: awkward code
+                for (int i = 0; i < iva.length; i++) {
+                    // convert InternalValue to Value of required type
+                    Value v =
+                            ValueHelper.convert(iva[i].toJCRValue(nsContext),
+                                    def.getRequiredType());
+                    // convert Value to InternalValue using
+                    // current namespace context of xml document
+                    InternalValue ival = InternalValue.create(v, nsContext);
+                    // convert InternalValue back to Value using this
+                    // session's namespace mappings
+                    va[i] = ival.toJCRValue(session.getNamespaceResolver());
+                }
+            } else {
+                // no type conversion required:
+                // convert InternalValue to Value using this
+                // session's namespace mappings
+                for (int i = 0; i < iva.length; i++) {
+                    va[i] = iva[i].toJCRValue(session.getNamespaceResolver());
+                }
+            }
+
+            // multi- or single-valued property?
+            if (va.length == 1) {
+                // could be single- or multi-valued (n == 1)
+                try {
+                    // try setting single-value
+                    node.setProperty(propName, va[0]);
+                } catch (ValueFormatException vfe) {
+                    // try setting value array
+                    node.setProperty(propName, va, type);
+                } catch (ConstraintViolationException cve) {
+                    // try setting value array
+                    node.setProperty(propName, va, type);
+                }
+            } else {
+                // can only be multi-valued (n == 0 || n > 1)
+                node.setProperty(propName, va, type);
             }
             if (type == PropertyType.REFERENCE) {
                 // store reference for later resolution

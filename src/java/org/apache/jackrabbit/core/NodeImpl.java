@@ -278,6 +278,15 @@ public class NodeImpl extends ItemImpl implements Node {
         return state;
     }
 
+    /**
+     * Computes the values of well-known system (i.e. protected) properties.
+     * todo: duplicate code in WorkspaceImporter: consolidate and delegate to NodeTypeInstanceHandler
+     *
+     * @param name
+     * @param def
+     * @return
+     * @throws RepositoryException
+     */
     protected InternalValue[] computeSystemGeneratedPropertyValues(QName name,
                                                                    PropertyDefImpl def)
             throws RepositoryException {
@@ -290,16 +299,16 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeState thisState = (NodeState) state;
 
-        // compute/apply system generated values
+        // compute system generated values
         NodeTypeImpl nt = (NodeTypeImpl) def.getDeclaringNodeType();
         if (nt.getQName().equals(MIX_REFERENCEABLE)) {
             // mix:referenceable node type
             if (name.equals(JCR_UUID)) {
                 // jcr:uuid property
-                genValues = new InternalValue[]{InternalValue.create(((NodeState) state).getUUID())};
+                genValues = new InternalValue[]{InternalValue.create(thisState.getUUID())};
             }
 /*
-	todo consolidate version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
+	todo consolidate version history creation code (currently in ItemImpl.initVersionHistories)
 	} else if (nt.getQName().equals(MIX_VERSIONABLE)) {
 	    // mix:versionable node type
 	    VersionHistory hist = session.getVersionManager().getOrCreateVersionHistory(this);
@@ -324,13 +333,13 @@ public class NodeImpl extends ItemImpl implements Node {
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
         } else if (nt.getQName().equals(NT_RESOURCE)) {
-            // nt:mimeResource node type
+            // nt:resource node type
             if (name.equals(JCR_LASTMODIFIED)) {
                 // jcr:lastModified property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
         } else if (nt.getQName().equals(NT_VERSION)) {
-            // nt:hierarchyNode node type
+            // nt:version node type
             if (name.equals(JCR_CREATED)) {
                 // jcr:created property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
@@ -413,19 +422,13 @@ public class NodeImpl extends ItemImpl implements Node {
             propState.setMultiValued(def.isMultiple());
             propState.setDefinitionId(new PropDefId(def.unwrap()));
             // compute system generated values if necessary
-            InternalValue[] genValues = computeSystemGeneratedPropertyValues(name, def);
+            InternalValue[] genValues =
+                    computeSystemGeneratedPropertyValues(name, def);
+            InternalValue[] defValues = def.unwrap().getDefaultValues();
             if (genValues != null) {
                 propState.setValues(genValues);
-            } else if (def.getDefaultValues() != null) {
-                Value[] vals = def.getDefaultValues();
-                if (vals.length > 0) {
-                    int length = (def.isMultiple() ? vals.length : 1);
-                    InternalValue[] defVals = new InternalValue[length];
-                    for (int i = 0; i < length; i++) {
-                        defVals[i] = InternalValue.create(vals[i], session.getNamespaceResolver());
-                    }
-                    propState.setValues(defVals);
-                }
+            } else if (defValues != null) {
+                propState.setValues(defValues);
             }
         } catch (ItemStateException ise) {
             String msg = "failed to add property " + name + " to " + safeGetJCRPath();
@@ -788,7 +791,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return the effective node type
      * @throws RepositoryException
      */
-    protected EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
+    public EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
         // build effective node type of mixins & primary type
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
         // existing mixin's
@@ -879,7 +882,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /**
      * Same as <code>{@link Node#getReferences()}</code> except that
-     * this method also filters out the references that appear to non-existent
+     * this method also filters out the references that appear to be non-existent
      * in this workspace if <code>skipInexistent</code> is set to <code>true</code>.
      *
      * @param skipInexistent if set to <code>true</code> inexistent items are skipped

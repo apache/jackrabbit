@@ -128,7 +128,8 @@ public class InternalValue {
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    public static InternalValue create(Value value, int targetType, NamespaceResolver nsResolver)
+    public static InternalValue create(Value value, int targetType,
+                                       NamespaceResolver nsResolver)
             throws ValueFormatException, RepositoryException {
         if (value == null) {
             throw new IllegalArgumentException("null value");
@@ -144,7 +145,8 @@ public class InternalValue {
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    public static InternalValue create(String value, int targetType, NamespaceResolver nsResolver)
+    public static InternalValue create(String value, int targetType,
+                                       NamespaceResolver nsResolver)
             throws ValueFormatException, RepositoryException {
         if (value == null) {
             throw new IllegalArgumentException("null value");
@@ -206,7 +208,8 @@ public class InternalValue {
      * @return
      * @throws IOException
      */
-    public static InternalValue create(FileSystemResource value) throws IOException {
+    public static InternalValue create(FileSystemResource value)
+            throws IOException {
         return new InternalValue(new BLOBFileValue(value));
     }
 
@@ -285,7 +288,8 @@ public class InternalValue {
      * @return
      * @throws RepositoryException
      */
-    public Value toJCRValue(NamespaceResolver nsResolver) throws RepositoryException {
+    public Value toJCRValue(NamespaceResolver nsResolver)
+            throws RepositoryException {
         switch (type) {
             case PropertyType.BINARY:
                 return new BinaryValue(((BLOBFileValue) val).getStream());

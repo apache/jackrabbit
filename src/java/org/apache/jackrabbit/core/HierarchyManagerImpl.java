@@ -81,10 +81,10 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * Failsafe translation of internal <code>ItemId</code> to JCR path for use in
-     * error messages etc.
+     * Failsafe translation of internal <code>ItemId</code> to JCR path for use
+     * in error messages etc.
      *
-     * @param id path to convert
+     * @param id id to translate
      * @return JCR path
      */
     public String safeGetJCRPath(ItemId id) {

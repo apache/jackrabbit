@@ -431,7 +431,7 @@ public class SessionImpl implements Session, Constants {
                 // should never happen, ignore...
             }
         }
-        return names;
+        return (String[]) list.toArray(new String[list.size()]);
     }
 
     /**

@@ -37,13 +37,15 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.GenericVersionSelector;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.WorkspaceImporter;
+import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -439,7 +441,8 @@ public class WorkspaceImpl implements Workspace, Constants {
             EffectiveNodeType entParent = getEffectiveNodeType(parentState);
             entParent.checkAddNodeConstraints(nodeName, nodeTypeName);
             ChildNodeDef newNodeDef =
-                    findApplicableDefinition(nodeName, nodeTypeName, parentState);
+                    findApplicableNodeDefinition(nodeName, nodeTypeName,
+                            parentState);
 
             // check for name collisions
             if (parentState.hasPropertyEntry(nodeName)) {
@@ -701,7 +704,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             throws RepositoryException {
         // build effective node type of mixins & primary type:
         // existing mixin's
-        HashSet set = new HashSet((state).getMixinTypeNames());
+        HashSet set = new HashSet(state.getMixinTypeNames());
         // primary type
         set.add(state.getNodeTypeName());
         NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
@@ -717,9 +720,9 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * Helper method that finds the applicable definition for the
-     * a child node with the given name and node type in the parent node's
-     * node type and mixin types.
+     * Helper method that finds the applicable definition for a child node with
+     * the given name and node type in the parent node's node type and
+     * mixin types.
      *
      * @param name
      * @param nodeTypeName
@@ -729,12 +732,35 @@ public class WorkspaceImpl implements Workspace, Constants {
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    public ChildNodeDef findApplicableDefinition(QName name,
-                                                 QName nodeTypeName,
-                                                 NodeState parentState)
+    public ChildNodeDef findApplicableNodeDefinition(QName name,
+                                                     QName nodeTypeName,
+                                                     NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
         return entParent.getApplicableChildNodeDef(name, nodeTypeName);
+    }
+
+    /**
+     * Helper method that finds the applicable definition for a property with
+     * the given name, type and multiValued characteristic in the parent node's
+     * node type and mixin types.
+     *
+     * @param name
+     * @param type
+     * @param multiValued
+     * @param parentState
+     * @return a <code>PropDef</code>
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     * @throws RepositoryException          if another error occurs
+     */
+    public PropDef findApplicablePropertyDefinition(QName name,
+                                                    int type,
+                                                    boolean multiValued,
+                                                    NodeState parentState)
+            throws RepositoryException, ConstraintViolationException {
+        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
+        return entParent.getApplicablePropertyDef(name, type, multiValued);
     }
 
     /**
@@ -743,6 +769,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      * <p/>
      * <b>Precondition:</b> the state manager of this workspace needs to be in
      * edit mode.
+     * todo duplicate code in WorkspaceImporter; consolidate in WorkspaceOperations class
      *
      * @param targetState
      * @param parentUUID
@@ -1090,7 +1117,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
             // change definition (id) of new node
             ChildNodeDef newNodeDef =
-                    findApplicableDefinition(destName.getName(),
+                    findApplicableNodeDefinition(destName.getName(),
                             srcState.getNodeTypeName(), destParentState);
             newState.setDefinitionId(new NodeDefId(newNodeDef));
 
@@ -1385,7 +1412,9 @@ public class WorkspaceImpl implements Workspace, Constants {
             destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
 
             // change definition (id) of target node
-            ChildNodeDef newTargetDef = findApplicableDefinition(destName.getName(), targetState.getNodeTypeName(), destParentState);
+            ChildNodeDef newTargetDef =
+                    findApplicableNodeDefinition(destName.getName(),
+                            targetState.getNodeTypeName(), destParentState);
             targetState.setDefinitionId(new NodeDefId(newTargetDef));
 
             // remove from old parent
@@ -1663,7 +1692,8 @@ public class WorkspaceImpl implements Workspace, Constants {
         // check locked-status
         getLockManager().checkLock(parentPath, session);
 
-        Importer importer = new WorkspaceImporter(parentState, this, uuidBehavior);
+        Importer importer = new WorkspaceImporter(parentState, this,
+                rep.getNodeTypeRegistry(), uuidBehavior);
         return new ImportHandler(importer, session.getNamespaceResolver(),
                 rep.getNamespaceRegistry());
 */

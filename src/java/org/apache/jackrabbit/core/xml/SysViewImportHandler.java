@@ -19,21 +19,20 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.core.BaseException;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.util.Base64;
-import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import javax.jcr.BinaryValue;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -282,8 +281,8 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
                 } else if (currentPropName.equals(JCR_UUID)) {
                     state.uuid = (String) currentPropValues.get(0);
                 } else {
-                    // convert values to native type and set property
-                    Value[] vals = new Value[currentPropValues.size()];
+                    // convert values to native type
+                    InternalValue[] vals = new InternalValue[currentPropValues.size()];
                     for (int i = 0; i < currentPropValues.size(); i++) {
                         String value = (String) currentPropValues.get(i);
                         if (currentPropType == PropertyType.BINARY) {
@@ -292,12 +291,13 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
                             try {
                                 Base64.decode(value, baos);
                                 baos.close();
+                                vals[i] = InternalValue.create(new ByteArrayInputStream(baos.toByteArray()));
                             } catch (IOException ioe) {
                                 throw new SAXException("failed to decode binary value", ioe);
                             }
-                            vals[i] = new BinaryValue(baos.toByteArray());
                         } else {
-                            vals[i] = ValueHelper.convert(value, currentPropType);
+                            vals[i] = InternalValue.create(value,
+                                    currentPropType, nsContext);
                         }
                     }
                     Importer.PropInfo prop = new Importer.PropInfo();

@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.Workspace;
 import java.util.List;
 
@@ -113,12 +113,12 @@ public interface Importer {
     public static class PropInfo {
         private QName name;
         private int type;
-        private Value[] values;
+        private InternalValue[] values;
 
         public PropInfo() {
         }
 
-        public PropInfo(QName name, int type, Value[] values) {
+        public PropInfo(QName name, int type, InternalValue[] values) {
             this.name = name;
             this.type = type;
             this.values = values;
@@ -140,11 +140,11 @@ public interface Importer {
             return type;
         }
 
-        public void setValues(Value[] values) {
+        public void setValues(InternalValue[] values) {
             this.values = values;
         }
 
-        public Value[] getValues() {
+        public InternalValue[] getValues() {
             return values;
         }
     }

@@ -881,8 +881,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
 
         try {
-            NodeId nodeId = (NodeId) id;
-            String nodeFilePath = buildNodeFilePath(nodeId.getUUID());
+            String nodeFilePath = buildNodeFilePath(id.getUUID());
             FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
             return nodeFile.exists();
         } catch (FileSystemException fse) {

@@ -19,13 +19,13 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.log4j.Logger;
 
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -88,7 +88,7 @@ public class NodeTypeRegistry implements Constants {
      * namespace registry for resolving prefixes and namespace URI's;
      * used for (de)serializing node type definitions
      */
-    private final NamespaceRegistryImpl nsReg;
+    private final NamespaceRegistry nsReg;
 
     /**
      * FIXME
@@ -115,7 +115,7 @@ public class NodeTypeRegistry implements Constants {
      * @return <code>NodeTypeRegistry</codes> object
      * @throws RepositoryException
      */
-    public static NodeTypeRegistry create(NamespaceRegistryImpl nsReg, FileSystem ntStore)
+    public static NodeTypeRegistry create(NamespaceRegistry nsReg, FileSystem ntStore)
             throws RepositoryException {
         NodeTypeRegistry ntMgr = new NodeTypeRegistry(nsReg, ntStore);
         return ntMgr;
@@ -128,7 +128,7 @@ public class NodeTypeRegistry implements Constants {
      * @param ntStore
      * @throws RepositoryException
      */
-    private NodeTypeRegistry(NamespaceRegistryImpl nsReg, FileSystem ntStore)
+    private NodeTypeRegistry(NamespaceRegistry nsReg, FileSystem ntStore)
             throws RepositoryException {
         this.nsReg = nsReg;
         this.ntStore = ntStore;
@@ -352,7 +352,7 @@ public class NodeTypeRegistry implements Constants {
         iter = keys.iterator();
         while (iter.hasNext()) {
             WeightedKey k = (WeightedKey) iter.next();
-            EffectiveNodeType ent = (EffectiveNodeType) entCache.get(k);
+            EffectiveNodeType ent = entCache.get(k);
             if (ent.includesNodeType(name)) {
                 entCache.remove(k);
             }
@@ -959,8 +959,8 @@ public class NodeTypeRegistry implements Constants {
                  */
                 QName[] remainder = key.toArray();
                 for (int i = 0; i < remainder.length; i++) {
-                    EffectiveNodeType ent = null;
-                    ent = EffectiveNodeType.create(this, remainder[i]);
+                    EffectiveNodeType ent =
+                            EffectiveNodeType.create(this, remainder[i]);
                     // store new effective node type
                     entCache.put(ent);
                     if (result == null) {
@@ -1210,7 +1210,7 @@ public class NodeTypeRegistry implements Constants {
             msg.append(name + " could not be removed because the following node types are referencing it: ");
             Iterator iterator = dependentNTs.iterator();
             while (iterator.hasNext()) {
-                msg.append((QName) iterator.next());
+                msg.append(iterator.next());
                 msg.append(" ");
             }
             throw new RepositoryException(msg.toString());
