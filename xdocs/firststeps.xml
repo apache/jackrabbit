@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-   Copyright 2003-2004 The Apache Software Foundation
+   Copyright 2004 The Apache Software Foundation.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,30 +15,26 @@
    limitations under the License.
   -->
 <document>
-   <properties>
-      <title>First Steps</title>
-      <author email="slide-dev@jakarta.apache.org">Slide Documentation Team</author>
-      <revision>$Id: $</revision>
-   </properties>
+ <properties>
+  <title>First Steps</title>
+ </properties>
 
-   <body>
-      <section name="Download and Build Jackrabbit">
-         <p>Please refer to the <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/README.txt">README.txt</a> to find details on 
-         how to build Jackrabbit using Maven.
-         </p>
-      </section>
-      <section name="Run Jackrabbit">
-         <p>
-         To be able to use Jackrabbit in a simple application
-         use the following simple example code.
-         Please note that this example code is geared to be
-         as short and simple as possible and is not necessarily 
-         meant to be used as is.
-         </p>
-         
-         <p>
-         JCRTest.java
-         <source>
+ <body>
+  <section name="Download and Build Jackrabbit">
+   <p>Please refer to the <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/README.txt">README.txt</a>
+      to find details on how to build Jackrabbit using Maven.
+   </p>
+  </section>
+  <section name="Run Jackrabbit">
+   <p>
+    The following code provides a brief introduction to using Jackrabbit
+    in a simple application.  Please note that this example is meant to
+    be as short and simple as possible, rather than usable as a real
+    application, and should not be interpreted as best practice.
+   </p>
+   <p>
+    JCRTest.java
+    <source>
 import java.util.Hashtable;
 
 import javax.jcr.*;
@@ -72,19 +68,18 @@ public class JCRTest {
     }
   }
 }
-         </source>
-        </p>
-	<p>
-	The <code>configFile</code> points to an file named
-	<code>repository.xml</code> by convention, which contains
-	the configuration for the repository.
-	
-	An example <code>repository.xml</code> could look like this:
-	<source>
+    </source>
+   </p>
+   <p>
+    The <code>configFile</code> variable points to a file, named
+    <code>repository.xml</code> by convention, that contains
+    the repository configuration.  
+    An example <code>repository.xml</code> might look like this:
+    <source>
 &lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
 &lt;Repository&gt;
     &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
-    	&lt;param name="path" value="${rep.home}/repository"/&gt;
+        &lt;param name="path" value="${rep.home}/repository"/&gt;
     &lt;/FileSystem&gt;
     &lt;Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" /&gt;
     &lt;Workspace name="${wsp.name}"&gt;
@@ -94,57 +89,58 @@ public class JCRTest {
         &lt;PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" /&gt;
         &lt;SearchIndex path="/index"/&gt;
     &lt;/Workspace&gt;
-&lt;/Repository&gt;	
-	</source>
-	</p>
-	<p>
-	The repository home directory points to a directory that is used
-	as the root directory for all the information that the repository
-	persists. This directory can be empty, the repository will
-	after initial startup fill it with a file structure similar to
-	this:
-	<source>
+&lt;/Repository&gt;   
+    </source>
+   </p>
+   <p>
+    The keyword <code>${rep.home}</code> refers to the repository home
+    directory, which is used as the root directory for all of the
+    information that the repository persists. The directory can be
+    empty; after initial startup, the repository will be filled with
+    file structure similar to this:
+    <source>
 repository.xml
 
 repository/
-	meta/
-	namespaces/
-	nodetypes/
-	versions/
+   meta/
+   namespaces/
+   nodetypes/
+   versions/
+
 tx/
 
 workspaces/
-	default/
-		workspace.xml
-		blobs/
-		data/
-		index/
-	</source>
-	</p>
-	<p>
-	Make sure that all the <a href="dependencies.html">dependencies</a> 
-	are added to your classpath aswell as the actual the actual Jackrabbit
-	repository implementation named something like 
-	<code>jackrabbit-x.xx-xxx.jar</code> that has been built by maven
-	into the <code>target</code> directory of your checkout.
-	</p>
-	<p>
-	Now you should be ready to compile, run and use jackrabbit, using the
-	above <code>JCRTest</code> class, which should produce the following
-	output.
-	<source>
+   default/
+      workspace.xml
+      blobs/
+      data/
+      index/
+    </source>
+   </p>
+   <p>
+    Make sure that all of the <a href="dependencies.html">dependencies</a> 
+    are added to your classpath, as well as the Jackrabbit
+    repository implementation (named something like 
+    <code>jackrabbit-x.xx-xxx.jar</code>) that has been built by Maven
+    into the <code>target</code> directory of your checkout.
+   </p>
+   <p>
+    Now you should be ready to compile the above <code>JCRTest</code>
+    class and run it, which should produce the following output:
+    <source>
 nt:unstructured
-	</source>
-	</p>
-      </section>
-      <section name="Adding Content">
-         <p>
-         Since an empty repository is not a lot of use, add the following
-         code to the above test class <code>JCRTest</code> to create 
-         content inside Jackrabbit.
-
-         JCRTest.java
-         <source>
+    </source>
+   </p>
+  </section>
+  <section name="Adding Content">
+   <p>
+    Since an empty repository is not very useful, add the following
+    code to the above test class <code>JCRTest</code> to create 
+    content inside Jackrabbit.
+   </p>
+   <p>
+    JCRTest.java
+    <source>
 import java.util.Hashtable;
 
 import javax.jcr.*;
@@ -186,23 +182,21 @@ public class JCRTest {
     }
   }
 }
-         </source>
-         
-        which should produce the following output when started for the first
-        time:
-	<source>
+    </source>
+    which should produce the following output when started for the first time:
+    <source>
 nt:unstructured
 creating testnode
-Hello, World.	
-	</source>
-	</p>
-	<p>
-	To add content a bit more efficiently you may want to
-	use JCR's import facilities for example through 
-	<code>Session.importXML</code>. An example that
-	also demonstrates the repository's namespace capabilities
-	is the following XML document:
-	<source>
+Hello, World.   
+    </source>
+   </p>
+   <p>
+    To add content a bit more efficiently, you may want to try
+    JCR's import facilities, such as <code>Session.importXML</code>.
+    The following <a href="http://www.cafeconleche.org/slides/xmlone/london2002/namespaces/10.html">XML document by Elliotte Rusty Harold</a>
+    provides an interesting example that demonstrates a repository's
+    namespace capabilities:
+    <source><!--  Copyright 2001, 2002 Elliotte Rusty Harold -->
 &lt;xhtml:html xmlns:xhtml="http://www.w3.org/1999/xhtml"
             xmlns:mathml="http://www.w3.org/1998/Math/MathML"&gt;
   &lt;xhtml:head&gt;&lt;xhtml:title&gt;Three Namespaces&lt;/xhtml:title&gt;&lt;/xhtml:head&gt;
@@ -253,16 +247,14 @@ Hello, World.
     &lt;xhtml:p&gt;Last Modified January 10, 2002&lt;/xhtml:p&gt;    
   &lt;/xhtml:body&gt;
 &lt;/xhtml:html&gt;
-	</source>
-	</p>
-	<p>
-	To import the XML data the <code>JCRTest</code> class has 
-	to be extended with the <code>Session.importXml()</code> and 
-	to be able to display the content of the repository a simple
-	<code>dump()</code> method is added. To be able to import 
-	properly the above XML has to be place into the local filesystem
-	and referenced in the code
-	<source>
+    </source>
+   </p>
+   <p>
+    The <code>JCRTest</code> class is then extended with
+    <code>Session.importXml()</code> to import the XML file named
+    <code>repotest/test.xml</code>, and a simple <code>dump()</code>
+    method is added to display the content of the repository.
+    <source>
 import java.io.FileInputStream;
 import java.util.Hashtable;
 
@@ -289,7 +281,6 @@ public class JCRTest {
       Node rn=session.getRootNode();
 
       System.out.println(rn.getPrimaryNodeType().getName());
-
       
       if (!rn.hasNode("testnode")) {
         System.out.println("creating testnode");
@@ -323,10 +314,9 @@ public class JCRTest {
     }
   }
 }
-	
-	</source>
-	Which should output something along the lines of:
-	<source>
+    </source>
+    Which should output something along the lines of:
+    <source>
 nt:unstructured
 importing xml
 /
@@ -363,9 +353,9 @@ importing xml
 /importxml/xhtml:html/xhtml:body/svg:svg/height=10cm
 .
 .
-.	
-	</source>
-	</p>
-      </section>
-   </body>
+.   
+    </source>
+   </p>
+  </section>
+ </body>
 </document>
