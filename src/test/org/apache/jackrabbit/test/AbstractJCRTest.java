@@ -288,7 +288,12 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 StringTokenizer names = new StringTokenizer(testPath, "/");
                 Node currentNode = root;
                 while (names.hasMoreTokens()) {
-                    currentNode = currentNode.addNode(names.nextToken(), testNodeType);
+                    String name = names.nextToken();
+                    if (currentNode.hasNode(name)) {
+                        currentNode = currentNode.getNode(name);
+                    } else {
+                        currentNode = currentNode.addNode(name, testNodeType);
+                    }
                 }
                 testRootNode = currentNode;
             }
@@ -320,7 +325,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         }
     }
 
-    protected String getProperty(String name) throws RepositoryException {
+    public String getProperty(String name) throws RepositoryException {
         String testCaseName = getName();
         String testClassName = getClass().getName();
         String testPackName = "";

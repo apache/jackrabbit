@@ -30,7 +30,7 @@
     <propertyDef name="test:computeOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="COMPUTE" protected="false" multiple="false" />
     <propertyDef name="test:ignoreOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" multiple="false" />
     <propertyDef name="test:abortOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="false" multiple="false" />
-    <childNodeDef name="*" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
+    <childNodeDef name="*" defaultPrimaryType="test:versionable" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
       <requiredPrimaryTypes>
         <requiredPrimaryType>nt:base</requiredPrimaryType>
       </requiredPrimaryTypes>
