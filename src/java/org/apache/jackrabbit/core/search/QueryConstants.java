@@ -70,6 +70,11 @@ public interface QueryConstants {
      */
     public static int TYPE_TIMESTAMP = 5;
 
+    /**
+     * position index type
+     */
+    public static int TYPE_POSITION = 6;
+
     public static int OPERATIONS = 10;
 
     /**

@@ -501,7 +501,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             } else {
                 int idx = names[i].indexOf('[');
                 String name = null;
-                int index = 0;
+                int index = LocationStepQueryNode.NONE;
                 if (idx > -1) {
                     // contains index
                     name = names[i].substring(0, idx);
@@ -509,7 +509,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                     String indexStr = suffix.substring(1, suffix.length() - 1);
                     if (indexStr.equals("%")) {
                         // select all same name siblings
-                        index = 0;
+                        index = LocationStepQueryNode.NONE;
                     } else {
                         try {
                             index = Integer.parseInt(indexStr);
@@ -517,14 +517,19 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                             log.warn("Unable to parse index for path element: " + names[i]);
                         }
                     }
+                    if (name.equals("%")) {
+                        name = null;
+                    }
                 } else {
-                    // no index
+                    // no index specified
+                    // - index defaults to 1 if there is an explicit name test
+                    // - index defaults to NONE if name test is %
                     name = names[i];
-                    // in SQL this means index 1
-                    index = 1;
-                }
-                if (name.equals("%")) {
-                    name = null;
+                    if (name.equals("%")) {
+                        name = null;
+                    } else {
+                        index = 1;
+                    }
                 }
                 QName qName = null;
                 if (name != null) {

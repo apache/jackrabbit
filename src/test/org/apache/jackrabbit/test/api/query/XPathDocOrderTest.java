@@ -64,6 +64,23 @@ public class XPathDocOrderTest extends AbstractQueryTest {
     }
 
     /**
+     * Tests if position index and document order on child axis returns the
+     * correct node.
+     * <p/>
+     * For configuration description see {@link XPathDocOrderTest}.
+     */
+    public void testDocOrderPositionIndex() throws Exception {
+        StringBuffer tmp = new StringBuffer("/");
+        tmp.append(jcrRoot).append(testRoot).append("/*");
+        tmp.append("[2]");
+        String resultPath = "";
+        for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPos() < 2;) {
+            resultPath = nodes.nextNode().getPath();
+        }
+        docOrderTest(new Statement(tmp.toString(), Query.XPATH), resultPath);
+    }
+
+    /**
      * Tests the <code>last()</code> function.
      * <p/>
      * For configuration description see {@link XPathDocOrderTest}.

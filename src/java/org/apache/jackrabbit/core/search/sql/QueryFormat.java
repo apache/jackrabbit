@@ -338,7 +338,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 } catch (NoPrefixDeclaredException e) {
                     exceptions.add(e);
                 }
-                if (node.getIndex() == 0) {
+                if (node.getIndex() == LocationStepQueryNode.NONE) {
                     sb.append("[%]");
                 } else if (node.getIndex() == 1) {
                     // do nothing

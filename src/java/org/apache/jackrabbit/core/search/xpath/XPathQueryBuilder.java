@@ -36,6 +36,7 @@ import org.apache.jackrabbit.core.search.QueryNode;
 import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.search.RelationQueryNode;
 import org.apache.jackrabbit.core.search.TextsearchQueryNode;
+import org.apache.jackrabbit.core.search.QueryConstants;
 import org.apache.jackrabbit.core.util.ISO9075;
 
 import javax.jcr.query.InvalidQueryException;
@@ -61,6 +62,36 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     static final QName FN_NOT_10 = new QName("", "not");
 
     /**
+     * QName for true function.
+     */
+    static final QName FN_TRUE = new QName("", "true");
+
+    /**
+     * QName for false function.
+     */
+    static final QName FN_FALSE = new QName("", "false");
+
+    /**
+     * QName for position function.
+     */
+    static final QName FN_POSITION = new QName("", "position");
+
+    /**
+     * QName for the full position function including bracket
+     */
+    static final QName FN_POSITION_FULL = new QName("", "position()");
+
+    /**
+     * QName for last function.
+     */
+    static final QName FN_LAST = new QName("", "last");
+
+    /**
+     * QName for first function.
+     */
+    static final QName FN_FIRST = new QName("", "first");
+
+    /**
      * QName for xs:dateTime
      */
     static final QName XS_DATETIME = new QName(SearchManager.NS_XS_URI, "dateTime");
@@ -69,6 +100,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * QName for jcrfn:like
      */
     static final QName JCRFN_LIKE = new QName(SearchManager.NS_JCRFN_URI, "like");
+
+    /**
+     * QName for jcrfn:deref
+     */
+    static final QName JCRFN_DEREF = new QName(SearchManager.NS_JCRFN_URI, "deref");
 
     /**
      * QName for jcrfn:contains
@@ -518,7 +554,13 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         } else if (node.getId() == JJTDOUBLELITERAL) {
             queryNode.setDoubleValue(Double.parseDouble(node.getValue()));
         } else if (node.getId() == JJTINTEGERLITERAL) {
-            queryNode.setLongValue(Long.parseLong(node.getValue()));
+            // if this is an expression that contains position() do not change
+            // the type.
+            if (queryNode.getValueType() == QueryConstants.TYPE_POSITION) {
+                queryNode.setPositionValue(Integer.parseInt(node.getValue()));
+            } else {
+                queryNode.setLongValue(Long.parseLong(node.getValue()));
+            }
         } else {
             exceptions.add(new InvalidQueryException("Unsupported literal type:" + node.toString()));
         }
@@ -634,6 +676,52 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     // wrong number of arguments
                     exceptions.add(new InvalidQueryException("Wrong number of arguments for jcrfn:like"));
                 }
+            } else if (FN_TRUE.toJCRName(resolver).equals(fName)) {
+                if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                    RelationQueryNode rel = (RelationQueryNode) queryNode;
+                    rel.setStringValue("true");
+                } else {
+                    exceptions.add(new InvalidQueryException("Unsupported location for true()"));
+                }
+            } else if (FN_FALSE.toJCRName(resolver).equals(fName)) {
+                if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                    RelationQueryNode rel = (RelationQueryNode) queryNode;
+                    rel.setStringValue("false");
+                } else {
+                    exceptions.add(new InvalidQueryException("Unsupported location for false()"));
+                }
+            } else if (FN_POSITION.toJCRName(resolver).equals(fName)) {
+                if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                    RelationQueryNode rel = (RelationQueryNode) queryNode;
+                    if (rel.getOperation() == RelationQueryNode.OPERATION_EQ_GENERAL) {
+                        // set dummy value to set type of relation query node
+                        // will be overwritten when the tree is furhter parsed.
+                        rel.setPositionValue(1);
+                        rel.setProperty(FN_POSITION_FULL);
+                    } else {
+                        exceptions.add(new InvalidQueryException("Unsupported expression with position(). Only = is supported."));
+                    }
+                } else {
+                    exceptions.add(new InvalidQueryException("Unsupported location for position()"));
+                }
+            } else if (FN_FIRST.toJCRName(resolver).equals(fName)) {
+                if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                    ((RelationQueryNode) queryNode).setPositionValue(1);
+                } else if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
+                    ((LocationStepQueryNode) queryNode).setIndex(1);
+                } else {
+                    exceptions.add(new InvalidQueryException("Unsupported location for first()"));
+                }
+            } else if (FN_LAST.toJCRName(resolver).equals(fName)) {
+                if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                    ((RelationQueryNode) queryNode).setPositionValue(LocationStepQueryNode.LAST);
+                } else if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
+                    ((LocationStepQueryNode) queryNode).setIndex(LocationStepQueryNode.LAST);
+                } else {
+                    exceptions.add(new InvalidQueryException("Unsupported location for last()"));
+                }
+            } else if (JCRFN_DEREF.toJCRName(resolver).equals(fName)) {
+                exceptions.add(new InvalidQueryException("Unsupported function: " + fName));
             } else {
                 exceptions.add(new InvalidQueryException("Unsupported function: " + fName));
             }

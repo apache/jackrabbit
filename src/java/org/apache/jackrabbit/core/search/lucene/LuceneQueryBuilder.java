@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.search.AndQueryNode;
 import org.apache.jackrabbit.core.search.ExactQueryNode;
 import org.apache.jackrabbit.core.search.LocationStepQueryNode;
@@ -38,6 +39,7 @@ import org.apache.jackrabbit.core.search.QueryNodeVisitor;
 import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.search.RelationQueryNode;
 import org.apache.jackrabbit.core.search.TextsearchQueryNode;
+import org.apache.jackrabbit.core.search.QueryNode;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
@@ -90,6 +92,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     private SessionImpl session;
 
     /**
+     * The shared item state manager of the workspace.
+     */
+    private ItemStateManager sharedItemMgr;
+
+    /**
      * Namespace mappings to internal prefixes
      */
     private NamespaceMappings nsMappings;
@@ -114,17 +121,20 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      *
      * @param root       the root node of the abstract query tree.
      * @param session    of the user executing this query.
+     * @param sharedItemMgr the shared item state manager of the workspace.
      * @param nsMappings namespace resolver for internal prefixes.
      * @param analyzer   for parsing the query statement of the contains function.
      * @param propReg    the property type registry.
      */
     private LuceneQueryBuilder(QueryRootNode root,
                                SessionImpl session,
+                               ItemStateManager sharedItemMgr,
                                NamespaceMappings nsMappings,
                                Analyzer analyzer,
                                PropertyTypeRegistry propReg) {
         this.root = root;
         this.session = session;
+        this.sharedItemMgr = sharedItemMgr;
         this.nsMappings = nsMappings;
         this.analyzer = analyzer;
         this.propRegistry = propReg;
@@ -136,6 +146,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      *
      * @param root       the root node of the abstract query tree.
      * @param session    of the user executing the query.
+     * @param sharedItemMgr the shared item state manager of the workspace.
      * @param nsMappings namespace resolver for internal prefixes.
      * @param analyzer   for parsing the query statement of the contains function.
      * @param propReg    the property type registry to lookup type information.
@@ -144,13 +155,14 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      */
     public static Query createQuery(QueryRootNode root,
                                     SessionImpl session,
+                                    ItemStateManager sharedItemMgr,
                                     NamespaceMappings nsMappings,
                                     Analyzer analyzer,
                                     PropertyTypeRegistry propReg)
             throws RepositoryException {
 
-        LuceneQueryBuilder builder = new LuceneQueryBuilder(root,
-                session, nsMappings, analyzer, propReg);
+        LuceneQueryBuilder builder = new LuceneQueryBuilder(root, session,
+                sharedItemMgr, nsMappings, analyzer, propReg);
 
         Query q = builder.createLuceneQuery();
         if (builder.exceptions.size() > 0) {
@@ -385,6 +397,17 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             andQuery.add((Query) predicates[i], true, false);
         }
 
+        // check for position predicate
+        QueryNode[] pred = node.getPredicates();
+        for (int i = 0; i < pred.length; i++) {
+            if (pred[i].getType() == QueryNode.TYPE_RELATION) {
+                RelationQueryNode pos = (RelationQueryNode) pred[i];
+                if (pos.getValueType() == QueryConstants.TYPE_POSITION) {
+                    node.setIndex(pos.getPositionValue());
+                }
+            }
+        }
+
         TermQuery nameTest = null;
         if (node.getNameTest() != null) {
             try {
@@ -408,19 +431,19 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                     andQuery = new BooleanQuery();
                     andQuery.add(subQuery, true, false);
                 } else {
-                    // @todo this will traverse the whole index, optimize!
+                    // todo this will traverse the whole index, optimize!
                     Query subQuery = new MatchAllQuery(FieldNames.UUID);
                     context = new DescendantSelfAxisQuery(context, subQuery);
-                    andQuery.add(new ChildAxisQuery(context), true, false);
+                    andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), true, false);
                 }
             }
         } else {
-            // select child nodes
-            andQuery.add(new ChildAxisQuery(context), true, false);
-
             // name test
             if (nameTest != null) {
-                andQuery.add(nameTest, true, false);
+                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, nameTest.getTerm().text(), node.getIndex()), true, false);
+            } else {
+                // select child nodes
+                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), true, false);
             }
         }
 
@@ -452,6 +475,9 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                     stringValues = getStringValues(node.getProperty(), node.getStringValue());
                 }
                 break;
+            case QueryConstants.TYPE_POSITION:
+                // ignore position. is handled in the location step
+                return null;
             default:
                 throw new IllegalArgumentException("Unknown relation type: "
                         + node.getValueType());

@@ -30,6 +30,12 @@ import org.apache.jackrabbit.core.QName;
  */
 public class LocationStepQueryNode extends NAryQueryNode {
 
+    /** Constant value for position index = last() */
+    public static final int LAST = Integer.MIN_VALUE;
+
+    /** Constant value to indicate no position index */
+    public static final int NONE = Integer.MIN_VALUE + 1;
+
     /** Empty <code>QueryNode</code> array for us as return value */
     private static final QueryNode[] EMPTY = new QueryNode[0];
 
@@ -46,10 +52,9 @@ public class LocationStepQueryNode extends NAryQueryNode {
     private boolean includeDescendants;
 
     /**
-     * If <code>index</code> is larger than 0 this location step contains
-     * a position index.
+     * The context position <code>index</code>. Initially {@link #NONE}.
      */
-    private int index = 0;
+    private int index = NONE;
 
     /**
      * Creates a new <code>LocationStepQueryNode</code> with a reference to
@@ -111,9 +116,8 @@ public class LocationStepQueryNode extends NAryQueryNode {
     }
 
     /**
-     * Returns the predicate nodes for this location step. This method will
-     * not return a position predicate. Use {@link #getIndex} to retrieve
-     * this information.
+     * Returns the predicate nodes for this location step. This method may
+     * also return a position predicate.
      * @return the predicate nodes or an empty array if there are no predicates
      *   for this location step.
      */
@@ -126,21 +130,17 @@ public class LocationStepQueryNode extends NAryQueryNode {
     }
 
     /**
-     * Sets the position index for this step. A value of 0 (zero) indicates
+     * Sets the position index for this step. A value of {@link #NONE} indicates
      * that this location step has no position index assigned. That is, the
      * step selects all same name siblings.
      * @param index the position index.
-     * @exception IllegalArgumentException if index < 0.
      */
     public void setIndex(int index) {
-        if (index < 0) {
-            throw new IllegalArgumentException("index < 0");
-        }
         this.index = index;
     }
 
     /**
-     * Returns the position index for this step. A value of 0 (zero) indicates
+     * Returns the position index for this step. A value of {@link #NONE} indicates
      * that this location step has no position index assigned. That is, the
      * step selects all same name siblings.
      * @return the position index for this step.

@@ -81,7 +81,7 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      * @return the persistent <code>ItemStateProvider</code> of the current
      *         workspace.
      */
-    protected ItemStateManager getItemStateProvider() {
+    public ItemStateManager getItemStateProvider() {
         return stateProvider;
     }
 

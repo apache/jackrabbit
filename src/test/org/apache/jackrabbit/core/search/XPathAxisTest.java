@@ -167,4 +167,25 @@ public class XPathAxisTest extends AbstractQueryTest {
         String xpath = testPath + "/node1";
         executeXPathQuery(xpath, new Node[]{n1});
     }
+
+    public void testIndex0Descendant() throws RepositoryException {
+        String xpath = "/jcr:root" + testRoot + "//*[0]";
+        executeXPathQuery(xpath, new Node[0]);
+    }
+
+    public void testIndex1Descendant() throws RepositoryException {
+        String xpath = "/jcr:root" + testRoot + "//*[1]";
+        executeXPathQuery(xpath, new Node[]{n1, n11, n21});
+    }
+
+    public void testIndex2Descendant() throws RepositoryException {
+        String xpath = "/jcr:root" + testRoot + "//*[2]";
+        executeXPathQuery(xpath, new Node[]{n2, n12, n22});
+    }
+
+    public void testIndex3Descendant() throws RepositoryException {
+        String xpath = "/jcr:root" + testRoot + "//*[3]";
+        executeXPathQuery(xpath, new Node[0]);
+    }
+
 }

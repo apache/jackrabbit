@@ -115,8 +115,9 @@ class QueryImpl implements ExecutableQuery {
      */
     public QueryResult execute() throws RepositoryException {
         // build lucene query
-        Query query = LuceneQueryBuilder.createQuery(root,
-                session, index.getNamespaceMappings(), index.getAnalyzer(), propReg);
+        Query query = LuceneQueryBuilder.createQuery(root, session,
+                index.getItemStateProvider(), index.getNamespaceMappings(), 
+                index.getAnalyzer(), propReg);
 
         OrderQueryNode orderNode = root.getOrderNode();
 

@@ -37,6 +37,11 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
     private long valueLong;
 
     /**
+     * The <code>int</code> value of the position index.
+     */
+    private int valuePosition;
+
+    /**
      * The <code>double</code> value of the relation if this is a query is of
      * type <code>double</code>
      */
@@ -62,7 +67,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
 
     /**
      * The value type of this relation. One of {@link #TYPE_DATE}, {@link
-     * #TYPE_DOUBLE}, {@link #TYPE_LONG}, {@link #TYPE_STRING}.
+     * #TYPE_DOUBLE}, {@link #TYPE_LONG}, {@link #TYPE_STRING}, {@link #TYPE_POSITION}.
      */
     private int type;
 
@@ -206,6 +211,25 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
     public void setLongValue(long value) {
         valueLong = value;
         type = TYPE_LONG;
+    }
+
+    /**
+     * Returns the <code>int</code> position index value if this relation is
+     * of type {@link #TYPE_POSITION}.
+     * @return the position index value.
+     */
+    public int getPositionValue() {
+        return valuePosition;
+    }
+
+    /**
+     * Sets a new value for the position index.
+     *
+     * @param value the new value.
+     */
+    public void setPositionValue(int value) {
+        valuePosition = value;
+        type = TYPE_POSITION;
     }
 
     /**

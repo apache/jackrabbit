@@ -102,7 +102,7 @@ public class SelectClauseTest extends AbstractQueryTest {
         testRootNode.save();
 
         String sql = "SELECT myvalue FROM " + ntBase + " WHERE " +
-                "jcr:path LIKE '" + testRoot + "/node' AND myvalue IS NOT NULL";
+                "jcr:path LIKE '" + testRoot + "/node[%]' AND myvalue IS NOT NULL";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 2, 2);

@@ -252,7 +252,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 exceptions.add(e);
             }
         }
-        if (node.getIndex() > 0) {
+        if (node.getIndex() != LocationStepQueryNode.NONE) {
             sb.append('[').append(node.getIndex()).append(']');
         }
         QueryNode[] predicates = node.getPredicates();
@@ -268,7 +268,13 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         try {
 
-            String propName = "@" + ISO9075.encode(node.getProperty()).toJCRName(resolver);
+            String propName = "@";
+            // only encode if not position function
+            if (node.getProperty().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
+                propName += node.getProperty().toJCRName(resolver);
+            } else {
+                propName += ISO9075.encode(node.getProperty()).toJCRName(resolver);
+            }
 
             if (node.getOperation() == OPERATION_EQ_VALUE) {
                 sb.append(propName).append(" eq ");
@@ -358,6 +364,12 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             cal.setTime(node.getDateValue());
             b.append(XPathQueryBuilder.XS_DATETIME.toJCRName(resolver));
             b.append("('").append(ISO8601.format(cal)).append("')");
+        } else if (node.getValueType() == TYPE_POSITION) {
+            if (node.getPositionValue() == LocationStepQueryNode.LAST) {
+                b.append("last()");
+            } else {
+                b.append(node.getPositionValue());
+            }
         } else {
             exceptions.add(new InvalidQueryException("Invalid type: " + node.getValueType()));
         }

@@ -26,6 +26,14 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.document.Document;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.search.LocationStepQueryNode;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,9 +48,26 @@ import java.util.List;
 class ChildAxisQuery extends Query {
 
     /**
+     * The item state manager containing persistent item states.
+     */
+    private final ItemStateManager itemMgr;
+
+    /**
      * The context query
      */
     private final Query contextQuery;
+
+    /**
+     * The nameTest to apply on the child axis, or <code>null</code> if all
+     * child nodes should be selected.
+     */
+    private final String nameTest;
+
+    /**
+     * The context position for the selected child node, or
+     * {@link LocationStepQueryNode#NONE} if no position is specified.
+     */
+    private final int position;
 
     /**
      * The scorer of the context query
@@ -50,13 +75,40 @@ class ChildAxisQuery extends Query {
     private Scorer contextScorer;
 
     /**
+     * The scorer of the name test query
+     */
+    private Scorer nameTestScorer;
+
+    /**
      * Creates a new <code>ChildAxisQuery</code> based on a <code>context</code>
      * query.
      *
+     * @param itemMgr the item state manager.
      * @param context the context for this query.
+     * @param nameTest a name test or <code>null</code> if any child node is
+     * selected.
      */
-    ChildAxisQuery(Query context) {
+    ChildAxisQuery(ItemStateManager itemMgr, Query context, String nameTest) {
+        this(itemMgr, context, nameTest, LocationStepQueryNode.NONE);
+    }
+
+    /**
+     * Creates a new <code>ChildAxisQuery</code> based on a <code>context</code>
+     * query.
+     *
+     * @param itemMgr the item state manager.
+     * @param context the context for this query.
+     * @param nameTest a name test or <code>null</code> if any child node is
+     * selected.
+     * @param position the context position of the child node to select. If
+     * <code>position</code> is {@link LocationStepQueryNode#NONE}, the context
+     * position of the child node is not checked.
+     */
+    ChildAxisQuery(ItemStateManager itemMgr, Query context, String nameTest, int position) {
+        this.itemMgr = itemMgr;
         this.contextQuery = context;
+        this.nameTest = nameTest;
+        this.position = position;
     }
 
     /**
@@ -142,6 +194,9 @@ class ChildAxisQuery extends Query {
          */
         public Scorer scorer(IndexReader reader) throws IOException {
             contextScorer = contextQuery.weight(searcher).scorer(reader);
+            if (nameTest != null) {
+                nameTestScorer = new TermQuery(new Term(FieldNames.LABEL, nameTest)).weight(searcher).scorer(reader);
+            }
             return new ChildAxisScorer(searcher.getSimilarity(), reader);
         }
 
@@ -256,17 +311,102 @@ class ChildAxisQuery extends Query {
                         // @todo maintain cache of doc id hierarchy
                         hits.set(doc);
                     }
-                }); // find all
+                });
+
+                // collect nameTest hits
+                final BitSet nameTestHits = new BitSet();
+                if (nameTestScorer != null) {
+                    nameTestScorer.score(new HitCollector() {
+                        public void collect(int doc, float score) {
+                            nameTestHits.set(doc);
+                        }
+                    });
+                }
+
+                // read the uuids of the context nodes
                 for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
                     String uuid = reader.document(i).get(FieldNames.UUID);
                     uuids.add(uuid);
                 }
 
+                // collect the doc ids of all child nodes. we reuse the existing
+                // bitset.
                 hits.clear();
                 for (Iterator it = uuids.iterator(); it.hasNext();) {
                     TermDocs children = reader.termDocs(new Term(FieldNames.PARENT, (String) it.next()));
                     while (children.next()) {
                         hits.set(children.doc());
+                    }
+                }
+                // filter out the child nodes that do not match the name test
+                // if there is any name test at all.
+                if (nameTestScorer != null) {
+                    hits.and(nameTestHits);
+                }
+
+                // filter by index
+                if (position != LocationStepQueryNode.NONE) {
+                    for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
+                        Document node = reader.document(i);
+                        String parentUUID = node.get(FieldNames.PARENT);
+                        String uuid = node.get(FieldNames.UUID);
+                        try {
+                            NodeState state = (NodeState) itemMgr.getItemState(new NodeId(parentUUID));
+                            if (nameTest == null) {
+                                // only select this node if it is the child at
+                                // specified position
+                                if (position == LocationStepQueryNode.LAST) {
+                                    // only select last
+                                    List childNodes = state.getChildNodeEntries();
+                                    if (childNodes.size() == 0
+                                            || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1)).getUUID().equals(uuid)) {
+                                        hits.flip(i);
+                                    }
+                                } else {
+                                    List childNodes = state.getChildNodeEntries();
+                                    if (position < 1
+                                            || childNodes.size() < position
+                                            || !((NodeState.ChildNodeEntry) childNodes.get(position - 1)).getUUID().equals(uuid)) {
+                                        hits.flip(i);
+                                    }
+                                }
+                            } else {
+                                // select the node when its index is equal to
+                                // specified position
+                                if (position == LocationStepQueryNode.LAST) {
+                                    // only select last
+                                    List childNodes = state.getChildNodeEntries(uuid);
+                                    if (childNodes.size() == 0) {
+                                        // no such child node, probably deleted meanwhile
+                                        hits.flip(i);
+                                    } else {
+                                        // only use the last one
+                                        QName name = ((NodeState.ChildNodeEntry) childNodes.get(0)).getName();
+                                        childNodes = state.getChildNodeEntries(name);
+                                        if (childNodes.size() == 0
+                                                || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1)).getUUID().equals(uuid)) {
+                                            hits.flip(i);
+                                        }
+                                    }
+                                } else {
+                                    List childNodes = state.getChildNodeEntries(uuid);
+                                    if (childNodes.size() == 0) {
+                                        // no such child node, probably has been deleted meanwhile
+                                        hits.flip(i);
+                                    } else {
+                                        for (int j = 0; j < childNodes.size(); j++) {
+                                            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) childNodes.get(j);
+                                            if (entry.getIndex() != position) {
+                                                hits.flip(i);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (ItemStateException e) {
+                            // ignore this node, probably has been deleted meanwhile
+                            hits.flip(i);
+                        }
                     }
                 }
             }
