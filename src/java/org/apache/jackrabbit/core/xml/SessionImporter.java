@@ -172,7 +172,7 @@ public class SessionImporter implements Importer {
 
         if (parent == null) {
             // parent node was skipped, skip this child node also
-            parents.push(null); // push null on stack for skipped node
+            parents.push(null); // push null onto stack for skipped node
             log.debug("skipping node " + nodeName);
             return;
         }
@@ -182,7 +182,7 @@ public class SessionImporter implements Importer {
             NodeDef def = existing.getDefinition();
             if (def.isProtected() && existing.isNodeType(ntName)) {
                 // skip protected node
-                parents.push(null); // push null on stack for skipped node
+                parents.push(null); // push null onto stack for skipped node
                 log.debug("skipping protected node " + existing.safeGetJCRPath());
                 return;
             }

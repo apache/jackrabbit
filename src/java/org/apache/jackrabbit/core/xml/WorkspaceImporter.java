@@ -189,28 +189,51 @@ public class WorkspaceImporter implements Importer {
             QName ntName = nodeInfo.getNodeTypeName();
             QName[] mixins = nodeInfo.getMixinNames();
 
+            if (parent == null) {
+                // parent node was skipped, skip this child node also
+                parents.push(null); // push null onto stack for skipped node
+                log.debug("skipping node " + nodeName);
+                return;
+            }
 /*
-            if (uuid == null) {
-                // no potential uuid conflict, always add new node
-                node = createNode(parent, nodeName, ntName, mixins, null);
-            } else {
-                // potential uuid conflict
-                NodeState conflicting;
-                try {
-                    conflicting = (NodeImpl) session.getNodeByUUID(uuid);
-                } catch (ItemNotFoundException infe) {
-                    conflicting = null;
+            if (parent.hasChildNodeEntry(nodeName)) {
+                // a node with that name already exists...
+                ChildNodeDef nodeDef =
+                        wsp.findApplicableDefinition(nodeName, ntName, parent);
+                if (nodeDef.isProtected()) {
+                    // skip protected node
+                    parents.push(null); // push null onto stack for skipped node
+                    log.debug("skipping protected node " + nodeName);
+                    return;
                 }
-                if (conflicting != null) {
-                    // resolve uuid conflict
-                    node = resolveUUIDConflict(parent, conflicting, nodeInfo);
+                if (nodeDef.isAutoCreate() && existing.isNodeType(ntName)) {
+                    // this node has already been auto-created, no need to create it
+                    node = existing;
                 } else {
-                    // create new with given uuid
-                    node = createNode(parent, nodeName, ntName, mixins, uuid);
+                    throw new ItemExistsException(existing.safeGetJCRPath());
+                }
+            } else {
+                // there's no node with that name...
+                if (uuid == null) {
+                    // no potential uuid conflict, always add new node
+                    node = createNode(parent, nodeName, ntName, mixins, null);
+                } else {
+                    // potential uuid conflict
+                    NodeState conflicting;
+                    try {
+                        conflicting = (NodeImpl) session.getNodeByUUID(uuid);
+                    } catch (ItemNotFoundException infe) {
+                        conflicting = null;
+                    }
+                    if (conflicting != null) {
+                        // resolve uuid conflict
+                        node = resolveUUIDConflict(parent, conflicting, nodeInfo);
+                    } else {
+                        // create new with given uuid
+                        node = createNode(parent, nodeName, ntName, mixins, uuid);
+                    }
                 }
             }
-*/
-/*
             // store state
             stateMgr.store(state);
             succeeded = true;
@@ -308,6 +331,10 @@ public class WorkspaceImporter implements Importer {
             return;
         }
         NodeState node = (NodeState) parents.pop();
+        if (node == null) {
+            // node was skipped, nothing to do here
+            return;
+        }
         boolean succeeded = false;
         try {
             // check sanity of workspace/session first
