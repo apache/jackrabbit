@@ -64,6 +64,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     // jcr:lastModified
     public static final QName PROPNAME_LAST_MODIFIED =
 	    new QName(NamespaceRegistryImpl.NS_JCR_URI, "lastModified");
+    // jcr:mergeFailed 
+    public static final QName PROPNAME_MERGE_FAILED =
+	    new QName(NamespaceRegistryImpl.NS_JCR_URI, "mergeFailed");
 
     protected static final int STATUS_NORMAL = 0;
     protected static final int STATUS_MODIFIED = 1;

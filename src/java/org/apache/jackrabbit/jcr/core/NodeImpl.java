@@ -653,6 +653,11 @@ public class NodeImpl extends ItemImpl implements Node {
 	}
     }
 
+    /**
+     * Checks if this node is the root node.
+     * todo: is this the root node of this workspace?
+     * @return
+     */
     protected boolean isRepositoryRoot() {
 	return ((NodeState) state).getUUID().equals(rep.getRootNodeUUID());
     }
@@ -2157,20 +2162,79 @@ public class NodeImpl extends ItemImpl implements Node {
 	    throws NoSuchWorkspaceException, AccessDeniedException,
 	    RepositoryException {
 
-	// @todo Node.update has changed semantics; check with current spec...
+	NodeImpl srcNode = getCorrespondingNode(srcWorkspaceName);
+	if (srcNode==null) {
+	    throw new ItemNotFoundException("No corresponding node for " + safeGetJCRPath());
+	}
+	// not sure, if clone overrides 'this' node.
+	session.getWorkspace().clone(srcWorkspaceName, srcNode.getPath(), getPath());
+    }
+
+    /**
+     * Returns the corresponding node in the <code>scrWorkspaceName</code> of
+     * this node.
+     * <p>
+     * Given a node N1 in workspace W1, its corresponding node N2 in workspace
+     * W2 is defined as follows:
+     * <ul>
+     * <li>If N1 is the root node of W1 then N2 is the root node of W2.
+     * <li>If N1 is referenceable (has a UUID) then N2 is the node in W2 with
+     *     the same UUID.
+     * <li>If N1 is not referenceable (does not have a UUID) then there is some
+     *     node M1 which is either the nearest ancestor of N1 that is
+     *     referenceable, or is the root node of W1. If the corresponding node
+     *     of M1 is M2 in W2, then N2 is the node with the same relative path
+     *     from M2 as N1 has from M1.
+     * </ul>
+     * @param srcWorkspaceName
+     * @return the corresponding node or <code>null</code> if no corresponding
+     *         node exists.
+     * @throws NoSuchWorkspaceException If <code>srcWorkspace</code> does not exist.
+     * @throws AccessDeniedException If the current session does not have sufficient rights to perform the operation.
+     * @throws RepositoryException If another error occurs.
+     */
+    private NodeImpl getCorrespondingNode(String srcWorkspaceName)
+	    throws NoSuchWorkspaceException, AccessDeniedException,
+	    RepositoryException {
 
 	SessionImpl srcSession = rep.getSystemSession(srcWorkspaceName);
-	// get src node either by uuid or path. since all nodes in the RI do
-	// have UUIDs, should we always take the internal uuid?
-	NodeImpl srcNode;
-	if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-	    srcNode = (NodeImpl) srcSession.getNodeByUUID(getUUID());
-	} else {
-	    srcNode = (NodeImpl) srcSession.getItem(getPath());
+	Node root = session.getRootNode();
+	// if (isRepositoryRoot()) [don't know, if this works correctly with workspaces]
+	if (isSame(root)) {
+	    return (NodeImpl) srcSession.getRootNode();
 	}
 
-	internalUpdate(srcNode, false, false);
-	save();
+	// if this node is referenceable, return the corresponding one
+	if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+	    try {
+		return (NodeImpl) srcSession.getNodeByUUID(getUUID());
+	    } catch (ItemNotFoundException e) {
+		return null;
+	    }
+	}
+
+	// search nearest ancestor that is referenceable
+	NodeImpl m1 = this;
+	while (!m1.isSame(root) && !m1.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+	    m1 = (NodeImpl) m1.getParent();
+	}
+	// special treatment for root
+	if (m1.isSame(root)) {
+	    return (NodeImpl) srcSession.getItem(getPath());
+	}
+
+	// calculate relative path. please note, that this cannot be done
+	// iteratively in the 'while' loop above, since getName() does not
+	// return the relative path, but just the name (without path indices)
+	// n1.getPath() = /foo/bar/something[1]
+	// m1.getPath() = /foo
+	//      relpath = bar/something[1]
+	String relPath = getPath().substring(m1.getPath().length()+1);
+	try {
+	    return (NodeImpl) srcSession.getNodeByUUID(m1.getUUID()).getNode(relPath);
+	} catch (ItemNotFoundException e) {
+	    return null;
+	}
     }
 
     /**
@@ -2180,113 +2244,126 @@ public class NodeImpl extends ItemImpl implements Node {
 	    throws UnsupportedRepositoryOperationException, NoSuchWorkspaceException,
 	    AccessDeniedException, MergeException, RepositoryException {
 
-	checkVersionable();
-	SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
-	NodeImpl srcNode = (NodeImpl) srcSession.getNodeByUUID(getUUID());
-	srcNode.checkVersionable();
+	NodeImpl srcNode = doMergeTest(srcWorkspace, bestEffort);
+	if (srcNode!=null) {
+	    // remove properties
+	    PropertyIterator pi = getProperties();
+	    while (pi.hasNext()) {
+		Property p = pi.nextProperty();
+		if (!srcNode.hasProperty(p.getName())) {
+		    p.setValue((Value) null);
+		}
+	    }
+	    // copy properties
+	    pi = srcNode.getProperties();
+	    while (pi.hasNext()) {
+		PropertyImpl p = (PropertyImpl) pi.nextProperty();
+		internalCopyPropertyFrom(p);
+	    }
 
-	internalUpdate(srcNode, bestEffort, true);
+	    // remove subnodes
+	    NodeIterator ni = getNodes();
+	    while (ni.hasNext()) {
+		// if the subnode does not exist in the src, and this is update,
+		// so delete here aswell?
+		Node n = ni.nextNode();
+		if (!srcNode.hasNode(n.getName())) {
+		    // todo: how does this work for same name siblings?
+		    remove(n.getName());
+		}
+	    }
+	    // 'clone' nodes that do not exist
+	    ni = srcNode.getNodes();
+	    while (ni.hasNext()) {
+		Node n = ni.nextNode();
+		if (!hasNode(n.getName())) {
+		    // todo: probably need some internal stuff
+		    // todo: how does this work for same name siblings?
+		    // todo: since clone is a ws operation, 'save' does not work later
+		    session.getWorkspace().clone(srcWorkspace, n.getPath(), getPath() + "/" + n.getName());
+		} else {
+		    // do recursive merge
+		    n.merge(srcWorkspace, bestEffort);
+		}
+	    }
+	} else {
+	    // do not change this node, but recuse merge
+	    NodeIterator ni = srcNode.getNodes();
+	    while (ni.hasNext()) {
+		ni.nextNode().merge(srcWorkspace, bestEffort);
+	    }
+	}
+
 	save();
     }
 
     /**
-     * Internal helper that combines the functionalities of update and merge.
+     * Performs the merge test. If the result is 'update', then the corresponding
+     * source node is returned. if the result is 'leave' or 'besteffort-fail'
+     * then <code>null</code> is returned. If the result of the merge test is
+     * 'fail' with bestEffort set to <code>false</code> a MergeException is
+     * thrown.
      *
-     * @see Node#update(String)
-     * @see Node#merge(String, boolean)
+     * @param srcWorkspace
+     * @param bestEffort
+     * @return
+     * @throws RepositoryException
+     * @throws AccessDeniedException
      */
-    private void internalUpdate(NodeImpl srcNode, boolean bestEffort, boolean merge)
-	    throws RepositoryException {
+    private NodeImpl doMergeTest(String srcWorkspace, boolean bestEffort)
+	    throws RepositoryException, AccessDeniedException {
 
-	boolean ignore = false;
-	if (merge) {
-	    if (!getVersionHistory().isSame(srcNode.getVersionHistory())) {
-		String msg = "Unable to merge nodes. They have differen version histories " + safeGetJCRPath();
+	// If N does not have a corresponding node then the merge result for N is leave.
+	NodeImpl srcNode = getCorrespondingNode(srcWorkspace);
+	if (srcNode==null) {
+	    return null;
+	}
+
+	// if not versionable, update
+	if (!isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
+	    return srcNode;
+	}
+	// if source node is not versionable, leave
+	if (!srcNode.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
+	    return null;
+	}
+	// test versions
+	VersionImpl v = (VersionImpl) getBaseVersion();
+	VersionImpl vp = (VersionImpl) srcNode.getBaseVersion();
+	if (vp.isMoreRecent(v) && !isCheckedOut()) {
+	    // I f V' is a successor (to any degree) of V, then the merge result for
+	    // N is update. This case can be thought of as the case where N' is
+	    // “newer” than N and therefore N should be updated to reflect N'.
+	    return srcNode;
+	} else if (v.isSame(vp) || v.isMoreRecent(vp)) {
+	    // If V' is a predecessor (to any degree) of V or if V and V' are
+	    // identical (i.e., are actually the same version), then the merge
+	    // result for N is leave. This case can be thought of as the case where
+	    // N' is “older” or the “same age” as N and therefore N should be left alone.
+	    return null;
+	} else {
+	    // If V is neither a successor of, predecessor of, nor identical
+	    // with V', then the merge result for N is failed. This is the case
+	    // where N and N' represent divergent branches of the version graph,
+	    // thus determining the result of a merge is non-trivial.
+	    if (bestEffort) {
+		// add 'offending' version to jcr:mergeFailed property
+		if (hasProperty(ItemImpl.PROPNAME_MERGE_FAILED)) {
+		    Value[] values = getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues();
+		    Value[] newValues = new Value[values.length+1];
+		    System.arraycopy(values, 0, newValues, 0, values.length);
+		    newValues[values.length] = new ReferenceValue(vp);
+		    setProperty(ItemImpl.PROPNAME_MERGE_FAILED, newValues);
+		} else {
+		    Value[] newValues = new Value[1];
+		    newValues[0] = new ReferenceValue(vp);
+		    setProperty(ItemImpl.PROPNAME_MERGE_FAILED, newValues);
+		}
+		return null;
+	    } else {
+		String msg = "Unable to merge nodes. Violating versions. " + safeGetJCRPath();
 		log.debug(msg);
 		throw new MergeException(msg);
-	    }
-	    VersionImpl v = (VersionImpl) getBaseVersion();
-	    VersionImpl srcV = (VersionImpl) srcNode.getBaseVersion();
-	    // check if version in src is newer
-	    if (srcV.isMoreRecent(v)) {
-		// src version is newer than this version
-		ignore = false;
-	    } else if (v.isMoreRecent(srcV)) {
-		// this version is newer than src version, ignore
-		ignore = true;
-	    } else {
-		// versions are same. according to spec -> merge exception
-		// but 'ignore' seems to be better
-		ignore = true;
-	    }
-	}
-	if (!ignore) {
-	    // copy the proerties
-	    PropertyIterator piter = srcNode.getProperties();
-	    while (piter.hasNext()) {
-		PropertyImpl prop = (PropertyImpl) piter.nextProperty();
-		switch (prop.getDefinition().getOnParentVersion()) {
-		    case OnParentVersionAction.ABORT:
-			throw new RepositoryException("Update aborted due to OPV in " + prop.safeGetJCRPath());
-		    case OnParentVersionAction.COMPUTE:
-		    case OnParentVersionAction.IGNORE:
-		    case OnParentVersionAction.INITIALIZE:
-			break;
-		    case OnParentVersionAction.VERSION:
-		    case OnParentVersionAction.COPY:
-			Value[] values = prop.getValues();
-			InternalValue[] ivalues = new InternalValue[values.length];
-			for (int i = 0; i < values.length; i++) {
-			    ivalues[i] = InternalValue.create(values[i], session.getNamespaceResolver());
-			}
-			internalSetProperty(prop.getQName(), ivalues);
-			break;
-		}
-	    }
-	}
-
-	// copy the childnodes
-	NodeIterator niter = srcNode.getNodes();
-	while (niter.hasNext()) {
-	    NodeImpl srcChild = (NodeImpl) niter.nextNode();
-	    NodeImpl ownChild = null;
-	    if (srcChild.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-		ownChild = (NodeImpl) srcChild.session.getNodeByUUID(srcChild.getUUID());
-		if (!ownChild.getParent().isSame(this)) {
-		    // source child is not at same location?
-		    ownChild = null;
-		}
-	    } else {
-		try {
-		    ownChild = (NodeImpl) srcChild.session.getItem(srcChild.getPath());
-		} catch (PathNotFoundException e) {
-		    // ignore
-		}
-	    }
-
-	    if (!ignore) {
-		switch (srcChild.getDefinition().getOnParentVersion()) {
-		    case OnParentVersionAction.ABORT:
-			throw new RepositoryException("Update aborted due to OPV in " + srcChild.safeGetJCRPath());
-		    case OnParentVersionAction.COMPUTE:
-		    case OnParentVersionAction.IGNORE:
-		    case OnParentVersionAction.INITIALIZE:
-			break;
-		    case OnParentVersionAction.VERSION:
-			// todo: implement
-			break;
-		    case OnParentVersionAction.COPY:
-			// todo: implement
-			break;
-		}
-	    }
-
-	    // If isDeep is set to true then every node with a UUID in the
-	    // subtree rooted at this node is updated.
-
-	    // @todo Node.merge has changed semantics; check with current spec...
-	    if (bestEffort && ownChild != null && srcChild.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-		ownChild.internalUpdate(srcChild, true, merge);
 	    }
 	}
     }
