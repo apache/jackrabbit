@@ -162,14 +162,30 @@ public class VersionManager {
     public VersionHistory createVersionHistory(NodeImpl node)
             throws RepositoryException {
 
-        // check if history already exists
-        QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, node.getUUID());
-        if (historyRoot.hasNode(historyNodeName)) {
-            historyRoot.removeNode(historyNodeName);
+        // create deep path
+        String uuid = node.getUUID();
+        PersistentNode parent = historyRoot;
+        QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid.substring(0, 2));
+        if (!parent.hasNode(historyNodeName)) {
+            parent = parent.addNode(historyNodeName, NodeTypeRegistry.NT_UNSTRUCTURED);
+        } else {
+            parent = parent.getNode(historyNodeName, 1);
+        }
+        historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid.substring(2, 4));
+        if (!parent.hasNode(historyNodeName)) {
+            parent = parent.addNode(historyNodeName, NodeTypeRegistry.NT_UNSTRUCTURED);
+        } else {
+            parent = parent.getNode(historyNodeName, 1);
         }
 
+        historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid.substring(4));
+        if (parent.hasNode(historyNodeName)) {
+            parent.removeNode(historyNodeName);
+        }
+        historyRoot.store();
+
         // create new history node in the persistent state
-        InternalVersionHistory history = InternalVersionHistory.create(historyRoot, historyNodeName);
+        InternalVersionHistory history = InternalVersionHistory.create(parent, historyNodeName);
         return new VersionHistoryImpl(node.getSession(), history);
     }
 
