@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
@@ -304,8 +303,19 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(TextsearchQueryNode node, Object data) {
         try {
+            String fieldname;
+            if (node.getPropertyName() == null) {
+                // fulltext on node
+                fieldname = FieldNames.FULLTEXT;
+            } else {
+                StringBuffer tmp = new StringBuffer();
+                tmp.append(nsMappings.getPrefix(node.getPropertyName().getNamespaceURI()));
+                tmp.append(":").append(FieldNames.FULLTEXT_PREFIX);
+                tmp.append(node.getPropertyName().getLocalName());
+                fieldname = tmp.toString();
+            }
             org.apache.lucene.queryParser.QueryParser parser
-                    = new org.apache.lucene.queryParser.QueryParser(FieldNames.FULLTEXT, analyzer);
+                    = new org.apache.lucene.queryParser.QueryParser(fieldname, analyzer);
             parser.setOperator(org.apache.lucene.queryParser.QueryParser.DEFAULT_OPERATOR_AND);
             // replace unescaped ' with " and escaped ' with just '
             StringBuffer query = new StringBuffer();
@@ -339,6 +349,8 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 }
             }
             return parser.parse(query.toString());
+        } catch (NamespaceException e) {
+            exceptions.add(e);
         } catch (ParseException e) {
             exceptions.add(e);
         }

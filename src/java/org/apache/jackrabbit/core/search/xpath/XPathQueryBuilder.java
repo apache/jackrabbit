@@ -301,7 +301,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     if (queryNode.getType() == QueryNode.TYPE_RELATION
                             || queryNode.getType() == QueryNode.TYPE_DEREF
                             || queryNode.getType() == QueryNode.TYPE_ORDER
-                            || queryNode.getType() == QueryNode.TYPE_PATH) {
+                            || queryNode.getType() == QueryNode.TYPE_PATH
+                            || queryNode.getType() == QueryNode.TYPE_TEXTSEARCH) {
                         // traverse
                         node.childrenAccept(this, queryNode);
                     } else if (queryNode.getType() == QueryNode.TYPE_NOT) {
@@ -324,7 +325,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     }
                 } else {
                     if (queryNode.getType() == QueryNode.TYPE_PATH) {
-                        queryNode = createLocationStep(node, (PathQueryNode) queryNode);
+                        queryNode = createLocationStep(node, (NAryQueryNode) queryNode);
+                    } else if (queryNode.getType() == QueryNode.TYPE_TEXTSEARCH) {
+                        // ignore
                     } else {
                         exceptions.add(new InvalidQueryException("Only attribute axis is allowed in predicate"));
                     }
@@ -334,6 +337,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 if (queryNode.getType() == QueryNode.TYPE_LOCATION
                         || queryNode.getType() == QueryNode.TYPE_DEREF
                         || queryNode.getType() == QueryNode.TYPE_RELATION
+                        || queryNode.getType() == QueryNode.TYPE_TEXTSEARCH
                         || queryNode.getType() == QueryNode.TYPE_PATH) {
                     createNodeTest(node, queryNode);
                 } else if (queryNode.getType() == QueryNode.TYPE_ORDER) {
@@ -438,7 +442,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * @param parent the parent <code>PathQueryNode</code>.
      * @return the created <code>LocationStepQueryNode</code>.
      */
-    private LocationStepQueryNode createLocationStep(SimpleNode node, PathQueryNode parent) {
+    private LocationStepQueryNode createLocationStep(SimpleNode node, NAryQueryNode parent) {
         LocationStepQueryNode queryNode = null;
         boolean descenant = false;
         Node p = node.jjtGetParent();
@@ -446,7 +450,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             SimpleNode c = (SimpleNode) p.jjtGetChild(i);
             if (c == node) {
                 queryNode = new LocationStepQueryNode(parent, null, descenant);
-                parent.addPathStep(queryNode);
+                parent.addOperand(queryNode);
                 break;
             }
             descenant = (c.getId() == JJTSLASHSLASH
@@ -461,7 +465,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Assigns a QName to one of the follwing QueryNodes:
      * {@link RelationQueryNode}, {@link DerefQueryNode}, {@link RelationQueryNode},
-     * {@link PathQueryNode}, {@link OrderQueryNode}.
+     * {@link PathQueryNode}, {@link OrderQueryNode}, {@link TextsearchQueryNode}.
      *
      * @param node      the current node in the xpath syntax tree.
      * @param queryNode the query node.
@@ -489,6 +493,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     } else if (queryNode.getType() == QueryNode.TYPE_ORDER) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
                         root.getOrderNode().addOrderSpec(name, true);
+                    } else if (queryNode.getType() == QueryNode.TYPE_TEXTSEARCH) {
+                        QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
+                        ((TextsearchQueryNode) queryNode).setPropertyName(name);
                     }
                 } catch (IllegalNameException e) {
                     exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
@@ -518,20 +525,27 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         }
         // get operation type
         String opType = node.getValue();
-        // todo distinguish value vs. general comparison
         int type = 0;
         if (opType.equals(OP_EQ)) {
             type = RelationQueryNode.OPERATION_EQ_VALUE;
         } else if (opType.equals(OP_SIGN_EQ)) {
             type = RelationQueryNode.OPERATION_EQ_GENERAL;
-        } else if (opType.equals(OP_GE) || opType.equals(OP_SIGN_GE)) {
-            type = RelationQueryNode.OPERATION_GE_VALUE;
-        } else if (opType.equals(OP_GT) || opType.equals(OP_SIGN_GT)) {
+        } else if (opType.equals(OP_GT)) {
             type = RelationQueryNode.OPERATION_GT_VALUE;
-        } else if (opType.equals(OP_LE) || opType.equals(OP_SIGN_LE)) {
+        } else if (opType.equals(OP_SIGN_GT)) {
+            type = RelationQueryNode.OPERATION_GT_GENERAL;
+        } else if (opType.equals(OP_GE)) {
+            type = RelationQueryNode.OPERATION_GE_VALUE;
+        } else if (opType.equals(OP_SIGN_GE)) {
+            type = RelationQueryNode.OPERATION_GE_GENERAL;
+        } else if (opType.equals(OP_LE)) {
             type = RelationQueryNode.OPERATION_LE_VALUE;
-        } else if (opType.equals(OP_LT) || opType.equals(OP_SIGN_LT)) {
+        } else if (opType.equals(OP_SIGN_LE)) {
+            type = RelationQueryNode.OPERATION_LE_GENERAL;
+        } else if (opType.equals(OP_LT)) {
             type = RelationQueryNode.OPERATION_LT_VALUE;
+        } else if (opType.equals(OP_SIGN_LT)) {
+            type = RelationQueryNode.OPERATION_LT_GENERAL;
         } else if (opType.equals(OP_NE)) {
             type = RelationQueryNode.OPERATION_NE_VALUE;
         } else if (opType.equals(OP_SIGN_NE)) {
@@ -668,7 +682,29 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 }
             } else if (JCRFN_CONTAINS.toJCRName(resolver).equals(fName)) {
                 // check number of arguments
-                if (node.jjtGetNumChildren() == 2) {
+                if (node.jjtGetNumChildren() == 3) {
+                    if (queryNode instanceof NAryQueryNode) {
+                        SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
+                        if (literal.getId() == JJTSTRINGLITERAL) {
+                            String value = literal.getValue();
+                            if (value.charAt(0) == '"') {
+                                value = value.replaceAll("\"\"", "\"");
+                            } else {
+                                value = value.replaceAll("''", "'");
+                            }
+                            // strip quotes
+                            value = value.substring(1, value.length() - 1);
+                            TextsearchQueryNode contains = new TextsearchQueryNode(queryNode, value);
+                            // assign property name
+                            SimpleNode path = (SimpleNode) node.jjtGetChild(1);
+                            path.jjtAccept(this, contains);
+                            ((NAryQueryNode) queryNode).addOperand(contains);
+                        } else {
+                            exceptions.add(new InvalidQueryException("Wrong argument type for jcrfn:contains"));
+                        }
+                    }
+                // todo first parameter is currently optional -> remove later
+                } else if (node.jjtGetNumChildren() == 2) {
                     SimpleNode literal = (SimpleNode) node.jjtGetChild(1).jjtGetChild(0);
                     if (queryNode instanceof NAryQueryNode) {
                         if (literal.getId() == JJTSTRINGLITERAL) {

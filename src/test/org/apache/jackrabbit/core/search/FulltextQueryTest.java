@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.search;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 
@@ -148,5 +149,74 @@ public class FulltextQueryTest extends AbstractQueryTest {
         checkResult(result, 2);
     }
 
+    public void testContainsStarSQL() throws RepositoryException {
+        Node n = testRootNode.addNode("node1");
+        n.setProperty("title", new String[]{"tEst text"});
+        n.setProperty("mytext", new String[]{"The quick brown Fox jumps over the lazy dog."});
+
+        n = testRootNode.addNode("node2");
+        n.setProperty("title", new String[]{"The quick brown Fox jumps over the lazy dog."});
+        n.setProperty("mytext", new String[]{"text text"});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured"
+                + " WHERE jcr:path LIKE '" + testRoot + "/%"
+                + "' AND CONTAINS(*, 'fox jumps')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        checkResult(q.execute(), 2);
+    }
+
+    public void testContainsStarXPath() throws RepositoryException {
+        Node n = testRootNode.addNode("node1");
+        n.setProperty("title", new String[]{"tEst text"});
+        n.setProperty("mytext", new String[]{"The quick brown Fox jumps over the lazy dog."});
+
+        n = testRootNode.addNode("node2");
+        n.setProperty("title", new String[]{"The quick brown Fox jumps over the lazy dog."});
+        n.setProperty("mytext", new String[]{"text text"});
+
+        testRootNode.save();
+
+        String sql = "/jcr:root" + testRoot + "/element(*, nt:unstructured)"
+                + "[jcrfn:contains(., 'quick fox')]";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.XPATH);
+        checkResult(q.execute(), 2);
+    }
+
+    public void testContainsPropScopeSQL() throws RepositoryException {
+        Node n = testRootNode.addNode("node1");
+        n.setProperty("title", new String[]{"tEst text"});
+        n.setProperty("mytext", new String[]{"The quick brown Fox jumps over the lazy dog."});
+
+        n = testRootNode.addNode("node2");
+        n.setProperty("title", new String[]{"The quick brown Fox jumps over the lazy dog."});
+        n.setProperty("mytext", new String[]{"text text"});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured"
+                + " WHERE jcr:path LIKE '" + testRoot + "/%"
+                + "' AND CONTAINS(title, 'fox jumps')";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        checkResult(q.execute(), 1);
+    }
+
+    public void testContainsPropScopeXPath() throws RepositoryException {
+        Node n = testRootNode.addNode("node1");
+        n.setProperty("title", new String[]{"tEst text"});
+        n.setProperty("mytext", new String[]{"The quick brown Fox jumps over the lazy dog."});
+
+        n = testRootNode.addNode("node2");
+        n.setProperty("title", new String[]{"The quick brown Fox jumps over the lazy dog."});
+        n.setProperty("mytext", new String[]{"text text"});
+
+        testRootNode.save();
+
+        String sql = "/jcr:root" + testRoot + "/element(*, nt:unstructured)"
+                + "[jcrfn:contains(@title, 'quick fox')]";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.XPATH);
+        checkResult(q.execute(), 1);
+    }
 
 }

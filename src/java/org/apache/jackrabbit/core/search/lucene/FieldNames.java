@@ -35,6 +35,11 @@ public class FieldNames {
     public static final String FULLTEXT = "_:FULLTEXT";
 
     /**
+     * Prefix for all field names that are fulltext indexed by property name.
+     */
+    public static final String FULLTEXT_PREFIX = "FULL:";
+
+    /**
      * Name of the field that contains the UUID of the parent node. Terms are
      * stored and but not tokenized.
      */

@@ -211,7 +211,13 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         try {
             sb.append(XPathQueryBuilder.JCRFN_CONTAINS.toJCRName(resolver));
-            sb.append("('");
+            sb.append("(");
+            if (node.getPropertyName() == null) {
+                sb.append(".");
+            } else {
+                sb.append(ISO9075.encode(node.getPropertyName()).toJCRName(resolver));
+            }
+            sb.append(", '");
             sb.append(node.getQuery().replaceAll("'", "''"));
             sb.append("')");
         } catch (NoPrefixDeclaredException e) {

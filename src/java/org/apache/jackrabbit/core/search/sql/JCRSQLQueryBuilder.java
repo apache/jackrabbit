@@ -420,7 +420,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     public Object visit(ASTContainsExpression node, Object data) {
         NAryQueryNode parent = (NAryQueryNode) data;
-        parent.addOperand(new TextsearchQueryNode(parent, node.getQuery()));
+        parent.addOperand(new TextsearchQueryNode(parent, node.getQuery(), node.getPropertyName()));
         return parent;
     }
 
