@@ -55,255 +55,459 @@ import javax.jcr.Value;
 public interface RemoteNode extends RemoteItem {
 
     /**
-     * @see javax.jcr.Node#addNode(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#addNode(String) Node.addNode(Sring)} method.
+     *
+     * @param path relative path
+     * @return new node
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNode addNode(String path) throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#addNode(java.lang.String, java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#addNode(String,String) Node.addNode(String,String)}
+     * method.
+     *
+     * @param path relative path
+     * @param type node type name
+     * @return new node
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNode addNode(String path, String type)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getProperty(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getProperty(String) Node.getProperty(String)}
+     * method.
+     *
+     * @param path relative path
+     * @return node property
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteProperty getProperty(String path)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getProperties()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getProperties() Node.getProperties()} method.
+     *
+     * @return node properties
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteProperty[] getProperties()
             throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Node#getProperties(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getProperties(String) Node.getProperties(String)}
+     * method.
+     *
+     * @param pattern property name pattern
+     * @return matching node properties
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteProperty[] getProperties(String pattern)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getPrimaryItem()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getPrimaryItem() Node.getPrimaryItem()} method.
+     *
+     * @return primary item
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteItem getPrimaryItem() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getUUID()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getUUID() Node.getUUID()} method.
+     *
+     * @return node uuid
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     String getUUID() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getReferences()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getReferences() Node.getReferences()} method.
+     *
+     * @return reference properties
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteProperty[] getReferences()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getNodes()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getNodes() Node.getNodes()} method.
+     *
+     * @return child nodes
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNode[] getNodes() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getNodes(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getNodes(String) Node.getNodes(String)} method.
+     *
+     * @param pattern node name pattern
+     * @return matching child nodes
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNode[] getNodes(String pattern)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#hasNode(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#hasNode(String) Node.hasNode(String)} method.
+     *
+     * @param path relative path
+     * @return <code>true</code> if the identified node exists,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean hasNode(String path) throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Node#hasProperty(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#hasProperty(String) Node.hasProperty()} method.
+     *
+     * @param path relative path
+     * @return <code>true</code> if the identified property exists,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean hasProperty(String path)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#hasNodes()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#hasNodes() Node.hasNodes()} method.
+     *
+     * @return <code>true</code> if this node has child nodes,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean hasNodes() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#hasProperties()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#hasProperties() Node.hasProperties()} method.
+     *
+     * @return <code>true</code> if this node has properties,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean hasProperties() throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Node#getPrimaryNodeType()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getPrimaryNodeType() Node.getPrimaryNodeType()}
+     * method.
+     *
+     * @return primary node type
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNodeType getPrimaryNodeType()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getMixinNodeTypes()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getMixinNodeTypes() Node.getMixinNodeTypes()}
+     * method.
+     *
+     * @return mixin node types
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNodeType[] getMixinNodeTypes()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#isNodeType(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#isNodeType(String) Node.isNodeType(String)} method.
+     *
+     * @param type node type name
+     * @return <code>true</code> if this node is an instance of the
+     *         identified type, <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean isNodeType(String type) throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getNode(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getNode(String) Node.getNode(String)} method.
+     *
+     * @param path relative path
+     * @return node
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNode getNode(String path) throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Node#orderBefore(java.lang.String, java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#orderBefore(String,String) Node.orderBefore(String,String)}
+     * method.
+     *
+     * @param src source path
+     * @param dst destination path
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void orderBefore(String src, String dst)
             throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Node#setProperty(java.lang.String, javax.jcr.Value)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#setProperty(String,Value) Node.setProperty(String,Value)}
+     * method.
+     *
+     * @param name property name
+     * @param value property value
+     * @return property
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteProperty setProperty(String name, Value value)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#setProperty(java.lang.String, javax.jcr.Value[])
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#setProperty(String,Value[]) Node.setProperty(String,Value[])}
+     * method.
+     *
+     * @param name property name
+     * @param values property values
+     * @return property
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
-    RemoteProperty setProperty(String name, Value[] value)
+    RemoteProperty setProperty(String name, Value[] values)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#addMixin(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#addMixin(String) Node.addMixin(String)} method.
+     *
+     * @param name mixin type name
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void addMixin(String name) throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#removeMixin(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#removeMixin(String) Node.removeMixin(String)}
+     * method.
+     *
+     * @param name mixin type name
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void removeMixin(String name) throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#canAddMixin(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#canAddMixin(String) Node.canAddMixin(String)}
+     * method.
+     *
+     * @param name mixin type name
+     * @return <code>true</code> if the mixin type can be added,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean canAddMixin(String name)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getDefinition()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getDefinition() Node.getDefinition()} method.
+     *
+     * @return node definition
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNodeDef getDefinition() throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Node#checkout()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#checkout() Node.checkout()} method.
+     *
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void checkout() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#update(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#update(String) Node.update(String)} method.
+     *
+     * @param workspace source workspace name
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void update(String workspace) throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#merge(java.lang.String, boolean)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#merge(String,boolean) Node.merge(String,boolean)}
+     * method.
+     *
+     * @param workspace source workspace name
+     * @param bestEffort best effort flag
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void merge(String workspace, boolean bestEffort)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getCorrespondingNodePath(java.lang.String)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getCorrespondingNodePath(String) Node.getCorrespondingNodePath(String)}
+     * method.
+     *
+     * @param workspace workspace name
+     * @return corresponding node path
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     String getCorrespondingNodePath(String workspace)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#getIndex()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getIndex() Node.getIndex()} method.
+     *
+     * @return node index
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     int getIndex() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#restore(java.lang.String, boolean)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#restore(String,boolean) Node.restore(String,boolean)}
+     * method.
+     *
+     * @param version version name
+     * @param removeExisting flag to remove conflicting nodes
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void restore(String version, boolean removeExisting)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#restoreByLabel(java.lang.String, boolean)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#restoreByLabel(String,boolean) Node.restoreByLabel(String,boolean)}
+     * method.
+     *
+     * @param label version label
+     * @param removeExisting flag to remove conflicting nodes
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void restoreByLabel(String label, boolean removeExisting)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#unlock()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#unlock() Node.unlock()} method.
+     *
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void unlock() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#holdsLock()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#holdsLock() Node.holdsLock()} method.
+     *
+     * @return <code>true</code> if this node holds a lock,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean holdsLock() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#isLocked()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#isLocked() Node.isLocked()} method.
+     *
+     * @return <code>true</code> if this node is locked,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean isLocked() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#isCheckedOut()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#isCheckedOut() Node.isCheckedOut()} method.
+     *
+     * @return <code>true</code> if this node is checked out,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     boolean isCheckedOut() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#setProperty(java.lang.String, javax.jcr.Value[], int)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#setProperty(String,Value[],int) Node.setProperty(String,Value[],int)}
+     * method.
+     *
+     * @param name property name
+     * @param values property values
+     * @param type property type
+     * @return property
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteProperty setProperty(String name, Value[] values, int type)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Node#lock(boolean, boolean)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#lock(boolean,boolean) Node.lock(boolean,boolean)}
+     * method.
+     *
+     * @param isDeep flag to create a deep lock
+     * @param isSessionScoped flag to create a session-scoped lock
+     * @return lock
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteLock lock(boolean isDeep, boolean isSessionScoped)
             throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Node#getLock()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Node#getLock() Node.getLock()} method.
+     *
+     * @return lock
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteLock getLock() throws RepositoryException, RemoteException;
 

@@ -44,97 +44,176 @@ import javax.jcr.Value;
 public interface RemoteNodeType extends Remote {
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getName()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getName() NodeType.getName()} method.
+     *
+     * @return node type name
      * @throws RemoteException on RMI errors
      */
     String getName() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#isMixin()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#isMixin() NodeType.isMixin()} method.
+     *
+     * @return <code>true</code> if this is a mixin type,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean isMixin() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#hasOrderableChildNodes()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#hasOrderableChildNodes() NodeType.hasOrderableChildNodes()}
+     * method.
+     *
+     * @return <code>true</code> if nodes of this type has orderable
+     *         child nodes, <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean hasOrderableChildNodes() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getSupertypes()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getSupertypes() NodeType.getSupertypes()}
+     * method.
+     *
+     * @return supertypes
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType[] getSupertypes() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredSupertypes()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getDeclaredSupertypes() NodeType.getDeclaredSupertypes()}
+     * method.
+     *
+     * @return declared supertypes
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType[] getDeclaredSupertypes() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#isNodeType(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#isNodeType(String) NodeType.isNodeType(String)}
+     * method.
+     *
+     * @param type node type name
+     * @return <code>true</code> if this node type is or extends the
+     *         given node type, <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean isNodeType(String type) throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getPropertyDefs()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getPropertyDefs() NodeType.getPropertyDefs()}
+     * method.
+     *
+     * @return property definitions
      * @throws RemoteException on RMI errors
      */
     RemotePropertyDef[] getPropertyDefs() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredPropertyDefs()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getDeclaredPropertyDefs() NodeType.getDeclaredPropertyDefs()}
+     * method.
+     *
+     * @return declared property definitions
      * @throws RemoteException on RMI errors
      */
     RemotePropertyDef[] getDeclaredPropertyDefs() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getChildNodeDefs()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getChildNodeDefs() NodeType.getChildNodeDefs()}
+     * method.
+     *
+     * @return child node definitions
      * @throws RemoteException on RMI errors
      */
     RemoteNodeDef[] getChildNodeDefs() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredChildNodeDefs()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getDeclaredChildNodeDefs() NodeType.getDeclaredChildNodeDefs()}
+     * method.
+     *
+     * @return declared child node definitions
      * @throws RemoteException on RMI errors
      */
     RemoteNodeDef[] getDeclaredChildNodeDefs() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#canSetProperty(java.lang.String, javax.jcr.Value)
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#canSetProperty(String,Value) NodeType.canSetProperty(String,Value)}
+     * method.
+     *
+     * @param name property name
+     * @param value property value
+     * @return <code>true</code> if the property can be set,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean canSetProperty(String name, Value value) throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#canSetProperty(java.lang.String, javax.jcr.Value[])
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#canSetProperty(String,Value[]) NodeType.canSetProperty(String,Value[])}
+     * method.
+     *
+     * @param name property name
+     * @param values property values
+     * @return <code>true</code> if the property can be set,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean canSetProperty(String name, Value[] values) throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#canAddChildNode(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#canAddChildNode(String) NodeType.canAddChildNode(String)}
+     * method.
+     *
+     * @param name child node name
+     * @return <code>true</code> if the child node can be added,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean canAddChildNode(String name) throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#canAddChildNode(java.lang.String, java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#canAddChildNode(String,String) NodeType.canAddChildNode(String,String)}
+     * method.
+     *
+     * @param name child node name
+     * @param type child node type
+     * @return <code>true</code> if the child node can be added,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean canAddChildNode(String name, String type) throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#canRemoveItem(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#canRemoveItem(String) NodeType.canRemoveItem(String)}
+     * method.
+     *
+     * @param name item name
+     * @return <code>true</code> if the item can be removed,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean canRemoveItem(String name) throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getPrimaryItemName()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getPrimaryItemName() NodeType.getPrimaryItemName()}
+     * method.
+     *
+     * @return primary item name
      * @throws RemoteException on RMI errors
      */
     String getPrimaryItemName() throws RemoteException;

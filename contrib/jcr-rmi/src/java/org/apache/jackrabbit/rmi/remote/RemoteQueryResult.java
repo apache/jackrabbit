@@ -39,7 +39,8 @@ public interface RemoteQueryResult extends Remote {
      * @see javax.jcr.query.QueryResult#getPropertyNames()
      *
      * @return a <code>PropertyIterator</code>
-     * @throws RepositoryException if an error occurs.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     String[] getPropertyNames() throws RepositoryException, RemoteException;
 
@@ -47,7 +48,8 @@ public interface RemoteQueryResult extends Remote {
      * @see javax.jcr.query.QueryResult#getRows()
      *
      * @return a <code>RowIterator</code>
-     * @throws RepositoryException if an error occurs.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteRow[] getRows() throws RepositoryException, RemoteException;
 
@@ -55,7 +57,8 @@ public interface RemoteQueryResult extends Remote {
      * @see javax.jcr.query.QueryResult#getNodes()
      *
      * @return a <code>NodeIterator</code>
-     * @throws RepositoryException if an error occurs.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemoteNode[] getNodes() throws RepositoryException, RemoteException;
 

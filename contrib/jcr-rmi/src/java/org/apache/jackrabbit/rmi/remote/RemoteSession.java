@@ -48,8 +48,12 @@ import javax.jcr.RepositoryException;
 public interface RemoteSession extends Remote {
 
     /**
-     * @see javax.jcr.Session#getUserId()
+     * Remote version of the
+     * {@link javax.jcr.Session#getUserId() Session.getUserId()} method.
+     *
+     * @return user id
      * @throws RemoteException on RMI errors
+     * @see javax.jcr.Session#getUserId()
      */
     String getUserId() throws RemoteException;
 
@@ -60,89 +64,156 @@ public interface RemoteSession extends Remote {
      * to access the returned value. Failures to meet these conditions
      * are signalled with RemoteExceptions.
      *
-     * @see javax.jcr.Session#getAttribute(java.lang.String)
+     * @param name attribute name
+     * @return attribute value
      * @throws RemoteException on RMI errors
+     * @see javax.jcr.Session#getAttribute(java.lang.String)
      */
     Object getAttribute(String name) throws RemoteException;
 
     /**
-     * @see javax.jcr.Session#getAttributeNames()
+     * Remote version of the
+     * {@link javax.jcr.Session#getAttributeNames() Session.getAttributeNames()}
+     * method.
+     *
+     * @return attribute names
      * @throws RemoteException on RMI errors
      */
     String[] getAttributeNames() throws RemoteException;
 
     /**
+     * Remote version of the
+     * {@link javax.jcr.Session#getWorkspace() Session.getWorkspace()} method.
+     *
+     * @return workspace
      * @see javax.jcr.Session#getWorkspace()
      * @throws RemoteException on RMI errors
      */
     RemoteWorkspace getWorkspace() throws RemoteException;
 
     /**
-     * @see javax.jcr.Session#impersonate(javax.jcr.Credentials)
+     * Remote version of the
+     * {@link javax.jcr.Session#impersonate(Credentials) Session.impersonate(Credentials)}
+     * method.
+     *
+     * @param credentials credentials for the new session
+     * @return new session
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteSession impersonate(Credentials credentials)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Session#getNodeByUUID(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#getNodeByUUID(String) Session.getNodeByUUID(String)}
+     * method.
+     *
+     * @param uuid node uuid
+     * @return node
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteNode getNodeByUUID(String uuid)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Session#getItem(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#getItem(String) Session.getItem(String)}
+     * method.
+     *
+     * @param path item path
+     * @return item
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteItem getItem(String path) throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#itemExists(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#itemExists(String) Session.itemExists(String)}
+     * method.
+     *
+     * @param path item path
+     * @return <code>true</code> if the item exists,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean itemExists(String path) throws RemoteException;
 
     /**
-     * @see javax.jcr.Session#move(java.lang.String, java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#move(String,String) Session.move(String,String)}
+     * method.
+     *
+     * @param from source path
+     * @param to destination path
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void move(String from, String to)
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Session#save()
+     * Remote version of the
+     * {@link javax.jcr.Session#save() Session.save()} method.
+     *
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void save() throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#refresh(boolean)
+     * Remote version of the
+     * {@link javax.jcr.Session#refresh(boolean) Session.refresh(boolean)}
+     * method.
+     *
+     * @param keepChanges flag to keep transient changes
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void refresh(boolean keepChanges)
             throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#logout()
+     * Remote version of the
+     * {@link javax.jcr.Session#logout() Session.logout()}
+     * method.
+     *
      * @throws RemoteException on RMI errors
      */
     void logout() throws RemoteException;
 
     /**
-     * @see javax.jcr.Session#getRootNode()
+     * Remote version of the
+     * {@link javax.jcr.Session#getRootNode() Session.getRootNode()} method.
+     *
+     * @return root node
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     RemoteNode getRootNode() throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#hasPendingChanges()
+     * Remote version of the
+     * {@link javax.jcr.Session#hasPendingChanges() Session.hasPendingChanges()}
+     * method.
+     *
+     * @return <code>true</code> if the session has pending changes,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     boolean hasPendingChanges() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Session#checkPermission(java.lang.String, java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#checkPermission(String,String) Session.checkPermission(String,String)}
+     * method.
+     *
+     * @param path item path
+     * @param actions actions
+     * @throws AccessControlException if permission is denied
      * @throws RemoteException on RMI errors
      */
     void checkPermission(String path, String actions)
@@ -155,54 +226,93 @@ public interface RemoteSession extends Remote {
      * large XML streams. The remote server will wrap the XML data into
      * a {@link java.io.ByteArrayInputStream ByteArrayInputStream} and feed
      * it to the normal importXML method.
-     * 
-     * @see javax.jcr.Session#importXML(java.lang.String, java.io.InputStream)
+     *
+     * @param path node path
+     * @param xml imported XML document
+     * @throws IOException on IO errors
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
+     * @see javax.jcr.Session#importXML(java.lang.String, java.io.InputStream)
      */
     void importXML(String path, byte[] xml)
             throws IOException, RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#setNamespacePrefix(java.lang.String, java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#setNamespacePrefix(String,String) Session.setNamespacePrefix(String,String)}
+     * method.
+     *
+     * @param prefix namespace prefix
+     * @param uri namespace uri
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void setNamespacePrefix(String prefix, String uri)
             throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#getNamespacePrefixes()
+     * Remote version of the
+     * {@link javax.jcr.Session#getNamespacePrefixes() Session.getNamespacePrefixes()}
+     * method.
+     *
+     * @return namespace prefixes
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String[] getNamespacePrefixes() throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#getNamespaceURI(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#getNamespaceURI(String) Session.getNamespaceURI(String)}
+     * method.
+     *
+     * @param prefix namespace prefix
+     * @return namespace uri
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String getNamespaceURI(String prefix)
             throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#getNamespacePrefix(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#getNamespacePrefix(String) Session.getNamespacePrefix(String)}
+     * method.
+     *
+     * @param uri namespace uri
+     * @return namespace prefix
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String getNamespacePrefix(String uri)
             throws RepositoryException, RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#addLockToken(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#addLockToken(String) Session.addLockToken(String)}
+     * method.
+     *
+     * @param name lock token
      * @throws RemoteException on RMI errors
      */
     void addLockToken(String name) throws RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#getLockTokens()
+     * Remote version of the
+     * {@link javax.jcr.Session#getLockTokens() Session.getLockTokens()}
+     * method.
+     *
+     * @return lock tokens
      * @throws RemoteException on RMI errors
      */
     String[] getLockTokens() throws RemoteException;
-    
+
     /**
-     * @see javax.jcr.Session#removeLockToken(java.lang.String)
+     * Remote version of the
+     * {@link javax.jcr.Session#removeLockToken(String) Session.removeLockToken(String)}
+     * method.
+     *
+     * @param name lock token
      * @throws RemoteException on RMI errors
      */
     void removeLockToken(String name) throws RemoteException;
@@ -215,8 +325,14 @@ public interface RemoteSession extends Remote {
      * {@link java.io.ByteArrayOutputStream ByteArrayOutputStream} to capture
      * the XML data written by the normal exportSysView method.
      *
-     * @see javax.jcr.Workspace#exportSysView(java.lang.String, java.io.OutputStream, boolean, boolean)
+     * @param path node path
+     * @param binaryAsLink TODO
+     * @param noRecurse TODO
+     * @return exported XML document
+     * @throws IOException on IO errors
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
+     * @see javax.jcr.Workspace#exportSysView(java.lang.String, java.io.OutputStream, boolean, boolean)
      */
     byte[] exportSysView(String path, boolean binaryAsLink, boolean noRecurse)
             throws IOException, RepositoryException, RemoteException;
@@ -229,8 +345,14 @@ public interface RemoteSession extends Remote {
      * {@link java.io.ByteArrayOutputStream ByteArrayOutputStream} to capture
      * the XML data written by the normal exportDocView method.
      *
-     * @see javax.jcr.Workspace#exportDocView(java.lang.String, java.io.OutputStream, boolean, boolean)
+     * @param path node path
+     * @param binaryAsLink TODO
+     * @param noRecurse TODO
+     * @return exported XML document
+     * @throws IOException on IO errors
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
+     * @see javax.jcr.Workspace#exportDocView(java.lang.String, java.io.OutputStream, boolean, boolean)
      */
     byte[] exportDocView(String path, boolean binaryAsLink, boolean noRecurse)
         throws IOException, RepositoryException, RemoteException;

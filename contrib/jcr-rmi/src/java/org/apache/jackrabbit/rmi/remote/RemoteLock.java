@@ -41,32 +41,49 @@ import javax.jcr.RepositoryException;
 public interface RemoteLock extends Remote {
 
     /**
-     * @see javax.jcr.lock.Lock#getLockOwner()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.lock.Lock#getLockOwner() Lock.getLockOwner()} method.
+     *
+     * @return lock owner
+     * @throws RemoteException on RMI errors
      */
     String getLockOwner() throws RemoteException;
 
     /**
-     * @see javax.jcr.lock.Lock#isDeep()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.lock.Lock#isDeep() Lock.isDeep()} method.
+     *
+     * @return <code>true</code> if the lock is deep,
+     *         <code>false</code> otherwise
+     * @throws RemoteException on RMI errors
      */
     boolean isDeep() throws RemoteException;
 
     /**
-     * @see javax.jcr.lock.Lock#getLockToken()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.lock.Lock#getLockToken() Lock.getLockToken()} method.
+     *
+     * @return lock token
+     * @throws RemoteException on RMI errors
      */
     String getLockToken() throws RemoteException;
 
     /**
-     * @see javax.jcr.lock.Lock#isLive()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.lock.Lock#isLive() Lock.isLive()} method.
+     *
+     * @return <code>true</code> if the lock is live,
+     *         <code>false</code> otherwise
+     * @throws RemoteException on RMI errors
      */
     boolean isLive() throws RemoteException;
 
     /**
-     * @see javax.jcr.lock.Lock#refresh()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.lock.Lock#refresh() Lock.refresh()} method.
+     *
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void refresh() throws RepositoryException, RemoteException;
 

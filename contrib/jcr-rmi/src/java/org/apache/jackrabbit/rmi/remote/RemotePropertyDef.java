@@ -48,25 +48,42 @@ import javax.jcr.Value;
 public interface RemotePropertyDef extends RemoteItemDef {
 
     /**
-     * @see javax.jcr.nodetype.PropertyDef#getRequiredType()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.PropertyDef#getRequiredType() PropertyDef.getRequiredType()}
+     * method.
+     *
+     * @return required type
      * @throws RemoteException on RMI errors
      */
     int getRequiredType() throws RemoteException;
 
     /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.PropertyDef#getValueConstraints() PropertyDef.getValueConstraints()}
+     * method.
+     *
+     * @return value constraints
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.nodetype.PropertyDef#getValueConstraints()
      */
     String[] getValueConstraints() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.PropertyDef#getDefaultValues()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.PropertyDef#getDefaultValues() PropertyDef.getDefaultValues()}
+     * method.
+     *
+     * @return default values
      * @throws RemoteException on RMI errors
      */
     Value[] getDefaultValues() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.PropertyDef#isMultiple()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.PropertyDef#isMultiple() PropertyDef.isMultiple()}
+     * method.
+     *
+     * @return <code>true</code> if the property is multi-valued,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean isMultiple() throws RemoteException;

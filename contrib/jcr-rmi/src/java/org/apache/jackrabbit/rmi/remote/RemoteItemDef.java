@@ -44,37 +44,63 @@ import java.rmi.RemoteException;
 public interface RemoteItemDef extends Remote {
 
     /**
-     * @see javax.jcr.nodetype.ItemDef#getDeclaringNodeType()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.ItemDef#getDeclaringNodeType() ItemDef.getDeclaringNodeType()}
+     * method.
+     *
+     * @return declaring node type
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType getDeclaringNodeType() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.ItemDef#getName()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.ItemDef#getName() ItemDef.getName()} method.
+     *
+     * @return item name
      * @throws RemoteException on RMI errors
      */
     String getName() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.ItemDef#isAutoCreate()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.ItemDef#isAutoCreate() ItemDef.isAutoCreate()}
+     * method.
+     *
+     * @return <code>true</code> if the item is automatically created,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean isAutoCreate() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.ItemDef#isMandatory()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.ItemDef#isMandatory() ItemDef.isMandatory()}
+     * method.
+     *
+     * @return <code>true</code> if the item is mandatory,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean isMandatory() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.ItemDef#getOnParentVersion()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.ItemDef#getOnParentVersion() ItemDef.getOnParentVersion()}
+     * method.
+     *
+     * @return parent version behaviour
      * @throws RemoteException on RMI errors
      */
     int getOnParentVersion() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.ItemDef#isProtected()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.ItemDef#isProtected() ItemDef.isProtected()}
+     * method.
+     *
+     * @return <code>true</code> if the item is protected,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean isProtected() throws RemoteException;

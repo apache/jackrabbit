@@ -54,51 +54,88 @@ import javax.jcr.Value;
 public interface RemoteProperty extends RemoteItem {
 
     /**
-     * @see javax.jcr.Property#getValue()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Property#getValue() Property.getValue()} method.
+     *
+     * @return property value
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     Value getValue() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Property#getValues()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Property#getValues() Property.getValues()} method.
+     *
+     * @return property values
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     Value[] getValues() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Property#setValue(javax.jcr.Value)
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Property#setValue(Value) Property.setValue(Value)}
+     * method.
+     *
+     * @param value property value
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void setValue(Value value) throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Property#setValue(javax.jcr.Value[])
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Property#setValue(Value[]) Property.setValue(Value[])}
+     * method.
+     *
+     * @param values property values
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     void setValue(Value[] values) throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Property#getLength()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Property#getLength() Property.getLength()}
+     * method.
+     *
+     * @return value length
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     long getLength() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Property#getLengths()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Property#getLengths() Property.getLengths()}
+     * method.
+     *
+     * @return value lengths
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     long[] getLengths() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Property#getDefinition()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Property#getDefinition() Property.getDefinition()}
+     * method.
+     *
+     * @return property definition
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     RemotePropertyDef getDefinition()
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Property#getType()
-     * @throws RemoteException on RMI exceptions
+     * Remote version of the
+     * {@link javax.jcr.Property#getType() Property.getType()} method.
+     *
+     * @return property type
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     int getType() throws RepositoryException, RemoteException;
 

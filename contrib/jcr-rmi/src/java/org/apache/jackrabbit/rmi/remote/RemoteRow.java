@@ -40,16 +40,19 @@ public interface RemoteRow extends Remote {
     /**
      * @see javax.jcr.query.Row#getValues()
      *
-     * @return a <code>Value</code> array.
-     * @throws RepositoryException if an error occurs
+     * @return row values
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     Value[] getValues() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.query.Row#getValue(String)
      *
-     * @return a <code>Value</code>
-     * @throws RepositoryException if anopther error occurs.
+     * @param propertyName property name
+     * @return identified value
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      */
     Value getValue(String propertyName)
             throws RepositoryException, RemoteException;

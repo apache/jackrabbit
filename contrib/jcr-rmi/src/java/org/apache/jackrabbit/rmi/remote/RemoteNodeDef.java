@@ -42,19 +42,32 @@ import java.rmi.RemoteException;
 public interface RemoteNodeDef extends RemoteItemDef {
 
     /**
-     * @see javax.jcr.nodetype.NodeDef#getRequiredPrimaryTypes()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeDef#getRequiredPrimaryTypes() NodeDef.getRequiredPrimaryTypes()}
+     * method.
+     *
+     * @return required primary node types
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType[] getRequiredPrimaryTypes() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeDef#getDefaultPrimaryType()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeDef#getDefaultPrimaryType() NodeDef.getDefaultPrimaryType()}
+     * method.
+     *
+     * @return default primary node type
      * @throws RemoteException on RMI errors
      */
     RemoteNodeType getDefaultPrimaryType() throws RemoteException;
 
     /**
-     * @see javax.jcr.nodetype.NodeDef#allowSameNameSibs()
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeDef#allowSameNameSibs() NodeDef.allowSameNameSibs()}
+     * method.
+     *
+     * @return <code>true</code> if same name siblings are allowed,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean allowSameNameSibs() throws RemoteException;
