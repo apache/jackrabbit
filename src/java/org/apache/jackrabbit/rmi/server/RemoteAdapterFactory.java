@@ -30,7 +30,10 @@ import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -41,8 +44,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
+import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
@@ -53,11 +59,10 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * modified (for example to add extra features) by changing the
  * remote adapter factory used by the repository server.
  * <p>
- * Note that the
- * {@link org.apache.jackrabbit.rmi.server.ServerObject ServerObject}
- * base class provides a number of utility methods designed to work with
- * a remote adapter factory. Adapter implementations may want to inherit
- * that functionality by subclassing from ServerObject.
+ * Note that the {@link ServerObject ServerObject} base class provides
+ * a number of utility methods designed to work with a remote adapter
+ * factory. Adapter implementations may want to inherit that functionality
+ * by subclassing from ServerObject.
  *
  * @author Jukka Zitting
  * @author Philipp Koch
@@ -68,7 +73,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 public interface RemoteAdapterFactory {
 
     /**
-     * Factory method for creating a remote adapter for a local repository.
+     * Returns a remote adapter for the given local repository.
      *
      * @param repository local repository
      * @return remote repository adapter
@@ -78,7 +83,7 @@ public interface RemoteAdapterFactory {
             throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local session.
+     * Returns a remote adapter for the given local session.
      *
      * @param session local session
      * @return remote session adapter
@@ -87,7 +92,7 @@ public interface RemoteAdapterFactory {
     RemoteSession getRemoteSession(Session session) throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local workspace.
+     * Returns a remote adapter for the given local workspace.
      *
      * @param workspace local workspace
      * @return remote workspace adapter
@@ -97,8 +102,7 @@ public interface RemoteAdapterFactory {
             throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local namespace
-     * registry.
+     * Returns a remote adapter for the given local namespace registry.
      *
      * @param registry local namespace registry
      * @return remote namespace registry adapter
@@ -108,8 +112,7 @@ public interface RemoteAdapterFactory {
             NamespaceRegistry registry) throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local node type
-     * manager.
+     * Returns a remote adapter for the given local node type manager.
      *
      * @param manager local node type manager
      * @return remote node type manager adapter
@@ -119,13 +122,12 @@ public interface RemoteAdapterFactory {
             throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local item.
-     * Note that before calling this method, the server may want to
-     * introspect the local item to determine whether to use the
-     * {@link #getRemoteNode(Node) getRemoteNode} or
-     * {@link #getRemoteProperty(Property) getRemoteProperty} method
-     * instead, as the adapter returned by this method will only cover
-     * the basic {@link RemoteItem RemoteItem} interface.
+     * Returns a remote adapter for the given local item. This method
+     * will return an adapter that implements <i>only</i> the
+     * {@link Item Item} interface. The caller may want to introspect
+     * the local item to determine whether to use either the
+     * {@link #getRemoteNode(Node) getRemoteNode} or the
+     * {@link #getRemoteProperty(Property) getRemoteProperty} method instead.
      *
      * @param item local item
      * @return remote item adapter
@@ -134,7 +136,7 @@ public interface RemoteAdapterFactory {
     RemoteItem getRemoteItem(Item item) throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local property.
+     * Returns a remote adapter for the given local property.
      *
      * @param property local property
      * @return remote property adapter
@@ -143,7 +145,7 @@ public interface RemoteAdapterFactory {
     RemoteProperty getRemoteProperty(Property property) throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local node.
+     * Returns a remote adapter for the given local node.
      *
      * @param node local node
      * @return remote node adapter
@@ -152,7 +154,7 @@ public interface RemoteAdapterFactory {
     RemoteNode getRemoteNode(Node node) throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local node type.
+     * Returns a remote adapter for the given local node type.
      *
      * @param type local node type
      * @return remote node type adapter
@@ -161,8 +163,7 @@ public interface RemoteAdapterFactory {
     RemoteNodeType getRemoteNodeType(NodeType type) throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local node
-     * definition.
+     * Returns a remote adapter for the given local node definition.
      *
      * @param def local node definition
      * @return remote node definition adapter
@@ -171,8 +172,7 @@ public interface RemoteAdapterFactory {
     RemoteNodeDef getRemoteNodeDef(NodeDef def) throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local property
-     * definition.
+     * Returns a remote adapter for the given local property definition.
      *
      * @param def local property definition
      * @return remote property definition adapter
@@ -182,7 +182,7 @@ public interface RemoteAdapterFactory {
             throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local lock.
+     * Returns a remote adapter for the given local lock.
      *
      * @param lock local lock
      * @return remote lock adapter
@@ -191,7 +191,7 @@ public interface RemoteAdapterFactory {
     RemoteLock getRemoteLock(Lock lock) throws RemoteException;
 
     /**
-     * Factory method for creating a remote adapter for a local query manager.
+     * Returns a remote adapter for the given local query manager.
      *
      * @param manager local query manager
      * @return remote query manager adapter
@@ -199,5 +199,33 @@ public interface RemoteAdapterFactory {
      */
     RemoteQueryManager getRemoteQueryManager(QueryManager manager)
             throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local query.
+     *
+     * @param query local query
+     * @return remote query adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteQuery getRemoteQuery(Query query) throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local query result.
+     *
+     * @param result local query result
+     * @return remote query result adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteQueryResult getRemoteQueryResult(QueryResult result)
+            throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local query row.
+     *
+     * @param row local query row
+     * @return remote query row adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteRow getRemoteRow(Row row) throws RemoteException;
 
 }

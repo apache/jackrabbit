@@ -30,7 +30,10 @@ import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -41,18 +44,20 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
+import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
 /**
  * Default implementation of the
- * {@link org.apache.jackrabbit.rmi.server.RemoteAdapterFactory RemoteAdapterFactory}
- * interface. This factory uses the server adapters defined in this
- * package as the default adapter implementations. Subclasses can
- * easily override or extend the default adapters by implementing the
- * corresponding factory methods.
+ * {@link RemoteAdapterFactory RemoteAdapterFactory} interface.
+ * This factory uses the server adapters defined in this package as
+ * the default adapter implementations. Subclasses can override or extend
+ * the default adapters by implementing the corresponding factory methods.
  *
  * @author Jukka Zitting
  * @author Philipp Koch
@@ -60,8 +65,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /**
-     * Creates and returns a {@link ServerRepository ServerRepository} instance.
-     *
+     * Creates a {@link ServerRepository ServerRepository} instance.
      * {@inheritDoc}
      */
     public RemoteRepository getRemoteRepository(Repository repository)
@@ -70,8 +74,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerSession ServerSession} instance.
-     *
+     * Creates a {@link ServerSession ServerSession} instance.
      * {@inheritDoc}
      */
     public RemoteSession getRemoteSession(Session session)
@@ -80,8 +83,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerWorkspace ServerWorkspace} instance.
-     *
+     * Creates a {@link ServerWorkspace ServerWorkspace} instance.
      * {@inheritDoc}
      */
     public RemoteWorkspace getRemoteWorkspace(Workspace workspace)
@@ -90,9 +92,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a
-     * {@link ServerNamespaceRegistry ServerNamespaceRegistry} instance.
-     *
+     * Creates a {@link ServerNamespaceRegistry ServerNamespaceRegistry}
+     * instance.
      * {@inheritDoc}
      */
     public RemoteNamespaceRegistry getRemoteNamespaceRegistry(
@@ -101,9 +102,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a
-     * {@link ServerNodeTypeManager ServerNodeTypeManager} instance.
-     *
+     * Creates a {@link ServerNodeTypeManager ServerNodeTypeManager} instance.
      * {@inheritDoc}
      */
     public RemoteNodeTypeManager getRemoteNodeTypeManager(
@@ -112,8 +111,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerItem ServerItem} instance.
-     *
+     * Creates a {@link ServerItem ServerItem} instance.
      * {@inheritDoc}
      */
     public RemoteItem getRemoteItem(Item item) throws RemoteException {
@@ -121,8 +119,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerProperty ServerProperty} instance.
-     *
+     * Creates a {@link ServerProperty ServerProperty} instance.
      * {@inheritDoc}
      */
     public RemoteProperty getRemoteProperty(Property property)
@@ -131,8 +128,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerNode ServerNode} instance.
-     *
+     * Creates a {@link ServerNode ServerNode} instance.
      * {@inheritDoc}
      */
     public RemoteNode getRemoteNode(Node node) throws RemoteException {
@@ -140,8 +136,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerNodeType ServerNodeType} instance.
-     *
+     * Creates a {@link ServerNodeType ServerNodeType} instance.
      * {@inheritDoc}
      */
     public RemoteNodeType getRemoteNodeType(NodeType type)
@@ -150,8 +145,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerNodeDef ServerNodeDef} instance.
-     *
+     * Creates a {@link ServerNodeDef ServerNodeDef} instance.
      * {@inheritDoc}
      */
     public RemoteNodeDef getRemoteNodeDef(NodeDef def)
@@ -160,9 +154,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerPropertyDef ServerPropertyDef}
-     * instance.
-     *
+     * Creates a {@link ServerPropertyDef ServerPropertyDef} instance.
      * {@inheritDoc}
      */
     public RemotePropertyDef getRemotePropertyDef(PropertyDef def)
@@ -171,8 +163,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerLock ServerLock} instance.
-     *
+     * Creates a {@link ServerLock ServerLock} instance.
      * {@inheritDoc}
      */
     public RemoteLock getRemoteLock(Lock lock) throws RemoteException {
@@ -180,14 +171,37 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ServerQueryManager ServerQueryManager}
-     * instance.
-     *
+     * Creates a {@link ServerQueryManager ServerQueryManager} instance.
      * {@inheritDoc}
      */
     public RemoteQueryManager getRemoteQueryManager(QueryManager manager)
             throws RemoteException {
         return new ServerQueryManager(manager, this);
+    }
+
+    /**
+     * Creates a {@link ServerQuery ServerQuery} instance.
+     * {@inheritDoc}
+     */
+    public RemoteQuery getRemoteQuery(Query query) throws RemoteException {
+        return new ServerQuery(query, this);
+    }
+
+    /**
+     * Creates a {@link ServerQueryResult ServerQueryResult} instance.
+     * {@inheritDoc}
+     */
+    public RemoteQueryResult getRemoteQueryResult(QueryResult result)
+            throws RemoteException {
+        return new ServerQueryResult(result, this);
+    }
+
+    /**
+     * Creates a {@link ServerQueryResult ServerQueryResult} instance.
+     * {@inheritDoc}
+     */
+    public RemoteRow getRemoteRow(Row row) throws RemoteException {
+        return new ServerRow(row, this);
     }
 
 }
