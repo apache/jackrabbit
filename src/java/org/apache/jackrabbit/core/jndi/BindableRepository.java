@@ -25,7 +25,6 @@ import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
 import java.io.*;
-import java.util.Properties;
 
 /**
  * <code>BindableRepository</code> ...
@@ -74,20 +73,6 @@ class BindableRepository implements Repository, Referenceable, Serializable {
 
     //-----------------------------------------------------------< Repository >
     /**
-     * @see Repository#getProperties()
-     */
-    public Properties getProperties() {
-        return delegatee.getProperties();
-    }
-
-    /**
-     * @see Repository#getProperty(String)
-     */
-    public String getProperty(String key) {
-        return delegatee.getProperty(key);
-    }
-
-    /**
      * @see Repository#login(Credentials, String)
      */
     public Session login(Credentials credentials, String workspaceName)
@@ -101,6 +86,35 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     public Session login(String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
         return delegatee.login(workspaceName);
+    }
+
+    /**
+     * @see Repository#login()
+     */
+    public Session login() throws LoginException, RepositoryException {
+        return delegatee.login();
+    }
+
+    /**
+     * @see Repository#login(Credentials)
+     */
+    public Session login(Credentials credentials)
+            throws LoginException, RepositoryException {
+        return delegatee.login(credentials);
+    }
+
+    /**
+     * @see Repository#getDescriptor(String)
+     */
+    public String getDescriptor(String key) {
+        return delegatee.getDescriptor(key);
+    }
+
+    /**
+     * @see Repository#getDescriptorKeys()
+     */
+    public String[] getDescriptorKeys() {
+        return delegatee.getDescriptorKeys();
     }
 
     //--------------------------------------------------------< Referenceable >

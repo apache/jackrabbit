@@ -64,20 +64,6 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     * @see Version#getVersionLabels()
-     */
-    public String[] getVersionLabels() throws RepositoryException {
-        return version.getLabels();
-    }
-
-    /**
-     * @see Version#hasVersionLabel
-     */
-    public boolean hasVersionLabel(String label) {
-        return version.hasLabel(label);
-    }
-
-    /**
      * @see Version#getSuccessors()
      */
     public Version[] getSuccessors() throws RepositoryException {

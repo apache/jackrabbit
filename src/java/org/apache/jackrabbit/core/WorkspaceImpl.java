@@ -21,15 +21,16 @@ import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.search.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
-import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
+import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.XMLReader;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.*;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.observation.EventListener;
@@ -39,7 +40,7 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -147,12 +148,31 @@ public class WorkspaceImpl implements Workspace {
 
     /**
      * Performs a sanity check on this workspace and the associated session.
+     *
      * @throws RepositoryException if this workspace has been rendered invalid
-     * for some reason
+     *                             for some reason
      */
     protected void sanityCheck() throws RepositoryException {
         // check session status
         session.sanityCheck();
+    }
+
+    /**
+     * Creates a workspace with the given name.
+     *
+     * @param workspaceName name of the new workspace
+     * @throws AccessDeniedException if the current session is not allowed to
+     *                               create the workspace
+     * @throws RepositoryException if a workspace with the given name
+     *                             already exists or if another error occurs
+     * @see #getAccessibleWorkspaceNames()
+     */
+    public void createWorkspace(String workspaceName)
+            throws AccessDeniedException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        session.createWorkspace(workspaceName);
     }
 
     //-----------< misc. static helper methods for cross-workspace operations >
@@ -631,6 +651,9 @@ public class WorkspaceImpl implements Workspace {
      * @see Workspace#getNamespaceRegistry
      */
     public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         return rep.getNamespaceRegistry();
     }
 
@@ -638,21 +661,34 @@ public class WorkspaceImpl implements Workspace {
      * @see Workspace#getNodeTypeManager
      */
     public NodeTypeManager getNodeTypeManager() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         return session.getNodeTypeManager();
     }
 
     /**
-     * @see Workspace#clone(String, String, String)
+     * @see Workspace#clone(String, String, String, boolean)
      */
-    public void clone(String srcWorkspace, String srcAbsPath, String destAbsPath)
+    public void clone(String srcWorkspace, String srcAbsPath,
+                      String destAbsPath, boolean removeExisting)
             throws NoSuchWorkspaceException, ConstraintViolationException,
-            AccessDeniedException, PathNotFoundException,
-            ItemExistsException, RepositoryException {
+            VersionException, AccessDeniedException, PathNotFoundException,
+            ItemExistsException, LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // @todo reimplement Workspace#clone according to new spec
+        // @todo check ckecked-out status
+        // @todo check locked-status status
+
         // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
         ItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
         // FIXME need to setup a hierarchy manager for source workspace
-        HierarchyManagerImpl srcHierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
+        HierarchyManagerImpl srcHierMgr =
+                new HierarchyManagerImpl(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
         // do cross-workspace copy
         internalCopy(srcAbsPath, srcStateMgr, srcHierMgr,
                 destAbsPath, stateMgr, hierMgr,
@@ -664,8 +700,17 @@ public class WorkspaceImpl implements Workspace {
      * @see Workspace#copy(String, String)
      */
     public void copy(String srcAbsPath, String destAbsPath)
-            throws ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException {
+            throws ConstraintViolationException, VersionException,
+            AccessDeniedException, PathNotFoundException, ItemExistsException,
+            LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // @todo reimplement Workspace#copy according to new spec
+        // @todo check ckecked-out status
+        // @todo check locked-status status
+
         // do intra-workspace copy
         internalCopy(srcAbsPath, stateMgr, hierMgr,
                 destAbsPath, stateMgr, hierMgr,
@@ -678,8 +723,16 @@ public class WorkspaceImpl implements Workspace {
      */
     public void copy(String srcWorkspace, String srcAbsPath, String destAbsPath)
             throws NoSuchWorkspaceException, ConstraintViolationException,
-            AccessDeniedException, PathNotFoundException, ItemExistsException,
-            RepositoryException {
+            VersionException, AccessDeniedException, PathNotFoundException,
+            ItemExistsException, LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // @todo reimplement Workspace#copy according to new spec
+        // @todo check ckecked-out status
+        // @todo check locked-status status
+
         // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
         ItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
@@ -696,8 +749,16 @@ public class WorkspaceImpl implements Workspace {
      * @see Workspace#move
      */
     public void move(String srcAbsPath, String destAbsPath)
-            throws ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, ItemExistsException, RepositoryException {
+            throws ConstraintViolationException, VersionException,
+            AccessDeniedException, PathNotFoundException, ItemExistsException,
+            LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // @todo reimplement Workspace#move according to new spec
+        // @todo check ckecked-out status
+        // @todo check locked-status status
 
         // intra-workspace move...
 
@@ -798,6 +859,10 @@ public class WorkspaceImpl implements Workspace {
      */
     public synchronized ObservationManager getObservationManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
         if (obsMgr == null) {
             try {
                 obsMgr = rep.getObservationManagerFactory(wspConfig.getName()).createObservationManager(session, session.getItemManager());
@@ -815,6 +880,10 @@ public class WorkspaceImpl implements Workspace {
      * @see Workspace#getQueryManager
      */
     public QueryManager getQueryManager() throws RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
         if (queryManager == null) {
             try {
                 SearchManager searchManager = rep.getSearchManager(wspConfig.getName());
@@ -836,95 +905,72 @@ public class WorkspaceImpl implements Workspace {
     }
 
     /**
-     * @see Workspace#restore(Version[])
+     * @see Workspace#restore(Version[], boolean)
      */
-    public void restore(Version[] versions) throws UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        // @todo implement versioning support
+    public void restore(Version[] versions, boolean removeExisting)
+            throws ItemExistsException, UnsupportedRepositoryOperationException,
+            VersionException, LockException, InvalidItemStateException,
+            RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // @todo implement Workspace#restore
         throw new UnsupportedRepositoryOperationException();
     }
 
     /**
-     * @see Workspace#exportDocView(String, ContentHandler, boolean, boolean)
+     * @see Workspace#getAccessibleWorkspaceNames
      */
-    public void exportDocView(String absPath, ContentHandler contentHandler, boolean binaryAsLink, boolean noRecurse)
-            throws InvalidSerializedDataException, PathNotFoundException, SAXException, RepositoryException {
-        // check path & retrieve state
-        Path path;
-        Path.PathElement name;
-        NodeState state;
-        try {
-            path = Path.create(absPath, session.getNamespaceResolver(), true);
-            name = path.getNameElement();
-            state = getNodeState(path, hierMgr, stateMgr);
-        } catch (MalformedPathException mpe) {
-            String msg = "invalid path: " + absPath;
-            log.error(msg, mpe);
-            throw new RepositoryException(msg, mpe);
-        }
+    public String[] getAccessibleWorkspaceNames() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
 
-        // check read access
-        if (!session.getAccessManager().isGranted(state.getId(), AccessManager.READ)) {
-            throw new PathNotFoundException(absPath);
-        }
-
-        new DocViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
-                stateMgr, rep.getNamespaceRegistry(),
-                session.getAccessManager(), hierMgr, contentHandler).serialize();
+        return session.getWorkspaceNames();
     }
 
     /**
-     * @see Workspace#exportDocView(String, OutputStream, boolean, boolean)
+     * @see Workspace#getImportContentHandler(String, int)
      */
-    public void exportDocView(String absPath, OutputStream out, boolean binaryAsLink, boolean noRecurse)
-            throws InvalidSerializedDataException, IOException, PathNotFoundException, RepositoryException {
-        OutputFormat format = new OutputFormat("xml", "UTF-8", true);
-        XMLSerializer serializer = new XMLSerializer(out, format);
+    public ContentHandler getImportContentHandler(String parentAbsPath,
+                                                  int uuidBehavior)
+            throws PathNotFoundException, ConstraintViolationException,
+            VersionException, LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // @todo implement Workspace#getImportContentHandler
+        throw new RepositoryException("not yet implemented");
+    }
+
+    /**
+     * @see Workspace#importXML(String, InputStream, int)
+     */
+    public void importXML(String parentAbsPath, InputStream in,
+                          int uuidBehavior)
+            throws IOException, PathNotFoundException, ItemExistsException,
+            ConstraintViolationException, InvalidSerializedDataException,
+            LockException, RepositoryException {
+
+        ImportHandler handler =
+                (ImportHandler) getImportContentHandler(parentAbsPath, uuidBehavior);
         try {
-            exportDocView(absPath, serializer.asContentHandler(), binaryAsLink, noRecurse);
+            XMLReader parser =
+                    XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+            parser.setContentHandler(handler);
+            parser.setErrorHandler(handler);
+            parser.parse(new InputSource(in));
         } catch (SAXException se) {
-            throw new RepositoryException(se);
-        }
-    }
-
-    /**
-     * @see Workspace#exportSysView(String, ContentHandler, boolean, boolean)
-     */
-    public void exportSysView(String absPath, ContentHandler contentHandler, boolean binaryAsLink, boolean noRecurse)
-            throws PathNotFoundException, SAXException, RepositoryException {
-        // check path & retrieve state
-        Path path;
-        Path.PathElement name;
-        NodeState state;
-        try {
-            path = Path.create(absPath, session.getNamespaceResolver(), true);
-            name = path.getNameElement();
-            state = getNodeState(path, hierMgr, stateMgr);
-        } catch (MalformedPathException mpe) {
-            String msg = "invalid path: " + absPath;
-            log.error(msg, mpe);
-            throw new RepositoryException(msg, mpe);
-        }
-
-        // check read access
-        if (!session.getAccessManager().isGranted(state.getId(), AccessManager.READ)) {
-            throw new PathNotFoundException(absPath);
-        }
-
-        new SysViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
-                stateMgr, rep.getNamespaceRegistry(),
-                session.getAccessManager(), hierMgr, contentHandler).serialize();
-    }
-
-    /**
-     * @see Workspace#exportSysView(String, OutputStream, boolean, boolean)
-     */
-    public void exportSysView(String absPath, OutputStream out, boolean binaryAsLink, boolean noRecurse) throws IOException, PathNotFoundException, RepositoryException {
-        OutputFormat format = new OutputFormat("xml", "UTF-8", true);
-        XMLSerializer serializer = new XMLSerializer(out, format);
-        try {
-            exportSysView(absPath, serializer.asContentHandler(), binaryAsLink, noRecurse);
-        } catch (SAXException se) {
-            throw new RepositoryException(se);
+            // check for wrapped repository exception
+            Exception e = se.getException();
+            if (e != null && e instanceof RepositoryException) {
+                throw (RepositoryException) e;
+            } else {
+                String msg = "failed to parse XML stream";
+                log.error(msg, se);
+                throw new InvalidSerializedDataException(msg, se);
+            }
         }
     }
 }

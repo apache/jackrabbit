@@ -32,8 +32,8 @@ import java.util.*;
  * The following modifications are considered <code>TRIVIAL</code>:
  * <ul>
  * <li>changing node type <code>orderableChildNodes</code> flag
+ * <li>changing node type <code>primaryItemName</code> value
  * <li>adding non-<code>mandatory</code> property/child node
- * <li>changing property/child node <code>primaryItem</code> flag
  * <li>changing property/child node <code>protected</code> flag
  * <li>changing property/child node <code>onParentVersion</code> value
  * <li>changing property/child node <code>mandatory</code> flag to <code>false</code>

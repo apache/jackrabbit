@@ -58,9 +58,9 @@ public class NodeTypeRegistry {
     // nt:hierarchyNode
     public static final QName NT_HIERARCHYNODE =
             new QName(NamespaceRegistryImpl.NS_NT_URI, "hierarchyNode");
-    // nt:mimeResource
-    public static final QName NT_MIME_RESOURCE =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "mimeResource");
+    // nt:resource
+    public static final QName NT_RESOURCE =
+            new QName(NamespaceRegistryImpl.NS_NT_URI, "resource");
     // nt:query
     public static final QName NT_QUERY =
             new QName(NamespaceRegistryImpl.NS_NT_URI, "query");
@@ -267,7 +267,6 @@ public class NodeTypeRegistry {
         def.setMandatory(true);
         def.setProtected(false);
         def.setOnParentVersion(OnParentVersionAction.VERSION);
-        def.setPrimaryItem(false);
         def.setAllowSameNameSibs(false);
         def.setAutoCreate(true);
         return def;
@@ -596,8 +595,6 @@ public class NodeTypeRegistry {
             }
         }
 
-        ChildItemDef primaryItem = null;
-
         // validate property definitions
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
@@ -607,24 +604,10 @@ public class NodeTypeRegistry {
              * make sure declaring node type matches name of node type definition
              */
             if (!name.equals(pd.getDeclaringNodeType())) {
-                String msg = "[" + name + "#" + pd.getName() + "] invalid declaring node type specified";
+                String msg = "[" + name + "#" + pd.getName()
+                        + "] invalid declaring node type specified";
                 log.error(msg);
                 throw new InvalidNodeTypeDefException(msg);
-            }
-            // check primary item flag
-            if (pd.isPrimaryItem()) {
-                if (pd.definesResidual()) {
-                    String msg = "[" + name + "#" + pd.getName() + "] primary item must specify a name";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-                if (primaryItem != null) {
-                    String msg = "[" + name + "#" + pd.getName() + "] more than one primary item specified";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                } else {
-                    primaryItem = pd;
-                }
             }
             // check that auto-created properties specify a name
             if (pd.definesResidual() && pd.isAutoCreate()) {
@@ -725,26 +708,10 @@ public class NodeTypeRegistry {
              * make sure declaring node type matches name of node type definition
              */
             if (!name.equals(cnd.getDeclaringNodeType())) {
-                String msg = "[" + name + "#" + cnd.getName() + "] invalid declaring node type specified";
+                String msg = "[" + name + "#" + cnd.getName()
+                        + "] invalid declaring node type specified";
                 log.error(msg);
                 throw new InvalidNodeTypeDefException(msg);
-            }
-            // check primary item flag
-            if (cnd.isPrimaryItem()) {
-                if (cnd.definesResidual()) {
-                    String msg = "[" + name + "#" + cnd.getName()
-                            + "] primary item must specify a name";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-                if (primaryItem != null) {
-                    String msg = "[" + name + "#" + cnd.getName()
-                            + "] more than one primary item specified";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                } else {
-                    primaryItem = cnd;
-                }
             }
             // check that auto-created child-nodes specify a name
             if (cnd.definesResidual() && cnd.isAutoCreate()) {
@@ -1513,6 +1480,7 @@ public class NodeTypeRegistry {
             }
             ps.println("\tMixin\t" + ntd.isMixin());
             ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
+            ps.println("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
             PropDef[] pd = ntd.getPropertyDefs();
             for (int i = 0; i < pd.length; i++) {
                 ps.print("\tPropertyDef");
@@ -1550,7 +1518,6 @@ public class NodeTypeRegistry {
                 ps.println("\t\tMandatory\t" + pd[i].isMandatory());
                 ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd[i].getOnParentVersion()));
                 ps.println("\t\tProtected\t" + pd[i].isProtected());
-                ps.println("\t\tPrimaryItem\t" + pd[i].isPrimaryItem());
                 ps.println("\t\tMultiple\t" + pd[i].isMultiple());
             }
             ChildNodeDef[] nd = ntd.getChildNodeDefs();
@@ -1572,7 +1539,6 @@ public class NodeTypeRegistry {
                 ps.println("\t\tMandatory\t" + nd[i].isMandatory());
                 ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(nd[i].getOnParentVersion()));
                 ps.println("\t\tProtected\t" + nd[i].isProtected());
-                ps.println("\t\tPrimaryItem\t" + nd[i].isPrimaryItem());
                 ps.println("\t\tAllowSameNameSibs\t" + nd[i].allowSameNameSibs());
             }
         }

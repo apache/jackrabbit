@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.version.VersionException;
@@ -183,7 +184,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -236,7 +237,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -520,13 +521,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(Calendar)
      */
-    public void setValue(Calendar date) throws ValueFormatException, RepositoryException {
+    public void setValue(Calendar date)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -565,13 +568,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(double)
      */
-    public void setValue(double number) throws ValueFormatException, RepositoryException {
+    public void setValue(double number)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -605,13 +610,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(java.io.InputStream)
      */
-    public void setValue(InputStream stream) throws ValueFormatException, RepositoryException {
+    public void setValue(InputStream stream)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -656,13 +663,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(String)
      */
-    public void setValue(String string) throws ValueFormatException, RepositoryException {
+    public void setValue(String string)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -700,13 +709,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(String)
      */
-    public void setValue(String[] strings) throws ValueFormatException, RepositoryException {
+    public void setValue(String[] strings)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -751,13 +762,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(boolean)
      */
-    public void setValue(boolean b) throws ValueFormatException, RepositoryException {
+    public void setValue(boolean b)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -791,13 +804,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(Node)
      */
-    public void setValue(Node target) throws ValueFormatException, RepositoryException {
+    public void setValue(Node target)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -843,13 +858,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(long)
      */
-    public void setValue(long number) throws ValueFormatException, RepositoryException {
+    public void setValue(long number)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -883,13 +900,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(Value)
      */
-    public synchronized void setValue(Value value) throws ValueFormatException, RepositoryException {
+    public synchronized void setValue(Value value)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            String msg = "Cannot alter the value of a property of a checked-in node " + safeGetJCRPath();
+            String msg = "cannot set the value of a property of a checked-in node " + safeGetJCRPath();
             log.error(msg);
             throw new VersionException(msg);
         }
@@ -929,13 +948,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#setValue(Value[])
      */
-    public void setValue(Value[] values) throws ValueFormatException, RepositoryException {
+    public void setValue(Value[] values)
+            throws ValueFormatException, VersionException,
+            LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
         // check protected flag
@@ -1090,6 +1111,16 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public PropertyDef getDefinition() {
         return definition;
+    }
+
+    /**
+     * @see Property#getType()
+     */
+    public int getType() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        return ((PropertyState) state).getType();
     }
 
     //-----------------------------------------------------------------< Item >

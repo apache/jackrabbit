@@ -23,20 +23,17 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import javax.jcr.*;
-import javax.jcr.xa.XASession;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.util.TraversingItemVisitor;
+import javax.jcr.util.ISO8601;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Hashtable;
-import java.util.Properties;
+import java.util.*;
 
 public class Test {
     private static Logger log = Logger.getLogger(Test.class);
@@ -79,11 +76,8 @@ public class Test {
 /*
         if (root.canAddMixin("mix:versionable")) {
             root.addMixin("mix:versionable");
-            if (root.canAddMixin("mix:accessControllable")) {
-                root.addMixin("mix:accessControllable");
-            }
             dumpTree(root, System.out);
-            boolean accessControllable = root.isNodeType("mix:accessControllable");
+            boolean versionable = root.isNodeType("mix:versionable");
             root.removeMixin("mix:versionable");
             root.save();
         }
@@ -313,7 +307,7 @@ public class Test {
             }
         } else {
             Node newNode = parent.addNode(file.getName(), "nt:file");
-            Node content = newNode.addNode("jcr:content", "nt:mimeResource");
+            Node content = newNode.addNode("jcr:content", "nt:resource");
             content.setProperty("jcr:data", new FileInputStream(file));
             content.setProperty("jcr:lastModified", Calendar.getInstance());
             content.setProperty("jcr:mimeType", "application/octet-stream");

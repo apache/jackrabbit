@@ -33,6 +33,7 @@ public class NodeTypeDef implements Cloneable {
     private QName[] supertypes;
     private boolean mixin;
     private boolean orderableChildNodes;
+    private QName primaryItemName;
     private PropDef[] propDefs;
     private ChildNodeDef[] nodeDefs;
     private Set dependencies;
@@ -65,6 +66,7 @@ public class NodeTypeDef implements Cloneable {
         if (obj instanceof NodeTypeDef) {
             NodeTypeDef other = (NodeTypeDef) obj;
             return (name == null ? other.name == null : name.equals(other.name))
+                    && (primaryItemName == null ? other.primaryItemName == null : primaryItemName.equals(other.primaryItemName))
                     && Arrays.equals(supertypes, other.supertypes)
                     && mixin == other.mixin
                     && orderableChildNodes == other.orderableChildNodes
@@ -169,6 +171,16 @@ public class NodeTypeDef implements Cloneable {
     }
 
     /**
+     * Sets the name of the primary item (one of the child items of the node's
+     * of this node type)
+     *
+     * @param primaryItemName The name of the primary item.
+     */
+    public void setPrimaryItemName(QName primaryItemName) {
+        this.primaryItemName = primaryItemName;
+    }
+
+    /**
      * Sets the property definitions.
      *
      * @param defs An array of <code>PropertyDef</code> objects.
@@ -224,6 +236,16 @@ public class NodeTypeDef implements Cloneable {
      */
     public boolean hasOrderableChildNodes() {
         return orderableChildNodes;
+    }
+
+    /**
+     * Returns the name of the primary item (one of the child items of the
+     * node's of this node type) or <code>null</code> if not set.
+     *
+     * @return the name of the primary item or <code>null</code> if not set.
+     */
+    public QName getPrimaryItemName() {
+        return primaryItemName;
     }
 
     /**

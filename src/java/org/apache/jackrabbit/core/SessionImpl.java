@@ -26,6 +26,8 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
+import org.apache.xml.serialize.OutputFormat;
+import org.apache.xml.serialize.XMLSerializer;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -33,11 +35,13 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.*;
+import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.OutputStream;
 import java.security.AccessControlException;
 import java.util.*;
 
@@ -333,7 +337,7 @@ public class SessionImpl implements Session {
      *
      * @return the names of all accessible workspaces
      */
-    public String[] getWorkspaceNames() {
+    protected String[] getWorkspaceNames() {
         // @todo filter workspace names based on credentials of this session
         return rep.getWorkspaceNames();
     }
@@ -342,10 +346,13 @@ public class SessionImpl implements Session {
      * Creates a workspace with the given name.
      *
      * @param workspaceName name of the new workspace
+     * @throws AccessDeniedException if the current session is not allowed to
+     *                               create the workspace
      * @throws RepositoryException if a workspace with the given name
      *                             already exists or if another error occurs
      */
-    public void createWorkspace(String workspaceName) throws RepositoryException {
+    protected void createWorkspace(String workspaceName)
+            throws AccessDeniedException, RepositoryException {
         // @todo verify that this session has the right privileges for this operation
         rep.createWorkspace(workspaceName);
     }
@@ -641,8 +648,9 @@ public class SessionImpl implements Session {
     /**
      * @see Session#save
      */
-    public void save() throws AccessDeniedException, LockException,
-            ConstraintViolationException, InvalidItemStateException,
+    public void save()
+            throws AccessDeniedException, ConstraintViolationException,
+            InvalidItemStateException, VersionException, LockException,
             RepositoryException {
         // check sanity of this session
         sanityCheck();
@@ -680,7 +688,7 @@ public class SessionImpl implements Session {
      */
     public void move(String srcAbsPath, String destAbsPath)
             throws ItemExistsException, PathNotFoundException,
-            ConstraintViolationException, RepositoryException {
+            VersionException, RepositoryException {
         // check sanity of this session
         sanityCheck();
 
@@ -798,7 +806,9 @@ public class SessionImpl implements Session {
     /**
      * @see Session#getImportContentHandler(String)
      */
-    public ContentHandler getImportContentHandler(String parentAbsPath) throws PathNotFoundException, RepositoryException {
+    public ContentHandler getImportContentHandler(String parentAbsPath)
+            throws PathNotFoundException, ConstraintViolationException,
+            VersionException, LockException, RepositoryException {
         // check sanity of this session
         sanityCheck();
 
@@ -818,6 +828,21 @@ public class SessionImpl implements Session {
             throw new RepositoryException(msg);
         }
         NodeImpl parent = (NodeImpl) item;
+
+        // check if versioning allows write (only cheap call)
+        if (!parent.isCheckedOut(false)) {
+            String msg = parentAbsPath + ": cannot add a child to a checked-in node";
+            log.error(msg);
+            throw new VersionException(msg);
+        }
+
+        // check protected flag of parent node
+        if (parent.getDefinition().isProtected()) {
+            String msg = parentAbsPath + ": cannot add a child to a protected node";
+            log.error(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
         return new ImportHandler(parent, rep.getNamespaceRegistry(), this);
     }
 
@@ -826,8 +851,8 @@ public class SessionImpl implements Session {
      */
     public void importXML(String parentAbsPath, InputStream in)
             throws IOException, PathNotFoundException, ItemExistsException,
-            ConstraintViolationException, InvalidSerializedDataException,
-            RepositoryException {
+            ConstraintViolationException, VersionException,
+            InvalidSerializedDataException, LockException, RepositoryException {
         // check sanity of this session
         sanityCheck();
 
@@ -847,6 +872,105 @@ public class SessionImpl implements Session {
                 log.error(msg, se);
                 throw new InvalidSerializedDataException(msg, se);
             }
+        }
+    }
+
+    /**
+     * @see Session#exportDocView(String, ContentHandler, boolean, boolean)
+     */
+    public void exportDocView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws InvalidSerializedDataException, PathNotFoundException, SAXException, RepositoryException {
+        // @todo implement Session#exportDocView(String, ContentHandler, boolean, boolean)
+        throw new RepositoryException("not yet implemented");
+/*
+        // check path & retrieve state
+        Path path;
+        Path.PathElement name;
+        NodeState state;
+        try {
+            path = Path.create(absPath, session.getNamespaceResolver(), true);
+            name = path.getNameElement();
+            state = getNodeState(path, hierMgr, stateMgr);
+        } catch (MalformedPathException mpe) {
+            String msg = "invalid path: " + absPath;
+            log.error(msg, mpe);
+            throw new RepositoryException(msg, mpe);
+        }
+
+        // check read access
+        if (!session.getAccessManager().isGranted(state.getId(), AccessManager.READ)) {
+            throw new PathNotFoundException(absPath);
+        }
+
+        new DocViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
+                stateMgr, rep.getNamespaceRegistry(),
+                session.getAccessManager(), hierMgr, contentHandler).serialize();
+    }
+*/
+    }
+
+    /**
+     * @see Session#exportDocView(String, OutputStream, boolean, boolean)
+     */
+    public void exportDocView(String absPath, OutputStream out,
+                              boolean skipBinary, boolean noRecurse)
+            throws InvalidSerializedDataException, IOException,
+            PathNotFoundException,  RepositoryException {
+        OutputFormat format = new OutputFormat("xml", "UTF-8", true);
+        XMLSerializer serializer = new XMLSerializer(out, format);
+        try {
+            exportDocView(absPath, serializer.asContentHandler(), skipBinary, noRecurse);
+        } catch (SAXException se) {
+            throw new RepositoryException(se);
+        }
+    }
+
+    /**
+     * @see Session#exportSysView(String, ContentHandler, boolean, boolean)
+     */
+    public void exportSysView(String absPath, ContentHandler contentHandler,
+                              boolean skipBinary, boolean noRecurse)
+            throws PathNotFoundException, SAXException, RepositoryException {
+        // @todo implement Session#exportSysView(String, ContentHandler, boolean, boolean)
+        throw new RepositoryException("not yet implemented");
+/*
+        // check path & retrieve state
+        Path path;
+        Path.PathElement name;
+        NodeState state;
+        try {
+            path = Path.create(absPath, session.getNamespaceResolver(), true);
+            name = path.getNameElement();
+            state = getNodeState(path, hierMgr, stateMgr);
+        } catch (MalformedPathException mpe) {
+            String msg = "invalid path: " + absPath;
+            log.error(msg, mpe);
+            throw new RepositoryException(msg, mpe);
+        }
+
+        // check read access
+        if (!session.getAccessManager().isGranted(state.getId(), AccessManager.READ)) {
+            throw new PathNotFoundException(absPath);
+        }
+
+        new SysViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
+                stateMgr, rep.getNamespaceRegistry(),
+                session.getAccessManager(), hierMgr, contentHandler).serialize();
+    }
+*/
+    }
+
+    /**
+     * @see Session#exportSysView(String, OutputStream, boolean, boolean)
+     */
+    public void exportSysView(String absPath, OutputStream out,
+                              boolean skipBinary, boolean noRecurse)
+            throws IOException, PathNotFoundException, RepositoryException {
+        OutputFormat format = new OutputFormat("xml", "UTF-8", true);
+        XMLSerializer serializer = new XMLSerializer(out, format);
+        try {
+            exportSysView(absPath, serializer.asContentHandler(), skipBinary, noRecurse);
+        } catch (SAXException se) {
+            throw new RepositoryException(se);
         }
     }
 
@@ -906,28 +1030,32 @@ public class SessionImpl implements Session {
     /**
      * @see Session#setNamespacePrefix(String, String)
      */
-    public void setNamespacePrefix(String prefix, String uri) throws NamespaceException, RepositoryException {
+    public void setNamespacePrefix(String prefix, String uri)
+            throws NamespaceException, RepositoryException {
         nsMappings.setNamespacePrefix(prefix, uri);
     }
 
     /**
      * @see Session#getNamespacePrefixes
      */
-    public String[] getNamespacePrefixes() {
+    public String[] getNamespacePrefixes()
+            throws NamespaceException, RepositoryException {
         return nsMappings.getPrefixes();
     }
 
     /**
      * @see Session#getNamespaceURI(String)
      */
-    public String getNamespaceURI(String prefix) throws NamespaceException {
+    public String getNamespaceURI(String prefix)
+            throws NamespaceException, RepositoryException {
         return nsMappings.getURI(prefix);
     }
 
     /**
      * @see Session#getNamespaceURI(String)
      */
-    public String getNamespacePrefix(String uri) throws NamespaceException {
+    public String getNamespacePrefix(String uri)
+            throws NamespaceException, RepositoryException {
         return nsMappings.getPrefix(uri);
     }
 
@@ -1033,7 +1161,7 @@ public class SessionImpl implements Session {
             }
         }
 
-        String[] getPrefixes() {
+        String[] getPrefixes() throws RepositoryException {
             if (prefixToURI.isEmpty()) {
                 // shortcut
                 return nsReg.getPrefixes();

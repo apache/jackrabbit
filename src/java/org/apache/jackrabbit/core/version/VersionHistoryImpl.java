@@ -75,7 +75,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * @see VersionHistory#getVersion(String)
      */
-    public Version getVersion(String versionName) throws RepositoryException {
+    public Version getVersion(String versionName)
+            throws VersionException, RepositoryException {
         try {
             QName name = QName.fromJCRName(versionName, session.getNamespaceResolver());
             InternalVersion v = history.getVersion(name);
@@ -93,13 +94,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public Version getVersionByLabel(String label) throws RepositoryException {
         InternalVersion v = history.getVersionByLabel(label);
         return v == null ? null : (Version) session.getNodeByUUID(v.getId());
-    }
-
-    /**
-     * @see VersionHistory#addVersionLabel(String, String)
-     */
-    public void addVersionLabel(String version, String label) throws VersionException, RepositoryException {
-        addVersionLabel(version, label, false);
     }
 
     /**
@@ -126,9 +120,49 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
 
     /**
+     * @see VersionHistory#getVersionLabels
+     */
+    public String[] getVersionLabels() {
+        return new String[0];  // @todo implement VersionHistory#getVersionLabels()
+    }
+
+    /**
+     * @see VersionHistory#getVersionLabels(Version)
+     */
+    public String[] getVersionLabels(Version version)
+            throws VersionException, RepositoryException {
+        return new String[0];  // @todo implement VersionHistory#getVersionLabels(Version)
+    }
+
+    /**
+     * @see VersionHistory#hasVersionLabel(String)
+     */
+    public boolean hasVersionLabel(String label) {
+        return false;  // @todo implement VersionHistory#hasVersionLabel(String)
+    }
+
+    /**
+     * @see VersionHistory#hasVersionLabel(Version, String)
+     */
+    public boolean hasVersionLabel(Version version, String label)
+            throws VersionException, RepositoryException {
+        return false;  // @todo implement VersionHistory#hasVersionLabel(Version, String)
+    }
+
+    /**
+     * @see VersionHistory#removeVersionLabel(String)
+     */
+    public void removeVersion(String label)
+            throws UnsupportedRepositoryOperationException, VersionException,
+            RepositoryException {
+        // @todo implement VersionHistory#removeVersionLabel(String)
+    }
+
+    /**
      * @see javax.jcr.Node#getUUID()
      */
-    public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
+    public String getUUID()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
         return history.getId();
     }
 

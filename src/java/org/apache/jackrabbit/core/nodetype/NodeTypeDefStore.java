@@ -48,6 +48,7 @@ class NodeTypeDefStore {
     private static final String NAME_ATTRIBUTE = "name";
     private static final String MIXIN_ATTRIBUTE = "mixin";
     private static final String ORDERABLECHILDNODES_ATTRIBUTE = "orderableChildNodes";
+    private static final String PRIMARYITEMNAME_ATTRIBUTE = "primaryItemName";
     private static final String SUPERTYPES_ELEMENT = "supertypes";
     private static final String SUPERTYPE_ELEMENT = "supertype";
     private static final String PROPERTYDEF_ELEMENT = "propertyDef";
@@ -59,7 +60,6 @@ class NodeTypeDefStore {
     private static final String AUTOCREATE_ATTRIBUTE = "autoCreate";
     private static final String MANDATORY_ATTRIBUTE = "mandatory";
     private static final String PROTECTED_ATTRIBUTE = "protected";
-    private static final String PRIMARYITEM_ATTRIBUTE = "primaryItem";
     private static final String MULTIPLE_ATTRIBUTE = "multiple";
     private static final String SAMENAMESIBS_ATTRIBUTE = "sameNameSibs";
     private static final String ONPARENTVERSION_ATTRIBUTE = "onParentVersion";
@@ -268,6 +268,18 @@ class NodeTypeDefStore {
             ntDef.setOrderableChildNodes(Boolean.valueOf(orderableChildNodes).booleanValue());
         }
 
+        // primaryItemName
+        String primaryItemName = ntElem.getAttributeValue(PRIMARYITEMNAME_ATTRIBUTE);
+        if (primaryItemName != null && primaryItemName.length() > 0) {
+            try {
+                ntDef.setPrimaryItemName(QName.fromJCRName(primaryItemName, nsResolver));
+            } catch (BaseException e) {
+                String msg = "invalid serialized node type definition [" + sntName + "]: invalid primaryItemName: " + primaryItemName;
+                log.error(msg, e);
+                throw new InvalidNodeTypeDefException(msg, e);
+            }
+        }
+
         // property definitions
         list.clear();
         Iterator iter = ntElem.getChildren(PROPERTYDEF_ELEMENT).iterator();
@@ -377,11 +389,6 @@ class NodeTypeDefStore {
             if (writeProtected != null && writeProtected.length() > 0) {
                 pd.setProtected(Boolean.valueOf(writeProtected).booleanValue());
             }
-            // primaryItem
-            String primaryItem = elem.getAttributeValue(PRIMARYITEM_ATTRIBUTE);
-            if (primaryItem != null && primaryItem.length() > 0) {
-                pd.setPrimaryItem(Boolean.valueOf(primaryItem).booleanValue());
-            }
             // multiple
             String multiple = elem.getAttributeValue(MULTIPLE_ATTRIBUTE);
             if (multiple != null && multiple.length() > 0) {
@@ -476,11 +483,6 @@ class NodeTypeDefStore {
             if (writeProtected != null && writeProtected.length() > 0) {
                 cnd.setProtected(Boolean.valueOf(writeProtected).booleanValue());
             }
-            // primaryItem
-            String primaryItem = elem.getAttributeValue(PRIMARYITEM_ATTRIBUTE);
-            if (primaryItem != null && primaryItem.length() > 0) {
-                cnd.setPrimaryItem(Boolean.valueOf(primaryItem).booleanValue());
-            }
             // sameNameSibs
             String sameNameSibs = elem.getAttributeValue(SAMENAMESIBS_ATTRIBUTE);
             if (sameNameSibs != null && sameNameSibs.length() > 0) {
@@ -519,6 +521,10 @@ class NodeTypeDefStore {
 
             // orderableChildNodes
             ntElem.setAttribute(ORDERABLECHILDNODES_ATTRIBUTE, Boolean.toString(ntd.hasOrderableChildNodes()));
+
+            // primaryItemName
+            String primaryItemName = ntd.getPrimaryItemName() == null ? "" : ntd.getPrimaryItemName().toJCRName(nsResolver);
+            ntElem.setAttribute(PRIMARYITEMNAME_ATTRIBUTE, primaryItemName);
 
             // property definitions
             PropDef[] pda = ntd.getPropertyDefs();
@@ -562,8 +568,6 @@ class NodeTypeDefStore {
                 elem.setAttribute(ONPARENTVERSION_ATTRIBUTE, OnParentVersionAction.nameFromValue(pd.getOnParentVersion()));
                 // protected
                 elem.setAttribute(PROTECTED_ATTRIBUTE, Boolean.toString(pd.isProtected()));
-                // primaryItem
-                elem.setAttribute(PRIMARYITEM_ATTRIBUTE, Boolean.toString(pd.isPrimaryItem()));
                 // multiple
                 elem.setAttribute(MULTIPLE_ATTRIBUTE, Boolean.toString(pd.isMultiple()));
             }
@@ -600,8 +604,6 @@ class NodeTypeDefStore {
                 elem.setAttribute(ONPARENTVERSION_ATTRIBUTE, OnParentVersionAction.nameFromValue(nd.getOnParentVersion()));
                 // protected
                 elem.setAttribute(PROTECTED_ATTRIBUTE, Boolean.toString(nd.isProtected()));
-                // primaryItem
-                elem.setAttribute(PRIMARYITEM_ATTRIBUTE, Boolean.toString(nd.isPrimaryItem()));
                 // sameNameSibs
                 elem.setAttribute(SAMENAMESIBS_ATTRIBUTE, Boolean.toString(nd.allowSameNameSibs()));
             }

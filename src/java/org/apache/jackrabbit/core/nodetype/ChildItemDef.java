@@ -36,7 +36,6 @@ abstract class ChildItemDef implements Cloneable {
     private int onParentVersion = OnParentVersionAction.COPY;
     private boolean writeProtected = false;
     private boolean mandatory = false;
-    private boolean primaryItem = false;
 
     protected Object clone() throws CloneNotSupportedException {
         // delegate to superclass which does a shallow copy;
@@ -56,8 +55,7 @@ abstract class ChildItemDef implements Cloneable {
                     && autoCreate == other.autoCreate
                     && onParentVersion == other.onParentVersion
                     && writeProtected == other.writeProtected
-                    && mandatory == other.mandatory
-                    && primaryItem == other.primaryItem;
+                    && mandatory == other.mandatory;
         }
         return false;
     }
@@ -92,10 +90,6 @@ abstract class ChildItemDef implements Cloneable {
         this.mandatory = mandatory;
     }
 
-    public void setPrimaryItem(boolean primaryItem) {
-        this.primaryItem = primaryItem;
-    }
-
     public QName getDeclaringNodeType() {
         return declaringNodeType;
     }
@@ -118,10 +112,6 @@ abstract class ChildItemDef implements Cloneable {
 
     public boolean isMandatory() {
         return mandatory;
-    }
-
-    public boolean isPrimaryItem() {
-        return primaryItem;
     }
 
     public boolean definesResidual() {

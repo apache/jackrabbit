@@ -39,9 +39,8 @@ public class QueryParser {
      * Parses a query <code>statement</code> according to a query
      * <code>language</code> into a query tree.
      * <p/>
-     * <code>language</code> must be one of: {@link javax.jcr.query.Query#JCRQL},
-     * {@link javax.jcr.query.Query#XPATH_DOCUMENT_VIEW},
-     * {@link javax.jcr.query.Query#XPATH_SYSTEM_VIEW}.
+     * <code>language</code> must be one of: {@link javax.jcr.query.Query#SQL},
+     * {@link javax.jcr.query.Query#XPATH}.
      *
      * @param statement the query statement.
      * @param language  the language of the query statement.
@@ -54,9 +53,9 @@ public class QueryParser {
                                       NamespaceResolver resolver)
             throws InvalidQueryException {
 
-        if (Query.XPATH_DOCUMENT_VIEW.equals(language)) {
+        if (Query.XPATH.equals(language)) {
             return XPathQueryBuilder.createQuery(statement, resolver);
-        } else if ("sql".equals(language)) {
+        } else if (Query.SQL.equals(language)) {
             return JCRSQLQueryBuilder.createQuery(statement, resolver);
         } else {
             throw new InvalidQueryException("Unsupported language: " + language);
@@ -87,9 +86,9 @@ public class QueryParser {
                                   NamespaceResolver resolver)
             throws InvalidQueryException {
 
-        if (Query.XPATH_DOCUMENT_VIEW.equals(language)) {
+        if (Query.XPATH.equals(language)) {
             return XPathQueryBuilder.toString(root, resolver);
-        } else if ("sql".equals(language)) {
+        } else if (Query.SQL.equals(language)) {
             return JCRSQLQueryBuilder.toString(root, resolver);
         } else {
             throw new InvalidQueryException("Unsupported language: " + language);

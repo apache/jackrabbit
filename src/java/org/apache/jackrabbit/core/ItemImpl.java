@@ -1074,7 +1074,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     /**
      * @see Item#remove
      */
-    public void remove() throws RepositoryException {
+    public void remove() throws VersionException, LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1110,7 +1110,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
         NodeImpl parentNode = (NodeImpl) getParent();
 
-        // check if versioning allows write
+        // check if versioning allows write (only cheap call)
         if (!parentNode.isCheckedOut(false)) {
             String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
             log.error(msg);
@@ -1136,9 +1136,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * @see Item#save
      */
     public void save()
-            throws AccessDeniedException, LockException,
-            ConstraintViolationException, InvalidItemStateException,
-            ReferentialIntegrityException, RepositoryException {
+            throws AccessDeniedException, ConstraintViolationException,
+            InvalidItemStateException, ReferentialIntegrityException,
+            VersionException, LockException, RepositoryException {
         // check state of this instance
         sanityCheck();
 

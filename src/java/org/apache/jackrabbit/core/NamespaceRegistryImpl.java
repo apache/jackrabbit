@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -223,7 +224,8 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
      * @see NamespaceRegistry#registerNamespace
      */
     public void registerNamespace(String prefix, String uri)
-            throws NamespaceException, RepositoryException {
+            throws NamespaceException, UnsupportedRepositoryOperationException,
+            RepositoryException {
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
         }
@@ -278,7 +280,8 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
      * @see NamespaceRegistry#unregisterNamespace
      */
     public void unregisterNamespace(String prefix)
-            throws NamespaceException, RepositoryException {
+            throws NamespaceException, UnsupportedRepositoryOperationException,
+            RepositoryException {
         if (reservedPrefixes.contains(prefix)) {
             throw new NamespaceException("reserved prefix: " + prefix);
         }
@@ -296,14 +299,14 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
     /**
      * @see NamespaceRegistry#getPrefixes
      */
-    public String[] getPrefixes() {
+    public String[] getPrefixes() throws RepositoryException {
         return (String[]) prefixToURI.keySet().toArray(new String[prefixToURI.keySet().size()]);
     }
 
     /**
      * @see NamespaceRegistry#getURIs
      */
-    public String[] getURIs() {
+    public String[] getURIs() throws RepositoryException {
         return (String[]) uriToPrefix.keySet().toArray(new String[uriToPrefix.keySet().size()]);
     }
 

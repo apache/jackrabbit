@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Node;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
@@ -29,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * This class implements the {@link javax.jcr.query.QueryManager} interface.
+ * This class implements the {@link QueryManager} interface.
  */
 public class QueryManagerImpl implements QueryManager {
 
@@ -37,7 +38,7 @@ public class QueryManagerImpl implements QueryManager {
      * Defines all supported query languages
      */
     private static final String[] SUPPORTED_QUERIES = new String[]{
-        Query.JCRQL, Query.XPATH_DOCUMENT_VIEW, Query.XPATH_SYSTEM_VIEW
+        Query.SQL, Query.XPATH
     };
 
     /**
@@ -87,20 +88,12 @@ public class QueryManagerImpl implements QueryManager {
     }
 
     /**
-     * @see QueryManager#getQuery(java.lang.String)
+     * @see QueryManager#getQuery(Node)
      */
-    public Query getQuery(String absPath)
+    public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
 
-        return searchMgr.createQuery(session, itemMgr, absPath);
-    }
-
-    /**
-     * @see QueryManager#getQueryByUUID(java.lang.String)
-     */
-    public Query getQueryByUUID(String uuid)
-            throws InvalidQueryException, RepositoryException {
-        return getQuery(session.getNodeByUUID(uuid).getPath());
+        return searchMgr.createQuery(session, itemMgr, node.getPath());
     }
 
     /**

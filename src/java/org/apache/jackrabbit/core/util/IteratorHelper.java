@@ -28,7 +28,7 @@ import java.util.Iterator;
  * interfaces.
  */
 public class IteratorHelper
-        implements NodeIterator, PropertyIterator, NodeTypeIterator, StringIterator {
+        implements NodeIterator, PropertyIterator, NodeTypeIterator {
 
     static final long UNDETERMINED_SIZE = -1;
 
@@ -127,12 +127,5 @@ public class IteratorHelper
      */
     public NodeType nextNodeType() {
         return (NodeType) next();
-    }
-
-    /**
-     * @see StringIterator#nextString()
-     */
-    public String nextString() {
-        return (String) next();
     }
 }

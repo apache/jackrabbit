@@ -111,13 +111,6 @@ abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * @see ItemDef#isPrimaryItem
-     */
-    public boolean isPrimaryItem() {
-        return itemDef.isPrimaryItem();
-    }
-
-    /**
      * @see ItemDef#isProtected
      */
     public boolean isProtected() {

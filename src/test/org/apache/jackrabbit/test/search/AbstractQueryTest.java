@@ -73,6 +73,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void checkResult(QueryResult result, int hits, int properties)
             throws RepositoryException {
+/*
         checkResult(result, hits);
         // now check property count
         int count = 0;
@@ -99,6 +100,9 @@ public class AbstractQueryTest extends AbstractJCRTest {
             log.println("  NONE");
         }
         assertEquals("Wrong property count.", properties, count);
+*/
+        //@todo rewrite test case
+        fail("need to rewrite test case according to interface change");
     }
 
 }

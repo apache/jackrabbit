@@ -289,6 +289,19 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
+     * @see NodeType#getPrimaryItemName
+     */
+    public String getPrimaryItemName() {
+        try {
+            return ntd.getPrimaryItemName().toJCRName(nsResolver);
+        } catch (NoPrefixDeclaredException npde) {
+            // should never get here
+            log.error("encountered unregistered namespace in name of primary item", npde);
+            return ntd.getName().toString();
+        }
+    }
+
+    /**
      * @see NodeType#isMixin
      */
     public boolean isMixin() {

@@ -16,22 +16,20 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.TransactionContext;
 import org.apache.jackrabbit.core.state.TransactionException;
 import org.apache.jackrabbit.core.state.TransactionListener;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
-import javax.jcr.xa.XASession;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Session extension that provides XA support.
@@ -77,7 +75,7 @@ public class XASessionImpl extends SessionImpl
     //-------------------------------------------------------------< XASession >
 
     /**
-     * @see javax.jcr.xa.XASession#getXAResource
+     * @see XASession#getXAResource
      */
     public XAResource getXAResource() {
         return this;

@@ -39,11 +39,9 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.ItemExistsException;
-import javax.jcr.PathNotFoundException;
+import javax.jcr.*;
+import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -202,24 +200,13 @@ class QueryImpl implements javax.jcr.query.Query {
         }
     }
 
-    public String getPersistentQueryUUID() throws ItemNotFoundException {
-        if (path == null) {
-            throw new ItemNotFoundException("not a persistent query");
-        }
-        try {
-            // FIXME what if nt:query does not have a mix:referencable?
-            return session.getRootNode().getNode(path.toJCRPath(session.getNamespaceResolver())).getUUID();
-        } catch (RepositoryException e) {
-            throw new ItemNotFoundException(e.getMessage(), e);
-        } catch (NoPrefixDeclaredException e) {
-            throw new ItemNotFoundException(e.getMessage(), e);
-        }
-    }
-
     public void save(String absPath)
             throws ItemExistsException,
             PathNotFoundException,
+            VersionException,
             ConstraintViolationException,
+            LockException,
+            UnsupportedRepositoryOperationException,
             RepositoryException {
         try {
             NamespaceResolver resolver = session.getNamespaceResolver();

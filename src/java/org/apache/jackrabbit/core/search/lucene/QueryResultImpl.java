@@ -17,14 +17,15 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.NodeIterator;
-import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.RowIterator;
 
 /**
  * Implements the <code>javax.jcr.query.QueryResult</code> interface.
@@ -52,18 +53,36 @@ class QueryResultImpl implements QueryResult {
     }
 
     /**
-     * @see QueryResult#getProperties()  
+     * @see QueryResult#getPropertyNames()
      */
-    public PropertyIterator getProperties() throws RepositoryException {
-        return new PropertyIteratorImpl(selectProps,
-                new NodeIteratorImpl(itemMgr, uuids),
-                resolver);
+    public String[] getPropertyNames() throws RepositoryException {
+        try {
+            String[] propNames = new String[selectProps.length];
+            for (int i = 0; i < selectProps.length; i++) {
+                propNames[i] = selectProps[i].toJCRName(resolver);
+            }
+            return propNames;
+        } catch (NoPrefixDeclaredException npde) {
+            String msg = "encountered invalid property name";
+            log.error(msg, npde);
+            throw new RepositoryException(msg, npde);
+
+        }
     }
+
 
     /**
      * @see QueryResult#getNodes()
      */
     public NodeIterator getNodes() throws RepositoryException {
         return new NodeIteratorImpl(itemMgr, uuids);
+    }
+
+    /**
+     * @see QueryResult#getRows()
+     */
+    public RowIterator getRows() throws RepositoryException {
+        // @todo implement QueryResult#getRows()
+        throw new RepositoryException("not yet implemented");
     }
 }

@@ -128,7 +128,7 @@ public class OrderByTest extends AbstractQueryTest {
         checkResultOrder(result, new String[]{"node2", "node3", "node1"});
 
         String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by @value, @text";
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResultOrder(result, new String[]{"node2", "node3", "node1"});
 
@@ -140,7 +140,7 @@ public class OrderByTest extends AbstractQueryTest {
         checkResultOrder(result, new String[]{"node1", "node3", "node2"});
 
         xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by @value descending, @text descending";
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResultOrder(result, new String[]{"node1", "node3", "node2"});
 
@@ -152,7 +152,7 @@ public class OrderByTest extends AbstractQueryTest {
         checkResultOrder(result, new String[]{"node1", "node2", "node3"});
 
         xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by @value descending, @text";
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResultOrder(result, new String[]{"node1", "node2", "node3"});
     }
@@ -204,7 +204,7 @@ public class OrderByTest extends AbstractQueryTest {
         checkResultOrder(result, nodeNames);
 
         String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by @value";
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResultOrder(result, nodeNames);
 
@@ -218,7 +218,7 @@ public class OrderByTest extends AbstractQueryTest {
         checkResultOrder(result, nodeNames);
 
         xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by @value descending";
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResultOrder(result, nodeNames);
     }

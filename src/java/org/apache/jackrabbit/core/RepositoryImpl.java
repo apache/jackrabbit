@@ -79,12 +79,12 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
 
     // pre-defined values of well known repository properties
     // @todo update as necessary
-    private static final String SPEC_VERSION = "0.15";
+    private static final String SPEC_VERSION = "0.16.2";
     private static final String SPEC_NAME = "Content Repository API for Java(TM) Technology Specification";
     private static final String REP_VENDOR = "Apache Software Foundation";
     private static final String REP_VENDOR_URL = "http://www.apache.org/";
     private static final String REP_NAME = "Jackrabbit";
-    private static final String REP_VERSION = "0.15";
+    private static final String REP_VERSION = "0.16.2";
 
     // system root location (jcr:system)
     public static final QName SYSTEM_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "system");
@@ -383,10 +383,10 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     }
 
     /**
-     * Returns the names of all workspaces of this repository.
+     * Returns the names of <i>all</i> workspaces in this repository.
      *
-     * @return the names of all workspaces of this repository.
-     * @see SessionImpl#getWorkspaceNames
+     * @return the names of all workspaces in this repository.
+     * @see javax.jcr.Workspace#getAccessibleWorkspaceNames()
      */
     String[] getWorkspaceNames() {
         return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
@@ -538,12 +538,25 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             repProps.clear();
             if (!propFile.exists() || propFile.length() == 0) {
                 // initialize properties with pre-defined values
-                repProps.setProperty(SPEC_VERSION_PROPERTY, SPEC_VERSION);
-                repProps.setProperty(SPEC_NAME_PROPERTY, SPEC_NAME);
-                repProps.setProperty(REP_VENDOR_PROPERTY, REP_VENDOR);
-                repProps.setProperty(REP_VENDOR_URL_PROPERTY, REP_VENDOR_URL);
-                repProps.setProperty(REP_NAME_PROPERTY, REP_NAME);
-                repProps.setProperty(REP_VERSION_PROPERTY, REP_VERSION);
+                repProps.setProperty(SPEC_VERSION_DESC, SPEC_VERSION);
+                repProps.setProperty(SPEC_NAME_DESC, SPEC_NAME);
+                repProps.setProperty(REP_VENDOR_DESC, REP_VENDOR);
+                repProps.setProperty(REP_VENDOR_URL_DESC, REP_VENDOR_URL);
+                repProps.setProperty(REP_NAME_DESC, REP_NAME);
+                repProps.setProperty(REP_VERSION_DESC, REP_VERSION);
+
+                // @todo check repository descriptor values with current state of implementation
+                repProps.setProperty(LEVEL_1_SUPPORTED, "true");
+                repProps.setProperty(LEVEL_2_SUPPORTED, "true");
+                repProps.setProperty(OPTION_TRANSACTIONS_SUPPORTED, "true");
+                repProps.setProperty(OPTION_VERSIONING_SUPPORTED, "true");
+                repProps.setProperty(OPTION_OBSERVATION_SUPPORTED, "true");
+                repProps.setProperty(OPTION_LOCKING_SUPPORTED, "true");
+                repProps.setProperty(OPTION_QUERY_SQL_SUPPORTED, "true");
+                repProps.setProperty(QUERY_XPATH_POS_INDEX, "true");
+                repProps.setProperty(QUERY_XPATH_DOC_ORDER, "true");
+                repProps.setProperty(QUERY_JCRPATH, "true");
+                repProps.setProperty(QUERY_JCRSCORE, "true");
 
                 repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
                 repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
@@ -585,31 +598,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     }
 
     /**
-     * @return
-     */
-    public Properties getProperties() {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
-
-        return (Properties) repProps.clone();
-    }
-
-    /**
-     * @param key
-     * @return
-     */
-    public String getProperty(String key) {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
-
-        return repProps.getProperty(key);
-    }
-
-    /**
      * Returns the system root node (i.e. /jcr:system)
      *
      * @param session
@@ -631,7 +619,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      * @return the workspace persistence manager
      * @throws RepositoryException if the persistence manager could not be instantiated/initialized
      */
-    public static PersistenceManager createPersistenceManager(File homeDir, 
+    private static PersistenceManager createPersistenceManager(File homeDir, 
                                                               FileSystem fs, 
                                                               PersistenceManagerConfig pmConfig,
                                                               String rootNodeUUID,
@@ -706,6 +694,35 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     public Session login(String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
         return login(null, workspaceName);
+    }
+
+    /**
+     * @see Repository#login()
+     */
+    public Session login() throws LoginException, RepositoryException {
+        return login(null, null);
+    }
+
+    /**
+     * @see Repository#login(Credentials)
+     */
+    public Session login(Credentials credentials)
+            throws LoginException, RepositoryException {
+        return login(credentials, null);
+    }
+
+    /**
+     * @see Repository#getDescriptor(String)
+     */
+    public String getDescriptor(String key) {
+        return repProps.getProperty(key);
+    }
+
+    /**
+     * @see Repository#getDescriptorKeys()
+     */
+    public String[] getDescriptorKeys() {
+        return (String[]) repProps.keySet().toArray(new String[repProps.keySet().size()]);
     }
 
     //------------------------------------------------------< SessionListener >

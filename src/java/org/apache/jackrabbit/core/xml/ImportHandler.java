@@ -126,6 +126,8 @@ public class ImportHandler extends DefaultHandler {
             } catch (RepositoryException re) {
                 throw new SAXException("failed to register namespace " + uri + " with prefix " + prefix, re);
             }
+        } catch (RepositoryException re) {
+            throw new SAXException("failed to check prefix for namespace " + uri, re);
         }
     }
 
