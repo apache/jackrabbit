@@ -16,7 +16,13 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.BaseException;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -35,7 +41,12 @@ import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>NodeTypeDefStore</code> ...

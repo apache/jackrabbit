@@ -1217,7 +1217,8 @@ public class NodeImpl extends ItemImpl implements Node {
     protected Property internalSetProperty(QName name, InternalValue[] values)
             throws ValueFormatException, RepositoryException {
         int type;
-        if (values == null || values.length == 0) {
+        if (values == null || values.length == 0
+                || values[0] == null) {
             type = PropertyType.UNDEFINED;
         } else {
             type = values[0].getType();
@@ -1441,7 +1442,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ValueFormatException, VersionException, LockException,
             RepositoryException {
         int type;
-        if (values == null || values.length == 0) {
+        if (values == null || values.length == 0
+                || values[0] == null) {
             type = PropertyType.UNDEFINED;
         } else {
             type = values[0].getType();
@@ -1762,7 +1764,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ValueFormatException, VersionException, LockException,
             RepositoryException {
         int type;
-        if (values == null || values.length == 0) {
+        if (values == null || values.length == 0
+                || values[0] == null) {
             type = PropertyType.UNDEFINED;
         } else {
             type = values[0].getType();

@@ -20,7 +20,9 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * <code>NodeReferences</code> represents the references (i.e. properties of
@@ -59,11 +61,12 @@ public class NodeReferences implements Serializable {
      * @param targetId
      */
     public NodeReferences(NodeReferencesId targetId) {
-        this.targetId  = targetId;
+        this.targetId = targetId;
     }
 
     /**
      * Return the target id of this node references object.
+     *
      * @return target id
      */
     public NodeReferencesId getTargetId() {
@@ -72,6 +75,7 @@ public class NodeReferences implements Serializable {
 
     /**
      * Return the UUID of the target id
+     *
      * @return UUID of the target id
      */
     public String getUUID() {
@@ -80,8 +84,9 @@ public class NodeReferences implements Serializable {
 
     /**
      * Return a flag indicating whether this object holds any references
+     *
      * @return <code>true</code> if this object holds references,
-     * <code>false</code> otherwise
+     *         <code>false</code> otherwise
      */
     public boolean hasReferences() {
         return !references.isEmpty();

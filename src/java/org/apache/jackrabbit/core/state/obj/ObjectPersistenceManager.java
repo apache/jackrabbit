@@ -16,20 +16,47 @@
  */
 package org.apache.jackrabbit.core.state.obj;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.fs.*;
+import org.apache.jackrabbit.core.BLOBFileValue;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.AbstractPersistenceManager;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PMContext;
+import org.apache.jackrabbit.core.state.PersistenceManager;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <code>ObjectPersistenceManager</code> is a <code>FileSystem</code>-based
@@ -42,7 +69,9 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
 
     private static Logger log = Logger.getLogger(ObjectPersistenceManager.class);
 
-    /** encoding used for serializing String values */
+    /**
+     * encoding used for serializing String values
+     */
     private static final String ENCODING = "UTF-8";
 
     /**
@@ -533,8 +562,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             throw new IllegalStateException("not initialized");
         }
 
-        String propFilePath = buildPropFilePath(
-                id.getParentUUID(), id.getName());
+        String propFilePath = buildPropFilePath(id.getParentUUID(), id.getName());
 
         try {
             if (!itemStateFS.isFile(propFilePath)) {

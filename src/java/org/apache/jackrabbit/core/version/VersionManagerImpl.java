@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
@@ -104,6 +105,7 @@ public class VersionManagerImpl implements VersionManager {
      * Close this version manager. After having closed a persistence
      * manager, further operations on this object are treated as illegal
      * and throw
+     *
      * @throws Exception if an error occurs
      */
     public void close() throws Exception {

@@ -16,22 +16,27 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.ItemLifeCycleListener;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.ItemStateException;
 
 import javax.jcr.Item;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.PropertyIterator;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import java.util.List;
 
 /**
  * This Class implements a version history that extends a node.
@@ -152,7 +157,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             QName[] labels = history.getVersionLabels();
             String[] ret = new String[labels.length];
-            for (int i=0; i<labels.length; i++) {
+            for (int i = 0; i < labels.length; i++) {
                 ret[i] = labels[i].toJCRName(session.getNamespaceResolver());
             }
             return ret;
@@ -170,7 +175,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             QName[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
             String[] ret = new String[labels.length];
-            for (int i=0; i<labels.length; i++) {
+            for (int i = 0; i < labels.length; i++) {
                 ret[i] = labels[i].toJCRName(session.getNamespaceResolver());
             }
             return ret;
@@ -185,7 +190,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public boolean hasVersionLabel(String label) {
         try {
             QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
-            return history.getVersionByLabel(qLabel)!=null;
+            return history.getVersionByLabel(qLabel) != null;
         } catch (IllegalNameException e) {
             throw new IllegalArgumentException("Unable to resolve label: " + e);
         } catch (UnknownPrefixException e) {
@@ -216,13 +221,13 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws UnsupportedRepositoryOperationException, VersionException,
             RepositoryException {
 
-	// check if any references exist on this version
-	VersionImpl v = (VersionImpl) getVersion(versionName);
-	PropertyIterator iter = v.getReferences();
-	if (iter.hasNext()) {
-	    throw new VersionException("Unable to remove version. At least once referenced: " + ((PropertyImpl) iter.nextProperty()).safeGetJCRPath());
-	}
-	history.removeVersion(v.getQName());
+        // check if any references exist on this version
+        VersionImpl v = (VersionImpl) getVersion(versionName);
+        PropertyIterator iter = v.getReferences();
+        if (iter.hasNext()) {
+            throw new VersionException("Unable to remove version. At least once referenced: " + ((PropertyImpl) iter.nextProperty()).safeGetJCRPath());
+        }
+        history.removeVersion(v.getQName());
     }
 
     /**
@@ -247,6 +252,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     /**
      * Returns the UUID of the node that was versioned.
+     *
      * @return
      */
     public String getVersionableUUID() throws RepositoryException {
@@ -255,6 +261,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     /**
      * Checks if the given version belongs to this history
+     *
      * @param version
      * @throws VersionException
      * @throws RepositoryException
@@ -268,7 +275,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * In addition to the normal behaviour, this method also filters out the
      * references that do not exist in this workspace.
      */

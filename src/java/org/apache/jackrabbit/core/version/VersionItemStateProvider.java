@@ -17,9 +17,27 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.*;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
@@ -75,10 +93,14 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
      */
     private NodeDefId NDEF_VERSION_LABELS;
 
-    /** the parent id */
+    /**
+     * the parent id
+     */
     private final String parentId;
 
-    /** the root node id */
+    /**
+     * the root node id
+     */
     private final String rootNodeId;
 
     /**
@@ -104,6 +126,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
 
     /**
      * Creates a new root node state
+     *
      * @throws RepositoryException
      */
     private void createRootNodeState() throws RepositoryException {
@@ -151,12 +174,12 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
                 if (vi instanceof InternalVersion) {
                     InternalVersion v = (InternalVersion) vi;
                     InternalVersion[] suc = v.getSuccessors();
-                    for (int i=0; i<suc.length; i++) {
+                    for (int i = 0; i < suc.length; i++) {
                         InternalVersion s = suc[i];
                         ref.addReference(new PropertyId(s.getId(), JCR_PREDECESSORS));
                     }
                     InternalVersion[] pred = v.getPredecessors();
-                    for (int i=0; i<pred.length; i++) {
+                    for (int i = 0; i < pred.length; i++) {
                         InternalVersion p = pred[i];
                         ref.addReference(new PropertyId(p.getId(), JCR_SUCCESSORS));
                     }

@@ -16,8 +16,26 @@
  */
 package org.apache.jackrabbit.core.search.xpath;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.search.*;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.SearchManager;
+import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.search.AndQueryNode;
+import org.apache.jackrabbit.core.search.LocationStepQueryNode;
+import org.apache.jackrabbit.core.search.NAryQueryNode;
+import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.search.NotQueryNode;
+import org.apache.jackrabbit.core.search.OrQueryNode;
+import org.apache.jackrabbit.core.search.OrderQueryNode;
+import org.apache.jackrabbit.core.search.PathQueryNode;
+import org.apache.jackrabbit.core.search.QueryNode;
+import org.apache.jackrabbit.core.search.QueryRootNode;
+import org.apache.jackrabbit.core.search.RelationQueryNode;
+import org.apache.jackrabbit.core.search.TextsearchQueryNode;
 import org.apache.jackrabbit.core.util.ISO9075;
 
 import javax.jcr.query.InvalidQueryException;
@@ -141,7 +159,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Creates a new <code>XPathQueryBuilder</code> instance.
      *
      * @param statement the XPath statement.
-     * @param resolver the namespace resolver to use.
+     * @param resolver  the namespace resolver to use.
      * @throws InvalidQueryException if the XPath statement is malformed.
      */
     private XPathQueryBuilder(String statement, NamespaceResolver resolver)
@@ -176,7 +194,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Creates a <code>QueryNode</code> tree from a XPath statement.
      *
      * @param statement the XPath statement.
-     * @param resolver the namespace resolver to use.
+     * @param resolver  the namespace resolver to use.
      * @return the <code>QueryNode</code> tree for the XPath statement.
      * @throws InvalidQueryException if the XPath statement is malformed.
      */
@@ -190,11 +208,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Creates a String representation of the query node tree in XPath syntax.
      *
-     * @param root the root of the query node tree.
+     * @param root     the root of the query node tree.
      * @param resolver to resolve QNames.
      * @return a String representation of the query node tree.
      * @throws InvalidQueryException if the query node tree cannot be converted
-     *   into a String representation due to restrictions in XPath.
+     *                               into a String representation due to restrictions in XPath.
      */
     public static String toString(QueryRootNode root, NamespaceResolver resolver)
             throws InvalidQueryException {
@@ -217,9 +235,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      *
      * @param node the current node as created by the XPath parser.
      * @param data the current <code>QueryNode</code> created by this
-     *  <code>XPathVisitor</code>.
+     *             <code>XPathVisitor</code>.
      * @return the current <code>QueryNode</code>. Can be different from
-     *  <code>data</code>.
+     *         <code>data</code>.
      */
     public Object visit(SimpleNode node, Object data) {
         switch (node.getId()) {
@@ -302,7 +320,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     if (node.getId() == JJTINTEGERLITERAL) {
                         int index = Integer.parseInt(node.getValue());
                         ((LocationStepQueryNode) data).setIndex(index);
-                } else {
+                    } else {
                         exceptions.add(new InvalidQueryException("LocationStep only allows integer literal as position index"));
                     }
                 } else {
@@ -319,7 +337,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 break;
             case JJTORDERMODIFIER:
                 if (node.jjtGetNumChildren() > 0
-                        && ((SimpleNode) node.jjtGetChild(0)) .getId() == JJTDESCENDING) {
+                        && ((SimpleNode) node.jjtGetChild(0)).getId() == JJTDESCENDING) {
                     OrderQueryNode.OrderSpec[] specs = ((OrderQueryNode) data).getOrderSpecs();
                     specs[specs.length - 1].setAscending(false);
                 }
@@ -337,7 +355,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Creates a <code>LocationStepQueryNode</code> at the current position
      * in parent.
      *
-     * @param node the current node in the xpath syntax tree.
+     * @param node   the current node in the xpath syntax tree.
      * @param parent the parent <code>PathQueryNode</code>.
      * @return the created <code>LocationStepQueryNode</code>.
      */
@@ -365,9 +383,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Creates a name test either for a <code>LocationStepQueryNode</code> or
      * for a <code>RelationQueryNode</code>.
      *
-     * @param node the current node in the xpath syntax tree.
+     * @param node      the current node in the xpath syntax tree.
      * @param queryNode either a <code>LocationStepQueryNode</code> or a
-     *   <code>RelationQueryNode</code>.
+     *                  <code>RelationQueryNode</code>.
      */
     private void createNameTest(SimpleNode node, QueryNode queryNode) {
         if (node.jjtGetNumChildren() > 0) {
@@ -409,7 +427,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Creates a new {@link org.apache.jackrabbit.core.search.RelationQueryNode}
      * with <code>queryNode</code> as its parent node.
      *
-     * @param node a comparison expression node.
+     * @param node      a comparison expression node.
      * @param queryNode the current <code>QueryNode</code>.
      */
     private void createExpression(SimpleNode node, NAryQueryNode queryNode) {
@@ -482,8 +500,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Assigns a value to the <code>queryNode</code>.
      *
-     * @param node must be of type string, decimal, double or integer; otherwise
-     *   an InvalidQueryException is added to {@link #exceptions}.
+     * @param node      must be of type string, decimal, double or integer; otherwise
+     *                  an InvalidQueryException is added to {@link #exceptions}.
      * @param queryNode current node in the query tree.
      */
     private void assignValue(SimpleNode node, RelationQueryNode queryNode) {
@@ -509,7 +527,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Creates a function based on <code>node</code>.
      *
-     * @param node the function node from the xpath tree.
+     * @param node      the function node from the xpath tree.
      * @param queryNode the current query node.
      * @return
      */

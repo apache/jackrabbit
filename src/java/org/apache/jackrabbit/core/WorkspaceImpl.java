@@ -34,7 +34,6 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
-import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
@@ -194,167 +193,23 @@ public class WorkspaceImpl implements Workspace, Constants {
         session.createWorkspace(workspaceName);
     }
 
-    //-----------< misc. static helper methods for cross-workspace operations >
-    /**
-     * @param nodePath
-     * @param nsResolver
-     * @param hierMgr
-     * @param stateMgr
-     * @return
-     * @throws PathNotFoundException
-     * @throws RepositoryException
-     */
-    protected static NodeState getNodeState(String nodePath,
-                                            NamespaceResolver nsResolver,
-                                            HierarchyManagerImpl hierMgr,
-                                            ItemStateManager stateMgr)
-            throws PathNotFoundException, RepositoryException {
-        try {
-            return getNodeState(Path.create(nodePath, nsResolver, true), hierMgr, stateMgr);
-        } catch (MalformedPathException mpe) {
-            String msg = "invalid path: " + nodePath;
-            log.debug(msg);
-            throw new RepositoryException(msg, mpe);
-        }
-    }
-
-    /**
-     * @param path
-     * @param nsResolver
-     * @param hierMgr
-     * @param stateMgr
-     * @return
-     * @throws PathNotFoundException
-     * @throws RepositoryException
-     */
-    protected static NodeState getParentNodeState(String path,
-                                                  NamespaceResolver nsResolver,
-                                                  HierarchyManagerImpl hierMgr,
-                                                  ItemStateManager stateMgr)
-
-            throws PathNotFoundException, RepositoryException {
-        try {
-            return getNodeState(Path.create(path, nsResolver, true).getAncestor(1), hierMgr, stateMgr);
-        } catch (MalformedPathException mpe) {
-            String msg = "invalid path: " + path;
-            log.debug(msg);
-            throw new RepositoryException(msg, mpe);
-        }
-    }
-
-    /**
-     * @param nodePath
-     * @param hierMgr
-     * @param stateMgr
-     * @return
-     * @throws PathNotFoundException
-     * @throws RepositoryException
-     */
-    protected static NodeState getNodeState(Path nodePath,
-                                            HierarchyManagerImpl hierMgr,
-                                            ItemStateManager stateMgr)
-            throws PathNotFoundException, RepositoryException {
-        try {
-            ItemId id = hierMgr.resolvePath(nodePath);
-            if (!id.denotesNode()) {
-                throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
-            }
-            return getNodeState((NodeId) id, stateMgr);
-        } catch (NoSuchItemStateException nsise) {
-            throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
-        } catch (ItemStateException ise) {
-            String msg = "internal error: failed to retrieve state of " + hierMgr.safeGetJCRPath(nodePath);
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
-        }
-    }
-
-    /**
-     * @param id
-     * @param stateMgr
-     * @return
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
-     */
-    protected static NodeState getNodeState(NodeId id,
-                                            ItemStateManager stateMgr)
-            throws NoSuchItemStateException, ItemStateException {
-        return (NodeState) stateMgr.getItemState(id);
-    }
-
-    /**
-     * Verifies that the node at <code>nodePath</code> is checked-out; throws a
-     * <code>VersionException</code> if that's not the case.
-     * <p/>
-     * A node is considered <i>checked-out</i> if it is versionable and
-     * checked-out, or is non-versionable but its nearest versionable ancestor
-     * is checked-out, or is non-versionable and there are no versionable
-     * ancestors.
-     *
-     * @param nodePath
-     * @param hierMgr
-     * @param stateMgr
-     * @throws VersionException
-     * @throws RepositoryException
-     */
-    protected static void verifyCheckedOut(Path nodePath,
-                                           HierarchyManagerImpl hierMgr,
-                                           ItemStateManager stateMgr)
-            throws VersionException, RepositoryException {
-        // search nearest ancestor that is versionable, start with node at nodePath
-        /**
-         * FIXME should not only rely on existence of jcr:isCheckedOut property
-         * but also verify that node.isNodeType("mix:versionable")==true;
-         * this would have a negative impact on performance though...
-         */
-        NodeState nodeState = getNodeState(nodePath, hierMgr, stateMgr);
-        while (!nodeState.hasPropertyEntry(JCR_ISCHECKEDOUT)) {
-            if (nodePath.denotesRoot()) {
-                return;
-            }
-            nodePath = nodePath.getAncestor(1);
-            nodeState = getNodeState(nodePath, hierMgr, stateMgr);
-        }
-        PropertyId propId =
-                new PropertyId(nodeState.getUUID(), JCR_ISCHECKEDOUT);
-        PropertyState propState;
-        try {
-            propState = (PropertyState) stateMgr.getItemState(propId);
-        } catch (ItemStateException ise) {
-            String msg = "internal error: failed to retrieve state of "
-                    + hierMgr.safeGetJCRPath(propId);
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
-        }
-        boolean checkedOut = ((Boolean) propState.getValues()[0].internalValue()).booleanValue();
-        if (!checkedOut) {
-            throw new VersionException(hierMgr.safeGetJCRPath(nodePath) + " is checked-in");
-        }
-    }
-
     /**
      * @param nodePath
      * @param nodeTypeName
-     * @param ntReg
-     * @param accessMgr
-     * @param hierMgr
-     * @param stateMgr
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
      * @throws PathNotFoundException
      * @throws ItemExistsException
      * @throws RepositoryException
      */
-    protected static void checkAddNode(Path nodePath, QName nodeTypeName,
-                                       NodeTypeRegistry ntReg,
-                                       AccessManager accessMgr,
-                                       HierarchyManagerImpl hierMgr,
-                                       ItemStateManager stateMgr)
+    protected void checkAddNode(Path nodePath, QName nodeTypeName)
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, ItemExistsException, RepositoryException {
 
+        AccessManager accessMgr = session.getAccessManager();
+
         Path parentPath = nodePath.getAncestor(1);
-        NodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
+        NodeState parentState = getNodeState(parentPath);
 
         // 1. check path & access rights
 
@@ -368,20 +223,23 @@ public class WorkspaceImpl implements Workspace, Constants {
                 throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + ": not allowed to add child node");
             }
         } catch (ItemNotFoundException infe) {
-            String msg = "internal error: failed to check access rights for " + hierMgr.safeGetJCRPath(parentPath);
+            String msg = "internal error: failed to check access rights for "
+                    + hierMgr.safeGetJCRPath(parentPath);
             log.debug(msg);
             throw new RepositoryException(msg, infe);
         }
 
         // 2. check node type constraints
 
+        NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
         ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
         if (parentDef.isProtected()) {
             throw new ConstraintViolationException(hierMgr.safeGetJCRPath(parentPath) + ": cannot add child node to protected parent node");
         }
-        EffectiveNodeType entParent = getEffectiveNodeType(parentState, ntReg);
+        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
         entParent.checkAddNodeConstraints(nodeName.getName(), nodeTypeName);
-        ChildNodeDef newNodeDef = findApplicableDefinition(nodeName.getName(), nodeTypeName, parentState, ntReg);
+        ChildNodeDef newNodeDef =
+                findApplicableDefinition(nodeName.getName(), nodeTypeName, parentState);
 
         // 3. check for name collisions
 
@@ -414,26 +272,20 @@ public class WorkspaceImpl implements Workspace, Constants {
 
     /**
      * @param nodePath
-     * @param ntReg
-     * @param accessMgr
-     * @param hierMgr
-     * @param stateMgr
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    protected static void checkRemoveNode(Path nodePath,
-                                          NodeTypeRegistry ntReg,
-                                          AccessManager accessMgr,
-                                          HierarchyManagerImpl hierMgr,
-                                          ItemStateManager stateMgr)
+    protected void checkRemoveNode(Path nodePath)
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, RepositoryException {
 
-        NodeState targetState = getNodeState(nodePath, hierMgr, stateMgr);
+        AccessManager accessMgr = session.getAccessManager();
+
+        NodeState targetState = getNodeState(nodePath);
         Path parentPath = nodePath.getAncestor(1);
-        NodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
+        NodeState parentState = getNodeState(parentPath);
 
         // 1. check path & access rights
 
@@ -453,6 +305,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         // 2. check node type constraints
 
+        NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
         ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
         if (parentDef.isProtected()) {
             throw new ConstraintViolationException(hierMgr.safeGetJCRPath(parentPath) + ": cannot remove child node of protected parent node");
@@ -467,27 +320,98 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
+     * Verifies that the node at <code>nodePath</code> is checked-out; throws a
+     * <code>VersionException</code> if that's not the case.
+     * <p/>
+     * A node is considered <i>checked-out</i> if it is versionable and
+     * checked-out, or is non-versionable but its nearest versionable ancestor
+     * is checked-out, or is non-versionable and there are no versionable
+     * ancestors.
+     *
+     * @param nodePath
+     * @throws VersionException
+     * @throws RepositoryException
+     */
+    protected void verifyCheckedOut(Path nodePath)
+            throws VersionException, RepositoryException {
+        // search nearest ancestor that is versionable, start with node at nodePath
+        /**
+         * FIXME should not only rely on existence of jcr:isCheckedOut property
+         * but also verify that node.isNodeType("mix:versionable")==true;
+         * this would have a negative impact on performance though...
+         */
+        NodeState nodeState = getNodeState(nodePath);
+        while (!nodeState.hasPropertyEntry(JCR_ISCHECKEDOUT)) {
+            if (nodePath.denotesRoot()) {
+                return;
+            }
+            nodePath = nodePath.getAncestor(1);
+            nodeState = getNodeState(nodePath);
+        }
+        PropertyId propId =
+                new PropertyId(nodeState.getUUID(), JCR_ISCHECKEDOUT);
+        PropertyState propState;
+        try {
+            propState = (PropertyState) stateMgr.getItemState(propId);
+        } catch (ItemStateException ise) {
+            String msg = "internal error: failed to retrieve state of "
+                    + hierMgr.safeGetJCRPath(propId);
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+        boolean checkedOut = ((Boolean) propState.getValues()[0].internalValue()).booleanValue();
+        if (!checkedOut) {
+            throw new VersionException(hierMgr.safeGetJCRPath(nodePath) + " is checked-in");
+        }
+    }
+
+    /**
+     * @param nodePath
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    protected NodeState getNodeState(Path nodePath)
+            throws PathNotFoundException, RepositoryException {
+        try {
+            ItemId id = hierMgr.resolvePath(nodePath);
+            if (!id.denotesNode()) {
+                throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
+            }
+            return (NodeState) stateMgr.getItemState(id);
+        } catch (NoSuchItemStateException nsise) {
+            throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
+        } catch (ItemStateException ise) {
+            String msg = "internal error: failed to retrieve state of "
+                    + hierMgr.safeGetJCRPath(nodePath);
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+    }
+
+    /**
      * Helper method that builds the effective (i.e. merged and resolved)
      * node type representation of the specified node's primary and mixin
      * node types.
      *
      * @param state
-     * @param ntReg
      * @return the effective node type
      * @throws RepositoryException
      */
-    protected static EffectiveNodeType getEffectiveNodeType(NodeState state,
-                                                            NodeTypeRegistry ntReg)
+    protected EffectiveNodeType getEffectiveNodeType(NodeState state)
             throws RepositoryException {
         // build effective node type of mixins & primary type:
         // existing mixin's
         HashSet set = new HashSet((state).getMixinTypeNames());
         // primary type
         set.add(state.getNodeTypeName());
+        NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
         try {
             return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: failed to build effective node type for node " + state.getUUID();
+            String msg =
+                    "internal error: failed to build effective node type for node "
+                    + state.getUUID();
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
@@ -501,28 +425,23 @@ public class WorkspaceImpl implements Workspace, Constants {
      * @param name
      * @param nodeTypeName
      * @param parentState
-     * @param ntReg
      * @return a <code>ChildNodeDef</code>
      * @throws ConstraintViolationException if no applicable child node definition
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    protected static ChildNodeDef findApplicableDefinition(QName name,
-                                                           QName nodeTypeName,
-                                                           NodeState parentState,
-                                                           NodeTypeRegistry ntReg)
+    protected ChildNodeDef findApplicableDefinition(QName name,
+                                                    QName nodeTypeName,
+                                                    NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
-        EffectiveNodeType entParent = getEffectiveNodeType(parentState, ntReg);
+        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
         return entParent.getApplicableChildNodeDef(name, nodeTypeName);
     }
 
-    private static NodeState copyNodeState(NodeState srcState,
-                                           String parentUUID,
-                                           NodeTypeRegistry ntReg,
-                                           HierarchyManagerImpl srcHierMgr,
-                                           ItemStateManager srcStateMgr,
-                                           UpdatableItemStateManager destStateMgr,
-                                           boolean clone)
+    private NodeState copyNodeState(NodeState srcState,
+                                    String parentUUID,
+                                    ItemStateManager srcStateMgr,
+                                    boolean clone)
             throws RepositoryException {
 
         NodeState newState;
@@ -531,9 +450,14 @@ public class WorkspaceImpl implements Workspace, Constants {
             if (clone) {
                 uuid = srcState.getUUID();
             } else {
+                /**
+                 * todo FIXME check mix:referenceable
+                 * make sure that copied reference properties are
+                 * refering to new uuid
+                 */
                 uuid = UUID.randomUUID().toString();	// create new version 4 uuid
             }
-            newState = destStateMgr.createNew(uuid, srcState.getNodeTypeName(), parentUUID);
+            newState = stateMgr.createNew(uuid, srcState.getNodeTypeName(), parentUUID);
             // copy node state
             // @todo special handling required for nodes with special semantics (e.g. those defined by mix:versionable, et.al.)
             // FIXME delegate to 'node type instance handler'
@@ -543,12 +467,13 @@ public class WorkspaceImpl implements Workspace, Constants {
             Iterator iter = srcState.getChildNodeEntries().iterator();
             while (iter.hasNext()) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-                NodeState srcChildState = (NodeState) srcStateMgr.getItemState(new NodeId(entry.getUUID()));
+                NodeState srcChildState =
+                        (NodeState) srcStateMgr.getItemState(new NodeId(entry.getUUID()));
                 // recursive copying of child node
                 NodeState newChildState = copyNodeState(srcChildState, uuid,
-                        ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
+                        srcStateMgr, clone);
                 // persist new child node
-                destStateMgr.store(newChildState);
+                stateMgr.store(newChildState);
                 // add new child node entry to new node
                 newState.addChildNodeEntry(entry.getName(), newChildState.getUUID());
             }
@@ -556,33 +481,30 @@ public class WorkspaceImpl implements Workspace, Constants {
             iter = srcState.getPropertyEntries().iterator();
             while (iter.hasNext()) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-                PropertyState srcChildState = (PropertyState) srcStateMgr.getItemState(new PropertyId(srcState.getUUID(), entry.getName()));
-                PropertyState newChildState = copyPropertyState(srcChildState, uuid, entry.getName(),
-                        ntReg, srcHierMgr, srcStateMgr, destStateMgr);
+                PropertyState srcChildState =
+                        (PropertyState) srcStateMgr.getItemState(new PropertyId(srcState.getUUID(), entry.getName()));
+                PropertyState newChildState =
+                        copyPropertyState(srcChildState, uuid, entry.getName());
                 // persist new property
-                destStateMgr.store(newChildState);
+                stateMgr.store(newChildState);
                 // add new property entry to new node
                 newState.addPropertyEntry(entry.getName());
             }
             return newState;
         } catch (ItemStateException ise) {
-            String msg = "internal error: failed to copy state of " + srcHierMgr.safeGetJCRPath(srcState.getId());
+            String msg = "internal error: failed to copy state of " + srcState.getId();
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
     }
 
-    private static PropertyState copyPropertyState(PropertyState srcState,
-                                                   String parentUUID,
-                                                   QName propName,
-                                                   NodeTypeRegistry ntReg,
-                                                   HierarchyManagerImpl srcHierMgr,
-                                                   ItemStateManager srcStateMgr,
-                                                   UpdatableItemStateManager destStateMgr)
+    private PropertyState copyPropertyState(PropertyState srcState,
+                                            String parentUUID,
+                                            QName propName)
             throws RepositoryException {
 
         // @todo special handling required for properties with special semantics (e.g. those defined by mix:versionable, mix:lockable, et.al.)
-        PropertyState newState = destStateMgr.createNew(propName, parentUUID);
+        PropertyState newState = stateMgr.createNew(propName, parentUUID);
         PropDefId defId = srcState.getDefinitionId();
         newState.setDefinitionId(defId);
         newState.setType(srcState.getType());
@@ -596,7 +518,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             newState.setValues(values);
             // FIXME delegate to 'node type instance handler'
             if (defId != null) {
-                PropDef def = ntReg.getPropDef(defId);
+                PropDef def = rep.getNodeTypeRegistry().getPropDef(defId);
                 if (def.getDeclaringNodeType().equals(MIX_REFERENCEABLE)) {
                     if (propName.equals(JCR_UUID)) {
                         // set correct value of jcr:uuid property
@@ -608,16 +530,10 @@ public class WorkspaceImpl implements Workspace, Constants {
         return newState;
     }
 
-    private static void internalCopy(String srcAbsPath,
-                                     ItemStateManager srcStateMgr,
-                                     HierarchyManagerImpl srcHierMgr,
-                                     String destAbsPath,
-                                     UpdatableItemStateManager destStateMgr,
-                                     HierarchyManagerImpl destHierMgr,
-                                     AccessManager accessMgr,
-                                     NamespaceResolver nsResolver,
-                                     NodeTypeRegistry ntReg,
-                                     boolean clone)
+    private void internalCopy(String srcAbsPath,
+                              WorkspaceImpl srcWsp,
+                              String destAbsPath,
+                              boolean clone)
             throws ConstraintViolationException, AccessDeniedException,
             VersionException, PathNotFoundException, ItemExistsException,
             LockException, RepositoryException {
@@ -627,8 +543,8 @@ public class WorkspaceImpl implements Workspace, Constants {
         Path srcPath;
         NodeState srcState;
         try {
-            srcPath = Path.create(srcAbsPath, nsResolver, true);
-            srcState = getNodeState(srcPath, srcHierMgr, srcStateMgr);
+            srcPath = Path.create(srcAbsPath, session.getNamespaceResolver(), true);
+            srcState = srcWsp.getNodeState(srcPath);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
@@ -640,10 +556,10 @@ public class WorkspaceImpl implements Workspace, Constants {
         Path destParentPath;
         NodeState destParentState;
         try {
-            destPath = Path.create(destAbsPath, nsResolver, true);
+            destPath = Path.create(destAbsPath, session.getNamespaceResolver(), true);
             destName = destPath.getNameElement();
             destParentPath = destPath.getAncestor(1);
-            destParentState = getNodeState(destParentPath, destHierMgr, destStateMgr);
+            destParentState = getNodeState(destParentPath);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
@@ -652,13 +568,14 @@ public class WorkspaceImpl implements Workspace, Constants {
         int ind = destName.getIndex();
         if (ind > 0) {
             // subscript in name element
-            String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
+            String msg = destAbsPath
+                    + ": invalid destination path (subscript in name element is not allowed)";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
 
         // make sure destination parent node is checked-out
-        verifyCheckedOut(destParentPath, destHierMgr, destStateMgr);
+        verifyCheckedOut(destParentPath);
 
         // @todo check locked-status
 
@@ -666,7 +583,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         try {
             // check read access right on source node
-            if (!accessMgr.isGranted(srcState.getId(), AccessManager.READ)) {
+            if (!session.getAccessManager().isGranted(srcState.getId(), AccessManager.READ)) {
                 throw new PathNotFoundException(srcAbsPath);
             }
         } catch (ItemNotFoundException infe) {
@@ -675,29 +592,32 @@ public class WorkspaceImpl implements Workspace, Constants {
             throw new RepositoryException(msg, infe);
         }
         // check node type constraints
-        checkAddNode(destPath, srcState.getNodeTypeName(), ntReg, accessMgr, destHierMgr, destStateMgr);
+        checkAddNode(destPath, srcState.getNodeTypeName());
 
         // 3. do copy operation (modify and persist affected states)
+
         try {
-            destStateMgr.edit();
+            stateMgr.edit();
 
             // create deep copy of source node state
             NodeState newState = copyNodeState(srcState, destParentState.getUUID(),
-                    ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
+                    srcWsp.getItemStateManager(), clone);
 
             // add to new parent
             destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
 
             // change definition (id) of new node
-            ChildNodeDef newNodeDef = findApplicableDefinition(destName.getName(), srcState.getNodeTypeName(), destParentState, ntReg);
+            ChildNodeDef newNodeDef =
+                    findApplicableDefinition(destName.getName(),
+                            srcState.getNodeTypeName(), destParentState);
             newState.setDefinitionId(new NodeDefId(newNodeDef));
 
             // persist states
-            destStateMgr.store(newState);
-            destStateMgr.store(destParentState);
+            stateMgr.store(newState);
+            stateMgr.store(destParentState);
 
             // finish update operations
-            destStateMgr.update();
+            stateMgr.update();
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
             log.debug(msg);
@@ -752,19 +672,26 @@ public class WorkspaceImpl implements Workspace, Constants {
         // check state of this instance
         sanityCheck();
 
-        // @todo reimplement Workspace#clone according to new spec
+        // check workspace name
+        if (getName().equals(srcWorkspace)) {
+            // same as current workspace
+            String msg = srcWorkspace + ": illegal workspace (same as current)";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        // @todo re-implement Workspace#clone (respect new removeExisting flag, etc)
 
         // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
-        ItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
-        // FIXME need to setup a hierarchy manager for source workspace
-        HierarchyManagerImpl srcHierMgr =
-                new HierarchyManagerImpl(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
+
+        // aquire session on other workspace (throws NoSuchWorkspaceException)
+        // @todo FIXME need to get session with same credentials as current
+        SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
+        WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
+
         // do cross-workspace copy
-        internalCopy(srcAbsPath, srcStateMgr, srcHierMgr,
-                destAbsPath, stateMgr, hierMgr,
-                session.getAccessManager(), session.getNamespaceResolver(),
-                rep.getNodeTypeRegistry(), true);
+        internalCopy(srcAbsPath, srcWsp, destAbsPath, true);
     }
 
     /**
@@ -779,10 +706,7 @@ public class WorkspaceImpl implements Workspace, Constants {
         sanityCheck();
 
         // do intra-workspace copy
-        internalCopy(srcAbsPath, stateMgr, hierMgr,
-                destAbsPath, stateMgr, hierMgr,
-                session.getAccessManager(), session.getNamespaceResolver(),
-                rep.getNodeTypeRegistry(), false);
+        internalCopy(srcAbsPath, this, destAbsPath, false);
     }
 
     /**
@@ -796,16 +720,23 @@ public class WorkspaceImpl implements Workspace, Constants {
         // check state of this instance
         sanityCheck();
 
+        // check workspace name
+        if (getName().equals(srcWorkspace)) {
+            // same as current workspace, delegate to intra-workspace copy method
+            copy(srcAbsPath, destAbsPath);
+            return;
+        }
+
         // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
-        ItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
-        // FIXME need to setup a hierarchy manager for source workspace
-        HierarchyManagerImpl srcHierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
+
+        // aquire session on other workspace (throws NoSuchWorkspaceException)
+        // @todo FIXME need to get session with same credentials as current
+        SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
+        WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
+
         // do cross-workspace copy
-        internalCopy(srcAbsPath, srcStateMgr, srcHierMgr,
-                destAbsPath, stateMgr, hierMgr,
-                session.getAccessManager(), session.getNamespaceResolver(),
-                rep.getNodeTypeRegistry(), false);
+        internalCopy(srcAbsPath, srcWsp, destAbsPath, false);
     }
 
     /**
@@ -832,8 +763,8 @@ public class WorkspaceImpl implements Workspace, Constants {
             srcPath = Path.create(srcAbsPath, session.getNamespaceResolver(), true);
             srcName = srcPath.getNameElement();
             srcParentPath = srcPath.getAncestor(1);
-            targetState = getNodeState(srcPath, hierMgr, stateMgr);
-            srcParentState = getNodeState(srcParentPath, hierMgr, stateMgr);
+            targetState = getNodeState(srcPath);
+            srcParentState = getNodeState(srcParentPath);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
@@ -854,7 +785,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             }
             destName = destPath.getNameElement();
             destParentPath = destPath.getAncestor(1);
-            destParentState = getNodeState(destParentPath, hierMgr, stateMgr);
+            destParentState = getNodeState(destParentPath);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
@@ -870,18 +801,15 @@ public class WorkspaceImpl implements Workspace, Constants {
         }
 
         // make sure both source & destination parent nodes are checked-out
-        verifyCheckedOut(srcParentPath, hierMgr, stateMgr);
-        verifyCheckedOut(destParentPath, hierMgr, stateMgr);
+        verifyCheckedOut(srcParentPath);
+        verifyCheckedOut(destParentPath);
 
         // @todo check locked-status
 
         // 2. check node type constraints & access rights
 
-        checkRemoveNode(srcPath, rep.getNodeTypeRegistry(),
-                session.getAccessManager(), hierMgr, stateMgr);
-        checkAddNode(destPath, targetState.getNodeTypeName(),
-                rep.getNodeTypeRegistry(), session.getAccessManager(),
-                hierMgr, stateMgr);
+        checkRemoveNode(srcPath);
+        checkAddNode(destPath, targetState.getNodeTypeName());
 
         // 3. do move operation (modify and persist affected states)
         try {
@@ -895,7 +823,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
 
             // change definition (id) of target node
-            ChildNodeDef newTargetDef = findApplicableDefinition(destName.getName(), targetState.getNodeTypeName(), destParentState, rep.getNodeTypeRegistry());
+            ChildNodeDef newTargetDef = findApplicableDefinition(destName.getName(), targetState.getNodeTypeName(), destParentState);
             targetState.setDefinitionId(new NodeDefId(newTargetDef));
 
             // remove from old parent
@@ -1008,6 +936,27 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         // check state of this instance
         sanityCheck();
+
+        // check path & retrieve state
+        Path targetPath;
+        NodeState targetState;
+
+        try {
+            targetPath = Path.create(parentAbsPath, session.getNamespaceResolver(), true);
+            targetState = getNodeState(targetPath);
+        } catch (MalformedPathException mpe) {
+            String msg = "invalid path: " + parentAbsPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, mpe);
+        }
+
+        // make sure target node is checked-out
+        verifyCheckedOut(targetPath);
+
+        // @todo check locked-status
+
+        // check node type constraints & access rights
+        checkAddNode(targetPath, targetState.getNodeTypeName());
 
         // @todo implement Workspace#getImportContentHandler
         throw new RepositoryException("not yet implemented");

@@ -729,17 +729,52 @@ public class EffectiveNodeType implements Cloneable {
             List existingDefs = (List) namedItemDefs.get(name);
             if (existingDefs != null) {
                 if (existingDefs.size() > 0) {
-                    /**
-                     * there already exists at least one definition with that
-                     * name; make sure none of them is auto-create
-                     */
+                    // there already exists at least one definition with that name
                     for (int j = 0; j < existingDefs.size(); j++) {
                         ChildItemDef existingDef = (ChildItemDef) existingDefs.get(j);
+                        // make sure none of them is auto-create
                         if (def.isAutoCreate() || existingDef.isAutoCreate()) {
                             // conflict
-                            String msg = "The item definition for '" + name + "' in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existingDef.getDeclaringNodeType() + "': name collision with auto-create definition";
+                            String msg = "The item definition for '" + name
+                                    + "' in node type '"
+                                    + def.getDeclaringNodeType()
+                                    + "' conflicts with node type '"
+                                    + existingDef.getDeclaringNodeType()
+                                    + "': name collision with auto-create definition";
                             log.debug(msg);
                             throw new NodeTypeConflictException(msg);
+                        }
+                        // check ambiguous definitions
+                        if (def.definesNode() == existingDef.definesNode()) {
+                            if (!def.definesNode()) {
+                                // property definition
+                                PropDef pd = (PropDef) def;
+                                PropDef epd = (PropDef) existingDef;
+                                // compare type & multiValued flag
+                                if (pd.getRequiredType() == epd.getRequiredType()
+                                        && pd.isMultiple() == epd.isMultiple()) {
+                                    // conflict
+                                    String msg = "The property definition for '"
+                                            + name + "' in node type '"
+                                            + def.getDeclaringNodeType()
+                                            + "' conflicts with node type '"
+                                            + existingDef.getDeclaringNodeType()
+                                            + "': ambiguous property definition";
+                                    log.debug(msg);
+                                    throw new NodeTypeConflictException(msg);
+                                }
+                            } else {
+                                // child node definition
+                                // conflict
+                                String msg = "The child node definition for '"
+                                        + name + "' in node type '"
+                                        + def.getDeclaringNodeType()
+                                        + "' conflicts with node type '"
+                                        + existingDef.getDeclaringNodeType()
+                                        + "': ambiguous child node definition";
+                                log.debug(msg);
+                                throw new NodeTypeConflictException(msg);
+                            }
                         }
                     }
                 }
@@ -771,14 +806,22 @@ public class EffectiveNodeType implements Cloneable {
                         if (pd.getRequiredType() == epd.getRequiredType()
                                 && pd.isMultiple() == epd.isMultiple()) {
                             // conflict
-                            String msg = "A property definition in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existing.getDeclaringNodeType() + "': ambiguos residual property definition";
+                            String msg = "A property definition in node type '"
+                                    + def.getDeclaringNodeType()
+                                    + "' conflicts with node type '"
+                                    + existing.getDeclaringNodeType()
+                                    + "': ambiguous residual property definition";
                             log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }
                     } else {
                         // child node definition
                         // conflict
-                        String msg = "A child node definition in node type '" + def.getDeclaringNodeType() + "' conflicts with node type '" + existing.getDeclaringNodeType() + "': ambiguos residual child node definition";
+                        String msg = "A child node definition in node type '"
+                                + def.getDeclaringNodeType()
+                                + "' conflicts with node type '"
+                                + existing.getDeclaringNodeType()
+                                + "': ambiguous residual child node definition";
                         log.debug(msg);
                         throw new NodeTypeConflictException(msg);
                     }

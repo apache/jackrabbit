@@ -16,8 +16,28 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.search.*;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.search.AndQueryNode;
+import org.apache.jackrabbit.core.search.ExactQueryNode;
+import org.apache.jackrabbit.core.search.LocationStepQueryNode;
+import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.search.NotQueryNode;
+import org.apache.jackrabbit.core.search.OrQueryNode;
+import org.apache.jackrabbit.core.search.OrderQueryNode;
+import org.apache.jackrabbit.core.search.PathQueryNode;
+import org.apache.jackrabbit.core.search.PropertyTypeRegistry;
+import org.apache.jackrabbit.core.search.QueryConstants;
+import org.apache.jackrabbit.core.search.QueryNodeVisitor;
+import org.apache.jackrabbit.core.search.QueryRootNode;
+import org.apache.jackrabbit.core.search.RelationQueryNode;
+import org.apache.jackrabbit.core.search.TextsearchQueryNode;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
@@ -28,18 +48,18 @@ import org.apache.lucene.search.RangeQuery;
 import org.apache.lucene.search.TermQuery;
 
 import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import javax.jcr.util.ISO8601;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.util.ISO8601;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Calendar;
 
 /**
  * Implements a query builder that takes an abstract query tree and creates
@@ -78,10 +98,10 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      * The analyzer instance to use for contains function query parsing
      */
     private Analyzer analyzer;
-    
+
     /**
      * The property type registry.
-     */ 
+     */
     private PropertyTypeRegistry propRegistry;
 
     /**
@@ -578,10 +598,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      * trying to find out the {@link javax.jcr.PropertyType}s.
      * If no property type is found looking up node type information, this
      * method will guess the property type.
+     *
      * @param propertyName the name of the property in the relation.
-     * @param literal the String literal in the relation.
+     * @param literal      the String literal in the relation.
      * @return the String values to use as term for the query.
-     */ 
+     */
     private String[] getStringValues(QName propertyName, String literal) {
         PropertyTypeRegistry.TypeMapping[] types = propRegistry.getPropertyTypes(propertyName);
         List values = new ArrayList();

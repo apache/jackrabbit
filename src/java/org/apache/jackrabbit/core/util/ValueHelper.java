@@ -21,7 +21,19 @@ import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.QName;
 
-import javax.jcr.*;
+import javax.jcr.BinaryValue;
+import javax.jcr.BooleanValue;
+import javax.jcr.DateValue;
+import javax.jcr.DoubleValue;
+import javax.jcr.LongValue;
+import javax.jcr.NameValue;
+import javax.jcr.PathValue;
+import javax.jcr.PropertyType;
+import javax.jcr.ReferenceValue;
+import javax.jcr.RepositoryException;
+import javax.jcr.StringValue;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 
 /**
  * The <code>ValueHelper</code> class provides several <code>Value</code>

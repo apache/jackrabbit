@@ -25,7 +25,13 @@ import org.apache.jackrabbit.core.util.Base64;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StringWriter;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
@@ -46,7 +52,7 @@ public class PropertyState extends ItemState {
      *
      * @param overlayedState the backing property state being overlayed
      * @param initialStatus  the initial status of the property state object
-     * @param isTransient   flag indicating whether this state is transient or not
+     * @param isTransient    flag indicating whether this state is transient or not
      */
     public PropertyState(PropertyState overlayedState, int initialStatus,
                          boolean isTransient) {

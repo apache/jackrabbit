@@ -15,13 +15,21 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.*;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.List;
@@ -213,11 +221,11 @@ public class PersistentNode {
             try {
                 PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
                 // someone calling this method will always alter the property state, so set status to modified
-                if (propState.getStatus()==ItemState.STATUS_EXISTING) {
+                if (propState.getStatus() == ItemState.STATUS_EXISTING) {
                     propState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 }
                 // although this is not quite correct, we mark node as modified aswell
-                if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
+                if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
                     nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 }
                 return propState;
@@ -231,7 +239,7 @@ public class PersistentNode {
             propState.setDefinitionId(PropDefId.valueOf("0"));
             // need to store nodestate
             nodeState.addPropertyEntry(name);
-            if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
+            if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
                 nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
             }
             return propState;
@@ -358,7 +366,7 @@ public class PersistentNode {
         PersistentNode node = new PersistentNode(stateMgr, state);
         // add new child node entry
         nodeState.addChildNodeEntry(name, state.getUUID());
-        if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
+        if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
             nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
         }
         return node;
@@ -407,13 +415,13 @@ public class PersistentNode {
     private void store(NodeState state)
             throws ItemStateException {
 
-        if (state.getStatus()!=ItemState.STATUS_EXISTING) {
+        if (state.getStatus() != ItemState.STATUS_EXISTING) {
             // first store all transient properties
             List props = state.getPropertyEntries();
             for (int i = 0; i < props.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
                 PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
-                if (pstate.getStatus()!=ItemState.STATUS_EXISTING) {
+                if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
                     stateMgr.store(pstate);
                 }
             }
@@ -451,13 +459,13 @@ public class PersistentNode {
      * @throws ItemStateException
      */
     private void reload(NodeState state) throws ItemStateException {
-        if (state.getStatus()!=ItemState.STATUS_EXISTING) {
+        if (state.getStatus() != ItemState.STATUS_EXISTING) {
             // first discard all all transient properties
             List props = state.getPropertyEntries();
             for (int i = 0; i < props.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
                 PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
-                if (pstate.getStatus()!=ItemState.STATUS_EXISTING) {
+                if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
                     pstate.discard();
                 }
             }
@@ -482,7 +490,7 @@ public class PersistentNode {
     protected void copyFrom(PropertyImpl prop) throws RepositoryException {
         if (prop.getDefinition().isMultiple()) {
             InternalValue[] values = prop.internalGetValues();
-            int type = values.length>0 ? values[0].getType() : prop.getDefinition().getRequiredType();
+            int type = values.length > 0 ? values[0].getType() : prop.getDefinition().getRequiredType();
             setPropertyValues(prop.getQName(), type, values);
         } else {
             setPropertyValue(prop.getQName(), prop.internalGetValue());
