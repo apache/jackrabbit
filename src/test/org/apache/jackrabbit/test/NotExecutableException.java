@@ -28,4 +28,18 @@ package org.apache.jackrabbit.test;
  * execute this test.
  */
 public class NotExecutableException extends Exception {
+
+    /**
+     * Creates a <code>NotExecutableException</code> without a message.
+     */
+    public NotExecutableException() {
+    }
+
+    /**
+     * Creates a <code>NotExecutableException</code> with a detailed message.
+     * @param message describes why the test case cannot be executed.
+     */
+    public NotExecutableException(String message) {
+        super(message);
+    }
 }
