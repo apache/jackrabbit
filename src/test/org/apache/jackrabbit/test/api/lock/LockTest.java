@@ -17,9 +17,11 @@
 package org.apache.jackrabbit.test.api.lock;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
+import javax.jcr.Repository;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
 
@@ -424,6 +426,30 @@ public class LockTest extends AbstractJCRTest {
 
         // lock holding node must be parent
         assertTrue("lock holding node must be parent", lock.getNode().equals(n1));
+    }
+
+    /**
+     * Tests if a locked, checked-in node can be unlocked
+     */
+    public void testCheckedInUnlock() throws Exception {
+        if (superuser.getRepository().getDescriptor(Repository.OPTION_VERSIONING_SUPPORTED) == null) {
+            throw new NotExecutableException("Repository does not support versioning.");
+        }
+
+        // set up versionable and lockable node
+        Node testNode = testRootNode.addNode(nodeName1);
+        testNode.addMixin(mixVersionable);
+        testNode.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock and check-in
+        testNode.lock(false, true);
+        testNode.save();
+        testNode.checkin();
+
+        // do the unlock
+        testNode.unlock();
+        assertFalse("Could not unlock a locked, checked-in node", testNode.holdsLock());
     }
 
     /**
