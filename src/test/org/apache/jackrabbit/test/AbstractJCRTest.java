@@ -71,6 +71,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String nodeName3;
 
     /**
+     * Name of a workspace to use instead of the default workspace.
+     */
+    protected String workspaceName;
+
+    /**
      * The superuser session
      */
     protected Session superuser;
@@ -101,6 +106,10 @@ public abstract class AbstractJCRTest extends JUnitTest {
         nodeName3 = getProperty(RepositoryStub.PROP_NODE_NAME3);
         if (nodeName3 == null) {
             fail("Property '" + RepositoryStub.PROP_NODE_NAME3 + "' is not defined.");
+        }
+        workspaceName = getProperty(RepositoryStub.PROP_WORKSPACE_NAME);
+        if (workspaceName == null) {
+            fail("Property '" + RepositoryStub.PROP_WORKSPACE_NAME + "' is not defined.");
         }
 
         superuser = helper.getSuperuserSession();

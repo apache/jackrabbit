@@ -66,6 +66,8 @@ public abstract class RepositoryStub {
 
     public static final String PROP_NODE_NAME3 = "nodename3";
 
+    public static final String PROP_WORKSPACE_NAME = "workspacename";
+
     protected static RepositoryStub instance;
 
     protected final Properties environment;
