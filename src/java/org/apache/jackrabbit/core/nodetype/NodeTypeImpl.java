@@ -232,12 +232,12 @@ public class NodeTypeImpl implements NodeType {
      *
      * @param def    The definiton of the property
      * @param values An array of <code>InternalValue</code> objects.
-     * @throws ValueFormatException
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    public static void checkSetPropertyValueConstraints(PropertyDefImpl def, InternalValue[] values)
-            throws ValueFormatException, ConstraintViolationException, RepositoryException {
+    public static void checkSetPropertyValueConstraints(PropertyDefImpl def,
+                                                        InternalValue[] values)
+            throws ConstraintViolationException, RepositoryException {
         EffectiveNodeType.checkSetPropertyValueConstraints(def.unwrap(), values);
     }
 

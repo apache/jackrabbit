@@ -188,6 +188,7 @@ public class WorkspaceImporter implements Importer {
             QName nodeName = nodeInfo.getName();
             QName ntName = nodeInfo.getNodeTypeName();
             QName[] mixins = nodeInfo.getMixinNames();
+
 /*
             if (uuid == null) {
                 // no potential uuid conflict, always add new node

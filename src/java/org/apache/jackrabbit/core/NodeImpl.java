@@ -393,7 +393,8 @@ public class NodeImpl extends ItemImpl implements Node {
         return prop;
     }
 
-    protected synchronized PropertyImpl createChildProperty(QName name, int type, PropertyDefImpl def)
+    protected synchronized PropertyImpl createChildProperty(QName name, int type,
+                                                            PropertyDefImpl def)
             throws RepositoryException {
         // check for name collisions with existing child nodes
         if (((NodeState) state).hasChildNodeEntry(name)) {
@@ -741,7 +742,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag of parent (i.e. this) node
-        if (getDefinition().isProtected()) {
+        if (definition.isProtected()) {
             String msg = safeGetJCRPath() + ": cannot add a child to a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
@@ -1180,7 +1181,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * with the specified property's definition.
      * <p/>
      * <b>Important:</b> This method is public in order to make it accessible
-     * from internal code located sub packages, i.e. it should never be called
+     * from internal code located in subpackages, i.e. it should never be called
      * from an application directly.
      *
      * @param name
@@ -1496,7 +1497,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
+            String msg = safeGetJCRPath()
+                    + ": cannot set property of a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -1540,7 +1542,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
+            String msg = safeGetJCRPath()
+                    + ": cannot set property of a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -1595,7 +1598,8 @@ public class NodeImpl extends ItemImpl implements Node {
             return name.toJCRName(session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
-            String msg = "internal error: encountered unregistered namespace " + name.getNamespaceURI();
+            String msg = "internal error: encountered unregistered namespace "
+                    + name.getNamespaceURI();
             log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
@@ -1723,7 +1727,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag
-        if (getDefinition().isProtected()) {
+        if (definition.isProtected()) {
             String msg = safeGetJCRPath() + ": cannot change child node ordering of a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
@@ -3116,7 +3120,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // add version to jcr:predecessors list
             Value[] vals = getProperty(JCR_PREDECESSORS).getValues();
             InternalValue[] v = new InternalValue[vals.length + 1];
-            for (int i=0; i<vals.length; i++) {
+            for (int i = 0; i < vals.length; i++) {
                 v[i] = InternalValue.create(UUID.fromString(vals[i].getString()));
             }
             v[vals.length] = InternalValue.create(UUID.fromString(version.getUUID()));
@@ -3128,7 +3132,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     *
      * @return
      * @throws RepositoryException
      */
@@ -3136,7 +3139,7 @@ public class NodeImpl extends ItemImpl implements Node {
         HashSet set = new HashSet();
         if (hasProperty(JCR_MERGEFAILED)) {
             Value[] vals = getProperty(JCR_MERGEFAILED).getValues();
-            for (int i=0; i<vals.length; i++) {
+            for (int i = 0; i < vals.length; i++) {
                 set.add(vals[i].getString());
             }
         }
@@ -3144,7 +3147,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     *
      * @param set
      * @throws RepositoryException
      */
@@ -3154,7 +3156,7 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             InternalValue[] vals = new InternalValue[set.size()];
             Iterator iter = set.iterator();
-            int i=0;
+            int i = 0;
             while (iter.hasNext()) {
                 String uuid = (String) iter.next();
                 vals[i++] = InternalValue.create(UUID.fromString(uuid));
@@ -3293,7 +3295,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     private void internalMerge(String srcWorkspaceName,
-                                boolean update, boolean bestEffort)
+                               boolean update, boolean bestEffort)
             throws NoSuchWorkspaceException, AccessDeniedException,
             LockException, InvalidItemStateException, RepositoryException {
 
@@ -3343,6 +3345,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /**
      * Merges/Updates this node with its corresponding ones
+     *
      * @param srcSession
      * @param update
      * @param bestEffort
@@ -3360,7 +3363,7 @@ public class NodeImpl extends ItemImpl implements Node {
             NodeIterator iter = getNodes();
             while (iter.hasNext()) {
                 NodeImpl n = (NodeImpl) iter.nextNode();
-                n.internalMerge(srcSession, update,  bestEffort, removeExisting, replaceExisting);
+                n.internalMerge(srcSession, update, bestEffort, removeExisting, replaceExisting);
             }
             return;
         }
@@ -3482,7 +3485,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     protected InternalVersion[] internalRestore(InternalVersion version, VersionSelector vsel,
-                                 boolean removeExisting)
+                                                boolean removeExisting)
             throws RepositoryException {
 
         // set jcr:isCheckedOut property to true, in order to avoid any conflicts

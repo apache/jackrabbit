@@ -429,10 +429,9 @@ public class EffectiveNodeType implements Cloneable {
      * @param pd
      * @param values
      * @throws ConstraintViolationException
-     * @throws ValueFormatException
      */
     public static void checkSetPropertyValueConstraints(PropDef pd, InternalValue[] values)
-            throws ConstraintViolationException, ValueFormatException, RepositoryException {
+            throws ConstraintViolationException, RepositoryException {
         // check multi-value flag
         if (!pd.isMultiple() && values != null && values.length > 1) {
             throw new ConstraintViolationException("the property is not multi-valued");

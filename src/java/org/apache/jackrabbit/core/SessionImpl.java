@@ -555,7 +555,7 @@ public class SessionImpl implements Session, Constants {
                 parentId = hierMgr.resolvePath(parentPath);
                 accessMgr.checkPermission(parentId, AccessManager.WRITE);
             } catch (PathNotFoundException pnfe) {
-                // parent does not exist, throw exception
+                // parent does not exist (i.e. / was specified), throw exception
                 throw new AccessControlException(ADD_NODE_ACTION);
             } catch (MalformedPathException mpe) {
                 String msg = "invalid path: " + absPath;
