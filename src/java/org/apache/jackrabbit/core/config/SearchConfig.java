@@ -44,7 +44,7 @@ public class SearchConfig extends BeanConfig {
      * @param properties search index properties
      * @param fsc search index file system configuration
      */
-    public SearchConfig(
+    SearchConfig(
             String className, Properties properties, FileSystemConfig fsc) {
         super(className, properties);
         this.fsc = fsc;

@@ -35,7 +35,7 @@ import org.xml.sax.SAXException;
  * The public identifiers are mapped to a document type definition
  * file included in the Jackrabbit jar archive.
  */
-public class ConfigurationEntityResolver implements EntityResolver {
+class ConfigurationEntityResolver implements EntityResolver {
 
     /**
      * Public identifier of the repository configuration DTD.

@@ -33,7 +33,7 @@ public class PersistenceManagerConfig extends BeanConfig {
      *
      * @param config bean configuration
      */
-    public PersistenceManagerConfig(BeanConfig config) {
+    PersistenceManagerConfig(BeanConfig config) {
         super(config);
     }
 

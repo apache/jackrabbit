@@ -157,7 +157,7 @@ public class RepositoryConfig {
      * @param defaultWorkspace name of the default workspace
      * @param vc versioning configuration
      */
-    public RepositoryConfig(String home, String name,
+    RepositoryConfig(String home, String name,
             AccessManagerConfig amc, FileSystemConfig fsc,
             String workspaceDirectory, String defaultWorkspace,
             Element template, VersioningConfig vc) {

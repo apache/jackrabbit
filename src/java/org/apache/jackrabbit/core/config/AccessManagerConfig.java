@@ -33,7 +33,7 @@ public class AccessManagerConfig extends BeanConfig {
      *
      * @param config bean configuration
      */
-    public AccessManagerConfig(BeanConfig config) {
+    AccessManagerConfig(BeanConfig config) {
         super(config);
     }
 
