@@ -1026,6 +1026,13 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // check if protected
         if (isNode()) {
             NodeImpl node = (NodeImpl) this;
+            // check if this is the repository root node
+            if (node.isRepositoryRoot()) {
+                String msg = safeGetJCRPath() + ": cannot remove root node";
+                log.error(msg);
+                throw new RepositoryException(msg);
+            }
+
             NodeDef def = node.getDefinition();
             // check protected flag
             if (def.isProtected()) {
