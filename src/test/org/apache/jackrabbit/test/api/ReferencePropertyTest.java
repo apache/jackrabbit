@@ -152,8 +152,9 @@ public class ReferencePropertyTest extends AbstractPropertyTest {
      */
     public void testGetString() throws RepositoryException {
         Value val = PropertyUtil.getValue(prop);
-        String ref = val.getString();
-        assertTrue("Reference property has not correct UUID format.", PropertyUtil.isUUID(ref));
+        // format of reference value is implementation specifc. but at least
+        // must not throw
+        val.getString();
     }
 
     /**

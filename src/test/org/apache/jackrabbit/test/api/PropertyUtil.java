@@ -132,11 +132,6 @@ public class PropertyUtil {
         "(Z|[+-]([0-1][0-9]|2[0-3]):[0-5][0-9])";
     public static final Pattern PATTERN_DATE = Pattern.compile(PATTERNSTRING_DATE);
 
-    public static final String PATTERNSTRING_UUID =
-        "\\p{XDigit}{8}-\\p{XDigit}{4}-\\p{XDigit}{4}-\\p{XDigit}{4}-\\p{XDigit}{12}";
-    public static final Pattern PATTERN_UUID = Pattern.compile(PATTERNSTRING_UUID);
-
-
     /**
      * Private constructor to disable instantiation.
      */
@@ -276,16 +271,6 @@ public class PropertyUtil {
      */
     public static boolean isDateFormat(String str) {
         return PATTERN_DATE.matcher(str).matches();
-    }
-
-    /**
-     * Checks if the String is a UUID.
-     *
-     * @param str the string to test.
-     * @return <code>true</code> if <code>str</code> is a UUID.
-     */
-    public static boolean isUUID(String str) {
-        return PATTERN_UUID.matcher(str).matches();
     }
 
     /**

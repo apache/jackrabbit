@@ -198,17 +198,7 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
      */
     public void testAsReference() throws RepositoryException, NotExecutableException {
         if (!multiple) {
-            if (!PropertyUtil.isUUID(prop.getString())) {
-                try {
-                    prop.getNode();
-                    fail("Conversion from a Path value to a Reference value " +
-                            "should throw a ValueFormatException");
-                } catch (ValueFormatException vfe) {
-                    //ok
-                }
-            } else {
-                prop.getNode();
-            }
+            // not testable since format of ID is implementation specific
         } else {
             try {
                 prop.getNode();

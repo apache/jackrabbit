@@ -117,6 +117,50 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
                 referenced.isSame(node));
     }
 
+    /**
+     * Tests if getAttribute(String name) returns not null if the requested
+     * attribute is existing
+     */
+    public void testGetAttribute() throws NotExecutableException {
+        String names[] = session.getAttributeNames();
+        if (names.length == 0) {
+            throw new NotExecutableException("No attributes set in this session.");
+        }
+        for (int i = 0; i < names.length; i++) {
+            assertNotNull("getAttribute(String name) returned null although the " +
+                    "requested attribute is existing.",
+                    session.getAttribute(names[i]));
+        }
+    }
+
+    /**
+     * Tests if getAttribute(String name) returns null if the requested attribute
+     * is not existing
+     */
+    public void testGetAttributeFailure() {
+        String names[] = session.getAttributeNames();
+        StringBuffer notExistingName = new StringBuffer("X");
+        for (int i = 0; i < names.length; i++) {
+            notExistingName.append(names[i]);
+        }
+        assertNull("getAttribute(String name) must return null if the " +
+                "requested attribute is not existing",
+                session.getAttribute(notExistingName.toString()));
+    }
+
+    /**
+     * Tests if attribute names returned by getAttributeNames() do not return
+     * null if used for getAttribute(String name)
+     */
+    public void testGetAttributeNames() {
+        String names[] = session.getAttributeNames();
+        for (int i = 0; i < names.length; i++) {
+            assertNotNull("An attribute name returned by getAttributeNames() " +
+                    "does not exist.",
+                    session.getAttribute(names[i]));
+        }
+    }
+
     //----------------------< internal >----------------------------------------
 
     /**
