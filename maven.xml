@@ -17,22 +17,13 @@
 
 <project
     default="jar:jar"
+    xmlns:deploy="deploy"
     xmlns:j="jelly:core"
     xmlns:ant="jelly:ant">
 
     <postGoal name="ant:generate-build">
         <attainGoal name="jackrabbit:post-ant"/>
     </postGoal>
-
-    <!-- Goal adds a line to build.xml to include the ./lib in ant classpath -->
-    <!-- Once jcr.jar is in a maven repository this can be removed -->
-    <goal name="jackrabbit:post-ant">
-        <ant:replace
-            file="build.xml"
-            token="&lt;path id=&quot;build.classpath&quot;&gt;"
-            value="&lt;path id=&quot;build.classpath&quot;&gt;&lt;fileset dir=&quot;./lib&quot;&gt;&lt;include name=&quot;**/*.jar&quot;>&lt;/include&gt;&lt;/fileset&gt;"
-            />
-    </goal>
 
     <postGoal name="maven-javadoc-plugin:report">
         <attainGoal name="jackrabbit:post-javadoc"/>
@@ -171,4 +162,12 @@
             </classpath>
         </ant:java>
     </goal>
+
+  <!-- 
+      Copies all dependencies to ./target/lib 
+      (except the optional runtime dependencies cqfs and cqfs-jackrabbit)  
+  -->
+  <goal name="copy-deps">
+    <deploy:copy-deps todir="./target/lib" excludes="cqfs,cqfs-jackrabbit"/>
+  </goal>
 </project>
