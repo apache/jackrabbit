@@ -125,6 +125,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      */
     private RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
         this.repConfig = repConfig;
+
         // setup file systems
         repStore = repConfig.getFileSystem();
         String fsRootPath = "/meta";
@@ -240,6 +241,12 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new RepositoryException(msg, fse);
         }
 
+        // load repository properties
+        repProps = new Properties();
+        loadRepProps();
+        nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
+        propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
+
         // setup internal transaction manager
         // @todo rewrite to use file system abstraction (FileSystem interface)
         try {
@@ -275,12 +282,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         SessionImpl verSession = getSystemSession(repConfig.getDefaultWorkspaceName());
         pvMgr = new NativePVM(verSession);
         vMgr = new VersionManagerImpl(pvMgr);
-
-        // load repository properties
-        repProps = new Properties();
-        loadRepProps();
-        nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
-        propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
 
         // finally register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
