@@ -123,7 +123,15 @@ public final class EventStateCollection {
                     // node moved
                     // generate node removed & node added event
                     String oldParentUUID = (String) n.getRemovedParentUUIDs().get(0);
-                    NodeState oldParent = (NodeState) changes.get(new NodeId(oldParentUUID));
+                    NodeState oldParent;
+                    try {
+                        oldParent = (NodeState) changes.get(new NodeId(oldParentUUID));
+                    } catch (NoSuchItemStateException e) {
+                        // old parent has been deleted, retrieve from
+                        // shared item state manager
+                        oldParent = (NodeState) provider.getItemState(new NodeId(oldParentUUID));
+                    }
+
                     NodeTypeImpl oldParentNodeType = getNodeType(oldParent, session);
                     Path newPath = getPath(n.getId(), hmgr);
                     Path[] allPaths = getAllPaths(n.getId(), hmgr);
@@ -179,7 +187,7 @@ public final class EventStateCollection {
                             NodeTypeImpl nodeType = getNodeType(parent, session);
                             Path newPath = getPath(state.getId(), hmgr);
                             Path parentPath = getParent(newPath);
-                            Path oldPath = null;
+                            Path oldPath;
                             try {
                                 if (moved.getIndex() == 0) {
                                     oldPath = Path.create(parentPath, moved.getName(), false);
@@ -262,7 +270,7 @@ public final class EventStateCollection {
                 // node created
                 NodeState n = (NodeState) state;
                 NodeId parentId = new NodeId(n.getParentUUID());
-                NodeState parent = null;
+                NodeState parent;
                 // unknown if parent node is also new
                 if (provider.hasItemState(parentId)) {
                     parent = (NodeState) provider.getItemState(parentId);
