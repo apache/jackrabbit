@@ -23,7 +23,9 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.naming.Context;
 import java.util.Properties;
+import java.util.Hashtable;
 
 /**
  * Implements the <code>RepositoryStub</code> for the JCR Reference Implementation.
@@ -74,13 +76,13 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                 String repConfig = environment.getProperty(PROP_REPOSITORY_CONFIG);
                 String repHome = environment.getProperty(PROP_REPOSITORY_HOME);
 
-                RepositoryConfig repConf = RepositoryConfig.create(repConfig, repHome);
-                repository = RepositoryImpl.create(repConf);
-/*
-                InitialContext ctx = new InitialContext();
+                // register repository instance
+                Hashtable env = new Hashtable();
+                env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
+                InitialContext ctx = new InitialContext(env);
                 RegistryHelper.registerRepository(ctx, repName, repConfig, repHome, true);
+
                 repository = (Repository) ctx.lookup(repName);
-*/
             } catch (Exception e) {
                 throw new RepositoryStubException(e.toString());
             }

@@ -51,23 +51,14 @@ public class Test {
             // fallback to cwd
             repHomeDir = System.getProperty("user.dir");
         }
-
-        RepositoryConfig repConf = RepositoryConfig.create(configDir + "/" + "repository.xml", repHomeDir);
-        Repository r = RepositoryImpl.create(repConf);
-/*
-        // Set up the environment for creating the initial context
+        // set up the environment for creating the initial context
         Hashtable env = new Hashtable();
-        //env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.fscontext.RefFSContextFactory");
-        //env.put(Context.PROVIDER_URL, "file:./jndi");
-
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.ervacon.xnam.XMLInitialContextFactory");
-        env.put(Context.PROVIDER_URL, "d:/temp/jndi.xml");
-
-        //env.put(Context.INITIAL_CONTEXT_FACTORY, "org.codehaus.spice.jndikit.memory.StaticMemoryInitialContextFactory");
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
         InitialContext ctx = new InitialContext(env);
+
         RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
         Repository r = (Repository) ctx.lookup("repo");
-*/
+
         Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
         Workspace wsp = session.getWorkspace();
 
