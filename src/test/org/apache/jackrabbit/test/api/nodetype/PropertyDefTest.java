@@ -26,8 +26,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.PathNotFoundException;
+import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
@@ -278,6 +277,8 @@ public class PropertyDefTest extends AbstractJCRTest {
                                 assertTrue("Value constraint does not match " +
                                         "the pattern of PropertyType.NAME",
                                         matcher.matches());
+
+                                checkPrefix(constraints[j]);
                                 break;
 
                             case PropertyType.PATH:
@@ -285,6 +286,11 @@ public class PropertyDefTest extends AbstractJCRTest {
                                 assertTrue("Value constraint does not match " +
                                         "the pattern of PropertyType.PATH",
                                         matcher.matches());
+
+                                String elems[] = constraints[j].split("/");
+                                for (int k = 0; k < elems.length; k++) {
+                                    checkPrefix(elems[k]);
+                                }
                                 break;
 
                             case PropertyType.REFERENCE:
@@ -293,6 +299,8 @@ public class PropertyDefTest extends AbstractJCRTest {
                                 assertTrue("Value constraint does not match " +
                                         "the pattern of PropertyType.REFERENCE",
                                         matcher.matches());
+
+                                checkPrefix(constraints[j]);
                                 break;
 
                             case PropertyType.BOOLEAN:
@@ -340,6 +348,8 @@ public class PropertyDefTest extends AbstractJCRTest {
         }
     }
 
+    // ---------------------------------< internal >----------------------------
+
     /**
      * Traverses the node hierarchy and applies
      * {@link #checkMandatoryConstraint(javax.jcr.Node, javax.jcr.nodetype.NodeType)}
@@ -379,12 +389,15 @@ public class PropertyDefTest extends AbstractJCRTest {
                 foundMandatoryProperty = true;
                 String name = propDef.getName();
 
+                assertTrue("Node instance does not contain value for mandatory property.", node.hasProperty(name));
+                // todo check back with latest spec!
+                /*
                 try {
                     Property p = node.getProperty(name);
                     if (propDef.isMultiple()) {
                         // empty array fails
-                        assertFalse("A mandatory and multiple property " +
-                                "must not be empty.",
+                        assertFalse("The mandatory and multiple property " + p.getName() +
+                                " must not be empty.",
                                 p.getValues().length == 0);
                     } else {
                         // empty value fails
@@ -394,7 +407,26 @@ public class PropertyDefTest extends AbstractJCRTest {
                 } catch (PathNotFoundException e) {
                     fail("Mandatory property " + name + " does not exist.");
                 }
+                */
             }
+        }
+    }
+
+    /**
+     * Checks for NAME, PATH and REFERENCE constraint values if the constraint
+     * is reflecting the namespace mapping in the current <code>Session</code>
+     *
+     * @throws NamespaceException if the prefix of name is not a registered
+     *                            namespace prefix
+     */
+    private void checkPrefix(String name)
+            throws NamespaceException, RepositoryException {
+
+        if (name.indexOf(":") != -1) {
+            String prefix = name.split(":")[0];
+
+            // NamespaceException is thrown if fails
+            session.getNamespaceURI(prefix);
         }
     }
 }

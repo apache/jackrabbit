@@ -758,6 +758,34 @@ public class NodeTest extends AbstractJCRTest {
     }
 
     /**
+     * Tests if <code>Item.isSame(Item otherItem)</code> will return true when
+     * two <code>Node</code> objects representing the same actual repository
+     * item have been retrieved through two different sessions and one has been
+     * modified.
+     */
+    public void testIsSameMustNotCompareStates()
+            throws RepositoryException {
+
+        // create a node and save it
+        Node testNode1 = testRootNode.addNode(nodeName1, testNodeType);
+        testRootNode.save();
+
+        // accuire the same node with a different session
+        Session session = helper.getReadOnlySession();
+        try {
+            Node testNode2 = (Node) session.getItem(testNode1.getPath());
+
+            // add a property and do not save it so property is different in testNode2
+            testNode1.setProperty(propertyName1, "value1");
+
+            assertTrue("Two references of same node should return true for Node1.isSame(Node2)",
+                    testNode1.isSame(testNode2));
+        } finally {
+            session.logout();
+        }
+    }
+
+    /**
      * Checks if {@link Node#isModified()} works correcty for unmodified and
      * modified nodes.
      */

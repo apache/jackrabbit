@@ -74,6 +74,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeTest.class);
         suite.addTestSuite(NodeUUIDTest.class);
         suite.addTestSuite(NodeOrderableChildNodesTest.class);
+        suite.addTestSuite(PropertyTest.class);
 
         suite.addTestSuite(SetValueBinaryTest.class);
         suite.addTestSuite(SetValueBooleanTest.class);
