@@ -170,7 +170,8 @@ public final class ObservationManagerFactory implements Runnable {
                 try {
                     c.consumeEvents(action.getEventStates());
                 } catch (Throwable t) {
-                    log.warn("EventConsumer threw exception.", t);
+                    log.warn("EventConsumer threw exception: " + t.toString());
+                    log.debug("Stacktrace: ", t);
                     // move on to the next consumer
                 }
             }
