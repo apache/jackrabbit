@@ -153,8 +153,10 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
                 // process current node first
                 ImportState current = (ImportState) stack.peek();
                 // need to start current node
-                processNode(current, true, false);
-                current.started = true;
+                if (!current.started) {
+                    processNode(current, true, false);
+                    current.started = true;
+                }
             }
 
             // push new ImportState instance onto the stack
