@@ -33,7 +33,7 @@ import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.Constants;
 import org.apache.log4j.Logger;
 
 import javax.jcr.query.InvalidQueryException;
@@ -213,7 +213,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
         return node.childrenAccept(new DefaultParserVisitor() {
             public Object visit(ASTIdentifier node, Object data) {
-                if (!node.getName().equals(NodeTypeRegistry.NT_BASE)) {
+                if (!node.getName().equals(Constants.NT_BASE)) {
                     // node is either primary or mixin node type
                     NodeTypeQueryNode nodeType
                             = new NodeTypeQueryNode(constraintNode, node.getName());
@@ -500,7 +500,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 }
             } else {
                 int idx = names[i].indexOf('[');
-                String name = null;
+                String name;
                 int index = LocationStepQueryNode.NONE;
                 if (idx > -1) {
                     // contains index

@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.Constants;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -111,7 +111,7 @@ public class QueryImpl implements Query {
         this.node = node;
 
         try {
-            if (!node.isNodeType(NodeTypeRegistry.NT_QUERY.toJCRName(session.getNamespaceResolver()))) {
+            if (!node.isNodeType(Constants.NT_QUERY.toJCRName(session.getNamespaceResolver()))) {
                 throw new InvalidQueryException("node is not of type nt:query");
             }
             statement = node.getProperty(QueryConstants.JCR_STATEMENT.toJCRName(session.getNamespaceResolver())).getString();
@@ -181,7 +181,7 @@ public class QueryImpl implements Query {
                 throw new ItemExistsException(p.toJCRPath(resolver));
             }
             Node queryNode = session.getRootNode().addNode(relPath,
-                    NodeTypeRegistry.NT_QUERY.toJCRName(resolver));
+                    Constants.NT_QUERY.toJCRName(resolver));
             // set properties
             queryNode.setProperty(QueryConstants.JCR_LANGUAGE.toJCRName(resolver), language);
             queryNode.setProperty(QueryConstants.JCR_STATEMENT.toJCRName(resolver), statement);

@@ -34,7 +34,7 @@ import org.apache.jackrabbit.core.search.DerefQueryNode;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.Constants;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.util.ISO8601;
@@ -142,7 +142,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
             if (ntCount == 0) {
                 sb.append(" ");
-                sb.append(NodeTypeRegistry.NT_BASE.toJCRName(resolver));
+                sb.append(Constants.NT_BASE.toJCRName(resolver));
             }
 
             // append WHERE clause
