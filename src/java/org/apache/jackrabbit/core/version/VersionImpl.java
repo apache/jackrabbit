@@ -15,320 +15,109 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.NodeImpl;
 
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 /**
- * This Class implements the Version representation of the node.
+ * This Class implements a Version that extends the node interface
  */
-public class VersionImpl extends FrozenNode implements Version {
+public class VersionImpl extends NodeWrapper implements Version {
 
     /**
-     * name of the 'jcr:versionLabels' property
+     * the internal version
      */
-    public static final QName PROPNAME_VERSION_LABELS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
+    protected final InternalVersion version;
 
     /**
-     * name of the 'jcr:predecessors' property
-     */
-    public static final QName PROPNAME_PREDECESSORS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "predecessors");
-
-    /**
-     * name of the 'jcr:successors' property
-     */
-    public static final QName PROPNAME_SUCCESSORS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "successors");
-
-    /**
-     * name of the 'jcr:isCheckedOut' property
-     */
-    public static final QName PROPNAME_IS_CHECKED_OUT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "isCheckedOut");
-
-    /**
-     * name of the 'jcr:versionHistory' property
-     */
-    public static final QName PROPNAME_VERSION_HISTORY = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionHistory");
-
-    /**
-     * name of the 'jcr:baseVersion' property
-     */
-    public static final QName PROPNAME_BASE_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "baseVersion");
-
-    /**
-     * cache for version labels
-     */
-    private Set cachedVersionLabels;
-
-    /**
-     * Creates a new Version node. This is only called by the ItemManager when
-     * creating new node instances.
+     * Creates a new version implementation
      *
-     * @see org.apache.jackrabbit.core.ItemManager#createNodeInstance(org.apache.jackrabbit.core.state.NodeState, javax.jcr.nodetype.NodeDef)
+     * @param session
+     * @param version
+     * @throws RepositoryException
      */
-    public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                       NodeState state, NodeDef definition,
-                       ItemLifeCycleListener[] listeners)
+    protected VersionImpl(Session session, InternalVersion version)
             throws RepositoryException {
-        super(itemMgr, session, id, state, definition, listeners);
+        super((NodeImpl) session.getNodeByUUID(version.getUUID()));
+        this.version = version;
     }
-
 
     /**
      * @see Version#getCreated()
      */
     public Calendar getCreated() throws RepositoryException {
-        // no check for NULL needed since its mandatory
-        return getProperty(PROPNAME_CREATED).getDate();
+        return version.getCreated();
     }
 
     /**
      * @see Version#getVersionLabels()
      */
     public String[] getVersionLabels() throws RepositoryException {
-        initLabelCache();
-        return (String[]) cachedVersionLabels.toArray(new String[cachedVersionLabels.size()]);
+        return version.internalGetLabels();
     }
 
-    /**
-     * Checks if this version contains the given version label.
-     *
-     * @param label the param to check
-     * @throws RepositoryException if an error occurrs
-     *                             <p/>
-     *                             todo: add to spec
-     */
-    public boolean hasVersionLabel(String label) throws RepositoryException {
-        initLabelCache();
-        return cachedVersionLabels.contains(label);
-    }
-
-    /**
-     * @see Version#addVersionLabel(java.lang.String)
-     */
     public void addVersionLabel(String label) throws RepositoryException {
-        // delegate to version history (will probably change in spec)
-        getHistory().addVersionLabel(this, label);
+        version.getVersionHistory().addVersionLabel(version, label, false);
     }
 
-    /**
-     * @see Version#removeVersionLabel(java.lang.String)
-     */
     public void removeVersionLabel(String label) throws RepositoryException {
-        // delegate to version history (will probably change in spec)
-        getHistory().removeVersionLabel(label);
+        version.getVersionHistory().removeVersionLabel(label);
     }
 
     /**
      * @see Version#getSuccessors()
      */
     public Version[] getSuccessors() throws RepositoryException {
-        if (hasProperty(PROPNAME_SUCCESSORS)) {
-            Value[] values = getProperty(PROPNAME_SUCCESSORS).getValues();
-            Version[] preds = new Version[values.length];
-            for (int i = 0; i < values.length; i++) {
-                preds[i] = (Version) session.getNodeByUUID(values[i].getString());
-            }
-            return preds;
+        // need to wrap it around proper node
+        InternalVersion[] suc = version.getSuccessors();
+        Version[] ret = new Version[suc.length];
+        for (int i = 0; i < suc.length; i++) {
+            ret[i] = new VersionImpl(unwrap().getSession(), suc[i]);
         }
-        return new Version[0];
+        return ret;
     }
 
     /**
-     * Adds a successor to the jcr:successor list
-     * <p/>
-     * please note, that this operation might corrupt the version graph
-     *
-     * @param succ
+     * @see Version#getPredecessors()
      */
-    void internalAddSuccessor(VersionImpl succ) throws RepositoryException {
-        Version[] successors = getSuccessors();
-        InternalValue[] values = new InternalValue[successors.length + 1];
-        for (int i = 0; i < successors.length; i++) {
-            values[i] = InternalValue.create(new UUID(successors[i].getUUID()));
-        }
-        values[successors.length] = InternalValue.create(new UUID(succ.getUUID()));
-        internalSetProperty(PROPNAME_SUCCESSORS, values);
-    }
-
-    /**
-     * Detaches itself from the version graph.
-     *
-     * @throws RepositoryException
-     */
-    void internalDetach() throws RepositoryException {
-        // detach this from all successors
-        VersionImpl[] succ = (VersionImpl[]) getSuccessors();
-        for (int i = 0; i < succ.length; i++) {
-            succ[i].internalDetachPredecessor(this);
-        }
-        // detach this from all predecessors
-        VersionImpl[] pred = (VersionImpl[]) getPredecessors();
+    public Version[] getPredecessors() throws RepositoryException {
+        // need to wrap it around proper node
+        InternalVersion[] pred = version.getPredecessors();
+        Version[] ret = new Version[pred.length];
         for (int i = 0; i < pred.length; i++) {
-            pred[i].internalDetachSuccessor(this);
+            ret[i] = new VersionImpl(unwrap().getSession(), pred[i]);
         }
-        // clear properties
-        internalSetProperty(PROPNAME_PREDECESSORS, new InternalValue[0]);
-        internalSetProperty(PROPNAME_SUCCESSORS, new InternalValue[0]);
+        return ret;
     }
 
     /**
-     * Removes the successor V of this successors list and adds all of Vs
-     * successors to it.
-     * <p/>
-     * please note, that this operation might corrupt the version graph
+     * @see javax.jcr.Node#getUUID()
+     */
+    public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
+        return version.getUUID();
+    }
+
+    /**
+     * Returns the internal version
      *
-     * @param v the successor to detach
+     * @return
      */
-    private void internalDetachSuccessor(VersionImpl v) throws RepositoryException {
-        Version[] vsucc = v.getSuccessors();
-        Version[] successors = getSuccessors();
-        InternalValue[] values = new InternalValue[successors.length - 1 + vsucc.length];
-        int idx = 0;
-        // copy successors but ignore 'v'
-        for (int i = 0; i < successors.length; i++) {
-            if (!successors[i].isSame(v)) {
-                values[idx++] = InternalValue.create(new UUID(successors[i].getUUID()));
-            }
-        }
-        // attach v's successors
-        for (int i = 0; i < vsucc.length; i++) {
-            values[idx++] = InternalValue.create(new UUID(vsucc[i].getUUID()));
-        }
-        internalSetProperty(PROPNAME_SUCCESSORS, values);
+    public InternalVersion getInternalVersion() {
+        return version;
     }
 
     /**
-     * Removes the predecessor V of this predecessor list and adds all of Vs
-     * predecessors to it.
-     * <p/>
-     * please note, that this operation might corrupt the version graph
+     * Returns the forzen node of this version
      *
-     * @param v the successor to detach
-     */
-    private void internalDetachPredecessor(VersionImpl v) throws RepositoryException {
-        Version[] vpred = v.getPredecessors();
-        Version[] tpred = getPredecessors();
-        InternalValue[] values = new InternalValue[tpred.length - 1 + vpred.length];
-        int idx = 0;
-        // copy predecessors but ignore 'v'
-        for (int i = 0; i < tpred.length; i++) {
-            if (!tpred[i].isSame(v)) {
-                values[idx++] = InternalValue.create(new UUID(tpred[i].getUUID()));
-            }
-        }
-        // attach v's predecessors
-        for (int i = 0; i < vpred.length; i++) {
-            values[idx++] = InternalValue.create(new UUID(vpred[i].getUUID()));
-        }
-        internalSetProperty(PROPNAME_PREDECESSORS, values);
-    }
-
-    /**
-     * @see NodeImpl#internalSetProperty(org.apache.jackrabbit.core.QName, org.apache.jackrabbit.core.InternalValue)
-     */
-    public Property internalSetProperty(QName name,
-                                        InternalValue value)
-            throws ValueFormatException, RepositoryException {
-        return super.internalSetProperty(name, value);
-    }
-
-    /**
-     * @see NodeImpl#internalSetProperty(org.apache.jackrabbit.core.QName, org.apache.jackrabbit.core.InternalValue[])
-     */
-    protected Property internalSetProperty(QName name,
-                                           InternalValue[] value)
-            throws ValueFormatException, RepositoryException {
-        return super.internalSetProperty(name, value);
-    }
-
-    /**
-     * @see Version#addVersionLabel(java.lang.String)
-     */
-    protected void internalAddVersionLabel(String label) throws RepositoryException {
-        initLabelCache();
-        cachedVersionLabels.add(label);
-        saveLabelCache();
-    }
-
-    /**
-     * @see Version#addVersionLabel(java.lang.String)
-     */
-    protected void internalRemoveVersionLabel(String label) throws RepositoryException {
-        initLabelCache();
-        cachedVersionLabels.remove(label);
-        saveLabelCache();
-    }
-
-    /**
-     * Initializes / Loads the version label cache
-     */
-    private void initLabelCache() throws RepositoryException {
-        if (cachedVersionLabels == null) {
-            cachedVersionLabels = new HashSet();
-            if (hasProperty(PROPNAME_VERSION_LABELS)) {
-                Value[] values = getProperty(PROPNAME_VERSION_LABELS).getValues();
-                for (int i = 0; i < values.length; i++) {
-                    cachedVersionLabels.add(values[i].getString());
-                }
-            }
-        }
-    }
-
-    /**
-     * Saves the current labels in the cache to the 'VersionLabels' property
-     * of this node.
-     *
+     * @return
      * @throws RepositoryException
      */
-    private void saveLabelCache() throws RepositoryException {
-        InternalValue[] newValues = new InternalValue[cachedVersionLabels.size()];
-        Iterator iter = cachedVersionLabels.iterator();
-        for (int i = 0; i < newValues.length; i++) {
-            newValues[i] = InternalValue.create((String) iter.next());
-        }
-        internalSetProperty(PROPNAME_VERSION_LABELS, newValues);
-        save();
+    public InternalFrozenNode getFrozenNode() throws RepositoryException {
+        return version.getFrozenNode();
     }
 
-    /**
-     * Returns the version history of this version and not the extended node.
-     *
-     * @return the version history of this version graph
-     * @throws RepositoryException
-     */
-    private VersionHistoryImpl getHistory() throws RepositoryException {
-        return (VersionHistoryImpl) getParent();
-    }
-
-
-    /**
-     * Checks if this version is more recent than the given version <code>v</code>.
-     * A version is more recent if and only if it is a successor (or a successor
-     * of a successor, etc., to any degree of separation) of the compared one.
-     *
-     * @param v the version to check
-     * @return <code>true</code> if the version is more recent;
-     *         <code>false</code> otherwise.
-     * @throws RepositoryException if an error occurrs.
-     */
-    public boolean isMoreRecent(Version v) throws RepositoryException {
-        VersionIteratorImpl iter = new VersionIteratorImpl(v);
-        while (iter.hasNext()) {
-            if (iter.nextVersion().isSame(this)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

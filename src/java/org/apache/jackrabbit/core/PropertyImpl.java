@@ -295,6 +295,45 @@ public class PropertyImpl extends ItemImpl implements Property {
         return propId.getName();
     }
 
+    /**
+     * Returns the internal values of this property
+     *
+     * @return
+     * @throws RepositoryException
+     */
+    public InternalValue[] internalGetValues() throws RepositoryException {
+
+        // check state of this instance
+        checkItemState();
+
+        // check multi-value flag
+        if (!definition.isMultiple()) {
+            throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
+        }
+
+        PropertyState state = (PropertyState) getItemState();
+        return state.getValues();
+    }
+
+    /**
+     * Returns the internal values of this property
+     *
+     * @return
+     * @throws RepositoryException
+     */
+    public InternalValue internalGetValue() throws RepositoryException {
+        // check state of this instance
+        checkItemState();
+
+        // check multi-value flag
+        if (definition.isMultiple()) {
+            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+        }
+
+        PropertyState state = (PropertyState) getItemState();
+        return state.getValues()[0];
+    }
+
     //-------------------------------------------------------------< Property >
     /**
      * @see Property#getValues()

@@ -46,6 +46,8 @@ public class RepositoryImpl implements Repository, EventListener {
 
     private static final String DEFAULT_WORKSPACE_NAME = "default";
 
+    private static final String VERSION_WORKSPACE_NAME = "default";
+
     private static final String ANONYMOUS_USER = "anonymous";
 
     private static final Credentials ANONYMOUS_CREDENTIALS =
@@ -262,7 +264,6 @@ public class RepositoryImpl implements Repository, EventListener {
          *   this 'read-only' system workspace
          */
 
-        // FIXME version manager should not operate on default workspace
         // check system root node of system workspace
         SessionImpl sysSession = getSystemSession(DEFAULT_WORKSPACE_NAME);
         NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
@@ -270,13 +271,25 @@ public class RepositoryImpl implements Repository, EventListener {
             rootNode.addNode(SYSTEM_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
             rootNode.save();
         }
+
         // init version manager
-        vMgr = new VersionManager(sysSession);
+        // todo: as soon as dynamic workspaces are available, base on system ws
+        SessionImpl verSession = getSystemSession(VERSION_WORKSPACE_NAME);
+        NodeImpl vRootNode = (NodeImpl) verSession.getRootNode();
+        try {
+            if (!vRootNode.hasNode(SYSTEM_ROOT_NAME)) {
+                verSession.getWorkspace().clone(DEFAULT_WORKSPACE_NAME,
+                        SYSTEM_ROOT_NAME.toJCRName(verSession.getNamespaceResolver()),
+                        SYSTEM_ROOT_NAME.toJCRName(verSession.getNamespaceResolver()));
+            }
+        } catch (NoPrefixDeclaredException e) {
+            throw new RepositoryException("Error: " + e.toString());
+        }
+        vMgr = new VersionManager(verSession);
 
         // load repository properties
         repProps = new Properties();
         loadRepProps();
-
         nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
         propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
 

@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
@@ -655,10 +655,10 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
                 if (node.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
                     VersionHistory hist = rep.getVersionManager().createVersionHistory(node);
-                    node.internalSetProperty(VersionImpl.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
-                    node.internalSetProperty(VersionImpl.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
-                    node.internalSetProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
-                    node.internalSetProperty(VersionImpl.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+                    node.internalSetProperty(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
+                    node.internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
+                    node.internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
+                    node.internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
                 }
             }
         }

@@ -16,12 +16,8 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.IteratorHelper;
-import org.apache.jackrabbit.core.version.FrozenNode;
-import org.apache.jackrabbit.core.version.VersionHistoryImpl;
-import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
@@ -371,17 +367,8 @@ public class ItemManager implements ItemLifeCycleListener {
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
-        // create node object; create specialized nodes for nodes of specific
-        // primary types (i.e. nt:version & nt:versionHistory)
-        if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION_HISTORY)) {
-            return new VersionHistoryImpl(this, session, id, state, def, listeners);
-        } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_FROZEN)) {
-            return new FrozenNode(this, session, id, state, def, listeners);
-        } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION)) {
-            return new VersionImpl(this, session, id, state, def, listeners);
-        } else {
-            return new NodeImpl(this, session, id, state, def, listeners);
-        }
+        // create node object
+        return new NodeImpl(this, session, id, state, def, listeners);
     }
 
     NodeImpl createNodeInstance(NodeState state) throws RepositoryException {

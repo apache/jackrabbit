@@ -16,9 +16,12 @@
 package org.apache.jackrabbit.core.version;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionIterator;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.Stack;
 
 /**
@@ -38,12 +41,24 @@ public class VersionIteratorImpl implements VersionIterator {
     private Stack successors = new Stack();
 
     /**
+     * the set of versions already returned. due to the topology of the version
+     * graph it is possible to reach a version via different paths.
+     */
+    private Set visited = new HashSet();
+
+    /**
+     * the session for wrapping the versions
+     */
+    private final Session session;
+
+    /**
      * Creates a new VersionIterator that iterates over the version tree,
      * starting the root node.
      *
      * @param rootVersion
      */
-    public VersionIteratorImpl(Version rootVersion) throws RepositoryException {
+    public VersionIteratorImpl(Session session, InternalVersion rootVersion) {
+        this.session = session;
         successors.push(rootVersion);
     }
 
@@ -54,14 +69,16 @@ public class VersionIteratorImpl implements VersionIterator {
         if (successors.isEmpty()) {
             throw new NoSuchElementException();
         }
-        Version ret = (Version) successors.peek();
+        InternalVersion ret = (InternalVersion) successors.peek();
+        visited.add(ret);
         pos++;
+        push(ret.getSuccessors());
+
         try {
-            push(ret.getSuccessors());
+            return new VersionImpl(session, ret);
         } catch (RepositoryException e) {
-            // ignore
+            throw new NoSuchElementException("Unable to provide element: " + e.toString());
         }
-        return ret;
     }
 
     /**
@@ -115,9 +132,11 @@ public class VersionIteratorImpl implements VersionIterator {
      *
      * @param versions
      */
-    private void push(Version[] versions) {
+    private void push(InternalVersion[] versions) {
         for (int i = 0; i < versions.length; i++) {
-            successors.push(versions[i]);
+            if (!visited.contains(versions[i])) {
+                successors.push(versions[i]);
+            }
         }
     }
 }

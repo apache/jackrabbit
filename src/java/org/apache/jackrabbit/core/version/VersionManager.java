@@ -16,8 +16,11 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PersistentItemStateManager;
+import org.apache.jackrabbit.core.state.PersistentNodeState;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Node;
@@ -27,23 +30,101 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
 /**
- * This Class implements...
+ * This Class provides general versioning functions.
  */
 public class VersionManager {
 
     private static Logger log = Logger.getLogger(VersionManager.class);
 
-    // root path for version storage
-    public static final QName VERSION_HISTORY_ROOT_NAME =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionStorage");
+    /**
+     * root path for version storage
+     */
+    public static final QName VERSION_HISTORY_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionStorage");
 
-    // the system session for the versioning
-    private final SessionImpl session;
+    /**
+     * name of the 'jcr:frozenUUID' property
+     */
+    public static final QName PROPNAME_FROZEN_UUID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenUUID");
+
+    /**
+     * name of the 'jcr:frozenPrimaryType' property
+     */
+    public static final QName PROPNAME_FROZEN_PRIMARY_TYPE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenPrimaryType");
+
+    /**
+     * name of the 'jcr:frozenMixinTypes' property
+     */
+    public static final QName PROPNAME_FROZEN_MIXIN_TYPES = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenMixinTypes");
+
+    /**
+     * name of the 'jcr:versionLabels' node
+     */
+    public static final QName NODENAME_VERSION_LABELS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
+
+    /**
+     * name of the 'jcr:frozen' property
+     */
+    public static final QName NODENAME_FROZEN = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozen");
+
+    /**
+     * name of the 'jcr:predecessors' property
+     */
+    public static final QName PROPNAME_PREDECESSORS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "predecessors");
+
+    /**
+     * name of the 'jcr:successors' property
+     */
+    public static final QName PROPNAME_SUCCESSORS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "successors");
+
+    /**
+     * name of the 'jcr:name' property
+     */
+    public static final QName PROPNAME_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "name");
+
+    /**
+     * name of the 'jcr:version' property
+     */
+    public static final QName PROPNAME_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "version");
+
+    /**
+     * name of the 'jcr:isCheckedOut' property
+     */
+    public static final QName PROPNAME_IS_CHECKED_OUT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "isCheckedOut");
+
+    /**
+     * name of the 'jcr:versionHistory' property
+     */
+    public static final QName PROPNAME_VERSION_HISTORY = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionHistory");
+
+    /**
+     * name of the 'jcr:baseVersion' property
+     */
+    public static final QName PROPNAME_BASE_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "baseVersion");
+
+    /**
+     * name of the 'jcr:created' property
+     */
+    public static final QName PROPNAME_CREATED = new QName(NamespaceRegistryImpl.NS_JCR_URI, "created");
+
+    /**
+     * the name of the 'jcr:rootVersion' node
+     */
+    public static final QName NODENAME_ROOTVERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "rootVersion");
 
     /**
      * the root node of the version histories
      */
-    private final NodeImpl historyRoot;
+    private final PersistentNode historyRoot;
+
+    /**
+     * the state manager for the version storage
+     */
+    private PersistentItemStateManager stateMgr;
+
+    /**
+     * the nodetype manager for the version storage
+     */
+    private NodeTypeManagerImpl ntMgr;
 
     /**
      * Creates a new VersionManager.
@@ -52,7 +133,8 @@ public class VersionManager {
      * @throws RepositoryException
      */
     public VersionManager(SessionImpl session) throws RepositoryException {
-        this.session = session;
+        this.stateMgr = ((WorkspaceImpl) session.getWorkspace()).getPersistentStateManager();
+        this.ntMgr = session.getNodeTypeManager();
 
         // check for versionhistory root
         NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
@@ -61,14 +143,20 @@ public class VersionManager {
             systemRoot.addNode(VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
             systemRoot.save();
         }
-        historyRoot = systemRoot.getNode(VERSION_HISTORY_ROOT_NAME);
+
+        try {
+            PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(new NodeId(systemRoot.getNode(VERSION_HISTORY_ROOT_NAME).internalGetUUID()));
+            historyRoot = new PersistentNode(stateMgr, ntMgr, nodeState);
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Unable to initialize VersionManager: " + e.toString());
+        }
     }
 
     /**
-     * Creates a new Version History and returns the UUID of it.
+     * Creates a new Version History..
      *
      * @param node the node for which the version history is to be initialized
-     * @return the UUID of the new version history node
+     * @return the newly created version history.
      * @throws RepositoryException
      */
     public VersionHistory createVersionHistory(NodeImpl node)
@@ -77,22 +165,12 @@ public class VersionManager {
         // check if history already exists
         QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, node.getUUID());
         if (historyRoot.hasNode(historyNodeName)) {
-            //throw new RepositoryException("Unable to initialize version history. Already exists");
-            historyRoot.getNode(historyNodeName).remove(".");
+            historyRoot.removeNode(historyNodeName);
         }
 
-        // create new history node
-        VersionHistoryImpl vh = VersionHistoryImpl.create(historyRoot.addNode(historyNodeName,
-                NodeTypeRegistry.NT_VERSION_HISTORY));
-
-        // and initialize the root version
-        ((VersionImpl) vh.getRootVersion()).initFrozenState(node);
-
-        // save new history
-        historyRoot.save();
-
-        // must aquire version history with the node's session
-        return VersionHistoryImpl.create((NodeImpl) node.getSession().getNodeByUUID(vh.getUUID()));
+        // create new history node in the persistent state
+        InternalVersionHistory history = InternalVersionHistory.create(historyRoot, historyNodeName);
+        return new VersionHistoryImpl(node.getSession(), history);
     }
 
     /**
@@ -103,7 +181,9 @@ public class VersionManager {
      * @throws RepositoryException
      */
     public Version getBaseVersion(NodeImpl node) throws RepositoryException {
-        return (Version) node.getSession().getNodeByUUID(node.getProperty(VersionImpl.PROPNAME_BASE_VERSION).getString());
+        InternalVersionHistory history = getInternalVersionHistory(node);
+        InternalVersion version = history.getVersion(node.getProperty(PROPNAME_BASE_VERSION).getString());
+        return version == null ? null : new VersionImpl(node.getSession(), version);
     }
 
     /**
@@ -114,8 +194,29 @@ public class VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public VersionHistoryImpl getVersionHistory(NodeImpl node) throws RepositoryException {
-        return VersionHistoryImpl.create((NodeImpl) node.getSession().getNodeByUUID(node.getProperty(VersionImpl.PROPNAME_VERSION_HISTORY).getString()));
+    public VersionHistory getVersionHistory(NodeImpl node)
+            throws RepositoryException {
+        InternalVersionHistory history = getInternalVersionHistory(node);
+        return new VersionHistoryImpl(node.getSession(), history);
+    }
+
+    /**
+     * returns the internal version history for the given node
+     *
+     * @param node
+     * @return
+     * @throws RepositoryException
+     */
+    private InternalVersionHistory getInternalVersionHistory(NodeImpl node)
+            throws RepositoryException {
+        String histUUID = node.getProperty(PROPNAME_VERSION_HISTORY).getString();
+        try {
+            PersistentNodeState state = (PersistentNodeState) stateMgr.getItemState(new NodeId(histUUID));
+            PersistentNode hNode = new PersistentNode(stateMgr, ntMgr, state);
+            return new InternalVersionHistory(hNode);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -130,12 +231,13 @@ public class VersionManager {
         // assuming node is versionable and checkout (check in nodeimpl)
         // To create a new version of a versionable node N, the client calls N.checkin.
         // This causes the following series of events:
+        InternalVersionHistory history = getInternalVersionHistory(node);
 
         // 0. resolve the predecessors
-        Value[] values = node.getProperty(VersionImpl.PROPNAME_PREDECESSORS).getValues();
-        VersionImpl[] preds = new VersionImpl[values.length];
+        Value[] values = node.getProperty(PROPNAME_PREDECESSORS).getValues();
+        InternalVersion[] preds = new InternalVersion[values.length];
         for (int i = 0; i < values.length; i++) {
-            preds[i] = (VersionImpl) node.getSession().getNodeByUUID(values[i].getString());
+            preds[i] = history.getVersion(values[i].getString());
         }
 
         // 0.1 search a predecessor, suitable for generating the new name
@@ -144,7 +246,7 @@ public class VersionManager {
         for (int i = 0; i < preds.length; i++) {
             // take the first pred. without a successor
             if (preds[i].getSuccessors().length == 0) {
-                versionName = preds[i].getName();
+                versionName = preds[i].getName().getLocalName(); //assuming no namespaces in version names
                 // need to count the dots
                 int pos = -1;
                 int numDots = 0;
@@ -160,63 +262,15 @@ public class VersionManager {
             }
         }
         // if no empty found, generate new name
-        VersionHistoryImpl vh = getVersionHistory(node);
         if (versionName == null) {
-            versionName = preds[0].getName();
+            versionName = preds[0].getName().getLocalName();
             do {
                 versionName += ".1";
-            } while (vh.hasNode(versionName));
+            } while (history.hasVersion(new QName("", versionName)));
         }
 
-        try {
-            // 1. A new nt:version node V is created and added as a child node to VH,
-            //    the nt:versionHistory pointed to by N’s jcr:versionHistory property.
-            VersionImpl v = (VersionImpl) vh.addNode(versionName,
-                    NodeTypeRegistry.NT_VERSION.toJCRName(session.getNamespaceResolver()));
-
-            // 3. N’s base version is changed to V by altering N’s jcr:baseVersion
-            //    property to point to V.
-            //   (will be done in the nodeimpl)
-
-            // 4. N’s checked-in/checked-out status is changed to checked-in by
-            //    changing its jcr:isCheckedOut property to false.
-            //    (will be done in NodeImpl)
-
-            // 5. The state of N is recorded in V by storing information about
-            //    N’s child items (properties or child nodes) to V, as prescribed by
-            //    the OnParentVersion attribute of each of N’s child items.
-            //    See 7.2.8, below, for the details. The jcr:primaryType,
-            //    jcr:mixinTypes and jcr:uuid properties of N are copied over to V
-            //    but renamed to jcr:frozenPrimaryType, jcr:frozenMixinTypes and
-            //    jcr:frozenUUID to avoid conflict with V's own properties with these names.
-            v.createFrozenState(node);
-
-            // 2. N’s current jcr:predecessors property is copied to V, and N’s
-            //    jcr:predecessors property is then set to null.  A reference to V
-            //    is then added to the jcr:successors property of each of the versions
-            //    identified in V’s jcr:predecessors property.
-            InternalValue[] ivPreds = new InternalValue[preds.length];
-            for (int i = 0; i < preds.length; i++) {
-                ivPreds[i] = InternalValue.create(new UUID(preds[i].getUUID()));
-                preds[i].internalAddSuccessor(v);
-            }
-            v.internalSetProperty(VersionImpl.PROPNAME_PREDECESSORS, ivPreds);
-
-            // 6. V is given a name, sometimes based upon the name of V’s predecessor.
-            //    For example, an increment from “1.5” to “1.6”.
-            // (is done before)
-            vh.save();
-            return v;
-        } catch (RepositoryException e) {
-            log.error("Aborting checkin. Error while creating version: " + e.toString());
-            vh.refresh(false);
-            throw e;
-        } catch (NoPrefixDeclaredException npde) {
-            String msg = "Aborting checkin. Error while creating version: " + npde.toString();
-            log.error(msg, npde);
-            vh.refresh(false);
-            throw new RepositoryException(msg, npde);
-        }
+        InternalVersion v = history.checkin(new QName("", versionName), node);
+        return new VersionImpl(node.getSession(), v);
     }
 
 }

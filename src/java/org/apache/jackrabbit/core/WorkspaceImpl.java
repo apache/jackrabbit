@@ -48,7 +48,7 @@ import java.util.Iterator;
 /**
  * A <code>WorkspaceImpl</code> ...
  */
-class WorkspaceImpl implements Workspace {
+public class WorkspaceImpl implements Workspace {
 
     private static Logger log = Logger.getLogger(WorkspaceImpl.class);
 
@@ -118,7 +118,7 @@ class WorkspaceImpl implements Workspace {
         return rep;
     }
 
-    PersistentItemStateManager getPersistentStateManager() {
+    public PersistentItemStateManager getPersistentStateManager() {
         return persistentStateMgr;
     }
 
