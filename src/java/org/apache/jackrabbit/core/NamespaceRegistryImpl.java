@@ -205,7 +205,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
      * @return a unique prefix
      */
     public String getUniquePrefix(String uriHint) {
-        // @todo smarter prefix generation
+        // @todo smarter unique prefix generation
 /*
         int number;
         if (uriHint == null || uriHint.length() == 0) {
@@ -238,6 +238,11 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
             throw new NamespaceException("failed to register namespace "
                     + prefix + " -> " + uri + ": reserved prefix");
         }
+        // special case: prefixes xml*
+        if (prefix.startsWith(NS_XML_PREFIX)) {
+            throw new NamespaceException("failed to register namespace "
+                    + prefix + " -> " + uri + ": reserved prefix");
+        }
 
         String oldPrefix = (String) uriToPrefix.get(uri);
         if (oldPrefix != null) {
@@ -252,10 +257,12 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
         }
 
         if (prefixToURI.containsKey(prefix)) {
-            // prevent remapping of existing prefixes because this would in effect
-            // remove the previously assigned namespace;
-            // as we can't guarantee that there are no references to this namespace
-            // (in names of nodes/properties/node types etc.) we simply don't allow it.
+            /**
+             * prevent remapping of existing prefixes because this would in effect
+             * remove the previously assigned namespace;
+             * as we can't guarantee that there are no references to this namespace
+             * (in names of nodes/properties/node types etc.) we simply don't allow it.
+             */
             throw new NamespaceException("failed to register namespace "
                     + prefix + " -> " + uri + ": remapping existing prefixes is not supported.");
         }
@@ -278,9 +285,11 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
         if (!prefixToURI.containsKey(prefix)) {
             throw new NamespaceException("unknown prefix: " + prefix);
         }
-        // as we can't guarantee that there are no references to the specified
-        // namespace (in names of nodes/properties/node types etc.) we simply
-        // don't allow it.
+        /**
+         * as we can't guarantee that there are no references to the specified
+         * namespace (in names of nodes/properties/node types etc.) we simply
+         * don't allow it.
+         */
         throw new NamespaceException("unregistering namespaces is not supported.");
     }
 
