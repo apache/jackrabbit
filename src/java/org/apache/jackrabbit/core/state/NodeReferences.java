@@ -71,8 +71,8 @@ public class NodeReferences implements Serializable {
     /**
      * @return
      */
-    public Collection getReferences() {
-        return Collections.unmodifiableCollection(references);
+    public List getReferences() {
+        return Collections.unmodifiableList(references);
     }
 
     /**

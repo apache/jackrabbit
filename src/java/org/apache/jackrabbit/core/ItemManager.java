@@ -18,17 +18,13 @@ package org.apache.jackrabbit.core;
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.*;
-import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.PropertyDef;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * There's one <code>ItemManager</code> instance per <code>Session</code>
@@ -237,7 +233,7 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    synchronized NodeIterator getChildNodes(NodeId parentId)
+    synchronized boolean hasChildNodes(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check privileges
         if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
@@ -248,8 +244,6 @@ public class ItemManager implements ItemLifeCycleListener {
             }
             throw new AccessDeniedException("cannot read item " + parentId);
         }
-
-        ArrayList children = new ArrayList();
 
         ItemState state = null;
         try {
@@ -274,16 +268,13 @@ public class ItemManager implements ItemLifeCycleListener {
 
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-            try {
-                Item item = getItem(new NodeId(entry.getUUID()));
-                children.add(item);
-            } catch (AccessDeniedException ade) {
-                // ignore
-                continue;
+            NodeId id = new NodeId(entry.getUUID());
+            // check read access
+            if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
+                return true;
             }
         }
-
-        return new IteratorHelper(Collections.unmodifiableList(children));
+        return false;
     }
 
     /**
@@ -293,7 +284,61 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    synchronized PropertyIterator getChildProperties(NodeId parentId)
+    synchronized NodeIterator getChildNodes(NodeId parentId)
+            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check privileges
+        if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
+            // clear cache
+            ItemImpl item = retrieveItem(parentId);
+            if (item != null) {
+                evictItem(parentId);
+            }
+            throw new AccessDeniedException("cannot read item " + parentId);
+        }
+
+        ArrayList childIds = new ArrayList();
+
+        ItemState state = null;
+        try {
+            state = itemStateProvider.getItemState(parentId);
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "no such item: " + parentId;
+            log.error(msg);
+            throw new ItemNotFoundException(msg);
+        } catch (ItemStateException ise) {
+            String msg = "failed to retrieve item state of node " + parentId;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+
+        if (!state.isNode()) {
+            String msg = "can't list child nodes of property " + parentId;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+        NodeState nodeState = (NodeState) state;
+        Iterator iter = nodeState.getChildNodeEntries().iterator();
+
+        while (iter.hasNext()) {
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            NodeId id = new NodeId(entry.getUUID());
+            // check read access
+            if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
+                childIds.add(id);
+            }
+        }
+
+        return new LazyItemIterator(this, childIds);
+    }
+
+    /**
+     * @param parentId
+     * @return
+     * @throws ItemNotFoundException
+     * @throws AccessDeniedException
+     * @throws RepositoryException
+     */
+    synchronized boolean hasChildProperties(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check privileges
         if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
@@ -303,8 +348,6 @@ public class ItemManager implements ItemLifeCycleListener {
             }
             throw new AccessDeniedException("cannot read item " + parentId);
         }
-
-        ArrayList children = new ArrayList();
 
         ItemState state = null;
         try {
@@ -329,18 +372,68 @@ public class ItemManager implements ItemLifeCycleListener {
 
         while (iter.hasNext()) {
             NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-            try {
-                Item item = getItem(new PropertyId(parentId.getUUID(), entry.getName()));
-                children.add(item);
-            } catch (AccessDeniedException ade) {
-                // ignore
-                continue;
+
+            PropertyId id = new PropertyId(parentId.getUUID(), entry.getName());
+            // check read access
+            if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
+                return true;
             }
         }
 
-        // not need to add virtual properties
+        return false;
+    }
 
-        return new IteratorHelper(Collections.unmodifiableList(children));
+    /**
+     * @param parentId
+     * @return
+     * @throws ItemNotFoundException
+     * @throws AccessDeniedException
+     * @throws RepositoryException
+     */
+    synchronized PropertyIterator getChildProperties(NodeId parentId)
+            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check privileges
+        if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
+            ItemImpl item = retrieveItem(parentId);
+            if (item != null) {
+                evictItem(parentId);
+            }
+            throw new AccessDeniedException("cannot read item " + parentId);
+        }
+
+        ArrayList childIds = new ArrayList();
+
+        ItemState state = null;
+        try {
+            state = itemStateProvider.getItemState(parentId);
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "no such item: " + parentId;
+            log.error(msg);
+            throw new ItemNotFoundException(msg);
+        } catch (ItemStateException ise) {
+            String msg = "failed to retrieve item state of node " + parentId;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+
+        if (!state.isNode()) {
+            String msg = "can't list child properties of property " + parentId;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+        NodeState nodeState = (NodeState) state;
+        Iterator iter = nodeState.getPropertyEntries().iterator();
+
+        while (iter.hasNext()) {
+            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
+            PropertyId id = new PropertyId(parentId.getUUID(), entry.getName());
+            // check read access
+            if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
+                childIds.add(id);
+            }
+        }
+
+        return new LazyItemIterator(this, childIds);
     }
 
     //-------------------------------------------------< item factory methods >

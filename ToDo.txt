@@ -6,9 +6,6 @@ is it complete :(
 
 - locking
 - access control (jaas)
-- current persistence model (nodes and properties are stored in separate
-  files) leads to *very* slow performance in a normal filesystem;
-  see next issues for solutions 
 - use jdbc as an alternative to virtual filesystem persistence layer
 - use an alternative journaling store as (transactional) persistence layer 
 - provide clean abstraction for persistence grouping (nodes & properties 

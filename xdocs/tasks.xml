@@ -13,10 +13,6 @@
         	access control (jaas)
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-		current persistence model (nodes and properties are stored in separate
-		files) leads to *very* slow performance in a normal filesystem;
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
         	use jdbc as an alternative to virtual filesystem persistence layer
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">

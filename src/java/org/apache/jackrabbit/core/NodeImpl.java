@@ -17,7 +17,6 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.state.*;
-import org.apache.jackrabbit.core.util.ChildrenCollector;
 import org.apache.jackrabbit.core.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -1463,10 +1462,7 @@ public class NodeImpl extends ItemImpl implements Node {
          * return false if child nodes exist
          * but the session is not granted read-access
          */
-        ArrayList nodes = new ArrayList();
-        // traverse children using a 'collector'
-        accept(new ChildrenCollector(nodes, true, false, 1));
-        return (nodes.size() > 0);
+        return itemMgr.hasChildNodes((NodeId) id);
     }
 
     /**
@@ -1482,10 +1478,7 @@ public class NodeImpl extends ItemImpl implements Node {
          * return false if properties exist
          * but the session is not granted read-access
          */
-        ArrayList props = new ArrayList();
-        // traverse children using a 'collector'
-        accept(new ChildrenCollector(props, false, true, 1));
-        return (props.size() > 0);
+        return itemMgr.hasChildProperties((NodeId) id);
     }
 
     /**
@@ -1877,13 +1870,9 @@ public class NodeImpl extends ItemImpl implements Node {
         ReferenceManager refMgr = wsp.getReferenceManager();
         synchronized (refMgr) {
             NodeReferences refs = refMgr.get((NodeId) id);
-            Iterator iter = refs.getReferences().iterator();
-            ArrayList list = new ArrayList();
-            while (iter.hasNext()) {
-                PropertyId propId = (PropertyId) iter.next();
-                list.add(itemMgr.getItem(propId));
-            }
-            return new IteratorHelper(list);
+            // refs.getReferences returns a list of PropertyId's
+            List idList = refs.getReferences();
+            return new LazyItemIterator(itemMgr, idList);
         }
     }
 
