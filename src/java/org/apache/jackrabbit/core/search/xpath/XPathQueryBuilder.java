@@ -203,7 +203,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             case JJTSTEPEXPR:
                 if (isAttributeAxis(node)) {
                     if (data instanceof RelationQueryNode
-                            || data instanceof OrderQueryNode) {
+                            || data instanceof OrderQueryNode
+                            || data instanceof PathQueryNode) {
                         // traverse
                         node.childrenAccept(this, data);
                     } else if (data instanceof NotQueryNode) {
