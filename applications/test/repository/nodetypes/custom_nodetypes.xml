@@ -66,5 +66,14 @@
       </requiredPrimaryTypes>
     </childNodeDef>
   </nodeType>
+  
+  <!-- Defines a referenceable nodetype for testing purposes -->
+  <nodeType name="test:refTargetNode" mixin="false" orderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+  </nodeType>
 </nodeTypes>
 

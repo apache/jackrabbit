@@ -37,10 +37,9 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("javax.jcr tests");
 
         // ADD TEST CLASSES HERE:
-        suite.addTestSuite(AddNodeTest.class);
+
+        // level 1 tests
         suite.addTestSuite(RootNodeTest.class);
-        suite.addTestSuite(NamespaceRegistryTest.class);
-        suite.addTestSuite(ReferencesTest.class);
         suite.addTestSuite(NodeReadMethodsTest.class);
         suite.addTestSuite(PropertyTypeTest.class);
         suite.addTestSuite(NodeDiscoveringNodeTypesTest.class);
@@ -63,6 +62,16 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RepositoryDescriptorTest.class);
         suite.addTestSuite(SessionReadMethodsTest.class);
         suite.addTestSuite(WorkspaceReadMethodsTest.class);
+
+        // level 2 tests
+        suite.addTestSuite(AddNodeTest.class);
+        suite.addTestSuite(NamespaceRegistryTest.class);
+        suite.addTestSuite(ReferencesTest.class);
+        suite.addTestSuite(SessionTest.class);
+        suite.addTestSuite(SessionUUIDTest.class);
+        suite.addTestSuite(NodeTest.class);
+        suite.addTestSuite(NodeUUIDTest.class);
+        suite.addTestSuite(NodeOrderableChildNodesTest.class);
 
         return suite;
     }

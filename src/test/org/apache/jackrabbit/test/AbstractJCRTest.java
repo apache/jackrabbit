@@ -25,6 +25,9 @@ import javax.jcr.Repository;
 import javax.jcr.NamespaceException;
 import javax.jcr.RangeIterator;
 import java.util.StringTokenizer;
+import java.util.Random;
+import java.util.List;
+import java.util.Arrays;
 
 /**
  * Abstract base class for all JCR test classes.
@@ -90,6 +93,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * JCR Name jcr:lockIsDeep using the namespace resolver of the current session.
      */
     protected String jcrlockIsDeep;
+
+    /**
+     * JCR Name jcr:mergeFailed using the namespace resolver of the current session.
+     */
+    protected String jcrMergeFailed;
 
     /**
      * JCR Name nt:base using the namespace resolver of the current session.
@@ -231,6 +239,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrUUID = superuser.getNamespacePrefix(NS_JCR_URI) + ":uuid";
         jcrLockOwner = superuser.getNamespacePrefix(NS_JCR_URI) + ":lockOwner";
         jcrlockIsDeep = superuser.getNamespacePrefix(NS_JCR_URI) + ":lockIsDeep";
+        jcrMergeFailed = superuser.getNamespacePrefix(NS_JCR_URI) + ":mergeFailed";
         ntBase = superuser.getNamespacePrefix(NS_NT_URI) + ":base";
         mixReferenceable = superuser.getNamespacePrefix(NS_MIX_URI) + ":referenceable";
         mixVersionable = superuser.getNamespacePrefix(NS_MIX_URI) + ":versionable";
@@ -364,6 +373,41 @@ public abstract class AbstractJCRTest extends JUnitTest {
             size++;
         }
         return size;
+    }
+
+    /**
+     * Returns the name of a workspace that is not accessible from
+     * <code>session</code>.
+     * @param session the session.
+     * @return name of a non existing workspace.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected String getNonExistingWorkspaceName(Session session) throws RepositoryException {
+        List names = Arrays.asList(session.getWorkspace().getAccessibleWorkspaceNames());
+        String nonExisting = null;
+        while (nonExisting == null) {
+            String name = createRandomString(10);
+            if (!names.contains(name)) {
+                nonExisting = name;
+            }
+        }
+        return nonExisting;
+    }
+
+    /**
+     * Creates a <code>String</code> with a random sequence of characters
+     * using 'a' - 'z'.
+     * @param numChars number of characters.
+     * @return the generated String.
+     */
+    protected String createRandomString(int numChars) {
+        Random rand = new Random(System.currentTimeMillis());
+        StringBuffer tmp = new StringBuffer(numChars);
+        for (int i = 0; i < numChars; i++) {
+            char c = (char) (rand.nextInt(('z' + 1) - 'a') + 'a');
+            tmp.append(c);
+        }
+        return tmp.toString();
     }
 
 }

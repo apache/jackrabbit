@@ -26,12 +26,12 @@ import java.util.regex.Matcher;
  * Implements the encode and decode routines as specified for XML name to SQL
  * identifier conversion in ISO 9075-14:2003.<br/>
  * If a character <code>c</code> is not valid at a certain position in an XML 1.0
- * Name it is encoded in the form: '_x' + hexValueOf(c) + '_'
- * todo or is it NCName
+ * NCName it is encoded in the form: '_x' + hexValueOf(c) + '_'
  * <p/>
  * Note that only the local part of a {@link org.apache.jackrabbit.core.QName}
  * is encoded / decoded. A URI namespace will always be valid and does not
  * need encoding.
+ * todo change implementation to latest spec. only encode _x when followed by XXXX_
  */
 public class ISO9075 {
 
