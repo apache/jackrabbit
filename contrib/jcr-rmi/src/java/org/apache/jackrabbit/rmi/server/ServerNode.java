@@ -74,7 +74,11 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteNode addNode(String path) throws ItemExistsException,
             PathNotFoundException, ConstraintViolationException,
             RepositoryException, RemoteException {
-        return factory.getRemoteNode(node.addNode(path));
+        try {
+            return factory.getRemoteNode(node.addNode(path));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
@@ -82,124 +86,208 @@ public class ServerNode extends ServerItem implements RemoteNode {
             ItemExistsException, PathNotFoundException,
             NoSuchNodeTypeException, ConstraintViolationException,
             RepositoryException, RemoteException {
-        return factory.getRemoteNode(node.addNode(path, type));
+        try {
+            return factory.getRemoteNode(node.addNode(path, type));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteProperty getProperty(String path) throws PathNotFoundException,
             RepositoryException, RemoteException {
-        return factory.getRemoteProperty(node.getProperty(path));
+        try {
+            return factory.getRemoteProperty(node.getProperty(path));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteProperty[] getProperties() throws RepositoryException,
             RemoteException {
-        return getRemotePropertyArray(node.getProperties());
+        try {
+            return getRemotePropertyArray(node.getProperties());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }    
     
     /** {@inheritDoc} */
     public RemoteItem getPrimaryItem() throws ItemNotFoundException,
             RepositoryException, RemoteException {
-        return getRemoteItem(node.getPrimaryItem());
+        try {
+            return getRemoteItem(node.getPrimaryItem());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteProperty[] getProperties(String pattern)
             throws RepositoryException, RemoteException {
-        return getRemotePropertyArray(node.getProperties(pattern));
+        try {
+            return getRemotePropertyArray(node.getProperties(pattern));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteProperty[] getReferences() throws RepositoryException,
             RemoteException {
-        return getRemotePropertyArray(node.getReferences());
+        try {
+            return getRemotePropertyArray(node.getReferences());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public String getUUID() throws UnsupportedRepositoryOperationException,
             RepositoryException, RemoteException {
-        return node.getUUID();
+        try {
+            return node.getUUID();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public boolean hasNodes() throws RepositoryException, RemoteException {
-        return node.hasNodes();
+        try {
+            return node.hasNodes();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public boolean hasProperties() throws RepositoryException, RemoteException {
-        return node.hasProperties();
+        try {
+            return node.hasProperties();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public boolean hasProperty(String path) throws RepositoryException,
             RemoteException {
-        return node.hasProperty(path);
+        try {
+            return node.hasProperty(path);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteNodeType[] getMixinNodeTypes() throws RepositoryException,
             RemoteException {
-        return getRemoteNodeTypeArray(node.getMixinNodeTypes());
+        try {
+            return getRemoteNodeTypeArray(node.getMixinNodeTypes());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteNodeType getPrimaryNodeType() throws RepositoryException,
             RemoteException {
-        return factory.getRemoteNodeType(node.getPrimaryNodeType());
+        try {
+            return factory.getRemoteNodeType(node.getPrimaryNodeType());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public boolean isNodeType(String type) throws RepositoryException,
             RemoteException {
-        return node.isNodeType(type);
+        try {
+            return node.isNodeType(type);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteNode[] getNodes() throws RepositoryException, RemoteException {
-        return getRemoteNodeArray(node.getNodes());
+        try {
+            return getRemoteNodeArray(node.getNodes());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteNode[] getNodes(String pattern) throws RepositoryException,
             RemoteException {
-        return getRemoteNodeArray(node.getNodes(pattern));
+        try {
+            return getRemoteNodeArray(node.getNodes(pattern));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteNode getNode(String path) throws PathNotFoundException,
             RepositoryException, RemoteException {
-        return factory.getRemoteNode(node.getNode(path));
+        try {
+            return factory.getRemoteNode(node.getNode(path));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public boolean hasNode(String path) throws RepositoryException,
             RemoteException {
-        return node.hasNode(path);
+        try {
+            return node.hasNode(path);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteProperty setProperty(String name, Value value)
             throws ValueFormatException, RepositoryException, RemoteException {
-        return factory.getRemoteProperty(node.setProperty(name, value));
+        try {
+            return factory.getRemoteProperty(node.setProperty(name, value));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void addMixin(String name) throws NoSuchNodeTypeException,
             ConstraintViolationException, RepositoryException, RemoteException {
-        node.addMixin(name);
+        try {
+            node.addMixin(name);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public boolean canAddMixin(String name) throws RepositoryException,
             RemoteException {
-        return node.canAddMixin(name);
+        try {
+            return node.canAddMixin(name);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void removeMixin(String name) throws NoSuchNodeTypeException,
             ConstraintViolationException, RepositoryException, RemoteException {
-        node.removeMixin(name);
+        try {
+            node.removeMixin(name);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -207,37 +295,61 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throws UnsupportedRepositoryOperationException,
             ConstraintViolationException, ItemNotFoundException,
             RepositoryException, RemoteException {
-        node.orderBefore(src, dst);
+        try {
+            node.orderBefore(src, dst);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteProperty setProperty(String name, Value[] values)
             throws ValueFormatException, RepositoryException, RemoteException {
-        return factory.getRemoteProperty(node.setProperty(name, values));
+        try {
+            return factory.getRemoteProperty(node.setProperty(name, values));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteNodeDef getDefinition() throws RepositoryException,
             RemoteException {
-        return factory.getRemoteNodeDef(node.getDefinition());
+        try {
+            return factory.getRemoteNodeDef(node.getDefinition());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void checkout() throws UnsupportedRepositoryOperationException,
             RepositoryException, RemoteException {
-        node.checkout();
+        try {
+            node.checkout();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public String getCorrespondingNodePath(String workspace)
             throws ItemNotFoundException, NoSuchWorkspaceException,
             AccessDeniedException, RepositoryException, RemoteException {
-        return node.getCorrespondingNodePath(workspace);
+        try {
+            return node.getCorrespondingNodePath(workspace);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public int getIndex() throws RepositoryException, RemoteException {
-        return node.getIndex();
+        try {
+            return node.getIndex();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
@@ -245,7 +357,11 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throws UnsupportedRepositoryOperationException,
             NoSuchWorkspaceException, AccessDeniedException, MergeException,
             RepositoryException, RemoteException {
-        node.merge(workspace, bestEffort);
+        try {
+            node.merge(workspace, bestEffort);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
@@ -253,7 +369,11 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throws VersionException, ItemExistsException,
             UnsupportedRepositoryOperationException, LockException,
             InvalidItemStateException, RepositoryException, RemoteException {
-        node.restore(version, removeExisting);
+        try {
+            node.restore(version, removeExisting);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
@@ -261,57 +381,93 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throws VersionException, ItemExistsException,
             UnsupportedRepositoryOperationException, LockException,
             InvalidItemStateException, RepositoryException, RemoteException {
-        node.restoreByLabel(label, removeExisting);
+        try {
+            node.restoreByLabel(label, removeExisting);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void update(String workspace) throws NoSuchWorkspaceException,
             AccessDeniedException, RepositoryException, RemoteException {
-        node.update(workspace);
+        try {
+            node.update(workspace);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public boolean holdsLock() throws RepositoryException, RemoteException {
-        return node.holdsLock();
+        try {
+            return node.holdsLock();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public boolean isCheckedOut() throws
             UnsupportedRepositoryOperationException, RepositoryException,
             RemoteException {
-        return node.isCheckedOut();
+        try {
+            return node.isCheckedOut();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public boolean isLocked() throws RepositoryException, RemoteException {
-        return node.isLocked();
+        try {
+            return node.isLocked();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteProperty setProperty(String name, Value[] values, int type)
             throws ValueFormatException, VersionException, LockException,
             RepositoryException, RemoteException {
-        return factory.getRemoteProperty(node.setProperty(name, values, type));
+        try {
+            return factory.getRemoteProperty(node.setProperty(name, values, type));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public void unlock() throws UnsupportedRepositoryOperationException,
             LockException, AccessDeniedException, RepositoryException,
             RemoteException {
-        node.unlock();
+        try {
+            node.unlock();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteLock getLock() throws UnsupportedRepositoryOperationException,
             LockException, AccessDeniedException, RepositoryException,
             RemoteException {
-        return factory.getRemoteLock(node.getLock());
+        try {
+            return factory.getRemoteLock(node.getLock());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteLock lock(boolean isDeep, boolean isSessionScoped)
             throws UnsupportedRepositoryOperationException, LockException,
             AccessDeniedException, RepositoryException, RemoteException {
-        return factory.getRemoteLock(node.lock(isDeep, isSessionScoped));
+        try {
+            return factory.getRemoteLock(node.lock(isDeep, isSessionScoped));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 }

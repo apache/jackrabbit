@@ -87,7 +87,11 @@ public class ServerSession extends ServerObject implements RemoteSession {
     /** {@inheritDoc} */
     public RemoteSession impersonate(Credentials credentials)
             throws LoginException, RepositoryException, RemoteException {
-        return factory.getRemoteSession(session.impersonate(credentials));
+        try {
+            return factory.getRemoteSession(session.impersonate(credentials));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -104,25 +108,41 @@ public class ServerSession extends ServerObject implements RemoteSession {
     /** {@inheritDoc} */
     public String getNamespacePrefix(String uri) throws NamespaceException,
             RepositoryException, RemoteException {
-        return session.getNamespacePrefix(uri);
+        try {
+            return session.getNamespacePrefix(uri);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public String[] getNamespacePrefixes() throws RepositoryException,
             RemoteException {
-        return session.getNamespacePrefixes();
+        try {
+            return session.getNamespacePrefixes();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public String getNamespaceURI(String prefix) throws NamespaceException,
             RepositoryException, RemoteException {
-        return session.getNamespaceURI(prefix);
+        try {
+            return session.getNamespaceURI(prefix);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public void setNamespacePrefix(String prefix, String uri)
             throws NamespaceException, RepositoryException, RemoteException {
-        session.setNamespacePrefix(prefix, uri);
+        try {
+            session.setNamespacePrefix(prefix, uri);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -133,45 +153,73 @@ public class ServerSession extends ServerObject implements RemoteSession {
     /** {@inheritDoc} */
     public RemoteNode getNodeByUUID(String uuid) throws ItemNotFoundException,
             RepositoryException, RemoteException {
-        return factory.getRemoteNode(session.getNodeByUUID(uuid));
+        try {
+            return factory.getRemoteNode(session.getNodeByUUID(uuid));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteNode getRootNode() throws RepositoryException,
             RemoteException {
-        return factory.getRemoteNode(session.getRootNode());
+        try {
+            return factory.getRemoteNode(session.getRootNode());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public RemoteItem getItem(String path) throws PathNotFoundException,
             RepositoryException, RemoteException {
-        return getRemoteItem(session.getItem(path));
+        try {
+            return getRemoteItem(session.getItem(path));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public boolean hasPendingChanges() throws RepositoryException,
             RemoteException {
-        return session.hasPendingChanges();
+        try {
+            return session.hasPendingChanges();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void move(String from, String to) throws ItemExistsException,
             PathNotFoundException, ConstraintViolationException,
             RepositoryException, RemoteException {
-        session.move(from, to);
+        try {
+            session.move(from, to);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void save() throws AccessDeniedException, LockException,
             ConstraintViolationException, InvalidItemStateException,
             RepositoryException, RemoteException {
-        session.save();
+        try {
+            session.save();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public void refresh(boolean keepChanges) throws RepositoryException,
             RemoteException {
-        session.refresh(keepChanges);
+        try {
+            session.refresh(keepChanges);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
@@ -184,7 +232,11 @@ public class ServerSession extends ServerObject implements RemoteSession {
             PathNotFoundException, ItemExistsException,
             ConstraintViolationException, InvalidSerializedDataException,
             RepositoryException, RemoteException {
-        session.importXML(path, new ByteArrayInputStream(xml));
+        try {
+            session.importXML(path, new ByteArrayInputStream(xml));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -207,17 +259,25 @@ public class ServerSession extends ServerObject implements RemoteSession {
             boolean noRecurse) throws InvalidSerializedDataException,
             PathNotFoundException, IOException, RepositoryException,
             RemoteException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        session.exportDocView(path, buffer, binaryAsLink, noRecurse);
-        return buffer.toByteArray();
+        try {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            session.exportDocView(path, buffer, binaryAsLink, noRecurse);
+            return buffer.toByteArray();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public byte[] exportSysView(String path, boolean binaryAsLink,
             boolean noRecurse) throws PathNotFoundException, IOException,
             RepositoryException, RemoteException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        session.exportSysView(path, buffer, binaryAsLink, noRecurse);
-        return buffer.toByteArray();
+        try {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            session.exportSysView(path, buffer, binaryAsLink, noRecurse);
+            return buffer.toByteArray();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 }

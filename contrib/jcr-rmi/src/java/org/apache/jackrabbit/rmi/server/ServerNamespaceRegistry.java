@@ -58,35 +58,59 @@ public class ServerNamespaceRegistry extends ServerObject implements
     /** {@inheritDoc} */
     public void registerNamespace(String prefix, String uri)
             throws NamespaceException, RepositoryException, RemoteException {
-        registry.registerNamespace(prefix, uri);
+        try {
+            registry.registerNamespace(prefix, uri);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public void unregisterNamespace(String prefix) throws NamespaceException,
             RepositoryException, RemoteException {
-        registry.unregisterNamespace(prefix);
+        try {
+            registry.unregisterNamespace(prefix);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public String[] getPrefixes() throws RepositoryException, RemoteException {
-        return registry.getPrefixes();
+        try {
+            return registry.getPrefixes();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public String[] getURIs() throws RepositoryException, RemoteException {
-        return registry.getURIs();
+        try {
+            return registry.getURIs();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public String getURI(String prefix) throws NamespaceException,
             RepositoryException, RemoteException {
-        return registry.getURI(prefix);
+        try {
+            return registry.getURI(prefix);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public String getPrefix(String uri) throws NamespaceException,
             RepositoryException, RemoteException {
-        return registry.getPrefix(uri);
+        try {
+            return registry.getPrefix(uri);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
 }

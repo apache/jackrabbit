@@ -74,7 +74,11 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, ItemExistsException, RepositoryException,
             RemoteException {
-        workspace.copy(from, to);
+        try {
+            workspace.copy(from, to);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -82,7 +86,11 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throws NoSuchWorkspaceException, ConstraintViolationException,
             AccessDeniedException, PathNotFoundException, ItemExistsException,
             RepositoryException, RemoteException {
-        this.workspace.copy(from, to, workspace);
+        try {
+            this.workspace.copy(from, to, workspace);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -91,7 +99,11 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, ItemExistsException, RepositoryException,
             RemoteException {
-        this.workspace.clone(workspace, from, to, removeExisting);
+        try {
+            this.workspace.clone(workspace, from, to, removeExisting);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -99,27 +111,43 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, ItemExistsException, RepositoryException,
             RemoteException {
-        workspace.move(from, to);
+        try {
+            workspace.move(from, to);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteNodeTypeManager getNodeTypeManager()
             throws RepositoryException, RemoteException {
-        NodeTypeManager manager = workspace.getNodeTypeManager();
-        return factory.getRemoteNodeTypeManager(manager);
+        try {
+            NodeTypeManager manager = workspace.getNodeTypeManager();
+            return factory.getRemoteNodeTypeManager(manager);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
     
     /** {@inheritDoc} */
     public RemoteNamespaceRegistry getNamespaceRegistry()
             throws RepositoryException, RemoteException {
-        NamespaceRegistry registry = workspace.getNamespaceRegistry();
-        return factory.getRemoteNamespaceRegistry(registry);
+        try {
+            NamespaceRegistry registry = workspace.getNamespaceRegistry();
+            return factory.getRemoteNamespaceRegistry(registry);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
     public String[] getAccessibleWorkspaceNames() throws RepositoryException,
             RemoteException {
-        return workspace.getAccessibleWorkspaceNames();
+        try {
+            return workspace.getAccessibleWorkspaceNames();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 
     /** {@inheritDoc} */
@@ -127,6 +155,10 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throws IOException, PathNotFoundException, ItemExistsException,
             ConstraintViolationException, InvalidSerializedDataException,
             LockException, RepositoryException, RemoteException {
-        workspace.importXML(path, new ByteArrayInputStream(xml), uuidBehaviour);
+        try {
+            workspace.importXML(path, new ByteArrayInputStream(xml), uuidBehaviour);
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
     }
 }
