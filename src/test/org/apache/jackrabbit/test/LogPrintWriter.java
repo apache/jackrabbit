@@ -135,6 +135,9 @@ public class LogPrintWriter extends PrintWriter {
     //-----------------------< private methods >--------------------------------
 
     private void flushBuffer() {
+        if (buffer.length() == 0) {
+            return;
+        }
         if (log != null) {
             log.log(level, buffer);
         } else {
