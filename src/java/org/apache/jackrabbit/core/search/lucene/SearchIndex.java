@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.search.QueryConstants;
 import org.apache.jackrabbit.core.search.ExecutableQuery;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.QName;
@@ -42,6 +43,8 @@ import org.apache.lucene.search.Sort;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
+import java.util.List;
+import java.util.Iterator;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.search.QueryHandler} using
@@ -107,7 +110,7 @@ public class SearchIndex extends AbstractQueryHandler {
             if (create) {
                 // index root node
                 NodeState rootState = (NodeState) getItemStateProvider().getItemState(new NodeId(getRootUUID()));
-                addNode(rootState);
+                createIndex(rootState);
             }
         } catch (ItemStateException e) {
             throw new IOException("Error indexing root node: " + e.getMessage());
@@ -213,6 +216,16 @@ public class SearchIndex extends AbstractQueryHandler {
         persistentIndex.close();
     }
 
+    /**
+     * Executes the query on the search index.
+     * @param query the lucene query.
+     * @param orderProps name of the properties for sort order.
+     * @param orderSpecs the order specs for the sort order properties.
+     * <code>true</code> indicates ascending order, <code>false</code> indicates
+     * descending.
+     * @return the lucene Hits object.
+     * @throws IOException if an error occurs while searching the index.
+     */
     Hits executeQuery(Query query,
                              QName[] orderProps,
                              boolean[] orderSpecs) throws IOException {
@@ -256,12 +269,40 @@ public class SearchIndex extends AbstractQueryHandler {
         return hits;
     }
 
+    /**
+     * Returns the analyzer in use for indexing.
+     * @return the analyzer in use for indexing.
+     */
     Analyzer getAnalyzer() {
         return analyzer;
     }
 
+    /**
+     * Returns the namespace mappings for the internal representation.
+     * @return the namespace mappings for the internal representation.
+     */
     NamespaceMappings getNamespaceMappings() {
         return nsMappings;
+    }
+
+    //---------------------------< internal >-----------------------------------
+
+    /**
+     * Recursively creates an index starting with the NodeState <code>node</code>.
+     * @param node the current NodeState.
+     * @throws IOException if an error occurs while writing to the index.
+     * @throws ItemStateException if an node state cannot be found.
+     * @throws RepositoryException if any other error occurs
+     */
+    private void createIndex(NodeState node)
+            throws IOException, ItemStateException, RepositoryException {
+        addNode(node);
+        List children = node.getChildNodeEntries();
+        ItemStateManager isMgr = getItemStateProvider();
+        for (Iterator it = children.iterator(); it.hasNext();) {
+            NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
+            createIndex((NodeState) isMgr.getItemState(new NodeId(child.getUUID())));
+        }
     }
 
     //--------------------------< properties >----------------------------------
