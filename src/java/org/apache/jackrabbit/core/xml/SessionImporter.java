@@ -164,7 +164,7 @@ public class SessionImporter implements Importer {
 
         // process node
 
-        NodeImpl node;
+        NodeImpl node = null;
         String uuid = nodeInfo.getUUID();
         QName nodeName = nodeInfo.getName();
         QName ntName = nodeInfo.getNodeTypeName();
@@ -180,20 +180,26 @@ public class SessionImporter implements Importer {
             // a node with that name already exists...
             NodeImpl existing = parent.getNode(nodeName);
             NodeDef def = existing.getDefinition();
-            if (def.isProtected() && existing.isNodeType(ntName)) {
-                // skip protected node
-                parents.push(null); // push null onto stack for skipped node
-                log.debug("skipping protected node " + existing.safeGetJCRPath());
-                return;
+            if (!def.allowSameNameSibs()) {
+                // existing doesn't allow same-name siblings,
+                // check for potential conflicts
+                if (def.isProtected() && existing.isNodeType(ntName)) {
+                    // skip protected node
+                    parents.push(null); // push null onto stack for skipped node
+                    log.debug("skipping protected node " + existing.safeGetJCRPath());
+                    return;
+                }
+                if (def.isAutoCreate() && existing.isNodeType(ntName)) {
+                    // this node has already been auto-created, no need to create it
+                    node = existing;
+                } else {
+                    throw new ItemExistsException(existing.safeGetJCRPath());
+                }
             }
-            if (def.isAutoCreate() && existing.isNodeType(ntName)) {
-                // this node has already been auto-created, no need to create it
-                node = existing;
-            } else {
-                throw new ItemExistsException(existing.safeGetJCRPath());
-            }
-        } else {
-            // there's no node with that name...
+        }
+
+        if (node == null) {
+            // create node
             if (uuid == null) {
                 // no potential uuid conflict, always add new node
                 node = createNode(parent, nodeName, ntName, mixins, null);
