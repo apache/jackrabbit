@@ -28,7 +28,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Stack;
-import java.io.IOException;
 
 /**
  * <code>DocViewImportHandler</code> processes Document View XML SAX events
