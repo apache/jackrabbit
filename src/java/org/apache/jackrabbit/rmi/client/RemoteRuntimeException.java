@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,17 +22,17 @@ import java.rmi.RemoteException;
  * JCR-RMI remote runtime exception. Used by the JCR-RMI client to wrap
  * RMI errors into RuntimeExceptions to avoid breaking the JCR interfaces.
  * <p>
- * Note that if a RemoteException is received by call that declares to 
+ * Note that if a RemoteException is received by call that declares to
  * throw RepositoryExceptions, then the RemoteException is wrapped into
  * a RemoteRepositoryException.
- * 
+ *
  * @author Jukka Zitting
  */
 public class RemoteRuntimeException extends RuntimeException {
 
     /**
      * Creates a RemoteRuntimeException based on the given RemoteException.
-     * 
+     *
      * @param ex the remote exception
      */
     public RemoteRuntimeException(RemoteException ex) {

@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
  * {@link org.apache.jackrabbit.rmi.client.ClientPropertyDef ClientPropertyDef}
  * and
  * {@link org.apache.jackrabbit.rmi.client.ClientNodeDef ClientNodeDef} adapters.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.nodetype.ItemDef
  * @see org.apache.jackrabbit.rmi.remote.RemoteItemDef
@@ -41,10 +41,10 @@ public class ClientItemDef extends ClientObject implements ItemDef {
 
     /** The adapted remote item definition. */
     private RemoteItemDef remote;
-    
+
     /**
      * Creates a local adapter for the given remote item definition.
-     * 
+     *
      * @param remote remote item definition
      * @param factory local adapter factory
      */

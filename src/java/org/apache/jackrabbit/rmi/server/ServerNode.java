@@ -47,7 +47,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteProperty;
  * This class makes a local node available as an RMI service using
  * the {@link org.apache.jackrabbit.rmi.remote.RemoteNode RemoteNode}
  * interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Node
  * @see org.apache.jackrabbit.rmi.remote.RemoteNode
@@ -55,11 +55,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 public class ServerNode extends ServerItem implements RemoteNode {
 
     /** The adapted local node. */
-    protected Node node;
-    
+    private Node node;
+
     /**
      * Creates a remote adapter for the given local node.
-     * 
+     *
      * @param node local node
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
@@ -69,7 +69,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
         super(node, factory);
         this.node = node;
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNode addNode(String path) throws ItemExistsException,
             PathNotFoundException, ConstraintViolationException,
@@ -80,7 +80,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNode addNode(String path, String type) throws
             ItemExistsException, PathNotFoundException,
@@ -92,7 +92,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteProperty getProperty(String path) throws PathNotFoundException,
             RepositoryException, RemoteException {
@@ -111,8 +111,8 @@ public class ServerNode extends ServerItem implements RemoteNode {
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
-    }    
-    
+    }
+
     /** {@inheritDoc} */
     public RemoteItem getPrimaryItem() throws ItemNotFoundException,
             RepositoryException, RemoteException {
@@ -122,7 +122,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteProperty[] getProperties(String pattern)
             throws RepositoryException, RemoteException {
@@ -132,7 +132,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteProperty[] getReferences() throws RepositoryException,
             RemoteException {
@@ -142,7 +142,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public String getUUID() throws UnsupportedRepositoryOperationException,
             RepositoryException, RemoteException {
@@ -152,7 +152,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public boolean hasNodes() throws RepositoryException, RemoteException {
         try {
@@ -161,7 +161,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public boolean hasProperties() throws RepositoryException, RemoteException {
         try {
@@ -170,7 +170,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public boolean hasProperty(String path) throws RepositoryException,
             RemoteException {
@@ -180,7 +180,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNodeType[] getMixinNodeTypes() throws RepositoryException,
             RemoteException {
@@ -190,7 +190,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNodeType getPrimaryNodeType() throws RepositoryException,
             RemoteException {
@@ -210,7 +210,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNode[] getNodes() throws RepositoryException, RemoteException {
         try {
@@ -239,7 +239,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public boolean hasNode(String path) throws RepositoryException,
             RemoteException {
@@ -249,7 +249,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteProperty setProperty(String name, Value value)
             throws ValueFormatException, RepositoryException, RemoteException {
@@ -259,7 +259,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void addMixin(String name) throws NoSuchNodeTypeException,
             ConstraintViolationException, RepositoryException, RemoteException {
@@ -279,7 +279,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void removeMixin(String name) throws NoSuchNodeTypeException,
             ConstraintViolationException, RepositoryException, RemoteException {
@@ -301,7 +301,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteProperty setProperty(String name, Value[] values)
             throws ValueFormatException, RepositoryException, RemoteException {
@@ -321,7 +321,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void checkout() throws UnsupportedRepositoryOperationException,
             RepositoryException, RemoteException {
@@ -331,7 +331,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public String getCorrespondingNodePath(String workspace)
             throws ItemNotFoundException, NoSuchWorkspaceException,
@@ -342,7 +342,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public int getIndex() throws RepositoryException, RemoteException {
         try {
@@ -351,7 +351,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void merge(String workspace, boolean bestEffort)
             throws UnsupportedRepositoryOperationException,
@@ -363,7 +363,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void restore(String version, boolean removeExisting)
             throws VersionException, ItemExistsException,
@@ -375,7 +375,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void restoreByLabel(String label, boolean removeExisting)
             throws VersionException, ItemExistsException,
@@ -387,7 +387,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void update(String workspace) throws NoSuchWorkspaceException,
             AccessDeniedException, RepositoryException, RemoteException {
@@ -397,7 +397,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public boolean holdsLock() throws RepositoryException, RemoteException {
         try {
@@ -448,7 +448,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteLock getLock() throws UnsupportedRepositoryOperationException,
             LockException, AccessDeniedException, RepositoryException,
@@ -459,7 +459,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteLock lock(boolean isDeep, boolean isSessionScoped)
             throws UnsupportedRepositoryOperationException, LockException,

@@ -34,11 +34,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
  * Remote adapter for the JCR {@link javax.jcr.Item Item} interface.
  * This class makes a local item available as an RMI service using
  * the {@link org.apache.jackrabbit.rmi.remote.RemoteItem RemoteItem}
- * interface. Used mainly as the base class for the 
+ * interface. Used mainly as the base class for the
  * {@link org.apache.jackrabbit.rmi.server.ServerProperty ServerProperty}
- * and {@link org.apache.jackrabbit.rmi.server.ServerNode ServerNode} 
+ * and {@link org.apache.jackrabbit.rmi.server.ServerNode ServerNode}
  * adapters.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Item
  * @see org.apache.jackrabbit.rmi.remote.RemoteItem
@@ -47,10 +47,10 @@ public class ServerItem extends ServerObject implements RemoteItem {
 
     /** The adapted local item. */
     protected Item item;
-    
+
     /**
      * Creates a remote adapter for the given local item.
-     * 
+     *
      * @param item    local item to be adapted
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
@@ -60,7 +60,7 @@ public class ServerItem extends ServerObject implements RemoteItem {
         super(factory);
         this.item = item;
     }
-    
+
     /** {@inheritDoc} */
     public String getPath() throws RepositoryException, RemoteException {
         try {
@@ -99,7 +99,7 @@ public class ServerItem extends ServerObject implements RemoteItem {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public int getDepth() throws RepositoryException, RemoteException {
         try {
@@ -108,7 +108,7 @@ public class ServerItem extends ServerObject implements RemoteItem {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteNode getParent() throws ItemNotFoundException,
             AccessDeniedException, RepositoryException, RemoteException {
@@ -123,12 +123,12 @@ public class ServerItem extends ServerObject implements RemoteItem {
     public boolean isModified() throws RemoteException {
         return item.isModified();
     }
-    
+
     /** {@inheritDoc} */
     public boolean isNew() throws RemoteException {
         return item.isNew();
     }
-    
+
     /** {@inheritDoc} */
     public void refresh(boolean keepChanges) throws InvalidItemStateException,
             RepositoryException, RemoteException {
@@ -138,7 +138,7 @@ public class ServerItem extends ServerObject implements RemoteItem {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void remove() throws RepositoryException, RemoteException {
         try {

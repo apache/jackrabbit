@@ -64,7 +64,7 @@ import org.apache.jackrabbit.rmi.remote.SerialValue;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNode RemoteNode}
  * inteface. This class makes a remote node locally available using
  * the JCR {@link javax.jcr.Node Node} interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Node
  * @see org.apache.jackrabbit.rmi.remote.RemoteNode
@@ -73,10 +73,10 @@ public class ClientNode extends ClientItem implements Node {
 
     /** The adapted remote node. */
     private RemoteNode remote;
-    
+
     /**
      * Creates a local adapter for the given remote node.
-     * 
+     *
      * @param session current session
      * @param remote  remote node
      * @param factory local adapter factory
@@ -86,10 +86,10 @@ public class ClientNode extends ClientItem implements Node {
         super(session, remote, factory);
         this.remote = remote;
     }
-    
+
     /**
      * Returns <code>true</code> without contacting the remote node.
-     *   
+     *
      * {@inheritDoc}
      */
     public boolean isNode() {
@@ -100,19 +100,19 @@ public class ClientNode extends ClientItem implements Node {
      * Calls the {@link ItemVisitor#visit(Node) ItemVisitor.visit(Node)}
      * method of the given visitor. Does not contact the remote node, but
      * the visitor may invoke other methods that do contact the remote node.
-     * 
+     *
      * {@inheritDoc}
      */
     public void accept(ItemVisitor visitor) throws RepositoryException {
         visitor.visit(this);
     }
-    
+
     /** {@inheritDoc} */
     public Node addNode(String path) throws ItemExistsException,
             PathNotFoundException, ConstraintViolationException,
             RepositoryException {
         try {
-            return factory.getNode(session, remote.addNode(path));
+            return factory.getNode(getSession(), remote.addNode(path));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -123,7 +123,7 @@ public class ClientNode extends ClientItem implements Node {
             PathNotFoundException, NoSuchNodeTypeException,
             ConstraintViolationException, RepositoryException {
         try {
-            return factory.getNode(session, remote.addNode(path, type));
+            return factory.getNode(getSession(), remote.addNode(path, type));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -145,8 +145,9 @@ public class ClientNode extends ClientItem implements Node {
     public Property setProperty(String name, Value value)
             throws ValueFormatException, RepositoryException {
         try {
-            return factory.getProperty(
-                    session, remote.setProperty(name, new SerialValue(value)));
+            RemoteProperty property =
+                remote.setProperty(name, new SerialValue(value));
+            return factory.getProperty(getSession(), property);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -158,7 +159,7 @@ public class ClientNode extends ClientItem implements Node {
         try {
             Value[] serials = SerialValue.makeSerialValueArray(values);
             RemoteProperty property = remote.setProperty(name, serials);
-            return factory.getProperty(session, property);
+            return factory.getProperty(getSession(), property);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -220,7 +221,7 @@ public class ClientNode extends ClientItem implements Node {
     public Node getNode(String path) throws PathNotFoundException,
             RepositoryException {
         try {
-            return factory.getNode(session, remote.getNode(path));
+            return factory.getNode(getSession(), remote.getNode(path));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -229,7 +230,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public NodeIterator getNodes() throws RepositoryException {
         try {
-            return getNodeIterator(session, remote.getNodes());
+            return getNodeIterator(getSession(), remote.getNodes());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -238,7 +239,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public NodeIterator getNodes(String pattern) throws RepositoryException {
         try {
-            return getNodeIterator(session, remote.getNodes(pattern));
+            return getNodeIterator(getSession(), remote.getNodes(pattern));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -248,7 +249,7 @@ public class ClientNode extends ClientItem implements Node {
     public Property getProperty(String path) throws PathNotFoundException,
             RepositoryException {
         try {
-            return factory.getProperty(session, remote.getProperty(path));
+            return factory.getProperty(getSession(), remote.getProperty(path));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -257,7 +258,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public PropertyIterator getProperties() throws RepositoryException {
         try {
-            return getPropertyIterator(session, remote.getProperties());
+            return getPropertyIterator(getSession(), remote.getProperties());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -267,7 +268,8 @@ public class ClientNode extends ClientItem implements Node {
     public PropertyIterator getProperties(String pattern) throws
             RepositoryException {
         try {
-            return getPropertyIterator(session, remote.getProperties(pattern));
+            RemoteProperty[] properties = remote.getProperties(pattern);
+            return getPropertyIterator(getSession(), properties);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -277,7 +279,7 @@ public class ClientNode extends ClientItem implements Node {
     public Item getPrimaryItem() throws ItemNotFoundException,
             RepositoryException {
         try {
-            return getItem(session, remote.getPrimaryItem());
+            return getItem(getSession(), remote.getPrimaryItem());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -296,7 +298,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public PropertyIterator getReferences() throws RepositoryException {
         try {
-            return getPropertyIterator(session, remote.getReferences());
+            return getPropertyIterator(getSession(), remote.getReferences());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -402,7 +404,7 @@ public class ClientNode extends ClientItem implements Node {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public Version checkin() throws VersionException,
             UnsupportedRepositoryOperationException, RepositoryException {
@@ -449,7 +451,7 @@ public class ClientNode extends ClientItem implements Node {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
-    
+
     /** {@inheritDoc} */
     public void doneMerge(Version version) throws VersionException,
             InvalidItemStateException, UnsupportedRepositoryOperationException,
@@ -457,7 +459,7 @@ public class ClientNode extends ClientItem implements Node {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
-    
+
     /** {@inheritDoc} */
     public String getCorrespondingNodePath(String workspace) throws
             ItemNotFoundException, NoSuchWorkspaceException,
@@ -539,7 +541,7 @@ public class ClientNode extends ClientItem implements Node {
         try {
             Value[] serials = SerialValue.makeSerialValueArray(values);
             RemoteProperty property = remote.setProperty(name, serials, type);
-            return factory.getProperty(session, property);
+            return factory.getProperty(getSession(), property);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

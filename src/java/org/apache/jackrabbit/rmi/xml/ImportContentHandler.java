@@ -32,17 +32,17 @@ import org.xml.sax.SAXException;
  * method. Subclasses can provide different import mechanisms simply by
  * implementing the abstract {@link #importXML(byte[]) importXML(byte[])}
  * method.
- * 
+ *
  * @author Jukka Zitting
  */
 public abstract class ImportContentHandler implements ContentHandler {
 
     /** Internal buffer for the XML byte stream. */
     private ByteArrayOutputStream buffer;
-    
+
     /** The internal XML serializer. */
     private ContentHandler handler;
-    
+
     /**
      * Creates a SAX content handler for importing XML data.
      */
@@ -50,7 +50,7 @@ public abstract class ImportContentHandler implements ContentHandler {
         this.buffer = new ByteArrayOutputStream();
         this.handler = new XMLSerializer(buffer, new OutputFormat());
     }
-    
+
     /**
      * Imports the given XML data. This method is called by the
      * {@link #endDocument() endDocument()} method after the received
@@ -58,7 +58,7 @@ public abstract class ImportContentHandler implements ContentHandler {
      * <p>
      * Subclasses must implement this method to provide the actual
      * import mechanism.
-     * 
+     *
      * @param xml the XML data to import
      * @throws Exception on import errors
      */

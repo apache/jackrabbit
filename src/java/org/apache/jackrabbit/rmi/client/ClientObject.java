@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,31 +42,31 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
  * this class is to centralize the handling of the
  * local adapter factory used by the client adapters to
  * instantiate new adapters.
- * 
+ *
  * @author Jukka Zitting
  */
 public class ClientObject {
 
     /** Local adapter factory. */
     protected LocalAdapterFactory factory;
-    
+
     /**
      * Creates a basic client adapter that uses the given factory
      * to create new adapters.
-     * 
+     *
      * @param factory local adapter factory
      */
     protected ClientObject(LocalAdapterFactory factory) {
         this.factory = factory;
     }
-    
+
     /**
      * Utility method to create a local adapter for a remote item.
      * This method introspects the remote reference to determine
      * whether to instantiate a {@link Property Property},
      * a {@link Node Node}, or an {@link Item Item} adapter using
      * the local adapter factory.
-     * 
+     *
      * @param session current session
      * @param remote remote item
      * @return local property, node, or item adapter
@@ -87,7 +87,7 @@ public class ClientObject {
      * are created using the local adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     * 
+     *
      * @param session current session
      * @param remotes remote properties
      * @return local property iterator
@@ -97,7 +97,7 @@ public class ClientObject {
         if (remotes == null) {
             return new ArrayPropertyIterator(new Property[0]); // for safety
         }
-        
+
         Property[] properties = new Property[remotes.length];
         for (int i = 0; i < remotes.length; i++) {
             properties[i] = factory.getProperty(session, remotes[i]);
@@ -111,7 +111,7 @@ public class ClientObject {
      * are created using the local adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     * 
+     *
      * @param session current session
      * @param remotes remote nodes
      * @return local node iterator
@@ -121,21 +121,21 @@ public class ClientObject {
         if (remotes == null) {
             return new ArrayNodeIterator(new Node[0]); // for safety
         }
-        
+
         Node[] nodes = new Node[remotes.length];
         for (int i = 0; i < remotes.length; i++) {
             nodes[i] = factory.getNode(session, remotes[i]);
         }
         return new ArrayNodeIterator(nodes);
     }
-    
+
     /**
      * Utility method for creating an array of local node type adapters
      * for an array of remote node types. The node type adapters are created
      * using the local adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     * 
+     *
      * @param remotes remote node types
      * @return local node type array
      */
@@ -143,21 +143,21 @@ public class ClientObject {
         if (remotes == null) {
             return new NodeType[0]; // for safety
         }
-        
+
         NodeType[] types = new NodeType[remotes.length];
         for (int i = 0; i < remotes.length; i++) {
             types[i] = factory.getNodeType(remotes[i]);
         }
         return types;
     }
-    
+
     /**
      * Utility method for creating an iterator of local node type adapters
      * for an array of remote node types. The node type adapters are created
      * using the local adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     * 
+     *
      * @param remotes remote node types
      * @return local node type iterator
      */
@@ -171,7 +171,7 @@ public class ClientObject {
      * definition adapters are created using the local adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     *  
+     *
      * @param remotes remote node definitions
      * @return local node definition array
      */
@@ -193,7 +193,7 @@ public class ClientObject {
      * definition adapters are created using the local adapter factory.
      * <p>
      * A <code>null</code> input is treated as an empty array.
-     * 
+     *
      * @param remotes remote property definitions
      * @return local property definition array
      */

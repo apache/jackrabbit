@@ -60,7 +60,7 @@ import org.xml.sax.SAXException;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteSession RemoteSession}
  * inteface. This class makes a remote session locally available using
  * the JCR {@link javax.jcr.Session Session} interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Session
  * @see org.apache.jackrabbit.rmi.remote.RemoteSession
@@ -69,13 +69,13 @@ public class ClientSession extends ClientObject implements Session {
 
     /** The current repository. */
     private Repository repository;
-    
+
     /** The adapted remote session. */
     private RemoteSession remote;
-    
+
     /**
      * Creates a client adapter for the given remote session.
-     * 
+     *
      * @param repository current repository
      * @param remote remote repository
      * @param factory local adapter factory
@@ -86,10 +86,10 @@ public class ClientSession extends ClientObject implements Session {
         this.repository = repository;
         this.remote = remote;
     }
-    
+
     /**
      * Returns the current repository without contacting the remote session.
-     *  
+     *
      * {@inheritDoc}
      */
     public Repository getRepository() {
@@ -247,7 +247,7 @@ public class ClientSession extends ClientObject implements Session {
             throw new RemoteRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public ContentHandler getImportContentHandler(String path) throws
             PathNotFoundException, RepositoryException {
@@ -310,7 +310,7 @@ public class ClientSession extends ClientObject implements Session {
             throw new RemoteRuntimeException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public String[] getLockTokens() {
         try {
@@ -319,7 +319,7 @@ public class ClientSession extends ClientObject implements Session {
             throw new RemoteRuntimeException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public void removeLockToken(String name) {
         try {
@@ -328,14 +328,14 @@ public class ClientSession extends ClientObject implements Session {
             throw new RemoteRuntimeException(ex);
         }
     }
-    
+
     /**
      * Exports the XML system view of the specified repository location
      * to the given XML content handler. This method first requests the
      * raw XML data from the remote session, and then uses an identity
      * transformation to feed the data to the given XML content handler.
-     * Possible IO and transformer exceptions are thrown as SAXExceptions. 
-     * 
+     * Possible IO and transformer exceptions are thrown as SAXExceptions.
+     *
      * {@inheritDoc}
      */
     public void exportSysView(String path, ContentHandler handler,
@@ -366,7 +366,7 @@ public class ClientSession extends ClientObject implements Session {
      * to the given output stream. This method first requests the
      * raw XML data from the remote session, and then writes the data to
      * the output stream.
-     * 
+     *
      * {@inheritDoc}
      */
     public void exportSysView(String path, OutputStream output,
@@ -385,8 +385,8 @@ public class ClientSession extends ClientObject implements Session {
      * to the given XML content handler. This method first requests the
      * raw XML data from the remote session, and then uses an identity
      * transformation to feed the data to the given XML content handler.
-     * Possible IO and transformer exceptions are thrown as SAXExceptions. 
-     * 
+     * Possible IO and transformer exceptions are thrown as SAXExceptions.
+     *
      * {@inheritDoc}
      */
     public void exportDocView(String path, ContentHandler handler,
@@ -418,7 +418,7 @@ public class ClientSession extends ClientObject implements Session {
      * to the given output stream. This method first requests the
      * raw XML data from the remote session, and then writes the data to
      * the output stream.
-     * 
+     *
      * {@inheritDoc}
      */
     public void exportDocView(String path, OutputStream output,

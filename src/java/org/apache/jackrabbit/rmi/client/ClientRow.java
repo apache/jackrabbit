@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,14 +36,13 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
  */
 public class ClientRow implements Row {
 
-    /** The current row. */
-    protected RemoteRow remote;
+    /** The remote query row. */
+    private RemoteRow remote;
 
     /**
-     * Creates a client adapter for the given remote row.
+     * Creates a client adapter for the given remote query row.
      *
-     * @param remote remote row
-     * @param local adapter factory
+     * @param remote remote query row
      */
     public ClientRow(RemoteRow remote) {
         this.remote = remote;
@@ -59,7 +58,7 @@ public class ClientRow implements Row {
     }
 
     /** {@inheritDoc} */
-    public Value getValue(String s) 
+    public Value getValue(String s)
             throws ItemNotFoundException, RepositoryException {
         try {
             return remote.getValue(s);

@@ -53,7 +53,7 @@ import javax.jcr.ValueFormatException;
  * The SerialValue decorator adds no other functionality to the Value
  * interface. Normal method calls are simply forwarded to the decorated
  * Value object.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Value
  * @see java.io.Serializable
@@ -62,22 +62,22 @@ public class SerialValue implements Value, Serializable {
 
     /** Static serial version UID. */
     static final long serialVersionUID = 8070492457339121953L;    
-    
+
     /** The decorated value. */
     private Value value;
 
     /**
      * Creates a SerialValue decorator for the given Value object.
-     * 
+     *
      * @param value the value to be decorated
      */
     public SerialValue(Value value) {
         this.value = value;
     }
-    
+
     /**
      * Utility method for decorating an array of Value objects.
-     * 
+     *
      * @param values the Value objects to be decorated
      * @return array of SerialValue decorators
      */
@@ -85,20 +85,20 @@ public class SerialValue implements Value, Serializable {
         if (values == null) {
             return new Value[0];
         }
-        
+
         Value[] serials = new Value[values.length];
         for (int i = 0; i < values.length; i++) {
             serials[i] = new SerialValue(values[i]);
         }
         return serials;
     }
-    
+
     /**
      * Serializes the underlying Value object. Instead of using
      * the normal serialization mechanism, the essential state
      * of the Value object is extracted and written to the serialization
      * stream as a type-value pair.
-     * 
+     *
      * @param out the serialization stream
      * @throws IOException on IO errors
      */
@@ -122,7 +122,7 @@ public class SerialValue implements Value, Serializable {
                 break;
             case PropertyType.DATE:
                 out.writeObject(value.getDate());
-                break;            
+                break;
             case PropertyType.DOUBLE:
                 out.writeDouble(value.getDouble());
                 break;
@@ -147,7 +147,7 @@ public class SerialValue implements Value, Serializable {
      * Deserializes the underlying Value object. A new Value object
      * is created based on the type and state data read fro the
      * serialization stream.
-     * 
+     *
      * @param in the serialization stream
      * @throws IOException on IO errors
      */
@@ -209,7 +209,7 @@ public class SerialValue implements Value, Serializable {
             IllegalStateException, RepositoryException {
         return value.getDate();
     }
-    
+
     /* (non-Javadoc)
      * @see javax.jcr.Value#getDouble()
      */
@@ -217,7 +217,7 @@ public class SerialValue implements Value, Serializable {
             IllegalStateException, RepositoryException {
         return value.getDouble();
     }
-    
+
     /* (non-Javadoc)
      * @see javax.jcr.Value#getLong()
      */
@@ -225,7 +225,7 @@ public class SerialValue implements Value, Serializable {
             RepositoryException {
         return value.getLong();
     }
-    
+
     /* (non-Javadoc)
      * @see javax.jcr.Value#getStream()
      */
@@ -233,7 +233,7 @@ public class SerialValue implements Value, Serializable {
             IllegalStateException, RepositoryException {
         return value.getStream();
     }
-    
+
     /* (non-Javadoc)
      * @see javax.jcr.Value#getString()
      */
@@ -241,12 +241,12 @@ public class SerialValue implements Value, Serializable {
             IllegalStateException, RepositoryException {
         return value.getString();
     }
-    
+
     /* (non-Javadoc)
      * @see javax.jcr.Value#getType()
      */
     public int getType() {
         return value.getType();
     }
-    
+
 }

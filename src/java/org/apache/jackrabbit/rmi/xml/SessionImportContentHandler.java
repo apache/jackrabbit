@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,21 +28,21 @@ import javax.jcr.Session;
  * method in terms of the
  * {@link Session#importXML(String, java.io.InputStream) Session.importXML(String, InputStream)}
  * method.
- * 
+ *
  * @author Jukka Zitting
  */
 public class SessionImportContentHandler extends ImportContentHandler {
 
     /** The repository session. */
     private Session session;
-    
+
     /** The import content path. */
     private String path;
-    
+
     /**
      * Creates a SAX content handler for importing XML data to the given
      * session and path.
-     * 
+     *
      * @param session repository session
      * @param path import content path
      */
@@ -50,12 +50,12 @@ public class SessionImportContentHandler extends ImportContentHandler {
         this.session = session;
         this.path = path;
     }
-    
+
     /**
      * Imports the serialized XML stream using the standard
      * {@link Session#importXML(String, java.io.InputStream) Session.importXML(String, InputStream)}
      * method.
-     * 
+     *
      * {@inheritDoc}
      */
     protected void importXML(byte[] xml) throws Exception {

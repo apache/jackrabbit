@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,22 +30,22 @@ import org.apache.jackrabbit.rmi.remote.RemoteLock;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteLock RemoteLock}
  * inteface. This class makes a remote lock locally available using
  * the JCR {@link javax.jcr.lock.Lock Lock} interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.lock.Lock
  * @see org.apache.jackrabbit.rmi.remote.RemoteLock
  */
 public class ClientLock implements Lock {
-    
+
     /** The current node. */
     private Node node;
-    
+
     /** The adapted remote lock. */
     private RemoteLock remote;
 
     /**
      * Creates a local adapter for the given remote lock.
-     * 
+     *
      * @param node current node
      * @param remote remote lock
      */
@@ -53,10 +53,10 @@ public class ClientLock implements Lock {
         this.node = node;
         this.remote = remote;
     }
-    
+
     /**
      * Returns the owning node without contacting the remote lock.
-     * 
+     *
      * {@inheritDoc}
      */
     public Node getNode() {

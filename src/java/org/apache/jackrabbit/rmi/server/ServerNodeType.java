@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,7 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
  * using the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeType RemoteNodeType}
  * interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeType
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeType
@@ -40,11 +40,11 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
 public class ServerNodeType extends ServerObject implements RemoteNodeType {
 
     /** The adapted local node type. */
-    protected NodeType type;
-    
+    private NodeType type;
+
     /**
      * Creates a remote adapter for the given local node type.
-     * 
+     *
      * @param type local node type
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors

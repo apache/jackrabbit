@@ -24,20 +24,20 @@ import javax.jcr.NodeIterator;
  * {@link javax.jcr.NodeIterator NodeIterator} interface.
  * This class is used by the JCR-RMI client adapters to convert
  * node arrays to iterators.
- * 
+ *
  * @author Jukka Zitting
  */
 public class ArrayNodeIterator extends ArrayIterator implements NodeIterator {
-    
+
     /**
      * Creates an iterator for the given array of nodes.
-     * 
+     *
      * @param nodes the nodes to iterate
      */
     public ArrayNodeIterator(Node[] nodes) {
         super(nodes);
     }
-    
+
     /** {@inheritDoc} */
     public Node nextNode() {
         return (Node) next();

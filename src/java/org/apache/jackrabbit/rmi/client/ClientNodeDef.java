@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeDef RemoteNodeDef}
  * inteface. This class makes a remote node definition locally available using
  * the JCR {@link javax.jcr.nodetype.NodeDef NodeDef} interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeDef
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDef
@@ -37,10 +37,10 @@ public class ClientNodeDef extends ClientItemDef implements NodeDef {
 
     /** The adapted remote node definition. */
     private RemoteNodeDef remote;
-    
+
     /**
      * Creates a local adapter for the given remote node definition.
-     * 
+     *
      * @param remote remote node definition
      * @param factory local adapter factory
      */

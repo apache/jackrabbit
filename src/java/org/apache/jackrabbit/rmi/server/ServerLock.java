@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,19 +30,19 @@ import org.apache.jackrabbit.rmi.remote.RemoteLock;
  * This class makes a local lock available as an RMI service using
  * the {@link org.apache.jackrabbit.rmi.remote.RemoteLock RemoteLock}
  * interface.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.lock.Lock
  * @see org.apache.jackrabbit.rmi.remote.RemoteLock
  */
 public class ServerLock extends UnicastRemoteObject implements RemoteLock {
-    
+
     /** The adapted local lock. */
     private Lock lock;
-    
+
     /**
      * Creates a remote adapter for the given local lock.
-     * 
+     *
      * @param lock local lock
      * @throws RemoteException on RMI errors
      */
