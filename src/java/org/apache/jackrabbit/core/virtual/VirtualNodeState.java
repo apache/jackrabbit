@@ -62,7 +62,7 @@ public class VirtualNodeState extends NodeState implements Constants {
             throws RepositoryException {
         super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING, false);
         this.stateMgr = stateMgr;
-
+        addListener(stateMgr);
         // add default properties
         setPropertyValue(JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
         setMixinNodeTypes(mixins);

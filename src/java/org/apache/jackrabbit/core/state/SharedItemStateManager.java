@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -53,6 +54,11 @@ public class SharedItemStateManager extends ItemStateCache
     private NodeState root;
 
     /**
+     * Virtual item state providers
+     */
+    private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
+
+    /**
      * Creates a new <code>SharedItemStateManager</code> instance.
      *
      * @param persistMgr
@@ -80,6 +86,18 @@ public class SharedItemStateManager extends ItemStateCache
     public void dispose() {
         // clear cache
         evictAll();
+    }
+
+    /**
+     * Adds a new virtual item state provider
+     *
+     * @param prov
+     */
+    public synchronized void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
+        VirtualItemStateProvider[] provs = new VirtualItemStateProvider[virtualProviders.length + 1];
+        System.arraycopy(virtualProviders, 0, provs, 0, virtualProviders.length);
+        provs[virtualProviders.length] = prov;
+        virtualProviders = provs;
     }
 
     private NodeState createRootNodeState(String rootNodeUUID,
@@ -141,7 +159,7 @@ public class SharedItemStateManager extends ItemStateCache
      * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
-    protected NodeState getNodeState(NodeId id)
+    private NodeState getNodeState(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         // check cache
@@ -167,7 +185,7 @@ public class SharedItemStateManager extends ItemStateCache
      * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
-    protected PropertyState getPropertyState(PropertyId id)
+    private PropertyState getPropertyState(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
 
         // check cache
@@ -194,7 +212,31 @@ public class SharedItemStateManager extends ItemStateCache
      */
     public synchronized ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
+        // check the virtual root ids (needed for overlay)
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].isVirtualRoot(id)) {
+                return virtualProviders[i].getItemState(id);
+            }
+        }
+        // check internal first
+        if (hasNonVirtualItemState(id)) {
+            return getNonVirtualItemState(id);
+        }
+        // check if there is a virtual state for the specified item
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].hasItemState(id)) {
+                return virtualProviders[i].getItemState(id);
+            }
+        }
+        throw new NoSuchItemStateException(id.toString());
+    }
 
+    /**
+     * returns the item state for the given id without considering virtual
+     * item state providers.
+     */
+    private ItemState getNonVirtualItemState(ItemId id)
+            throws NoSuchItemStateException, ItemStateException {
         if (id.denotesNode()) {
             return getNodeState((NodeId) id);
         } else {
@@ -206,6 +248,33 @@ public class SharedItemStateManager extends ItemStateCache
      * @see ItemStateManager#hasItemState(ItemId)
      */
     public synchronized boolean hasItemState(ItemId id) {
+        if (isCached(id)) {
+            return true;
+        }
+        // check the virtual root ids (needed for overlay)
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].isVirtualRoot(id)) {
+                return true;
+            }
+        }
+        // check if this manager has the item state
+        if (hasNonVirtualItemState(id)) {
+            return true;
+        }
+        // otherwise check virtual ones
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].hasItemState(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if this itemstate manager has the given item state without
+     * considering the virtual item state managers.
+     */
+    private boolean hasNonVirtualItemState(ItemId id) {
         if (isCached(id)) {
             return true;
         }
@@ -227,15 +296,24 @@ public class SharedItemStateManager extends ItemStateCache
     public synchronized NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        NodeReferences refs;
+        // todo: add caching
 
+        // check persistence manager
         try {
-            refs = persistMgr.load(id);
-        } catch (NoSuchItemStateException nsise) {
-            refs = new NodeReferences(id);
+            return persistMgr.load(id);
+        } catch (NoSuchItemStateException e) {
+            // ignore
         }
-
-        return refs;
+        // check virtual providers
+        for (int i = 0; i < virtualProviders.length; i++) {
+            try {
+                return virtualProviders[i].getNodeReferences(id);
+            } catch (NoSuchItemStateException e) {
+                // ignore
+            }
+        }
+        // create new one
+        return new NodeReferences(id);
     }
 
     //-------------------------------------------------------- other operations

@@ -23,13 +23,14 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 
 import javax.jcr.RepositoryException;
 
 /**
  * This Interface defines a virtual item state provider.
  */
-public interface VirtualItemStateProvider extends ItemStateManager {
+public interface VirtualItemStateProvider extends ItemStateManager, ItemStateListener {
 
     /**
      * Checks if the id refers to the root of a virtual tree.

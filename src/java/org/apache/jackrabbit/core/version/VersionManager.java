@@ -38,8 +38,7 @@ public interface VersionManager {
      * @param base
      * @return
      */
-    public VirtualItemStateProvider getVirtualItemStateProvider(SessionImpl session,
-                                                                ItemStateManager base);
+    public VirtualItemStateProvider getVirtualItemStateProvider(ItemStateManager base);
 
     /**
      * Creates a new version history. This action is needed either when creating

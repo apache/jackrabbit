@@ -211,15 +211,6 @@ public class SessionImpl implements Session, Constants {
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(subject, hierMgr);
         versionMgr = rep.getVersionManager();
-
-        // add virtual item managers (only for non-system sessions)
-        if (!(this instanceof SystemSession)) {
-            try {
-                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
-            } catch (Exception e) {
-                log.error("Unable to add vmgr: " + e.toString(), e);
-            }
-        }
     }
 
     /**

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
 import javax.jcr.InvalidItemStateException;
@@ -44,10 +43,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     private final UpdatableItemStateManager persistentStateMgr;
 
     /**
-     * Virtual item state providers
+     * State manager for the transient items
      */
-    private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
     private final TransientItemStateManager transientStateMgr;
+
+    /**
+     * Hierarchy manager
+     */
     private HierarchyManager hierMgr;
 
     /**
@@ -96,18 +98,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     }
 
     /**
-     * Adds a new virtual item state provider
-     *
-     * @param prov
-     */
-    public synchronized void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
-        VirtualItemStateProvider[] provs = new VirtualItemStateProvider[virtualProviders.length + 1];
-        System.arraycopy(virtualProviders, 0, provs, 0, virtualProviders.length);
-        provs[virtualProviders.length] = prov;
-        virtualProviders = provs;
-    }
-
-    /**
      * Dumps the state of this <code>SessionItemStateManager</code> instance
      * (used for diagnostic purposes).
      *
@@ -153,13 +143,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             return transientStateMgr.getItemState(id);
         }
 
-        // check the virtual root ids (needed for overlay)
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].isVirtualRoot(id)) {
-                return virtualProviders[i].getItemState(id);
-            }
-        }
-
         // check if there's transient state for the specified item
         if (transientStateMgr.hasItemState(id)) {
             return transientStateMgr.getItemState(id);
@@ -168,13 +151,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         // check if there's persistent state for the specified item
         if (persistentStateMgr.hasItemState(id)) {
             return persistentStateMgr.getItemState(id);
-        }
-
-        // check if there is a virtual state for the specified item
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasItemState(id)) {
-                return virtualProviders[i].getItemState(id);
-            }
         }
 
         throw new NoSuchItemStateException(id.toString());
@@ -193,32 +169,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
              */
             return transientStateMgr.hasItemState(id);
         }
-
-        // check the virtual root ids (needed for overlay)
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].isVirtualRoot(id)) {
-                return true;
-            }
-        }
-
         // check if there's transient state for the specified item
         if (transientStateMgr.hasItemState(id)) {
             return true;
         }
-
         // check if there's persistent state for the specified item
-        if (persistentStateMgr.hasItemState(id)) {
-            return true;
-        }
-
-        // check if there is a virtual state for the specified item
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasItemState(id)) {
-                return true;
-            }
-        }
-
-        return false;
+        return persistentStateMgr.hasItemState(id);
     }
 
     /**

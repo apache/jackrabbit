@@ -17,9 +17,10 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
@@ -56,7 +57,7 @@ public class VersionManagerImpl implements VersionManager {
     /**
      * the node type manager
      */
-    private NodeTypeManagerImpl ntMgr;
+    private NodeTypeRegistry ntReg;
 
 
     /**
@@ -64,8 +65,9 @@ public class VersionManagerImpl implements VersionManager {
      *
      * @param vMgr
      */
-    public VersionManagerImpl(PersistentVersionManager vMgr, String rootUUID) {
+    public VersionManagerImpl(PersistentVersionManager vMgr, NodeTypeRegistry ntReg, String rootUUID) {
         this.vMgr = vMgr;
+        this.ntReg = ntReg;
         this.VERSION_STORAGE_NODE_UUID = rootUUID;
     }
 
@@ -76,13 +78,12 @@ public class VersionManagerImpl implements VersionManager {
      * @param base
      * @return
      */
-    public synchronized VirtualItemStateProvider getVirtualItemStateProvider(SessionImpl session, ItemStateManager base) {
+    public synchronized VirtualItemStateProvider getVirtualItemStateProvider(ItemStateManager base) {
         if (virtProvider == null) {
             try {
                 // init the definition id mgr
-                ntMgr = session.getNodeTypeManager();
                 NodeState virtRootState = (NodeState) base.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID));
-                virtProvider = new VersionItemStateProvider(this, ntMgr, VERSION_STORAGE_NODE_UUID, virtRootState.getParentUUID());
+                virtProvider = new VersionItemStateProvider(this, ntReg, VERSION_STORAGE_NODE_UUID, virtRootState.getParentUUID());
             } catch (Exception e) {
                 // todo: better error handling
                 log.error("Error while initializing virtual items.", e);
@@ -102,15 +103,6 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     /**
-     * returns the node type manager
-     *
-     * @return
-     */
-    NodeTypeManagerImpl getNodeTypeManager() {
-        return ntMgr;
-    }
-
-    /**
      * Creates a new version history. This action is needed either when creating
      * a new 'mix:versionable' node or when adding the 'mix:versionalbe' mixin
      * to a node.
@@ -121,6 +113,11 @@ public class VersionManagerImpl implements VersionManager {
      */
     public VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException {
         InternalVersionHistory history = vMgr.createVersionHistory(node);
+        try {
+            virtProvider.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID)).discard();
+        } catch (ItemStateException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         return (VersionHistory) node.getSession().getNodeByUUID(history.getId());
     }
 
@@ -217,6 +214,11 @@ public class VersionManagerImpl implements VersionManager {
      */
     public Version checkin(NodeImpl node) throws RepositoryException {
         InternalVersion version = vMgr.checkin(node);
+        try {
+            virtProvider.getItemState(new NodeId(version.getVersionHistory().getId())).discard();
+        } catch (ItemStateException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         return (Version) node.getSession().getNodeByUUID(version.getId());
     }
 

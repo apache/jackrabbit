@@ -43,7 +43,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
     /**
      * the root node
      */
-    private final HistoryRootNodeState root;
+    private HistoryRootNodeState root;
     /**
      * the version manager
      */
@@ -51,7 +51,8 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
     /**
      * the node type manager
      */
-    private final NodeTypeManagerImpl ntMgr;
+    private final NodeTypeRegistry ntReg;
+
     /**
      * the cache node states. key=ItemId, value=ItemState
      */
@@ -74,6 +75,12 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
      */
     private NodeDefId NDEF_VERSION_LABELS;
 
+    /** the parent id */
+    private final String parentId;
+
+    /** the root node id */
+    private final String rootNodeId;
+
     /**
      * creates a new version item state provide
      *
@@ -82,16 +89,26 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
      * @param parentId
      * @throws RepositoryException
      */
-    public VersionItemStateProvider(VersionManager vMgr, NodeTypeManagerImpl ntMgr, String rootId, String parentId) throws RepositoryException {
+    public VersionItemStateProvider(VersionManager vMgr, NodeTypeRegistry ntReg, String rootId, String parentId) throws RepositoryException {
         this.vMgr = vMgr;
-        this.ntMgr = ntMgr;
-        NDEF_VERSION = new NodeDefId(getNodeTypeManager().getNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSION).unwrap());
-        NDEF_VERSION_HISTORY = new NodeDefId(getNodeTypeManager().getNodeType(NT_UNSTRUCTURED).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSIONHISTORY).unwrap());
-        NDEF_VERSION_HISTORY_ROOT = new NodeDefId(getNodeTypeManager().getNodeType(REP_SYSTEM).getApplicableChildNodeDef(JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE).unwrap());
-        NDEF_VERSION_LABELS = new NodeDefId(getNodeTypeManager().getNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_VERSIONLABELS, NT_VERSIONLABELS).unwrap());
+        this.ntReg = ntReg;
+        this.rootNodeId = rootId;
+        this.parentId = parentId;
+        NDEF_VERSION = new NodeDefId(ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSION));
+        NDEF_VERSION_HISTORY = new NodeDefId(ntReg.getEffectiveNodeType(NT_UNSTRUCTURED).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSIONHISTORY));
+        NDEF_VERSION_HISTORY_ROOT = new NodeDefId(ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicableChildNodeDef(JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE));
+        NDEF_VERSION_LABELS = new NodeDefId(ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_VERSIONLABELS, NT_VERSIONLABELS));
 
-        this.root = new HistoryRootNodeState(this, vMgr, parentId, rootId);
-        this.root.setDefinitionId(NDEF_VERSION_HISTORY_ROOT);
+        createRootNodeState();
+    }
+
+    /**
+     * Creates a new root node state
+     * @throws RepositoryException
+     */
+    private void createRootNodeState() throws RepositoryException {
+        root = new HistoryRootNodeState(this, vMgr, parentId, rootNodeId);
+        root.setDefinitionId(NDEF_VERSION_HISTORY_ROOT);
     }
 
     //-----------------------------------------------------< ItemStateManager >
@@ -275,11 +292,11 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
                                                     QName name, int type,
                                                     boolean multiValued)
             throws RepositoryException {
-        PropertyDefImpl def = getApplicablePropertyDef(parent, name, type, multiValued);
+        PropDef def = getApplicablePropertyDef(parent, name, type, multiValued);
         VirtualPropertyState prop = new VirtualPropertyState(name, parent.getUUID());
         prop.setType(type);
         prop.setMultiValued(multiValued);
-        prop.setDefinitionId(new PropDefId(def.unwrap()));
+        prop.setDefinitionId(new PropDefId(def));
         return prop;
     }
 
@@ -290,20 +307,16 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
                                             String uuid, QName nodeTypeName)
             throws RepositoryException {
 
-        NodeTypeImpl nodeType = getNodeTypeManager().getNodeType(nodeTypeName);
-        NodeDefImpl def;
+        NodeDefId def;
         try {
-            def = getApplicableChildNodeDef(parent, name, nodeType == null ? null : nodeType.getQName());
+            def = new NodeDefId(getApplicableChildNodeDef(parent, name, nodeTypeName));
         } catch (RepositoryException re) {
             // hack, use nt:unstructured as parent
-            NodeTypeRegistry ntReg = getNodeTypeManager().getNodeTypeRegistry();
+            NodeTypeRegistry ntReg = getNodeTypeRegistry();
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(NT_UNSTRUCTURED);
             ChildNodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
-            def = getNodeTypeManager().getNodeDef(new NodeDefId(cnd));
-        }
-        if (nodeType == null) {
-            // use default node type
-            nodeType = (NodeTypeImpl) def.getDefaultPrimaryType();
+            ntReg.getNodeDef(new NodeDefId(cnd));
+            def = new NodeDefId(cnd);
         }
 
         // create a new node state
@@ -312,7 +325,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
             uuid = UUID.randomUUID().toString();	// version 4 uuid
         }
         state = new VirtualNodeState(this, parent.getUUID(), uuid, nodeTypeName, new QName[0]);
-        state.setDefinitionId(new NodeDefId(def.unwrap()));
+        state.setDefinitionId(def);
 
         nodes.put(state.getId(), state);
         return state;
@@ -325,8 +338,8 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
      *
      * @return
      */
-    private NodeTypeManagerImpl getNodeTypeManager() {
-        return ntMgr;
+    private NodeTypeRegistry getNodeTypeRegistry() {
+        return ntReg;
     }
 
     /**
@@ -382,11 +395,10 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
      * @return
      * @throws RepositoryException
      */
-    protected PropertyDefImpl getApplicablePropertyDef(NodeState parent, QName propertyName,
-                                                       int type, boolean multiValued)
+    protected PropDef getApplicablePropertyDef(NodeState parent, QName propertyName,
+                                               int type, boolean multiValued)
             throws RepositoryException {
-        PropDef pd = getEffectiveNodeType(parent).getApplicablePropertyDef(propertyName, type, multiValued);
-        return getNodeTypeManager().getPropDef(new PropDefId(pd));
+        return getEffectiveNodeType(parent).getApplicablePropertyDef(propertyName, type, multiValued);
     }
 
     /**
@@ -397,10 +409,9 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
      * @return
      * @throws RepositoryException
      */
-    protected NodeDefImpl getApplicableChildNodeDef(NodeState parent, QName nodeName, QName nodeTypeName)
+    protected ChildNodeDef getApplicableChildNodeDef(NodeState parent, QName nodeName, QName nodeTypeName)
             throws RepositoryException {
-        ChildNodeDef cnd = getEffectiveNodeType(parent).getApplicableChildNodeDef(nodeName, nodeTypeName);
-        return getNodeTypeManager().getNodeDef(new NodeDefId(cnd));
+        return getEffectiveNodeType(parent).getApplicableChildNodeDef(nodeName, nodeTypeName);
     }
 
     /**
@@ -412,7 +423,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
      */
     protected EffectiveNodeType getEffectiveNodeType(NodeState parent) throws RepositoryException {
         // build effective node type of mixins & primary type
-        NodeTypeRegistry ntReg = getNodeTypeManager().getNodeTypeRegistry();
+        NodeTypeRegistry ntReg = getNodeTypeRegistry();
         // existing mixin's
         HashSet set = new HashSet(parent.getMixinTypeNames());
         // primary type
@@ -423,5 +434,47 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
             String msg = "internal error: failed to build effective node type for node " + parent.getUUID();
             throw new RepositoryException(msg, ntce);
         }
+    }
+
+    /**
+     * @see ItemStateListener#stateCreated
+     */
+    public void stateCreated(ItemState created) {
+    }
+
+    /**
+     * @see ItemStateListener#stateModified
+     */
+    public void stateModified(ItemState modified) {
+    }
+
+    /**
+     * @see ItemStateListener#stateDestroyed
+     */
+    public void stateDestroyed(ItemState destroyed) {
+        destroyed.removeListener(this);
+        if (destroyed.isNode() && ((NodeState) destroyed).getUUID().equals(rootNodeId)) {
+            try {
+                createRootNodeState();
+            } catch (RepositoryException e) {
+                // ignore
+            }
+        }
+        nodes.remove(destroyed.getId());
+    }
+
+    /**
+     * @see ItemStateListener#stateDiscarded
+     */
+    public void stateDiscarded(ItemState discarded) {
+        discarded.removeListener(this);
+        if (discarded.isNode() && ((NodeState) discarded).getUUID().equals(rootNodeId)) {
+            try {
+                createRootNodeState();
+            } catch (RepositoryException e) {
+                // ignore
+            }
+        }
+        nodes.remove(discarded.getId());
     }
 }

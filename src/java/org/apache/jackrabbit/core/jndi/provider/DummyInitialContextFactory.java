@@ -27,6 +27,9 @@ import java.util.Hashtable;
  */
 public class DummyInitialContextFactory implements InitialContextFactory {
 
+    /**
+     * map with all the contexts. key=provider-url, value=context
+     */
     private static HashMap contexts = new HashMap();
 
     /**

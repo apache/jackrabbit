@@ -250,13 +250,6 @@ public class RepositoryImpl implements Repository, SessionListener,
 
         ntReg = NodeTypeRegistry.create(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
-        // initialize workspaces
-        iter = wspInfos.keySet().iterator();
-        while (iter.hasNext()) {
-            String wspName = (String) iter.next();
-            initWorkspace(wspName);
-        }
-
         // init version manager
         VersioningConfig vConfig = repConfig.getVersioningConfig();
         PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
@@ -266,7 +259,14 @@ public class RepositoryImpl implements Repository, SessionListener,
                 nsReg,
                 ntReg);
         pvMgr = new NativePVM(pm, getNodeTypeRegistry());
-        vMgr = new VersionManagerImpl(pvMgr, VERSION_STORAGE_NODE_UUID);
+        vMgr = new VersionManagerImpl(pvMgr, ntReg, VERSION_STORAGE_NODE_UUID);
+
+        // initialize workspaces
+        iter = wspInfos.keySet().iterator();
+        while (iter.hasNext()) {
+            String wspName = (String) iter.next();
+            initWorkspace(wspName);
+        }
 
         // finally register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -882,6 +882,11 @@ public class RepositoryImpl implements Repository, SessionListener,
                 // create item state manager
                 try {
                     itemStateMgr = new SharedItemStateManager(getPersistenceManager(config.getPersistenceManagerConfig()), rootNodeUUID, ntReg);
+                    try {
+                        itemStateMgr.addVirtualItemStateProvider(vMgr.getVirtualItemStateProvider(itemStateMgr));
+                    } catch (Exception e) {
+                        log.error("Unable to add vmgr: " + e.toString(), e);
+                    }
                 } catch (ItemStateException ise) {
                     String msg = "failed to instantiate persistent item state manager";
                     log.debug(msg);
