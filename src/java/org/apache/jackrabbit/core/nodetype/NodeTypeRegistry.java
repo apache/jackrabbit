@@ -111,9 +111,22 @@ public class NodeTypeRegistry {
     // map of id's and node definitions
     private final HashMap nodeDefs;
 
-    // namespace registry for resolving prefixes and namespace URI's;
-    // used for (de)serializing node type definitions
+    /**
+     * namespace registry for resolving prefixes and namespace URI's;
+     * used for (de)serializing node type definitions
+     */
     private final NamespaceRegistryImpl nsReg;
+
+    /**
+     * FIXME
+     * flag used to temporarily disable checking that auto-created properties
+     * have a default value; this check has to be disabled while validating
+     * built-in node types because there are properties defined in built-in
+     * node types which are auto-created but don't have a fixed default value
+     * that can be exposed in a property definition because it is
+     * system-generated (e.g. jcr:primaryType in nt:base).
+     */
+    private boolean checkAutoCreatePropHasDefault = true;
 
     /**
      * Listeners (soft references)
@@ -168,6 +181,11 @@ public class NodeTypeRegistry {
         nodeDefs.put(new NodeDefId(rootNodeDef), rootNodeDef);
 
         // load and register pre-defined (i.e. built-in) node types
+        /**
+         * temporarily disable checking that auto-create properties have
+         * default values
+         */
+        checkAutoCreatePropHasDefault = false;
         builtInNTDefs = new NodeTypeDefStore();
         InputStream in = null;
         try {
@@ -183,6 +201,10 @@ public class NodeTypeRegistry {
             log.error(error, intde);
             throw new RepositoryException(error, intde);
         } finally {
+            /**
+             * re-enable checking that auto-create properties have default values
+             */
+            checkAutoCreatePropHasDefault = true;
             if (in != null) {
                 try {
                     in.close();
@@ -427,12 +449,13 @@ public class NodeTypeRegistry {
                  * (won't trap recursion on a deeper inheritance level)
                  */
                 if (name.equals(supertypes[i])) {
-                    String msg = "invalid supertype: " + supertypes[i] + " (infinite recursion))";
+                    String msg = "[" + name + "] invalid supertype: "
+                            + supertypes[i] + " (infinite recursion))";
                     log.error(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
                 if (!registeredNTDefs.containsKey(supertypes[i])) {
-                    String msg = "invalid supertype: " + supertypes[i];
+                    String msg = "[" + name + "] invalid supertype: " + supertypes[i];
                     log.error(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
@@ -464,23 +487,25 @@ public class NodeTypeRegistry {
                 // make sure that all primary types except nt:base extend from nt:base
                 if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName()) &&
                         !est.includesNodeType(NT_BASE)) {
-                    String msg = "all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
+                    String msg = "[" + name
+                            + "] all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
                     log.error(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
             } catch (NodeTypeConflictException ntce) {
-                String msg = "failed to validate supertypes";
+                String msg = "[" + name + "] failed to validate supertypes";
                 log.error(msg, ntce);
                 throw new InvalidNodeTypeDefException(msg, ntce);
             } catch (NoSuchNodeTypeException nsnte) {
-                String msg = "failed to validate supertypes";
+                String msg = "[" + name + "] failed to validate supertypes";
                 log.error(msg, nsnte);
                 throw new InvalidNodeTypeDefException(msg, nsnte);
             }
         } else {
             // no supertypes specified: has to be either a mixin type or nt:base
             if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName())) {
-                String msg = "all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
+                String msg = "[" + name
+                        + "] all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
                 log.error(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
@@ -495,12 +520,12 @@ public class NodeTypeRegistry {
             // check primary item flag
             if (pd.isPrimaryItem()) {
                 if (pd.definesResidual()) {
-                    String msg = "primary item must specify a name";
+                    String msg = "[" + name + "#" + pd.getName() + "] primary item must specify a name";
                     log.error(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
                 if (primaryItem != null) {
-                    String msg = "more than one primary item specified";
+                    String msg = "[" + name + "#" + pd.getName() + "] more than one primary item specified";
                     log.error(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 } else {
@@ -509,7 +534,8 @@ public class NodeTypeRegistry {
             }
             // check that auto-created properties specify a name
             if (pd.definesResidual() && pd.isAutoCreate()) {
-                String msg = "auto-created properties must specify a name";
+                String msg = "[" + name + "#" + pd.getName()
+                        + "] auto-created properties must specify a name";
                 log.error(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
@@ -525,16 +551,26 @@ public class NodeTypeRegistry {
                         reqType = defVals[j].getType();
                     } else {
                         if (defVals[j].getType() != reqType) {
-                            String msg = "type of default value(s) is not consistent with required property type";
+                            String msg = "[" + name + "#" + pd.getName()
+                                    + "] type of default value(s) is not consistent with required property type";
                             log.error(msg);
                             throw new InvalidNodeTypeDefException(msg);
                         }
                     }
                 }
+            } else {
+                // no default values specified
+                if (checkAutoCreatePropHasDefault) {
+                    // auto-created properties must have a default value
+                    if (pd.isAutoCreate()) {
+                        String msg = "[" + name + "#" + pd.getName()
+                                + "] auto-created property must have a default value";
+                        log.error(msg);
+                        throw new InvalidNodeTypeDefException(msg);
+                    }
+                }
             }
-            /**
-             * todo check that auto-created properties have have at least either default values or system generated values
-             */
+
             // check that default values satisfy value constraints
             ValueConstraint[] constraints = pd.getValueConstraints();
             if (constraints != null && constraints.length > 0) {
@@ -557,9 +593,8 @@ public class NodeTypeRegistry {
                         }
                         if (!satisfied) {
                             // report last exception we encountered
-                            String msg = "default value of property "
-                                    + (pd.definesResidual() ? "*" : pd.getName().toString())
-                                    + " does not satisfy value constraint";
+                            String msg = "[" + name + "#" + pd.getName()
+                                    + "] default value does not satisfy value constraint";
                             log.error(msg, cve);
                             throw new InvalidNodeTypeDefException(msg, cve);
                         }
@@ -576,9 +611,9 @@ public class NodeTypeRegistry {
                         ReferenceConstraint rc = (ReferenceConstraint) constraints[j];
                         QName ntName = rc.getNodeTypeName();
                         if (!name.equals(ntName) && !registeredNTDefs.containsKey(ntName)) {
-                            String msg = "invalid REFERENCE value constraint '"
-                                    + ntName + "' (unknown node type) in property definition "
-                                    + (pd.definesResidual() ? "*" : pd.getName().toString());
+                            String msg = "[" + name + "#" + pd.getName()
+                                    + "] invalid REFERENCE value constraint '"
+                                    + ntName + "' (unknown node type)";
                             log.error(msg);
                             throw new InvalidNodeTypeDefException(msg);
                         }
@@ -594,12 +629,14 @@ public class NodeTypeRegistry {
             // check primary item flag
             if (cnd.isPrimaryItem()) {
                 if (cnd.definesResidual()) {
-                    String msg = "primary item must specify a name";
+                    String msg = "[" + name + "#" + cnd.getName()
+                            + "] primary item must specify a name";
                     log.error(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
                 if (primaryItem != null) {
-                    String msg = "more than one primary item specified";
+                    String msg = "[" + name + "#" + cnd.getName()
+                            + "] more than one primary item specified";
                     log.error(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 } else {
@@ -608,7 +645,8 @@ public class NodeTypeRegistry {
             }
             // check that auto-created child-nodes specify a name
             if (cnd.definesResidual() && cnd.isAutoCreate()) {
-                String msg = "auto-created child-nodes must specify a name";
+                String msg = "[" + name + "#" + cnd.getName()
+                        + "] auto-created child-nodes must specify a name";
                 log.error(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
@@ -626,8 +664,8 @@ public class NodeTypeRegistry {
                  * exception: the node type just being registered
                  */
                 if (!name.equals(dpt) && !registeredNTDefs.containsKey(dpt)) {
-                    String msg = "invalid default primary type '" + dpt
-                            + "' in childnode definition " + cnd.getName();
+                    String msg = "[" + name + "#" + cnd.getName()
+                            + "] invalid default primary type '" + dpt + "'";
                     log.error(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
@@ -658,11 +696,13 @@ public class NodeTypeRegistry {
                         checkForCircularNodeAutoCreation(defaultENT, definingNTs);
                     }
                 } catch (NodeTypeConflictException ntce) {
-                    String msg = "failed to validate default primary type";
+                    String msg = "[" + name + "#" + cnd.getName()
+                            + "] failed to validate default primary type";
                     log.error(msg, ntce);
                     throw new InvalidNodeTypeDefException(msg, ntce);
                 } catch (NoSuchNodeTypeException nsnte) {
-                    String msg = "failed to validate default primary type";
+                    String msg = "[" + name + "#" + cnd.getName()
+                            + "] failed to validate default primary type";
                     log.error(msg, nsnte);
                     throw new InvalidNodeTypeDefException(msg, nsnte);
                 }
@@ -686,7 +726,8 @@ public class NodeTypeRegistry {
                      * notable exception: the node type just being registered
                      */
                     if (!name.equals(rpt) && !registeredNTDefs.containsKey(rpt)) {
-                        String msg = "invalid required primary type: " + rpt;
+                        String msg = "[" + name + "#" + cnd.getName()
+                                + "] invalid required primary type: " + rpt;
                         log.error(msg);
                         throw new InvalidNodeTypeDefException(msg);
                     }
@@ -695,7 +736,9 @@ public class NodeTypeRegistry {
                      * primary type constraint
                      */
                     if (defaultENT != null && !defaultENT.includesNodeType(rpt)) {
-                        String msg = "default primary type does not satisfy required primary type constraint " + rpt;
+                        String msg = "[" + name + "#" + cnd.getName()
+                                + "] default primary type does not satisfy required primary type constraint "
+                                + rpt;
                         log.error(msg);
                         throw new InvalidNodeTypeDefException(msg);
                     }
@@ -717,11 +760,13 @@ public class NodeTypeRegistry {
                             }
                         }
                     } catch (NodeTypeConflictException ntce) {
-                        String msg = "failed to validate required primary type constraint";
+                        String msg = "[" + name + "#" + cnd.getName()
+                                + "] failed to validate required primary type constraint";
                         log.error(msg, ntce);
                         throw new InvalidNodeTypeDefException(msg, ntce);
                     } catch (NoSuchNodeTypeException nsnte) {
-                        String msg = "failed to validate required primary type constraint";
+                        String msg = "[" + name + "#" + cnd.getName()
+                                + "] failed to validate required primary type constraint";
                         log.error(msg, nsnte);
                         throw new InvalidNodeTypeDefException(msg, nsnte);
                     }
@@ -738,11 +783,11 @@ public class NodeTypeRegistry {
             try {
                 ent = EffectiveNodeType.create(this, ntd);
             } catch (NodeTypeConflictException ntce) {
-                String msg = "failed to resolve node type definition";
+                String msg = "[" + name + "] failed to resolve node type definition";
                 log.error(msg, ntce);
                 throw new InvalidNodeTypeDefException(msg, ntce);
             } catch (NoSuchNodeTypeException nsnte) {
-                String msg = "failed to resolve node type definition";
+                String msg = "[" + name + "] failed to resolve node type definition";
                 log.error(msg, nsnte);
                 throw new InvalidNodeTypeDefException(msg, nsnte);
             }
