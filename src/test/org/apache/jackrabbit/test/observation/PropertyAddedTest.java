@@ -29,19 +29,19 @@ public class PropertyAddedTest extends AbstractObservationTest {
     public void testSinglePropertyAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("prop1", new String[]{"foo"});
         testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkPropertyAdded(events, new String[]{"foo/prop1",
-                                                "foo/" + JCR_PRIMARY_TYPE});
+                                                "foo/" + jcrPrimaryType});
     }
 
     public void testMultiPropertyAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();
@@ -49,7 +49,7 @@ public class PropertyAddedTest extends AbstractObservationTest {
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkPropertyAdded(events, new String[]{"foo/prop1",
                                                 "foo/prop2",
-                                                "foo/" + JCR_PRIMARY_TYPE});
+                                                "foo/" + jcrPrimaryType});
     }
 
 

@@ -28,7 +28,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
 
     public void testSinglePropertyChanged() throws RepositoryException {
         EventResult result = new EventResult(log);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("bar", new String[]{"foo"});
         testRootNode.save();
         addEventListener(result, Event.PROPERTY_CHANGED);
@@ -41,7 +41,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
 
     public void testMultiPropertyChanged() throws RepositoryException {
         EventResult result = new EventResult(log);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();
@@ -56,7 +56,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
 
     public void testSinglePropertyChangedWithAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("bar", new String[]{"foo"});
         testRootNode.save();
         addEventListener(result, Event.PROPERTY_CHANGED);
@@ -70,7 +70,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
 
     public void testMultiPropertyChangedWithAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();

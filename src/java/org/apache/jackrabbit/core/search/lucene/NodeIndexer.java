@@ -147,7 +147,10 @@ class NodeIndexer {
                     }
                 } else {
                     // single value
-                    addValue(doc, values[0], propState.getName(), false);
+                    // do we have a value at all?
+                    if (values.length == 1) {
+                        addValue(doc, values[0], propState.getName(), false);
+                    }
                 }
             } catch (NoSuchItemStateException e) {
                 throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);

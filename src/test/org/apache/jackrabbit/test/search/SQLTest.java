@@ -26,36 +26,36 @@ public class SQLTest extends AbstractQueryTest {
 
 
     public void testSimpleQuery1() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("bla", new String[]{"bla"});
 
         testRootNode.save();
 
-        String sql = "SELECT * FROM \"nt:unstructured\" WHERE bla='bla'";
+        String sql = "SELECT * FROM nt:unstructured WHERE bla='bla'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
     }
 
     public void testFulltextSimple() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
         testRootNode.save();
 
-        String sql = "SELECT * FROM \"nt:unstructured\" WHERE contains('fox')";
+        String sql = "SELECT * FROM nt:unstructured WHERE contains('fox')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
     }
 
     public void testFulltextComplex() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("mytext", new String[]{"the quick brown fox jumps over the lazy dog."});
 
         testRootNode.save();
 
-        String sql = "SELECT * FROM \"nt:unstructured\" WHERE contains('fox') AND NOT contains('bla')";
+        String sql = "SELECT * FROM nt:unstructured WHERE contains('fox') AND NOT contains('bla')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);

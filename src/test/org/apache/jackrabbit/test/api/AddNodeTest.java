@@ -120,7 +120,7 @@ public class AddNodeTest extends AbstractJCRTest {
     public void testConstraintViolation() throws RepositoryException {
         try {
             Node rootNode = superuser.getRootNode();
-            String propPath = testPath + "/" + JCR_PRIMARY_TYPE;
+            String propPath = testPath + "/" + jcrPrimaryType;
             rootNode.addNode(propPath + "/" + nodeName1, testNodeType);
             fail("Expected ConstraintViolationException.");
         } catch (ConstraintViolationException e) {

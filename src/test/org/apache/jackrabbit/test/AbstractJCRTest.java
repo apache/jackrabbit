@@ -20,6 +20,9 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.Repository;
+import javax.jcr.NamespaceException;
 import java.util.StringTokenizer;
 
 /**
@@ -32,13 +35,65 @@ public abstract class AbstractJCRTest extends JUnitTest {
      */
     public static RepositoryHelper helper = new RepositoryHelper();
 
-    protected static final String JCR_PRIMARY_TYPE = "jcr:primaryType";
+    /**
+     * Namespace URI for jcr prefix.
+     */
+    public static final String NS_JCR_URI = "http://www.jcp.org/jcr/1.0";
 
-    protected static final String NT_UNSTRUCTURED = "nt:unstructured";
+    /**
+     * Namespace URI for nt prefix.
+     */
+    public static final String NS_NT_URI = "http://www.jcp.org/jcr/nt/1.0";
 
-    protected static final String MIX_REFERENCABLE = "mix:referencable";
+    /**
+     * Namespace URI for mix prefix.
+     */
+    public static final String NS_MIX_URI = "http://www.jcp.org/jcr/mix/1.0";
 
-    protected static final String NT_BASE = "nt:base";
+    /**
+     * Namespace URI for sv prefix
+     */
+    public static final String NS_SV_URI = "http://www.jcp.org/jcr/sv/1.0";
+
+    /**
+     * JCR Name jcr:primaryType using the namespace resolver of the current session.
+     */
+    protected String jcrPrimaryType;
+
+    /**
+     * JCR Name jcr:predecessors using the namespace resolver of the current session.
+     */
+    protected String jcrPredecessors;
+
+    /**
+     * JCR Name jcr:baseVersion using the namespace resolver of the current session.
+     */
+    protected String jcrBaseVersion;
+
+    /**
+     * JCR Name nt:base using the namespace resolver of the current session.
+     */
+    protected String ntBase;
+
+    /**
+     * JCR Name mix:referenceable using the namespace resolver of the current session.
+     */
+    protected String mixReferenceable;
+
+    /**
+     * JCR Name mix:versionable using the namespace resolver of the current session.
+     */
+    protected String mixVersionable;
+
+    /**
+     * JCR Name mix:lockable using the namespace resolver of the current session.
+     */
+    protected String mixLockable;
+
+    /**
+     * JCR Name nt:query using the namespace resolver of the current session.
+     */
+    protected String ntQuery;
 
     /**
      * Relative path to the test root node.
@@ -69,6 +124,21 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * Name of a node that will be created during a test case.
      */
     protected String nodeName3;
+
+    /**
+     * Name of a node that will be created during a test case.
+     */
+    protected String nodeName4;
+
+    /**
+     * Name of a property that will be used during a test case.
+     */
+    protected String propertyName1;
+
+    /**
+     * Name of a property that will be used during a test case.
+     */
+    protected String propertyName2;
 
     /**
      * Name of a workspace to use instead of the default workspace.
@@ -107,12 +177,55 @@ public abstract class AbstractJCRTest extends JUnitTest {
         if (nodeName3 == null) {
             fail("Property '" + RepositoryStub.PROP_NODE_NAME3 + "' is not defined.");
         }
+        nodeName4 = getProperty(RepositoryStub.PROP_NODE_NAME4);
+        if (nodeName4 == null) {
+            fail("Property '" + RepositoryStub.PROP_NODE_NAME4 + "' is not defined.");
+        }
+        propertyName1 = getProperty(RepositoryStub.PROP_PROP_NAME1);
+        if (propertyName1 == null) {
+            fail("Property '" + RepositoryStub.PROP_PROP_NAME1 + "' is not defined.");
+        }
+        propertyName2 = getProperty(RepositoryStub.PROP_PROP_NAME2);
+        if (propertyName2 == null) {
+            fail("Property '" + RepositoryStub.PROP_PROP_NAME2 + "' is not defined.");
+        }
         workspaceName = getProperty(RepositoryStub.PROP_WORKSPACE_NAME);
         if (workspaceName == null) {
             fail("Property '" + RepositoryStub.PROP_WORKSPACE_NAME + "' is not defined.");
         }
 
         superuser = helper.getSuperuserSession();
+
+        // setup some common names
+        jcrPrimaryType = superuser.getNamespacePrefix(NS_JCR_URI) + ":primaryType";
+        jcrPredecessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":predecessors";
+        jcrBaseVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":baseVersion";
+        ntBase = superuser.getNamespacePrefix(NS_NT_URI) + ":base";
+        mixReferenceable = superuser.getNamespacePrefix(NS_MIX_URI) + ":referenceable";
+        mixVersionable = superuser.getNamespacePrefix(NS_MIX_URI) + ":versionable";
+        mixLockable = superuser.getNamespacePrefix(NS_MIX_URI) + ":lockable";
+        ntQuery = superuser.getNamespacePrefix(NS_NT_URI) + ":query";
+
+        // setup custom namespaces
+        if (helper.getRepository().getDescriptor(Repository.LEVEL_2_SUPPORTED) != null) {
+            NamespaceRegistry nsReg = superuser.getWorkspace().getNamespaceRegistry();
+            String namespaces = getProperty(RepositoryStub.PROP_NAMESPACES);
+            if (namespaces != null) {
+                String[] prefixes = namespaces.split(" ");
+                for (int i = 0; i < prefixes.length; i++) {
+                    String uri = getProperty(RepositoryStub.PROP_NAMESPACES + "." + prefixes[i]);
+                    if (uri != null) {
+                        try {
+                            nsReg.getPrefix(uri);
+                        } catch (NamespaceException e) {
+                            // not yet registered
+                            nsReg.registerNamespace(prefixes[i], uri);
+                        }
+                    }
+                }
+            }
+        }
+
         Node root = superuser.getRootNode();
         if (root.hasNode(testPath)) {
             // clean test root

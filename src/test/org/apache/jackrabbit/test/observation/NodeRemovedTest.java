@@ -29,7 +29,7 @@ public class NodeRemovedTest extends AbstractObservationTest {
     public void testSingleNodeRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_REMOVED);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         testRootNode.save();
         foo.remove();
         testRootNode.save();
@@ -41,8 +41,8 @@ public class NodeRemovedTest extends AbstractObservationTest {
     public void testMultiNodesRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_REMOVED);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
-        foo.addNode("bar", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
+        foo.addNode("bar");
         testRootNode.save();
         foo.remove();
         testRootNode.save();
@@ -54,9 +54,9 @@ public class NodeRemovedTest extends AbstractObservationTest {
     public void testMultiNodesRemovedWithRemaining() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_REMOVED);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
-        testRootNode.addNode("foobar", NT_UNSTRUCTURED);
-        foo.addNode("bar", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
+        testRootNode.addNode("foobar");
+        foo.addNode("bar");
         testRootNode.save();
         foo.remove();
         testRootNode.save();

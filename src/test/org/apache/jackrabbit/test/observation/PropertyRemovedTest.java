@@ -30,7 +30,7 @@ public class PropertyRemovedTest extends AbstractObservationTest {
     public void testSinglePropertyRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_REMOVED);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         Property prop1 = foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();
@@ -44,7 +44,7 @@ public class PropertyRemovedTest extends AbstractObservationTest {
     public void testMultiPropertyRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_REMOVED);
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         Property prop1 = foo.setProperty("prop1", new String[]{"foo"});
         Property prop2 = foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();

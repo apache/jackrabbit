@@ -36,7 +36,19 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("javax.jcr.version tests");
 
-        // ADD TEST CLASSES HERE:
+        suite.addTestSuite(VersionHistoryTest.class);
+        suite.addTestSuite(VersionLabelTest.class);
+        suite.addTestSuite(CheckoutTest.class);
+        suite.addTestSuite(CheckinTest.class);
+        suite.addTestSuite(VersionGraphTest.class);
+        suite.addTestSuite(RemoveVersionTest.class);
+        //suite.addTestSuite(RestoreTest.class);
+        //suite.addTestSuite(WorkspaceRestoreTest.class);
+        //suite.addTestSuite(OnParentVersionAbortTest.class);
+        //suite.addTestSuite(OnParentVersionComputeTest.class);
+        //suite.addTestSuite(OnParentVersionCopyTest.class);
+        //suite.addTestSuite(OnParentVersionIgnoreTest.class);
+        //suite.addTestSuite(OnParentVersionInitializeTest.class);
 
         return suite;
     }

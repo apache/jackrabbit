@@ -28,7 +28,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
 
     public void testSimpleQuerySQL1() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("bla", new String[]{"bla"});
 
         testRootNode.save();
@@ -42,9 +42,9 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testSimpleQuerySQL2() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("bla", new String[]{"bla"});
-        Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
+        Node bla = testRootNode.addNode("bla");
         bla.setProperty("bla", new String[]{"bla"});
 
         superuser.getRootNode().save();
@@ -58,9 +58,9 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testSimpleQuerySQL3() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("bla", new String[]{"bla"});
-        Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
+        Node bla = testRootNode.addNode("bla");
         bla.setProperty("bla", new String[]{"bla"});
 
         testRootNode.save();
@@ -74,9 +74,9 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testSimpleQuerySQL4() throws Exception {
-        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        Node foo = testRootNode.addNode("foo");
         foo.setProperty("bla", new String[]{"bla"});
-        Node bla = testRootNode.addNode("bla", NT_UNSTRUCTURED);
+        Node bla = testRootNode.addNode("bla");
         bla.setProperty("bla", new String[]{"bla"});
 
         testRootNode.save();
@@ -88,12 +88,12 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testDateField1() throws Exception {
-        Node n = testRootNode.addNode("marcel", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("marcel");
         Calendar marcel = Calendar.getInstance();
         marcel.set(1976, 4, 20, 15, 40);
         n.setProperty("birth", new Value[]{new DateValue(marcel)});
 
-        n = testRootNode.addNode("vanessa", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("vanessa");
         Calendar vanessa = Calendar.getInstance();
         vanessa.set(1975, 4, 10, 13, 30);
         n.setProperty("birth", new Value[]{new DateValue(vanessa)});
@@ -112,11 +112,11 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testDoubleField() throws Exception {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1");
         n.setProperty("value", new Value[]{new DoubleValue(1.9928375d)});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2");
         n.setProperty("value", new Value[]{new DoubleValue(0.0d)});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node3");
         n.setProperty("value", new Value[]{new DoubleValue(-1.42982475d)});
 
         testRootNode.save();
@@ -138,11 +138,11 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testLongField() throws Exception {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1");
         n.setProperty("value", new Value[]{new LongValue(1)});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2");
         n.setProperty("value", new Value[]{new LongValue(0)});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node3");
         n.setProperty("value", new Value[]{new LongValue(-1)});
 
         testRootNode.save();
@@ -164,11 +164,11 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testLikePattern() throws Exception {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1");
         n.setProperty("value", new String[]{"king"});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2");
         n.setProperty("value", new String[]{"ping"});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node3");
         n.setProperty("value", new String[]{"ching"});
 
         testRootNode.save();
@@ -190,11 +190,11 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testLikePatternBetween() throws Exception {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1");
         n.setProperty("value", new String[]{"ping"});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2");
         n.setProperty("value", new String[]{"pong"});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node3");
         n.setProperty("value", new String[]{"puung"});
 
         testRootNode.save();
@@ -216,11 +216,11 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testLikePatternEnd() throws Exception {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1");
         n.setProperty("value", new String[]{"bli"});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2");
         n.setProperty("value", new String[]{"bla"});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node3");
         n.setProperty("value", new String[]{"blub"});
 
         testRootNode.save();
@@ -242,13 +242,13 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testLikePatternEscaped() throws Exception {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1");
         n.setProperty("value", new String[]{"foo\\_bar"});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2");
         n.setProperty("value", new String[]{"foobar"});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node3");
         n.setProperty("value", new String[]{"foo_bar"});
-        n = testRootNode.addNode("node4", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node4");
         n.setProperty("value", new String[]{"foolbar"});
 
         testRootNode.save();
@@ -280,11 +280,11 @@ public class SimpleQueryTest extends AbstractQueryTest {
     }
 
     public void testNotEqual() throws Exception {
-        Node n = testRootNode.addNode("node1", NT_UNSTRUCTURED);
+        Node n = testRootNode.addNode("node1");
         n.setProperty("value", new String[]{"foo"});
-        n = testRootNode.addNode("node2", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node2");
         n.setProperty("value", new String[]{"bar"});
-        n = testRootNode.addNode("node3", NT_UNSTRUCTURED);
+        n = testRootNode.addNode("node3");
         n.setProperty("value", new String[]{"foobar"});
 
         testRootNode.save();
