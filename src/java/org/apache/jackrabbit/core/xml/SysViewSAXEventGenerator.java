@@ -46,11 +46,25 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      * The XML elements and attributes used in serialization
      */
     public static final String NODE_ELEMENT = "node";
+    public static final String PREFIXED_NODE_ELEMENT =
+            NS_SV_PREFIX + ":" + NODE_ELEMENT;
+
     public static final String PROPERTY_ELEMENT = "property";
+    public static final String PREFIXED_PROPERTY_ELEMENT =
+            NS_SV_PREFIX + ":" + PROPERTY_ELEMENT;;
+
     public static final String VALUE_ELEMENT = "value";
+    public static final String PREFIXED_VALUE_ELEMENT =
+            NS_SV_PREFIX + ":" + VALUE_ELEMENT;;
 
     public static final String NAME_ATTRIBUTE = "name";
+    public static final String PREFIXED_NAME_ATTRIBUTE =
+            NS_SV_PREFIX + ":" + NAME_ATTRIBUTE;
+
     public static final String TYPE_ATTRIBUTE = "type";
+    public static final String PREFIXED_TYPE_ATTRIBUTE =
+            NS_SV_PREFIX + ":" + TYPE_ATTRIBUTE;
+
     public static final String CDATA_TYPE = "CDATA";
     public static final String ENUMERATION_TYPE = "ENUMERATION";
 
@@ -96,9 +110,11 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             throw new RepositoryException(msg, npde);
         }
 
-        attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, NS_SV_PREFIX + ":" + NAME_ATTRIBUTE, CDATA_TYPE, nodeName);
+        attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
+                CDATA_TYPE, nodeName);
         // start node element
-        contentHandler.startElement(NS_SV_URI, NODE_ELEMENT, NS_SV_PREFIX + ":" + NODE_ELEMENT, attrs);
+        contentHandler.startElement(NS_SV_URI, NODE_ELEMENT,
+                PREFIXED_NODE_ELEMENT, attrs);
     }
 
     /**
@@ -123,7 +139,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     protected void leaving(NodeImpl node, int level)
             throws RepositoryException, SAXException {
         // end node element
-        contentHandler.endElement(NS_SV_URI, NODE_ELEMENT, NS_SV_PREFIX + ":" + NODE_ELEMENT);
+        contentHandler.endElement(NS_SV_URI, NODE_ELEMENT, PREFIXED_NODE_ELEMENT);
     }
 
     /**
@@ -147,7 +163,8 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         }
         AttributesImpl attrs = new AttributesImpl();
         // name attribute
-        attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, NS_SV_PREFIX + ":" + NAME_ATTRIBUTE, CDATA_TYPE, propName);
+        attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
+                CDATA_TYPE, propName);
         // type attribute
         int type = prop.getType();
         String typeName;
@@ -157,10 +174,12 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             // should never be getting here
             throw new RepositoryException("unexpected property-type ordinal: " + type, iae);
         }
-        attrs.addAttribute(NS_SV_URI, TYPE_ATTRIBUTE, NS_SV_PREFIX + ":" + TYPE_ATTRIBUTE, ENUMERATION_TYPE, typeName);
+        attrs.addAttribute(NS_SV_URI, TYPE_ATTRIBUTE, PREFIXED_TYPE_ATTRIBUTE,
+                ENUMERATION_TYPE, typeName);
 
         // start property element
-        contentHandler.startElement(NS_SV_URI, PROPERTY_ELEMENT, NS_SV_PREFIX + ":" + PROPERTY_ELEMENT, attrs);
+        contentHandler.startElement(NS_SV_URI, PROPERTY_ELEMENT,
+                PREFIXED_PROPERTY_ELEMENT, attrs);
 
         // values
         boolean multiValued = prop.getDefinition().isMultiple();
@@ -174,7 +193,8 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             Value val = vals[i];
 
             // start value element
-            contentHandler.startElement(NS_SV_URI, VALUE_ELEMENT, NS_SV_PREFIX + ":" + VALUE_ELEMENT, new AttributesImpl());
+            contentHandler.startElement(NS_SV_URI, VALUE_ELEMENT,
+                    PREFIXED_VALUE_ELEMENT, new AttributesImpl());
 
             // characters
             if (prop.getType() == PropertyType.BINARY) {
@@ -219,7 +239,8 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 contentHandler.characters(chars, 0, chars.length);
             }
             // end value element
-            contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT, NS_SV_PREFIX + ":" + VALUE_ELEMENT);
+            contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT,
+                    PREFIXED_VALUE_ELEMENT);
         }
     }
 
@@ -231,6 +252,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         if (prop.getType() == PropertyType.BINARY && skipBinary) {
             return;
         }
-        contentHandler.endElement(NS_SV_URI, PROPERTY_ELEMENT, NS_SV_PREFIX + ":" + PROPERTY_ELEMENT);
+        contentHandler.endElement(NS_SV_URI, PROPERTY_ELEMENT,
+                PREFIXED_PROPERTY_ELEMENT);
     }
 }
