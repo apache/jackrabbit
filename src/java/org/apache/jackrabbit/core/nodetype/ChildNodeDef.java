@@ -42,7 +42,7 @@ public class ChildNodeDef extends ChildItemDef {
         if (obj instanceof ChildNodeDef) {
             ChildNodeDef other = (ChildNodeDef) obj;
             return super.equals(obj)
-                    && Arrays.equals(requiredPrimaryTypes, requiredPrimaryTypes)
+                    && Arrays.equals(requiredPrimaryTypes, other.requiredPrimaryTypes)
                     && (defaultPrimaryType == null ? other.defaultPrimaryType == null : defaultPrimaryType.equals(other.defaultPrimaryType))
                     && allowSameNameSibs == other.allowSameNameSibs;
         }

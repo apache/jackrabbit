@@ -22,6 +22,7 @@ import javax.jcr.PropertyType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * A <code>NodeTypeDef</code> holds the definition of a node type.
@@ -55,6 +56,22 @@ public class NodeTypeDef implements Cloneable {
         // clear dependencies (will be lazily built)
         clone.resetDependencies();
         return clone;
+    }
+
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof NodeTypeDef) {
+            NodeTypeDef other = (NodeTypeDef) obj;
+            return (name == null ? other.name == null : name.equals(other.name))
+                    && Arrays.equals(supertypes, other.supertypes)
+                    && mixin == other.mixin
+                    && orderableChildNodes == other.orderableChildNodes
+                    && Arrays.equals(propDefs, other.propDefs)
+                    && Arrays.equals(nodeDefs, other.nodeDefs);
+        }
+        return false;
     }
 
     /**
