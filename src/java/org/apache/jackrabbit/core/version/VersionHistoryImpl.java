@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 
 import javax.jcr.Item;

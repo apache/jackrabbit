@@ -17,31 +17,18 @@
 package org.apache.jackrabbit.core.version;
 
 /**
- * This interface defines the base for all internal versioning items. Internal
- * versioning items are decoupled from their external form as exposed to the
- * repository or in form of the node extensions {@link javax.jcr.version.Version}
- * or {@link javax.jcr.version.VersionHistory}.
+ * This Interface defines a listener on versionitem events
+ *
+ * @author tripod
+ * @version $Revision:$, $Date:$
  */
-public interface InternalVersionItem {
+public interface InternalVersionItemListener {
 
     /**
-     * Returns the external id of this item
+     * is called, when the version item was modified
      *
-     * @return
+     * @param item
      */
-    public String getId();
+    public void itemModifed(InternalVersionItem item);
 
-    /**
-     * returns the parent version item or null
-     *
-     * @return
-     */
-    public InternalVersionItem getParent();
-
-    /**
-     * Adds a vesion item state listener to this item
-     *
-     * @param listener
-     */
-    public void addListener(InternalVersionItemListener listener);
 }

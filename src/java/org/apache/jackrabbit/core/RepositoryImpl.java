@@ -779,6 +779,11 @@ public class RepositoryImpl implements Repository, SessionListener,
     /**
      * {@inheritDoc}
      */
+    public void loggingOut(SessionImpl session) {}
+
+    /**
+     * {@inheritDoc}
+     */
     public void loggedOut(SessionImpl session) {
         // remove session from active sessions
         activeSessions.remove(session);

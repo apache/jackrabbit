@@ -409,6 +409,24 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
+     * Notify the listeners that this session is about to be closed.
+     */
+    protected void notifyLoggingOut() {
+        // copy listeners to array to avoid ConcurrentModificationException
+        SessionListener[] la = new SessionListener[listeners.size()];
+        Iterator iter = listeners.values().iterator();
+        int cnt = 0;
+        while (iter.hasNext()) {
+            la[cnt++] = (SessionListener) iter.next();
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].loggingOut(this);
+            }
+        }
+    }
+
+    /**
      * Notify the listeners that this session has been closed.
      */
     protected void notifyLoggedOut() {
@@ -1023,6 +1041,9 @@ public class SessionImpl implements Session, Constants {
             // ignore
             return;
         }
+
+        // notify listeners that session is about to be closed
+        notifyLoggingOut();
 
         // discard all transient changes
         itemStateMgr.disposeAllTransientItemStates();

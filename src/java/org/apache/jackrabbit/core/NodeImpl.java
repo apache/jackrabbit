@@ -523,7 +523,7 @@ public class NodeImpl extends ItemImpl implements Node {
         removeChildProperty(qName);
     }
 
-    protected void removeChildProperty(QName propName) throws RepositoryException {
+    public void removeChildProperty(QName propName) throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
 
@@ -3645,22 +3645,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkLockable();
 
         LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
-        Lock lock = lockMgr.lock(this, isDeep, isSessionScoped);
-
-        try {
-            internalSetProperty(JCR_LOCKOWNER,
-                    InternalValue.create(session.getUserId()));
-            internalSetProperty(JCR_LOCKISDEEP,
-                    InternalValue.create(isDeep));
-            save();
-
-        } catch (RepositoryException e) {
-
-            // An error occurred, so remove lock
-            lockMgr.unlock(this);
-            throw e;
-        }
-        return lock;
+        return lockMgr.lock(this, isDeep, isSessionScoped);
     }
 
     /**
@@ -3699,10 +3684,6 @@ public class NodeImpl extends ItemImpl implements Node {
 
         LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         lockMgr.unlock(this);
-
-        removeChildProperty(JCR_LOCKOWNER);
-        removeChildProperty(JCR_LOCKISDEEP);
-        save();
     }
 
     /**

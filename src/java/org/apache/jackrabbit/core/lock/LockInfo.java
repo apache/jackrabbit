@@ -18,14 +18,29 @@ package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.log4j.Logger;
 
 import javax.jcr.Session;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
 
 /**
  * Contains information about a lock and gets placed inside the child
  * information of a {@link PathMap}.
  */
 class LockInfo implements SessionListener {
+
+    /**
+     * Logger
+     */
+    private static final Logger log = Logger.getLogger(LockInfo.class);
+
+    /**
+     * Lock manager
+     */
+    private final LockManagerImpl lockMgr;
 
     /**
      * Lock token
@@ -59,18 +74,19 @@ class LockInfo implements SessionListener {
 
     /**
      * Create a new instance of this class.
+     * @param lockMgr lock manager
      * @param lockToken lock token
      * @param sessionScoped whether lock token is session scoped
      * @param deep whether lock is deep
      * @param lockOwner owner of lock
      */
-    public LockInfo(LockToken lockToken, boolean sessionScoped,
-                    boolean deep, String lockOwner) {
+    public LockInfo(LockManagerImpl lockMgr, LockToken lockToken,
+                    boolean sessionScoped, boolean deep, String lockOwner) {
+        this.lockMgr = lockMgr;
         this.lockToken = lockToken;
         this.sessionScoped = sessionScoped;
         this.deep = deep;
         this.lockOwner = lockOwner;
-        this.live = true;
     }
 
     /**
@@ -111,7 +127,7 @@ class LockInfo implements SessionListener {
      * itself, otherwise a <code>null</code> string
      */
     public String getLockToken(Session session) {
-        if (live && session.equals(lockHolder)) {
+        if (session.equals(lockHolder)) {
             return lockToken.toString();
         }
         return null;
@@ -125,12 +141,34 @@ class LockInfo implements SessionListener {
         return live;
     }
 
+    /**
+     * Refresh a lock. Will try to re-insert this lock info into the lock
+     * manager's path map, provided the node is not already locked.
+     * @param node node to lock again
+     * @throws LockException if the node is already locked
+     * @throws RepositoryException if some other error occurs
+     * @see javax.jcr.Node#refresh
+     */
+    public void refresh(NodeImpl node) throws LockException, RepositoryException {
+        lockMgr.lock(node, this);
+    }
+
     //-------------------------------------------------------< SessionListener >
 
     /**
      * {@inheritDoc}
+     *
+     * When the owning session is logging out, we should unlock the node on
+     * behalf of the user currently holding it.
      */
-    public void loggedOut(SessionImpl session) {
-        live = false;
+    public void loggingOut(SessionImpl session) {
+        if (live) {
+            lockMgr.unlock(this);
+        }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void loggedOut(SessionImpl session) {}
 }

@@ -273,6 +273,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
                 stateMgr.update();
                 succeeded = true;
+                notifyModifed();
             } finally {
                 if (!succeeded) {
                     // update operation failed, cancel all modifications
@@ -331,6 +332,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 stateMgr.cancel();
             }
         }
+        notifyModifed();
         return prev;
     }
 
@@ -363,7 +365,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 stateMgr.cancel();
             }
         }
-
+        notifyModifed();
         return v;
     }
 

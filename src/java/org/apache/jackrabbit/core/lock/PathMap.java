@@ -203,7 +203,7 @@ public class PathMap {
                     if (child != null) {
                         childrenCount--;
                     }
-                    if (childrenCount == 0) {
+                    if (obj == null && childrenCount == 0) {
                         remove();
                     }
                     return child;
@@ -323,7 +323,7 @@ public class PathMap {
         /**
          * Recursively invoked traversal method.
          */
-        private void traverse(ChildVisitor visitor, boolean includeEmpty) {
+        public void traverse(ChildVisitor visitor, boolean includeEmpty) {
             if (children != null) {
                 Iterator iter = children.values().iterator();
                 while (iter.hasNext()) {

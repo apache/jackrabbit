@@ -159,4 +159,6 @@ public interface VersionManager {
      * @throws Exception if an error occurs
      */
     public void close() throws Exception;
+
+
 }

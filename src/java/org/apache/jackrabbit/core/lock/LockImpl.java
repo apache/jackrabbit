@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.lock;
 
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.NodeId;
+
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.Node;
@@ -35,7 +38,7 @@ class LockImpl implements Lock {
     /**
      * Node holding lock
      */
-    private Node node;
+    private final Node node;
 
     /**
      * Create a new instance of this class.
@@ -92,6 +95,12 @@ class LockImpl implements Lock {
      * {@inheritDoc}
      */
     public void refresh() throws LockException, RepositoryException {
-        //@todo implement refresh
+        if (isLive()) {
+            throw new LockException("Lock still alive.");
+        }
+        if (getLockToken() == null) {
+            throw new LockException("Session does not hold lock.");
+        }
+        info.refresh((NodeImpl) node);
     }
 }

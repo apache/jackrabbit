@@ -563,6 +563,9 @@ public class NativePVM implements PersistentVersionManager, Constants {
 
             initVirtualIds(v.getId(), v.getNode().getState());
 
+            // notify listeners
+            history.notifyModifed();
+
             return v;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);

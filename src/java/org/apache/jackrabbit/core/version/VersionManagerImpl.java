@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -36,7 +37,7 @@ import java.util.List;
  * version storage ({@link VersionItemStateProvider}) and the persistent
  * version manager.
  */
-public class VersionManagerImpl implements VersionManager {
+public class VersionManagerImpl implements VersionManager, Constants, InternalVersionItemListener {
 
     /**
      * the default logger
@@ -122,11 +123,8 @@ public class VersionManagerImpl implements VersionManager {
      */
     public VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException {
         InternalVersionHistory history = vMgr.createVersionHistory(node);
-        try {
-            virtProvider.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID)).discard();
-        } catch (ItemStateException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        history.addListener(this);
+        onVersionStorageChanged();
         return (VersionHistory) node.getSession().getNodeByUUID(history.getId());
     }
 
@@ -148,7 +146,11 @@ public class VersionManagerImpl implements VersionManager {
      * @throws RepositoryException
      */
     public InternalVersionHistory getVersionHistory(String id) throws RepositoryException {
-        return vMgr.getVersionHistory(id);
+        InternalVersionHistory hist = vMgr.getVersionHistory(id);
+        if (hist != null) {
+            hist.addListener(this);
+        }
+        return hist;
     }
 
     /**
@@ -189,7 +191,11 @@ public class VersionManagerImpl implements VersionManager {
      * @throws RepositoryException
      */
     public InternalVersion getVersion(String id) throws RepositoryException {
-        return vMgr.getVersion(id);
+        InternalVersion vers = vMgr.getVersion(id);
+        if (vers != null) {
+            vers.addListener(this);
+        }
+        return vers;
     }
 
     /**
@@ -210,7 +216,11 @@ public class VersionManagerImpl implements VersionManager {
      * @throws RepositoryException
      */
     public InternalVersionItem getItem(String id) throws RepositoryException {
-        return vMgr.getItemByExternal(id);
+        InternalVersionItem item = vMgr.getItemByExternal(id);
+        if (item != null) {
+            item.addListener(this);
+        }
+        return item;
     }
 
     /**
@@ -223,11 +233,7 @@ public class VersionManagerImpl implements VersionManager {
      */
     public Version checkin(NodeImpl node) throws RepositoryException {
         InternalVersion version = vMgr.checkin(node);
-        try {
-            virtProvider.getItemState(new NodeId(version.getVersionHistory().getId())).discard();
-        } catch (ItemStateException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        version.addListener(this);
         return (Version) node.getSession().getNodeByUUID(version.getId());
     }
 
@@ -243,5 +249,27 @@ public class VersionManagerImpl implements VersionManager {
      */
     public void setItemReferences(InternalVersionItem item, List references) {
         vMgr.setItemReferences(item, references);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void itemModifed(InternalVersionItem item) {
+        try {
+            virtProvider.getItemState(new NodeId(item.getId())).discard();
+        } catch (ItemStateException e) {
+            log.error("Error while refreshing virtual item.", e);
+        }
+    }
+
+    /**
+     * Flushes the virtual node state information of the version storage
+     */
+    public void onVersionStorageChanged() {
+        try {
+            virtProvider.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID)).discard();
+        } catch (ItemStateException e) {
+            log.error("Error while refreshing virtual version storage.", e);
+        }
     }
 }

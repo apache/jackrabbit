@@ -42,59 +42,98 @@ import javax.jcr.lock.Lock;
 public class LockTest extends AbstractJCRTest {
 
     /**
+     * Test lock token functionality
+     */
+    public void testAddRemoveLockToken() throws Exception {
+        // create new node
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixReferenceable);
+        n.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock node and get lock token
+        Lock lock = n.lock(false, true);
+
+        // assert: session must get a non-null lock token
+        assertNotNull("session must get a non-null lock token",
+                lock.getLockToken());
+
+        // assert: session must hold lock token
+        assertTrue("session must hold lock token",
+                containsLockToken(superuser, lock.getLockToken()));
+
+        // remove lock token
+        String lockToken = lock.getLockToken();
+        superuser.removeLockToken(lockToken);
+
+        // assert: session must get a null lock token
+        assertNull("session must get a null lock token",
+                lock.getLockToken());
+
+        // assert: session must still hold lock token
+        assertFalse("session must not hold lock token",
+                containsLockToken(superuser, lockToken));
+
+        // assert: session unable to modify node
+        try {
+            n.addNode(nodeName2, testNodeType);
+            fail("session unable to modify node");
+        } catch (LockException e) {
+            // expected
+        }
+
+        // add lock token
+        superuser.addLockToken(lockToken);
+
+        // assert: session must get a non-null lock token
+        assertNotNull("session must get a non-null lock token",
+                lock.getLockToken());
+
+        // assert: session must hold lock token
+        assertTrue("session must hold lock token",
+                containsLockToken(superuser, lock.getLockToken()));
+
+        // assert: session able to modify node
+        n.addNode(nodeName2, testNodeType);
+    }
+
+    /**
      * Test session scope: other session may not access nodes that are
      * locked.
      */
-    public void testSessionScope() throws Exception {
+    public void testNodeLocked() throws Exception {
         // create new node and lock it
-        Node n = testRootNode.addNode(nodeName1, testNodeType);
-        if (!n.isNodeType(mixReferenceable)) {
-            n.addMixin(mixReferenceable);
-        }
-        if (!n.isNodeType(mixLockable)) {
-            n.addMixin(mixLockable);
-        }
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixReferenceable);
+        n1.addMixin(mixLockable);
         testRootNode.save();
 
-        // remember uuid
-        String uuid = n.getUUID();
-
         // lock node
-        Lock lock = n.lock(false, true);
+        Lock lock = n1.lock(false, true);
 
-        // assertion: isLive must return true
+        // assert: isLive must return true
         assertTrue("Lock must be live", lock.isLive());
-
-        // assertion: lock token must not be null for holding session
-        String lockToken = n.getLock().getLockToken();
-        assertNotNull("Lock token must not be null for holding session", lockToken);
 
         // create new session
         Session otherSuperuser = helper.getSuperuserSession();
 
         // get same node
-        n = otherSuperuser.getNodeByUUID(uuid);
+        Node n2 = otherSuperuser.getNodeByUUID(n1.getUUID());
 
-        // assertion: lock token must be null for other session
+        // assert: lock token must be null for other session
         assertNull("Lock token must be null for other session",
-                n.getLock().getLockToken());
+                n2.getLock().getLockToken());
 
-        // assertion: modifying same node in other session must fail
+        // assert: modifying same node in other session must fail
         try {
-            n.addNode(nodeName2);
-            fail("Modified node locked by other session.");
+            n2.addNode(nodeName2, testNodeType);
+            fail("modifying same node in other session must fail");
         } catch (LockException e) {
             // expected
         }
 
         // logout
         otherSuperuser.logout();
-
-        // unlock node
-        superuser.getNodeByUUID(uuid).unlock();
-
-        // assertion: isLive must return false
-        assertFalse("Lock must be dead", lock.isLive());
     }
 
     /**
@@ -139,14 +178,168 @@ public class LockTest extends AbstractJCRTest {
         // lock child node
         n2.lock(false, true);
 
-        // lock parent node
-        n1.lock(true, false);
+        // assert: unable to deep lock parent node
+        try {
+            n1.lock(true, true);
+            fail("unable to deep lock parent node");
+        } catch (LockException e) {
+            // expected
+        }
+    }
 
-        // unlock child node
-        n2.unlock();
+    /**
+     * Test locks are released when session logs out
+     */
+    public void testLogout() throws Exception {
+        // add node
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixReferenceable);
+        n1.addMixin(mixLockable);
+        testRootNode.save();
 
-        // parent node must still hold lock
-        assertTrue("parent node must still hold lock", n1.holdsLock());
+        // create new session
+        Session otherSuperuser = helper.getSuperuserSession();
+
+        // get node created above
+        Node n2 = otherSuperuser.getNodeByUUID(n1.getUUID());
+
+        // lock node
+        Lock lock = n2.lock(false, true);
+
+        // assert: lock must be alive
+        assertTrue("lock must be alive", lock.isLive());
+
+        // assert: node must be locked
+        assertTrue("node must be locked", n1.isLocked());
+
+        // log out
+        otherSuperuser.logout();
+
+        // assert: lock must not be alive
+        assertFalse("lock must not be alive", lock.isLive());
+
+        // assert: node must not be locked
+        assertFalse("node must not be locked", n1.isLocked());
+    }
+
+    /**
+     * Test locks may be transferred to other session
+     */
+    public void testLockTransfer() throws Exception {
+        // add node
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixReferenceable);
+        n1.addMixin(mixLockable);
+        testRootNode.save();
+
+        // create new session
+        Session otherSuperuser = helper.getSuperuserSession();
+
+        // get node created above
+        Node n2 = otherSuperuser.getNodeByUUID(n1.getUUID());
+
+        // lock node
+        Lock lock = n2.lock(false, true);
+
+        // assert: user must get non-null token
+        assertNotNull("user must get non-null token", lock.getLockToken());
+
+        // transfer to standard session
+        String lockToken = lock.getLockToken();
+        otherSuperuser.removeLockToken(lockToken);
+        superuser.addLockToken(lockToken);
+
+        // assert: user must get null token
+        assertNull("user must get null token", lock.getLockToken());
+
+        // assert: user must get non-null token
+        assertNotNull("user must get non-null token",
+                n1.getLock().getLockToken());
+
+        // log out
+        otherSuperuser.logout();
+    }
+
+    /**
+     * Test open-scoped locks
+     */
+    public void testOpenScopedLocks() throws Exception {
+        // add node
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixReferenceable);
+        n1.addMixin(mixLockable);
+        testRootNode.save();
+
+        // create new session
+        Session otherSuperuser = helper.getSuperuserSession();
+
+        // get node created above
+        Node n2 = otherSuperuser.getNodeByUUID(n1.getUUID());
+
+        // lock node
+        Lock lock = n2.lock(false, false);
+
+        // transfer to standard session
+        String lockToken = lock.getLockToken();
+        otherSuperuser.removeLockToken(lockToken);
+        superuser.addLockToken(lockToken);
+
+        // log out
+        otherSuperuser.logout();
+
+        // assert: node still locked
+        assertTrue(n1.isLocked());
+    }
+
+    /**
+     * Test refresh
+     */
+    public void testRefresh() throws Exception {
+        // create new node
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixReferenceable);
+        n.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock node and get lock token
+        Lock lock = n.lock(false, true);
+
+        // assert: lock must be alive
+        assertTrue("lock must be alive", lock.isLive());
+
+        // assert: refresh must fail, since lock is still alive
+        try {
+            lock.refresh();
+            fail("refresh must fail, since lock is still alive");
+        } catch (LockException e) {
+            // expected
+        }
+
+        // unlock node
+        n.unlock();
+
+        // assert: lock must not be alive
+        assertFalse("lock must not be alive", lock.isLive());
+
+        // refresh
+        lock.refresh();
+
+        // assert: lock must again be alive
+        assertTrue("lock must again be alive", lock.isLive());
+    }
+
+    /**
+     * Return a flag indicating whether the indicated session contains
+     * a specific lock token
+     */
+    private boolean containsLockToken(Session session, String lockToken) {
+        String[] lt = session.getLockTokens();
+        for (int i = 0; i < lt.length; i++) {
+            if (lt[i].equals(lockToken)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

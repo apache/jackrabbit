@@ -25,6 +25,15 @@ package org.apache.jackrabbit.core;
 public interface SessionListener {
 
     /**
+     * Called when a <code>Session</code> is about to be 'closed' by
+     * calling <code>{@link javax.jcr.Session#logout()}</code. At this
+     * moment the session is still valid.
+     *
+     * @param session the <code>Session</code> that is about to be 'closed'
+     */
+    public void loggingOut(SessionImpl session);
+
+    /**
      * Called when a <code>Session</code> has been 'closed' by
      * calling <code>{@link javax.jcr.Session#logout()}</code.
      *
