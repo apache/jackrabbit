@@ -85,6 +85,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String jcrCreated;
 
     /**
+     * JCR Name jcr:created using the namespace resolver of the current session.
+     */
+    protected String jcrVersionHistory;
+
+    /**
      * JCR Name jcr:frozenNode using the namespace resolver of the current session.
      */
     protected String jcrFrozenNode;
@@ -133,6 +138,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * JCR Name nt:versionHistory using the namespace resolver of the current session.
      */
     protected String ntVersionHistory;
+
+    /**
+     * JCR Name nt:versionHistory using the namespace resolver of the current session.
+     */
+    protected String ntVersionLabels;
 
     /**
      * JCR Name nt:frozenNode using the namespace resolver of the current session.
@@ -272,6 +282,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrPredecessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":predecessors";
         jcrSuccessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":successors";
         jcrCreated = superuser.getNamespacePrefix(NS_JCR_URI) + ":created";
+        jcrVersionHistory = superuser.getNamespacePrefix(NS_JCR_URI) + ":versionHistory";
         jcrFrozenNode = superuser.getNamespacePrefix(NS_JCR_URI) + ":frozenNode";
         jcrRootVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":rootVersion";
         jcrBaseVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":baseVersion";
@@ -282,6 +293,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         ntBase = superuser.getNamespacePrefix(NS_NT_URI) + ":base";
         ntVersion = superuser.getNamespacePrefix(NS_NT_URI) + ":version";
         ntVersionHistory = superuser.getNamespacePrefix(NS_NT_URI) + ":versionHistory";
+        ntVersionLabels = superuser.getNamespacePrefix(NS_NT_URI) + ":versionLabels";
         ntFrozenNode = superuser.getNamespacePrefix(NS_NT_URI) + ":frozenNode";
         mixReferenceable = superuser.getNamespacePrefix(NS_MIX_URI) + ":referenceable";
         mixVersionable = superuser.getNamespacePrefix(NS_MIX_URI) + ":versionable";
