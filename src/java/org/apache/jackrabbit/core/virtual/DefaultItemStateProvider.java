@@ -48,7 +48,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
     /**
      * the virtual root state of this provider (does not have to be /)
      */
-    private final VirtualNodeState rootState;
+    //private final VirtualNodeState rootState;
 
     /**
      * the items of this provider
@@ -59,21 +59,9 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
      * Creates a new item state provider.
      *
      * @param ntMgr         the nodetype manager
-     * @param overlayedRoot the node state that is overlayed
      */
-    public DefaultItemStateProvider(NodeTypeManagerImpl ntMgr, NodeState overlayedRoot) {
+    public DefaultItemStateProvider(NodeTypeManagerImpl ntMgr) {
         this.ntMgr = ntMgr;
-        rootState = new VirtualNodeState(overlayedRoot);
-        items.put(rootState.getId(), rootState);
-    }
-
-    /**
-     * Returns the nodestate of the relative root of this provider
-     *
-     * @return
-     */
-    public VirtualNodeState getRootState() {
-        return rootState;
     }
 
     /**
@@ -132,6 +120,15 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
         }
         VirtualNodeState parent = (VirtualNodeState) getItemState(parentId);
         return addNode(parent, name, id, nodeType, null);
+    }
+
+    public VirtualNodeState addOverlay(NodeState original) throws RepositoryException {
+        VirtualNodeState ns= new VirtualNodeState(original.getUUID(), original.getNodeTypeName(), original.getParentUUID());
+        ns.setDefinitionId(original.getDefinitionId());
+        setPropertyValue(ns, ItemImpl.PROPNAME_PRIMARYTYPE, InternalValue.create(original.getNodeTypeName()));
+        ns.setMixinTypeNames(original.getMixinTypeNames());
+        items.put(ns.getId(), ns);
+        return ns;
     }
 
     /**

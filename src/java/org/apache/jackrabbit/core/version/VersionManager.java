@@ -117,6 +117,7 @@ public class VersionManager {
 
     /**
      * @param vMgr
+     * @param rootId the uuid of the version history root
      */
     protected VersionManager(PersistentVersionManager vMgr, String rootId) {
         this.vMgr = vMgr;
@@ -132,9 +133,10 @@ public class VersionManager {
     public VirtualItemStateProvider getVirtualItemStateProvider(ItemStateProvider base) {
         if (virtProvider==null) {
             try {
-                NodeState rootState = (NodeState) base.getItemState(new NodeId(rootId));
-                virtProvider = new DefaultItemStateProvider(vMgr.getNodeTypeManager(), rootState);
-                historyRoot = virtProvider.addNode(virtProvider.getRootState(), VERSION_HISTORY_ROOT_NAME, null, NodeTypeRegistry.NT_UNSTRUCTURED, null);
+                virtProvider = new DefaultItemStateProvider(vMgr.getNodeTypeManager());
+                // create a duplicate of the version history root name
+                NodeState virtRootState = (NodeState) base.getItemState(new NodeId(rootId));
+                historyRoot = virtProvider.addOverlay(virtRootState);
                 Iterator iter = vMgr.getVersionHistories();
                 while (iter.hasNext()) {
                     InternalVersionHistory vh = (InternalVersionHistory) iter.next();

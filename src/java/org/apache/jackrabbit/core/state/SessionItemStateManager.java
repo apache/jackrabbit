@@ -211,12 +211,6 @@ public class SessionItemStateManager implements ItemStateProvider {
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
-        // check if there is a virtual state for the specified item
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasItemState(id)) {
-                return virtualProviders[i].getItemState(id);
-            }
-        }
 
         // first check if the specified item has been transiently removed
         if (transientStateMgr.hasItemStateInAttic(id)) {
@@ -233,6 +227,13 @@ public class SessionItemStateManager implements ItemStateProvider {
         // check if there's transient state for the specified item
         if (transientStateMgr.hasItemState(id)) {
             return transientStateMgr.getItemState(id);
+        }
+
+        // check if there is a virtual state for the specified item
+        for (int i=0; i<virtualProviders.length; i++) {
+            if (virtualProviders[i].hasItemState(id)) {
+                return virtualProviders[i].getItemState(id);
+            }
         }
 
         // check if there's persistent state for the specified item

@@ -65,11 +65,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * 'existing', i.e. persistent state that has been destroyed by somebody else
      */
     public static final int STATUS_STALE_DESTROYED = 6;
-    /**
-     * 'virtual' status, i.e. persistent state is virtual
-     */
-    public static final int STATUS_EXISTING_VIRTUAL = 7;
 
+    /**
+     * the internal status of this item state
+     */
     protected int status = STATUS_UNDEFINED;
 
     /**
@@ -104,10 +103,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
             case STATUS_NEW:
                 status = initialStatus;
                 break;
-            case STATUS_EXISTING_VIRTUAL:
-                // todo: should be keep this state?
-                status = STATUS_EXISTING;
-                break;
             default:
                 String msg = "illegal status: " + initialStatus;
                 log.error(msg);
@@ -133,10 +128,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
             case STATUS_EXISTING_MODIFIED:
             case STATUS_EXISTING_REMOVED:
                 status = initialStatus;
-                break;
-            case STATUS_EXISTING_VIRTUAL:
-                // todo: should be keep this state?
-                status = STATUS_EXISTING;
                 break;
             default:
                 String msg = "illegal status: " + initialStatus;

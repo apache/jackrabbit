@@ -72,9 +72,14 @@ public class PersistentVersionManager {
 
 
     /**
-     * the root node of the version histories
+     * the persistent root node of the version histories
      */
     private final PersistentNode historyRoot;
+
+    /**
+     * the virtual root node of the version histories
+     */
+    private final String virtHistoryRootId;
 
     /**
      * the system root id
@@ -117,8 +122,13 @@ public class PersistentVersionManager {
         if (!systemRoot.hasNode(VERSION_HISTORY_ROOT_NAME)) {
             // if not exist, create
             systemRoot.addNode(VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
-            systemRoot.save();
         }
+        if (!systemRoot.hasNode(VersionManager.VERSION_HISTORY_ROOT_NAME)) {
+            // if not exist, create
+            systemRoot.addNode(VersionManager.VERSION_HISTORY_ROOT_NAME, NodeTypeRegistry.NT_UNSTRUCTURED);
+        }
+        systemRoot.save();
+        virtHistoryRootId = systemRoot.getNode(VersionManager.VERSION_HISTORY_ROOT_NAME).internalGetUUID();
 
         try {
             PersistentNodeState nodeState = (PersistentNodeState) stateMgr.getItemState(new NodeId(systemRoot.getNode(VERSION_HISTORY_ROOT_NAME).internalGetUUID()));
@@ -271,7 +281,7 @@ public class PersistentVersionManager {
      */
     public synchronized VersionManager getVersionManager() {
         if (versionManager==null) {
-            versionManager = new VersionManager(this, systemRootId);
+            versionManager = new VersionManager(this, virtHistoryRootId);
         }
         return versionManager;
     }

@@ -501,7 +501,9 @@ public class PersistentNode {
             store(nstate);
         }
         // and store itself
-        state.store();
+        if (state.isTransient()) {
+            state.store();
+        }
     }
 
     /**

@@ -33,14 +33,7 @@ public class VirtualNodeState extends NodeState {
      * @param parentUUID
      */
     protected VirtualNodeState(String uuid, QName nodeTypeName, String parentUUID) {
-        super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING_VIRTUAL);
+        super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING);
     }
 
-    /**
-     *
-     * @param overlayedState
-     */
-    protected VirtualNodeState(NodeState overlayedState) {
-        super(overlayedState, ItemState.STATUS_EXISTING_VIRTUAL);
-    }
 }
