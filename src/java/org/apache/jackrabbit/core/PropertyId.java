@@ -23,8 +23,8 @@ public class PropertyId extends ItemId {
 
     static final long serialVersionUID = -3726624437800567892L;
 
-    private String parentUUID;
-    private QName propName;
+    private final String parentUUID;
+    private final QName propName;
 
     public PropertyId(String parentUUID, QName propName) {
         if (parentUUID == null) {

@@ -36,7 +36,7 @@ public class ReferenceManager {
      * A cache for <code>NodeReferences</code> objects created by this
      * <code>ReferenceManager</code>
      */
-    private Map refsCache;
+    private final Map refsCache;
 
     /**
      * Package private constructor
@@ -59,11 +59,11 @@ public class ReferenceManager {
         NodeReferences refs;
         try {
             // load persisted references
-            refs = new NodeReferences(new NodeId(targetId.getUUID()));
+            refs = new NodeReferences(targetId);
             persistMgr.load(refs);
         } catch (NoSuchItemStateException nsise) {
             // does not exist, create new
-            refs = new NodeReferences(new NodeId(targetId.getUUID()));
+            refs = new NodeReferences(targetId);
         } catch (ItemStateException ise) {
             String msg = "error while loading references";
             log.error(msg, ise);

@@ -23,7 +23,7 @@ public class NodeId extends ItemId {
 
     static final long serialVersionUID = 7026219091360041109L;
 
-    private String uuid;
+    private final String uuid;
 
     public NodeId(String uuid) {
         if (uuid == null) {
