@@ -88,7 +88,7 @@ class EventFilter {
      * @param itemMgr    the <code>ItemManager</code> of the <code>session</code>.
      * @param session    the <code>Session</code> that registered the {@link
      *                   javax.jcr.observation.EventListener}.
-     * @param eventTypes only allow specified {@link javax.jcr.observation.EventType}s.
+     * @param eventTypes only allow specified {@link javax.jcr.observation.Event} types.
      * @param path       only allow {@link javax.jcr.Item} with
      *                   <code>path</code>.
      * @param isDeep     if <code>true</code> also allow events for {@link
@@ -184,7 +184,7 @@ class EventFilter {
         if (nodeTypes != null) {
             boolean match = false;
             for (int i = 0; i < nodeTypes.length && !match; i++) {
-                match |= eventState.getNodeType().equals(nodeTypes[i]) || eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
+                match |= eventState.getNodeType().getQName().equals(nodeTypes[i].getQName()) || eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
             }
             if (!match) {
                 return true;
