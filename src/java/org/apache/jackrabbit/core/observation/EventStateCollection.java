@@ -22,6 +22,8 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -33,6 +35,8 @@ import org.apache.log4j.Logger;
 import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -102,6 +106,7 @@ public final class EventStateCollection {
                 // 3) child node added
                 // 4) child node removed
                 // 5) node moved
+                // 6) node reordered
                 // cases 1) and 2) are detected with added and deleted states
                 // on the PropertyState itself.
                 // cases 3) and 4) are detected with added and deleted states
@@ -110,68 +115,36 @@ public final class EventStateCollection {
                 // when a child node is renamed. three nodes are changed when
                 // a node is really moved. In any case we are only interested in
                 // the node that actually got moved.
+                // in case 6) only one node state changes. the state of the
+                // parent node.
                 NodeState n = (NodeState) state;
                 if (n.getAddedParentUUIDs().size() > 0 && n.getRemovedParentUUIDs().size() > 0) {
                     // node moved
                     // generate node removed & node added event
                     String oldParentUUID = (String) n.getRemovedParentUUIDs().get(0);
-                    NodeTypeImpl nodeType = null;
-                    try {
-                        nodeType = session.getNodeTypeManager().getNodeType(n.getNodeTypeName());
-                    } catch (NoSuchNodeTypeException e) {
-                        // should never happen actually
-                        String msg = "Item " + state.getId() + " has unknown node type: " + n.getNodeTypeName();
-                        log.error(msg);
-                        throw new ItemStateException(msg, e);
-                    }
-                    // FIXME find more efficient way
-                    Path newPath = null;
-                    Path[] allPaths = null;
-                    try {
-                        newPath = hmgr.getPath(n.getId());
-                        allPaths = hmgr.getAllPaths(n.getId(), true);
-                    } catch (RepositoryException e) {
-                        // should never happen actually
-                        String msg = "Unable to resolve path for item: " + n.getId();
-                        log.error(msg);
-                        throw new ItemStateException(msg, e);
-                    }
+                    NodeState oldParent = (NodeState) changes.get(new NodeId(oldParentUUID));
+                    NodeTypeImpl oldParentNodeType = getNodeType(oldParent, session);
+                    Path newPath = getPath(n.getId(), hmgr);
+                    Path[] allPaths = getAllPaths(n.getId(), hmgr);
                     List paths = new ArrayList(Arrays.asList(allPaths));
                     paths.remove(newPath);
                     if (paths.size() > 0) {
                         Path removedPath = (Path) paths.get(0);
-                        Path parentPath = null;
-                        try {
-                            parentPath = removedPath.getAncestor(1);
-                        } catch (PathNotFoundException e) {
-                            // should never happen actually, root node cannot
-                            // be removed, thus path has always a parent
-                            String msg = "Path " + removedPath + " has no parent";
-                            log.error(msg);
-                            throw new ItemStateException(msg, e);
-                        }
                         events.add(EventState.childNodeRemoved(oldParentUUID,
-                                parentPath,
+                                getParent(removedPath),
                                 n.getUUID(),
                                 removedPath.getNameElement(),
-                                nodeType,
+                                oldParentNodeType,
                                 session));
 
                         String newParentUUID = (String) n.getAddedParentUUIDs().get(0);
-                        try {
-                            parentPath = newPath.getAncestor(1);
-                        } catch (PathNotFoundException e) {
-                            // should never happen actually, root node cannot
-                            // be 'added', thus path has always a parent
-                            String msg = "Path " + removedPath + " has no parent";
-                            log.error(msg);
-                            throw new ItemStateException(msg, e);
-                        }
+                        NodeState newParent = (NodeState) changes.get(new NodeId(newParentUUID));
+                        NodeTypeImpl newParentNodeType = getNodeType(newParent, session);
                         events.add(EventState.childNodeAdded(newParentUUID,
-                                parentPath,
+                                getParent(newPath),
                                 n.getUUID(),
                                 newPath.getNameElement(),
-                                nodeType,
+                                newParentNodeType,
                                 session));
                     } else {
                         log.error("Unable to calculate old path of moved node");
@@ -202,32 +175,17 @@ public final class EventStateCollection {
                             }
                         }
                         if (moved != null) {
-                            NodeTypeImpl nodeType = null;
-                            try {
-                                nodeType = session.getNodeTypeManager().getNodeType(n.getNodeTypeName());
-                            } catch (NoSuchNodeTypeException e) {
-                                // should never happen actually
-                                String msg = "Item " + state.getId() + " has unknown node type: " + n.getNodeTypeName();
-                                log.error(msg);
-                                throw new ItemStateException(msg, e);
-                            }
-                            Path newPath = null;
-                            Path parentPath = null;
+                            NodeTypeImpl nodeType = getNodeType(parent, session);
+                            Path newPath = getPath(state.getId(), hmgr);
+                            Path parentPath = getParent(newPath);
                             Path oldPath = null;
                             try {
-                                newPath = hmgr.getPath(state.getId());
-                                parentPath = newPath.getAncestor(1);
                                 oldPath = null;
                                 if (moved.getIndex() == 0) {
                                     oldPath = Path.create(parentPath, moved.getName(), false);
                                 } else {
                                     oldPath = Path.create(parentPath, moved.getName(), moved.getIndex(), false);
                                 }
-                            } catch (RepositoryException e) {
-                                // should never happen actually
-                                String msg = "Unable to resolve path for item: " + state.getId();
-                                log.error(msg);
-                                throw new ItemStateException(msg, e);
                             } catch (MalformedPathException e) {
                                 // should never happen actually
                                 String msg = "Malformed path for item: " + state.getId();
@@ -249,31 +207,50 @@ public final class EventStateCollection {
                         }
                     }
                 }
+                // check if child nodes of modified node state have been reordered
+                List reordered = n.getReorderedChildNodeEntries();
+                NodeTypeImpl nodeType = getNodeType(n, session);
+                if (reordered.size() > 0) {
+                    // create a node removed and a node added event for every
+                    // reorder
+                    for (Iterator ro = reordered.iterator(); ro.hasNext();) {
+                        NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) ro.next();
+                        QName name = child.getName();
+                        int index = (child.getIndex() != 1) ? child.getIndex() : 0;
+                        Path parentPath = getPath(n.getId(), hmgr);
+                        Path.PathElement addedElem = Path.create(name, index).getNameElement();
+                        // get removed index
+                        NodeState overlayed = (NodeState) n.getOverlayedState();
+                        List removedChild = overlayed.getChildNodeEntries(child.getUUID());
+                        if (removedChild.size() == 0) {
+                            throw new ItemStateException("Unable to retrieve old child index for item: " + child.getUUID());
+                        }
+                        NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) removedChild.get(0);
+                        int oldIndex = (entry.getIndex() != 1) ? entry.getIndex() : 0;
+                        Path.PathElement removedElem = Path.create(name, oldIndex).getNameElement();
+
+                        events.add(EventState.childNodeRemoved(n.getUUID(),
+                                parentPath,
+                                child.getUUID(),
+                                removedElem,
+                                nodeType,
+                                session));
+
+                        events.add(EventState.childNodeAdded(n.getUUID(),
+                                parentPath,
+                                child.getUUID(),
+                                addedElem,
+                                nodeType,
+                                session));
+                    }
+                }
             } else {
                 // property changed
-                Path path = null;
-                Path parentPath = null;
-                try {
-                    path = hmgr.getPath(state.getId());
-                    parentPath = path.getAncestor(1);
-                } catch (RepositoryException e) {
-                    // should never happen actually
-                    String msg = "Unable to resolve path for item: " + state.getId();
-                    log.error(msg);
-                    throw new ItemStateException(msg, e);
-                }
+                Path path = getPath(state.getId(), hmgr);
                 NodeState parent = (NodeState) provider.getItemState(new NodeId(state.getParentUUID()));
-                NodeTypeImpl nodeType = null;
-                try {
-                    nodeType = session.getNodeTypeManager().getNodeType(parent.getNodeTypeName());
-                } catch (NoSuchNodeTypeException e) {
-                    // should never happen actually
-                    String msg = "Item " + parent.getId() + " has unknown node type: " + parent.getNodeTypeName();
-                    log.error(msg);
-                    throw new ItemStateException(msg, e);
-                }
+                NodeTypeImpl nodeType = getNodeType(parent, session);
                 events.add(EventState.propertyChanged(state.getParentUUID(),
-                        parentPath,
+                        getParent(path),
                         path.getNameElement(),
                         nodeType,
                         session));
@@ -284,28 +261,18 @@ public final class EventStateCollection {
             if (state.isNode()) {
                 // node created
                 NodeState n = (NodeState) state;
-                NodeTypeImpl nodeType = null;
-                try {
-                    nodeType = session.getNodeTypeManager().getNodeType(n.getNodeTypeName());
-                } catch (NoSuchNodeTypeException e) {
-                    // should never happen actually
-                    String msg = "Item " + state.getId() + " has unknown node type: " + n.getNodeTypeName();
-                    log.error(msg);
-                    throw new ItemStateException(msg, e);
+                NodeId parentId = new NodeId(n.getParentUUID());
+                NodeState parent = null;
+                // unknown if parent node is also new
+                if (provider.hasItemState(parentId)) {
+                    parent = (NodeState) provider.getItemState(parentId);
+                } else {
+                    parent = (NodeState) changes.get(parentId);
                 }
-                Path path = null;
-                Path parentPath = null;
-                try {
-                    path = hmgr.getPath(n.getId());
-                    parentPath = path.getAncestor(1);
-                } catch (RepositoryException e) {
-                    // should never happen actually
-                    String msg = "Unable to resolve path for item: " + n.getId();
-                    log.error(msg);
-                    throw new ItemStateException(msg, e);
-                }
+                NodeTypeImpl nodeType = getNodeType(parent, session);
+                Path path = getPath(n.getId(), hmgr);
                 events.add(EventState.childNodeAdded(n.getParentUUID(),
-                        parentPath,
+                        getParent(path),
                         n.getUUID(),
                         path.getNameElement(),
                         nodeType,
@@ -313,28 +280,10 @@ public final class EventStateCollection {
             } else {
                 // property created / set
                 NodeState n = (NodeState) changes.get(new NodeId(state.getParentUUID()));
-                NodeTypeImpl nodeType = null;
-                try {
-                    nodeType = session.getNodeTypeManager().getNodeType(n.getNodeTypeName());
-                } catch (NoSuchNodeTypeException e) {
-                    // should never happen actually
-                    String msg = "Item " + state.getId() + " has unknown node type: " + n.getNodeTypeName();
-                    log.error(msg);
-                    throw new ItemStateException(msg, e);
-                }
-                Path path = null;
-                Path parentPath = null;
-                try {
-                    path = hmgr.getPath(state.getId());
-                    parentPath = path.getAncestor(1);
-                } catch (RepositoryException e) {
-                    // should never happen actually
-                    String msg = "Unable to resolve path for item: " + n.getId();
-                    log.error(msg);
-                    throw new ItemStateException(msg, e);
-                }
+                NodeTypeImpl nodeType = getNodeType(n, session);
+                Path path = getPath(state.getId(), hmgr);
                 events.add(EventState.propertyAdded(state.getParentUUID(),
-                        parentPath,
+                        getParent(path),
                         path.getNameElement(),
                         nodeType,
                         session));
@@ -345,31 +294,16 @@ public final class EventStateCollection {
             if (state.isNode()) {
                 // node deleted
                 NodeState n = (NodeState) state;
-                NodeTypeImpl nodeType = null;
-                try {
-                    nodeType = session.getNodeTypeManager().getNodeType(n.getNodeTypeName());
-                } catch (NoSuchNodeTypeException e) {
-                    // should never happen actually
-                    String msg = "Item " + state.getId() + " has unknown node type: " + n.getNodeTypeName();
-                    log.error(msg);
-                    throw new ItemStateException(msg, e);
-                }
-                try {
-                    Path[] paths = hmgr.getAllPaths(state.getId(), true);
-                    for (int i = 0; i < paths.length; i++) {
-                        Path parentPath = paths[i].getAncestor(1);
-                        events.add(EventState.childNodeRemoved(n.getParentUUID(),
-                                parentPath,
-                                n.getUUID(),
-                                paths[i].getNameElement(),
-                                nodeType,
-                                session));
-                    }
-                } catch (RepositoryException e) {
-                    // should never happen actually
-                    String msg = "Unable to resolve path for item: " + n.getId();
-                    log.error(msg);
-                    throw new ItemStateException(msg, e);
+                NodeState parent = (NodeState) provider.getItemState(new NodeId(n.getParentUUID()));
+                NodeTypeImpl nodeType = getNodeType(parent, session);
+                Path[] paths = getAllPaths(state.getId(), hmgr);
+                for (int i = 0; i < paths.length; i++) {
+                    events.add(EventState.childNodeRemoved(n.getParentUUID(),
+                            getParent(paths[i]),
+                            n.getUUID(),
+                            paths[i].getNameElement(),
+                            nodeType,
+                            session));
                 }
             } else {
                 // property removed
@@ -377,31 +311,14 @@ public final class EventStateCollection {
                 try {
                     NodeState n = (NodeState) changes.get(new NodeId(state.getParentUUID()));
                     // node state exists -> only property removed
-                    NodeTypeImpl nodeType = null;
-                    try {
-                        nodeType = session.getNodeTypeManager().getNodeType(n.getNodeTypeName());
-                    } catch (NoSuchNodeTypeException e) {
-                        // should never happen actually
-                        String msg = "Item " + state.getId() + " has unknown node type: " + n.getNodeTypeName();
-                        log.error(msg);
-                        throw new ItemStateException(msg, e);
-                    }
-                    Path paths[] = null;
-                    try {
-                        paths = hmgr.getAllPaths(state.getId(), true);
-                        for (int i = 0; i < paths.length; i++) {
-                            Path parentPath = paths[i].getAncestor(1);
-                            events.add(EventState.propertyRemoved(state.getParentUUID(),
-                                    parentPath,
-                                    paths[i].getNameElement(),
-                                    nodeType,
-                                    session));
-                        }
-                    } catch (RepositoryException e) {
-                        // should never happen actually
-                        String msg = "Unable to resolve path for item: " + n.getId();
-                        log.error(msg);
-                        throw new ItemStateException(msg, e);
+                    NodeTypeImpl nodeType = getNodeType(n, session);
+                    Path paths[] = getAllPaths(state.getId(), hmgr);
+                    for (int i = 0; i < paths.length; i++) {
+                        events.add(EventState.propertyRemoved(state.getParentUUID(),
+                                getParent(paths[i]),
+                                paths[i].getNameElement(),
+                                nodeType,
+                                session));
                     }
                 } catch (NoSuchItemStateException e) {
                     // also node removed -> do not create an event
@@ -431,5 +348,80 @@ public final class EventStateCollection {
      */
     Iterator iterator() {
         return events.iterator();
+    }
+
+    /**
+     * Resolves the node type name in <code>node</code> into a {@link NodeType}
+     * object using the {@link NodeTypeManager} of <code>session</code>.
+     * @param node the node.
+     * @param session the session.
+     * @return the {@link NodeType} of <code>node</code>.
+     * @throws ItemStateException if the nodetype cannot be resolved.
+     */
+    private NodeTypeImpl getNodeType(NodeState node, SessionImpl session)
+            throws ItemStateException {
+        try {
+            return session.getNodeTypeManager().getNodeType(node.getNodeTypeName());
+        } catch (NoSuchNodeTypeException e) {
+            // should never happen actually
+            String msg = "Item " + node.getId() + " has unknown node type: " + node.getNodeTypeName();
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * Returns the path of the parent node of node at <code>path</code>..
+     * @param p the path.
+     * @return the parent path.
+     * @throws ItemStateException if <code>p</code> does not have a parent
+     * path. E.g. <code>p</code> designates root.
+     */
+    private Path getParent(Path p) throws ItemStateException {
+        try {
+            return p.getAncestor(1);
+        } catch (PathNotFoundException e) {
+            // should never happen actually
+            String msg = "Unable to resolve parent for path: " + p;
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * Resolves the path of the Item with id <code>itemId</code>.
+     * @param itemId the id of the item.
+     * @return the path of the item.
+     * @throws ItemStateException if the path cannot be resolved.
+     */
+    private Path getPath(ItemId itemId, HierarchyManager hmgr)
+            throws ItemStateException {
+        try {
+            return hmgr.getPath(itemId);
+        } catch (RepositoryException e) {
+            // should never happen actually
+            String msg = "Unable to resolve path for item: " + itemId;
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * Resolves all paths of the Item with id <code>itemId</code> including
+     * the zombie paths.
+     * @param itemId the id of the item.
+     * @return the paths of the item.
+     * @throws ItemStateException if the paths cannot be resolved.
+     */
+    private Path[] getAllPaths(ItemId itemId, HierarchyManager hmgr)
+            throws ItemStateException {
+        try {
+            return hmgr.getAllPaths(itemId, true);
+        } catch (RepositoryException e) {
+            // should never happen actually
+            String msg = "Unable to resolve paths for item: " + itemId;
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        }
     }
 }

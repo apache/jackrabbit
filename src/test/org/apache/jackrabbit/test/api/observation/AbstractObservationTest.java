@@ -32,7 +32,7 @@ import java.util.ArrayList;
  * This class implements the basic {@link #setUp} and {@link #tearDown()}
  * methods for the observation test cases.
  */
-abstract class AbstractObservationTest extends AbstractJCRTest {
+public abstract class AbstractObservationTest extends AbstractJCRTest {
 
     /**
      * Default wait timeout for events: 5000 ms

@@ -21,6 +21,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.observation.Event;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+import javax.jcr.Session;
 
 /**
  * Tests the options for addEventListener().
@@ -144,7 +145,11 @@ public class AddEventListenerTest extends AbstractObservationTest {
      * Tests if events are only generated for specified node types.
      */
     public void testNodeType() throws RepositoryException {
+        String nodetype2 = getProperty("nodetype2");
         EventResult listener = new EventResult(log);
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        Node n2 = testRootNode.addNode(nodeName2, nodetype2);
+        testRootNode.save();
         obsMgr.addEventListener(listener,
                 Event.NODE_ADDED,
                 testRoot,
@@ -152,12 +157,20 @@ public class AddEventListenerTest extends AbstractObservationTest {
                 null,
                 new String[]{testNodeType},
                 false);
-        testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.addNode(nodeName2, ntBase);
-        testRootNode.save();
+        Session s = helper.getSuperuserSession();
+        try {
+            Node n = (Node) s.getItem(n1.getPath());
+            n.addNode(nodeName3, ntBase);
+            n = (Node) s.getItem(n2.getPath());
+            n.addNode(nodeName3, nodetype2);
+            n = (Node) s.getItem(testRoot);
+            n.save();
+        } finally {
+            s.logout();
+        }
         obsMgr.removeEventListener(listener);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[]{nodeName1});
+        checkNodeAdded(events, new String[]{nodeName1 + "/" + nodeName3});
     }
 
     //-------------------------< internal >-------------------------------------

@@ -588,6 +588,108 @@ public class NodeState extends ItemState {
         return other.childNodeEntries.removeAll(childNodeEntries);
     }
 
+    /**
+     * Returns a list of child node entries, that exist both in <i>this</i> node
+     * state and in the overlayed node state, but have been reordered.
+     * <p/>
+     * The list may include only the minimal set of nodes that have been
+     * reordered. That is, even though a certain number of nodes have changed
+     * their context position, the list may include less that this number of
+     * nodes.
+     * <p/>
+     * Example:<br/>
+     * Initial state:
+     * <pre>
+     *  + node1
+     *  + node2
+     *  + node3
+     * </pre>
+     * After reorder:
+     * <pre>
+     *  + node2
+     *  + node3
+     *  + node1
+     * </pre>
+     * All nodes have changed their context position. The returned list however
+     * may only return that <code>node1</code> has been reordered (from the
+     * first position to the end).
+     *
+     * @return list of reordered child node enties.
+     */
+    public synchronized List getReorderedChildNodeEntries() {
+        if (!hasOverlayedState()) {
+            return Collections.EMPTY_LIST;
+        }
+
+        List others = new ArrayList();
+        others.addAll(((NodeState) getOverlayedState()).childNodeEntries.entries);
+
+        List ours = new ArrayList();
+        ours.addAll(childNodeEntries.entries);
+
+        // do a lazy init
+        List reordered = null;
+        // remove added nodes from ours entries
+        ours.removeAll(getAddedChildNodeEntries());
+        // remove all removed nodes from others entries
+        others.removeAll(getRemovedChildNodeEntries());
+        // both entry list now contain the set of nodes that have not
+        // been removed or added. but they may have changed their position
+        for (int i = 0; i < ours.size();) {
+            ChildNodeEntry entry = (ChildNodeEntry) ours.get(i);
+            ChildNodeEntry other = (ChildNodeEntry) others.get(i);
+            if (!entry.getUUID().equals(other.getUUID())) {
+                if (reordered == null) {
+                    reordered = new ArrayList();
+                }
+                // Note, that this check will not necessarily find the
+                // minimal reorder operations required to convert the overlayed
+                // child node entries into the current.
+
+                // is there a next entry
+                if (i + 1 < ours.size()) {
+                    // if entry is the next in the other list, then probably
+                    // the other entry at position <code>i</code> was reordered
+                    if (entry.getUUID().equals(((ChildNodeEntry) others.get(i + 1)).getUUID())) {
+                        // scan for the uuid of the other entry in our list
+                        for (int j = i; j < ours.size(); j++) {
+                            if (((ChildNodeEntry) ours.get(j)).getUUID().equals(other.uuid)) {
+                                // found it
+                                entry = (ChildNodeEntry) ours.get(j);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                reordered.add(entry);
+                // remove the entry from both lists
+                // entries > i are already cleaned
+                for (int j = i; j < ours.size(); j++) {
+                    if (((ChildNodeEntry) ours.get(j)).getUUID().equals(entry.getUUID())) {
+                        ours.remove(j);
+                    }
+                }
+                for (int j = i; j < ours.size(); j++) {
+                    if (((ChildNodeEntry) others.get(j)).getUUID().equals(entry.getUUID())) {
+                        others.remove(j);
+                    }
+                }
+                // if a reorder has been detected index <code>i</code> is not
+                // incremented, because entries will be shifted when the
+                // reordered entry is removed.
+            } else {
+                // no reorder, move to next child entry
+                i++;
+            }
+        }
+        if (reordered == null) {
+            return Collections.EMPTY_LIST;
+        } else {
+            return reordered;
+        }
+    }
+
     //--------------------------------------------------< ItemState overrides >
     /**
      * Sets the UUID of the parent <code>NodeState</code>.

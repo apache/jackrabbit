@@ -35,7 +35,7 @@ import java.io.PrintWriter;
  * only one of the methods can be called for an expected event delivery. Calling
  * the 'other' method will block until the next events are delivered.
  */
-class EventResult implements EventListener {
+public class EventResult implements EventListener {
 
     /**
      * The <code>EventIterator</code> delivered to this <code>EventListener</code>
@@ -57,7 +57,7 @@ class EventResult implements EventListener {
      *
      * @param log log messages are written to this <code>Logger</code>.
      */
-    EventResult(PrintWriter log) {
+    public EventResult(PrintWriter log) {
         this.log = log;
         try {
             sync.acquire();

@@ -14,14 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test.api.observation;
+package org.apache.jackrabbit.core.observation;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all testcases for the Observation module.
+ * Test suite that includes all jackrabbit specific testcases for the
+ * observation module.
  */
 public class TestAll extends TestCase {
 
@@ -35,19 +36,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Observation tests");
 
-        suite.addTestSuite(EventIteratorTest.class);
-        suite.addTestSuite(EventTest.class);
-        suite.addTestSuite(GetRegisteredEventListenersTest.class);
-        suite.addTestSuite(LockingTest.class);
-        suite.addTestSuite(NodeAddedTest.class);
-        suite.addTestSuite(NodeRemovedTest.class);
-        suite.addTestSuite(NodeMovedTest.class);
-        suite.addTestSuite(NodeReorderTest.class);
-        suite.addTestSuite(PropertyAddedTest.class);
-        suite.addTestSuite(PropertyChangedTest.class);
-        suite.addTestSuite(PropertyRemovedTest.class);
-        suite.addTestSuite(AddEventListenerTest.class);
-        suite.addTestSuite(WorkspaceOperationTest.class);
+        suite.addTestSuite(ReorderTest.class);
 
         return suite;
     }

@@ -39,10 +39,22 @@ import javax.jcr.observation.Event;
 public class NodeMovedTest extends AbstractObservationTest {
 
     /**
-     * Tests if node removed and node added event is triggered when a node
+     * Tests if node removed and node added event is triggered when a tree
      * is moved.
      */
-    public void testMoveNode() throws RepositoryException {
+    public void testMoveTree() throws RepositoryException {
+        /**
+         * Initial tree:
+         *  + testroot
+         *      + nodename1
+         *          + nodename2
+         *
+         * After move:
+         *  + testroot
+         *      + nodename3
+         *          + nodename2
+         */
+
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         n1.addNode(nodeName2, testNodeType);
         testRootNode.save();
@@ -58,5 +70,39 @@ public class NodeMovedTest extends AbstractObservationTest {
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         checkNodeAdded(added, new String[]{nodeName3});
         checkNodeRemoved(removed, new String[]{nodeName1});
+    }
+
+    /**
+     * Tests if node removed and node added event is triggered when a node
+     * is moved.
+     */
+    public void testMoveNode() throws RepositoryException {
+        /**
+         * Initial tree:
+         *  + testroot
+         *      + nodename1
+         *          + nodename2
+         *
+         * After move:
+         *  + testroot
+         *      + nodename1
+         *      + nodename2
+         */
+
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        Node n2 = n1.addNode(nodeName2, testNodeType);
+        testRootNode.save();
+        EventResult addNodeListener = new EventResult(log);
+        EventResult removeNodeListener = new EventResult(log);
+        addEventListener(addNodeListener, Event.NODE_ADDED);
+        addEventListener(removeNodeListener, Event.NODE_REMOVED);
+        superuser.move(n2.getPath(), testRoot + "/" + nodeName2);
+        testRootNode.save();
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
+        Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        checkNodeAdded(added, new String[]{nodeName2});
+        checkNodeRemoved(removed, new String[]{nodeName1 + "/" + nodeName2});
     }
 }
