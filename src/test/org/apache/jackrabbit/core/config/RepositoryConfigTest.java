@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.config;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Properties;
 
 import org.xml.sax.InputSource;
 
@@ -27,6 +28,12 @@ import junit.framework.TestCase;
  * Test cases for repository configuration handling.
  */
 public class RepositoryConfigTest extends TestCase {
+
+    private ConfigurationParser parser;
+
+    protected void setUp() {
+        parser = new ConfigurationParser(new Properties());
+    }
 
     /**
      * Test that a standard repository configuration file is
@@ -38,7 +45,7 @@ public class RepositoryConfigTest extends TestCase {
         InputStream xml = getClass().getClassLoader().getResourceAsStream(
                 "org/apache/jackrabbit/core/config/repository.xml");
         RepositoryConfig config =
-            RepositoryConfig.create(new InputSource(xml), "target");
+            parser.parseRepositoryConfig(new InputSource(xml), "target");
 
         assertEquals("target", config.getHomeDir());
         assertEquals("default", config.getDefaultWorkspaceName());

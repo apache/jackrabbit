@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.collections.BeanMap;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.jdom.Element;
 
 /**
  * Bean configuration class. BeanConfig instances contain the class name

@@ -17,9 +17,11 @@
 package org.apache.jackrabbit.core.config;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -27,27 +29,38 @@ import java.util.Properties;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.util.Text;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
-import org.xml.sax.EntityResolver;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 /**
  * TODO
  */
 public class ConfigurationParser {
 
-    /**
-     * public id
-     */
-    public static final String PUBLIC_ID = "-//The Apache Software Foundation//DTD Workspace//EN";
+    private static final String SECURITY_ELEMENT = "Security";
+    private static final String APP_NAME_ATTRIB = "appName";
+    private static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
 
-    public static final String CONFIG_DTD_RESOURCE_PATH =
-            "org/apache/jackrabbit/core/config/config.dtd";
+    private static final String WORKSPACES_ELEMENT = "Workspaces";
+    private static final String ROOT_PATH_ATTRIB = "rootPath";
+    private static final String DEFAULT_WORKSPACE_ATTRIB = "defaultWorkspace";
+
+    private static final String WORKSPACE_ELEMENT = "Workspace";
+
+    private static final String VERSIONING_ELEMENT = "Versioning";
+
+    /**
+     * wellknown variables (will be replaced with their respective values
+     * whereever they occur within the configuration)
+     */
+    public static final String REPOSITORY_HOME_VARIABLE = "${rep.home}";
 
     protected static final String FILE_SYSTEM_ELEMENT = "FileSystem";
     private static final String PERSISTENCE_MANAGER_ELEMENT = "PersistenceManager";
@@ -79,6 +92,192 @@ public class ConfigurationParser {
         this.variables = variables;
     }
 
+    public Document parse(InputSource xml) throws IOException, JDOMException {
+        SAXBuilder builder = new SAXBuilder();
+        builder.setEntityResolver(new ConfigurationEntityResolver());
+        return builder.build(xml);
+    }
+    
+    /**
+     * Creates a new <code>RepositoryFactory</code> instance. The configuration
+     * is read from the specified configuration file.
+     *
+     * @param configFilePath path to the configuration file
+     * @param repHomeDir     repository home directory
+     * @return a new <code>RepositoryConfig</code> instance
+     * @throws RepositoryException If an error occurs
+     */
+    public RepositoryConfig parseRepositoryConfig(
+            String configFilePath, String repHomeDir) throws RepositoryException {
+        try {
+            File config = new File(configFilePath);
+            InputSource is = new InputSource(new FileReader(config));
+            is.setSystemId(config.toURI().toString());
+            return parseRepositoryConfig(is, repHomeDir);
+        } catch (IOException ioe) {
+            String msg = "error while reading config file " + configFilePath;
+            throw new RepositoryException(msg, ioe);
+        }
+    }
+
+    /**
+     * private constructor.
+     *
+     * @param is
+     * @param repHomeDir
+     * @throws RepositoryException
+     */
+    public RepositoryConfig parseRepositoryConfig(
+            InputSource xml, String repHomeDir)
+            throws RepositoryException {
+        Properties newVariables = new Properties(variables);
+        newVariables.setProperty(REPOSITORY_HOME_VARIABLE, repHomeDir);
+        ConfigurationParser parser = new ConfigurationParser(newVariables);
+        return parser.parseRepositoryConfig(xml);
+    }
+
+    public RepositoryConfig parseRepositoryConfig(InputSource xml)
+            throws RepositoryException {
+        try {
+            Document config = parse(xml);
+            Element root = config.getRootElement();
+
+            String home = variables.getProperty(REPOSITORY_HOME_VARIABLE);
+
+            // file system
+            BeanConfig fsc = parseBeanConfig(root, FILE_SYSTEM_ELEMENT);
+            FileSystem repFS = (FileSystem) fsc.newInstance();
+            repFS.init();
+
+            // security & access manager config
+            Element secEleme = root.getChild(SECURITY_ELEMENT);
+            String appName = secEleme.getAttributeValue(APP_NAME_ATTRIB);
+            BeanConfig amc = parseBeanConfig(secEleme, ACCESS_MANAGER_ELEMENT);
+
+            // workspaces
+            Element wspsElem = root.getChild(WORKSPACES_ELEMENT);
+            String wspConfigRootDir = replaceVariables(wspsElem.getAttributeValue(ROOT_PATH_ATTRIB));
+            String defaultWspName = replaceVariables(wspsElem.getAttributeValue(DEFAULT_WORKSPACE_ATTRIB));
+
+            // load wsp configs
+            Map wspConfigs = new HashMap();
+            File wspRoot = new File(wspConfigRootDir);
+            if (!wspRoot.exists()) {
+                wspRoot.mkdir();
+            }
+            File[] files = wspRoot.listFiles();
+            if (files == null) {
+                String msg = "invalid repsitory home directory";
+                throw new RepositoryException(msg);
+            }
+            for (int i = 0; i < files.length; i++) {
+                // check if <subfolder>/workspace.xml exists
+                File configFile = new File(files[i], "workspace.xml");
+                if (configFile.isFile()) {
+                    // create workspace config
+                    WorkspaceConfig wspConfig = parseWorkspaceConfig(
+                                configFile.getPath(), configFile.getParent());
+                    String wspName = wspConfig.getName();
+                    if (wspConfigs.containsKey(wspName)) {
+                        String msg = "duplicate workspace name: " + wspName;
+                        throw new RepositoryException(msg);
+                    }
+                    wspConfigs.put(wspName, wspConfig);
+                }
+            }
+            if (wspConfigs.isEmpty()) {
+                // create initial default workspace
+                wspConfigs.put(defaultWspName, createWorkspaceConfig(
+                        config, wspConfigRootDir, defaultWspName));
+            } else {
+                if (!wspConfigs.containsKey(defaultWspName)) {
+                    String msg = "no configuration found for default workspace: " + defaultWspName;
+                    throw new RepositoryException(msg);
+                }
+            }
+
+            // load versioning config
+            Element vElement = config.getRootElement().getChild(VERSIONING_ELEMENT);
+            VersioningConfig vc = parseVersioningConfig(vElement);
+
+            return new RepositoryConfig(config, this, home, appName, wspConfigs, repFS, wspConfigRootDir, defaultWspName, amc, vc);
+        } catch (FileSystemException ex) {
+            throw new RepositoryException(ex);
+        } catch (JDOMException ex) {
+            throw new RepositoryException(ex);
+        } catch (IOException ex) {
+            throw new RepositoryException(ex);
+        } catch (ClassNotFoundException ex) {
+            throw new RepositoryException(ex);
+        } catch (InstantiationException ex) {
+            throw new RepositoryException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RepositoryException(ex);
+        } catch (ClassCastException ex) {
+            throw new RepositoryException(ex);
+        }
+    }
+
+    /**
+     * Creates a new workspace configuration with the specified name.
+     *
+     * @param name workspace name
+     * @return a new <code>WorkspaceConfig</code> object.
+     * @throws RepositoryException if the specified name already exists or
+     *                             if an error occured during the creation.
+     */
+    public WorkspaceConfig createWorkspaceConfig(
+            Document config, String root, String name)
+            throws RepositoryException {
+        // create the workspace folder (i.e. the workspace home directory)
+        File wspFolder = new File(root, name);
+        if (!wspFolder.mkdir()) {
+            String msg = "Failed to create the workspace home directory: " + wspFolder.getPath();
+            throw new RepositoryException(msg);
+        }
+        // clone the workspace definition template
+        Element wspCongigElem =
+            (Element) config.getRootElement().getChild("Workspace").clone();
+        wspCongigElem.setAttribute("name", name);
+
+        // create workspace.xml file
+/*
+        DocType docType = new DocType(WORKSPACE_ELEMENT, null, WorkspaceConfig.PUBLIC_ID);
+        Document doc = new Document(wspCongigElem, docType);
+*/
+        Document doc = new Document(wspCongigElem);
+        XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
+        File configFile = new File(wspFolder, "workspace.xml");
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(configFile);
+            out.output(doc, fos);
+        } catch (IOException ioe) {
+            String msg = "Failed to create workspace configuration file: " + configFile.getPath();
+            throw new RepositoryException(msg, ioe);
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
+
+        // create workspace config object
+        return parseWorkspaceConfig(configFile.getPath(), configFile.getParent());
+    }
+
+    /**
+     * Initializes this <code>RepositoryConfig</code> object.
+     *
+     * @param config
+     * @throws RepositoryException
+     */
+    protected void init(Document config) throws RepositoryException {
+    }
+
     /**
      * Creates a new <code>WorkspaceConfig</code> instance. The configuration
      * is read from the specified configuration file.
@@ -88,7 +287,7 @@ public class ConfigurationParser {
      * @return a new <code>WorkspaceConfig</code> instance
      * @throws RepositoryException If an error occurs
      */
-    public static WorkspaceConfig parseWorkspaceConfig(
+    public WorkspaceConfig parseWorkspaceConfig(
             String configFilePath, String wspHomeDir)
             throws RepositoryException {
         try {
@@ -111,28 +310,15 @@ public class ConfigurationParser {
      * @return a new <code>WorkspaceConfig</code> instance
      * @throws RepositoryException If an error occurs
      */
-    public static WorkspaceConfig parseWorkspaceConfig(
+    public WorkspaceConfig parseWorkspaceConfig(
             InputSource xml, String home)
             throws RepositoryException {
         try {
-            SAXBuilder builder = new SAXBuilder();
-            builder.setEntityResolver(new EntityResolver() {
-                public InputSource resolveEntity(String publicId, String systemId)
-                throws SAXException, IOException {
-                    if (publicId.equals(PUBLIC_ID)) {
-                        // load dtd resource
-                        return new InputSource(getClass().getClassLoader().getResourceAsStream(CONFIG_DTD_RESOURCE_PATH));
-                    } else {
-                        // use the default behaviour
-                        return null;
-                    }
-                }
-            });
-            Document config = builder.build(xml);
+            Document config = parse(xml);
 
-            Properties variables = new Properties();
-            variables.setProperty(WORKSPACE_HOME_VARIABLE, home);
-            ConfigurationParser parser = new ConfigurationParser(variables);
+            Properties newVariables = new Properties(variables);
+            newVariables.setProperty(WORKSPACE_HOME_VARIABLE, home);
+            ConfigurationParser parser = new ConfigurationParser(newVariables);
             return parser.parseWorkspaceConfig(config);
         } catch (JDOMException ex) {
             throw new RepositoryException(ex);
@@ -170,6 +356,7 @@ public class ConfigurationParser {
             // file system
             BeanConfig fsc = parser.parseBeanConfig(wspElem, FILE_SYSTEM_ELEMENT);
             FileSystem wspFS = (FileSystem) fsc.newInstance();
+            wspFS.init();
 
             // persistence manager config
             BeanConfig pmc =
@@ -181,8 +368,10 @@ public class ConfigurationParser {
             if (searchElem != null) {
                 sc = parser.parseSearchConfig(searchElem);
             }
-            
+
             return new WorkspaceConfig(wspHomeDir, wspName, wspFS, pmc, sc);
+        } catch (FileSystemException ex) {
+            throw new RepositoryException(ex);
         } catch (ClassNotFoundException ex) {
             throw new RepositoryException(ex);
         } catch (InstantiationException ex) {
@@ -205,6 +394,7 @@ public class ConfigurationParser {
             // create FileSystem
             BeanConfig fsc = parseBeanConfig(config, FILE_SYSTEM_ELEMENT);
             FileSystem fs = (FileSystem) fsc.newInstance();
+            fs.init();
 
             // handler class name
             String handlerClassName = config.getAttributeValue(CLASS_ATTRIBUTE,
@@ -214,6 +404,8 @@ public class ConfigurationParser {
             Properties params = parseParameters(config);
 
             return new SearchConfig(fs, handlerClassName, params);
+        } catch (FileSystemException ex) {
+            throw new RepositoryException(ex);
         } catch (ClassNotFoundException ex) {
             throw new RepositoryException(ex);
         } catch (InstantiationException ex) {
@@ -240,11 +432,14 @@ public class ConfigurationParser {
             // create FileSystem
             BeanConfig fsc = parseBeanConfig(config, FILE_SYSTEM_ELEMENT);
             FileSystem fs = (FileSystem) fsc.newInstance();
+            fs.init();
 
             // persistence manager config
             BeanConfig pmc = parseBeanConfig(config, PERSISTENCE_MANAGER_ELEMENT);
 
             return new VersioningConfig(homeDir, fs, pmc);
+        } catch (FileSystemException ex) {
+            throw new RepositoryException(ex);
         } catch (ClassNotFoundException ex) {
             throw new RepositoryException(ex);
         } catch (InstantiationException ex) {
@@ -264,7 +459,8 @@ public class ConfigurationParser {
             Properties properties = parseParameters(element);
             return new BeanConfig(className, properties);
         } else {
-            return null;
+            throw new IllegalArgumentException(name);
+            // return null;
         }
     }
 
@@ -292,10 +488,11 @@ public class ConfigurationParser {
      * @return
      */
     public String replaceVariables(String value) {
-        Iterator iterator = variables.keySet().iterator();
-        while (iterator.hasNext()) {
-            String varName = (String) iterator.next();
-            String varValue = (String) variables.get(varName);
+        String ovalue = value;
+        Enumeration e = variables.propertyNames();
+        while (e.hasMoreElements()) {
+            String varName = (String) e.nextElement();
+            String varValue = variables.getProperty(varName);
             value = Text.replace(value, varName, varValue);
         }
         return value;

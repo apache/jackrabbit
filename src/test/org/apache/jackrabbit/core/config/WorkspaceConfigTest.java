@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.config;
 
 import java.io.InputStream;
+import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -27,6 +28,12 @@ import org.xml.sax.InputSource;
  */
 public class WorkspaceConfigTest extends TestCase {
 
+    private ConfigurationParser parser;
+
+    protected void setUp() {
+        parser = new ConfigurationParser(new Properties());
+    }
+
     /**
      * Test that a standard workspace configuration file is
      * correctly parsed.
@@ -36,7 +43,7 @@ public class WorkspaceConfigTest extends TestCase {
     public void testWorkspaceXml() throws Exception {
         InputStream xml = getClass().getClassLoader().getResourceAsStream(
                 "org/apache/jackrabbit/core/config/workspace.xml");
-        WorkspaceConfig config = ConfigurationParser.parseWorkspaceConfig(
+        WorkspaceConfig config = parser.parseWorkspaceConfig(
                 new InputSource(xml), "target");
 
         assertEquals("target", config.getHomeDir());
