@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Calendar;
 
 /**
@@ -200,7 +201,7 @@ public class BLOBFileValue implements Value {
             BLOBFileValue other = (BLOBFileValue) obj;
             return ((file == null ? other.file == null : file.equals(other.file))
                     && (fsResource == null ? other.fsResource == null : fsResource.equals(other.fsResource))
-                    && (buffer == null ? other.buffer == null : buffer.equals(other.buffer)));
+                    && Arrays.equals(buffer, other.buffer));
         }
         return false;
     }
