@@ -212,11 +212,27 @@ public class PathTest extends TestCase {
         }
         for (int i=0; i<elems.length; i++) {
             int pos = elems[i].indexOf('[');
+            String elem;
+            QName name;
+            int index;
             if (pos<0) {
-                builder.addLast(QName.fromJCRName(elems[i], resolver));
+                elem = elems[i];
+                index = -1;
             } else {
-                int index = Integer.parseInt(elems[i].substring(pos+1, elems[i].length()-1));
-                builder.addLast(QName.fromJCRName(elems[i].substring(0, pos), resolver), index);
+                index = Integer.parseInt(elems[i].substring(pos+1, elems[i].length()-1));
+                elem = elems[i].substring(0, pos);
+            }
+            if (".".equals(elem)) {
+                name = new QName("", ".");
+            } else if ("..".equals(elems[i])) {
+                name = new QName("", "..");
+            } else {
+                name = QName.fromJCRName(elem, resolver);
+            }
+            if (index < 0) {
+                builder.addLast(name);
+            } else {
+                builder.addLast(name, index);
             }
         }
         return normalize ? builder.getPath().getNormalizedPath() : builder.getPath();
@@ -228,11 +244,27 @@ public class PathTest extends TestCase {
         String[] elems = Text.explode(path, '/', false);
         for (int i=elems.length-1; i>=0; i--) {
             int pos = elems[i].indexOf('[');
+            String elem;
+            QName name;
+            int index;
             if (pos<0) {
-                builder.addFirst(QName.fromJCRName(elems[i], resolver));
+                elem = elems[i];
+                index = -1;
             } else {
-                int index = Integer.parseInt(elems[i].substring(pos+1, elems[i].length()-1));
-                builder.addFirst(QName.fromJCRName(elems[i].substring(0, pos), resolver), index);
+                index = Integer.parseInt(elems[i].substring(pos+1, elems[i].length()-1));
+                elem = elems[i].substring(0, pos);
+            }
+            if (".".equals(elem)) {
+                name = new QName("", ".");
+            } else if ("..".equals(elems[i])) {
+                name = new QName("", "..");
+            } else {
+                name = QName.fromJCRName(elem, resolver);
+            }
+            if (index < 0) {
+                builder.addFirst(name);
+            } else {
+                builder.addFirst(name, index);
             }
         }
         if (path.startsWith("/")) {

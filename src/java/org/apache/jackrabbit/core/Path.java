@@ -151,7 +151,7 @@ public final class Path {
         this.normalized = isNormalized;
     }
 
-    //----------------------------------------------------< factory methods >---
+    //------------------------------------------------------< factory methods >
     /**
      * Creates a new <code>Path</code> from the given <code>jcrPath</code>
      * string. If <code>normalize</code> is <code>true</code>, the returned
@@ -281,6 +281,135 @@ public final class Path {
             elem = new PathElement(name, index);
         }
         return new Path(new PathElement[]{elem}, !elem.equals(CURRENT_ELEMENT));
+    }
+
+    //-------------------------------------------------------< implementation >
+    /**
+     * Parses the give string an d returns an array of path elements. if
+     * <code>master</code> is not <code>null</code>, it is prepended to the
+     * returned list. If <code>resolver</code> is <code>null</code>, this
+     * method only checks the format of the string and returns <code>null</code>.
+     *
+     * @param jcrPath
+     * @param master
+     * @param resolver
+     * @return
+     * @throws MalformedPathException
+     */
+    private static Path parse(String jcrPath, Path master, NamespaceResolver resolver)
+            throws MalformedPathException {
+        // shortcut
+        if ("/".equals(jcrPath)) {
+            return ROOT;
+        }
+
+        // split path into path elements
+        String[] elems = Text.explode(jcrPath, '/', true);
+        if (elems.length == 0) {
+            throw new MalformedPathException("empty path");
+        }
+
+        ArrayList list = new ArrayList();
+        boolean isNormalized = true;
+        boolean leadingParent = true;
+        if (master != null) {
+            isNormalized = master.normalized;
+            // a master path was specified; the 'path' argument is assumed
+            // to be a relative path
+            for (int i = 0; i < master.elements.length; i++) {
+                list.add(master.elements[i]);
+                leadingParent &= master.elements[i].denotesParent();
+            }
+        }
+
+        for (int i = 0; i < elems.length; i++) {
+            // validate & parse path element
+            String prefix;
+            String localName;
+            int index;
+
+            String elem = elems[i];
+            if (i == 0 && elem.length() == 0) {
+                // path is absolute, i.e. the first element is the root element
+                if (!list.isEmpty()) {
+                    throw new MalformedPathException("'" + jcrPath + "' is not a relative path");
+                }
+                list.add(ROOT_ELEMENT);
+                leadingParent = false;
+                continue;
+            }
+            Matcher matcher = PATH_ELEMENT_PATTERN.matcher(elem);
+            if (matcher.matches()) {
+                if (resolver == null) {
+                    // check only
+                    continue;
+                }
+
+                if (matcher.group(1) != null) {
+                    // group 1 is .
+                    list.add(CURRENT_ELEMENT);
+                    leadingParent = false;
+                    isNormalized = false;
+                } else if (matcher.group(2) != null) {
+                    // group 2 is ..
+                    list.add(PARENT_ELEMENT);
+                    isNormalized &= leadingParent;
+                } else {
+                    // element is a name
+
+                    // check for prefix (group 3)
+                    if (matcher.group(3) != null) {
+                        // prefix specified
+                        // group 4 is namespace prefix excl. delimiter (colon)
+                        prefix = matcher.group(4);
+                        // check if the prefix is a valid XML prefix
+                        if (!XMLChar.isValidNCName(prefix)) {
+                            // illegal syntax for prefix
+                            throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' specifies an illegal namespace prefix");
+                        }
+                    } else {
+                        // no prefix specified
+                        prefix = "";
+                    }
+
+                    // group 5 is localName
+                    localName = matcher.group(5);
+
+                    // check for index (group 6)
+                    if (matcher.group(6) != null) {
+                        // index specified
+                        // group 7 is index excl. brackets
+                        index = Integer.parseInt(matcher.group(7));
+                    } else {
+                        // no index specified
+                        index = 0;
+                    }
+
+                    String nsURI;
+                    try {
+                        nsURI = resolver.getURI(prefix);
+                    } catch (NamespaceException nse) {
+                        // unknown prefix
+                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' specifies an unmapped namespace prefix");
+                    }
+
+                    PathElement element;
+                    if (index == 0) {
+                        element = new PathElement(nsURI, localName);
+                    } else {
+                        element = new PathElement(nsURI, localName, index);
+                    }
+                    list.add(element);
+                    leadingParent = false;
+                }
+            } else {
+                // illegal syntax for path element
+                throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' is not a legal path element");
+            }
+        }
+        return resolver == null
+                ? null
+                : new Path((PathElement[]) list.toArray(new PathElement[list.size()]), isNormalized);
     }
 
     //------------------------------------------------------< utility methods >
@@ -1147,135 +1276,4 @@ public final class Path {
             return false;
         }
     }
-
-    //-------------------------------------------------------< implementation >
-
-    /**
-     * parses the give string an d returns an array of path elements. if
-     * <code>master</code> is not <code>null</code>, it is prepended to the
-     * returned list. If <code>resolver</code> is <code>null</code>, this
-     * method only checks the format of the string and returns <code>null</code>.
-     *
-     * @param jcrPath
-     * @param master
-     * @param resolver
-     * @return
-     * @throws MalformedPathException
-     */
-    private static Path parse(String jcrPath, Path master, NamespaceResolver resolver)
-            throws MalformedPathException {
-        // shortcut
-        if (jcrPath.equals("/")) {
-            return ROOT;
-        }
-
-        // split path into path elements
-        String[] elems = Text.explode(jcrPath, '/', true);
-        if (elems.length == 0) {
-            throw new MalformedPathException("empty path");
-        }
-
-        ArrayList list = new ArrayList();
-        boolean isNormalized = true;
-        boolean leadingParent = true;
-        if (master != null) {
-            isNormalized = master.normalized;
-            // a master path was specified; the 'path' argument is assumed
-            // to be a relative path
-            for (int i = 0; i < master.elements.length; i++) {
-                list.add(master.elements[i]);
-                leadingParent &= master.elements[i].denotesParent();
-            }
-        }
-
-        for (int i = 0; i < elems.length; i++) {
-            // validate & parse path element
-            String prefix;
-            String localName;
-            int index;
-
-            String elem = elems[i];
-            if (i == 0 && elem.length() == 0) {
-                // path is absolute, i.e. the first element is the root element
-                if (!list.isEmpty()) {
-                    throw new MalformedPathException("'" + jcrPath + "' is not a relative path");
-                }
-                list.add(ROOT_ELEMENT);
-                leadingParent = false;
-                continue;
-            }
-            Matcher matcher = PATH_ELEMENT_PATTERN.matcher(elem);
-            if (matcher.matches()) {
-                if (resolver == null) {
-                    // check only
-                    continue;
-                }
-
-                if (matcher.group(1) != null) {
-                    // group 1 is .
-                    list.add(CURRENT_ELEMENT);
-                    leadingParent = false;
-                    isNormalized = false;
-                } else if (matcher.group(2) != null) {
-                    // group 2 is ..
-                    list.add(PARENT_ELEMENT);
-                    isNormalized &= leadingParent;
-                } else {
-                    // element is a name
-
-                    // check for prefix (group 3)
-                    if (matcher.group(3) != null) {
-                        // prefix specified
-                        // group 4 is namespace prefix excl. delimiter (colon)
-                        prefix = matcher.group(4);
-                        // check if the prefix is a valid XML prefix
-                        if (!XMLChar.isValidNCName(prefix)) {
-                            // illegal syntax for prefix
-                            throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' specifies an illegal namespace prefix");
-                        }
-                    } else {
-                        // no prefix specified
-                        prefix = "";
-                    }
-
-                    // group 5 is localName
-                    localName = matcher.group(5);
-
-                    // check for index (group 6)
-                    if (matcher.group(6) != null) {
-                        // index specified
-                        // group 7 is index excl. brackets
-                        index = Integer.parseInt(matcher.group(7));
-                    } else {
-                        // no index specified
-                        index = 0;
-                    }
-
-                    String nsURI;
-                    try {
-                        nsURI = resolver.getURI(prefix);
-                    } catch (NamespaceException nse) {
-                        // unknown prefix
-                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' specifies an unmapped namespace prefix");
-                    }
-
-                    PathElement element;
-                    if (index == 0) {
-                        element = new PathElement(nsURI, localName);
-                    } else {
-                        element = new PathElement(nsURI, localName, index);
-                    }
-                    list.add(element);
-                    leadingParent = false;
-                }
-            } else {
-                // illegal syntax for path element
-                throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' is not a legal path element");
-            }
-        }
-        return resolver == null
-                ? null
-                : new Path((PathElement[]) list.toArray(new PathElement[list.size()]), isNormalized);
-    }
-
 }

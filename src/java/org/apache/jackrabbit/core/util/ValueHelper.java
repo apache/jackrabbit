@@ -58,7 +58,7 @@ public class ValueHelper {
      */
     public static Value convert(Value srcValue, int targetType)
             throws ValueFormatException, IllegalStateException, IllegalArgumentException {
-        Value val = null;
+        Value val;
         int srcType = srcValue.getType();
 
         if (srcType == targetType) {
