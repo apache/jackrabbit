@@ -136,8 +136,13 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
     protected void finalize() throws Throwable {
         if (state != null) {
-            state.removeListener(this);
+            try {
+                state.removeListener(this);
+            } catch (Throwable t) {
+                // ignore
+            }
         }
+        super.finalize();
     }
 
     protected void checkItemState() throws InvalidItemStateException {

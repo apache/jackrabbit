@@ -32,7 +32,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 /**
- * <code>ObjectPersistenceManager</code> ...
+ * <code>ObjectPersistenceManager</code> is a <code>FileSystem</code>-based
+ * <code>PersistenceManager</code> that persists <code>ItemState</code>
+ * and <code>NodeReferences</code> objects using a simple custom serialization
+ * format.
  */
 public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
 
@@ -639,7 +642,7 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     /**
      * @see PersistenceManager#load(NodeReferences)
      */
-    public void load(NodeReferences refs)
+    public synchronized void load(NodeReferences refs)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -676,7 +679,7 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     /**
      * @see PersistenceManager#store(NodeReferences)
      */
-    public void store(NodeReferences refs) throws ItemStateException {
+    public synchronized void store(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -702,7 +705,7 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     /**
      * @see PersistenceManager#destroy(NodeReferences)
      */
-    public void destroy(NodeReferences refs) throws ItemStateException {
+    public synchronized void destroy(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -723,9 +726,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#exists(org.apache.jackrabbit.core.ItemId id)
+     * @see PersistenceManager#exists(ItemId id)
      */
-    public boolean exists(ItemId id) throws ItemStateException {
+    public synchronized boolean exists(ItemId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -752,7 +755,7 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     /**
      * @see PersistenceManager#referencesExist(NodeId targetId)
      */
-    public boolean referencesExist(NodeId targetId) throws ItemStateException {
+    public synchronized boolean referencesExist(NodeId targetId) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }

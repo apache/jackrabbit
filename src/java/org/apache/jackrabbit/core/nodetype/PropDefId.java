@@ -88,6 +88,7 @@ public class PropDefId implements Serializable {
     }
 
     public int hashCode() {
+        // id is already the computed hash code
         return id;
     }
 }

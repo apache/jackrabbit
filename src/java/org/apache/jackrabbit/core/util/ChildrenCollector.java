@@ -39,7 +39,7 @@ public class ChildrenCollector extends TraversingItemVisitor.Default {
      * @param children          where the matching children should be added
      * @param collectNodes      true, if child nodes should be collected; otherwise false
      * @param collectProperties true, if child properties should be collected; otherwise false
-     * @param maxLevel          umber of hierarchy levels to traverse
+     * @param maxLevel          number of hierarchy levels to traverse
      *                          (e.g. 1 for direct children only, 2 for children and their children, and so on)
      */
     public ChildrenCollector(Collection children, boolean collectNodes, boolean collectProperties, int maxLevel) {

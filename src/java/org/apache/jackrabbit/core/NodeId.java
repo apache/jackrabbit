@@ -79,7 +79,7 @@ public class NodeId extends ItemId {
     public int hashCode() {
         // NodeId is immutable, we can store the computed hash code value
         if (hash == 0) {
-            hash = 1609 * uuid.hashCode();
+            hash = uuid.hashCode();
         }
         return hash;
     }

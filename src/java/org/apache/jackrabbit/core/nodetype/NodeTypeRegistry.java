@@ -1319,8 +1319,14 @@ public class NodeTypeRegistry {
         }
 
         public int hashCode() {
+            int h = 17;
             // ignore weight
-            return set.hashCode();
+            Iterator i = set.iterator();
+            while (i.hasNext()) {
+                Object obj = i.next();
+                h = 37 * h + (obj != null ? obj.hashCode() : 0);
+            }
+            return h;
         }
 
         public boolean equals(Object obj) {

@@ -783,7 +783,7 @@ public class NodeState extends ItemState {
         public int hashCode() {
             // PropertyEntry is immutable, we can store the computed hash code value
             if (hash == 0) {
-                hash = 191 * name.hashCode();
+                hash = name.hashCode();
             }
             return hash;
         }
@@ -840,10 +840,15 @@ public class NodeState extends ItemState {
 
         public int hashCode() {
             // ChildNodeEntry is immutable, we can store the computed hash code value
-            if (hash == 0) {
-                hash = 6547 * name.hashCode() + 7877 * uuid.hashCode() + 2897 * index;
+            int h = hash;
+            if (h == 0) {
+                h = 17;
+                h = 37 * h + name.hashCode();
+                h = 37 * h + uuid.hashCode();
+                h = 37 * h + index;
+                hash = h;
             }
-            return hash;
+            return h;
         }
     }
 }

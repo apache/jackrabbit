@@ -51,7 +51,7 @@ public final class Path {
 
     private final PathElement[] elements;
 
-    private int hashCode;
+    private int hash;
     private String string;
 
     /**
@@ -61,7 +61,7 @@ public final class Path {
      */
     private Path(PathElement[] elements) {
         this.elements = elements;
-        hashCode = 0;
+        hash = 0;
     }
 
     //------------------------------------------------------< factory methods >
@@ -472,13 +472,16 @@ public final class Path {
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
-        if (hashCode == 0) {
-            hashCode = 1;
+        // Path is immutable, we can store the computed hash code value
+        int h = hash;
+        if (h == 0) {
+            h = 17;
             for (int i = 0; i < elements.length; i++) {
-                hashCode = 43 * hashCode + elements[i].hashCode();
+                h = 37 * h + elements[i].hashCode();
             }
+            hash = h;
         }
-        return hashCode;
+        return h;
     }
 
     /**
@@ -767,7 +770,10 @@ public final class Path {
 
         public int hashCode() {
             // @todo treat index==0 as index==1?
-            return 73 * index + name.hashCode();
+            int h = 17;
+            h = 37 * h + index;
+            h = 37 * h + name.hashCode();
+            return h;
         }
 
         public boolean equals(Object obj) {

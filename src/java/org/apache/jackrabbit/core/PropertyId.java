@@ -95,9 +95,13 @@ public class PropertyId extends ItemId {
 
     public int hashCode() {
         // PropertyId is immutable, we can store the computed hash code value
-        if (hash == 0) {
-            hash = 577 * parentUUID.hashCode() + 43 * propName.hashCode();
+        int h = hash;
+        if (h == 0) {
+            h = 17;
+            h = 37 * h + parentUUID.hashCode();
+            h = 37 * h + propName.hashCode();
+            hash = h;
         }
-        return hash;
+        return h;
     }
 }

@@ -237,10 +237,14 @@ public class QName implements Cloneable, Comparable, Serializable {
 
     public int hashCode() {
         // QName is immutable, we can store the computed hash code value
-        if (hash == 0) {
-            hash = namespaceURI.hashCode() + 313 * localName.hashCode();
+        int h = hash;
+        if (h == 0) {
+            h = 17;
+            h = 37 * h + namespaceURI.hashCode();
+            h = 37 * h + localName.hashCode();
+            hash = h;
         }
-        return hash;
+        return h;
     }
 
     /**
