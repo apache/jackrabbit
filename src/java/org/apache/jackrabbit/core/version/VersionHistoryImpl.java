@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.*;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Item;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
@@ -104,5 +105,17 @@ public class VersionHistoryImpl extends NodeWrapper implements VersionHistory {
      */
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
         return history.getUUID();
+    }
+
+    /**
+     * @see javax.jcr.Item#isSame(javax.jcr.Item)
+     */
+    public boolean isSame(Item otherItem) {
+        if (otherItem instanceof VersionHistoryImpl) {
+            // since all version histories live in the same workspace, we can compare the uuids
+            return ((VersionHistoryImpl) otherItem).history.getUUID().equals(history.getUUID());
+        } else {
+            return false;
+        }
     }
 }

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Item;
 import javax.jcr.version.Version;
 import java.util.Calendar;
 
@@ -120,4 +121,15 @@ public class VersionImpl extends NodeWrapper implements Version {
         return version.getFrozenNode();
     }
 
+    /**
+     * @see Item#isSame(javax.jcr.Item)
+     */
+    public boolean isSame(Item otherItem) {
+        if (otherItem instanceof VersionImpl) {
+            // since all versions live in the same workspace, we can compare the uuids
+            return ((VersionImpl) otherItem).version.getUUID().equals(version.getUUID());
+        } else {
+            return false;
+        }
+    }
 }
