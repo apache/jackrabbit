@@ -144,7 +144,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
         try {
             NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(VersionManager.NODENAME_FROZEN, 1);
             if (entry == null) {
-                throw new IllegalStateException("version has no frozen node: " + getId());
+                throw new InternalError("version has no frozen node: " + getId());
             }
             return (InternalFrozenNode) getVersionManager().getItemByInternal(entry.getUUID());
         } catch (RepositoryException e) {

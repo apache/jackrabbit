@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -51,6 +52,9 @@ public class VersionNodeState extends VirtualNodeState {
             throws RepositoryException {
         super(vm, parentUUID, v.getId(), NodeTypeRegistry.NT_VERSION, new QName[0]);
         this.v = v;
+
+        // version is referenceable
+        setPropertyValue(ItemImpl.PROPNAME_UUID, InternalValue.create(v.getId()));
 
         // add the frozen node id if not root version
         if (!v.isRootVersion()) {

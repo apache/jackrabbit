@@ -131,4 +131,10 @@ public interface InternalVersionHistory extends InternalVersionItem {
     public int getNumVersions();
 
 
+    /**
+     * Returns the UUID of the versionable node that this history belongs to.
+     * 
+     * @return the UUID of the versionable node.
+     */
+    public String getVersionableUUID();
 }

@@ -60,11 +60,14 @@ public class NativePVM implements PersistentVersionManager {
      * root path for version storage
      */
     public static final QName VERSION_HISTORY_ROOT_NAME = new QName(NamespaceRegistryImpl.NS_JCR_URI, "persistentVersionStorage");
-
     /**
      * name of the 'jcr:historyId' property
      */
     public static final QName PROPNAME_HISTORY_ID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "historyId");
+    /**
+     * name of the 'jcr:versionableId' property
+     */
+    public static final QName PROPNAME_VERSIONABLE_ID = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionableId");
     /**
      * name of the 'jcr:versionId' property
      */
@@ -152,11 +155,13 @@ public class NativePVM implements PersistentVersionManager {
      */
     public NativePVM(PersistenceManager pMgr, NodeTypeRegistry ntReg) throws RepositoryException {
         try {
+            long t1 = System.currentTimeMillis();
             this.stateMgr = new NativeItemStateManager(pMgr, PERSISTENT_ROOT_ID.getUUID(), ntReg);
             NodeState nodeState = (NodeState) stateMgr.getItemState(PERSISTENT_ROOT_ID);
             historyRoot = new PersistentNode(stateMgr, nodeState);
             initVirtualIds(historyRoot.getState());
-            log.info("loaded " + idsByExternal.size() + " virtual ids.");
+            long t2 = System.currentTimeMillis();
+            log.info("loaded " + idsByExternal.size() + " virtual ids in " + (t2-t1) + "ms.");
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to initialize PersistentVersionManager: " + e.toString(), e);
         }
@@ -235,6 +240,17 @@ public class NativePVM implements PersistentVersionManager {
     }
 
     /**
+     * Retrusn the version history that corresponds to the versionable node of
+     * the given uuid.
+     * @param uuid
+     * @return
+     */
+    private InternalVersionHistoryImpl getHistoryByVersionableUUID(String uuid) {
+        // @TODO: implement
+        return null;
+    }
+
+    /**
      * Creates a new Version History.
      *
      * @param node the node for which the version history is to be initialized
@@ -245,7 +261,7 @@ public class NativePVM implements PersistentVersionManager {
             throws RepositoryException {
 
         // check if version history for that node already exists
-        InternalVersionHistoryImpl hist = (InternalVersionHistoryImpl) getVersionHistory(node.internalGetUUID());
+        InternalVersionHistoryImpl hist = getHistoryByVersionableUUID(node.internalGetUUID());
         if (hist!=null) {
             return hist;
         }
@@ -588,32 +604,4 @@ public class NativePVM implements PersistentVersionManager {
             return type == TYPE_FROZEN;
         }
     }
-
-    private class Update implements UpdateOperation {
-
-        public NodeState createNew(String uuid, QName nodeTypeName, String parentUUID) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        public PropertyState createNew(QName propName, String parentUUID) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        public void store(ItemState state) {
-            //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        public void store(NodeReferences refs) {
-            //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        public void destroy(ItemState state) {
-            //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        public void end() throws ItemStateException {
-            //To change body of implemented methods use File | Settings | File Templates.
-        }
-    }
-
 }

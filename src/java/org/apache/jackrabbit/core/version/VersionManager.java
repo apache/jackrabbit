@@ -40,7 +40,7 @@ public interface VersionManager {
     /**
      * the name of the frozen node
      */
-    public static final QName NODENAME_FROZEN = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozen");
+    public static final QName NODENAME_FROZEN = new QName(NamespaceRegistryImpl.NS_JCR_URI, "frozenNode");
     /**
      * name of the 'jcr:frozenUUID' property
      */
@@ -77,6 +77,10 @@ public interface VersionManager {
      * name of the 'jcr:baseVersion' property
      */
     public static final QName PROPNAME_BASE_VERSION = new QName(NamespaceRegistryImpl.NS_JCR_URI, "baseVersion");
+    /**
+     * name of the 'jcr:child' property
+     */
+    public static final QName PROPNAME_CHILD = new QName(NamespaceRegistryImpl.NS_JCR_URI, "child");
     /**
      * name of the 'jcr:created' property
      */

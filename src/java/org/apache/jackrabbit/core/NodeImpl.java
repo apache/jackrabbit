@@ -2432,52 +2432,42 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-            String uuid = ((NodeState) state).getUUID();
-        }
-/*
+        // aquire session of other workspace (throws NoSuchWorkspaceException)
         // @todo FIXME need to get session with same credentials as current
-        SessionImpl srcSession = rep.getSystemSession(srcWorkspaceName);
-        Node root = session.getRootNode();
-        // if (isRepositoryRoot()) [don't know, if this works correctly with workspaces]
-        if (isSame(root)) {
-            return (NodeImpl) srcSession.getRootNode();
-        }
-
-        // if this node is referenceable, return the corresponding one
-        if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-            try {
-                return (NodeImpl) srcSession.getNodeByUUID(getUUID());
-            } catch (ItemNotFoundException e) {
-                return null;
-            }
-        }
+        SessionImpl srcSession = rep.getSystemSession(workspaceName);
 
         // search nearest ancestor that is referenceable
         NodeImpl m1 = this;
-        while (!m1.isSame(root) && !m1.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+        while (!m1.isRepositoryRoot() && !m1.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
             m1 = (NodeImpl) m1.getParent();
         }
-        // special treatment for root
-        if (m1.isSame(root)) {
-            return (NodeImpl) srcSession.getItem(getPath());
+
+        // if root is common ancestor, corresponding path is same as ours
+        if (m1.isRepositoryRoot()) {
+            return getPath();
         }
 
-        // calculate relative path. please note, that this cannot be done
+        // get corresponding ancestor
+        Node m2 = srcSession.getNodeByUUID(m1.getUUID());
+
+        // return path of m2, if m1 == n1
+        if (m1 == this) {
+            return m2.getPath();
+        }
+
+        // calculate relative path from the referenceable ancestor to this node.
+        // please note, that this cannot be done
         // iteratively in the 'while' loop above, since getName() does not
         // return the relative path, but just the name (without path indices)
         // n1.getPath() = /foo/bar/something[1]
         // m1.getPath() = /foo
         //      relpath = bar/something[1]
+
+        // @todo: replace as soon as implemented
+        // Path relPath = m1.getPrimaryPath().getRelativePath(getPrimaryPath());
+
         String relPath = getPath().substring(m1.getPath().length() + 1);
-        try {
-            return (NodeImpl) srcSession.getNodeByUUID(m1.getUUID()).getNode(relPath);
-        } catch (ItemNotFoundException e) {
-            return null;
-        }
-*/
-        // @todo implement Node#getCorrespondingNodePath
-        throw new RepositoryException("not yet implemented");
+        return m2.getNode(relPath).getPath();
     }
 
     /**
@@ -2506,8 +2496,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkVersionable();
 
         // check if checked out
-        // @todo FIXME semantics of isCheckedOut() have changed!
-        if (!isCheckedOut()) {
+        if (!internalIsCheckedOut()) {
             String msg = safeGetJCRPath() + ": Node is already checked-in. ignoring.";
             log.debug(msg);
             return getBaseVersion();
@@ -2522,7 +2511,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check if not merge failed
         if (hasProperty(ItemImpl.PROPNAME_MERGE_FAILED) && getProperty(ItemImpl.PROPNAME_MERGE_FAILED).getValues().length>0) {
-            String msg = "Unable to checkin node. Clear 'jcr:mergeFailed' first. " + safeGetJCRPath();
+            String msg = "Unable to checkin node. Node has unresolved merge operation. " + safeGetJCRPath();
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -2581,7 +2570,10 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new InvalidItemStateException(msg);
         }
 
-        NodeImpl srcNode = getCorrespondingNode(srcWorkspaceName);
+        // @todo FIXME need to get session with same credentials as current
+        SessionImpl srcSession = rep.getSystemSession(srcWorkspaceName);
+
+        NodeImpl srcNode = getCorrespondingNode(srcSession);
         if (srcNode == null) {
             throw new ItemNotFoundException("No corresponding node for " + safeGetJCRPath());
         }
@@ -2606,7 +2598,15 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new InvalidItemStateException(msg);
         }
 
-        NodeImpl srcNode = doMergeTest(srcWorkspace, bestEffort);
+        // if same workspace, ignore
+        if (srcWorkspace.equals(session.getWorkspace().getName())) {
+            return;
+        }
+
+        // @todo FIXME need to get session with same credentials as current
+        SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
+
+        NodeImpl srcNode = doMergeTest(srcSession, bestEffort);
         if (srcNode != null) {
             // remove properties
             PropertyIterator pi = getProperties();
@@ -2716,6 +2716,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws VersionException, ItemExistsException,
             UnsupportedRepositoryOperationException, LockException,
             InvalidItemStateException, RepositoryException {
+
         // check state of this instance
         sanityCheck();
 
@@ -2729,7 +2730,7 @@ public class NodeImpl extends ItemImpl implements Node {
         GenericVersionSelector gvs = new GenericVersionSelector();
         gvs.setName(versionName);
         internalRestore(getVersionHistory().getVersion(versionName), gvs, removeExisting);
-        save();
+        // session.save/revert is done in internal restore
     }
 
     /**
@@ -2750,11 +2751,13 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check if 'own' version
-        if (!version.getParent().getUUID().equals(getVersionHistory().getUUID())) {
+        // TODO: change if Version.getContainingVersionHistory() is introduced
+        if (!version.getParent().isSame(getVersionHistory())) {
             throw new VersionException("Unable to restore version. Not same version history.");
         }
+
         internalRestore(version, new GenericVersionSelector(version.getCreated()), removeExisting);
-        save();
+        // session.save/revert is done in internal restore
     }
 
     /**
@@ -2781,7 +2784,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // recreate node from frozen state
             NodeImpl node = addNode(relPath, ((VersionImpl) version).getFrozenNode());
             node.internalRestore(version, new GenericVersionSelector(version.getCreated()), removeExisting);
-            node.getParent().save();
+            // session.save/revert is done in internal restore
         }
     }
 
@@ -2849,10 +2852,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new UnsupportedRepositoryOperationException(msg);
         }
     }
-
-    /**
-     * Returns the corresponding node in the <code>scrWorkspaceName</code> of
-     * this node.
+/**
+     * Returns the corresponding node in the workspace of the given session.
      * <p/>
      * Given a node N1 in workspace W1, its corresponding node N2 in workspace
      * W2 is defined as follows:
@@ -2867,57 +2868,49 @@ public class NodeImpl extends ItemImpl implements Node {
      * from M2 as N1 has from M1.
      * </ul>
      *
-     * @param srcWorkspaceName
+     * @param srcSession
      * @return the corresponding node or <code>null</code> if no corresponding
      *         node exists.
      * @throws NoSuchWorkspaceException If <code>srcWorkspace</code> does not exist.
      * @throws AccessDeniedException    If the current session does not have sufficient rights to perform the operation.
      * @throws RepositoryException      If another error occurs.
      */
-    private NodeImpl getCorrespondingNode(String srcWorkspaceName)
-            throws NoSuchWorkspaceException, AccessDeniedException,
-            RepositoryException {
+    private NodeImpl getCorrespondingNode(Session srcSession)
+            throws AccessDeniedException, RepositoryException {
 
-        // @todo FIXME need to get session with same credentials as current
-        SessionImpl srcSession = rep.getSystemSession(srcWorkspaceName);
-        Node root = session.getRootNode();
-        // if (isRepositoryRoot()) [don't know, if this works correctly with workspaces]
-        if (isSame(root)) {
-            return (NodeImpl) srcSession.getRootNode();
+    // search nearest ancestor that is referenceable
+    NodeImpl m1 = this;
+    while (!m1.isRepositoryRoot() && !m1.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+        m1 = (NodeImpl) m1.getParent();
+    }
+
+    try {
+        // get corresponding ancestor
+        NodeImpl m2 = (NodeImpl) srcSession.getNodeByUUID(m1.getUUID());
+
+        // return path of m2, if m1 == n1
+        if (m1 == this) {
+            return m2;
         }
 
-        // if this node is referenceable, return the corresponding one
-        if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-            try {
-                return (NodeImpl) srcSession.getNodeByUUID(getUUID());
-            } catch (ItemNotFoundException e) {
-                return null;
-            }
-        }
-
-        // search nearest ancestor that is referenceable
-        NodeImpl m1 = this;
-        while (!m1.isSame(root) && !m1.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-            m1 = (NodeImpl) m1.getParent();
-        }
-        // special treatment for root
-        if (m1.isSame(root)) {
-            return (NodeImpl) srcSession.getItem(getPath());
-        }
-
-        // calculate relative path. please note, that this cannot be done
+        // calculate relative path from the referenceable ancestor to this node.
+        // please note, that this cannot be done
         // iteratively in the 'while' loop above, since getName() does not
         // return the relative path, but just the name (without path indices)
         // n1.getPath() = /foo/bar/something[1]
         // m1.getPath() = /foo
         //      relpath = bar/something[1]
+
+        // @todo: replace as soon as implemented
+        // Path relPath = m1.getPrimaryPath().getRelativePath(getPrimaryPath());
+
         String relPath = getPath().substring(m1.getPath().length() + 1);
-        try {
-            return (NodeImpl) srcSession.getNodeByUUID(m1.getUUID()).getNode(relPath);
-        } catch (ItemNotFoundException e) {
-            return null;
-        }
+        return (NodeImpl) m2.getNode(relPath);
+
+    } catch (ItemNotFoundException e) {
+        return null;
     }
+}
 
     /**
      * Performs the merge test. If the result is 'update', then the corresponding
@@ -2926,17 +2919,17 @@ public class NodeImpl extends ItemImpl implements Node {
      * 'fail' with bestEffort set to <code>false</code> a MergeException is
      * thrown.
      *
-     * @param srcWorkspace
+     * @param srcSession
      * @param bestEffort
      * @return
      * @throws RepositoryException
      * @throws AccessDeniedException
      */
-    private NodeImpl doMergeTest(String srcWorkspace, boolean bestEffort)
+    private NodeImpl doMergeTest(Session srcSession, boolean bestEffort)
             throws RepositoryException, AccessDeniedException {
 
         // If N does not have a corresponding node then the merge result for N is leave.
-        NodeImpl srcNode = getCorrespondingNode(srcWorkspace);
+        NodeImpl srcNode = getCorrespondingNode(srcSession);
         if (srcNode == null) {
             return null;
         }
@@ -3115,52 +3108,19 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void internalRestore(Version version, VersionSelector vsel, boolean removeExisting)
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        internalRestore(((VersionImpl) version).getInternalVersion(), vsel, removeExisting);
-    }
-
-    /**
-     * Checks if any frozen uuid in the given frozen node or its descendants
-     * collides with the one in the workspace. if 'removeExisting' is true,
-     * collisions will be removed, otherwise an ItemExistsException is thrown.
-     * If a frozen version history is already restored outside this nodes
-     * subtree, a exception is thrown, too, if the removeExisting is true.
-     * @param f
-     * @param removeExisting
-     * @throws RepositoryException
-     */
-    private void checkUUIDCollisions(InternalFrozenNode f, boolean removeExisting)
-            throws RepositoryException {
-
-        if (itemMgr.itemExists(new NodeId(f.getFrozenUUID()))) {
-            NodeImpl node = (NodeImpl) session.getNodeByUUID(f.getFrozenUUID());
-            if (removeExisting) {
-                node.remove();
-            } else {
-                throw new ItemExistsException("Unable to restore. UUID collides with " + node.safeGetJCRPath());
+        try {
+            internalRestore(((VersionImpl) version).getInternalVersion(), vsel, removeExisting);
+        } catch (RepositoryException e) {
+            // revert session
+            try {
+                log.error("reverting changes applied during restore...");
+                session.refresh(false);
+            } catch (RepositoryException e1) {
+                // ignore this
             }
+            throw e;
         }
-        InternalFreeze[] fs = f.getFrozenChildNodes();
-        for (int i=0; i<fs.length; i++) {
-            if (fs[i] instanceof InternalFrozenNode) {
-                checkUUIDCollisions((InternalFrozenNode) fs[i], removeExisting);
-            } else if (!removeExisting) {
-                InternalFrozenVersionHistory fh = (InternalFrozenVersionHistory) fs[i];
-                VersionHistoryImpl history = (VersionHistoryImpl) session.getNodeByUUID(fh.getVersionHistoryId());
-                String nodeId = history.getVersionedUUID();
-
-                // check if representing vh already exists somewhere
-                if (itemMgr.itemExists(new NodeId(nodeId))) {
-                    NodeImpl n = (NodeImpl) session.getNodeByUUID(nodeId);
-                    try {
-                        if (!n.getPrimaryPath().isDescendantOf(getPrimaryPath())) {
-                            throw new ItemExistsException("Unable to restore. Same node already restored at " + n.safeGetJCRPath());
-                        }
-                    } catch (MalformedPathException e) {
-                        throw new RepositoryException(e);
-                    }
-                }
-            }
-        }
+        session.save();
     }
 
     /**
@@ -3173,11 +3133,9 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @throws RepositoryException
      */
-    private void internalRestore(InternalVersion version, VersionSelector vsel, boolean removeExisting)
+    private void internalRestore(InternalVersion version, VersionSelector vsel,
+                                 boolean removeExisting)
             throws RepositoryException {
-
-        // first check, if any uuid conflicts would occurr
-        checkUUIDCollisions(version.getFrozenNode(), removeExisting);
 
         // set jcr:isCheckedOut property to true, in order to avoid any conflicts
         internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
@@ -3191,20 +3149,23 @@ public class NodeImpl extends ItemImpl implements Node {
         internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(version.getId())));
 
         // 4. N's jcr:predecessor property is set to null
-        internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[0]);
+        internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[0], PropertyType.REFERENCE);
 
         // 3. N’s jcr:isCheckedOut property is set to false.
         internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(false));
     }
 
     /**
-     * Creates the frozen state from a node
+     * Restores the properties and child nodes from the frozen state.
      *
      * @param freeze
+     * @param vsel
+     * @param removeExisting
      * @throws RepositoryException
      */
     void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel, boolean removeExisting)
             throws RepositoryException {
+
         // check uuid
         if (isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
             String uuid = freeze.getFrozenUUID();
@@ -3212,11 +3173,13 @@ public class NodeImpl extends ItemImpl implements Node {
                 throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". UUID changed.");
             }
         }
+
         // check primarty type
         if (!freeze.getFrozenPrimaryType().equals(nodeType.getQName())) {
             // todo: check with spec what should happen here
             throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". PrimaryType changed.");
         }
+
         // adjust mixins
         QName[] values = freeze.getFrozenMixinTypes();
         NodeType[] mixins = getMixinNodeTypes();
@@ -3240,7 +3203,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             }
         }
-        // remove additional
+        // remove additional mixins
         for (int i = 0; i < mixins.length; i++) {
             if (mixins[i] != null) {
                 removeMixin(mixins[i].getName());
@@ -3280,42 +3243,49 @@ public class NodeImpl extends ItemImpl implements Node {
         // restore the frozen nodes
         InternalFreeze[] frozenNodes = freeze.getFrozenChildNodes();
 
-        // first delete all non frozen version histories
+        // first delete all non frozen version histories, ie. all OPV!=Version
         NodeIterator iter = getNodes();
         while (iter.hasNext()) {
             NodeImpl n = (NodeImpl) iter.nextNode();
-            // this is a bit lousy
-            boolean found = false;
-            for (int i=0; i<frozenNodes.length; i++) {
-                InternalFreeze child = frozenNodes[i];
-                if (child instanceof InternalFrozenVersionHistory) {
-                    if (n.internalGetUUID().equals(child.getId())) {
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) {
+            if (n.getDefinition().getOnParentVersion()==OnParentVersionAction.COPY) {
                 n.remove();
             }
         }
+
+        // now restore the frozen ones
         for (int i = 0; i < frozenNodes.length; i++) {
             InternalFreeze child = frozenNodes[i];
             if (child instanceof InternalFrozenNode) {
                 InternalFrozenNode f = (InternalFrozenNode) child;
+                // check for existing
+                if (f.getFrozenUUID()!=null) {
+                    try {
+                        NodeImpl existing = (NodeImpl) session.getNodeByUUID(f.getFrozenUUID());
+                        if (removeExisting) {
+                            existing.remove();
+                        } else {
+                            // since we delete the OPV=Copy children beforehand, all
+                            // found nodes must be outside of this tree
+                            throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: " + existing.safeGetJCRPath());
+                        }
+                    } catch (ItemNotFoundException e) {
+                        // ignore, item with uuid does not exist
+                    }
+                }
                 NodeImpl n = addNode(f.getName(), f);
                 n.restoreFrozenState(f, vsel, removeExisting);
+
             } else if (child instanceof InternalFrozenVersionHistory) {
                 InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
                 VersionHistoryImpl history = (VersionHistoryImpl) session.getNodeByUUID(f.getVersionHistoryId());
-                String nodeId = history.getVersionedUUID();
+                String nodeId = history.getVersionableUUID();
 
                 // check if representing vh already exists somewhere
                 if (itemMgr.itemExists(new NodeId(nodeId))) {
                     NodeImpl n = (NodeImpl) session.getNodeByUUID(nodeId);
                     if (hasNode(n.getQName())) {
                         // so order at end
-                        orderBefore(n.getName(), "");
+                        // orderBefore(n.getName(), "");
                     } else {
                         session.move(n.getPath(), getPath()+ "/" + n.getName());
                     }

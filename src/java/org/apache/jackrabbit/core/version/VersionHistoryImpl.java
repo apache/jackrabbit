@@ -183,7 +183,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * Returns the UUID of the node that was versioned.
      * @return
      */
-    public String getVersionedUUID() throws RepositoryException {
-        return getName();
+    public String getVersionableUUID() throws RepositoryException {
+        return history.getVersionableUUID();
     }
 }

@@ -79,9 +79,15 @@ public class NodeTypeRegistry {
     // nt:version
     public static final QName NT_VERSION =
             new QName(NamespaceRegistryImpl.NS_NT_URI, "version");
-    // nt:frozenVersionableChild
-    public static final QName NT_FROZEN_VERSIONABLE_CHILD =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "frozenVersionableChild");
+    // nt:versionLabels
+    public static final QName NT_VERSION_LABELS =
+            new QName(NamespaceRegistryImpl.NS_NT_URI, "versionLabels");
+    // nt:versionedChild
+    public static final QName NT_VERSIONED_CHILD =
+            new QName(NamespaceRegistryImpl.NS_NT_URI, "versionedChild");
+    // nt:frozenNode
+    public static final QName NT_FROZEN_NODE =
+            new QName(NamespaceRegistryImpl.NS_NT_URI, "frozenNode");
     // jcr:primaryType
     public static final QName JCR_PRIMARY_TYPE =
             new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");

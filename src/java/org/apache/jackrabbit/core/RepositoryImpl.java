@@ -619,8 +619,8 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      * @return the workspace persistence manager
      * @throws RepositoryException if the persistence manager could not be instantiated/initialized
      */
-    private static PersistenceManager createPersistenceManager(File homeDir, 
-                                                              FileSystem fs, 
+    private static PersistenceManager createPersistenceManager(File homeDir,
+                                                              FileSystem fs,
                                                               PersistenceManagerConfig pmConfig,
                                                               String rootNodeUUID,
                                                               NamespaceRegistry nsReg,

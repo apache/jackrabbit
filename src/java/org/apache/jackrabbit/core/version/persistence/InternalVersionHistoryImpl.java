@@ -79,6 +79,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
     private String historyId;
 
     /**
+     * the if of the versionable node
+     */
+    private String versionableId;
+
+    /**
      * Creates a new VersionHistory object for the given node state.
      */
     InternalVersionHistoryImpl(PersistentVersionManager vMgr, PersistentNode node) throws RepositoryException {
@@ -98,6 +103,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
 
         // get id
         historyId = (String) node.getPropertyValue(NativePVM.PROPNAME_HISTORY_ID).internalValue();
+
+        // get versionable id
+        versionableId = (String) node.getPropertyValue(NativePVM.PROPNAME_VERSIONABLE_ID).internalValue();
 
         // get entries
         PersistentNode[] children = node.getChildNodes();
@@ -417,6 +425,13 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         return versionCache.size();
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.version.InternalVersionHistory#getVersionableUUID()
+     */
+    public String getVersionableUUID() {
+        return versionableId;
+    }
+
     protected String getUUID() {
         return node.getUUID();
     }
@@ -441,6 +456,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         PersistentNode pNode = parent.addNode(upd, name, NativePVM.NT_REP_VERSION_HISTORY);
         pNode.setPropertyValue(upd, NativePVM.PROPNAME_HISTORY_ID, InternalValue.create(historyId));
 
+        // set the versionable uuid
+        pNode.setPropertyValue(upd, NativePVM.PROPNAME_VERSIONABLE_ID, InternalValue.create(src.internalGetUUID()));
+        
         // create label node
         pNode.addNode(upd, NativePVM.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_UNSTRUCTURED);
 
