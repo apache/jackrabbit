@@ -29,8 +29,14 @@ public class ISO9075Test extends TestCase {
     public void testSpecExamples() {
         assertEquals("My_x0020_Documents", ISO9075.encode("My Documents"));
         assertEquals("_x0031_234id", ISO9075.encode("1234id"));
-        assertEquals("merry_x005f_xmas", ISO9075.encode("merry_xmas"));
-        assertEquals("merry_christmas", ISO9075.encode("merry_christmas"));
+        assertEquals("My_Documents", ISO9075.encode("My_Documents"));
+        assertEquals("My_x005f_x0020Documents", ISO9075.encode("My_x0020Documents"));
+        assertEquals("My_x005f_x0020_Documents", ISO9075.encode("My_x0020_Documents"));
+        assertEquals("My_x005f_x0020_", ISO9075.encode("My_x0020_"));
+        assertEquals("My_x002", ISO9075.encode("My_x002"));
+        assertEquals("My_x005f_x0020", ISO9075.encode("My_x0020"));
+        assertEquals("My_", ISO9075.encode("My_"));
+        assertEquals("My_x005f_x0020_x0020_Documents", ISO9075.encode("My_x0020 Documents"));
     }
 
     /**

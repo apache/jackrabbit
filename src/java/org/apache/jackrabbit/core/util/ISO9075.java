@@ -31,15 +31,17 @@ import java.util.regex.Matcher;
  * Note that only the local part of a {@link org.apache.jackrabbit.core.QName}
  * is encoded / decoded. A URI namespace will always be valid and does not
  * need encoding.
- * todo change implementation to latest spec. only encode _x when followed by XXXX_
  */
 public class ISO9075 {
 
     /** Pattern on an encoded character */
-    private static Pattern ENCODE_PATTERN = Pattern.compile("_x\\p{XDigit}{4}_");
+    private static final Pattern ENCODE_PATTERN = Pattern.compile("_x\\p{XDigit}{4}_");
 
     /** Padding characters */
-    private static char[] PADDING = new char[] {'0', '0', '0'};
+    private static final char[] PADDING = new char[] {'0', '0', '0'};
+
+    /** All the possible hex digits */
+    private static final String HEX_DIGITS = "0123456789abcdefABCDEF";
 
     /**
      * Encodes the local part of <code>name</code> as specified in ISO 9075.
@@ -77,9 +79,7 @@ public class ISO9075 {
                 if (i == 0) {
                     // first character of name
                     if (XMLChar.isNameStart(name.charAt(i))) {
-                        if (name.charAt(i) == '_'
-                                && name.length() > (i + 1)
-                                && name.charAt(i + 1) == 'x') {
+                        if (needsEscaping(name, i)) {
                             // '_x' must be encoded
                             encode('_', encoded);
                         } else {
@@ -92,9 +92,7 @@ public class ISO9075 {
                 } else if (!XMLChar.isName(name.charAt(i))) {
                     encode(name.charAt(i), encoded);
                 } else {
-                    if (name.charAt(i) == '_'
-                            && name.length() > (i + 1)
-                            && name.charAt(i + 1) == 'x') {
+                    if (needsEscaping(name, i)) {
                         // '_x' must be encoded
                         encode('_', encoded);
                     } else {
@@ -144,8 +142,8 @@ public class ISO9075 {
 
     /**
      * Encodes the character <code>c</code> as a String in the following form:
-     * <code>"_x" + hex value of c + "_"</code>. Where the hex value has always
-     * four digits with possibly leading zeros.
+     * <code>"_x" + hex value of c + "_"</code>. Where the hex value has
+     * four digits if the character with possibly leading zeros.
      * <p/>
      * Example: ' ' (the space character) is encoded to: _x0020_
      * @param c the character to encode
@@ -160,4 +158,27 @@ public class ISO9075 {
         b.append("_");
     }
 
+    /**
+     * Returns true if <code>name.charAt(location)</code> is the underscore
+     * character and the following character sequence is 'xHHHH_' where H
+     * is a hex digit.
+     * @param name the name to check.
+     * @param location the location to look at.
+     * @throws ArrayIndexOutOfBoundsException if location > name.length()
+     */
+    private static boolean needsEscaping(String name, int location) {
+        if (name.charAt(location) == '_' && name.length() >= location + 6) {
+            if (name.charAt(location + 1) == 'x'
+                    && HEX_DIGITS.indexOf(name.charAt(location + 2)) != -1
+                    && HEX_DIGITS.indexOf(name.charAt(location + 3)) != -1
+                    && HEX_DIGITS.indexOf(name.charAt(location + 4)) != -1
+                    && HEX_DIGITS.indexOf(name.charAt(location + 5)) != -1) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 }
