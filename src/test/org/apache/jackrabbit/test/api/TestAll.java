@@ -33,7 +33,7 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("Search tests");
+        TestSuite suite = new TestSuite("javax.jcr tests");
 
         suite.addTestSuite(AddNodeTest.class);
         suite.addTestSuite(GetAncestorTest.class);
