@@ -18,19 +18,19 @@
  */
  -->
 <nodeTypes xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:rep="internal" xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:test="http://www.apache.org/jackrabbit/test" xmlns:mix="http://www.jcp.org/jcr/mix/1.0">
-  <nodeType name="test:versionable" mixin="false" orderableChildNodes="false" primaryItemName="">
+  <nodeType name="test:versionable" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
-    <propertyDef name="*" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDef name="test:copyOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDef name="test:versionOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" multiple="false" />
-    <propertyDef name="test:initializeOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="INITIALIZE" protected="false" multiple="false" />
-    <propertyDef name="test:computeOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="COMPUTE" protected="false" multiple="false" />
-    <propertyDef name="test:ignoreOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" multiple="false" />
-    <propertyDef name="test:abortOnParentVersionProp" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="false" multiple="false" />
-    <childNodeDef name="*" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
+    <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDef name="test:copyOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDef name="test:versionOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" multiple="false" />
+    <propertyDef name="test:initializeOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="INITIALIZE" protected="false" multiple="false" />
+    <propertyDef name="test:computeOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COMPUTE" protected="false" multiple="false" />
+    <propertyDef name="test:ignoreOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" multiple="false" />
+    <propertyDef name="test:abortOnParentVersionProp" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="false" multiple="false" />
+    <childNodeDef name="*" defaultPrimaryType="test:versionable" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
       <requiredPrimaryTypes>
         <requiredPrimaryType>nt:base</requiredPrimaryType>
       </requiredPrimaryTypes>
@@ -66,5 +66,163 @@
       </requiredPrimaryTypes>
     </childNodeDef>
   </nodeType>
+  
+  <!-- Defines a referenceable nodetype for testing purposes -->
+  <nodeType name="test:refTargetNode" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+  </nodeType>
+
+  <!-- Defines a nodetype for testing NodeType.canSetProperty() -->
+  <nodeType name="test:canSetProperty" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDef name="String" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDef name="StringMultiple" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
+    <propertyDef name="StringConstraints" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>abc</valueConstraint>
+        <valueConstraint>def</valueConstraint>
+        <valueConstraint>ghi</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="StringMultipleConstraints" requiredType="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>abc</valueConstraint>
+        <valueConstraint>def</valueConstraint>
+        <valueConstraint>ghi</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="Binary" requiredType="Binary" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDef name="BinaryMultiple" requiredType="Binary" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
+    <propertyDef name="BinaryConstraints" requiredType="Binary" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>(,100)</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="BinaryMultipleConstraints" requiredType="Binary" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>(,100)</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="Date" requiredType="Date" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDef name="DateMultiple" requiredType="Date" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
+    <propertyDef name="DateConstraints" requiredType="Date" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>(1974-02-15T00:00:00.000Z,)</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="DateMultipleConstraints" requiredType="Date" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>(,1974-02-15T00:00:00.000Z)</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="Double" requiredType="Double" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDef name="DoubleMultiple" requiredType="Double" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
+    <propertyDef name="DoubleConstraints" requiredType="Double" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>(100,)</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="DoubleMultipleConstraints" requiredType="Double" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>(,100)</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="Long" requiredType="Long" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDef name="LongMultiple" requiredType="Long" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
+    <propertyDef name="LongConstraints" requiredType="Long" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>(100,)</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="LongMultipleConstraints" requiredType="Long" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>(,100)</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="Boolean" requiredType="Boolean" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDef name="BooleanMultiple" requiredType="Boolean" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
+    <propertyDef name="BooleanConstraints" requiredType="Boolean" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>true</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="BooleanMultipleConstraints" requiredType="Boolean" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>true</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="Name" requiredType="Name" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDef name="NameMultiple" requiredType="Name" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
+    <propertyDef name="NameConstraints" requiredType="Name" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>abc</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="NameMultipleConstraints" requiredType="Name" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>abc</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="Path" requiredType="Path" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDef name="PathMultiple" requiredType="Path" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
+    <propertyDef name="PathConstraints" requiredType="Path" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>/abc</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+    <propertyDef name="PathMultipleConstraints" requiredType="Path" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>/abc</valueConstraint>
+      </valueConstraints>
+    </propertyDef>
+  </nodeType>
+
+  <!-- Defines a nodetype for testing NodeType.canAddChildNode() -->
+  <nodeType name="test:canAddChildNode" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <childNodeDef name="testChildWithDefaultType" defaultPrimaryType="nt:base" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>nt:base</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDef>
+    <childNodeDef name="testChildWithoutDefaultType" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>nt:base</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDef>
+  </nodeType>
+
+  <!-- Defines a nodetype for testing Node.setProperty(). -->
+  <nodeType name="test:setProperty" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+      <supertype>mix:referenceable</supertype>
+    </supertypes>
+    <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDef name="test:multiProperty" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true" />
+    <childNodeDef name="*" defaultPrimaryType="test:setProperty" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false" />
+  </nodeType>
+  
+  <!-- Defines a nodetype with a ChildNodeDef that does not allow same name siblings -->
+  <nodeType name="test:sameNameSibsFalseChildNodeDef" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
+    <childNodeDef name="*" defaultPrimaryType="test:sameNameSibsFalseChildNodeDef" autoCreate="false" mandatory="false" onParentVersion="COMPUTE" protected="false" sameNameSibs="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>nt:base</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDef>
+  </nodeType>  
+
 </nodeTypes>
 

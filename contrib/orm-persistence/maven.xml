@@ -29,6 +29,14 @@
        id="maven.test.compile.src.set"
        refid="parent.test.src.dir"/>
   </preGoal>
+  
+  <postGoal name="test:compile">
+    <copy todir="${maven.test.dest}">
+      <fileset dir="${basedir}/../../src/test">
+        <exclude name="**/*.java"/>
+      </fileset>
+    </copy>  
+  </postGoal>
 
    <!-- Additionally cleans the test data created -->
    <postGoal name="clean">
@@ -46,7 +54,7 @@
         <ant:delete includeEmptyDirs="true">
             <ant:fileset dir="applications/test/workspaces">
                 <ant:include name="**/*"/>
-                <!--ant:exclude name="**/workspace.xml"/-->
+                <ant:exclude name="**/workspace.xml"/>
             </ant:fileset>
         </ant:delete>
         <ant:delete dir="applications/test/tx"/>
