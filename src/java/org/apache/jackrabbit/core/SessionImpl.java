@@ -121,7 +121,6 @@ public class SessionImpl implements Session {
                           WorkspaceConfig wspConfig)
             throws RepositoryException {
         this.rep = rep;
-
         if (credentials instanceof SimpleCredentials) {
             SimpleCredentials sc = (SimpleCredentials) credentials;
             // clear password for security reasons
@@ -139,14 +138,11 @@ public class SessionImpl implements Session {
         } else {
             userId = null;
         }
-
         nsMappings = new TransientNamespaceMappings(rep.getNamespaceRegistry());
-
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
         String wspName = wspConfig.getName();
         wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
                 rep.getWorkspaceReferenceManager(wspName), rep, this);
-
         itemStateMgr = createSessionItemStateManager(wsp.getPersistentStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
@@ -173,11 +169,8 @@ public class SessionImpl implements Session {
     protected SessionImpl(RepositoryImpl rep, String userId, WorkspaceConfig wspConfig)
             throws RepositoryException {
         this.rep = rep;
-
         this.userId = userId;
-
         nsMappings = new TransientNamespaceMappings(rep.getNamespaceRegistry());
-
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
         String wspName = wspConfig.getName();
         wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
@@ -203,7 +196,6 @@ public class SessionImpl implements Session {
      * @return session item state manager
      */
     protected SessionItemStateManager createSessionItemStateManager(PersistentItemStateProvider provider) {
-
         return new SessionItemStateManager(rep.getRootNodeUUID(), provider, getNamespaceResolver());
     }
 
@@ -214,7 +206,6 @@ public class SessionImpl implements Session {
      */
     protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
                                             HierarchyManager hierMgr) {
-
         return new ItemManager(itemStateMgr, hierMgr, this,
                 ntMgr.getRootNodeDefinition(), rep.getRootNodeUUID());
     }

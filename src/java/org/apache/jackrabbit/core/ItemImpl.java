@@ -1089,7 +1089,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
          */
         ReferenceManager refMgr = wsp.getReferenceManager();
         synchronized (refMgr) {
-
             /**
              * build list of transient descendents in the attic
              * (i.e. those marked as 'removed')

@@ -185,15 +185,7 @@ public class RepositoryImpl implements Repository, EventListener {
                             // ignore
                         }
                     }
-                    /**
-                     * use hard-coded uuid for root node rather than generating
-                     * a different uuid per repository instance; using a
-                     * hard-coded uuid makes it easier to copy/move entire
-                     * workspaces from one repository instance to another.
-                     */
-                    //rootNodeUUID = new UUID(new String(chars)).toString();
-                    rootNodeUUID = ROOT_NODE_UUID;
-
+                    rootNodeUUID = new UUID(new String(chars)).toString();
                 } catch (Exception e) {
                     String msg = "failed to load persisted repository state";
                     log.error(msg, e);
@@ -201,8 +193,17 @@ public class RepositoryImpl implements Repository, EventListener {
                 }
             } else {
                 // create new uuid
+/*
                 UUID rootUUID = UUID.randomUUID();     // version 4 uuid
                 rootNodeUUID = rootUUID.toString();
+*/
+                /**
+                 * use hard-coded uuid for root node rather than generating
+                 * a different uuid per repository instance; using a
+                 * hard-coded uuid makes it easier to copy/move entire
+                 * workspaces from one repository instance to another.
+                 */
+                rootNodeUUID = ROOT_NODE_UUID;
                 try {
                     // persist uuid of the repository's root node
                     OutputStream out = uuidFile.getOutputStream();
@@ -221,7 +222,7 @@ public class RepositoryImpl implements Repository, EventListener {
                     // store uuid in text format for better readability
                     OutputStreamWriter writer = new OutputStreamWriter(out);
                     try {
-                        writer.write(rootUUID.toString());
+                        writer.write(rootNodeUUID);
                     } finally {
                         try {
                             writer.close();
@@ -536,13 +537,6 @@ public class RepositoryImpl implements Repository, EventListener {
             return;
         }
 
-        // persist repository properties
-        try {
-            storeRepProps();
-        } catch (RepositoryException e) {
-            log.error("failed to persist repository properties", e);
-        }
-
         // stop / dispose all ObservationManagers
         for (Iterator it = wspObsMgrFactory.values().iterator(); it.hasNext();) {
             ObservationManagerFactory obsMgr = (ObservationManagerFactory) it.next();
@@ -556,14 +550,37 @@ public class RepositoryImpl implements Repository, EventListener {
         }
 
         /**
-         * todo free resources, shutdown workspaces, close sessions,
-         * shutdown item state mgr's, persistence mgr's, etc.
+         * todo close sessions, close item state mgr's, free resources, etc.
          */
+
+        for (Iterator it = wspConfigs.values().iterator(); it.hasNext();) {
+            WorkspaceConfig wspConfig = (WorkspaceConfig) it.next();
+            try {
+                // close workspace file system
+                wspConfig.getFileSystem().close();
+            } catch (FileSystemException e) {
+                log.error("Error while closing filesystem of workspace " + wspConfig.getName(), e);
+            }
+            try {
+                // close persistence manager
+                wspConfig.getPersistenceManager().close();
+            } catch (Exception e) {
+                log.error("Error while closing persistence manager of workspace " + wspConfig.getName(), e);
+            }
+        }
+
+        // persist repository properties
         try {
-            // close master file system (this will also invalidate sub file systems)
+            storeRepProps();
+        } catch (RepositoryException e) {
+            log.error("failed to persist repository properties", e);
+        }
+
+        try {
+            // close repository file system
             repStore.close();
         } catch (FileSystemException e) {
-            log.error("Error while closing filesystem", e);
+            log.error("Error while closing repository filesystem", e);
         }
 
         // make sure this instance is not used anymore

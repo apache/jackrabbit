@@ -29,6 +29,11 @@ public interface PersistenceManager {
     public void init(WorkspaceConfig wspConfig) throws Exception;
 
     /**
+     * @throws Exception
+     */
+    public void close() throws Exception;
+
+    /**
      * @param state
      * @throws NoSuchItemStateException
      * @throws ItemStateException

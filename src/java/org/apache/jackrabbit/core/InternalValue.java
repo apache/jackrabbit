@@ -220,7 +220,7 @@ public class InternalValue {
      */
     public static InternalValue[] create(QName[] values) {
         InternalValue[] ret = new InternalValue[values.length];
-        for (int i=0; i<values.length; i++) {
+        for (int i = 0; i < values.length; i++) {
             ret[i] = new InternalValue(values[i]);
         }
         return ret;
@@ -232,7 +232,7 @@ public class InternalValue {
      */
     public static InternalValue[] create(String[] values) {
         InternalValue[] ret = new InternalValue[values.length];
-        for (int i=0; i<values.length; i++) {
+        for (int i = 0; i < values.length; i++) {
             ret[i] = new InternalValue(values[i]);
         }
         return ret;

@@ -10,9 +10,6 @@
         	locking
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-        	jta support
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
         	access control (jaas)
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
@@ -43,9 +40,6 @@
   		update cache on hierarchy changes (move, hardlink, remove, etc) 
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
         	inline @todo comments: resolve/implement
-        </task>
-        <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
-    		ItemState: hide STATUS_* flags, use set* and is* methods instead
         </task>
         <task creator="stefan" assignedto="" startdate="" enddate="" effort="" status="">
     		javaDoc, javaDoc, javaDoc

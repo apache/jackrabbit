@@ -5,7 +5,6 @@ the following list is not yet categorized/prioritized, neither
 is it complete :(
 
 - locking
-- jta support
 - access control (jaas)
 - current persistence model (nodes and properties are stored in separate
   files) leads to *very* slow performance in a normal filesystem;
@@ -25,7 +24,6 @@ is it complete :(
 - HierarchyManager: cache Path objects (key: ItemId, value: Path[]);
   update cache on hierarchy changes (move, hardlink, remove, etc) 
 - inline @todo comments: resolve/implement
-- ItemState: hide STATUS_* flags, use set* and is* methods instead
 - javaDoc, javaDoc, javaDoc
 - logging: use commons logging instead of log4j
 - logging: remove unnecessary output, check log categories/verbosity, 

@@ -267,7 +267,7 @@ public class XMLPersistenceManager implements PersistenceManager {
                     try {
                         val = InternalValue.create(new FileSystemResource(blobStore, text));
                     } catch (IOException ioe) {
-                        String msg = "error while reading serialized binary valuey";
+                        String msg = "error while reading serialized binary value";
                         log.error(msg, ioe);
                         throw new ItemStateException(msg, ioe);
                     }
@@ -306,6 +306,27 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     /**
+     * @see PersistenceManager#close
+     */
+    public synchronized void close() throws Exception {
+        if (!initialized) {
+            return;
+        }
+
+        try {
+            // close blob store
+            blobStore.close();
+            /**
+             * there's no need close the item state store because it
+             * is based in the workspace's file system which is
+             * closed by the repository
+             */
+        } finally {
+            initialized = false;
+        }
+    }
+
+    /**
      * @see PersistenceManager#load(PersistentNodeState)
      */
     public synchronized void load(PersistentNodeState state)
@@ -333,7 +354,6 @@ public class XMLPersistenceManager implements PersistenceManager {
 
                 readState(rootElement, state);
                 return;
-
             } finally {
                 in.close();
             }
@@ -377,7 +397,6 @@ public class XMLPersistenceManager implements PersistenceManager {
                 props.load(in);
                 readState(props, state);
                 return;
-
             } finally {
                 in.close();
             }
@@ -636,7 +655,6 @@ public class XMLPersistenceManager implements PersistenceManager {
                             }
                             // store path to binary file as property value
                             props.setProperty(Integer.toString(i), binPath);
-                            // FIXME: hack!
                             // replace value instance with value
                             // backed by internal file and delete temp file
                             values[i] = InternalValue.create(internalBlobFile);
