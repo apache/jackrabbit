@@ -62,10 +62,16 @@ abstract class ChildItemDef implements Cloneable {
     }
 
     public void setDeclaringNodeType(QName declaringNodeType) {
+        if (declaringNodeType == null) {
+            throw new IllegalArgumentException("declaringNodeType can not be null");
+        }
         this.declaringNodeType = declaringNodeType;
     }
 
     public void setName(QName name) {
+        if (name == null) {
+            throw new IllegalArgumentException("name can not be null");
+        }
         this.name = name;
     }
 

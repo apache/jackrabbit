@@ -523,6 +523,15 @@ public class NodeTypeRegistry {
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
             PropDef pd = pda[i];
+            /**
+             * sanity check:
+             * make sure declaring node type matches name of node type definition
+             */
+            if (!name.equals(pd.getDeclaringNodeType())) {
+                String msg = "[" + name + "#" + pd.getName() + "] invalid declaring node type specified";
+                log.error(msg);
+                throw new InvalidNodeTypeDefException(msg);
+            }
             // check primary item flag
             if (pd.isPrimaryItem()) {
                 if (pd.definesResidual()) {
@@ -632,6 +641,15 @@ public class NodeTypeRegistry {
         ChildNodeDef[] cnda = ntd.getChildNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
             ChildNodeDef cnd = cnda[i];
+            /**
+             * sanity check:
+             * make sure declaring node type matches name of node type definition
+             */
+            if (!name.equals(cnd.getDeclaringNodeType())) {
+                String msg = "[" + name + "#" + cnd.getName() + "] invalid declaring node type specified";
+                log.error(msg);
+                throw new InvalidNodeTypeDefException(msg);
+            }
             // check primary item flag
             if (cnd.isPrimaryItem()) {
                 if (cnd.definesResidual()) {

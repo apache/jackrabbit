@@ -59,6 +59,9 @@ public class ChildNodeDef extends ChildItemDef {
      * @param requiredPrimaryTypes
      */
     public void setRequiredPrimaryTypes(QName[] requiredPrimaryTypes) {
+        if (requiredPrimaryTypes == null) {
+            throw new IllegalArgumentException("requiredPrimaryTypes can not be null");
+        }
         this.requiredPrimaryTypes = requiredPrimaryTypes;
     }
 
