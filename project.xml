@@ -28,6 +28,7 @@
   </organization>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.*</package>
+  <logo>/images/jackrabbitlogo.gif</logo>
   <description>
     The Jackrabbit Project has been formed to develop an open source implementation of the Content Repository
     for Java Technology API (JCR), being specified within the Java Community Process as
