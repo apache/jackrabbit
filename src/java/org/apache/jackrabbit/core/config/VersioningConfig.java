@@ -17,20 +17,13 @@
 package org.apache.jackrabbit.core.config;
 
 import java.io.File;
-import java.util.Map;
-
-import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.jdom.Element;
 
 /**
  * This Class implements the configuration object for the versioning.
  */
 public class VersioningConfig {
-
-    /** attribute name of home dir */
-    private static final String ROOTPATH_ATTRIB = "rootPath";
 
     /** the homedir for the versioning */
     private final File homeDir;
@@ -41,27 +34,12 @@ public class VersioningConfig {
     /** The <code>PersistenceManagerConfig</code> for the versioning */
     private final PersistenceManagerConfig pmConfig;
 
-    /**
-     * Creates a new <code>VersioningConfig</code>.
-     * @param config the config root element for this <code>VersioningConfig</code>.
-     * @param vars map of variable values.
-     * @throws RepositoryException if an error occurs while creating the
-     *  <code>SearchConfig</code>.
-     */
-    VersioningConfig(Element config, Map vars) throws RepositoryException {
-
-        // home dir
-        homeDir = new File(AbstractConfig.replaceVars(config.getAttributeValue(ROOTPATH_ATTRIB), vars));
-
-        // create FileSystem
-        Element fsElement = config.getChild(AbstractConfig.FILE_SYSTEM_ELEMENT);
-        this.fs = AbstractConfig.createFileSystem(fsElement, vars);
-
-        // persistence manager config
-        Element pmElem = config.getChild(WorkspaceConfig.PERSISTENCE_MANAGER_ELEMENT);
-        pmConfig = PersistenceManagerConfig.parse(pmElem, vars);
+    public VersioningConfig(File homeDir, FileSystem fs, PersistenceManagerConfig pmc) {
+        this.homeDir = homeDir;
+        this.fs = fs;
+        this.pmConfig = pmc;
     }
-
+    
     /**
      * Returns the virtual file system where the workspace stores global state.
      *

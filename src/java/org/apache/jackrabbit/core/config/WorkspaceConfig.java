@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Properties;
 
 /**
  * A <code>WorkspaceConfig</code> ...
@@ -55,7 +56,7 @@ public class WorkspaceConfig extends AbstractConfig {
     public static final String WORKSPACE_HOME_VARIABLE = "${wsp.home}";
     public static final String WORKSPACE_NAME_VARIABLE = "${wsp.name}";
 
-    private final HashMap vars;
+    private final Properties vars;
 
     /**
      * workspace home directory
@@ -94,7 +95,7 @@ public class WorkspaceConfig extends AbstractConfig {
         super(is);
         this.wspHomeDir = wspHomeDir;
         // initialize variables
-        vars = new HashMap();
+        vars = new Properties();
         vars.put(WORKSPACE_HOME_VARIABLE, wspHomeDir);
         // read config
         init(config);
@@ -114,24 +115,26 @@ public class WorkspaceConfig extends AbstractConfig {
             // init with wsp home dirname
             wspName = new File(wspHomeDir).getName();
         } else {
-            wspName = replaceVars(wspName, vars);
+            ConfigurationParser parser = new ConfigurationParser(vars);
+            wspName = parser.replaceVariables(wspName);
         }
-        
+
         // set name variable
         vars.put(WORKSPACE_NAME_VARIABLE, wspName);
+        ConfigurationParser parser = new ConfigurationParser(vars);
 
         // file system
         Element fsElem = wspElem.getChild(FILE_SYSTEM_ELEMENT);
-        wspFS = createFileSystem(fsElem, vars);
+        wspFS = parser.createFileSystem(fsElem);
 
         // persistence manager config
         Element pmElem = wspElem.getChild(PERSISTENCE_MANAGER_ELEMENT);
-        pmConfig = PersistenceManagerConfig.parse(pmElem, vars);
+        pmConfig = parser.parsePersistenceManagerConfig(pmElem);
 
         // search config (optional)
         Element searchElem = wspElem.getChild(SEARCH_INDEX_ELEMENT);
         if (searchElem != null) {
-            searchConfig = SearchConfig.parse(searchElem, vars);
+            searchConfig = parser.parseSearchConfig(searchElem);
         }
     }
 

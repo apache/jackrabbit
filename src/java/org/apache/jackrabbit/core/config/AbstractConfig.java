@@ -16,22 +16,16 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.commons.collections.BeanMap;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.util.Text;
+import java.io.IOException;
+
+import javax.jcr.RepositoryException;
+
 import org.apache.log4j.Logger;
 import org.jdom.Document;
-import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import javax.jcr.RepositoryException;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <code>AbstractConfig</code> is the superclass of
@@ -69,67 +63,6 @@ abstract class AbstractConfig implements EntityResolver {
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
-    }
-
-    /**
-     * Creates a {@link org.apache.jackrabbit.core.fs.FileSystem} instance
-     * based on the config <code>fsConfig</code>.
-     *
-     * @param fsConfig  a {@link #FILE_SYSTEM_ELEMENT}.
-     * @param variables values of variables to be replaced in config.
-     * @return a {@link org.apache.jackrabbit.core.fs.FileSystem} instance.
-     * @throws RepositoryException if an error occurs while creating the
-     *                             {@link org.apache.jackrabbit.core.fs.FileSystem}.
-     */
-    static FileSystem createFileSystem(Element fsConfig, Map variables)
-            throws RepositoryException {
-        FileSystem fs;
-        String className = "";
-        try {
-            // create the file system object
-            className = fsConfig.getAttributeValue(CLASS_ATTRIB);
-            Class c = Class.forName(className);
-            fs = (FileSystem) c.newInstance();
-
-            // set the properties of the file system object from the
-            // param elements in the config
-            BeanMap bm = new BeanMap(fs);
-            List paramList = fsConfig.getChildren(PARAM_ELEMENT);
-            for (Iterator i = paramList.iterator(); i.hasNext();) {
-                Element param = (Element) i.next();
-                String paramName = param.getAttributeValue(NAME_ATTRIB);
-                String paramValue = param.getAttributeValue(VALUE_ATTRIB);
-                // replace variables in param value
-                bm.put(paramName, replaceVars(paramValue, variables));
-            }
-            fs.init();
-        } catch (Exception e) {
-            String msg = "Cannot instantiate implementing class " + className;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-        return fs;
-    }
-
-    /**
-     * Helper method that replaces in the given string any occurences of the keys
-     * in the specified map with their associated values.
-     *
-     * @param s
-     * @param vars
-     * @return
-     */
-    protected static String replaceVars(String s, Map vars) {
-        if (vars.size() == 0) {
-            return s;
-        }
-        Iterator iter = vars.keySet().iterator();
-        while (iter.hasNext()) {
-            String varName = (String) iter.next();
-            String varValue = (String) vars.get(varName);
-            s = Text.replace(s, varName, varValue);
-        }
-        return s;
     }
 
     //-------------------------------------------------------< EntityResolver >

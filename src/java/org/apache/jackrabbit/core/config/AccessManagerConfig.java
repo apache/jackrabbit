@@ -16,12 +16,7 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-
-import org.jdom.Element;
 
 /**
  * A <code>AccessManagerConfig</code> represents the configuration of an
@@ -31,33 +26,6 @@ import org.jdom.Element;
  */
 public class AccessManagerConfig extends BeanConfig {
 
-    private static final String CLASS_ATTRIB = "class";
-
-    /**
-     * Creates a new <code>PersistenceManagerConfig</code>.
-     *
-     * @param config the config root element for this <code>PersistenceManagerConfig</code>.
-     * @param vars   map of variable values.
-     */
-    static AccessManagerConfig parse(Element config, Map vars) {
-        // FQN of persistence manager class
-        String className = config.getAttributeValue(CLASS_ATTRIB);
-
-        // read the PersistenceManager properties from the
-        // <param/> elements in the config
-        Properties params = new Properties();
-        List paramList = config.getChildren(AbstractConfig.PARAM_ELEMENT);
-        for (Iterator i = paramList.iterator(); i.hasNext();) {
-            Element param = (Element) i.next();
-            String paramName = param.getAttributeValue(AbstractConfig.NAME_ATTRIB);
-            String paramValue = param.getAttributeValue(AbstractConfig.VALUE_ATTRIB);
-            // replace variables in param value
-            params.put(paramName, AbstractConfig.replaceVars(paramValue, vars));
-        }
-        
-        return new AccessManagerConfig(className, params);
-    }
-    
     public AccessManagerConfig(String className, Properties properties) {
         super(className, properties);
     }

@@ -140,20 +140,22 @@ public class RepositoryConfig extends AbstractConfig {
      * @throws RepositoryException
      */
     protected void init(Document config) throws RepositoryException {
+        ConfigurationParser parser = new ConfigurationParser(vars);
+
         // file system
         Element fsConfig = config.getRootElement().getChild(FILE_SYSTEM_ELEMENT);
-        repFS = createFileSystem(fsConfig, vars);
+        repFS = parser.createFileSystem(fsConfig);
 
         // security & access manager config
         Element secEleme = config.getRootElement().getChild(SECURITY_ELEMENT);
         appName = secEleme.getAttributeValue(APP_NAME_ATTRIB);
         Element amElem = secEleme.getChild(ACCESS_MANAGER_ELEMENT);
-        amConfig = AccessManagerConfig.parse(amElem, vars);
+        amConfig = parser.parseAccessManagerConfig(amElem);
 
         // workspaces
         Element wspsElem = config.getRootElement().getChild(WORKSPACES_ELEMENT);
-        wspConfigRootDir = replaceVars(wspsElem.getAttributeValue(ROOT_PATH_ATTRIB), vars);
-        defaultWspName = replaceVars(wspsElem.getAttributeValue(DEFAULT_WORKSPACE_ATTRIB), vars);
+        wspConfigRootDir = parser.replaceVariables(wspsElem.getAttributeValue(ROOT_PATH_ATTRIB));
+        defaultWspName = parser.replaceVariables(wspsElem.getAttributeValue(DEFAULT_WORKSPACE_ATTRIB));
 
         // load wsp configs
         File wspRoot = new File(wspConfigRootDir);
@@ -194,7 +196,7 @@ public class RepositoryConfig extends AbstractConfig {
 
         // load versioning config
         Element vElement = config.getRootElement().getChild(VERSIONING_ELEMENT);
-        vConfig = new VersioningConfig(vElement, vars);
+        vConfig = parser.parseVersioningConfig(vElement);
     }
 
     /**

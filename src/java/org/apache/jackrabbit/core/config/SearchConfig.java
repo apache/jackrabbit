@@ -16,57 +16,17 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.jdom.Element;
 
 /**
  * Implements the search configuration.
  */
 public class SearchConfig extends BeanConfig {
 
-    /** FQN of the default query handler implementation */
-    private static final String DEFAULT_QUERY_HANDLER
-            = "org.apache.jackrabbit.core.search.lucene.SearchIndex";
-
     /** The <code>FileSystem</code> for the search index. */
     private final FileSystem fs;
-
-    /**
-     * Creates a new <code>SearchConfig</code>.
-     * @param config the config root element for this <code>SearchConfig</code>.
-     * @param vars map of variable values.
-     * @throws RepositoryException if an error occurs while creating the
-     *  <code>SearchConfig</code>.
-     */
-    static SearchConfig parse(Element config, Map vars) throws RepositoryException {
-        // create FileSystem
-        Element fsElement = config.getChild(AbstractConfig.FILE_SYSTEM_ELEMENT);
-        FileSystem fs = AbstractConfig.createFileSystem(fsElement, vars);
-
-        // gather params
-        Properties params = new Properties();
-        List paramList = config.getChildren(AbstractConfig.PARAM_ELEMENT);
-        for (Iterator i = paramList.iterator(); i.hasNext();) {
-            Element param = (Element) i.next();
-            String paramName = param.getAttributeValue(AbstractConfig.NAME_ATTRIB);
-            String paramValue = param.getAttributeValue(AbstractConfig.VALUE_ATTRIB);
-            // replace variables in param value
-            params.put(paramName, AbstractConfig.replaceVars(paramValue, vars));
-        }
-
-        // handler class name
-        String handlerClassName = config.getAttributeValue(AbstractConfig.CLASS_ATTRIB,
-                DEFAULT_QUERY_HANDLER);
-
-        return new SearchConfig(fs, handlerClassName, params);
-    }
 
     public SearchConfig(FileSystem fs, String className, Properties properties) {
         super(className, properties);
