@@ -253,13 +253,13 @@ class SysViewImportHandler extends DefaultHandler {
                         createNode(current);
                     }
                 } else if (currentPropName.equals(VersionManager.PROPNAME_BASE_VERSION)) {
-// ignore so far
+                    // ignore so far
                 } else if (currentPropName.equals(VersionManager.PROPNAME_VERSION_HISTORY)) {
-// ignore so far
+                    // ignore so far
                 } else if (currentPropName.equals(VersionManager.PROPNAME_PREDECESSORS)) {
-// ignore so far
+                    // ignore so far
                 } else if (currentPropName.equals(VersionManager.PROPNAME_IS_CHECKED_OUT)) {
-// ignore so far
+                    // ignore so far
                 } else {
                     // non-system property encountered; we can assume that all
                     // required system properties have been collected by now
@@ -303,7 +303,7 @@ class SysViewImportHandler extends DefaultHandler {
                             // try setting single-value
                             current.node.setProperty(currentPropName, vals[0]);
                         } catch (ValueFormatException vfe) {
-// try setting value array
+                            // try setting value array
                             current.node.setProperty(currentPropName, vals);
                         } catch (ConstraintViolationException vfe) {
                             // try setting value array
@@ -313,7 +313,7 @@ class SysViewImportHandler extends DefaultHandler {
                         // can only be multi-valued (n == 0 || n > 1)
                         current.node.setProperty(currentPropName, vals);
                     }
-// check if reference for later resolution
+                    // check if reference for later resolution
                     if (currentPropType == PropertyType.REFERENCE) {
                         references.add(current.node.getProperty(currentPropName));
                     }
@@ -347,7 +347,7 @@ class SysViewImportHandler extends DefaultHandler {
             state.node = state.parent.getNode(state.nodeName);
             NodeDef def = state.node.getDefinition();
             if (def.isProtected()) {
-// @todo how to handle protected/auto-created child node?
+                // @todo how to handle protected/auto-created child node?
 
             } else if (def.isAutoCreate()) {
                 // @todo how to handle protected/auto-created child node?
