@@ -70,12 +70,16 @@ abstract class AbstractConfig implements EntityResolver {
     }
 
     /**
-     * @param fsConfig
-     * @param variables
-     * @return
-     * @throws RepositoryException
+     * Creates a {@link org.apache.jackrabbit.core.fs.FileSystem} instance
+     * based on the config <code>fsConfig</code>.
+     *
+     * @param fsConfig a {@link #FILE_SYSTEM_ELEMENT}.
+     * @param variables values of variables to be replaced in config.
+     * @return a {@link org.apache.jackrabbit.core.fs.FileSystem} instance.
+     * @throws RepositoryException if an error occurs while creating the
+     *  {@link org.apache.jackrabbit.core.fs.FileSystem}.
      */
-    protected FileSystem createFileSystem(Element fsConfig, Map variables)
+    static FileSystem createFileSystem(Element fsConfig, Map variables)
             throws RepositoryException {
         FileSystem fs;
         String className = "";

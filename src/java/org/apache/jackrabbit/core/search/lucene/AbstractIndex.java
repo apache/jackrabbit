@@ -22,6 +22,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
@@ -29,6 +30,8 @@ import java.io.IOException;
  * Implements common functionality for a lucene index.
  */
 abstract class AbstractIndex {
+
+    private static final Logger log = Logger.getLogger(AbstractIndex.class);
 
     private IndexWriter indexWriter;
 
@@ -38,7 +41,13 @@ abstract class AbstractIndex {
 
     private Analyzer analyzer;
 
-    private boolean useCompoundFile = false;
+    private boolean useCompoundFile = true;
+
+    private int minMergeDocs = 1000;
+
+    private int maxMergeDocs = 10000;
+
+    private int mergeFactor = 10;
 
     AbstractIndex(Analyzer analyzer, Directory directory) throws IOException {
         this.analyzer = analyzer;
@@ -46,17 +55,12 @@ abstract class AbstractIndex {
 
         if (!IndexReader.indexExists(directory)) {
             indexWriter = new IndexWriter(directory, analyzer, true);
+            indexWriter.minMergeDocs = minMergeDocs;
+            indexWriter.maxMergeDocs = maxMergeDocs;
+            indexWriter.mergeFactor = mergeFactor;
             indexWriter.setUseCompoundFile(useCompoundFile);
         }
     }
-
-    synchronized void setUseCompoundFile(boolean b) {
-        useCompoundFile = b;
-        if (indexWriter != null) {
-            indexWriter.setUseCompoundFile(b);
-        }
-    }
-
 
     /**
      * Default implementation returns the same instance as passed
@@ -84,6 +88,7 @@ abstract class AbstractIndex {
     protected synchronized IndexReader getIndexReader() throws IOException {
         if (indexWriter != null) {
             indexWriter.close();
+            log.debug("closing IndexWriter.");
             indexWriter = null;
         }
         if (indexReader == null) {
@@ -95,10 +100,14 @@ abstract class AbstractIndex {
     protected synchronized IndexWriter getIndexWriter() throws IOException {
         if (indexReader != null) {
             indexReader.close();
+            log.debug("closing IndexReader.");
             indexReader = null;
         }
         if (indexWriter == null) {
             indexWriter = new IndexWriter(getDirectory(), analyzer, false);
+            indexWriter.minMergeDocs = minMergeDocs;
+            indexWriter.maxMergeDocs = maxMergeDocs;
+            indexWriter.mergeFactor = mergeFactor;
             indexWriter.setUseCompoundFile(useCompoundFile);
         }
         return indexWriter;
@@ -109,7 +118,7 @@ abstract class AbstractIndex {
             try {
                 indexWriter.close();
             } catch (IOException e) {
-                // FIXME do logging
+                log.warn("Exception closing index writer: " + e.toString());
             }
             indexWriter = null;
         }
@@ -117,7 +126,7 @@ abstract class AbstractIndex {
             try {
                 indexReader.close();
             } catch (IOException e) {
-                // FIXME do logging
+                log.warn("Exception closing index reader: " + e.toString());
             }
             indexReader = null;
         }
@@ -127,6 +136,34 @@ abstract class AbstractIndex {
             } catch (IOException e) {
                 directory = null;
             }
+        }
+    }
+
+    void setUseCompoundFile(boolean b) {
+        useCompoundFile = b;
+        if (indexWriter != null) {
+            indexWriter.setUseCompoundFile(b);
+        }
+    }
+
+    void setMinMergeDocs(int minMergeDocs) {
+        this.minMergeDocs = minMergeDocs;
+        if (indexWriter != null) {
+            indexWriter.minMergeDocs = minMergeDocs;
+        }
+    }
+
+    void setMaxMergeDocs(int maxMergeDocs) {
+        this.maxMergeDocs = maxMergeDocs;
+        if (indexWriter != null) {
+            indexWriter.maxMergeDocs = maxMergeDocs;
+        }
+    }
+
+    void setMergeFactor(int mergeFactor) {
+        this.mergeFactor = mergeFactor;
+        if (indexWriter != null) {
+            indexWriter.mergeFactor = mergeFactor;
         }
     }
 }

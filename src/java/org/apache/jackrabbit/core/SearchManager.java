@@ -17,6 +17,7 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.search.NamespaceMappings;
@@ -26,12 +27,14 @@ import org.apache.jackrabbit.core.search.lucene.*;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateProvider;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.config.SearchConfig;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
+import org.apache.commons.collections.BeanMap;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventIterator;
@@ -44,45 +47,70 @@ import java.util.*;
  */
 public class SearchManager implements SynchronousEventListener {
 
+    /** Logger instance for this class */
     private static final Logger log = Logger.getLogger(SearchManager.class);
 
+    /** Name of the file to persist search internal namespace mappings */
     private static final String NS_MAPPING_FILE = "ns_mappings.properties";
 
+    /** The actual search index */
     private final SearchIndex index;
 
+    /** State manager to retrieve content */
     private final ItemStateProvider stateProvider;
 
+    /** HierarchyManager for path resolution */
     private final HierarchyManager hmgr;
 
+    /** Session for accessing Nodes */
     private final SessionImpl session;
 
+    /** Storage for search index */
+    private final FileSystem fs;
+
+    /** Namespace resolver for search internal prefixes */
     private final NamespaceMappings nsMappings;
 
-    public SearchManager(ItemStateProvider stateProvider,
-                         HierarchyManager hmgr,
-                         SessionImpl session,
-                         FileSystem fs) throws IOException {
-        this.stateProvider = stateProvider;
-        this.hmgr = hmgr;
+    public SearchManager(SessionImpl session, SearchConfig config)
+            throws IOException {
         this.session = session;
+        this.stateProvider = session.getItemStateManager();
+        this.hmgr = session.getHierarchyManager();
+        this.fs = config.getFileSystem();
         index = new SearchIndex(fs, new StandardAnalyzer());
         FileSystemResource mapFile = new FileSystemResource(fs, NS_MAPPING_FILE);
         nsMappings = new NamespaceMappings(mapFile);
+
+        // set properties
+        BeanMap bm = new BeanMap(this);
+        try {
+            bm.putAll(config.getParameters());
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid configuration: " + e.getMessage());
+        }
     }
 
+    /**
+     * Adds a <code>Node</code> to the search index.
+     * @param node the NodeState to add.
+     * @param path the path of the node.
+     * @throws IOException if an error occurs while adding the node to
+     * the search index.
+     */
     public void addNode(NodeState node, Path path) throws IOException {
-        // FIXME rather throw RepositoryException?
-        log.debug("add node to index: " + path);
+        if (log.isDebugEnabled()) {
+            log.debug("add node to index: " + path);
+        }
         Document doc = NodeIndexer.createDocument(node, stateProvider, path, nsMappings);
         index.addDocument(doc);
     }
 
-    public void updateNode(NodeState node, Path path) throws IOException {
-        log.debug("update index for node: " + path);
-        deleteNode(path, node.getUUID());
-        addNode(node, path);
-    }
-
+    /**
+     * Deletes the Node with <code>UUID</code> from the search index.
+     * @param path the path of the node to delete.
+     * @param uuid the <code>UUID</code> of the node to delete.
+     * @throws IOException if an error occurs while deleting the node.
+     */
     public void deleteNode(Path path, String uuid) throws IOException {
         if (log.isDebugEnabled()) {
             log.debug("remove node from index: " + path.toString());
@@ -90,8 +118,18 @@ public class SearchManager implements SynchronousEventListener {
         index.removeDocument(new Term(FieldNames.UUID, uuid));
     }
 
+    /**
+     * Closes this <code>SearchManager</code> and also closes the
+     * {@link org.apache.jackrabbit.core.fs.FileSystem} passed in the
+     * constructor of this <code>SearchManager</code>.
+     */
     public void close() {
         index.close();
+        try {
+            fs.close();
+        } catch (FileSystemException e) {
+            log.error("Exception closing FileSystem.", e);
+        }
     }
 
     public QueryResultImpl execute(ItemManager itemMgr,
@@ -145,6 +183,7 @@ public class SearchManager implements SynchronousEventListener {
 
     public void onEvent(EventIterator events) {
         Set modified = new HashSet();
+        Set added = new HashSet();
         log.debug("onEvent: indexing started");
         long time = System.currentTimeMillis();
 
@@ -162,6 +201,7 @@ public class SearchManager implements SynchronousEventListener {
                             session.getNamespaceResolver(),
                             true);
                     pendingNodes.add(path);
+                    added.add(e.getChildUUID());
                 } else if (type == Event.NODE_REMOVED) {
 
                     Path path = Path.create(e.getPath(),
@@ -176,13 +216,24 @@ public class SearchManager implements SynchronousEventListener {
                     Path path = Path.create(e.getPath(),
                             session.getNamespaceResolver(),
                             true).getAncestor(1);
-                    if (!modified.contains(e.getParentUUID())) {
-                        deleteNode(path, e.getParentUUID());
-                        modified.add(e.getParentUUID());
-                        pendingNodes.add(path);
+
+                    if (type == Event.PROPERTY_ADDED) {
+                        // do not delete and re-add if associated node got added too
+                        if (!added.contains(e.getParentUUID())) {
+                            deleteNode(path, e.getParentUUID());
+                            modified.add(e.getParentUUID());
+                            pendingNodes.add(path);
+                        }
                     } else {
-                        // already deleted
+                        if (!modified.contains(e.getParentUUID())) {
+                            deleteNode(path, e.getParentUUID());
+                            modified.add(e.getParentUUID());
+                            pendingNodes.add(path);
+                        } else {
+                            // already deleted
+                        }
                     }
+
                 }
             } catch (MalformedPathException e) {
                 log.error("error indexing node.", e);
@@ -212,6 +263,24 @@ public class SearchManager implements SynchronousEventListener {
                     + String.valueOf(System.currentTimeMillis() - time)
                     + " ms.");
         }
+    }
+
+    //---------------------< properties >---------------------------------------
+
+    public void setUseCompoundFile(boolean b) {
+        index.setUseCompoundFile(b);
+    }
+
+    public void setMinMergeDocs(int minMergeDocs) {
+        index.setMinMergeDocs(minMergeDocs);
+    }
+
+    public void setMaxMergeDocs(int maxMergeDocs) {
+        index.setMaxMergeDocs(maxMergeDocs);
+    }
+
+    public void setMergeFactor(int mergeFactor) {
+        index.setMergeFactor(mergeFactor);
     }
 
     //-----------------------< internal >---------------------------------------

@@ -104,7 +104,9 @@ class FileSystemDirectory extends Directory {
                 // erase if existing
                 String[] files = fs.listFiles("/");
                 for (int i = 0; i < files.length; i++) {
-                    log.debug("deleting " + files[i]);
+                    if (log.isDebugEnabled()) {
+                        log.debug("deleting " + files[i]);
+                    }
                     fs.deleteFile(files[i]);
                 }
             } catch (FileSystemException e) {
@@ -117,7 +119,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#list()
      */
     public String[] list() throws IOException {
-        log.debug("list");
+        if (log.isDebugEnabled()) {
+            log.debug("list");
+        }
         try {
             return fs.listFiles("/");
         } catch (FileSystemException e) {
@@ -129,7 +133,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#fileExists(String)
      */
     public boolean fileExists(String name) throws IOException {
-        log.debug("fileExists: " + name);
+        if (log.isDebugEnabled()) {
+            log.debug("fileExists: " + name);
+        }
         try {
             return fs.exists(name);
         } catch (FileSystemException e) {
@@ -141,7 +147,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#fileModified(String)
      */
     public long fileModified(String name) throws IOException {
-        log.debug("fileModified: " + name);
+        if (log.isDebugEnabled()) {
+            log.debug("fileModified: " + name);
+        }
         try {
             return fs.lastModified(name);
         } catch (FileSystemException e) {
@@ -153,7 +161,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#touchFile(String)
      */
     public void touchFile(String name) throws IOException {
-        log.debug("touchFile: " + name);
+        if (log.isDebugEnabled()) {
+            log.debug("touchFile: " + name);
+        }
         try {
             fs.touch(name);
         } catch (FileSystemException e) {
@@ -165,7 +175,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#deleteFile(String)
      */
     public void deleteFile(String name) throws IOException {
-        log.debug("deleteFile: " + name);
+        if (log.isDebugEnabled()) {
+            log.debug("deleteFile: " + name);
+        }
         try {
             fs.deleteFile(name);
         } catch (FileSystemException e) {
@@ -177,7 +189,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#renameFile(String, String)
      */
     public void renameFile(String from, String to) throws IOException {
-        log.debug("renameFile: from=" + from + " to=" + to);
+        if (log.isDebugEnabled()) {
+            log.debug("renameFile: from=" + from + " to=" + to);
+        }
         try {
             fs.move(from, to);
         } catch (FileSystemException e) {
@@ -189,7 +203,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#fileLength(String)
      */
     public long fileLength(String name) throws IOException {
-        log.debug("fileLength: " + name);
+        if (log.isDebugEnabled()) {
+            log.debug("fileLength: " + name);
+        }
         try {
             return fs.length(name);
         } catch (FileSystemException e) {
@@ -201,7 +217,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#createFile(String)
      */
     public OutputStream createFile(String name) throws IOException {
-        log.debug("createFile: " + name);
+        if (log.isDebugEnabled()) {
+            log.debug("createFile: " + name);
+        }
         return new FileSystemOutputStream(new FileSystemResource(fs, name));
     }
 
@@ -209,7 +227,9 @@ class FileSystemDirectory extends Directory {
      * @see Directory#openFile(String)
      */
     public InputStream openFile(String name) throws IOException {
-        log.debug("openFile: " + name);
+        if (log.isDebugEnabled()) {
+            log.debug("openFile: " + name);
+        }
         return new FileSystemInputStream(new FileSystemResource(fs, name));
     }
 

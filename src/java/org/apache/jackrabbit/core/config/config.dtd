@@ -88,7 +88,4 @@
     the SearchIndex element specifies the locaction of the search index
     (used by the QueryManager)
 -->
-<!ELEMENT SearchIndex EMPTY>
-<!ATTLIST SearchIndex
-    path CDATA #REQUIRED>
-
+<!ELEMENT SearchIndex (param*,FileSystem)>

@@ -74,7 +74,7 @@
         the SearchIndex element specifies the locaction of the search index
         (used by the QueryManager)
     -->
-    <!ELEMENT SearchIndex (FileSystem)>
+    <!ELEMENT SearchIndex (param*,FileSystem)>
 ]>
 <!-- Example Repository Configuration File -->
 <Repository>
@@ -128,6 +128,11 @@
             Search index and the file system it uses.
         -->
         <SearchIndex>
+            <param name="useCompoundFile" value="true"/>
+            <param name="minMergeDocs" value="1000"/>
+            <param name="maxMergeDocs" value="10000"/>
+            <param name="mergeFactor" value="10"/>
+
             <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
                 <param name="path" value="${wsp.home}/index"/>
             </FileSystem>

@@ -81,9 +81,9 @@ public class WorkspaceConfig extends AbstractConfig {
     private PersistenceManager persistMgr;
 
     /**
-     * virtual file system where the workspace stores the search index
+     * configuration for the search manager.
      */
-    private FileSystem searchIndexFS;
+    private SearchConfig searchConfig;
 
     /**
      * private constructor.
@@ -127,11 +127,10 @@ public class WorkspaceConfig extends AbstractConfig {
         Element fsConfig = wspElem.getChild(FILE_SYSTEM_ELEMENT);
         wspFS = createFileSystem(fsConfig, vars);
 
-        // search index
-        Element searchConfig = wspElem.getChild(SEARCH_INDEX_ELEMENT);
-        if (searchConfig != null) {
-            Element indexFS = searchConfig.getChild(FILE_SYSTEM_ELEMENT);
-            searchIndexFS = createFileSystem(indexFS, vars);
+        // search config
+        Element searchElem = wspElem.getChild(SEARCH_INDEX_ELEMENT);
+        if (searchElem != null) {
+            searchConfig = new SearchConfig(searchElem, vars);
         }
 
         // persistence manager
@@ -241,13 +240,13 @@ public class WorkspaceConfig extends AbstractConfig {
     }
 
     /**
-     * Returns virtual file system where the search index is stored.
-     * Returns <code>null</code> if no search index is configured.
+     * Returns the configuration of the search manager.
+     * Returns <code>null</code> if no search manager is configured.
      *
-     * @return virtual file system where the search index is stored.
+     * @return the <code>SearchConfig</code> for this workspace.
      */
-    public FileSystem getSearchIndexFS() {
-        return searchIndexFS;
+    public SearchConfig getSearchConfig() {
+        return searchConfig;
     }
 
     //------------------------------------------------------< EntityResolver >

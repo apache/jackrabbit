@@ -115,7 +115,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
             StringTokenizer names = new StringTokenizer(testPath, "/");
             Node currentNode = root;
             while (names.hasMoreTokens()) {
-                currentNode.addNode(names.nextToken(), testNodeType);
+                currentNode = currentNode.addNode(names.nextToken(), testNodeType);
             }
             testRootNode = currentNode;
         }

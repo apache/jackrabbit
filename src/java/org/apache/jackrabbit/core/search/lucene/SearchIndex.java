@@ -146,4 +146,22 @@ public class SearchIndex {
     public Analyzer getAnalyzer() {
         return analyzer;
     }
+
+    //--------------------------< properties >----------------------------------
+
+    public void setUseCompoundFile(boolean b) {
+        persistentIndex.setUseCompoundFile(b);
+    }
+
+    public void setMinMergeDocs(int minMergeDocs) {
+        persistentIndex.setMinMergeDocs(minMergeDocs);
+    }
+
+    public void setMaxMergeDocs(int maxMergeDocs) {
+        persistentIndex.setMaxMergeDocs(maxMergeDocs);
+    }
+
+    public void setMergeFactor(int mergeFactor) {
+        persistentIndex.setMergeFactor(mergeFactor);
+    }
 }
