@@ -361,23 +361,19 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     public Object visit(RelationQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
-            if (node.getOperation() == OPERATION_EQ_VALUE) {
+            if (node.getOperation() == OPERATION_EQ_VALUE || node.getOperation() == OPERATION_EQ_GENERAL) {
                 appendName(node.getProperty(), resolver, sb);
                 sb.append(" = ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_EQ_GENERAL) {
-                appendValue(node, sb);
-                sb.append(" IN ");
-                appendName(node.getProperty(), resolver, sb);
-            } else if (node.getOperation() == OPERATION_GE_VALUE) {
+            } else if (node.getOperation() == OPERATION_GE_VALUE || node.getOperation() == OPERATION_GE_GENERAL) {
                 appendName(node.getProperty(), resolver, sb);
                 sb.append(" >= ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_GT_VALUE) {
+            } else if (node.getOperation() == OPERATION_GT_VALUE || node.getOperation() == OPERATION_GT_GENERAL) {
                 appendName(node.getProperty(), resolver, sb);
                 sb.append(" > ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_LE_VALUE) {
+            } else if (node.getOperation() == OPERATION_LE_VALUE || node.getOperation() == OPERATION_LE_GENERAL) {
                 appendName(node.getProperty(), resolver, sb);
                 sb.append(" <= ");
                 appendValue(node, sb);
@@ -385,18 +381,14 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 appendName(node.getProperty(), resolver, sb);
                 sb.append(" LIKE ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_LT_VALUE) {
+            } else if (node.getOperation() == OPERATION_LT_VALUE || node.getOperation() == OPERATION_LT_GENERAL) {
                 appendName(node.getProperty(), resolver, sb);
                 sb.append(" < ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_NE_VALUE) {
+            } else if (node.getOperation() == OPERATION_NE_VALUE || node.getOperation() == OPERATION_NE_GENERAL) {
                 appendName(node.getProperty(), resolver, sb);
                 sb.append(" <> ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_NE_GENERAL) {
-                appendValue(node, sb);
-                sb.append(" NOT IN ");
-                appendName(node.getProperty(), resolver, sb);
             } else if (node.getOperation() == OPERATION_NULL) {
                 appendName(node.getProperty(), resolver, sb);
                 sb.append(" IS NULL");

@@ -303,11 +303,11 @@ void Predicate() :
 {
   (
     (
-      identifier = Identifier() { jjtThis.setIdentifier(identifier); } ( <PERIOD> identifier = Identifier() { jjtThis.setIdentifier(identifier); } )?
+      identifier = Identifier() { jjtThis.setIdentifier(identifier); } ( <PERIOD> identifier = Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); jjtThis.setIdentifier(identifier); } )?
       (
         (
           operationType = ComparisonOperation() { jjtThis.setOperationType(operationType); }
-          (Literal() | (identifier = Identifier() { jjtThis.setIdentifier(identifier); } ( <PERIOD> identifier = Identifier() { jjtThis.setIdentifier(identifier); } )? ) )
+          (Literal() | (identifier = Identifier() { jjtThis.setIdentifier(identifier); } ( <PERIOD> identifier = Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); jjtThis.setIdentifier(identifier); } )? ) )
         )
       |
         ((<NOT> { jjtThis.setNegate(true); })?
@@ -355,12 +355,12 @@ int ComparisonOperation() #void :
 }
 {
   (
-      <EQ_OPERATOR> { operationType = QueryConstants.OPERATION_EQ_VALUE; }
-    | <NE_OPERATOR> { operationType = QueryConstants.OPERATION_NE_VALUE; }
-    | <LT_OPERATOR> { operationType = QueryConstants.OPERATION_LT_VALUE; }
-    | <GT_OPERATOR> { operationType = QueryConstants.OPERATION_GT_VALUE; }
-    | <LE_OPERATOR> { operationType = QueryConstants.OPERATION_LE_VALUE; }
-    | <GE_OPERATOR> { operationType = QueryConstants.OPERATION_GE_VALUE; }
+      <EQ_OPERATOR> { operationType = QueryConstants.OPERATION_EQ_GENERAL; }
+    | <NE_OPERATOR> { operationType = QueryConstants.OPERATION_NE_GENERAL; }
+    | <LT_OPERATOR> { operationType = QueryConstants.OPERATION_LT_GENERAL; }
+    | <GT_OPERATOR> { operationType = QueryConstants.OPERATION_GT_GENERAL; }
+    | <LE_OPERATOR> { operationType = QueryConstants.OPERATION_LE_GENERAL; }
+    | <GE_OPERATOR> { operationType = QueryConstants.OPERATION_GE_GENERAL; }
   )
   {
     return operationType;

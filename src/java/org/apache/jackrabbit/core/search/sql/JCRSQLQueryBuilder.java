@@ -232,24 +232,33 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         NAryQueryNode parent = (NAryQueryNode) data;
 
         int type = node.getOperationType();
-        QueryNode predicateNode = null;
+        QueryNode predicateNode;
 
         try {
-            final QName[] tmp = new QName[1];
+            final QName[] tmp = new QName[2];
+            final ASTLiteral[] value = new ASTLiteral[1];
             node.childrenAccept(new DefaultParserVisitor() {
                 public Object visit(ASTIdentifier node, Object data) {
-                    // only assign first identifier
-                    tmp[0] = (tmp[0] == null) ? node.getName() : tmp[0];
+                    if (tmp[0] == null) {
+                        tmp[0] = node.getName();
+                    } else if (tmp[1] == null) {
+                        tmp[1] = node.getName();
+                    }
+                    return data;
+                }
+
+                public Object visit(ASTLiteral node, Object data) {
+                    value[0] = node;
                     return data;
                 }
             }, data);
             QName identifier = tmp[0];
 
             if (identifier.equals(QueryConstants.JCR_PATH)) {
-                if (node.children[1] instanceof ASTIdentifier) {
+                if (tmp[1] != null) {
                     // simply ignore, this is a join of a mixin node type
                 } else {
-                    createPathQuery(((ASTLiteral) node.children[1]).getValue(), parent.getType());
+                    createPathQuery(value[0].getValue(), parent.getType());
                 }
                 // done
                 return data;
@@ -258,32 +267,22 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             if (type == QueryConstants.OPERATION_BETWEEN) {
                 AndQueryNode between = new AndQueryNode(parent);
                 RelationQueryNode rel = createRelationQueryNode(between,
-                        identifier, QueryConstants.OPERATION_GE_VALUE, (ASTLiteral) node.children[1]);
+                        identifier, QueryConstants.OPERATION_GE_GENERAL, (ASTLiteral) node.children[1]);
                 between.addOperand(rel);
                 rel = createRelationQueryNode(between,
-                        identifier, QueryConstants.OPERATION_LE_VALUE, (ASTLiteral) node.children[2]);
+                        identifier, QueryConstants.OPERATION_LE_GENERAL, (ASTLiteral) node.children[2]);
                 between.addOperand(rel);
                 predicateNode = between;
-            } else if (type == QueryConstants.OPERATION_EQ_VALUE) {
-                if (node.children[1] instanceof ASTIdentifier) {
-                    // simply ignore, this is a join of a mixin node type
-                } else {
-                    predicateNode = createRelationQueryNode(parent,
-                            identifier, type, (ASTLiteral) node.children[1]);
-                }
-            } else if (type == QueryConstants.OPERATION_GE_VALUE
-                    || type == QueryConstants.OPERATION_GT_VALUE
-                    || type == QueryConstants.OPERATION_LE_VALUE
-                    || type == QueryConstants.OPERATION_LT_VALUE
-                    || type == QueryConstants.OPERATION_NE_VALUE) {
+            } else if (type == QueryConstants.OPERATION_GE_GENERAL
+                    || type == QueryConstants.OPERATION_GT_GENERAL
+                    || type == QueryConstants.OPERATION_LE_GENERAL
+                    || type == QueryConstants.OPERATION_LT_GENERAL
+                    || type == QueryConstants.OPERATION_NE_GENERAL
+                    || type == QueryConstants.OPERATION_EQ_GENERAL) {
                 predicateNode = createRelationQueryNode(parent,
-                        identifier, type, (ASTLiteral) node.children[1]);
-            } else if (type == QueryConstants.OPERATION_EQ_GENERAL
-                    || type == QueryConstants.OPERATION_NE_GENERAL) {
-                predicateNode = createRelationQueryNode(parent,
-                        identifier, type, (ASTLiteral) node.children[0]);
+                        identifier, type, value[0]);
             } else if (type == QueryConstants.OPERATION_LIKE) {
-                ASTLiteral pattern = (ASTLiteral) node.children[1];
+                ASTLiteral pattern = value[0];
                 if (node.getEscapeString() != null) {
                     if (node.getEscapeString().length() == 1) {
                         // backslash is the escape character we use internally

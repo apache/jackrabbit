@@ -310,10 +310,10 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             // replace unescaped ' with " and escaped ' with just '
             StringBuffer query = new StringBuffer();
             String textsearch = node.getQuery();
-            // the default lucene query parser recognizes 'AND', 'OR' and
-            // 'NOT' as keywords. when the whole statement is lowercased, this
-            // will not happen ;)
-            textsearch = textsearch.toLowerCase();
+            // the default lucene query parser recognizes 'AND' and 'NOT' as
+            // keywords.
+            textsearch = textsearch.replaceAll("AND", "and");
+            textsearch = textsearch.replaceAll("NOT", "not");
             boolean escaped = false;
             for (int i = 0; i < textsearch.length(); i++) {
                 if (textsearch.charAt(i) == '\\') {
@@ -568,6 +568,15 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = or;
                 }
                 break;
+            case QueryConstants.OPERATION_GE_GENERAL:   // >=
+                // search in single and multi valued properties
+                or = new BooleanQuery();
+                for (int i = 0; i < stringValues.length; i++) {
+                    or.add(new RangeQuery(new Term(field, stringValues[i]), null, true), false, false);
+                    or.add(new RangeQuery(new Term(mvpField, stringValues[i]), null, true), false, false);
+                }
+                query = or;
+                break;
             case QueryConstants.OPERATION_GT_VALUE:      // >
                 if (stringValues.length == 1) {
                     query = new RangeQuery(new Term(field, stringValues[0]), null, false);
@@ -579,6 +588,14 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = or;
                 }
                 break;
+            case QueryConstants.OPERATION_GT_GENERAL:      // >
+                or = new BooleanQuery();
+                for (int i = 0; i < stringValues.length; i++) {
+                    or.add(new RangeQuery(new Term(field, stringValues[i]), null, false), false, false);
+                    or.add(new RangeQuery(new Term(mvpField, stringValues[i]), null, false), false, false);
+                }
+                query = or;
+                break;
             case QueryConstants.OPERATION_LE_VALUE:      // <=
                 if (stringValues.length == 1) {
                     query = new RangeQuery(null, new Term(field, stringValues[0]), true);
@@ -589,6 +606,14 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                     }
                     query = or;
                 }
+                break;
+            case QueryConstants.OPERATION_LE_GENERAL:      // <=
+                or = new BooleanQuery();
+                for (int i = 0; i < stringValues.length; i++) {
+                    or.add(new RangeQuery(null, new Term(field, stringValues[i]), true), false, false);
+                    or.add(new RangeQuery(null, new Term(mvpField, stringValues[i]), true), false, false);
+                }
+                query = or;
                 break;
             case QueryConstants.OPERATION_LIKE:          // LIKE
                 // the like operation always has one string value.
@@ -609,6 +634,14 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                     }
                     query = or;
                 }
+                break;
+            case QueryConstants.OPERATION_LT_GENERAL:      // <
+                or = new BooleanQuery();
+                for (int i = 0; i < stringValues.length; i++) {
+                    or.add(new RangeQuery(null, new Term(field, stringValues[i]), false), false, false);
+                    or.add(new RangeQuery(null, new Term(mvpField, stringValues[i]), false), false, false);
+                }
+                query = or;
                 break;
             case QueryConstants.OPERATION_NE_VALUE:      // !=
                 BooleanQuery notQuery = new BooleanQuery();

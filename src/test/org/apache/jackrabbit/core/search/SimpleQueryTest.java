@@ -368,11 +368,12 @@ public class SimpleQueryTest extends AbstractQueryTest {
         result = q.execute();
         checkResult(result, 3); // foo, bar, bla
 
+        // the text = 'foo' is now also a general comparison
         sql = "SELECT * FROM nt:unstructured WHERE text = 'foo' " +
                 "and jcr:path LIKE '" + testRoot + "/%'";
         q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
-        checkResult(result, 2); // bar, bla
+        checkResult(result, 3); // foo, bar, bla
 
         xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text eq 'foo']";
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);

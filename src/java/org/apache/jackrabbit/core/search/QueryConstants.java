@@ -86,61 +86,85 @@ public interface QueryConstants {
      * equal operation: =
      * general comparison
      */
-    public static int OPERATION_EQ_GENERAL = OPERATIONS + 2;
+    public static int OPERATION_EQ_GENERAL = OPERATION_EQ_VALUE + 1;
 
     /**
      * not equal operation: <>
      */
-    public static int OPERATION_NE_VALUE = OPERATIONS + 3;
+    public static int OPERATION_NE_VALUE = OPERATION_EQ_GENERAL + 1;
 
     /**
      * not equal operation: <>
      * general comparision
      */
-    public static int OPERATION_NE_GENERAL = OPERATIONS + 4;
+    public static int OPERATION_NE_GENERAL = OPERATION_NE_VALUE + 1;
 
     /**
      * less than operation: &lt;
      */
-    public static int OPERATION_LT_VALUE = OPERATIONS + 5;
+    public static int OPERATION_LT_VALUE = OPERATION_NE_GENERAL + 1;
+
+    /**
+     * less than operation: &lt;
+     * general comparison
+     */
+    public static int OPERATION_LT_GENERAL = OPERATION_LT_VALUE + 1;
 
     /**
      * greater than operation: >
      */
-    public static int OPERATION_GT_VALUE = OPERATIONS + 6;
+    public static int OPERATION_GT_VALUE = OPERATION_LT_GENERAL + 1;
+
+    /**
+     * greater than operation: >
+     * general comparision
+     */
+    public static int OPERATION_GT_GENERAL = OPERATION_GT_VALUE + 1;
 
     /**
      * greater or equal operation: >=
      */
-    public static int OPERATION_GE_VALUE = OPERATIONS + 7;
+    public static int OPERATION_GE_VALUE = OPERATION_GT_GENERAL + 1;
+
+    /**
+     * greater or equal operation: >=
+     * general comparison
+     */
+    public static int OPERATION_GE_GENERAL = OPERATION_GE_VALUE + 1;
 
     /**
      * less than or equal operation: <=
      */
-    public static int OPERATION_LE_VALUE = OPERATIONS + 8;
+    public static int OPERATION_LE_VALUE = OPERATION_GE_GENERAL + 1;
+
+    /**
+     * less than or equal operation: <=
+     * general comparison
+     */
+    public static int OPERATION_LE_GENERAL = OPERATION_LE_VALUE + 1;
 
     /**
      * like operation: identifier LIKE string_literal
      */
-    public static int OPERATION_LIKE = OPERATIONS + 9;
+    public static int OPERATION_LIKE = OPERATION_LE_GENERAL + 1;
 
     /**
      * between operation: identifier [ NOT ] BETWEEN literal AND literal
      */
-    public static int OPERATION_BETWEEN = OPERATIONS + 10;
+    public static int OPERATION_BETWEEN = OPERATION_LIKE + 1;
 
     /**
      * on operation: identifier [ NOT ] IN ( literal {, literal}* )
      */
-    public static int OPERATION_IN = OPERATIONS + 11;
+    public static int OPERATION_IN = OPERATION_BETWEEN + 1;
 
     /**
      * is null operation: identifier IS NULL
      */
-    public static int OPERATION_NULL = OPERATIONS + 12;
+    public static int OPERATION_NULL = OPERATION_IN + 1;
 
     /**
      * is not null operation: identifier IS NOT NULL
      */
-    public static int OPERATION_NOT_NULL = OPERATIONS + 13;
+    public static int OPERATION_NOT_NULL = OPERATION_NULL + 1;
 }
