@@ -35,19 +35,45 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class RepositoryServlet extends HttpServlet {
 
+    /** the logger */
     private static Logger log;// = Logger.getLogger(RepositoryServlet.class);
 
+    /** repository configuration path */
     public final static String INIT_PARAM_REPOSITORY_CONFIG = "repository-config";
 
+    /** repository home */
     public final static String INIT_PARAM_REPOSITORY_HOME = "repository-home";
 
+    /** repository name */
     public final static String INIT_PARAM_REPOSITORY_NAME = "repository-name";
 
-    // todo: implement correctly
+    /** jaas configuration file path */
+    public static final String JAAS_CONFIG_FILE = "jaas-config-file";
+
+    /** user id name */
+    public static final String USER_ID = "jcr-userid";
+
+    /** user password name */
+    public static final String  USER_PASSWORD = "jcr-password";
+
+    /** log4j config */
     public final static String PARAM_LOG4J_CONFIG = "log4j-config";
 
-    public static RepositoryImpl repository;
+    /** the repository to read/write test results and config */
+    private static RepositoryImpl repository;
 
+    /** the user id */
+    private static String uid;
+
+    /** the password */
+    private static String pw;
+
+    /**
+     * The init method starts the repository to read/write test results and configuration,
+     * sets the jaas config and the user id and the user password
+     *
+     * @throws ServletException
+     */
     public void init() throws ServletException {
         super.init();
 
@@ -117,6 +143,18 @@ public class RepositoryServlet extends HttpServlet {
 
             log_info("JSR170 RI Repository initialized.");
 
+            // set jaas config file
+            String jaasConfigFile = getServletConfig().getInitParameter(JAAS_CONFIG_FILE);
+            if (jaasConfigFile == null) {
+                jaasConfigFile = "etc/jaas.config";
+            }
+            System.setProperty("java.security.auth.login.config", jaasConfigFile);
+            log_info("JAAS config set");
+
+            // set user id and password to read/write test results and configuration
+            uid = getServletConfig().getInitParameter(USER_ID);
+            pw = getServletConfig().getInitParameter(USER_PASSWORD);
+
         } catch (RepositoryException e) {
             log_info("Unable to initialize repository: " + e.toString(), e);
             throw new ServletException("Unable to initialize repository: " + e.toString(), e);
@@ -155,10 +193,9 @@ public class RepositoryServlet extends HttpServlet {
     /**
      * Returns the jcr session
      *
-     * @param req
      * @return
      */
-    public static Session getSession(HttpServletRequest req) {
+    public static Session getSession() {
         try {
             return login();
         } catch (RepositoryException e) {
@@ -168,14 +205,14 @@ public class RepositoryServlet extends HttpServlet {
     }
 
     /**
-     * logs in to the repository. currently only as anonymous user
+     * Logs in to the repository. The user to login is specified in the servlet config.
      * @throws RepositoryException
      */
     public static Session login()
 	    throws RepositoryException {
 
         // login
-        Session repSession = repository.login(null, null);
+        Session repSession = repository.login(new SimpleCredentials(uid, pw.toCharArray()), null);
         return repSession;
     }
 

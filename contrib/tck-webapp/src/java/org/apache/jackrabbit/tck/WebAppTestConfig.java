@@ -18,24 +18,29 @@ package org.apache.jackrabbit.tck;
 
 import org.apache.jackrabbit.tck.j2ee.RepositoryServlet;
 import org.apache.jackrabbit.test.JNDIRepositoryStub;
+import org.apache.jackrabbit.test.RepositoryStub;
 
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Properties;
+import java.util.*;
 import java.io.InputStream;
 import java.io.IOException;
+
+import junit.framework.TestSuite;
+import junit.framework.TestCase;
 
 
 /**
  * The <code>WebAppTestConfig</code> class reads and saves the config in the tck web app specific way.
  */
 public class WebAppTestConfig {
+    /** default property names */
     public final static String[] propNames = {JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_WORKSPACE_NAME,
-                                              JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP, "java.naming.provider.url", "java.naming.factory.initial",
+                                              JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP,
+                                              "java.naming.provider.url",
+                                              "java.naming.factory.initial",
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_SUPERUSER_NAME,
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_SUPERUSER_PWD,
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READWRITE_NAME,
@@ -46,6 +51,10 @@ public class WebAppTestConfig {
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME1,
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME2,
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME3,
+                                              JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME4,
+                                              JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_PROP_NAME1,
+                                              JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_PROP_NAME2,
+                                              JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NAMESPACES,
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODETYPE};
 
     /**
@@ -56,12 +65,16 @@ public class WebAppTestConfig {
     public static Map getConfig() {
         Map config = new HashMap();
         try {
-            Session repSession = RepositoryServlet.getSession(null);
+            Iterator allPropNames = getOriConfig().keySet().iterator();
+
+            Session repSession = RepositoryServlet.getSession();
             Node configNode = repSession.getRootNode().getNode("testconfig");
 
-            for (int i = 0; i < propNames.length; i++) {
-                String pName = propNames[i];
-                config.put(pName, configNode.getProperty(pName).getString());
+            while (allPropNames.hasNext()) {
+                String pName = (String) allPropNames.next();
+                if (configNode.hasProperty(pName)) {
+                    config.put(pName, configNode.getProperty(pName).getString());
+                }
             }
         } catch (RepositoryException e) {
             return new HashMap();
@@ -84,6 +97,12 @@ public class WebAppTestConfig {
                 // ignore
             }
         }
+
+        // add additional props
+        props.put(JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP, "");
+        props.put("java.naming.provider.url", "");
+        props.put("java.naming.factory.initial", "");
+
         return props;
     }
 
@@ -105,8 +124,10 @@ public class WebAppTestConfig {
         }
 
         // save config entries
-        for (int i = 0; i < propNames.length; i++) {
-            String pName = propNames[i];
+        Iterator allPropNames = getOriConfig().keySet().iterator();
+
+        while (allPropNames.hasNext()) {
+            String pName = (String) allPropNames.next();
             setEntry(pName, request, testConfig);
         }
 
@@ -126,5 +147,78 @@ public class WebAppTestConfig {
         if (request.getParameter(propname) != null) {
             testConfig.setProperty(propname, request.getParameter(propname));
         }
+    }
+
+    /**
+     * Returns all test case specific configuration entries
+     *
+     * @param suite test suite
+     * @return all test case specific conf entries
+     */
+    public static Map getTestCaseSpecificConfigs(TestSuite suite) {
+        Map currentConfig = getCurrentConfig();
+        Map configs = new HashMap();
+
+        // check for "package" defined props
+        String pname = suite.getName();
+        if ("versioning".equals(pname)) {
+            pname = "version";
+        }
+        configs.putAll(getProperties(pname, currentConfig));
+
+        Enumeration allTestClasses = suite.tests();
+
+        while (allTestClasses.hasMoreElements()) {
+            TestSuite aTest = (TestSuite) allTestClasses.nextElement();
+            String name = aTest.getName();
+            name = name.substring(name.lastIndexOf(".") + 1);
+
+            // check for class defined props
+            configs.putAll(getProperties(name, currentConfig));
+
+            // goto methods
+            Enumeration testMethods = aTest.tests();
+
+            while (testMethods.hasMoreElements()) {
+                TestCase tc = (TestCase) testMethods.nextElement();
+                String methodname = tc.getName();
+                String fullName = name + "." + methodname;
+                configs.putAll(getProperties(fullName, currentConfig));
+            }
+        }
+        return configs;
+    }
+
+    /**
+     * Returns the current configuration
+     * @return
+     */
+    public static Map getCurrentConfig() {
+        Map conf = getOriConfig();
+        conf.putAll(getConfig());
+        return conf;
+    }
+
+    /**
+     * Returns all properties which property name starts with <code>"javax.jcr.tck." + name</code>
+     *
+     * @param name property name "extension"
+     * @param config configuration
+     * @return all properties which apply the above mentioned rule
+     */
+    private static Map getProperties(String name, Map config) {
+        Map props = new HashMap();
+
+        String pname = RepositoryStub.PROP_PREFIX + "." + name;
+
+        Iterator itr = config.keySet().iterator();
+
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            if (key.startsWith(pname)) {
+                props.put(key, config.get(key));
+            }
+        }
+        return props;
     }
 }

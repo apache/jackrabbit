@@ -20,7 +20,11 @@ import junit.framework.TestSuite;
 import junit.framework.TestResult;
 import javax.jcr.*;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.servlet.jsp.JspWriter;
 import java.util.*;
+import java.io.IOException;
+import java.text.MessageFormat;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.RepositoryHelper;
 
@@ -38,18 +42,25 @@ public class Tester {
     /** the test listener */
     TckTestRunner runner;
 
+    /** the jsp writer */
+    JspWriter writer;
+
+    /** The string to be writen after finishing a suite */
+    String finishedSuiteString;
+
     /**
      * The constructor...
      *
      * @param tests All tests found using <code>TestFinder</code>
      */
-    public Tester(TestFinder tests, TckTestRunner runner) {
+    public Tester(TestFinder tests, TckTestRunner runner, JspWriter writer) {
         this.tests = tests;
         results = new HashMap();
         this.runner = runner;
+        this.writer = writer;
 
         // set the configuration for the to be tested repository
-        AbstractJCRTest.helper = new RepositoryHelper(WebAppTestConfig.getConfig());
+        AbstractJCRTest.helper = new RepositoryHelper(WebAppTestConfig.getCurrentConfig());
     }
 
     /**
@@ -71,11 +82,26 @@ public class Tester {
             try {
                 suite.run(result);
                 results.putAll(runner.getResults());
+                write(suite);
             } catch (Exception e) {
                 // ignore
             }
         }
         return results;
+    }
+
+
+    public void setfinishedSuiteString(String line) {
+        finishedSuiteString = line;
+    }
+
+    /**
+     * Writes a predefined string to the output after finishing a test suite
+     */
+    private void write(TestSuite suite) throws IOException {
+        if (writer != null) {
+            writer.write(MessageFormat.format(finishedSuiteString, new String[]{suite.toString(), String.valueOf(suite.testCount())}));
+        }
     }
 
     /**

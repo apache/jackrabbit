@@ -26,13 +26,27 @@ limitations under the License.
 %><html>
     <head><title>TCK for JSR170</title>
     <link rel="stylesheet" href="docroot/ui/default.css" type="text/css" title="style" />
+    <script>
+        function setImage(id, url) {
+		var logoImg = new Image();
+            logoImg.src = url;
+            var img = document.getElementById(id);
+
+            if (logoImg .width > 0) {
+                img.src= logoImg.src;
+            } else {
+                img.src = "docroot/imgs/banner_right.jpg";
+            }
+        }
+
+    </script>
     </head>
-    <body>
+    <body onload="setImage('logo', 'http://jsr170tools.day.com/crx/crx_main_files/banner_right.jpg');">
         <center>
             <table cellpadding="0" cellspacing="0" border="0" id="maintable">
                 <!-- banner -->
                 <tr>
-                    <td class="leadcell"><span class="leadcelltext">TCK for JSR 170<br>Content Repository Standard</span></td><td class="logocell"><a target="_blank" href="http://www.day.com" title="www.day.com"><img src="docroot/imgs/logo.png" width="238" height="100" border="0"></td>
+                    <td class="leadcell"><span class="leadcelltext">TCK for JSR 170<br>Content Repository Standard</span></td><td class="logocell"><a target="_blank" href="http://www.day.com" title="www.day.com"><img id="logo" border="0"></td>
                 </tr>
                 <tr>
                 <td colspan="2">

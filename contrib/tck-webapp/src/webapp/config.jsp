@@ -21,10 +21,15 @@ limitations under the License.
                  org.apache.jackrabbit.tck.WebAppTestConfig,
                  org.apache.jackrabbit.test.JNDIRepositoryStub,
                  org.apache.jackrabbit.tck.WebAppTestConfig,
-                 org.apache.jackrabbit.tck.j2ee.RepositoryServlet"
+                 org.apache.jackrabbit.tck.j2ee.RepositoryServlet,
+                 org.apache.jackrabbit.tck.TestFinder,
+                 junit.framework.TestSuite"
 %><%@page session="false" %><%
 
-Session repSession = RepositoryServlet.getSession(request);
+// get path from jar where the test sources are stored
+String TEST_JCR_PATH = "/WEB-INF/lib/tck-webapp-0.1.jar";
+
+Session repSession = RepositoryServlet.getSession();
 if (repSession == null) {
     return;
 }
@@ -54,19 +59,43 @@ String mode = request.getParameter("mode");
                 <td colspan="3">
                     <%
                     if (mode == null || !mode.equals("view")) {
-                        Map props = WebAppTestConfig.getOriConfig();
-                        props.putAll(WebAppTestConfig.getConfig());
+                        Map props = WebAppTestConfig.getCurrentConfig();
                         %>
-                        <form name="test" action="graph.jsp" target="graph">
-                            <table>
-                                <tr class="content"><td class="content">Repository Lookup Name</td><td class="content"><input name="<%= JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP %>" value="<%= props.get(JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP) %>"></td><td class="content">Workspace Name</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_WORKSPACE_NAME %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_WORKSPACE_NAME) %>"></td><td class="content">Description</td><td class="content"><input name="desc"></td><td>&nbsp;</td><td><input class="submit" type="submit" value="start"></td><td><input type="hidden" name="mode" value="testnow"</td></tr>
-                                <tr><td class="content">Superuser Name</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_SUPERUSER_NAME %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_SUPERUSER_NAME) %>"></td><td class="content">NodeType</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODETYPE %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODETYPE) %>"></td></tr>
-                                <tr><td class="content">Superuser Password</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_SUPERUSER_PWD %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_SUPERUSER_PWD) %>"></td><td class="content">Node Name 1</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME1 %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME1) %>"></td></tr>
-                                <tr><td class="content">ReadWrite User Id</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READWRITE_NAME %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READWRITE_NAME) %>"></td><td class="content">Node Name 2</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME2 %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME2) %>"></td></tr>
-                                <tr><td class="content">ReadWrite User Password</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READWRITE_PWD %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READWRITE_PWD) %>"></td><td class="content">Node Name 3</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME3 %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_NODE_NAME3) %>"></td></tr>
-                                <tr><td class="content">Readonly User Id</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READONLY_NAME %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READONLY_NAME) %>"></td><td class="content">Naming Factory Name</td><td class="content"><input name="java.naming.factory.initial" value="<%= props.get("java.naming.factory.initial") %>"></td></tr>
-                                <tr><td class="content">Readonly User Password</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READONLY_PWD %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READONLY_PWD) %>"></td><td class="content">Naming Provider Url</td><td class="content"><input name="java.naming.provider.url" value="<%= props.get("java.naming.provider.url") %>"></td></tr>
-                                <tr><td class="content">Test Root Path</td><td class="content"><input name="<%= JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_TESTROOT %>" value="<%= props.get(JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_TESTROOT) %>"></td></tr>
+                        <form name="test" action="graph.jsp?" target="graph" method="post">
+                            <table width="100%">
+                                <tr><th class="content" width="40%" >Default Configuration</td><td width="60%" class="content" align="right"><input type="submit" value="start" class="submit"><input type="hidden" name="mode" value="testnow"></td></tr>
+                                <%
+                                // display default config
+                                for (int i = 0; i < WebAppTestConfig.propNames.length; i++) {
+                                    String name = WebAppTestConfig.propNames[i];
+                                    String value = (String) props.get(name);
+                                    %><tr><td class="graph"><%= name %></td><td class="graph"><input class="input" name="<%= name %>" value="<%= value %>"></td></tr><%
+                                }
+
+                                // display test suite specific configs
+                                TestFinder tf = new TestFinder();
+                                tf.find(getServletConfig().getServletContext().getResource(TEST_JCR_PATH).openStream(),
+                                        "TestAll.java");
+                                Iterator  tests = tf.getSuites().keySet().iterator();
+                                tests = tf.getSuites().keySet().iterator();
+
+                                while (tests.hasNext()) {
+                                    String key = (String) tests.next();
+                                    TestSuite t = (TestSuite) tf.getSuites().get(key);
+                                    Map configs = WebAppTestConfig.getTestCaseSpecificConfigs(t);
+                                    if (configs.size() > 0) {
+                                        %><tr><th class="content" colspan="2"><a id="<%= key  %>"></a><%= key  %></td></tr><%
+
+                                        Iterator citr = configs.keySet().iterator();
+                                        while (citr.hasNext()) {
+                                            String ckey = (String) citr.next();
+                                            // split title if too long
+                                            String title = (ckey.length() > 80) ? ckey.substring(0, 80) + " " + ckey.substring(81) : ckey;
+                                            %><tr><td class="graph"><%= title %></td><td class="graph"><input class="input" name="<%= ckey %>" value="<%= configs.get(ckey) %>"></td><%
+                                        }
+                                    }
+                                }
+                                %>
                             </table>
                         </form>
                     <%

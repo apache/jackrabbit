@@ -15,25 +15,43 @@
         <init-param>
             <param-name>log4j-config</param-name>
             <param-value>/WEB-INF/content-repository/log4j.properties</param-value>
-                <description>initial log4j configuration</description>
+            <description>initial log4j configuration</description>
         </init-param>
 
         <init-param>
             <param-name>repository-config</param-name>
             <param-value>/WEB-INF/content-repository/repository.xml</param-value>
-                <description>the repository config location</description>
+            <description>the repository config location</description>
         </init-param>
 
         <init-param>
             <param-name>repository-home</param-name>
             <param-value>tck/content-repository</param-value>
-                <description>the repository home</description>
+            <description>the repository home</description>
         </init-param>
 
         <init-param>
             <param-name>repository-name</param-name>
             <param-value>tck.repository</param-value>
-                <description>Repository Name under which the repository is registered via JNDI</description>
+            <description>Repository Name under which the repository is registered via JNDI</description>
+        </init-param>
+
+        <init-param>
+            <param-name>jaas-config-file</param-name>
+            <param-value>etc/jaas.config</param-value>
+            <description>Path of the jaas config file</description>
+        </init-param>
+
+        <init-param>
+            <param-name>jcr-userid</param-name>
+            <param-value>superuser</param-value>
+            <description>User to read/write from the repository where test results and config is stored</description>
+        </init-param>
+
+        <init-param>
+            <param-name>jcr-password</param-name>
+            <param-value>superuser</param-value>
+            <description>User password</description>
         </init-param>
 
         <load-on-startup>1</load-on-startup>

@@ -58,6 +58,12 @@ public class TckTestRunner extends BaseTestRunner {
     /** String containing defined interaction output */
     private String interactionString;
 
+    /** current testclass */
+    private String currentTestClass;
+
+    /** new test identifier string */
+    private String newTestString;
+
     /**
      * The constructor inits the result map and sets the writer
      *
@@ -66,6 +72,7 @@ public class TckTestRunner extends BaseTestRunner {
     public TckTestRunner(JspWriter writer) {
         this.writer = writer;
         results = new HashMap();
+        currentTestClass = "";
     }
 
     /**
@@ -88,7 +95,7 @@ public class TckTestRunner extends BaseTestRunner {
      */
     protected void runFailed(String message) {
         String msg = "RUN FAILED:" + message;
-        write(msg);
+        write(msg, false);
     }
 
     /**
@@ -103,7 +110,12 @@ public class TckTestRunner extends BaseTestRunner {
         result.setTestTime(testTime);
         result.setStatus(state);
         results.put(test.toString(), result);
-        write(test.toString());
+        if (!currentTestClass.equals(test.getClass().getName())) {
+            currentTestClass = test.getClass().getName();
+            write(test.toString(), true);
+        } else {
+            write(test.toString(), false);
+        }
     }
 
     /**
@@ -131,7 +143,7 @@ public class TckTestRunner extends BaseTestRunner {
      *
      * @param msg
      */
-    private void write(String msg) {
+    private void write(String msg, boolean newTestClass) {
         if (writer != null) {
             try {
                 String html = "";
@@ -158,6 +170,9 @@ public class TckTestRunner extends BaseTestRunner {
 
                 if (interactionString!= null && !"".equals(interactionString)) {
                     html = MessageFormat.format(interactionString, new String[]{msg, color, String.valueOf(testTime)});
+                    if (newTestClass) {
+                        html += newTestString;
+                    }
                     writer.write(html);
                 }
                 writer.flush();
@@ -185,11 +200,14 @@ public class TckTestRunner extends BaseTestRunner {
         this.interactionString = interactionString;
     }
 
+    public void setNewTestString(String newTestString) {
+        this.newTestString = newTestString;
+    }
+
     public void testStarted(String testName) {
     }
 
     public void testEnded(String testName) {
     }
-
 }
 
