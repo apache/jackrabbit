@@ -419,6 +419,29 @@ public class LockTest extends AbstractJCRTest {
     }
 
     /**
+     * Test getLock
+     */
+    public void testGetLock() throws Exception {
+        // create new nodes
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixReferenceable);
+        n1.addMixin(mixLockable);
+        Node n2 = n1.addNode(nodeName2, testNodeType);
+        n2.addMixin(mixReferenceable);
+        n2.addMixin(mixLockable);
+        testRootNode.save();
+
+        // deep lock parent node
+        n1.lock(true, true);
+
+        // get lock on child node
+        Lock lock = n2.getLock();
+
+        // lock holding node must be parent
+        assertTrue("lock holding node must be parent", lock.getNode().equals(n1));
+    }
+
+    /**
      * Return a flag indicating whether the indicated session contains
      * a specific lock token
      */

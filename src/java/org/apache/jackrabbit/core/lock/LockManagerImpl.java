@@ -16,7 +16,15 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.log4j.Logger;
@@ -26,12 +34,19 @@ import javax.jcr.lock.LockException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+
 
 /**
  * Provides the functionality needed for locking and unlocking nodes.
@@ -308,7 +323,10 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
         if (child.hasPath(path) || info.deep) {
-            return new LockImpl(info, node);
+            SessionImpl session = (SessionImpl) node.getSession();
+            Node lockHolder = (Node) session.getItemManager().getItem(
+                    new NodeId(info.getUUID()));
+            return new LockImpl(info, lockHolder);
         } else {
             throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
