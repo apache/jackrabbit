@@ -16,9 +16,12 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.jdom.Element;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import java.util.*;
+import org.jdom.Element;
 
 /**
  * A <code>PersistenceManagerConfig</code> represents the configuration of a
@@ -26,19 +29,9 @@ import java.util.*;
  *
  * @see WorkspaceConfig#getPersistenceManagerConfig()
  */
-public class PersistenceManagerConfig {
+public class PersistenceManagerConfig extends BeanConfig {
 
     private static final String CLASS_ATTRIB = "class";
-
-    /**
-     * FQN of class implementing the <code>PersistenceManager</code> interface
-     */
-    private final String className;
-
-    /**
-     * Parameters for configuring the persistence manager.
-     */
-    private final Map params;
 
     /**
      * Creates a new <code>PersistenceManagerConfig</code>.
@@ -46,13 +39,13 @@ public class PersistenceManagerConfig {
      * @param config the config root element for this <code>PersistenceManagerConfig</code>.
      * @param vars   map of variable values.
      */
-    PersistenceManagerConfig(Element config, Map vars) {
+    static PersistenceManagerConfig parse(Element config, Map vars) {
         // FQN of persistence manager class
-        className = config.getAttributeValue(CLASS_ATTRIB);
+        String className = config.getAttributeValue(CLASS_ATTRIB);
 
         // read the PersistenceManager properties from the
         // <param/> elements in the config
-        Map params = new HashMap();
+        Properties params = new Properties();
         List paramList = config.getChildren(AbstractConfig.PARAM_ELEMENT);
         for (Iterator i = paramList.iterator(); i.hasNext();) {
             Element param = (Element) i.next();
@@ -61,26 +54,12 @@ public class PersistenceManagerConfig {
             // replace variables in param value
             params.put(paramName, AbstractConfig.replaceVars(paramValue, vars));
         }
-        this.params = Collections.unmodifiableMap(params);
+
+        return new PersistenceManagerConfig(className, params);
     }
 
-    /**
-     * Returns configuration parameters. Each entry in the map represents
-     * a name/value pair where both name and value are <code>String</code>s.
-     *
-     * @return Map of configuration parameters.
-     */
-    public Map getParameters() {
-        return params;
-    }
-
-    /**
-     * Returns the FQN of a class implementing the <code>PersistenceManager</code> interface
-     *
-     * @return FQN of persistence manager class
-     */
-    public String getClassName() {
-        return className;
+    public PersistenceManagerConfig(String className, Properties properties) {
+        super(className, properties);
     }
 
 }

@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.jdom.Element;
-import org.apache.jackrabbit.core.fs.FileSystem;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.jcr.RepositoryException;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-import java.util.List;
-import java.util.Iterator;
+
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.jdom.Element;
 
 /**
  * Implements the search configuration.
  */
-public class SearchConfig {
+public class SearchConfig extends BeanConfig {
 
     /** FQN of the default query handler implementation */
     private static final String DEFAULT_QUERY_HANDLER
@@ -38,15 +38,6 @@ public class SearchConfig {
     /** The <code>FileSystem</code> for the search index. */
     private final FileSystem fs;
 
-    /** Parameters for configuring the search index. */
-    private Map params = new HashMap();
-
-    /**
-     * The FQN of the class implementing the
-     * {@link org.apache.jackrabbit.core.search.QueryHandler} interface.
-     */
-    private final String handlerClassName;
-
     /**
      * Creates a new <code>SearchConfig</code>.
      * @param config the config root element for this <code>SearchConfig</code>.
@@ -54,12 +45,13 @@ public class SearchConfig {
      * @throws RepositoryException if an error occurs while creating the
      *  <code>SearchConfig</code>.
      */
-    SearchConfig(Element config, Map vars) throws RepositoryException {
+    static SearchConfig parse(Element config, Map vars) throws RepositoryException {
         // create FileSystem
         Element fsElement = config.getChild(AbstractConfig.FILE_SYSTEM_ELEMENT);
-        this.fs = AbstractConfig.createFileSystem(fsElement, vars);
+        FileSystem fs = AbstractConfig.createFileSystem(fsElement, vars);
 
         // gather params
+        Properties params = new Properties();
         List paramList = config.getChildren(AbstractConfig.PARAM_ELEMENT);
         for (Iterator i = paramList.iterator(); i.hasNext();) {
             Element param = (Element) i.next();
@@ -68,21 +60,17 @@ public class SearchConfig {
             // replace variables in param value
             params.put(paramName, AbstractConfig.replaceVars(paramValue, vars));
         }
-        // seal
-        params = Collections.unmodifiableMap(params);
 
         // handler class name
-        handlerClassName = config.getAttributeValue(AbstractConfig.CLASS_ATTRIB, 
+        String handlerClassName = config.getAttributeValue(AbstractConfig.CLASS_ATTRIB,
                 DEFAULT_QUERY_HANDLER);
+
+        return new SearchConfig(fs, handlerClassName, params);
     }
 
-    /**
-     * Returns configuration parameters. Each entry in the map represents
-     * a name value pair. Where both name and values are <code>String</code>s.
-     * @return Map of config parameters.
-     */
-    public Map getParameters() {
-        return params;
+    public SearchConfig(FileSystem fs, String className, Properties properties) {
+        super(className, properties);
+        this.fs = fs;
     }
 
     /**
@@ -100,7 +88,7 @@ public class SearchConfig {
      *   interface.
      */
     public String getHandlerClassName() {
-        return handlerClassName;
+        return getClassName();
     }
 
 }

@@ -148,7 +148,7 @@ public class RepositoryConfig extends AbstractConfig {
         Element secEleme = config.getRootElement().getChild(SECURITY_ELEMENT);
         appName = secEleme.getAttributeValue(APP_NAME_ATTRIB);
         Element amElem = secEleme.getChild(ACCESS_MANAGER_ELEMENT);
-        amConfig = new AccessManagerConfig(amElem, vars);
+        amConfig = AccessManagerConfig.parse(amElem, vars);
 
         // workspaces
         Element wspsElem = config.getRootElement().getChild(WORKSPACES_ELEMENT);

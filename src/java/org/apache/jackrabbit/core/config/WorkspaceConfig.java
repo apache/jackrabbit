@@ -126,12 +126,12 @@ public class WorkspaceConfig extends AbstractConfig {
 
         // persistence manager config
         Element pmElem = wspElem.getChild(PERSISTENCE_MANAGER_ELEMENT);
-        pmConfig = new PersistenceManagerConfig(pmElem, vars);
+        pmConfig = PersistenceManagerConfig.parse(pmElem, vars);
 
         // search config (optional)
         Element searchElem = wspElem.getChild(SEARCH_INDEX_ELEMENT);
         if (searchElem != null) {
-            searchConfig = new SearchConfig(searchElem, vars);
+            searchConfig = SearchConfig.parse(searchElem, vars);
         }
     }
 

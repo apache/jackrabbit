@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.jdom.Element;
+import java.io.File;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
-import java.util.*;
-import java.io.File;
+
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.jdom.Element;
 
 /**
  * This Class implements the configuration object for the versioning.
@@ -36,9 +37,6 @@ public class VersioningConfig {
 
     /** The <code>FileSystem</code> for the versioing. */
     private final FileSystem fs;
-
-    /** Parameters for configuring the versioning */
-    private Map params = new HashMap();
 
     /** The <code>PersistenceManagerConfig</code> for the versioning */
     private final PersistenceManagerConfig pmConfig;
@@ -61,19 +59,7 @@ public class VersioningConfig {
 
         // persistence manager config
         Element pmElem = config.getChild(WorkspaceConfig.PERSISTENCE_MANAGER_ELEMENT);
-        pmConfig = new PersistenceManagerConfig(pmElem, vars);
-
-        // gather params
-        List paramList = config.getChildren(AbstractConfig.PARAM_ELEMENT);
-        for (Iterator i = paramList.iterator(); i.hasNext();) {
-            Element param = (Element) i.next();
-            String paramName = param.getAttributeValue(AbstractConfig.NAME_ATTRIB);
-            String paramValue = param.getAttributeValue(AbstractConfig.VALUE_ATTRIB);
-            // replace variables in param value
-            params.put(paramName, AbstractConfig.replaceVars(paramValue, vars));
-        }
-        // seal
-        params = Collections.unmodifiableMap(params);
+        pmConfig = PersistenceManagerConfig.parse(pmElem, vars);
     }
 
     /**

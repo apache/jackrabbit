@@ -16,13 +16,12 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.jdom.Element;
-
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+
+import org.jdom.Element;
 
 /**
  * A <code>AccessManagerConfig</code> represents the configuration of an
@@ -30,19 +29,9 @@ import java.util.Map;
  *
  * @see RepositoryConfig#getAccessManagerConfig()
  */
-public class AccessManagerConfig {
+public class AccessManagerConfig extends BeanConfig {
 
     private static final String CLASS_ATTRIB = "class";
-
-    /**
-     * FQN of class implementing the <code>AccessManager</code> interface
-     */
-    private final String className;
-
-    /**
-     * Parameters for configuring the persistence manager.
-     */
-    private final Map params;
 
     /**
      * Creates a new <code>PersistenceManagerConfig</code>.
@@ -50,13 +39,13 @@ public class AccessManagerConfig {
      * @param config the config root element for this <code>PersistenceManagerConfig</code>.
      * @param vars   map of variable values.
      */
-    AccessManagerConfig(Element config, Map vars) {
+    static AccessManagerConfig parse(Element config, Map vars) {
         // FQN of persistence manager class
-        className = config.getAttributeValue(CLASS_ATTRIB);
+        String className = config.getAttributeValue(CLASS_ATTRIB);
 
         // read the PersistenceManager properties from the
         // <param/> elements in the config
-        Map params = new HashMap();
+        Properties params = new Properties();
         List paramList = config.getChildren(AbstractConfig.PARAM_ELEMENT);
         for (Iterator i = paramList.iterator(); i.hasNext();) {
             Element param = (Element) i.next();
@@ -65,26 +54,12 @@ public class AccessManagerConfig {
             // replace variables in param value
             params.put(paramName, AbstractConfig.replaceVars(paramValue, vars));
         }
-        this.params = Collections.unmodifiableMap(params);
+        
+        return new AccessManagerConfig(className, params);
     }
-
-    /**
-     * Returns configuration parameters. Each entry in the map represents
-     * a name/value pair where both name and value are <code>String</code>s.
-     *
-     * @return Map of configuration parameters.
-     */
-    public Map getParameters() {
-        return params;
-    }
-
-    /**
-     * Returns the FQN of a class implementing the <code>PersistenceManager</code> interface
-     *
-     * @return FQN of persistence manager class
-     */
-    public String getClassName() {
-        return className;
+    
+    public AccessManagerConfig(String className, Properties properties) {
+        super(className, properties);
     }
 
 }
