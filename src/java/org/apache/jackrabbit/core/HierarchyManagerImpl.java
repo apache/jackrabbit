@@ -28,7 +28,7 @@ import java.util.*;
  */
 public class HierarchyManagerImpl implements HierarchyManager {
 
-    private static Logger log = Logger.getLogger(HierarchyManager.class);
+    private static Logger log = Logger.getLogger(HierarchyManagerImpl.class);
 
     private final NodeId rootNodeId;
     private final ItemStateProvider provider;
