@@ -1,0 +1,371 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2003-2004 The Apache Software Foundation
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<document>
+   <properties>
+      <title>First Steps</title>
+      <author email="slide-dev@jakarta.apache.org">Slide Documentation Team</author>
+      <revision>$Id: $</revision>
+   </properties>
+
+   <body>
+      <section name="Download and Build Jackrabbit">
+         <p>Please refer to the <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/README.txt">README.txt</a> to find details on 
+         how to build Jackrabbit using Maven.
+         </p>
+      </section>
+      <section name="Run Jackrabbit">
+         <p>
+         To be able to use Jackrabbit in a simple application
+         use the following simple example code.
+         Please note that this example code is geared to be
+         as short and simple as possible and is not necessarily 
+         meant to be used as is.
+         </p>
+         
+         <p>
+         JCRTest.java
+         <source>
+import java.util.Hashtable;
+
+import javax.jcr.*;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
+import org.apache.jackrabbit.core.jndi.RegistryHelper;
+
+public class JCRTest {
+
+  public static void main(String[] args) {
+    try {
+      String configFile = "<b>repotest/repository.xml</b>";
+      String repHomeDir = "<b>repotest</b>";
+      
+      Hashtable env = new Hashtable();
+      env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
+      InitialContext ctx = new InitialContext(env);
+      
+      RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
+      Repository r = (Repository) ctx.lookup("repo");
+      Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
+      Node rn=session.getRootNode();
+      
+      System.out.println(rn.getPrimaryNodeType().getName());
+      
+      
+    } catch (Exception e){
+      System.err.println(e);
+    }
+  }
+}
+         </source>
+        </p>
+	<p>
+	The <code>configFile</code> points to an file named
+	<code>repository.xml</code> by convention, which contains
+	the configuration for the repository.
+	
+	An example <code>repository.xml</code> could look like this:
+	<source>
+&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+&lt;Repository&gt;
+    &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
+    	&lt;param name="path" value="${rep.home}/repository"/&gt;
+    &lt;/FileSystem&gt;
+    &lt;Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" /&gt;
+    &lt;Workspace name="${wsp.name}"&gt;
+        &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
+            &lt;param name="path" value="${wsp.home}"/&gt;
+        &lt;/FileSystem&gt;
+        &lt;PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" /&gt;
+        &lt;SearchIndex path="/index"/&gt;
+    &lt;/Workspace&gt;
+&lt;/Repository&gt;	
+	</source>
+	</p>
+	<p>
+	The repository home directory points to a directory that is used
+	as the root directory for all the information that the repository
+	persists. This directory can be empty, the repository will
+	after initial startup fill it with a file structure similar to
+	this:
+	<source>
+repository.xml
+
+repository/
+	meta/
+	namespaces/
+	nodetypes/
+	versions/
+tx/
+
+workspaces/
+	default/
+		workspace.xml
+		blobs/
+		data/
+		index/
+	</source>
+	</p>
+	<p>
+	Make sure that all the <a href="dependencies.html">dependencies</a> 
+	are added to your classpath aswell as the actual the actual Jackrabbit
+	repository implementation named something like 
+	<code>jackrabbit-x.xx-xxx.jar</code> that has been built by maven
+	into the <code>target</code> directory of your checkout.
+	</p>
+	<p>
+	Now you should be ready to compile, run and use jackrabbit, using the
+	above <code>JCRTest</code> class, which should produce the following
+	output.
+	<source>
+nt:unstructured
+	</source>
+	</p>
+      </section>
+      <section name="Adding Content">
+         <p>
+         Since an empty repository is not a lot of use, add the following
+         code to the above test class <code>JCRTest</code> to create 
+         content inside Jackrabbit.
+
+         JCRTest.java
+         <source>
+import java.util.Hashtable;
+
+import javax.jcr.*;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
+import org.apache.jackrabbit.core.jndi.RegistryHelper;
+
+public class JCRTest {
+
+  public static void main(String[] args) {
+    try {
+      String configFile = "repotest/repository.xml";
+      String repHomeDir = "repotest";
+      
+      Hashtable env = new Hashtable();
+      env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
+      InitialContext ctx = new InitialContext(env);
+      
+      RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
+      Repository r = (Repository) ctx.lookup("repo");
+      Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
+      Node rn=session.getRootNode();
+      
+      System.out.println(rn.getPrimaryNodeType().getName());
+<b>        
+      if (!rn.hasNode("testnode")) {
+        System.out.println("creating testnode");
+        Node n=rn.addNode("testnode", "nt:unstructured");
+        n.setProperty("testprop", new StringValue("Hello, World."));
+        session.save();
+      }
+
+      System.out.println(rn.getProperty("testnode/testprop").getString());
+</b>      
+    } catch (Exception e){
+      System.err.println(e);
+    }
+  }
+}
+         </source>
+         
+        which should produce the following output when started for the first
+        time:
+	<source>
+nt:unstructured
+creating testnode
+Hello, World.	
+	</source>
+	</p>
+	<p>
+	To add content a bit more efficiently you may want to
+	use JCR's import facilities for example through 
+	<code>Session.importXML</code>. An example that
+	also demonstrates the repository's namespace capabilities
+	is the following XML document:
+	<source>
+&lt;xhtml:html xmlns:xhtml="http://www.w3.org/1999/xhtml"
+            xmlns:mathml="http://www.w3.org/1998/Math/MathML"&gt;
+  &lt;xhtml:head&gt;&lt;xhtml:title&gt;Three Namespaces&lt;/xhtml:title&gt;&lt;/xhtml:head&gt;
+  &lt;xhtml:body&gt;
+    &lt;xhtml:h1 align="center"&gt;An Ellipse and a Rectangle&lt;/xhtml:h1&gt;
+    &lt;svg:svg xmlns:svg="http://www.w3.org/2000/svg" 
+             width="12cm" height="10cm"&gt;
+      &lt;svg:ellipse rx="110" ry="130" /&gt;
+      &lt;svg:rect x="4cm" y="1cm" width="3cm" height="6cm" /&gt;
+    &lt;/svg:svg&gt;
+    &lt;xhtml:p&gt;The equation for ellipses&lt;/xhtml:p&gt;
+&lt;mathml:math&gt;
+  &lt;mathml:apply&gt;
+    &lt;mathml:eq/&gt;
+    &lt;mathml:cn&gt; 1 &lt;/mathml:cn&gt;
+    &lt;mathml:apply&gt;
+      &lt;mathml:plus/&gt;
+      &lt;mathml:apply&gt;
+        &lt;mathml:divide/&gt;
+        &lt;mathml:apply&gt;
+          &lt;mathml:power/&gt;
+          &lt;mathml:ci&gt; x &lt;/mathml:ci&gt;
+          &lt;mathml:cn&gt; 2 &lt;/mathml:cn&gt;
+        &lt;/mathml:apply&gt;
+        &lt;mathml:apply&gt;
+          &lt;mathml:power/&gt;
+          &lt;mathml:ci&gt; a &lt;/mathml:ci&gt;
+          &lt;mathml:cn&gt; 2 &lt;/mathml:cn&gt;
+        &lt;/mathml:apply&gt;
+      &lt;/mathml:apply&gt;
+      &lt;mathml:apply&gt;
+        &lt;mathml:divide/&gt;
+        &lt;mathml:apply&gt;
+          &lt;mathml:power/&gt;
+          &lt;mathml:ci&gt; y &lt;/mathml:ci&gt;
+          &lt;mathml:cn&gt; 2 &lt;/mathml:cn&gt;
+        &lt;/mathml:apply&gt;
+        &lt;mathml:apply&gt;
+          &lt;mathml:power/&gt;
+          &lt;mathml:ci&gt; b &lt;/mathml:ci&gt;
+          &lt;mathml:cn&gt; 2 &lt;/mathml:cn&gt;
+        &lt;/mathml:apply&gt;        
+      &lt;/mathml:apply&gt;
+    &lt;/mathml:apply&gt;
+ &lt;/mathml:apply&gt;
+&lt;/mathml:math&gt;
+    &lt;xhtml:hr/&gt;
+    &lt;xhtml:p&gt;Last Modified January 10, 2002&lt;/xhtml:p&gt;    
+  &lt;/xhtml:body&gt;
+&lt;/xhtml:html&gt;
+	</source>
+	</p>
+	<p>
+	To import the XML data the <code>JCRTest</code> class has 
+	to be extended with the <code>Session.importXml()</code> and 
+	to be able to display the content of the repository a simple
+	<code>dump()</code> method is added. To be able to import 
+	properly the above XML has to be place into the local filesystem
+	and referenced in the code
+	<source>
+import java.io.FileInputStream;
+import java.util.Hashtable;
+
+import javax.jcr.*;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
+import org.apache.jackrabbit.core.jndi.RegistryHelper;
+
+public class JCRTest {
+
+  public static void main(String[] args) {
+    try {
+      String configFile = "repotest/repository.xml";
+      String repHomeDir = "repotest";
+
+      Hashtable env = new Hashtable();
+      env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
+      InitialContext ctx = new InitialContext(env);
+
+      RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
+      Repository r = (Repository) ctx.lookup("repo");
+      Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
+      Node rn=session.getRootNode();
+
+      System.out.println(rn.getPrimaryNodeType().getName());
+
+      
+      if (!rn.hasNode("testnode")) {
+        System.out.println("creating testnode");
+        Node n=rn.addNode("testnode", "nt:unstructured");
+        n.setProperty("testprop", new StringValue("Hello, World."));
+        session.save();
+      }
+      
+      if (!rn.hasNode("importxml")) {
+        System.out.println("importing xml");
+        Node n=rn.addNode("importxml", "nt:unstructured");
+        session.importXML("/importxml", new FileInputStream("<b>repotest/test.xml</b>"));
+        session.save();
+      }
+      dump(rn);
+    } catch (Exception e){
+      System.err.println(e);
+    }
+  }
+  public static void dump (Node n) throws RepositoryException {
+    System.out.println(n.getPath());
+    PropertyIterator pit=n.getProperties();
+    while (pit.hasNext()) {
+      Property p=pit.nextProperty();
+      System.out.println(p.getPath()+"="+p.getString());
+    }
+    NodeIterator nit=n.getNodes();
+    while (nit.hasNext()) {
+      Node cn=nit.nextNode();
+      dump (cn);
+    }
+  }
+}
+	
+	</source>
+	Which should output something along the lines of:
+	<source>
+nt:unstructured
+importing xml
+/
+/jcr:primaryType=nt:unstructured
+/jcr:system
+/jcr:system/jcr:primaryType=nt:unstructured
+/jcr:system/jcr:versionStorage
+/jcr:system/jcr:versionStorage/jcr:primaryType=nt:unstructured
+/testnode
+/testnode/jcr:primaryType=nt:unstructured
+/testnode/testprop=Hello, World.
+/importxml
+/importxml/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html
+/importxml/xhtml:html/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html/xhtml:head
+/importxml/xhtml:html/xhtml:head/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html/xhtml:head/xhtml:title
+/importxml/xhtml:html/xhtml:head/xhtml:title/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html/xhtml:head/xhtml:title/jcr:xmltext
+/importxml/xhtml:html/xhtml:head/xhtml:title/jcr:xmltext/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html/xhtml:head/xhtml:title/jcr:xmltext/jcr:xmlcharacters=Three Namespaces
+/importxml/xhtml:html/xhtml:body
+/importxml/xhtml:html/xhtml:body/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html/xhtml:body/xhtml:h1
+/importxml/xhtml:html/xhtml:body/xhtml:h1/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html/xhtml:body/xhtml:h1/align=center
+/importxml/xhtml:html/xhtml:body/xhtml:h1/jcr:xmltext
+/importxml/xhtml:html/xhtml:body/xhtml:h1/jcr:xmltext/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html/xhtml:body/xhtml:h1/jcr:xmltext/jcr:xmlcharacters=An Ellipse and a Rectangle
+/importxml/xhtml:html/xhtml:body/svg:svg
+/importxml/xhtml:html/xhtml:body/svg:svg/jcr:primaryType=nt:unstructured
+/importxml/xhtml:html/xhtml:body/svg:svg/width=12cm
+/importxml/xhtml:html/xhtml:body/svg:svg/height=10cm
+.
+.
+.	
+	</source>
+	</p>
+      </section>
+   </body>
+</document>

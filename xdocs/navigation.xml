@@ -26,6 +26,7 @@
 		    <item name="Start-up,&#xA0;Initialize" href="/arch/operate/startup.html"/>
  	        </item>
             </item>
+            <item name="First&#xA0;Steps"                href="/firststeps.html" />
             <item name="API&#xA0;Documentation"          href="/apidocs/index.html" target="_blank"/>
             <item name="Layout"                          href="/layout.html"/>
             <item name="Downloads"                       href="/downloads.html"/>
