@@ -21,7 +21,7 @@ package org.apache.jackrabbit.core.search.lucene;
  * values into <code>String</code> values that are lexicographically ordered
  * according to the double value.
  */
-class DoubleField {
+public class DoubleField {
 
     private static final long SIGN_MASK = 0x8000000000000000L;
 

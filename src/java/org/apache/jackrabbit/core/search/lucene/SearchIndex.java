@@ -180,7 +180,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @throws IOException if an error occurs while adding the node to the index.
      */
     public void addNode(NodeState node) throws RepositoryException, IOException {
-        Document doc = NodeIndexer.createDocument(node, getItemStateProvider(), nsMappings);
+        Document doc = createDocument(node, nsMappings);
         try {
             readWriteLock.writeLock().acquire();
         } catch (InterruptedException e) {
@@ -374,7 +374,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     private void addNodePersistent(NodeState node)
             throws IOException, RepositoryException {
-        Document doc = NodeIndexer.createDocument(node, getItemStateProvider(), nsMappings);
+        Document doc = createDocument(node, nsMappings);
         persistentIndex.addDocument(doc);
     }
 
@@ -389,6 +389,21 @@ public class SearchIndex extends AbstractQueryHandler {
         persistentIndex.removeDocument(idTerm);
     }
 
+    /**
+     * Creates a lucene <code>Document</code> from a node state using the
+     * namespace mappings <code>nsMappings</code>.
+     * @param node the node state to index.
+     * @param nsMappings the namespace mappings of the search index.
+     * @return a lucene <code>Document</code> that contains all properties
+     *  of <code>node</code>.
+     * @throws RepositoryException if an error occurs while indexing the 
+     *  <code>node</code>.
+     */
+    protected Document createDocument(NodeState node, NamespaceMappings nsMappings)
+            throws RepositoryException {
+        return NodeIndexer.createDocument(node, getItemStateProvider(), nsMappings);
+    }
+    
     //--------------------------< properties >----------------------------------
 
     public void setUseCompoundFile(boolean b) {

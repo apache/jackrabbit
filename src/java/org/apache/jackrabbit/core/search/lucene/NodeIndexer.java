@@ -42,22 +42,22 @@ import java.util.List;
  *
  * todo add support for indexing of nt:resource. e.g. when mime type is text/*
  */
-class NodeIndexer {
+public class NodeIndexer {
 
     /**
      * The <code>NodeState</code> of the node to index
      */
-    private final NodeState node;
+    protected final NodeState node;
     /**
      * The persistent item state provider
      */
-    private final ItemStateManager stateProvider;
+    protected final ItemStateManager stateProvider;
 
     /**
      * Namespace mappings to use for indexing. This is the internal
      * namespace mapping.
      */
-    private final NamespaceMappings mappings;
+    protected final NamespaceMappings mappings;
 
     /**
      * Creates a new node indexer.
@@ -66,7 +66,7 @@ class NodeIndexer {
      * @param stateProvider the persistent item state manager to retrieve properties.
      * @param mappings      internal namespace mappings.
      */
-    private NodeIndexer(NodeState node,
+    protected NodeIndexer(NodeState node,
                         ItemStateManager stateProvider,
                         NamespaceMappings mappings) {
         this.node = node;
@@ -99,7 +99,7 @@ class NodeIndexer {
      * @throws RepositoryException if an error occurs while reading property
      *                             values from the <code>ItemStateProvider</code>.
      */
-    private Document createDoc() throws RepositoryException {
+    protected Document createDoc() throws RepositoryException {
         Document doc = new Document();
 
         // special fields
@@ -188,93 +188,211 @@ class NodeIndexer {
         Object internalValue = value.internalValue();
         switch (value.getType()) {
             case PropertyType.BINARY:
-                // don't know how to index -> ignore
+                addBinaryValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.BOOLEAN:
-                doc.add(new Field(fieldName,
-                        internalValue.toString(),
-                        false,
-                        true,
-                        false));
+                addBooleanValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.DATE:
-                long millis = ((Calendar) internalValue).getTimeInMillis();
-                doc.add(new Field(fieldName,
-                        DateField.timeToString(millis),
-                        false,
-                        true,
-                        false));
+                addCalendarValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.DOUBLE:
-                double doubleVal = ((Double) internalValue).doubleValue();
-                doc.add(new Field(fieldName,
-                        DoubleField.doubleToString(doubleVal),
-                        false,
-                        true,
-                        false));
+                addDoubleValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.LONG:
-                long longVal = ((Long) internalValue).longValue();
-                doc.add(new Field(fieldName,
-                        LongField.longToString(longVal),
-                        false,
-                        true,
-                        false));
+                addLongValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.REFERENCE:
-                String uuid = internalValue.toString();
-                doc.add(new Field(fieldName,
-                        uuid,
-                        true, // store
-                        true,
-                        false));
+                addReferenceValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.PATH:
-                Path path = (Path) internalValue;
-                String pathString = path.toString();
-                try {
-                    pathString = path.toJCRPath(mappings);
-                } catch (NoPrefixDeclaredException e) {
-                    // will never happen
-                }
-                doc.add(new Field(fieldName,
-                        pathString,
-                        false,
-                        true,
-                        false));
+                addPathValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.STRING:
-                // simple String
-                doc.add(new Field(fieldName,
-                        internalValue.toString(),
-                        false,
-                        true,
-                        false));
-                // also create fulltext index of this value
-                doc.add(new Field(FieldNames.FULLTEXT,
-                        internalValue.toString(),
-                        false,
-                        true,
-                        true));
+                addStringValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.NAME:
-                QName qualiName = (QName) internalValue;
-                String normValue = internalValue.toString();
-                try {
-                    normValue = mappings.getPrefix(qualiName.getNamespaceURI())
-                            + ":" + qualiName.getLocalName();
-                } catch (NamespaceException e) {
-                    // will never happen
-                }
-                doc.add(new Field(fieldName,
-                        normValue,
-                        false,
-                        true,
-                        false));
+                addNameValue(doc, fieldName, internalValue);
                 break;
             default:
                 throw new IllegalArgumentException("illegal internal value type");
         }
     }
 
+    /**
+     * Adds the binary value to the document as the named field.
+     * <p>
+     * This implementation does nothing as binary indexing is not implemented
+     * here.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addBinaryValue(Document doc, String fieldName, Object internalValue) {
+        // don't know how to index -> ignore
+    }
+    
+    /**
+     * Adds the string representation of the boolean value to the document as
+     * the named field.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addBooleanValue(Document doc, String fieldName, Object internalValue) {
+        doc.add(new Field(fieldName,
+            internalValue.toString(),
+            false,
+            true,
+            false));
+    }
+
+    /**
+     * Adds the calendar value to the document as the named field. The calendar
+     * value is converted to an indexable string value using the {@link DateField}
+     * class.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addCalendarValue(Document doc, String fieldName, Object internalValue) {
+        long millis = ((Calendar) internalValue).getTimeInMillis();
+        doc.add(new Field(fieldName,
+                DateField.timeToString(millis),
+                false,
+                true,
+                false));
+    }
+    
+    /**
+     * Adds the double value to the document as the named field. The double
+     * value is converted to an indexable string value using the
+     * {@link DoubleField} class.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addDoubleValue(Document doc, String fieldName, Object internalValue) {
+        double doubleVal = ((Double) internalValue).doubleValue();
+        doc.add(new Field(fieldName,
+                DoubleField.doubleToString(doubleVal),
+                false,
+                true,
+                false));
+    }
+    
+    /**
+     * Adds the long value to the document as the named field. The long
+     * value is converted to an indexable string value using the {@link LongField}
+     * class.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addLongValue(Document doc, String fieldName, Object internalValue) {
+        long longVal = ((Long) internalValue).longValue();
+        doc.add(new Field(fieldName,
+                LongField.longToString(longVal),
+                false,
+                true,
+                false));
+    }
+    
+    /**
+     * Adds the reference value to the document as the named field. The value's
+     * string representation is added as the reference data. Additionally the
+     * reference data is stored in the index.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addReferenceValue(Document doc, String fieldName, Object internalValue) {
+        String uuid = internalValue.toString();
+        doc.add(new Field(fieldName,
+                uuid,
+                true, // store
+                true,
+                false));
+    }
+    
+    /**
+     * Adds the path value to the document as the named field. The path
+     * value is converted to an indexable string value using the name space
+     * mappings with which this class has been created.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addPathValue(Document doc, String fieldName, Object internalValue) {
+        Path path = (Path) internalValue;
+        String pathString = path.toString();
+        try {
+            pathString = path.toJCRPath(mappings);
+        } catch (NoPrefixDeclaredException e) {
+            // will never happen
+        }
+        doc.add(new Field(fieldName,
+                pathString,
+                false,
+                true,
+                false));
+    }
+
+    /**
+     * Adds the string value to the document both as the named field and for
+     * full text indexing.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addStringValue(Document doc, String fieldName, Object internalValue) {
+        String stringValue = String.valueOf(internalValue);
+        
+        // simple String
+        doc.add(new Field(fieldName,
+                stringValue,
+                false,
+                true,
+                false));
+        // also create fulltext index of this value
+        doc.add(new Field(FieldNames.FULLTEXT,
+                stringValue,
+                false,
+                true,
+                true));
+    }
+    
+    /**
+     * Adds the name value to the document as the named field. The name
+     * value is converted to an indexable string treating the internal value
+     * as a qualified name and mapping the name space using the name space
+     * mappings with which this class has been created.
+     * 
+     * @param doc The document to which to add the field
+     * @param fieldName The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addNameValue(Document doc, String fieldName, Object internalValue) {
+        QName qualiName = (QName) internalValue;
+        String normValue = internalValue.toString();
+        try {
+            normValue = mappings.getPrefix(qualiName.getNamespaceURI())
+                    + ":" + qualiName.getLocalName();
+        } catch (NamespaceException e) {
+            // will never happen
+        }
+        doc.add(new Field(fieldName,
+                normValue,
+                false,
+                true,
+                false));
+    }
 }

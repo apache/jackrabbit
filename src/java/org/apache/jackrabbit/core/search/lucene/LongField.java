@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.search.lucene;
 
 /**
  */
-class LongField {
+public class LongField {
 
     private static final int STRING_LONG_LEN
             = Long.toString(Long.MAX_VALUE, Character.MAX_RADIX).length() + 1;
@@ -27,7 +27,7 @@ class LongField {
 
     }
 
-    static String longToString(long value) {
+    public static String longToString(long value) {
         StringBuffer sb = new StringBuffer(STRING_LONG_LEN);
         if (value < 0) {
             // shift value
@@ -58,7 +58,7 @@ class LongField {
         return sb.toString();
     }
 
-    static long stringToLong(String value) {
+    public static long stringToLong(String value) {
         if (value.charAt(0) == '1') {
             // positive
             return Long.parseLong(value.substring(1), Character.MAX_RADIX);

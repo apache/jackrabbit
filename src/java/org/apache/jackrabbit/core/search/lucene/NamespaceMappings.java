@@ -45,7 +45,7 @@ import java.util.Properties;
  * prefix is created on the fly and associated with the namespace. Known
  * namespace mappings are stored in a properties file.
  */
-class NamespaceMappings implements NamespaceResolver {
+public class NamespaceMappings implements NamespaceResolver {
 
     /**
      * Default logger instance for this class
