@@ -135,10 +135,10 @@ public abstract class RepositoryStub {
         }
 
         if (props == null) {
+            props = new Properties();
             InputStream is = RepositoryStub.class.getClassLoader().getResourceAsStream(STUB_IMPL_PROPS);
             if (is != null) {
                 try {
-                    props = new Properties();
                     props.load(is);
                 } catch (IOException e) {
                     throw new RepositoryStubException("Exception reading "
