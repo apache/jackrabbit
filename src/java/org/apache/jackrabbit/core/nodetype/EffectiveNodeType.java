@@ -423,13 +423,16 @@ public class EffectiveNodeType implements Cloneable {
      * Tests if the value constraints defined in the property definition
      * <code>pd</code> are satisfied by the the specified <code>values</code>.
      * <p/>
-     * Note that the <i>protected</i> flag is not checked.
+     * Note that the <i>protected</i> flag is not checked. Also note that no
+     * type conversions are attempted if the type of the given values does not
+     * match the required type as specified in the given definition.
      *
      * @param pd
      * @param values
      * @throws ConstraintViolationException
      */
-    public static void checkSetPropertyValueConstraints(PropDef pd, InternalValue[] values)
+    public static void checkSetPropertyValueConstraints(PropDef pd,
+                                                        InternalValue[] values)
             throws ConstraintViolationException, RepositoryException {
         // check multi-value flag
         if (!pd.isMultiple() && values != null && values.length > 1) {
