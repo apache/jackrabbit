@@ -284,8 +284,10 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
      * @param state
      */
     protected NodeState cache(NodeState state) {
-        nodes.put(state.getId(), state);
-        log.debug("item added to cache. size=" + nodes.size());
+        if (state != null) {
+            nodes.put(state.getId(), state);
+            log.debug("item added to cache. size=" + nodes.size());
+        }
         return state;
     }
 
