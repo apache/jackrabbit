@@ -32,9 +32,6 @@ import java.util.Set;
 
 /**
  * This Class implements the Version representation of the node.
- *
- * @author Tobias Strasser
- * @version $Revision: 1.12 $, $Date: 2004/09/14 12:49:00 $
  */
 public class VersionImpl extends FrozenNode implements Version {
 
@@ -80,10 +77,10 @@ public class VersionImpl extends FrozenNode implements Version {
      * @see org.apache.jackrabbit.core.ItemManager#createNodeInstance(org.apache.jackrabbit.core.state.NodeState, javax.jcr.nodetype.NodeDef)
      */
     public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-		       NodeState state, NodeDef definition,
-		       ItemLifeCycleListener[] listeners)
-	    throws RepositoryException {
-	super(itemMgr, session, id, state, definition, listeners);
+                       NodeState state, NodeDef definition,
+                       ItemLifeCycleListener[] listeners)
+            throws RepositoryException {
+        super(itemMgr, session, id, state, definition, listeners);
     }
 
 
@@ -91,16 +88,16 @@ public class VersionImpl extends FrozenNode implements Version {
      * @see Version#getCreated()
      */
     public Calendar getCreated() throws RepositoryException {
-	// no check for NULL needed since its mandatory
-	return getProperty(PROPNAME_CREATED).getDate();
+        // no check for NULL needed since its mandatory
+        return getProperty(PROPNAME_CREATED).getDate();
     }
 
     /**
      * @see Version#getVersionLabels()
      */
     public String[] getVersionLabels() throws RepositoryException {
-	initLabelCache();
-	return (String[]) cachedVersionLabels.toArray(new String[cachedVersionLabels.size()]);
+        initLabelCache();
+        return (String[]) cachedVersionLabels.toArray(new String[cachedVersionLabels.size()]);
     }
 
     /**
@@ -112,39 +109,39 @@ public class VersionImpl extends FrozenNode implements Version {
      *                             todo: add to spec
      */
     public boolean hasVersionLabel(String label) throws RepositoryException {
-	initLabelCache();
-	return cachedVersionLabels.contains(label);
+        initLabelCache();
+        return cachedVersionLabels.contains(label);
     }
 
     /**
      * @see Version#addVersionLabel(java.lang.String)
      */
     public void addVersionLabel(String label) throws RepositoryException {
-	// delegate to version history (will probably change in spec)
-	getHistory().addVersionLabel(this, label);
+        // delegate to version history (will probably change in spec)
+        getHistory().addVersionLabel(this, label);
     }
 
     /**
      * @see Version#removeVersionLabel(java.lang.String)
      */
     public void removeVersionLabel(String label) throws RepositoryException {
-	// delegate to version history (will probably change in spec)
-	getHistory().removeVersionLabel(label);
+        // delegate to version history (will probably change in spec)
+        getHistory().removeVersionLabel(label);
     }
 
     /**
      * @see Version#getSuccessors()
      */
     public Version[] getSuccessors() throws RepositoryException {
-	if (hasProperty(PROPNAME_SUCCESSORS)) {
-	    Value[] values = getProperty(PROPNAME_SUCCESSORS).getValues();
-	    Version[] preds = new Version[values.length];
-	    for (int i = 0; i < values.length; i++) {
-		preds[i] = (Version) session.getNodeByUUID(values[i].getString());
-	    }
-	    return preds;
-	}
-	return new Version[0];
+        if (hasProperty(PROPNAME_SUCCESSORS)) {
+            Value[] values = getProperty(PROPNAME_SUCCESSORS).getValues();
+            Version[] preds = new Version[values.length];
+            for (int i = 0; i < values.length; i++) {
+                preds[i] = (Version) session.getNodeByUUID(values[i].getString());
+            }
+            return preds;
+        }
+        return new Version[0];
     }
 
     /**
@@ -155,13 +152,13 @@ public class VersionImpl extends FrozenNode implements Version {
      * @param succ
      */
     void internalAddSuccessor(VersionImpl succ) throws RepositoryException {
-	Version[] successors = getSuccessors();
-	InternalValue[] values = new InternalValue[successors.length + 1];
-	for (int i = 0; i < successors.length; i++) {
-	    values[i] = InternalValue.create(new UUID(successors[i].getUUID()));
-	}
-	values[successors.length] = InternalValue.create(new UUID(succ.getUUID()));
-	internalSetProperty(PROPNAME_SUCCESSORS, values);
+        Version[] successors = getSuccessors();
+        InternalValue[] values = new InternalValue[successors.length + 1];
+        for (int i = 0; i < successors.length; i++) {
+            values[i] = InternalValue.create(new UUID(successors[i].getUUID()));
+        }
+        values[successors.length] = InternalValue.create(new UUID(succ.getUUID()));
+        internalSetProperty(PROPNAME_SUCCESSORS, values);
     }
 
     /**
@@ -170,19 +167,19 @@ public class VersionImpl extends FrozenNode implements Version {
      * @throws RepositoryException
      */
     void internalDetach() throws RepositoryException {
-	// detach this from all successors
-	VersionImpl[] succ = (VersionImpl[]) getSuccessors();
-	for (int i = 0; i < succ.length; i++) {
-	    succ[i].internalDetachPredecessor(this);
-	}
-	// detach this from all predecessors
-	VersionImpl[] pred = (VersionImpl[]) getPredecessors();
-	for (int i = 0; i < pred.length; i++) {
-	    pred[i].internalDetachSuccessor(this);
-	}
-	// clear properties
-	internalSetProperty(PROPNAME_PREDECESSORS, new InternalValue[0]);
-	internalSetProperty(PROPNAME_SUCCESSORS, new InternalValue[0]);
+        // detach this from all successors
+        VersionImpl[] succ = (VersionImpl[]) getSuccessors();
+        for (int i = 0; i < succ.length; i++) {
+            succ[i].internalDetachPredecessor(this);
+        }
+        // detach this from all predecessors
+        VersionImpl[] pred = (VersionImpl[]) getPredecessors();
+        for (int i = 0; i < pred.length; i++) {
+            pred[i].internalDetachSuccessor(this);
+        }
+        // clear properties
+        internalSetProperty(PROPNAME_PREDECESSORS, new InternalValue[0]);
+        internalSetProperty(PROPNAME_SUCCESSORS, new InternalValue[0]);
     }
 
     /**
@@ -194,21 +191,21 @@ public class VersionImpl extends FrozenNode implements Version {
      * @param v the successor to detach
      */
     private void internalDetachSuccessor(VersionImpl v) throws RepositoryException {
-	Version[] vsucc = v.getSuccessors();
-	Version[] successors = getSuccessors();
-	InternalValue[] values = new InternalValue[successors.length - 1 + vsucc.length];
-	int idx = 0;
-	// copy successors but ignore 'v'
-	for (int i = 0; i < successors.length; i++) {
-	    if (!successors[i].isSame(v)) {
-		values[idx++] = InternalValue.create(new UUID(successors[i].getUUID()));
-	    }
-	}
-	// attach v's successors
-	for (int i = 0; i < vsucc.length; i++) {
-	    values[idx++] = InternalValue.create(new UUID(vsucc[i].getUUID()));
-	}
-	internalSetProperty(PROPNAME_SUCCESSORS, values);
+        Version[] vsucc = v.getSuccessors();
+        Version[] successors = getSuccessors();
+        InternalValue[] values = new InternalValue[successors.length - 1 + vsucc.length];
+        int idx = 0;
+        // copy successors but ignore 'v'
+        for (int i = 0; i < successors.length; i++) {
+            if (!successors[i].isSame(v)) {
+                values[idx++] = InternalValue.create(new UUID(successors[i].getUUID()));
+            }
+        }
+        // attach v's successors
+        for (int i = 0; i < vsucc.length; i++) {
+            values[idx++] = InternalValue.create(new UUID(vsucc[i].getUUID()));
+        }
+        internalSetProperty(PROPNAME_SUCCESSORS, values);
     }
 
     /**
@@ -220,72 +217,72 @@ public class VersionImpl extends FrozenNode implements Version {
      * @param v the successor to detach
      */
     private void internalDetachPredecessor(VersionImpl v) throws RepositoryException {
-	Version[] vpred = v.getPredecessors();
-	Version[] tpred = getPredecessors();
-	InternalValue[] values = new InternalValue[tpred.length - 1 + vpred.length];
-	int idx = 0;
-	// copy predecessors but ignore 'v'
-	for (int i = 0; i < tpred.length; i++) {
-	    if (!tpred[i].isSame(v)) {
-		values[idx++] = InternalValue.create(new UUID(tpred[i].getUUID()));
-	    }
-	}
-	// attach v's predecessors
-	for (int i = 0; i < vpred.length; i++) {
-	    values[idx++] = InternalValue.create(new UUID(vpred[i].getUUID()));
-	}
-	internalSetProperty(PROPNAME_PREDECESSORS, values);
+        Version[] vpred = v.getPredecessors();
+        Version[] tpred = getPredecessors();
+        InternalValue[] values = new InternalValue[tpred.length - 1 + vpred.length];
+        int idx = 0;
+        // copy predecessors but ignore 'v'
+        for (int i = 0; i < tpred.length; i++) {
+            if (!tpred[i].isSame(v)) {
+                values[idx++] = InternalValue.create(new UUID(tpred[i].getUUID()));
+            }
+        }
+        // attach v's predecessors
+        for (int i = 0; i < vpred.length; i++) {
+            values[idx++] = InternalValue.create(new UUID(vpred[i].getUUID()));
+        }
+        internalSetProperty(PROPNAME_PREDECESSORS, values);
     }
 
     /**
      * @see NodeImpl#internalSetProperty(org.apache.jackrabbit.core.QName, org.apache.jackrabbit.core.InternalValue)
      */
     public Property internalSetProperty(QName name,
-					InternalValue value)
-	    throws ValueFormatException, RepositoryException {
-	return super.internalSetProperty(name, value);
+                                        InternalValue value)
+            throws ValueFormatException, RepositoryException {
+        return super.internalSetProperty(name, value);
     }
 
     /**
      * @see NodeImpl#internalSetProperty(org.apache.jackrabbit.core.QName, org.apache.jackrabbit.core.InternalValue[])
      */
     protected Property internalSetProperty(QName name,
-					   InternalValue[] value)
-	    throws ValueFormatException, RepositoryException {
-	return super.internalSetProperty(name, value);
+                                           InternalValue[] value)
+            throws ValueFormatException, RepositoryException {
+        return super.internalSetProperty(name, value);
     }
 
     /**
      * @see Version#addVersionLabel(java.lang.String)
      */
     protected void internalAddVersionLabel(String label) throws RepositoryException {
-	initLabelCache();
-	cachedVersionLabels.add(label);
-	saveLabelCache();
+        initLabelCache();
+        cachedVersionLabels.add(label);
+        saveLabelCache();
     }
 
     /**
      * @see Version#addVersionLabel(java.lang.String)
      */
     protected void internalRemoveVersionLabel(String label) throws RepositoryException {
-	initLabelCache();
-	cachedVersionLabels.remove(label);
-	saveLabelCache();
+        initLabelCache();
+        cachedVersionLabels.remove(label);
+        saveLabelCache();
     }
 
     /**
      * Initializes / Loads the version label cache
      */
     private void initLabelCache() throws RepositoryException {
-	if (cachedVersionLabels == null) {
-	    cachedVersionLabels = new HashSet();
-	    if (hasProperty(PROPNAME_VERSION_LABELS)) {
-		Value[] values = getProperty(PROPNAME_VERSION_LABELS).getValues();
-		for (int i = 0; i < values.length; i++) {
-		    cachedVersionLabels.add(values[i].getString());
-		}
-	    }
-	}
+        if (cachedVersionLabels == null) {
+            cachedVersionLabels = new HashSet();
+            if (hasProperty(PROPNAME_VERSION_LABELS)) {
+                Value[] values = getProperty(PROPNAME_VERSION_LABELS).getValues();
+                for (int i = 0; i < values.length; i++) {
+                    cachedVersionLabels.add(values[i].getString());
+                }
+            }
+        }
     }
 
     /**
@@ -295,13 +292,13 @@ public class VersionImpl extends FrozenNode implements Version {
      * @throws RepositoryException
      */
     private void saveLabelCache() throws RepositoryException {
-	InternalValue[] newValues = new InternalValue[cachedVersionLabels.size()];
-	Iterator iter = cachedVersionLabels.iterator();
-	for (int i = 0; i < newValues.length; i++) {
-	    newValues[i] = InternalValue.create((String) iter.next());
-	}
-	internalSetProperty(PROPNAME_VERSION_LABELS, newValues);
-	save();
+        InternalValue[] newValues = new InternalValue[cachedVersionLabels.size()];
+        Iterator iter = cachedVersionLabels.iterator();
+        for (int i = 0; i < newValues.length; i++) {
+            newValues[i] = InternalValue.create((String) iter.next());
+        }
+        internalSetProperty(PROPNAME_VERSION_LABELS, newValues);
+        save();
     }
 
     /**
@@ -311,7 +308,7 @@ public class VersionImpl extends FrozenNode implements Version {
      * @throws RepositoryException
      */
     private VersionHistoryImpl getHistory() throws RepositoryException {
-	return (VersionHistoryImpl) getParent();
+        return (VersionHistoryImpl) getParent();
     }
 
 
@@ -326,12 +323,12 @@ public class VersionImpl extends FrozenNode implements Version {
      * @throws RepositoryException if an error occurrs.
      */
     public boolean isMoreRecent(Version v) throws RepositoryException {
-	VersionIteratorImpl iter = new VersionIteratorImpl(v);
-	while (iter.hasNext()) {
-	    if (iter.nextVersion().isSame(this)) {
-		return true;
-	    }
-	}
-	return false;
+        VersionIteratorImpl iter = new VersionIteratorImpl(v);
+        while (iter.hasNext()) {
+            if (iter.nextVersion().isSame(this)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -23,12 +23,12 @@ public class SimpleNode implements Node {
     protected JCRQLParser parser;
 
     public SimpleNode(int i) {
-	id = i;
+        id = i;
     }
 
     public SimpleNode(JCRQLParser p, int i) {
-	this(i);
-	parser = p;
+        this(i);
+        parser = p;
     }
 
     public void jjtOpen() {
@@ -38,49 +38,49 @@ public class SimpleNode implements Node {
     }
 
     public void jjtSetParent(Node n) {
-	parent = n;
+        parent = n;
     }
 
     public Node jjtGetParent() {
-	return parent;
+        return parent;
     }
 
     public void jjtAddChild(Node n, int i) {
-	if (children == null) {
-	    children = new Node[i + 1];
-	} else if (i >= children.length) {
-	    Node[] c = new Node[i + 1];
-	    System.arraycopy(children, 0, c, 0, children.length);
-	    children = c;
-	}
-	children[i] = n;
+        if (children == null) {
+            children = new Node[i + 1];
+        } else if (i >= children.length) {
+            Node[] c = new Node[i + 1];
+            System.arraycopy(children, 0, c, 0, children.length);
+            children = c;
+        }
+        children[i] = n;
     }
 
     public Node jjtGetChild(int i) {
-	return children[i];
+        return children[i];
     }
 
     public int jjtGetNumChildren() {
-	return (children == null) ? 0 : children.length;
+        return (children == null) ? 0 : children.length;
     }
 
     /**
      * Accept the visitor. *
      */
     public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     /**
      * Accept the visitor. *
      */
     public Object childrenAccept(JCRQLParserVisitor visitor, Object data) {
-	if (children != null) {
-	    for (int i = 0; i < children.length; ++i) {
-		children[i].jjtAccept(visitor, data);
-	    }
-	}
-	return data;
+        if (children != null) {
+            for (int i = 0; i < children.length; ++i) {
+                children[i].jjtAccept(visitor, data);
+            }
+        }
+        return data;
     }
 
     /* You can override these two methods in subclasses of SimpleNode to
@@ -90,26 +90,26 @@ public class SimpleNode implements Node {
        you need to do. */
 
     public String toString() {
-	return JCRQLParserTreeConstants.jjtNodeName[id];
+        return JCRQLParserTreeConstants.jjtNodeName[id];
     }
 
     public String toString(String prefix) {
-	return prefix + toString();
+        return prefix + toString();
     }
 
     /* Override this method if you want to customize how the node dumps
        out its children. */
 
     public void dump(String prefix) {
-	System.out.println(toString(prefix));
-	if (children != null) {
-	    for (int i = 0; i < children.length; ++i) {
-		SimpleNode n = (SimpleNode) children[i];
-		if (n != null) {
-		    n.dump(prefix + " ");
-		}
-	    }
-	}
+        System.out.println(toString(prefix));
+        if (children != null) {
+            for (int i = 0; i < children.length; ++i) {
+                SimpleNode n = (SimpleNode) children[i];
+                if (n != null) {
+                    n.dump(prefix + " ");
+                }
+            }
+        }
     }
 }
 

@@ -15,15 +15,12 @@
  */
 package org.apache.jackrabbit.test.search;
 
-import junit.framework.TestCase;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
  * Test suite that includes all testcases for the Search module.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class TestAll extends TestCase {
 
@@ -32,15 +29,15 @@ public class TestAll extends TestCase {
      * package.
      *
      * @return a <code>Test</code> suite that executes all tests inside this
-     * package.
+     *         package.
      */
     public static Test suite() {
-	TestSuite suite = new TestSuite("Search tests");
+        TestSuite suite = new TestSuite("Search tests");
 
-	suite.addTestSuite(SimpleQueryTest.class);
-	suite.addTestSuite(FulltextQueryTest.class);
-	suite.addTestSuite(SelectClauseTest.class);
+        suite.addTestSuite(SimpleQueryTest.class);
+        suite.addTestSuite(FulltextQueryTest.class);
+        suite.addTestSuite(SelectClauseTest.class);
 
-	return suite;
+        return suite;
     }
 }

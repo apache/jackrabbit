@@ -20,9 +20,6 @@ import java.util.Iterator;
 /**
  * Implements a query node that defines an OR operation between arbitrary
  * other {@link QueryNode}s.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class OrQueryNode extends NAryQueryNode {
 
@@ -33,7 +30,7 @@ public class OrQueryNode extends NAryQueryNode {
      * @param parent the parent of <code>this</code> <code>OrQueryNode</code>.
      */
     public OrQueryNode(QueryNode parent) {
-	super(parent);
+        super(parent);
     }
 
     /**
@@ -45,14 +42,14 @@ public class OrQueryNode extends NAryQueryNode {
      * @param operands the operands for this OR operation.
      */
     public OrQueryNode(QueryNode parent, QueryNode[] operands) {
-	super(parent, operands);
+        super(parent, operands);
     }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     /**
@@ -62,24 +59,24 @@ public class OrQueryNode extends NAryQueryNode {
      * @return a string representation of this query node including its sub-nodes.
      */
     public String toJCRQLString() {
-	StringBuffer sb = new StringBuffer();
-	boolean bracket = false;
-	if (getParent() instanceof AndQueryNode || getParent() instanceof NotQueryNode) {
-	    bracket = true;
-	}
-	if (bracket) {
-	    sb.append("(");
-	}
-	String or = "";
-	for (Iterator it = operands.iterator(); it.hasNext();) {
-	    sb.append(or);
-	    sb.append(((QueryNode) it.next()).toJCRQLString());
-	    or = " OR ";
-	}
-	if (bracket) {
-	    sb.append(")");
-	}
-	return sb.toString();
+        StringBuffer sb = new StringBuffer();
+        boolean bracket = false;
+        if (getParent() instanceof AndQueryNode || getParent() instanceof NotQueryNode) {
+            bracket = true;
+        }
+        if (bracket) {
+            sb.append("(");
+        }
+        String or = "";
+        for (Iterator it = operands.iterator(); it.hasNext();) {
+            sb.append(or);
+            sb.append(((QueryNode) it.next()).toJCRQLString());
+            or = " OR ";
+        }
+        if (bracket) {
+            sb.append(")");
+        }
+        return sb.toString();
     }
 
     /**
@@ -89,7 +86,7 @@ public class OrQueryNode extends NAryQueryNode {
      * @return a string representation of this query node including its sub-nodes.
      */
     public String toXPathString() {
-	// todo implement
-	return "";
+        // todo implement
+        return "";
     }
 }

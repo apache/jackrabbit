@@ -19,9 +19,6 @@ import org.apache.jackrabbit.core.BaseException;
 
 /**
  * The <code>FileSystemException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.13 $, $Date: 2004/09/01 15:14:29 $
  */
 public class FileSystemException extends BaseException {
     /**
@@ -29,7 +26,7 @@ public class FileSystemException extends BaseException {
      * detail message.
      */
     public FileSystemException() {
-	super();
+        super();
     }
 
     /**
@@ -40,7 +37,7 @@ public class FileSystemException extends BaseException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public FileSystemException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -52,7 +49,7 @@ public class FileSystemException extends BaseException {
      * @param rootCause root failure cause
      */
     public FileSystemException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -61,6 +58,6 @@ public class FileSystemException extends BaseException {
      * @param rootCause root failure cause
      */
     public FileSystemException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

@@ -22,9 +22,6 @@ import java.util.Arrays;
 
 /**
  * A <code>PropDef</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.23 $, $Date: 2004/09/09 15:23:43 $
  */
 public class PropDef extends ChildItemDef {
 
@@ -40,80 +37,80 @@ public class PropDef extends ChildItemDef {
     }
 
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof PropDef) {
-	    PropDef other = (PropDef) obj;
-	    return super.equals(obj)
-		    && requiredType == other.requiredType
-		    && Arrays.equals(valueConstraints, other.valueConstraints)
-		    && Arrays.equals(defaultValues, other.defaultValues)
-		    && multiple == other.multiple;
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof PropDef) {
+            PropDef other = (PropDef) obj;
+            return super.equals(obj)
+                    && requiredType == other.requiredType
+                    && Arrays.equals(valueConstraints, other.valueConstraints)
+                    && Arrays.equals(defaultValues, other.defaultValues)
+                    && multiple == other.multiple;
+        }
+        return false;
     }
 
     /**
      * @param requiredType
      */
     public void setRequiredType(int requiredType) {
-	this.requiredType = requiredType;
+        this.requiredType = requiredType;
     }
 
     /**
      * @param valueConstraints
      */
     public void setValueConstraints(ValueConstraint valueConstraints[]) {
-	this.valueConstraints = valueConstraints;
+        this.valueConstraints = valueConstraints;
     }
 
     /**
      * @param defaultValues
      */
     public void setDefaultValues(InternalValue[] defaultValues) {
-	this.defaultValues = defaultValues;
+        this.defaultValues = defaultValues;
     }
 
     /**
      * @param multiple
      */
     public void setMultiple(boolean multiple) {
-	this.multiple = multiple;
+        this.multiple = multiple;
     }
 
     /**
      * @return
      */
     public int getRequiredType() {
-	return requiredType;
+        return requiredType;
     }
 
     /**
      * @return
      */
     public ValueConstraint[] getValueConstraints() {
-	return valueConstraints;
+        return valueConstraints;
     }
 
     /**
      * @return
      */
     public InternalValue[] getDefaultValues() {
-	return defaultValues;
+        return defaultValues;
     }
 
     /**
      * @return
      */
     public boolean isMultiple() {
-	return multiple;
+        return multiple;
     }
 
     /**
      * @return
      */
     public boolean definesNode() {
-	return false;
+        return false;
     }
 }

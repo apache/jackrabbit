@@ -24,9 +24,6 @@ import java.util.Map;
 
 /**
  * <code>ReferenceManager</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.2 $, $Date: 2004/09/06 14:28:05 $
  */
 public class ReferenceManager {
 
@@ -36,7 +33,7 @@ public class ReferenceManager {
 
     /**
      * A cache for <code>NodeReferences</code> objects created by this
-     *  <code>ReferenceManager</code>
+     * <code>ReferenceManager</code>
      */
     private Map refsCache;
 
@@ -44,78 +41,75 @@ public class ReferenceManager {
      * Package private constructor
      */
     public ReferenceManager(PersistenceManager persistMgr) {
-	this.persistMgr = persistMgr;
-	// setup cache with soft references to <code>NodeReferences</code> objects
-	refsCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        this.persistMgr = persistMgr;
+        // setup cache with soft references to <code>NodeReferences</code> objects
+        refsCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
     }
 
     /**
-     *
      * @param targetId
      * @return
      * @throws RepositoryException
      */
     public synchronized NodeReferences get(NodeId targetId) throws RepositoryException {
-	if (refsCache.containsKey(targetId)) {
-	    return (NodeReferences) refsCache.get(targetId);
-	}
-	NodeReferences refs;
-	try {
-	    // load persisted references
-	    refs = persistMgr.loadNodeReferences(targetId.getUUID());
-	} catch (NoSuchItemStateException nsise) {
-	    // does not exist, create new
-	    refs = persistMgr.createNodeReferencesInstance(targetId.getUUID());
-	} catch (ItemStateException ise) {
-	    String msg = "error while loading references";
-	    log.error(msg, ise);
-	    throw new RepositoryException(msg, ise);
-	}
-	// put it in cache
-	refsCache.put(targetId, refs);
-	return refs;
+        if (refsCache.containsKey(targetId)) {
+            return (NodeReferences) refsCache.get(targetId);
+        }
+        NodeReferences refs;
+        try {
+            // load persisted references
+            refs = persistMgr.loadNodeReferences(targetId.getUUID());
+        } catch (NoSuchItemStateException nsise) {
+            // does not exist, create new
+            refs = persistMgr.createNodeReferencesInstance(targetId.getUUID());
+        } catch (ItemStateException ise) {
+            String msg = "error while loading references";
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
+        }
+        // put it in cache
+        refsCache.put(targetId, refs);
+        return refs;
     }
 
     /**
-     *
      * @param refs
      * @throws RepositoryException
      */
     public synchronized void save(NodeReferences refs) throws RepositoryException {
-	if (!refs.hasReferences()) {
-	    remove(refs);
-	    return;
-	}
-	if (!refsCache.containsKey(refs.getTargetId())) {
-	    // not yet in cache, put it in cache
-	    refsCache.put(refs.getTargetId(), refs);
-	}
-	try {
-	    // store references
-	    persistMgr.store(refs);
-	} catch (ItemStateException ise) {
-	    String msg = "error while storing references";
-	    log.error(msg, ise);
-	    throw new RepositoryException(msg, ise);
-	}
+        if (!refs.hasReferences()) {
+            remove(refs);
+            return;
+        }
+        if (!refsCache.containsKey(refs.getTargetId())) {
+            // not yet in cache, put it in cache
+            refsCache.put(refs.getTargetId(), refs);
+        }
+        try {
+            // store references
+            persistMgr.store(refs);
+        } catch (ItemStateException ise) {
+            String msg = "error while storing references";
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
+        }
     }
 
     /**
-     *
      * @param refs
      * @throws RepositoryException
      */
     public synchronized void remove(NodeReferences refs) throws RepositoryException {
-	try {
-	    // destroy persisted references
-	    persistMgr.destroy(refs);
-	} catch (ItemStateException ise) {
-	    String msg = "error while destroying references";
-	    log.error(msg, ise);
-	    throw new RepositoryException(msg, ise);
-	}
+        try {
+            // destroy persisted references
+            persistMgr.destroy(refs);
+        } catch (ItemStateException ise) {
+            String msg = "error while destroying references";
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
+        }
 
-	// remove from cache
-	refsCache.remove(refs.getTargetId());
+        // remove from cache
+        refsCache.remove(refs.getTargetId());
     }
 }

@@ -31,46 +31,60 @@ import org.apache.commons.codec.digest.DigestUtils;*/
  * <p><code>UUID</code> represents a Universally Unique Identifier per IETF
  * Draft specification. For more information regarding the IETF Draft UUID
  * specification</p>
- *
+ * <p/>
  * <p>See: http://www.ietf.org/internet-drafts/draft-mealling-uuid-urn-01.txt</p>
- *
+ * <p/>
  * <p>Copied from the Jakarta Commons-Id project</p>
  * <p/>
  * todo remove and use official commons-id release as soon as it is available
- *
- * @author Commons-Id Team
- * @version $Revision: 1.2 $ $Date: 2004/07/26 17:10:46 $
- *
  */
 
 public class UUID implements Constants, Serializable, Comparable {
 
-    /** byte array to store 128-bits composing this UUID */
+    /**
+     * byte array to store 128-bits composing this UUID
+     */
     private byte[] rawBytes = new byte[UUID_BYTE_LENGTH];
 
-    /** Holds node identifier for this UUID */
+    /**
+     * Holds node identifier for this UUID
+     */
     private Long node = null;
 
-    /** Holds timestamp for this UUID */
+    /**
+     * Holds timestamp for this UUID
+     */
     private long timestamp = -1;
 
-    /** Holds the clock sequence field */
+    /**
+     * Holds the clock sequence field
+     */
     private Short clockSq = null;
 
-    /** Holds the version field of this UUID */
+    /**
+     * Holds the version field of this UUID
+     */
     private int version = -1;
 
-    /** Holds the variant field of this UUID */
+    /**
+     * Holds the variant field of this UUID
+     */
     private int variant = -1;
 
-    /** Holds the internal string value of the UUID */
+    /**
+     * Holds the internal string value of the UUID
+     */
     private String stringValue = null;
 
-    /** XXX begin modification by stefan@apache.org */
+    /**
+     * XXX begin modification by stefan@apache.org
+     */
     private static VersionFourGenerator versionFourGenereator = new VersionFourGenerator();
     /** XXX end modification by stefan@apache.org */
 
-    /** Constructs a nil UUID */
+    /**
+     * Constructs a nil UUID
+     */
     public UUID() {
         super();
     }
@@ -83,13 +97,13 @@ public class UUID implements Constants, Serializable, Comparable {
      *  @param bigIntValue the 128 bit BigInteger to construct this UUID from.
      *  @throws IllegalArgumentException argument must be 128 bit
      */
-   /* protected UUID(BigInteger bigIntValue) throws IllegalArgumentException {
-        super();
-        if (bigIntValue.bitLength() > UUID.UUID_BIT_LENGTH) {
-            throw new IllegalArgumentException("UUID must be contructed using a 128 bit BigInteger");
-        }
-        numberValue = bigIntValue;
-    } */
+    /* protected UUID(BigInteger bigIntValue) throws IllegalArgumentException {
+         super();
+         if (bigIntValue.bitLength() > UUID.UUID_BIT_LENGTH) {
+             throw new IllegalArgumentException("UUID must be contructed using a 128 bit BigInteger");
+         }
+         numberValue = bigIntValue;
+     } */
 
     /**
      * <p>Copy constructor.</p>
@@ -104,8 +118,8 @@ public class UUID implements Constants, Serializable, Comparable {
     /**
      * <p>Constructs a UUID from a 16 byte array.</p>
      *
-     *  @param byteArray the 16 byte array to construct this UUID from.
-     *  @throws IllegalArgumentException argument must be 16 bytes
+     * @param byteArray the 16 byte array to construct this UUID from.
+     * @throws IllegalArgumentException argument must be 16 bytes
      */
     public UUID(byte[] byteArray) throws IllegalArgumentException {
         super();
@@ -119,8 +133,8 @@ public class UUID implements Constants, Serializable, Comparable {
     /**
      * <p>Constructs a UUID from a DataInput. Note if 16 bytes are not available this method will block.</p>
      *
-     *  @param input the datainput with 16 bytes to read in from.
-     *  @throws IOException exception if there is an IO problem also argument must contain 16 bytes.
+     * @param input the datainput with 16 bytes to read in from.
+     * @throws IOException exception if there is an IO problem also argument must contain 16 bytes.
      */
     public UUID(DataInput input) throws IOException {
         super();
@@ -130,19 +144,19 @@ public class UUID implements Constants, Serializable, Comparable {
     /**
      * <p>Constructs a UUID from two long values in most significant byte, and least significant bytes order.</p>
      *
-     * @param mostSignificant - the most significant 8 bytes of the uuid to be constructed.
+     * @param mostSignificant  - the most significant 8 bytes of the uuid to be constructed.
      * @param leastSignificant - the least significant 8 bytes of the uuid to be constructed.
      */
     public UUID(long mostSignificant, long leastSignificant) {
-       rawBytes = Bytes.append(Bytes.toBytes(mostSignificant), Bytes.toBytes(leastSignificant));
+        rawBytes = Bytes.append(Bytes.toBytes(mostSignificant), Bytes.toBytes(leastSignificant));
     }
 
     /** XXX begin modification by stefan@apache.org */
     /**
      * <p>Constructs a UUID from a UUID formatted String.</p>
      *
-     *  @param uuidString the String representing a UUID to construct this UUID
-     *  @throws UUIDFormatException String must be a properly formatted UUID string
+     * @param uuidString the String representing a UUID to construct this UUID
+     * @throws UUIDFormatException String must be a properly formatted UUID string
      */
     //public UUID(String uuidString) throws UUIDFormatException {
     public UUID(String uuidString) {
@@ -153,13 +167,13 @@ public class UUID implements Constants, Serializable, Comparable {
 
     /** XXX begin modification by stefan@apache.org */
     /**
-     *  <p>Parses a string for a UUID.</p>
+     * <p>Parses a string for a UUID.</p>
      *
-     *  @param uuidString the UUID formatted String to parse.
-     * XXX begin modification by stefan@apache.org
-     *  @throws UUIDFormatException the String must be a properly formatted UUID String.
-     * XXX end modification by stefan@apache.org
-     *  @return Returns a UUID or null if the formatted string could not be parsed.
+     * @param uuidString the UUID formatted String to parse.
+     *                   XXX begin modification by stefan@apache.org
+     * @return Returns a UUID or null if the formatted string could not be parsed.
+     * @throws UUIDFormatException the String must be a properly formatted UUID String.
+     *                             XXX end modification by stefan@apache.org
      */
     //public static UUID fromString(String uuidString) throws UUIDFormatException {
     public static UUID fromString(String uuidString) {
@@ -176,14 +190,14 @@ public class UUID implements Constants, Serializable, Comparable {
         //Check for 36 char length
         if (leanString.length() != UUID_FORMATTED_LENGTH) {
             //throw new UUIDFormatException();
-	    throw new IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
 
         //Check for 5 fields
         StringTokenizer tok = new StringTokenizer(leanString, "-");
-        if ( tok.countTokens() != TOKENS_IN_UUID ) {
-	    //throw new UUIDFormatException();
-	    throw new IllegalArgumentException();
+        if (tok.countTokens() != TOKENS_IN_UUID) {
+            //throw new UUIDFormatException();
+            throw new IllegalArgumentException();
         }
 
         //Remove the "-" from the formatted string and test token sizes
@@ -193,14 +207,14 @@ public class UUID implements Constants, Serializable, Comparable {
         while (tok.hasMoreTokens()) {
             token = tok.nextToken();
             if (token.length() != TOKEN_LENGTHS[count++]) {
-		//throw new UUIDFormatException();
-		throw new IllegalArgumentException();
+                //throw new UUIDFormatException();
+                throw new IllegalArgumentException();
             }
             buf.append(token);
         }
 
         //Create from the hex value
-	/** XXX begin modification by stefan@apache.org */
+        /** XXX begin modification by stefan@apache.org */
 /*
         try {
             char[] chars = buf.toString().toCharArray();
@@ -209,13 +223,13 @@ public class UUID implements Constants, Serializable, Comparable {
               throw new UUIDFormatException(de.getMessage());
        }
 */
-	String s = buf.toString();
-	byte[] bytes = new byte[UUID_BYTE_LENGTH];
-	for (int i = 0, j = 0; i < (UUID_BYTE_LENGTH * 2); i += 2) {
-	    bytes[j++] = (byte) Integer.parseInt(s.substring(i, i + 2), 16);
-	}
-	tmpUUID = new UUID(bytes);
-	/** XXX end modification by stefan@apache.org */
+        String s = buf.toString();
+        byte[] bytes = new byte[UUID_BYTE_LENGTH];
+        for (int i = 0, j = 0; i < (UUID_BYTE_LENGTH * 2); i += 2) {
+            bytes[j++] = (byte) Integer.parseInt(s.substring(i, i + 2), 16);
+        }
+        tmpUUID = new UUID(bytes);
+        /** XXX end modification by stefan@apache.org */
 
         return tmpUUID;
     }
@@ -229,7 +243,7 @@ public class UUID implements Constants, Serializable, Comparable {
     public String toString() {
         //set string value if not set
         if (stringValue == null) {
-	    /** XXX begin modification by stefan@apache.org */
+            /** XXX begin modification by stefan@apache.org */
 /*
             StringBuffer buf = new StringBuffer(new String(Hex.encodeHex(rawBytes)));
             while (buf.length() != UUID_UNFORMATTED_LENGTH) {
@@ -242,16 +256,16 @@ public class UUID implements Constants, Serializable, Comparable {
             buf.insert(FORMAT_POSITION4, '-');
             stringValue = buf.toString();
 */
-	    char[] chars = new char[UUID_FORMATTED_LENGTH];
-	    for (int i = 0, j = 0; i < 16; i++) {
-		chars[j++] = hexDigits[(rawBytes[i] >> 4) & 0x0f];
-		chars[j++] = hexDigits[rawBytes[i] & 0x0f];
-		if (i == 3 || i == 5 || i == 7 || i == 9) {
-		    chars[j++] = '-';
-		}
-	    }
-	    stringValue = new String(chars);
-	    /** XXX end modification by stefan@apache.org */
+            char[] chars = new char[UUID_FORMATTED_LENGTH];
+            for (int i = 0, j = 0; i < 16; i++) {
+                chars[j++] = hexDigits[(rawBytes[i] >> 4) & 0x0f];
+                chars[j++] = hexDigits[rawBytes[i] & 0x0f];
+                if (i == 3 || i == 5 || i == 7 || i == 9) {
+                    chars[j++] = '-';
+                }
+            }
+            stringValue = new String(chars);
+            /** XXX end modification by stefan@apache.org */
         }
         return stringValue;
     }
@@ -276,7 +290,7 @@ public class UUID implements Constants, Serializable, Comparable {
         if (!(obj instanceof UUID)) {
             return false;
         }
-        return Bytes.areEqual( ((UUID) obj).getRawBytes(), rawBytes);
+        return Bytes.areEqual(((UUID) obj).getRawBytes(), rawBytes);
     }
 
     /**
@@ -290,7 +304,7 @@ public class UUID implements Constants, Serializable, Comparable {
         for (int i = 0; i < rawBytes.length; i++) {
             iTotal = iTotal * iConstant + rawBytes[i];
         }
-       return iTotal;
+        return iTotal;
     }
 
     /**
@@ -327,12 +341,13 @@ public class UUID implements Constants, Serializable, Comparable {
     /**
      * <p>Returns the version of the UUID.
      * <ul>
-     *   <li>VERSION_ONE - The time-based version</li>
-     *   <li>VERSION_TWO - DCE Security version, with embedded POSIX UIDs.</li>
-     *   <li>VERSION_THREE - Name based UUID.</li>
-     *   <li>VERSION_FOUR - Random based UUID.</li>
+     * <li>VERSION_ONE - The time-based version</li>
+     * <li>VERSION_TWO - DCE Security version, with embedded POSIX UIDs.</li>
+     * <li>VERSION_THREE - Name based UUID.</li>
+     * <li>VERSION_FOUR - Random based UUID.</li>
      * </ul>
      * </p>
+     *
      * @return the version of the UUID.
      */
     public int version() {
@@ -414,7 +429,7 @@ public class UUID implements Constants, Serializable, Comparable {
      *
      * @return the least significant bits stored in the uuid's internal structure.
      */
-    long getLeastSignificantBits()  {
+    long getLeastSignificantBits() {
         byte[] lsb = new byte[8];
         System.arraycopy(rawBytes, 8, lsb, 0, 8);
         return Bytes.toLong(lsb);
@@ -425,7 +440,7 @@ public class UUID implements Constants, Serializable, Comparable {
      *
      * @return the least significant bits stored in the uuid's internal structure.
      */
-    long getMostSignificantBits()  {
+    long getMostSignificantBits() {
         byte[] msb = new byte[8];
         System.arraycopy(rawBytes, 0, msb, 0, 8);
         return Bytes.toLong(msb);
@@ -447,11 +462,13 @@ public class UUID implements Constants, Serializable, Comparable {
      *
      * @return a new version 4 UUID, based upon Random bits.
      */
-    /** XXX begin modification by stefan@apache.org */
+    /**
+     * XXX begin modification by stefan@apache.org
+     */
     //static UUID randomUUID() {
     public static UUID randomUUID() {
         //return (UUID) IdentifierUtils.UUID_VERSION_FOUR_GENERATOR.nextIdentifier();
-	return (UUID) versionFourGenereator.nextIdentifier();
+        return (UUID) versionFourGenereator.nextIdentifier();
     }
     /** XXX end modification by stefan@apache.org */
 

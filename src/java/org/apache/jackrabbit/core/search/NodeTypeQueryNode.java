@@ -19,28 +19,26 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
 /**
  * Implements a query node that defines a node type match.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class NodeTypeQueryNode extends ExactQueryNode {
 
     /**
      * Creates a new <code>NodeTypeQueryNode</code>.
-     * @param parent the parent node for this query node.
+     *
+     * @param parent   the parent node for this query node.
      * @param nodeType the name of the node type.
      */
     public NodeTypeQueryNode(QueryNode parent, String nodeType) {
-	// we only use the jcr primary type as a dummy value
-	// the property name is actually replaced in the query builder
-	// when the runtime query is created to search the index.
-	super(parent, NodeTypeRegistry.JCR_PRIMARY_TYPE.toString(), nodeType);
+        // we only use the jcr primary type as a dummy value
+        // the property name is actually replaced in the query builder
+        // when the runtime query is created to search the index.
+        super(parent, NodeTypeRegistry.JCR_PRIMARY_TYPE.toString(), nodeType);
     }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 }

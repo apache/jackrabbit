@@ -16,40 +16,39 @@
  */
 package org.apache.jackrabbit.core.search.jcrql;
 
-public interface JCRQLParserTreeConstants
-{
-  public int JJTSTATEMENT = 0;
-  public int JJTSELECTCLAUSE = 1;
-  public int JJTVOID = 2;
-  public int JJTFROMCLAUSE = 3;
-  public int JJTNODETYPE = 4;
-  public int JJTLOCATIONCLAUSE = 5;
-  public int JJTWHERECLAUSE = 6;
-  public int JJTOREXPR = 7;
-  public int JJTANDEXPR = 8;
-  public int JJTNOTEXPR = 9;
-  public int JJTRELEXPR = 10;
-  public int JJTBRACKETEXPR = 11;
-  public int JJTVALUE = 12;
-  public int JJTTEXTSEARCHCLAUSE = 13;
-  public int JJTORDERCLAUSE = 14;
+public interface JCRQLParserTreeConstants {
+    public int JJTSTATEMENT = 0;
+    public int JJTSELECTCLAUSE = 1;
+    public int JJTVOID = 2;
+    public int JJTFROMCLAUSE = 3;
+    public int JJTNODETYPE = 4;
+    public int JJTLOCATIONCLAUSE = 5;
+    public int JJTWHERECLAUSE = 6;
+    public int JJTOREXPR = 7;
+    public int JJTANDEXPR = 8;
+    public int JJTNOTEXPR = 9;
+    public int JJTRELEXPR = 10;
+    public int JJTBRACKETEXPR = 11;
+    public int JJTVALUE = 12;
+    public int JJTTEXTSEARCHCLAUSE = 13;
+    public int JJTORDERCLAUSE = 14;
 
 
-  public String[] jjtNodeName = {
-    "Statement",
-    "SelectClause",
-    "void",
-    "FromClause",
-    "NodeType",
-    "LocationClause",
-    "WhereClause",
-    "OrExpr",
-    "AndExpr",
-    "NotExpr",
-    "RelExpr",
-    "BracketExpr",
-    "Value",
-    "TextsearchClause",
-    "OrderClause",
-  };
+    public String[] jjtNodeName = {
+        "Statement",
+        "SelectClause",
+        "void",
+        "FromClause",
+        "NodeType",
+        "LocationClause",
+        "WhereClause",
+        "OrExpr",
+        "AndExpr",
+        "NotExpr",
+        "RelExpr",
+        "BracketExpr",
+        "Value",
+        "TextsearchClause",
+        "OrderClause",
+    };
 }

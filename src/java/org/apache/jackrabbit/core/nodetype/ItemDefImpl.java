@@ -15,10 +15,10 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
+import org.apache.log4j.Logger;
 
 import javax.jcr.nodetype.ItemDef;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -26,9 +26,6 @@ import javax.jcr.nodetype.NodeType;
 
 /**
  * An <code>ItemDefImpl</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.1 $, $Date: 2004/09/09 15:23:43 $
  */
 abstract class ItemDefImpl implements ItemDef {
 
@@ -50,13 +47,13 @@ abstract class ItemDefImpl implements ItemDef {
      * @param nsResolver namespace resolver
      */
     ItemDefImpl(ChildItemDef itemDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
-	this.itemDef = itemDef;
-	this.ntMgr = ntMgr;
-	this.nsResolver = nsResolver;
+        this.itemDef = itemDef;
+        this.ntMgr = ntMgr;
+        this.nsResolver = nsResolver;
     }
 
     public QName getQName() {
-	return itemDef.getName();
+        return itemDef.getName();
     }
 
     //--------------------------------------------------------------< ItemDef >
@@ -64,66 +61,66 @@ abstract class ItemDefImpl implements ItemDef {
      * @see ItemDef#getDeclaringNodeType
      */
     public NodeType getDeclaringNodeType() {
-	try {
-	    return ntMgr.getNodeType(itemDef.getDeclaringNodeType());
-	} catch (NoSuchNodeTypeException e) {
-	    // should never get here
-	    log.error("declaring node type does not exist", e);
-	    return null;
-	}
+        try {
+            return ntMgr.getNodeType(itemDef.getDeclaringNodeType());
+        } catch (NoSuchNodeTypeException e) {
+            // should never get here
+            log.error("declaring node type does not exist", e);
+            return null;
+        }
     }
 
     /**
      * @see ItemDef#getName
      */
     public String getName() {
-	if (itemDef.definesResidual()) {
-	    return ANY_NAME;
-	} else {
-	    try {
-		return itemDef.getName().toJCRName(nsResolver);
-	    } catch (NoPrefixDeclaredException npde) {
-		// should never get here
-		log.error("encountered unregistered namespace in property name", npde);
-		// not correct, but an acceptable fallback
-		return itemDef.getName().toString();
-	    }
-	}
+        if (itemDef.definesResidual()) {
+            return ANY_NAME;
+        } else {
+            try {
+                return itemDef.getName().toJCRName(nsResolver);
+            } catch (NoPrefixDeclaredException npde) {
+                // should never get here
+                log.error("encountered unregistered namespace in property name", npde);
+                // not correct, but an acceptable fallback
+                return itemDef.getName().toString();
+            }
+        }
     }
 
     /**
      * @see ItemDef#getOnParentVersion()
      */
     public int getOnParentVersion() {
-	return itemDef.getOnParentVersion();
+        return itemDef.getOnParentVersion();
     }
 
     /**
      * @see ItemDef#isAutoCreate
      */
     public boolean isAutoCreate() {
-	return itemDef.isAutoCreate();
+        return itemDef.isAutoCreate();
     }
 
     /**
      * @see ItemDef#isMandatory
      */
     public boolean isMandatory() {
-	return itemDef.isMandatory();
+        return itemDef.isMandatory();
     }
 
     /**
      * @see ItemDef#isPrimaryItem
      */
     public boolean isPrimaryItem() {
-	return itemDef.isPrimaryItem();
+        return itemDef.isPrimaryItem();
     }
 
     /**
      * @see ItemDef#isProtected
      */
     public boolean isProtected() {
-	return itemDef.isProtected();
+        return itemDef.isProtected();
     }
 }
 

@@ -15,15 +15,12 @@
  */
 package org.apache.jackrabbit.test.observation;
 
-import junit.framework.TestCase;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
  * Test suite that includes all testcases for the Observation module.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class TestAll extends TestCase {
 
@@ -32,17 +29,17 @@ public class TestAll extends TestCase {
      * package.
      *
      * @return a <code>Test</code> suite that executes all tests inside this
-     * package.
+     *         package.
      */
     public static Test suite() {
-	TestSuite suite = new TestSuite("Observation tests");
+        TestSuite suite = new TestSuite("Observation tests");
 
-	suite.addTestSuite(NodeAddedTest.class);
-	suite.addTestSuite(NodeRemovedTest.class);
-	suite.addTestSuite(PropertyAddedTest.class);
-	suite.addTestSuite(PropertyChangedTest.class);
-	suite.addTestSuite(PropertyRemovedTest.class);
+        suite.addTestSuite(NodeAddedTest.class);
+        suite.addTestSuite(NodeRemovedTest.class);
+        suite.addTestSuite(PropertyAddedTest.class);
+        suite.addTestSuite(PropertyChangedTest.class);
+        suite.addTestSuite(PropertyRemovedTest.class);
 
-	return suite;
+        return suite;
     }
 }

@@ -17,15 +17,13 @@ package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.log4j.Logger;
 
-import javax.jcr.PropertyIterator;
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import java.util.NoSuchElementException;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 class FilteredPropertyIterator implements PropertyIterator {
 
@@ -38,49 +36,49 @@ class FilteredPropertyIterator implements PropertyIterator {
     private int propIndex;
 
     FilteredPropertyIterator(String[] props, Node node) {
-	this.props = props;
-	this.node = node;
+        this.props = props;
+        this.node = node;
     }
 
     public Property nextProperty() {
-	if (propIndex >= props.length) {
-	    throw new NoSuchElementException();
-	}
-	try {
-	    return node.getProperty(props[propIndex++]);
-	} catch (RepositoryException e) {
-	    // FIXME find better error handling
-	    log.error("Exception retrieving property with name: "
-		    + props[propIndex - 1]);
-	    throw new NoSuchElementException();
-	}
+        if (propIndex >= props.length) {
+            throw new NoSuchElementException();
+        }
+        try {
+            return node.getProperty(props[propIndex++]);
+        } catch (RepositoryException e) {
+            // FIXME find better error handling
+            log.error("Exception retrieving property with name: "
+                    + props[propIndex - 1]);
+            throw new NoSuchElementException();
+        }
     }
 
     public void skip(long skipNum) {
-	if ((propIndex + skipNum) > props.length) {
-	    throw new NoSuchElementException();
-	}
-	propIndex += skipNum;
+        if ((propIndex + skipNum) > props.length) {
+            throw new NoSuchElementException();
+        }
+        propIndex += skipNum;
     }
 
     public long getSize() {
-	return props.length;
+        return props.length;
     }
 
     public long getPos() {
-	return propIndex;
+        return propIndex;
     }
 
     public void remove() {
-	throw new UnsupportedOperationException("remove");
+        throw new UnsupportedOperationException("remove");
     }
 
     public boolean hasNext() {
-	return propIndex < props.length;
+        return propIndex < props.length;
     }
 
     public Object next() {
-	return nextProperty();
+        return nextProperty();
     }
 
 }

@@ -26,9 +26,6 @@ import java.util.Calendar;
  * version by name, label or creation date. If no version is found and the
  * 'returnLatest' flag is set to <code>true</code>, the latest version is
  * returned.
- *
- * @author Tobias Strasser
- * @version $Revision: 1.3 $, $Date: 2004/09/06 07:55:12 $
  */
 public class GenericVersionSelector implements VersionSelector {
 
@@ -44,87 +41,87 @@ public class GenericVersionSelector implements VersionSelector {
     }
 
     public GenericVersionSelector(String label) {
-	this.label = label;
+        this.label = label;
     }
 
     public GenericVersionSelector(Calendar date) {
-	this.date = date;
+        this.date = date;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public void setName(String name) {
-	this.name = name;
+        this.name = name;
     }
 
     public String getLabel() {
-	return label;
+        return label;
     }
 
     public void setLabel(String label) {
-	this.label = label;
+        this.label = label;
     }
 
     public Calendar getDate() {
-	return date;
+        return date;
     }
 
     public void setDate(Calendar date) {
-	this.date = date;
+        this.date = date;
     }
 
     public boolean isReturnLatest() {
-	return returnLatest;
+        return returnLatest;
     }
 
     public void setReturnLatest(boolean returnLatest) {
-	this.returnLatest = returnLatest;
+        this.returnLatest = returnLatest;
     }
 
     public Version select(VersionHistory versionHistory) throws RepositoryException {
-	Version selected = null;
-	if (name != null) {
-	    selected = selectByName(versionHistory, name);
-	}
-	if (selected == null && label != null) {
-	    selected = selectByLabel(versionHistory, label);
-	}
-	if (selected == null && date != null) {
-	    selected = selectByDate(versionHistory, date);
-	}
-	if (selected == null && returnLatest) {
-	    selected = selectByDate(versionHistory, null);
-	}
-	return selected;
+        Version selected = null;
+        if (name != null) {
+            selected = selectByName(versionHistory, name);
+        }
+        if (selected == null && label != null) {
+            selected = selectByLabel(versionHistory, label);
+        }
+        if (selected == null && date != null) {
+            selected = selectByDate(versionHistory, date);
+        }
+        if (selected == null && returnLatest) {
+            selected = selectByDate(versionHistory, null);
+        }
+        return selected;
     }
 
     public static Version selectByName(VersionHistory history, String name)
-	    throws RepositoryException {
-	return history.hasNode(name) ? history.getVersion(name) : null;
+            throws RepositoryException {
+        return history.hasNode(name) ? history.getVersion(name) : null;
     }
 
     public static Version selectByLabel(VersionHistory history, String label)
-	    throws RepositoryException {
-	return history.getVersionByLabel(label);
+            throws RepositoryException {
+        return history.getVersionByLabel(label);
     }
 
     public static Version selectByDate(VersionHistory history, Calendar date)
-	    throws RepositoryException {
-	long time = date == null ? Long.MAX_VALUE : date.getTimeInMillis();
-	long latestDate = Long.MIN_VALUE;
-	Version latestVersion = null;
-	VersionIterator iter = history.getAllVersions();
-	while (iter.hasNext()) {
-	    Version v = iter.nextVersion();
-	    long c = v.getCreated().getTimeInMillis();
-	    if (c > latestDate && c <= time) {
-		latestDate = c;
-		latestVersion = v;
-	    }
-	}
-	return latestVersion;
+            throws RepositoryException {
+        long time = date == null ? Long.MAX_VALUE : date.getTimeInMillis();
+        long latestDate = Long.MIN_VALUE;
+        Version latestVersion = null;
+        VersionIterator iter = history.getAllVersions();
+        while (iter.hasNext()) {
+            Version v = iter.nextVersion();
+            long c = v.getCreated().getTimeInMillis();
+            if (c > latestDate && c <= time) {
+                latestDate = c;
+                latestVersion = v;
+            }
+        }
+        return latestVersion;
     }
 
 }

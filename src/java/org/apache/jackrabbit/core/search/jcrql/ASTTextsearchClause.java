@@ -20,25 +20,25 @@ public class ASTTextsearchClause extends SimpleNode {
     private String query;
 
     public ASTTextsearchClause(int id) {
-	super(id);
+        super(id);
     }
 
     public ASTTextsearchClause(JCRQLParser p, int id) {
-	super(p, id);
+        super(p, id);
     }
 
     public String getQuery() {
-	return query;
+        return query;
     }
 
     public void setQuery(String query) {
-	this.query = query;
+        this.query = query;
     }
 
     /**
      * Accept the visitor. *
      */
     public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 }

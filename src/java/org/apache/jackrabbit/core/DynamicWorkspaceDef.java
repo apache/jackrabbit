@@ -24,8 +24,6 @@ import java.util.HashMap;
  * a workspace that physically only stores those items that differ from
  * the items in the underlying stable workspace.
  *
- * @author Stefan Guggisberg
- * @version $Revision: 1.13 $, $Date: 2004/08/02 16:19:40 $
  * @see WorkspaceDef
  * @see StableWorkspaceDef
  */
@@ -46,10 +44,10 @@ public class DynamicWorkspaceDef extends WorkspaceDef {
      *                                 workspace should be based on
      */
     DynamicWorkspaceDef(String name, FileSystem wspStore, FileSystem blobStore,
-			String persistenceManagerClass, HashMap persistenceManagerParams,
-			String stableWorkspace) {
-	super(name, wspStore, blobStore, persistenceManagerClass, persistenceManagerParams);
-	this.stableWorkspace = stableWorkspace;
+                        String persistenceManagerClass, HashMap persistenceManagerParams,
+                        String stableWorkspace) {
+        super(name, wspStore, blobStore, persistenceManagerClass, persistenceManagerParams);
+        this.stableWorkspace = stableWorkspace;
     }
 
     /**
@@ -59,7 +57,7 @@ public class DynamicWorkspaceDef extends WorkspaceDef {
      * @return the name of the stable workspace.
      */
     public String getStableWorkspace() {
-	return stableWorkspace;
+        return stableWorkspace;
     }
 
     /**
@@ -69,6 +67,6 @@ public class DynamicWorkspaceDef extends WorkspaceDef {
      * @return true if the workspace is dynamic, otherwise false
      */
     public boolean isDynamic() {
-	return true;
+        return true;
     }
 }

@@ -15,16 +15,14 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.FilteredTermEnum;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.FilteredTermEnum;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 class WildcardTermEnum extends FilteredTermEnum {
 
@@ -35,75 +33,75 @@ class WildcardTermEnum extends FilteredTermEnum {
     private boolean endEnum = false;
 
     public WildcardTermEnum(IndexReader reader, Term term) throws IOException {
-	super(reader, term);
-	pattern = createRegexp(term.text());
+        super(reader, term);
+        pattern = createRegexp(term.text());
         field = term.field();
 
-	// FIXME optimize term enum. find start term text
-	setEnum(reader.terms(new Term(term.field(), "")));
+        // FIXME optimize term enum. find start term text
+        setEnum(reader.terms(new Term(term.field(), "")));
     }
 
     protected boolean termCompare(Term term) {
-	if (term.field() == field) {
-	    return pattern.matcher(term.text()).matches();
-	}
-	endEnum = true;
-	return false;
+        if (term.field() == field) {
+            return pattern.matcher(term.text()).matches();
+        }
+        endEnum = true;
+        return false;
     }
 
     protected float difference() {
-	return 1.0f;
+        return 1.0f;
     }
 
     protected boolean endEnum() {
-	return endEnum;
+        return endEnum;
     }
 
     //--------------------------< internal >------------------------------------
 
     private Pattern createRegexp(String likePattern) {
-	// - escape all non alphabetic characters
-	// - escape constructs like \<alphabetic char> into \\<alphabetic char>
-	// - replace non escaped ? _ * % into . and .*
-	StringBuffer regexp = new StringBuffer();
-	boolean escaped = false;
-	for (int i = 0; i < likePattern.length(); i++) {
-	    if (likePattern.charAt(i) == '\\') {
-		if (escaped) {
-		    regexp.append("\\\\");
-		    escaped = false;
-		} else {
-		    escaped = true;
-		}
-	    } else {
-		if (Character.isLetter(likePattern.charAt(i))) {
-		    if (escaped) {
-			regexp.append("\\\\").append(likePattern.charAt(i));
-			escaped = false;
-		    } else {
-			regexp.append(likePattern.charAt(i));
-		    }
-		} else {
-		    if (escaped) {
-			regexp.append('\\').append(likePattern.charAt(i));
-			escaped = false;
-		    } else {
-			switch (likePattern.charAt(i)) {
-			    case '?':
-			    case '_':
-				regexp.append('.');
-				break;
-			    case '*':
-			    case '%':
-				regexp.append(".*");
-				break;
-			    default:
-				regexp.append('\\').append(likePattern.charAt(i));
-			}
-		    }
-		}
-	    }
-	}
-	return Pattern.compile(regexp.toString());
+        // - escape all non alphabetic characters
+        // - escape constructs like \<alphabetic char> into \\<alphabetic char>
+        // - replace non escaped ? _ * % into . and .*
+        StringBuffer regexp = new StringBuffer();
+        boolean escaped = false;
+        for (int i = 0; i < likePattern.length(); i++) {
+            if (likePattern.charAt(i) == '\\') {
+                if (escaped) {
+                    regexp.append("\\\\");
+                    escaped = false;
+                } else {
+                    escaped = true;
+                }
+            } else {
+                if (Character.isLetter(likePattern.charAt(i))) {
+                    if (escaped) {
+                        regexp.append("\\\\").append(likePattern.charAt(i));
+                        escaped = false;
+                    } else {
+                        regexp.append(likePattern.charAt(i));
+                    }
+                } else {
+                    if (escaped) {
+                        regexp.append('\\').append(likePattern.charAt(i));
+                        escaped = false;
+                    } else {
+                        switch (likePattern.charAt(i)) {
+                            case '?':
+                            case '_':
+                                regexp.append('.');
+                                break;
+                            case '*':
+                            case '%':
+                                regexp.append(".*");
+                                break;
+                            default:
+                                regexp.append('\\').append(likePattern.charAt(i));
+                        }
+                    }
+                }
+            }
+        }
+        return Pattern.compile(regexp.toString());
     }
 }

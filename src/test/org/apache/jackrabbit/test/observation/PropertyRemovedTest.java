@@ -15,47 +15,44 @@
  */
 package org.apache.jackrabbit.test.observation;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.observation.EventType;
+import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.EventType;
 
 /**
  * Test cases for {@link javax.jcr.observation.EventType#PROPERTY_REMOVED
  * PROPERTY_REMOVED} events.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class PropertyRemovedTest extends AbstractObservationTest {
 
     public void testSinglePropertyRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-	addEventListener(result, EventType.PROPERTY_REMOVED);
-	Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.setProperty("prop1", new String[] { "foo" });
-	foo.setProperty("prop2", new String[] { "bar" });
-	testRoot.save();
-	foo.remove("prop1");
-	testRoot.save();
+        addEventListener(result, EventType.PROPERTY_REMOVED);
+        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("prop1", new String[]{"foo"});
+        foo.setProperty("prop2", new String[]{"bar"});
+        testRoot.save();
+        foo.remove("prop1");
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkPropertyRemoved(events, new String[] { "foo/prop1" });
+        checkPropertyRemoved(events, new String[]{"foo/prop1"});
     }
 
     public void testMultiPropertyRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-	addEventListener(result, EventType.PROPERTY_REMOVED);
-	Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.setProperty("prop1", new String[] { "foo" });
-	foo.setProperty("prop2", new String[] { "bar" });
-	testRoot.save();
-	foo.remove("prop1");
-	foo.remove("prop2");
-	testRoot.save();
+        addEventListener(result, EventType.PROPERTY_REMOVED);
+        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("prop1", new String[]{"foo"});
+        foo.setProperty("prop2", new String[]{"bar"});
+        testRoot.save();
+        foo.remove("prop1");
+        foo.remove("prop2");
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkPropertyRemoved(events, new String[] { "foo/prop1", "foo/prop2" });
+        checkPropertyRemoved(events, new String[]{"foo/prop1", "foo/prop2"});
     }
 
 }

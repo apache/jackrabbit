@@ -16,17 +16,19 @@
 package org.apache.jackrabbit.core.search.jcrql;
 
 public class ASTStatement extends SimpleNode {
-  public ASTStatement(int id) {
-    super(id);
-  }
+    public ASTStatement(int id) {
+        super(id);
+    }
 
-  public ASTStatement(JCRQLParser p, int id) {
-    super(p, id);
-  }
+    public ASTStatement(JCRQLParser p, int id) {
+        super(p, id);
+    }
 
 
-  /** Accept the visitor. **/
-  public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-    return visitor.visit(this, data);
-  }
+    /**
+     * Accept the visitor. *
+     */
+    public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
+        return visitor.visit(this, data);
+    }
 }

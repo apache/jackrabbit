@@ -28,9 +28,6 @@ import java.io.ObjectOutputStream;
 /**
  * <code>XMLNodeState</code> represents the persistent state of a
  * <code>Node</code>.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.7 $, $Date: 2004/08/02 16:19:50 $
  */
 class XMLNodeState extends PersistentNodeState {
 
@@ -45,7 +42,7 @@ class XMLNodeState extends PersistentNodeState {
      * @param persistMgr   the persistence manager
      */
     XMLNodeState(String uuid, QName nodeTypeName, String parentUUID, PersistenceManager persistMgr) {
-	super(uuid, nodeTypeName, parentUUID, persistMgr);
+        super(uuid, nodeTypeName, parentUUID, persistMgr);
     }
 
     //-------------------------------------------------< PersistableItemState >
@@ -53,45 +50,45 @@ class XMLNodeState extends PersistentNodeState {
      * @see PersistableItemState#reload
      */
     public synchronized void reload() throws ItemStateException {
-	persistMgr.reload(this);
-	// reset status
-	status = STATUS_EXISTING;
+        persistMgr.reload(this);
+        // reset status
+        status = STATUS_EXISTING;
     }
 
     /**
      * @see PersistableItemState#store
      */
     public synchronized void store() throws ItemStateException {
-	persistMgr.store(this);
-	// notify listeners
-	if (status == STATUS_NEW) {
-	    notifyStateCreated();
-	} else {
-	    notifyStateModified();
-	}
-	// reset status
-	status = STATUS_EXISTING;
+        persistMgr.store(this);
+        // notify listeners
+        if (status == STATUS_NEW) {
+            notifyStateCreated();
+        } else {
+            notifyStateModified();
+        }
+        // reset status
+        status = STATUS_EXISTING;
     }
 
     /**
      * @see PersistableItemState#destroy
      */
     public synchronized void destroy() throws ItemStateException {
-	persistMgr.destroy(this);
-	// notify listeners
-	notifyStateDestroyed();
-	// reset status
-	status = STATUS_UNDEFINED;
+        persistMgr.destroy(this);
+        // notify listeners
+        notifyStateDestroyed();
+        // reset status
+        status = STATUS_UNDEFINED;
     }
 
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
-	// delegate to default implementation
-	out.defaultWriteObject();
+        // delegate to default implementation
+        out.defaultWriteObject();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-	// delegate to default implementation
-	in.defaultReadObject();
+        // delegate to default implementation
+        in.defaultReadObject();
     }
 }

@@ -15,78 +15,74 @@
  */
 package org.apache.jackrabbit.test.observation;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.observation.EventType;
+import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.EventType;
 
 /**
  * Test cases for {@link javax.jcr.observation.EventType#PROPERTY_CHANGED
  * PROPERTY_CHANGED} events.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class PropertyChangedTest extends AbstractObservationTest {
 
     public void testSinglePropertyChanged() throws RepositoryException {
         EventResult result = new EventResult(log);
         Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.setProperty("bar", new String[] { "foo" });
+        foo.setProperty("bar", new String[]{"foo"});
         testRoot.save();
-	addEventListener(result, EventType.PROPERTY_CHANGED);
-	foo.getProperty("bar").setValue(new String[] { "foobar" });
-	testRoot.save();
+        addEventListener(result, EventType.PROPERTY_CHANGED);
+        foo.getProperty("bar").setValue(new String[]{"foobar"});
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkPropertyChanged(events, new String[] { "foo/bar" });
+        checkPropertyChanged(events, new String[]{"foo/bar"});
     }
 
     public void testMultiPropertyChanged() throws RepositoryException {
         EventResult result = new EventResult(log);
         Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.setProperty("prop1", new String[] { "foo" });
-	foo.setProperty("prop2", new String[] { "bar" });
+        foo.setProperty("prop1", new String[]{"foo"});
+        foo.setProperty("prop2", new String[]{"bar"});
         testRoot.save();
-	addEventListener(result, EventType.PROPERTY_CHANGED);
-	foo.getProperty("prop1").setValue(new String[] { "foobar" });
-	foo.getProperty("prop2").setValue(new String[] { "foobar" });
-	testRoot.save();
+        addEventListener(result, EventType.PROPERTY_CHANGED);
+        foo.getProperty("prop1").setValue(new String[]{"foobar"});
+        foo.getProperty("prop2").setValue(new String[]{"foobar"});
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkPropertyChanged(events, new String[] { "foo/prop1", "foo/prop2" });
+        checkPropertyChanged(events, new String[]{"foo/prop1", "foo/prop2"});
     }
 
     public void testSinglePropertyChangedWithAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
         Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.setProperty("bar", new String[] { "foo" });
+        foo.setProperty("bar", new String[]{"foo"});
         testRoot.save();
-	addEventListener(result, EventType.PROPERTY_CHANGED);
-	foo.getProperty("bar").setValue(new String[] { "foobar" });
-	foo.setProperty("foo", new String[] { "bar" });    // will not fire prop changed event
-	testRoot.save();
+        addEventListener(result, EventType.PROPERTY_CHANGED);
+        foo.getProperty("bar").setValue(new String[]{"foobar"});
+        foo.setProperty("foo", new String[]{"bar"});    // will not fire prop changed event
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkPropertyChanged(events, new String[] { "foo/bar" });
+        checkPropertyChanged(events, new String[]{"foo/bar"});
     }
 
     public void testMultiPropertyChangedWithAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
         Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.setProperty("prop1", new String[] { "foo" });
-	foo.setProperty("prop2", new String[] { "bar" });
+        foo.setProperty("prop1", new String[]{"foo"});
+        foo.setProperty("prop2", new String[]{"bar"});
         testRoot.save();
-	addEventListener(result, EventType.PROPERTY_CHANGED);
-	foo.getProperty("prop1").setValue(new String[] { "foobar" });
-	foo.getProperty("prop2").setValue(new String[] { "foobar" });
-	foo.setProperty("prop3", new String[] { "foo" }); // will not fire prop changed event
-	testRoot.save();
+        addEventListener(result, EventType.PROPERTY_CHANGED);
+        foo.getProperty("prop1").setValue(new String[]{"foobar"});
+        foo.getProperty("prop2").setValue(new String[]{"foobar"});
+        foo.setProperty("prop3", new String[]{"foo"}); // will not fire prop changed event
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkPropertyChanged(events, new String[] { "foo/prop1", "foo/prop2" });
+        checkPropertyChanged(events, new String[]{"foo/prop1", "foo/prop2"});
     }
-
 
 
 }

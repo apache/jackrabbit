@@ -27,9 +27,6 @@ import javax.jcr.access.Permission;
  * A derived class has only to implement the abstract <code>getPermissions(String)</code>
  * as all other methods except <code>getSupportedPermissions()</code> directly or
  * indirectly call this method.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.15 $, $Date: 2004/08/02 16:19:40 $
  */
 abstract class AbstractAccessManager implements AccessManager {
 
@@ -44,58 +41,58 @@ abstract class AbstractAccessManager implements AccessManager {
      * @see AccessManager#getPermissions(String)
      */
     public abstract long getPermissions(String absPath)
-	    throws PathNotFoundException, RepositoryException;
+            throws PathNotFoundException, RepositoryException;
 
     /**
      * @see AccessManager#getSupportedPermissions
      */
     public Permission[] getSupportedPermissions() {
-	return PermissionImpl.ALL_PERMISSIONS;
+        return PermissionImpl.ALL_PERMISSIONS;
     }
 
     /**
      * @see AccessManager#isGranted(String, long)
      */
     public boolean isGranted(String absPath, long permissions)
-	    throws PathNotFoundException, RepositoryException {
-	return (getPermissions(absPath) & permissions) == permissions;
+            throws PathNotFoundException, RepositoryException {
+        return (getPermissions(absPath) & permissions) == permissions;
     }
 
     //--------------------------------------------------------< inner classes >
     static final class PermissionImpl implements Permission {
 
-	private final String name;
-	private final long value;
+        private final String name;
+        private final long value;
 
-	static final Permission ADD_NODE_PERMISSION =
-		new PermissionImpl("add node", Permission.ADD_NODE);
-	static final Permission SET_PROPERTY_PERMISSION =
-		new PermissionImpl("set property", Permission.SET_PROPERTY);
-	static final Permission REMOVE_ITEM_PERMISSION =
-		new PermissionImpl("remove item", Permission.REMOVE_ITEM);
-	static final Permission READ_ITEM_PERMISSION =
-		new PermissionImpl("read item", Permission.READ_ITEM);
+        static final Permission ADD_NODE_PERMISSION =
+                new PermissionImpl("add node", Permission.ADD_NODE);
+        static final Permission SET_PROPERTY_PERMISSION =
+                new PermissionImpl("set property", Permission.SET_PROPERTY);
+        static final Permission REMOVE_ITEM_PERMISSION =
+                new PermissionImpl("remove item", Permission.REMOVE_ITEM);
+        static final Permission READ_ITEM_PERMISSION =
+                new PermissionImpl("read item", Permission.READ_ITEM);
 
-	static final long ALL_VALUES =
-		ADD_NODE_PERMISSION.getValue() | SET_PROPERTY_PERMISSION.getValue()
-		| READ_ITEM_PERMISSION.getValue() | REMOVE_ITEM_PERMISSION.getValue();
+        static final long ALL_VALUES =
+                ADD_NODE_PERMISSION.getValue() | SET_PROPERTY_PERMISSION.getValue()
+                | READ_ITEM_PERMISSION.getValue() | REMOVE_ITEM_PERMISSION.getValue();
 
-	static final Permission[] ALL_PERMISSIONS =
-		new Permission[]{ADD_NODE_PERMISSION, SET_PROPERTY_PERMISSION,
-				 READ_ITEM_PERMISSION, REMOVE_ITEM_PERMISSION};
+        static final Permission[] ALL_PERMISSIONS =
+                new Permission[]{ADD_NODE_PERMISSION, SET_PROPERTY_PERMISSION,
+                                 READ_ITEM_PERMISSION, REMOVE_ITEM_PERMISSION};
 
-	private PermissionImpl(String name, long value) {
-	    this.name = name;
-	    this.value = value;
-	}
+        private PermissionImpl(String name, long value) {
+            this.name = name;
+            this.value = value;
+        }
 
-	//-------------------------------------------------------< Permission >
-	public String getName() {
-	    return name;
-	}
+        //-------------------------------------------------------< Permission >
+        public String getName() {
+            return name;
+        }
 
-	public long getValue() {
-	    return value;
-	}
+        public long getValue() {
+            return value;
+        }
     }
 }

@@ -21,8 +21,6 @@ import javax.jcr.Session;
 
 /**
  *
- * @version $Revision: 1.5 $, $Date: 2004/06/28 14:29:16 $
- * @author Marcel Reutegger
  */
 public class RepositoryHelper {
 

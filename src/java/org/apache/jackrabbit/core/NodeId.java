@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core;
 
 /**
  * <code>NodeId</code> uniquely identifies a node in the repository.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.10 $
  */
 public class NodeId extends ItemId {
 
@@ -28,32 +25,32 @@ public class NodeId extends ItemId {
     private String uuid;
 
     public NodeId(String uuid) {
-	if (uuid == null) {
-	    throw new IllegalArgumentException("uuid can not be null");
-	}
-	this.uuid = uuid;
+        if (uuid == null) {
+            throw new IllegalArgumentException("uuid can not be null");
+        }
+        this.uuid = uuid;
     }
 
     /**
      * @see ItemId#denotesNode
      */
     public boolean denotesNode() {
-	return true;
+        return true;
     }
 
     public String getUUID() {
-	return uuid;
+        return uuid;
     }
 
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof NodeId) {
-	    NodeId other = (NodeId) obj;
-	    return uuid.equals(other.uuid);
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof NodeId) {
+            NodeId other = (NodeId) obj;
+            return uuid.equals(other.uuid);
+        }
+        return false;
     }
 
     /**
@@ -69,21 +66,21 @@ public class NodeId extends ItemId {
      * @see #toString()
      */
     public static NodeId valueOf(String s) {
-	if (s == null) {
-	    throw new IllegalArgumentException("invalid NodeId literal");
-	}
-	return new NodeId(s);
+        if (s == null) {
+            throw new IllegalArgumentException("invalid NodeId literal");
+        }
+        return new NodeId(s);
     }
 
     public String toString() {
-	return uuid;
+        return uuid;
     }
 
     public int hashCode() {
-	// NodeId is immutable, we can store the computed hash code value
-	if (hash == 0) {
-	    hash = 1609 * uuid.hashCode();
-	}
-	return hash;
+        // NodeId is immutable, we can store the computed hash code value
+        if (hash == 0) {
+            hash = 1609 * uuid.hashCode();
+        }
+        return hash;
     }
 }

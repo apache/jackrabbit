@@ -15,24 +15,22 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.FilteredTermEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.FilteredTermEnum;
+import org.apache.lucene.search.MultiTermQuery;
 
 import java.io.IOException;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 class WildcardQuery extends MultiTermQuery {
 
     public WildcardQuery(Term term) {
-	super(term);
+        super(term);
     }
 
     protected FilteredTermEnum getEnum(IndexReader reader) throws IOException {
-	return new WildcardTermEnum(reader, getTerm());
+        return new WildcardTermEnum(reader, getTerm());
     }
 }

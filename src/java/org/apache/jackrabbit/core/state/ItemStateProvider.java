@@ -19,9 +19,6 @@ import org.apache.jackrabbit.core.ItemId;
 
 /**
  * The <code>ItemStateProvider</code> interface...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.4 $, $Date: 2004/08/06 15:08:21 $
  */
 public interface ItemStateProvider {
 
@@ -32,7 +29,7 @@ public interface ItemStateProvider {
      * @throws ItemStateException
      */
     public ItemState getItemState(ItemId id)
-	    throws NoSuchItemStateException, ItemStateException;
+            throws NoSuchItemStateException, ItemStateException;
 
     /**
      * @param id
@@ -47,7 +44,7 @@ public interface ItemStateProvider {
      * @throws ItemStateException
      */
     public ItemState getItemStateInAttic(ItemId id)
-	    throws NoSuchItemStateException, ItemStateException;
+            throws NoSuchItemStateException, ItemStateException;
 
     /**
      * @param id

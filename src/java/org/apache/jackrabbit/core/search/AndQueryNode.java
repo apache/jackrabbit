@@ -20,9 +20,6 @@ import java.util.Iterator;
 /**
  * Implements a query node that defines an AND operation between arbitrary
  * other {@link QueryNode}s.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class AndQueryNode extends NAryQueryNode {
 
@@ -33,7 +30,7 @@ public class AndQueryNode extends NAryQueryNode {
      * @param parent the parent of <code>this</code> <code>AndQueryNode</code>.
      */
     public AndQueryNode(QueryNode parent) {
-	super(parent);
+        super(parent);
     }
 
     /**
@@ -45,14 +42,14 @@ public class AndQueryNode extends NAryQueryNode {
      * @param operands the operands for this AND operation.
      */
     public AndQueryNode(QueryNode parent, QueryNode[] operands) {
-	super(parent, operands);
+        super(parent, operands);
     }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     /**
@@ -62,24 +59,24 @@ public class AndQueryNode extends NAryQueryNode {
      * @return a string representation of this query node including its sub-nodes.
      */
     public String toJCRQLString() {
-	StringBuffer sb = new StringBuffer();
-	boolean bracket = false;
-	if (getParent() instanceof NotQueryNode) {
-	    bracket = true;
-	}
-	if (bracket) {
-	    sb.append("(");
-	}
-	String and = "";
-	for (Iterator it = operands.iterator(); it.hasNext();) {
-	    sb.append(and);
-	    sb.append(((QueryNode) it.next()).toJCRQLString());
-	    and = " AND ";
-	}
-	if (bracket) {
-	    sb.append(")");
-	}
-	return sb.toString();
+        StringBuffer sb = new StringBuffer();
+        boolean bracket = false;
+        if (getParent() instanceof NotQueryNode) {
+            bracket = true;
+        }
+        if (bracket) {
+            sb.append("(");
+        }
+        String and = "";
+        for (Iterator it = operands.iterator(); it.hasNext();) {
+            sb.append(and);
+            sb.append(((QueryNode) it.next()).toJCRQLString());
+            and = " AND ";
+        }
+        if (bracket) {
+            sb.append(")");
+        }
+        return sb.toString();
     }
 
     /**
@@ -89,7 +86,7 @@ public class AndQueryNode extends NAryQueryNode {
      * @return a string representation of this query node including its sub-nodes.
      */
     public String toXPathString() {
-	// @todo implement
-	return "";
+        // @todo implement
+        return "";
     }
 }

@@ -16,21 +16,34 @@
  */
 package org.apache.jackrabbit.core.search.jcrql;
 
-public interface JCRQLParserVisitor
-{
-  public Object visit(SimpleNode node, Object data);
-  public Object visit(ASTStatement node, Object data);
-  public Object visit(ASTSelectClause node, Object data);
-  public Object visit(ASTFromClause node, Object data);
-  public Object visit(ASTNodeType node, Object data);
-  public Object visit(ASTLocationClause node, Object data);
-  public Object visit(ASTWhereClause node, Object data);
-  public Object visit(ASTOrExpr node, Object data);
-  public Object visit(ASTAndExpr node, Object data);
-  public Object visit(ASTNotExpr node, Object data);
-  public Object visit(ASTRelExpr node, Object data);
-  public Object visit(ASTBracketExpr node, Object data);
-  public Object visit(ASTValue node, Object data);
-  public Object visit(ASTTextsearchClause node, Object data);
-  public Object visit(ASTOrderClause node, Object data);
+public interface JCRQLParserVisitor {
+    public Object visit(SimpleNode node, Object data);
+
+    public Object visit(ASTStatement node, Object data);
+
+    public Object visit(ASTSelectClause node, Object data);
+
+    public Object visit(ASTFromClause node, Object data);
+
+    public Object visit(ASTNodeType node, Object data);
+
+    public Object visit(ASTLocationClause node, Object data);
+
+    public Object visit(ASTWhereClause node, Object data);
+
+    public Object visit(ASTOrExpr node, Object data);
+
+    public Object visit(ASTAndExpr node, Object data);
+
+    public Object visit(ASTNotExpr node, Object data);
+
+    public Object visit(ASTRelExpr node, Object data);
+
+    public Object visit(ASTBracketExpr node, Object data);
+
+    public Object visit(ASTValue node, Object data);
+
+    public Object visit(ASTTextsearchClause node, Object data);
+
+    public Object visit(ASTOrderClause node, Object data);
 }

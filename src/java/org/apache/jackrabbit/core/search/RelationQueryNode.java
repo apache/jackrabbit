@@ -16,19 +16,18 @@
 package org.apache.jackrabbit.core.search;
 
 import javax.jcr.util.ISO8601;
-import java.util.Date;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.TimeZone;
 
 /**
  * Implements a query node that defines property value relation.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class RelationQueryNode extends QueryNode implements Constants {
 
-    /** The name of the property */
+    /**
+     * The name of the property
+     */
     private String property;
 
     /**
@@ -78,11 +77,11 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @param operation the type of the relation.
      */
     public RelationQueryNode(QueryNode parent, String property, long value, int operation) {
-	super(parent);
-	this.property = property;
-	this.valueLong = value;
-	this.operation = operation;
-	this.type = TYPE_LONG;
+        super(parent);
+        this.property = property;
+        this.valueLong = value;
+        this.operation = operation;
+        this.type = TYPE_LONG;
     }
 
     /**
@@ -95,11 +94,11 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @param operation the type of the relation.
      */
     public RelationQueryNode(QueryNode parent, String property, double value, int operation) {
-	super(parent);
-	this.property = property;
-	this.valueDouble = value;
-	this.operation = operation;
-	this.type = TYPE_DOUBLE;
+        super(parent);
+        this.property = property;
+        this.valueDouble = value;
+        this.operation = operation;
+        this.type = TYPE_DOUBLE;
     }
 
     /**
@@ -112,11 +111,11 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @param operation the type of the relation.
      */
     public RelationQueryNode(QueryNode parent, String property, Date value, int operation) {
-	super(parent);
-	this.property = property;
-	this.valueDate = value;
-	this.operation = operation;
-	this.type = TYPE_DATE;
+        super(parent);
+        this.property = property;
+        this.valueDate = value;
+        this.operation = operation;
+        this.type = TYPE_DATE;
     }
 
     /**
@@ -129,34 +128,36 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @param operation the type of the relation.
      */
     public RelationQueryNode(QueryNode parent, String property, String value, int operation) {
-	super(parent);
-	this.property = property;
-	this.valueString = value;
-	this.operation = operation;
-	this.type = TYPE_STRING;
+        super(parent);
+        this.property = property;
+        this.valueString = value;
+        this.operation = operation;
+        this.type = TYPE_STRING;
     }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     /**
      * Returns the type of the value.
+     *
      * @return the type of the value.
      */
     public int getType() {
-	return type;
+        return type;
     }
 
     /**
      * Returns the name of the property in this relation query node.
+     *
      * @return the name of the property in this relation query node.
      */
     public String getProperty() {
-	return property;
+        return property;
     }
 
     /**
@@ -166,7 +167,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @return the <code>long</code> value.
      */
     public long getLongValue() {
-	return valueLong;
+        return valueLong;
     }
 
     /**
@@ -176,7 +177,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @return the <code>double</code> value.
      */
     public double getDoubleValue() {
-	return valueDouble;
+        return valueDouble;
     }
 
     /**
@@ -186,7 +187,7 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @return the <code>String</code> value.
      */
     public String getStringValue() {
-	return valueString;
+        return valueString;
     }
 
     /**
@@ -196,70 +197,73 @@ public class RelationQueryNode extends QueryNode implements Constants {
      * @return the <code>Date</code> value.
      */
     public Date getDateValue() {
-	return valueDate;
+        return valueDate;
     }
 
     /**
      * Returns the operation type.
+     *
      * @return the operation type.
      */
     public int getOperation() {
-	return operation;
+        return operation;
     }
 
     /**
      * Returns a JCRQL representation for this query node.
+     *
      * @return a JCRQL representation for this query node.
      */
     public String toJCRQLString() {
-	StringBuffer sb = new StringBuffer();
-	if (property.indexOf(' ') > -1) {
-	    sb.append("\"" + property + "\"");
-	} else {
-	    sb.append(property);
-	}
+        StringBuffer sb = new StringBuffer();
+        if (property.indexOf(' ') > -1) {
+            sb.append("\"" + property + "\"");
+        } else {
+            sb.append(property);
+        }
 
-	if (operation == OPERATION_EQ) {
-	    sb.append("=");
-	} else if (operation == OPERATION_GE) {
-	    sb.append(">=");
-	} else if (operation == OPERATION_GT) {
-	    sb.append(">");
-	} else if (operation == OPERATION_LE) {
-	    sb.append("<=");
-	} else if (operation == OPERATION_LIKE) {
-	    sb.append(" LIKE ");
-	} else if (operation == OPERATION_LT) {
-	    sb.append("<");
-	} else if (operation == OPERATION_NE) {
-	    sb.append("<>");
-	} else {
-	    throw new RuntimeException("invalid operation: " + operation);
-	}
+        if (operation == OPERATION_EQ) {
+            sb.append("=");
+        } else if (operation == OPERATION_GE) {
+            sb.append(">=");
+        } else if (operation == OPERATION_GT) {
+            sb.append(">");
+        } else if (operation == OPERATION_LE) {
+            sb.append("<=");
+        } else if (operation == OPERATION_LIKE) {
+            sb.append(" LIKE ");
+        } else if (operation == OPERATION_LT) {
+            sb.append("<");
+        } else if (operation == OPERATION_NE) {
+            sb.append("<>");
+        } else {
+            throw new RuntimeException("invalid operation: " + operation);
+        }
 
 
-	if (type == TYPE_LONG) {
-	    sb.append(valueLong);
-	} else if (type == TYPE_DOUBLE) {
-	    sb.append(valueDouble);
-	} else if (type == TYPE_STRING) {
-	    sb.append("\"").append(valueString).append("\"");
-	} else if (type == TYPE_DATE) {
-	    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-	    cal.setTime(valueDate);
-	    sb.append(ISO8601.format(cal));
-	} else {
-	   throw new RuntimeException("Invalid type: " + type);
-	}
-	return sb.toString();
+        if (type == TYPE_LONG) {
+            sb.append(valueLong);
+        } else if (type == TYPE_DOUBLE) {
+            sb.append(valueDouble);
+        } else if (type == TYPE_STRING) {
+            sb.append("\"").append(valueString).append("\"");
+        } else if (type == TYPE_DATE) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTime(valueDate);
+            sb.append(ISO8601.format(cal));
+        } else {
+            throw new RuntimeException("Invalid type: " + type);
+        }
+        return sb.toString();
     }
 
     /**
      * Returns an XPath representation for this query node.
+     *
      * @return an XPath representation for this query node.
      */
     public String toXPathString() {
-	// todo implement
-	return "";
+        // todo implement
+        return "";
     }
 }

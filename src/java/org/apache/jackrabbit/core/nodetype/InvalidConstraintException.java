@@ -19,9 +19,6 @@ import org.apache.jackrabbit.core.BaseException;
 
 /**
  * The <code>InvalidConstraintException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.10 $, $Date: 2004/09/01 15:14:28 $
  */
 public class InvalidConstraintException extends BaseException {
     /**
@@ -29,7 +26,7 @@ public class InvalidConstraintException extends BaseException {
      * detail message.
      */
     public InvalidConstraintException() {
-	super();
+        super();
     }
 
     /**
@@ -40,7 +37,7 @@ public class InvalidConstraintException extends BaseException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public InvalidConstraintException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -52,7 +49,7 @@ public class InvalidConstraintException extends BaseException {
      * @param rootCause root failure cause
      */
     public InvalidConstraintException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -61,6 +58,6 @@ public class InvalidConstraintException extends BaseException {
      * @param rootCause root failure cause
      */
     public InvalidConstraintException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

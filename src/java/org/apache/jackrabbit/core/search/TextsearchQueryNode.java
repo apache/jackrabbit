@@ -17,55 +17,58 @@ package org.apache.jackrabbit.core.search;
 
 /**
  * Implements a query node that defines a textsearch clause.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class TextsearchQueryNode extends QueryNode {
 
-    /** The query statement inside the textsearch clause */
+    /**
+     * The query statement inside the textsearch clause
+     */
     private final String query;
 
     /**
      * Creates a new <code>TextsearchQueryNode</code> with a <code>parent</code>
      * and a textsearch <code>query</code> statement.
+     *
      * @param parent the parent node of this query node.
-     * @param query the textsearch statement.
+     * @param query  the textsearch statement.
      */
     public TextsearchQueryNode(QueryNode parent, String query) {
-	super(parent);
-	this.query = query;
+        super(parent);
+        this.query = query;
     }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     /**
      * Returns the textsearch statement.
+     *
      * @return the textsearch statement.
      */
     public String getQuery() {
-	return query;
+        return query;
     }
 
     /**
      * Returns a JCRQL representation for this query node.
+     *
      * @return a JCRQL representation for this query node.
      */
     public String toJCRQLString() {
-	return "TEXTSEARCH \"" + query + "\"";
+        return "TEXTSEARCH \"" + query + "\"";
     }
 
     /**
      * Returns an XPath representation for this query node.
+     *
      * @return an XPath representation for this query node.
      */
     public String toXPathString() {
-	// todo implement
-	return "";
+        // todo implement
+        return "";
     }
 }

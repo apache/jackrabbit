@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 
 import javax.jcr.Session;
@@ -25,9 +25,6 @@ import javax.jcr.observation.EventType;
 /**
  * The <code>EventState</code> class encapsulates the session
  * independent state of an {@link javax.jcr.observation.Event}.
- *
- * @author Marcel Reutegger
- * @version $Revision: 1.6 $
  */
 class EventState {
 
@@ -97,29 +94,29 @@ class EventState {
      * @param session    the {@link javax.jcr.Session} that caused this event.
      */
     private EventState(long type,
-		       String parentUUID,
-		       Path parentPath,
-		       String childUUID,
-		       QName childName,
-		       NodeTypeImpl nodeType,
-		       Session session) {
-	long mask = (EventType.PROPERTY_ADDED | EventType.PROPERTY_CHANGED | EventType.PROPERTY_REMOVED);
-	if ((type & mask) > 0) {
-	    if (childUUID != null) {
-		throw new IllegalArgumentException("childUUID only allowed for Node events.");
-	    }
-	} else {
-	    if (childUUID == null) {
-		throw new IllegalArgumentException("childUUID must not be null for Node events.");
-	    }
-	}
-	this.type = type;
-	this.parentUUID = parentUUID;
-	this.parentPath = parentPath;
-	this.childUUID = childUUID;
-	this.childName = childName;
-	this.nodeType = nodeType;
-	this.session = session;
+                       String parentUUID,
+                       Path parentPath,
+                       String childUUID,
+                       QName childName,
+                       NodeTypeImpl nodeType,
+                       Session session) {
+        long mask = (EventType.PROPERTY_ADDED | EventType.PROPERTY_CHANGED | EventType.PROPERTY_REMOVED);
+        if ((type & mask) > 0) {
+            if (childUUID != null) {
+                throw new IllegalArgumentException("childUUID only allowed for Node events.");
+            }
+        } else {
+            if (childUUID == null) {
+                throw new IllegalArgumentException("childUUID must not be null for Node events.");
+            }
+        }
+        this.type = type;
+        this.parentUUID = parentUUID;
+        this.parentPath = parentPath;
+        this.childUUID = childUUID;
+        this.childName = childName;
+        this.nodeType = nodeType;
+        this.session = session;
     }
 
     //-----------------< factory methods >--------------------------------------
@@ -139,18 +136,18 @@ class EventState {
      * @return an <code>EventState</code> instance.
      */
     public static EventState childNodeAdded(String parentUUID,
-					    Path parentPath,
-					    String childUUID,
-					    QName childName,
-					    NodeTypeImpl nodeType,
-					    Session session) {
-	return new EventState(EventType.CHILD_NODE_ADDED,
-		parentUUID,
-		parentPath,
-		childUUID,
-		childName,
-		nodeType,
-		session);
+                                            Path parentPath,
+                                            String childUUID,
+                                            QName childName,
+                                            NodeTypeImpl nodeType,
+                                            Session session) {
+        return new EventState(EventType.CHILD_NODE_ADDED,
+                parentUUID,
+                parentPath,
+                childUUID,
+                childName,
+                nodeType,
+                session);
     }
 
     /**
@@ -168,18 +165,18 @@ class EventState {
      * @return an <code>EventState</code> instance.
      */
     public static EventState childNodeRemoved(String parentUUID,
-					      Path parentPath,
-					      String childUUID,
-					      QName childName,
-					      NodeTypeImpl nodeType,
-					      Session session) {
-	return new EventState(EventType.CHILD_NODE_REMOVED,
-		parentUUID,
-		parentPath,
-		childUUID,
-		childName,
-		nodeType,
-		session);
+                                              Path parentPath,
+                                              String childUUID,
+                                              QName childName,
+                                              NodeTypeImpl nodeType,
+                                              Session session) {
+        return new EventState(EventType.CHILD_NODE_REMOVED,
+                parentUUID,
+                parentPath,
+                childUUID,
+                childName,
+                nodeType,
+                session);
     }
 
     /**
@@ -196,17 +193,17 @@ class EventState {
      * @return an <code>EventState</code> instance.
      */
     public static EventState propertyAdded(String parentUUID,
-					   Path parentPath,
-					   QName childName,
-					   NodeTypeImpl nodeType,
-					   Session session) {
-	return new EventState(EventType.PROPERTY_ADDED,
-		parentUUID,
-		parentPath,
-		null,
-		childName,
-		nodeType,
-		session);
+                                           Path parentPath,
+                                           QName childName,
+                                           NodeTypeImpl nodeType,
+                                           Session session) {
+        return new EventState(EventType.PROPERTY_ADDED,
+                parentUUID,
+                parentPath,
+                null,
+                childName,
+                nodeType,
+                session);
     }
 
     /**
@@ -223,17 +220,17 @@ class EventState {
      * @return an <code>EventState</code> instance.
      */
     public static EventState propertyRemoved(String parentUUID,
-					     Path parentPath,
-					     QName childName,
-					     NodeTypeImpl nodeType,
-					     Session session) {
-	return new EventState(EventType.PROPERTY_REMOVED,
-		parentUUID,
-		parentPath,
-		null,
-		childName,
-		nodeType,
-		session);
+                                             Path parentPath,
+                                             QName childName,
+                                             NodeTypeImpl nodeType,
+                                             Session session) {
+        return new EventState(EventType.PROPERTY_REMOVED,
+                parentUUID,
+                parentPath,
+                null,
+                childName,
+                nodeType,
+                session);
     }
 
     /**
@@ -250,24 +247,24 @@ class EventState {
      * @return an <code>EventState</code> instance.
      */
     public static EventState propertyChanged(String parentUUID,
-					     Path parentPath,
-					     QName childName,
-					     NodeTypeImpl nodeType,
-					     Session session) {
-	return new EventState(EventType.PROPERTY_CHANGED,
-		parentUUID,
-		parentPath,
-		null,
-		childName,
-		nodeType,
-		session);
+                                             Path parentPath,
+                                             QName childName,
+                                             NodeTypeImpl nodeType,
+                                             Session session) {
+        return new EventState(EventType.PROPERTY_CHANGED,
+                parentUUID,
+                parentPath,
+                null,
+                childName,
+                nodeType,
+                session);
     }
 
     /**
      * @see javax.jcr.observation.Event#getType()
      */
     public long getType() {
-	return type;
+        return type;
     }
 
     /**
@@ -276,25 +273,27 @@ class EventState {
      * @return the uuid of the parent node.
      */
     public String getParentUUID() {
-	return parentUUID;
+        return parentUUID;
     }
 
     /**
      * Returns the path of the parent node.
+     *
      * @return the path of the parent node.
      */
     public Path getParentPath() {
-	return parentPath;
+        return parentPath;
     }
 
     /**
      * Returns the UUID of a child node operation.
      * If this <code>EventState</code> was generated for a property
      * operation this method returns <code>null</code>.
+     *
      * @return the UUID of a child node operation.
      */
     public String getChildUUID() {
-	return childUUID;
+        return childUUID;
     }
 
     /**
@@ -304,7 +303,7 @@ class EventState {
      * @return the <code>QName</code> associated with this event.
      */
     public QName getChildItemQName() {
-	return childName;
+        return childName;
     }
 
     /**
@@ -313,14 +312,14 @@ class EventState {
      * @return the node type of the parent associated with this event.
      */
     public NodeTypeImpl getNodeType() {
-	return nodeType;
+        return nodeType;
     }
 
     /**
      * @see javax.jcr.observation.Event#getUserId()
      */
     public String getUserId() {
-	return session.getUserId();
+        return session.getUserId();
     }
 
     /**
@@ -331,7 +330,7 @@ class EventState {
      *         <code>EventState</code>.
      */
     Session getSession() {
-	return session;
+        return session;
     }
 
     /**
@@ -340,15 +339,15 @@ class EventState {
      * @return a String representation of this <code>EventState</code>.
      */
     public String toString() {
-	if (stringValue == null) {
-	    StringBuffer sb = new StringBuffer();
-	    sb.append("EventState: ").append(valueOf(type));
-	    sb.append(", Parent: ").append(parentUUID);
-	    sb.append(", Child: ").append(childName);
-	    sb.append(", UserId: ").append(session.getUserId());
-	    stringValue = sb.toString();
-	}
-	return stringValue;
+        if (stringValue == null) {
+            StringBuffer sb = new StringBuffer();
+            sb.append("EventState: ").append(valueOf(type));
+            sb.append(", Parent: ").append(parentUUID);
+            sb.append(", Child: ").append(childName);
+            sb.append(", UserId: ").append(session.getUserId());
+            stringValue = sb.toString();
+        }
+        return stringValue;
     }
 
     /**
@@ -357,16 +356,16 @@ class EventState {
      * @return a hashCode for this <code>EventState</code>.
      */
     public int hashCode() {
-	int h = hashCode;
-	if (h == 0) {
-	    h = 37;
-	    h = 37 * h + (int) type;
-	    h = 37 * h + parentUUID.hashCode();
-	    h = 37 * h + childName.hashCode();
-	    h = 37 * h + session.hashCode();
-	    hashCode = h;
-	}
-	return hashCode;
+        int h = hashCode;
+        if (h == 0) {
+            h = 37;
+            h = 37 * h + (int) type;
+            h = 37 * h + parentUUID.hashCode();
+            h = 37 * h + childName.hashCode();
+            h = 37 * h + session.hashCode();
+            hashCode = h;
+        }
+        return hashCode;
     }
 
     /**
@@ -378,17 +377,17 @@ class EventState {
      *         <code>EventState</code>; <code>false</code> otherwise.
      */
     public boolean equals(Object obj) {
-	if (obj == this) {
-	    return true;
-	}
-	if (obj instanceof EventState) {
-	    EventState other = (EventState) obj;
-	    return this.type == other.type
-		    && this.parentUUID.equals(other.parentUUID)
-		    && this.childName.equals(other.childName)
-		    && this.session.equals(other.session);
-	}
-	return false;
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof EventState) {
+            EventState other = (EventState) obj;
+            return this.type == other.type
+                    && this.parentUUID.equals(other.parentUUID)
+                    && this.childName.equals(other.childName)
+                    && this.session.equals(other.session);
+        }
+        return false;
     }
 
     /**
@@ -398,19 +397,19 @@ class EventState {
      * @return a String representation of <code>eventType</code>.
      */
     public static String valueOf(long eventType) {
-	if (eventType == EventType.CHILD_NODE_ADDED) {
-	    return "ChildNodeAdded";
-	} else if (eventType == EventType.CHILD_NODE_REMOVED) {
-	    return "ChildNodeRemoved";
-	} else if (eventType == EventType.PROPERTY_ADDED) {
-	    return "PropertyAdded";
-	} else if (eventType == EventType.PROPERTY_CHANGED) {
-	    return "PropertyChanged";
-	} else if (eventType == EventType.PROPERTY_REMOVED) {
-	    return "PropertyRemoved";
-	} else {
-	    return "UnknownEventType";
-	}
+        if (eventType == EventType.CHILD_NODE_ADDED) {
+            return "ChildNodeAdded";
+        } else if (eventType == EventType.CHILD_NODE_REMOVED) {
+            return "ChildNodeRemoved";
+        } else if (eventType == EventType.PROPERTY_ADDED) {
+            return "PropertyAdded";
+        } else if (eventType == EventType.PROPERTY_CHANGED) {
+            return "PropertyChanged";
+        } else if (eventType == EventType.PROPERTY_REMOVED) {
+            return "PropertyRemoved";
+        } else {
+            return "UnknownEventType";
+        }
     }
 
 }

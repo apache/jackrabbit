@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core;
 
 /**
  * The <code>NoPrefixDeclaredException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.6 $, $Date: 2004/09/01 15:14:27 $
  */
 public class NoPrefixDeclaredException extends BaseException {
     /**
@@ -27,7 +24,7 @@ public class NoPrefixDeclaredException extends BaseException {
      * detail message.
      */
     public NoPrefixDeclaredException() {
-	super();
+        super();
     }
 
     /**
@@ -38,7 +35,7 @@ public class NoPrefixDeclaredException extends BaseException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public NoPrefixDeclaredException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -50,7 +47,7 @@ public class NoPrefixDeclaredException extends BaseException {
      * @param rootCause root failure cause
      */
     public NoPrefixDeclaredException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -59,6 +56,6 @@ public class NoPrefixDeclaredException extends BaseException {
      * @param rootCause root failure cause
      */
     public NoPrefixDeclaredException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

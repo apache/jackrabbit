@@ -19,14 +19,12 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.log4j.Logger;
 
-import javax.jcr.NodeIterator;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import java.util.NoSuchElementException;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 class NodeIteratorImpl implements NodeIterator {
 
@@ -39,50 +37,50 @@ class NodeIteratorImpl implements NodeIterator {
     private int pos = 0;
 
     NodeIteratorImpl(ItemManager itemMgr,
-		     String[] uuids) {
-	this.itemMgr = itemMgr;
-	this.uuids = uuids;
+                     String[] uuids) {
+        this.itemMgr = itemMgr;
+        this.uuids = uuids;
     }
 
     public Node nextNode() {
-	if (pos >= uuids.length) {
-	    throw new NoSuchElementException();
-	}
-	try {
-	    return (Node) itemMgr.getItem(new NodeId(uuids[pos++]));
-	} catch (RepositoryException e) {
-	    log.error("Exception retrieving Node with UUID: "
-		    + uuids[pos] + ": " + e.toString());
-	    // FIXME this is bad error handling!
-	    throw new NoSuchElementException();
-	}
+        if (pos >= uuids.length) {
+            throw new NoSuchElementException();
+        }
+        try {
+            return (Node) itemMgr.getItem(new NodeId(uuids[pos++]));
+        } catch (RepositoryException e) {
+            log.error("Exception retrieving Node with UUID: "
+                    + uuids[pos] + ": " + e.toString());
+            // FIXME this is bad error handling!
+            throw new NoSuchElementException();
+        }
     }
 
     public Object next() {
-	return nextNode();
+        return nextNode();
     }
 
     public void skip(long skipNum) {
-	if ((pos + skipNum) > uuids.length) {
-	    throw new NoSuchElementException();
-	}
-	pos += skipNum;
+        if ((pos + skipNum) > uuids.length) {
+            throw new NoSuchElementException();
+        }
+        pos += skipNum;
     }
 
     public long getSize() {
-	return uuids.length;
+        return uuids.length;
     }
 
     public long getPos() {
-	return pos;
+        return pos;
     }
 
     public boolean hasNext() {
-	return pos < uuids.length;
+        return pos < uuids.length;
     }
 
     public void remove() {
-	throw new UnsupportedOperationException("remove");
+        throw new UnsupportedOperationException("remove");
     }
 
 }

@@ -24,9 +24,6 @@ import java.io.ObjectOutputStream;
 /**
  * <code>PersistentPropertyState</code> represents the persistent state of a
  * <code>Property</code>.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.9 $, $Date: 2004/08/02 16:19:48 $
  */
 public abstract class PersistentPropertyState extends PropertyState implements PersistableItemState {
 
@@ -42,8 +39,8 @@ public abstract class PersistentPropertyState extends PropertyState implements P
      * @param persistMgr the persistence manager
      */
     protected PersistentPropertyState(QName name, String parentUUID, PersistenceManager persistMgr) {
-	super(name, parentUUID, STATUS_NEW);
-	this.persistMgr = persistMgr;
+        super(name, parentUUID, STATUS_NEW);
+        this.persistMgr = persistMgr;
     }
 
     //-------------------------------------------------< PersistableItemState >
@@ -64,12 +61,12 @@ public abstract class PersistentPropertyState extends PropertyState implements P
 
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
-	// delegate to default implementation
-	out.defaultWriteObject();
+        // delegate to default implementation
+        out.defaultWriteObject();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-	// delegate to default implementation
-	in.defaultReadObject();
+        // delegate to default implementation
+        in.defaultReadObject();
     }
 }

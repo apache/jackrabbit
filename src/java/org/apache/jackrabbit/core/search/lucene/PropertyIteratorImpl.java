@@ -17,15 +17,13 @@ package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.log4j.Logger;
 
-import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import java.util.NoSuchElementException;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 class PropertyIteratorImpl implements PropertyIterator {
 
@@ -42,82 +40,82 @@ class PropertyIteratorImpl implements PropertyIterator {
     private long pos;
 
     PropertyIteratorImpl(String[] props, NodeIterator nodes) {
-	this.nodes = nodes;
+        this.nodes = nodes;
 
-	if (props != null && props.length > 0) {
-	    this.props = props;
-	}
-	try {
-	    fetchNext();
-	} catch (RepositoryException e) {
-	    // FIXME this is bad error handling!
-	    log.error("Exception retrieving property: " + e.toString());
-	}
+        if (props != null && props.length > 0) {
+            this.props = props;
+        }
+        try {
+            fetchNext();
+        } catch (RepositoryException e) {
+            // FIXME this is bad error handling!
+            log.error("Exception retrieving property: " + e.toString());
+        }
     }
 
     public Property nextProperty() {
-	if (next == null) {
-	    throw new NoSuchElementException();
-	}
-	try {
-	    Property tmp = next;
-	    fetchNext();
-	    pos++;
-	    return tmp;
-	} catch (RepositoryException e) {
-	    log.error("Exception retrieving property: " + e.toString());
-	    // FIXME this is bad error handling!
-	    throw new NoSuchElementException();
-	}
+        if (next == null) {
+            throw new NoSuchElementException();
+        }
+        try {
+            Property tmp = next;
+            fetchNext();
+            pos++;
+            return tmp;
+        } catch (RepositoryException e) {
+            log.error("Exception retrieving property: " + e.toString());
+            // FIXME this is bad error handling!
+            throw new NoSuchElementException();
+        }
     }
 
     public void skip(long skipNum) {
-	while (skipNum-- > 0) {
-	    next();
-	}
+        while (skipNum-- > 0) {
+            next();
+        }
     }
 
     public long getSize() {
-	return -1;
+        return -1;
     }
 
     public long getPos() {
-	return pos;
+        return pos;
     }
 
     public void remove() {
-	throw new UnsupportedOperationException("remove");
+        throw new UnsupportedOperationException("remove");
     }
 
     public boolean hasNext() {
-	return (next != null);
+        return (next != null);
     }
 
     public Object next() {
-	return nextProperty();
+        return nextProperty();
     }
 
     //--------------------< internal >------------------------------------------
 
     private void fetchNext() throws RepositoryException {
-	next = null;
-	if (currentProps == null) {
-	    // try to get next PropertyIterator
-	    if (nodes.hasNext()) {
-		if (props != null) {
-		    currentProps = new FilteredPropertyIterator(props, nodes.nextNode());
-		} else {
-		    currentProps = nodes.nextNode().getProperties();
-		}
-	    }
-	}
+        next = null;
+        if (currentProps == null) {
+            // try to get next PropertyIterator
+            if (nodes.hasNext()) {
+                if (props != null) {
+                    currentProps = new FilteredPropertyIterator(props, nodes.nextNode());
+                } else {
+                    currentProps = nodes.nextNode().getProperties();
+                }
+            }
+        }
 
-	if (currentProps != null) {
-	    next = currentProps.nextProperty();
-	    if (!currentProps.hasNext()) {
-		// reset current iterator
-		currentProps = null;
-	    }
-	}
+        if (currentProps != null) {
+            next = currentProps.nextProperty();
+            if (!currentProps.hasNext()) {
+                // reset current iterator
+                currentProps = null;
+            }
+        }
     }
 }

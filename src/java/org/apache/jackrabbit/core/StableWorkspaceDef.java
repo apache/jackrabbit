@@ -24,8 +24,6 @@ import java.util.HashMap;
  * a workspace that physically stores all items that can be accessed
  * through it.
  *
- * @author Stefan Guggisberg
- * @version $Revision: 1.13 $, $Date: 2004/08/02 16:19:41 $
  * @see WorkspaceDef
  * @see DynamicWorkspaceDef
  */
@@ -49,11 +47,11 @@ public class StableWorkspaceDef extends WorkspaceDef {
      * @param searchIndexPath          path to the location where the search index is stored
      */
     StableWorkspaceDef(String name, FileSystem wspStore, FileSystem blobStore,
-		       String persistenceManagerClass, HashMap persistenceManagerParams,
-		       DynamicWorkspaceDef[] dynWorkspaces, String searchIndexPath) {
-	super(name, wspStore, blobStore, persistenceManagerClass, persistenceManagerParams);
-	this.dynWorkspaces = dynWorkspaces;
-	this.searchIndexPath = searchIndexPath;
+                       String persistenceManagerClass, HashMap persistenceManagerParams,
+                       DynamicWorkspaceDef[] dynWorkspaces, String searchIndexPath) {
+        super(name, wspStore, blobStore, persistenceManagerClass, persistenceManagerParams);
+        this.dynWorkspaces = dynWorkspaces;
+        this.searchIndexPath = searchIndexPath;
     }
 
     /**
@@ -62,7 +60,7 @@ public class StableWorkspaceDef extends WorkspaceDef {
      * @return array of dynamic workspaces
      */
     public DynamicWorkspaceDef[] getDynWorkspaces() {
-	return dynWorkspaces;
+        return dynWorkspaces;
     }
 
     /**
@@ -71,14 +69,15 @@ public class StableWorkspaceDef extends WorkspaceDef {
      * @return always false
      */
     public boolean isDynamic() {
-	return false;
+        return false;
     }
 
     /**
      * Returns the path to the location where the search index is stored.
+     *
      * @return the path to the location where the search index is stored.
      */
     public String getSearchIndexPath() {
-	return searchIndexPath;
+        return searchIndexPath;
     }
 }

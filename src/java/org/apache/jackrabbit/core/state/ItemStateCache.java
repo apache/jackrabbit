@@ -16,8 +16,8 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,9 +27,6 @@ import java.util.Map;
 /**
  * An <code>ItemStateCache</code> maintains a cache of <code>ItemState</code>
  * instances.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.15 $, $Date: 2004/08/06 15:08:21 $
  */
 abstract class ItemStateCache {
     private static Logger log = Logger.getLogger(ItemStateCache.class);
@@ -44,8 +41,8 @@ abstract class ItemStateCache {
      * hard references to keys and soft references to values.
      */
     protected ItemStateCache() {
-	// setup cache with soft references to ItemState instances
-	this(ReferenceMap.HARD, ReferenceMap.SOFT);
+        // setup cache with soft references to ItemState instances
+        this(ReferenceMap.HARD, ReferenceMap.SOFT);
     }
 
     /**
@@ -59,7 +56,7 @@ abstract class ItemStateCache {
      * @see org.apache.commons.collections.ReferenceMap#WEAK
      */
     protected ItemStateCache(int keyType, int valueType) {
-	cache = new ReferenceMap(keyType, valueType);
+        cache = new ReferenceMap(keyType, valueType);
     }
 
     /**
@@ -70,7 +67,7 @@ abstract class ItemStateCache {
      * @return true if there's a corresponding cache entry, otherwise false.
      */
     protected boolean isCached(ItemId id) {
-	return cache.containsKey(id);
+        return cache.containsKey(id);
     }
 
     /**
@@ -83,7 +80,7 @@ abstract class ItemStateCache {
      *         cache entry.
      */
     protected ItemState retrieve(ItemId id) {
-	return (ItemState) cache.get(id);
+        return (ItemState) cache.get(id);
     }
 
     /**
@@ -92,12 +89,12 @@ abstract class ItemStateCache {
      * @param state the <code>ItemState</code> object to cache
      */
     protected void cache(ItemState state) {
-	ItemId id = state.getId();
-	if (cache.containsKey(id)) {
-	    log.warn("overwriting cached entry " + id);
-	}
-	log.debug("caching " + id);
-	cache.put(id, state);
+        ItemId id = state.getId();
+        if (cache.containsKey(id)) {
+            log.warn("overwriting cached entry " + id);
+        }
+        log.debug("caching " + id);
+        cache.put(id, state);
     }
 
     /**
@@ -107,16 +104,16 @@ abstract class ItemStateCache {
      *           reference should be removed from the cache.
      */
     protected void evict(ItemId id) {
-	log.debug("removing entry " + id + " from cache");
-	cache.remove(id);
+        log.debug("removing entry " + id + " from cache");
+        cache.remove(id);
     }
 
     /**
      * Clears all entries from the cache.
      */
     protected void evictAll() {
-	log.debug("removing all entries from cache");
-	cache.clear();
+        log.debug("removing all entries from cache");
+        cache.clear();
     }
 
     /**
@@ -125,7 +122,7 @@ abstract class ItemStateCache {
      * @return <code>true</code> if the cache contains no entries.
      */
     protected boolean isEmpty() {
-	return cache.isEmpty();
+        return cache.isEmpty();
     }
 
     /**
@@ -134,7 +131,7 @@ abstract class ItemStateCache {
      * @return number of entries in the cache.
      */
     protected int size() {
-	return cache.size();
+        return cache.size();
     }
 
     /**
@@ -144,9 +141,9 @@ abstract class ItemStateCache {
      * @return an iterator of the keys of the cached entries.
      */
     protected Iterator keys() {
-	// use temp collection to avoid ConcurrentModificationException
-	Collection tmp = new ArrayList(cache.keySet());
-	return tmp.iterator();
+        // use temp collection to avoid ConcurrentModificationException
+        Collection tmp = new ArrayList(cache.keySet());
+        return tmp.iterator();
     }
 
     /**
@@ -156,8 +153,8 @@ abstract class ItemStateCache {
      * @return an iterator of the entries in the cache.
      */
     protected Iterator entries() {
-	// use temp collection to avoid ConcurrentModificationException
-	Collection tmp = new ArrayList(cache.values());
-	return tmp.iterator();
+        // use temp collection to avoid ConcurrentModificationException
+        Collection tmp = new ArrayList(cache.values());
+        return tmp.iterator();
     }
 }

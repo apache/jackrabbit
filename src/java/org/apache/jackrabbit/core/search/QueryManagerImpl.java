@@ -15,43 +15,50 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SearchManager;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.search.lucene.QueryImpl;
 
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.Query;
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
-import java.util.List;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * This class implements the {@link javax.jcr.query.QueryManager} interface.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class QueryManagerImpl implements QueryManager {
 
-    /** Defines all supported query languages */
-    private static final String[] SUPPORTED_QUERIES = new String[] {
-	Query.JCRQL, Query.XPATH_DOCUMENT_VIEW, Query.XPATH_SYSTEM_VIEW
+    /**
+     * Defines all supported query languages
+     */
+    private static final String[] SUPPORTED_QUERIES = new String[]{
+        Query.JCRQL, Query.XPATH_DOCUMENT_VIEW, Query.XPATH_SYSTEM_VIEW
     };
 
-    /** List of all supported query languages */
+    /**
+     * List of all supported query languages
+     */
     private static final List SUPPORTED_QUERIES_LIST
-	    = Collections.unmodifiableList(Arrays.asList(SUPPORTED_QUERIES));
+            = Collections.unmodifiableList(Arrays.asList(SUPPORTED_QUERIES));
 
-    /** The <code>Session</code> for this QueryManager. */
+    /**
+     * The <code>Session</code> for this QueryManager.
+     */
     private final SessionImpl session;
 
-    /** The <code>ItemManager</code> of for item retrieval in search results */
+    /**
+     * The <code>ItemManager</code> of for item retrieval in search results
+     */
     private final ItemManager itemMgr;
 
-    /** The <code>SearchManager</code> holding the search index. */
+    /**
+     * The <code>SearchManager</code> holding the search index.
+     */
     private final SearchManager searchMgr;
 
     /**
@@ -63,42 +70,42 @@ public class QueryManagerImpl implements QueryManager {
      * @param searchMgr
      */
     public QueryManagerImpl(SessionImpl session,
-			    ItemManager itemMgr,
-			    SearchManager searchMgr) {
-	this.session = session;
-	this.itemMgr = itemMgr;
-	this.searchMgr = searchMgr;
+                            ItemManager itemMgr,
+                            SearchManager searchMgr) {
+        this.session = session;
+        this.itemMgr = itemMgr;
+        this.searchMgr = searchMgr;
     }
 
     /**
      * @see QueryManager#createQuery(java.lang.String, java.lang.String)
      */
     public Query createQuery(String statement, String language)
-	    throws InvalidQueryException, RepositoryException {
+            throws InvalidQueryException, RepositoryException {
 
-	return new QueryImpl(session, itemMgr, searchMgr, statement, language);
+        return new QueryImpl(session, itemMgr, searchMgr, statement, language);
     }
 
     /**
      * @see QueryManager#getQuery(java.lang.String)
      */
     public Query getQuery(String absPath)
-	    throws InvalidQueryException, RepositoryException {
-	return new QueryImpl(session, itemMgr, searchMgr, absPath);
+            throws InvalidQueryException, RepositoryException {
+        return new QueryImpl(session, itemMgr, searchMgr, absPath);
     }
 
     /**
      * @see QueryManager#getQueryByUUID(java.lang.String)
      */
     public Query getQueryByUUID(String uuid)
-	    throws InvalidQueryException, RepositoryException {
-	return getQuery(session.getNodeByUUID(uuid).getPath());
+            throws InvalidQueryException, RepositoryException {
+        return getQuery(session.getNodeByUUID(uuid).getPath());
     }
 
     /**
      * @see QueryManager#getSupportedQueryLanguages()
      */
     public String[] getSupportedQueryLanguages() {
-	return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
+        return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
     }
 }

@@ -18,15 +18,12 @@ package org.apache.jackrabbit.core.search.lucene;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.log4j.Logger;
 
-import javax.jcr.query.QueryResult;
-import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
+import javax.jcr.PropertyIterator;
+import javax.jcr.query.QueryResult;
 
 /**
  * Implements the <code>javax.jcr.query.QueryResult</code> interface.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class QueryResultImpl implements QueryResult {
 
@@ -39,19 +36,19 @@ public class QueryResultImpl implements QueryResult {
     private final String[] selectProps;
 
     public QueryResultImpl(ItemManager itemMgr,
-			   String[] uuids,
-			   String[] selectProps) {
-	this.uuids = uuids;
-	this.itemMgr = itemMgr;
-	this.selectProps = selectProps;
+                           String[] uuids,
+                           String[] selectProps) {
+        this.uuids = uuids;
+        this.itemMgr = itemMgr;
+        this.selectProps = selectProps;
     }
 
     public PropertyIterator getProperties() {
-	return new PropertyIteratorImpl(selectProps,
-		new NodeIteratorImpl(itemMgr, uuids));
+        return new PropertyIteratorImpl(selectProps,
+                new NodeIteratorImpl(itemMgr, uuids));
     }
 
     public NodeIterator getNodes() {
-	return new NodeIteratorImpl(itemMgr, uuids);
+        return new NodeIteratorImpl(itemMgr, uuids);
     }
 }

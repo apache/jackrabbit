@@ -20,11 +20,11 @@ public class ASTNodeType extends SimpleNode {
     private String name;
 
     public ASTNodeType(int id) {
-	super(id);
+        super(id);
     }
 
     public ASTNodeType(JCRQLParser p, int id) {
-	super(p, id);
+        super(p, id);
     }
 
 
@@ -32,14 +32,14 @@ public class ASTNodeType extends SimpleNode {
      * Accept the visitor. *
      */
     public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public void setName(String name) {
-	this.name = name;
+        this.name = name;
     }
 }

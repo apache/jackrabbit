@@ -26,82 +26,93 @@ import java.util.Date;
  * <li><code>String</code></li>
  * <li><code>Date</code></li>
  * </ul>
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class RangeQueryNode extends QueryNode implements Constants {
 
-    /** Range array for long boundary values */
+    /**
+     * Range array for long boundary values
+     */
     private long[] rangeLong;
 
-    /** Range array for double boundary values */
+    /**
+     * Range array for double boundary values
+     */
     private double[] rangeDouble;
 
-    /** Range array for String boundary values */
+    /**
+     * Range array for String boundary values
+     */
     private String[] rangeString;
 
-    /** Range array for Date boundary values */
+    /**
+     * Range array for Date boundary values
+     */
     private Date[] rangeDate;
 
-    /** The data type of this <code>RangeQueryNode</code>. */
+    /**
+     * The data type of this <code>RangeQueryNode</code>.
+     */
     private final int type;
 
     /**
      * Creates a new range query with <code>long</code> values.
+     *
      * @param parent the parent node of this query node.
-     * @param lower lower boundary value.
-     * @param upper upper boundary value.
+     * @param lower  lower boundary value.
+     * @param upper  upper boundary value.
      */
     public RangeQueryNode(QueryNode parent, long lower, long upper) {
-    	super(parent);
-	rangeLong = new long[] {
-	    lower, upper
-	};
-	type = TYPE_LONG;
+        super(parent);
+        rangeLong = new long[]{
+            lower, upper
+        };
+        type = TYPE_LONG;
     }
 
     /**
      * Creates a new range query with <code>double</code> values.
+     *
      * @param parent the parent node of this query node.
-     * @param lower lower boundary value.
-     * @param upper upper boundary value.
+     * @param lower  lower boundary value.
+     * @param upper  upper boundary value.
      */
     public RangeQueryNode(QueryNode parent, double lower, double upper) {
-	super(parent);
-	rangeDouble = new double[]{lower, upper};
-	type = TYPE_DOUBLE;
+        super(parent);
+        rangeDouble = new double[]{lower, upper};
+        type = TYPE_DOUBLE;
     }
 
     /**
      * Creates a new range query with <code>String</code> values.
+     *
      * @param parent the parent node of this query node.
-     * @param lower lower boundary value.
-     * @param upper upper boundary value.
+     * @param lower  lower boundary value.
+     * @param upper  upper boundary value.
      */
     public RangeQueryNode(QueryNode parent, String lower, String upper) {
-	super(parent);
-	rangeString = new String[]{lower, upper};
-	type = TYPE_STRING;
+        super(parent);
+        rangeString = new String[]{lower, upper};
+        type = TYPE_STRING;
     }
 
     /**
      * Creates a new range query with <code>Date</code> values.
+     *
      * @param parent the parent node of this query node.
-     * @param lower lower boundary value.
-     * @param upper upper boundary value.
+     * @param lower  lower boundary value.
+     * @param upper  upper boundary value.
      */
     public RangeQueryNode(QueryNode parent, Date lower, Date upper) {
-	super(parent);
-	rangeDate = new Date[]{lower, upper};
-	type = TYPE_DATE;
+        super(parent);
+        rangeDate = new Date[]{lower, upper};
+        type = TYPE_DATE;
     }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     /**
@@ -111,7 +122,7 @@ public class RangeQueryNode extends QueryNode implements Constants {
      * @return a value array with <code>long</code> boundaries.
      */
     public long[] getLongRange() {
-	return rangeLong;
+        return rangeLong;
     }
 
     /**
@@ -121,7 +132,7 @@ public class RangeQueryNode extends QueryNode implements Constants {
      * @return a value array with <code>double</code> boundaries.
      */
     public double[] getDoubleRange() {
-	return rangeDouble;
+        return rangeDouble;
     }
 
     /**
@@ -131,7 +142,7 @@ public class RangeQueryNode extends QueryNode implements Constants {
      * @return a value array with <code>String</code> boundaries.
      */
     public String[] getStringRange() {
-	return rangeString;
+        return rangeString;
     }
 
     /**
@@ -141,7 +152,7 @@ public class RangeQueryNode extends QueryNode implements Constants {
      * @return a value array with <code>Date</code> boundaries.
      */
     public Date[] getDateRange() {
-	return rangeDate;
+        return rangeDate;
     }
 
     /**
@@ -152,22 +163,24 @@ public class RangeQueryNode extends QueryNode implements Constants {
      * @return the type of this <code>RangeQueryNode</code>.
      */
     public int getType() {
-	return type;
+        return type;
     }
 
     /**
      * Returns a JCRQL representation for this query node.
+     *
      * @return a JCRQL representation for this query node.
      */
     public String toJCRQLString() {
-	return "";
+        return "";
     }
 
     /**
      * Returns an XPath representation for this query node.
+     *
      * @return an XPath representation for this query node.
      */
     public String toXPathString() {
-	return "";
+        return "";
     }
 }

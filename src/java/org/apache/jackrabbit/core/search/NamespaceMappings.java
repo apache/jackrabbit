@@ -15,24 +15,18 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.log4j.Logger;
 
 import javax.jcr.NamespaceException;
+import java.io.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Iterator;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.File;
 
 /**
  * The class <code>NamespaceMappings</code> implements a {@link
@@ -43,25 +37,32 @@ import java.io.File;
  * Whenever a yet unknown namespace uri to prefix mapping is requested, a new
  * prefix is created on the fly and associated with the namespace. Known
  * namespace mappings are stored in a properties file.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class NamespaceMappings implements NamespaceResolver {
 
-    /** Default logger instance for this class */
+    /**
+     * Default logger instance for this class
+     */
     private static Logger log = Logger.getLogger(NamespaceMappings.class);
 
-    /** Location of the file that persists the uri / prefix mappings */
+    /**
+     * Location of the file that persists the uri / prefix mappings
+     */
     private final File storage;
 
-    /** Map of uris indexed by prefixes */
+    /**
+     * Map of uris indexed by prefixes
+     */
     private Map prefixToURI = new HashMap();
 
-    /** Map of prefixes indexed by uris */
+    /**
+     * Map of prefixes indexed by uris
+     */
     private Map uriToPrefix = new HashMap();
 
-    /** Current prefix count. */
+    /**
+     * Current prefix count.
+     */
     private int prefixCount;
 
     /**
@@ -73,8 +74,8 @@ public class NamespaceMappings implements NamespaceResolver {
      *                     mappings from <code>file</code>.
      */
     public NamespaceMappings(File file) throws IOException {
-	storage = file;
-	load();
+        storage = file;
+        load();
     }
 
     /**
@@ -82,15 +83,14 @@ public class NamespaceMappings implements NamespaceResolver {
      *
      * @param prefix the namespace prefix.
      * @return the namespace uri.
-     *
      * @throws NamespaceException if no namespace uri is registered for
      *                            <code>prefix</code>.
      */
     public synchronized String getURI(String prefix) throws NamespaceException {
-	if (!prefixToURI.containsKey(prefix)) {
-	    throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
-	}
-	return (String) prefixToURI.get(prefix);
+        if (!prefixToURI.containsKey(prefix)) {
+            throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
+        }
+        return (String) prefixToURI.get(prefix);
     }
 
     /**
@@ -100,47 +100,47 @@ public class NamespaceMappings implements NamespaceResolver {
      *
      * @param uri the namespace uri.
      * @return the prefix for the namespace uri.
-     *
      * @throws NamespaceException if an yet unknown namespace uri / prefix
      *                            mapping could not be stored.
      */
     public synchronized String getPrefix(String uri) throws NamespaceException {
-	String prefix = (String) uriToPrefix.get(uri);
-	if (prefix == null) {
-	    // make sure prefix is not taken
-	    while (prefixToURI.get(String.valueOf(prefixCount)) != null) {
-		prefixCount++;
-	    }
-	    prefix = String.valueOf(prefixCount);
-	    prefixToURI.put(prefix, uri);
-	    uriToPrefix.put(uri, prefix);
-	    log.debug("adding new namespace mapping: " + prefix + " -> " + uri);
-	    try {
-		store();
-	    } catch (IOException e) {
-		throw new NamespaceException("Could not obtain a prefix for uri: " + uri, e);
-	    }
-	}
-	return prefix;
+        String prefix = (String) uriToPrefix.get(uri);
+        if (prefix == null) {
+            // make sure prefix is not taken
+            while (prefixToURI.get(String.valueOf(prefixCount)) != null) {
+                prefixCount++;
+            }
+            prefix = String.valueOf(prefixCount);
+            prefixToURI.put(prefix, uri);
+            uriToPrefix.put(uri, prefix);
+            log.debug("adding new namespace mapping: " + prefix + " -> " + uri);
+            try {
+                store();
+            } catch (IOException e) {
+                throw new NamespaceException("Could not obtain a prefix for uri: " + uri, e);
+            }
+        }
+        return prefix;
     }
 
     /**
      * Translates a property name from a session local namespace mapping
      * into a search index private namespace mapping.
-     * @param name the property name to translate
+     *
+     * @param name     the property name to translate
      * @param resolver the <code>NamespaceResolver</code> of the local session.
      * @return the translated property name
      */
     public String translatePropertyName(String name, NamespaceResolver resolver)
-	    throws MalformedPathException {
-	Path path = Path.create(name, resolver, false);
-	try {
-	    return path.toJCRPath(this);
-	} catch (NoPrefixDeclaredException e) {
-	    // should never happen actually, because we create yet unknown
-	    // uri mappings on the fly.
-	    throw new MalformedPathException(e.toString());
-	}
+            throws MalformedPathException {
+        Path path = Path.create(name, resolver, false);
+        try {
+            return path.toJCRPath(this);
+        } catch (NoPrefixDeclaredException e) {
+            // should never happen actually, because we create yet unknown
+            // uri mappings on the fly.
+            throw new MalformedPathException(e.toString());
+        }
     }
 
     //-----------------------< internal >---------------------------------------
@@ -151,53 +151,54 @@ public class NamespaceMappings implements NamespaceResolver {
      * @throws IOException if an error occurs while reading from the file.
      */
     private void load() throws IOException {
-	if (storage.exists()) {
-	    InputStream in = new FileInputStream(storage);
-	    try {
-		Properties props = new Properties();
-		log.debug("loading namespace mappings...");
-		props.load(in);
+        if (storage.exists()) {
+            InputStream in = new FileInputStream(storage);
+            try {
+                Properties props = new Properties();
+                log.debug("loading namespace mappings...");
+                props.load(in);
 
-		// read mappings from properties
-		Iterator iter = props.keySet().iterator();
-		while (iter.hasNext()) {
-		    String prefix = (String) iter.next();
-		    String uri = props.getProperty(prefix);
+                // read mappings from properties
+                Iterator iter = props.keySet().iterator();
+                while (iter.hasNext()) {
+                    String prefix = (String) iter.next();
+                    String uri = props.getProperty(prefix);
                     log.debug(prefix + " -> " + uri);
-		    prefixToURI.put(prefix, uri);
-		    uriToPrefix.put(uri, prefix);
-		}
-		prefixCount = props.size();
-		log.debug("namespace mappings loaded.");
-	    } finally {
-		in.close();
-	    }
-	}
+                    prefixToURI.put(prefix, uri);
+                    uriToPrefix.put(uri, prefix);
+                }
+                prefixCount = props.size();
+                log.debug("namespace mappings loaded.");
+            } finally {
+                in.close();
+            }
+        }
     }
 
     /**
      * Writes the currently known mappings into a .properties file.
+     *
      * @throws IOException if an error occurs while writing the file.
      */
     private void store() throws IOException {
-	Properties props = new Properties();
+        Properties props = new Properties();
 
-	// store mappings in properties
-	Iterator iter = prefixToURI.keySet().iterator();
-	while (iter.hasNext()) {
-	    String prefix = (String) iter.next();
-	    String uri = (String) prefixToURI.get(prefix);
-	    props.setProperty(prefix, uri);
-	}
+        // store mappings in properties
+        Iterator iter = prefixToURI.keySet().iterator();
+        while (iter.hasNext()) {
+            String prefix = (String) iter.next();
+            String uri = (String) prefixToURI.get(prefix);
+            props.setProperty(prefix, uri);
+        }
 
-	storage.getParentFile().mkdirs();
-	OutputStream out = new BufferedOutputStream(new FileOutputStream(storage));
+        storage.getParentFile().mkdirs();
+        OutputStream out = new BufferedOutputStream(new FileOutputStream(storage));
 
-	try {
-	    props.store(out, null);
-	} finally {
-	    // make sure stream is closed
-	    out.close();
-	}
+        try {
+            props.store(out, null);
+        } finally {
+            // make sure stream is closed
+            out.close();
+        }
     }
 }

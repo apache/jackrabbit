@@ -18,15 +18,12 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 
-import java.util.*;
 import java.io.Serializable;
+import java.util.*;
 
 /**
  * <code>NodeReferences</code> represents the references (i.e. properties of
  * type <code>REFERENCE</code>) to a particular node (denoted by its uuid).
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.1 $, $Date: 2004/09/06 07:29:10 $
  */
 public class NodeReferences implements Serializable {
 
@@ -53,63 +50,57 @@ public class NodeReferences implements Serializable {
      * @param targetId
      */
     public NodeReferences(NodeId targetId) {
-	this.targetId = targetId;
-	references = new ArrayList();
+        this.targetId = targetId;
+        references = new ArrayList();
     }
 
     /**
-     *
      * @return
      */
     public NodeId getTargetId() {
-	return targetId;
+        return targetId;
     }
 
     /**
-     *
      * @return
      */
     public boolean hasReferences() {
-	return !references.isEmpty();
+        return !references.isEmpty();
     }
 
     /**
-     *
      * @return
      */
     public Collection getReferences() {
-	return Collections.unmodifiableCollection(references);
+        return Collections.unmodifiableCollection(references);
     }
 
     /**
-     *
      * @param refId
      */
     public void addReference(PropertyId refId) {
-	references.add(refId);
+        references.add(refId);
     }
 
     /**
-     *
      * @param references
      */
     public void addAllReferences(Set references) {
-	references.addAll(references);
+        references.addAll(references);
     }
 
     /**
-     *
      * @param refId
      * @return
      */
     public boolean removeReference(PropertyId refId) {
-	return references.remove(refId);
+        return references.remove(refId);
     }
 
     /**
      *
      */
     public void clearAllReferences() {
-	references.clear();
+        references.clear();
     }
 }

@@ -15,39 +15,40 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Defines an abstract query node for nodes that have child nodes.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public abstract class NAryQueryNode extends QueryNode {
 
-    /** The list of operands / children */
+    /**
+     * The list of operands / children
+     */
     protected List operands = new ArrayList();
 
     /**
      * Creates a new <code>NAryQueryNode</code> with a reference to a parent
      * {@link QueryNode}.
+     *
      * @param parent the parent node.
      */
     public NAryQueryNode(QueryNode parent) {
-	super(parent);
+        super(parent);
     }
 
     /**
      * Creates a new <code>NAryQueryNode</code> with a reference to a parent
      * {@link QueryNode} and initial <code>operands</code>.
-     * @param parent the parent node.
+     *
+     * @param parent   the parent node.
      * @param operands child nodes of this <code>NAryQueryNode</code>.
      */
     public NAryQueryNode(QueryNode parent, QueryNode[] operands) {
-	super(parent);
-	this.operands.addAll(Arrays.asList(operands));
+        super(parent);
+        this.operands.addAll(Arrays.asList(operands));
     }
 
     /**
@@ -56,7 +57,7 @@ public abstract class NAryQueryNode extends QueryNode {
      * @param operand the child {@link QueryNode} to add.
      */
     public void addOperand(QueryNode operand) {
-	operands.add(operand);
+        operands.add(operand);
     }
 
     /**
@@ -64,14 +65,14 @@ public abstract class NAryQueryNode extends QueryNode {
      * of this <code>NAryQueryNode</code>.
      *
      * @param visitor the visitor to call back.
-     * @param data arbitrary data for the visitor.
+     * @param data    arbitrary data for the visitor.
      * @return the return values of the <code>visitor.visit()</code> calls.
      */
     public Object[] acceptOperands(QueryNodeVisitor visitor, Object data) {
-	Object[] result = new Object[operands.size()];
-	for (int i = 0; i < operands.size(); i++) {
-	    result[i] = ((QueryNode) operands.get(i)).accept(visitor, data);
-	}
-	return result;
+        Object[] result = new Object[operands.size()];
+        for (int i = 0; i < operands.size(); i++) {
+            result[i] = ((QueryNode) operands.get(i)).accept(visitor, data);
+        }
+        return result;
     }
 }

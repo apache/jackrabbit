@@ -15,12 +15,10 @@
  */
 package org.apache.jackrabbit.test;
 
-import javax.jcr.Session;
 import javax.jcr.Node;
+import javax.jcr.Session;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public abstract class AbstractTest extends JUnitTest {
 
@@ -34,10 +32,14 @@ public abstract class AbstractTest extends JUnitTest {
 
     protected static final String NT_BASE = "nt:base";
 
-    /** The superuser session */
+    /**
+     * The superuser session
+     */
     protected Session superuser;
 
-    /** The root <code>Node</code> for testing */
+    /**
+     * The root <code>Node</code> for testing
+     */
     protected Node testRoot;
 
     protected void setUp() throws Exception {

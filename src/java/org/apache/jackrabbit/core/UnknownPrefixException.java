@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core;
 
 /**
  * The <code>UnknownPrefixException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.5 $, $Date: 2004/09/01 15:14:28 $
  */
 public class UnknownPrefixException extends BaseException {
     /**
@@ -27,7 +24,7 @@ public class UnknownPrefixException extends BaseException {
      * detail message.
      */
     public UnknownPrefixException() {
-	super();
+        super();
     }
 
     /**
@@ -38,7 +35,7 @@ public class UnknownPrefixException extends BaseException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public UnknownPrefixException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -50,7 +47,7 @@ public class UnknownPrefixException extends BaseException {
      * @param rootCause root failure cause
      */
     public UnknownPrefixException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -59,6 +56,6 @@ public class UnknownPrefixException extends BaseException {
      * @param rootCause root failure cause
      */
     public UnknownPrefixException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

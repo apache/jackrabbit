@@ -16,42 +16,43 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Weight;
-import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.*;
 
 import java.io.IOException;
 
 /**
  * This class implements the Weight calculation for the MatchAllQuery.
- *
- * @author Marcel Reutegger
- * @version $Revision: 1.2 $, $Date: 2004/06/14 09:28:03 $
  */
 class MatchAllWeight implements Weight {
 
-    /** the MatchAllQuery */
+    /**
+     * the MatchAllQuery
+     */
     private final Query query;
 
     private final String field;
 
-    /** the current Searcher instance */
+    /**
+     * the current Searcher instance
+     */
     private final Searcher searcher;
 
-    /** the weight value */
+    /**
+     * the weight value
+     */
     private float value;
 
-    /** doc frequency for this weight */
+    /**
+     * doc frequency for this weight
+     */
     private float idf;
 
-    /** the query weight */
+    /**
+     * the query weight
+     */
     private float queryWeight;
 
     /**
-     *
      * @param query
      * @param searcher
      */
@@ -104,6 +105,6 @@ class MatchAllWeight implements Weight {
      */
     public Explanation explain(IndexReader reader, int doc) throws IOException {
         return new Explanation(Similarity.getDefault().idf(reader.maxDoc(), reader.maxDoc()),
-                            "matchAll");
+                "matchAll");
     }
 }

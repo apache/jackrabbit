@@ -15,33 +15,33 @@
  */
 package org.apache.jackrabbit.core.search.jcrql;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ASTSelectClause extends SimpleNode {
 
     private List properties = new ArrayList();
 
     public ASTSelectClause(int id) {
-	super(id);
+        super(id);
     }
 
     public ASTSelectClause(JCRQLParser p, int id) {
-	super(p, id);
+        super(p, id);
     }
 
     public void addProperty(String prop) {
-	properties.add(prop);
+        properties.add(prop);
     }
 
     public String[] getProperties() {
-	return (String[]) properties.toArray(new String[properties.size()]);
+        return (String[]) properties.toArray(new String[properties.size()]);
     }
 
     /**
      * Accept the visitor. *
      */
     public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 }

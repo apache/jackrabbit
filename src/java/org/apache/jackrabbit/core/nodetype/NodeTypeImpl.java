@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.*;
+import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -28,9 +28,6 @@ import java.util.HashSet;
 
 /**
  * A <code>NodeTypeImpl</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.36 $, $Date: 2004/08/30 11:13:46 $
  */
 public class NodeTypeImpl implements NodeType {
 
@@ -55,17 +52,17 @@ public class NodeTypeImpl implements NodeType {
      * @param nsResolver namespace resolver
      */
     NodeTypeImpl(EffectiveNodeType ent, NodeTypeDef ntd, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
-	this.ent = ent;
-	this.ntMgr = ntMgr;
-	this.nsResolver = nsResolver;
-	try {
-	    // store a clone of the definition
-	    this.ntd = (NodeTypeDef) ntd.clone();
-	} catch (CloneNotSupportedException e) {
-	    // should never get here
-	    log.fatal("internal error", e);
-	    throw new InternalError(e.getMessage());
-	}
+        this.ent = ent;
+        this.ntMgr = ntMgr;
+        this.nsResolver = nsResolver;
+        try {
+            // store a clone of the definition
+            this.ntd = (NodeTypeDef) ntd.clone();
+        } catch (CloneNotSupportedException e) {
+            // should never get here
+            log.fatal("internal error", e);
+            throw new InternalError(e.getMessage());
+        }
     }
 
     /**
@@ -78,8 +75,8 @@ public class NodeTypeImpl implements NodeType {
      *                             could be found
      */
     public NodeDefImpl getApplicableChildNodeDef(QName nodeName)
-	    throws RepositoryException {
-	return getApplicableChildNodeDef(nodeName, null);
+            throws RepositoryException {
+        return getApplicableChildNodeDef(nodeName, null);
     }
 
     /**
@@ -93,9 +90,9 @@ public class NodeTypeImpl implements NodeType {
      *                             could be found
      */
     public NodeDefImpl getApplicableChildNodeDef(QName nodeName, QName nodeTypeName)
-	    throws RepositoryException {
-	return new NodeDefImpl(ent.getApplicableChildNodeDef(nodeName, nodeTypeName),
-		ntMgr, nsResolver);
+            throws RepositoryException {
+        return new NodeDefImpl(ent.getApplicableChildNodeDef(nodeName, nodeTypeName),
+                ntMgr, nsResolver);
     }
 
     /**
@@ -110,10 +107,10 @@ public class NodeTypeImpl implements NodeType {
      *                             could be found
      */
     public PropertyDefImpl getApplicablePropertyDef(QName propertyName, int type,
-						    boolean multiValued)
-	    throws RepositoryException {
-	return new PropertyDefImpl(ent.getApplicablePropertyDef(propertyName, type, multiValued),
-		ntMgr, nsResolver);
+                                                    boolean multiValued)
+            throws RepositoryException {
+        return new PropertyDefImpl(ent.getApplicablePropertyDef(propertyName, type, multiValued),
+                ntMgr, nsResolver);
     }
 
     /**
@@ -125,7 +122,7 @@ public class NodeTypeImpl implements NodeType {
      *         specified node type, otherwise false.
      */
     public boolean isDerivedFrom(QName nodeTypeName) {
-	return !nodeTypeName.equals(ntd.getName()) && ent.includesNodeType(nodeTypeName);
+        return !nodeTypeName.equals(ntd.getName()) && ent.includesNodeType(nodeTypeName);
     }
 
     /**
@@ -134,14 +131,14 @@ public class NodeTypeImpl implements NodeType {
      * @return the definition of this node type
      */
     public NodeTypeDef getDefinition() {
-	try {
-	    // return a clone of the definition
-	    return (NodeTypeDef) ntd.clone();
-	} catch (CloneNotSupportedException e) {
-	    // should never get here
-	    log.fatal("internal error", e);
-	    throw new InternalError(e.getMessage());
-	}
+        try {
+            // return a clone of the definition
+            return (NodeTypeDef) ntd.clone();
+        } catch (CloneNotSupportedException e) {
+            // should never get here
+            log.fatal("internal error", e);
+            throw new InternalError(e.getMessage());
+        }
     }
 
     /**
@@ -154,12 +151,12 @@ public class NodeTypeImpl implements NodeType {
      * @see NodeDef#isAutoCreate
      */
     public NodeDef[] getAutoCreateNodeDefs() {
-	ChildNodeDef[] cnda = ent.getAutoCreateNodeDefs();
-	NodeDef[] nodeDefs = new NodeDef[cnda.length];
-	for (int i = 0; i < cnda.length; i++) {
-	    nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
-	}
-	return nodeDefs;
+        ChildNodeDef[] cnda = ent.getAutoCreateNodeDefs();
+        NodeDef[] nodeDefs = new NodeDef[cnda.length];
+        for (int i = 0; i < cnda.length; i++) {
+            nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
+        }
+        return nodeDefs;
     }
 
     /**
@@ -172,12 +169,12 @@ public class NodeTypeImpl implements NodeType {
      * @see PropertyDef#isAutoCreate
      */
     public PropertyDef[] getAutoCreatePropertyDefs() {
-	PropDef[] pda = ent.getAutoCreatePropDefs();
-	PropertyDef[] propDefs = new PropertyDef[pda.length];
-	for (int i = 0; i < pda.length; i++) {
-	    propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
-	}
-	return propDefs;
+        PropDef[] pda = ent.getAutoCreatePropDefs();
+        PropertyDef[] propDefs = new PropertyDef[pda.length];
+        for (int i = 0; i < pda.length; i++) {
+            propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
+        }
+        return propDefs;
     }
 
     /**
@@ -190,12 +187,12 @@ public class NodeTypeImpl implements NodeType {
      * @see PropertyDef#isMandatory
      */
     public PropertyDef[] getMandatoryPropertyDefs() {
-	PropDef[] pda = ent.getMandatoryPropDefs();
-	PropertyDef[] propDefs = new PropertyDef[pda.length];
-	for (int i = 0; i < pda.length; i++) {
-	    propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
-	}
-	return propDefs;
+        PropDef[] pda = ent.getMandatoryPropDefs();
+        PropertyDef[] propDefs = new PropertyDef[pda.length];
+        for (int i = 0; i < pda.length; i++) {
+            propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
+        }
+        return propDefs;
     }
 
     /**
@@ -208,12 +205,12 @@ public class NodeTypeImpl implements NodeType {
      * @see NodeDef#isMandatory
      */
     public NodeDef[] getMandatoryNodeDefs() {
-	ChildNodeDef[] cnda = ent.getMandatoryNodeDefs();
-	NodeDef[] nodeDefs = new NodeDef[cnda.length];
-	for (int i = 0; i < cnda.length; i++) {
-	    nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
-	}
-	return nodeDefs;
+        ChildNodeDef[] cnda = ent.getMandatoryNodeDefs();
+        NodeDef[] nodeDefs = new NodeDef[cnda.length];
+        for (int i = 0; i < cnda.length; i++) {
+            nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
+        }
+        return nodeDefs;
     }
 
     /**
@@ -229,8 +226,8 @@ public class NodeTypeImpl implements NodeType {
      * @throws RepositoryException
      */
     public static void checkSetPropertyValueConstraints(PropertyDefImpl def, InternalValue[] values)
-	    throws ValueFormatException, ConstraintViolationException, RepositoryException {
-	EffectiveNodeType.checkSetPropertyValueConstraints(def.unwrap(), values);
+            throws ValueFormatException, ConstraintViolationException, RepositoryException {
+        EffectiveNodeType.checkSetPropertyValueConstraints(def.unwrap(), values);
     }
 
     /**
@@ -239,7 +236,7 @@ public class NodeTypeImpl implements NodeType {
      * @return the qualified name
      */
     public QName getQName() {
-	return ntd.getName();
+        return ntd.getName();
     }
 
     /**
@@ -250,30 +247,30 @@ public class NodeTypeImpl implements NodeType {
      * @see #getDeclaredSupertypes
      */
     public NodeType[] getInheritedSupertypes() {
-	// declared supertypes
-	QName[] ntNames = ntd.getSupertypes();
-	HashSet declared = new HashSet();
-	for (int i = 0; i < ntNames.length; i++) {
-	    declared.add(ntNames[i]);
-	}
-	// all supertypes
-	ntNames = ent.getInheritedNodeTypes();
+        // declared supertypes
+        QName[] ntNames = ntd.getSupertypes();
+        HashSet declared = new HashSet();
+        for (int i = 0; i < ntNames.length; i++) {
+            declared.add(ntNames[i]);
+        }
+        // all supertypes
+        ntNames = ent.getInheritedNodeTypes();
 
-	// filter from all supertypes those that are not declared
-	ArrayList inherited = new ArrayList();
-	for (int i = 0; i < ntNames.length; i++) {
-	    if (!declared.contains(ntNames[i])) {
-		try {
-		    inherited.add(ntMgr.getNodeType(ntNames[i]));
-		} catch (NoSuchNodeTypeException e) {
-		    // should never get here
-		    log.error("undefined supertype", e);
-		    return new NodeType[0];
-		}
-	    }
-	}
+        // filter from all supertypes those that are not declared
+        ArrayList inherited = new ArrayList();
+        for (int i = 0; i < ntNames.length; i++) {
+            if (!declared.contains(ntNames[i])) {
+                try {
+                    inherited.add(ntMgr.getNodeType(ntNames[i]));
+                } catch (NoSuchNodeTypeException e) {
+                    // should never get here
+                    log.error("undefined supertype", e);
+                    return new NodeType[0];
+                }
+            }
+        }
 
-	return (NodeType[]) inherited.toArray(new NodeType[inherited.size()]);
+        return (NodeType[]) inherited.toArray(new NodeType[inherited.size()]);
     }
 
     //-------------------------------------------------------------< NodeType >
@@ -281,221 +278,221 @@ public class NodeTypeImpl implements NodeType {
      * @see NodeType#getName
      */
     public String getName() {
-	try {
-	    return ntd.getName().toJCRName(nsResolver);
-	} catch (NoPrefixDeclaredException npde) {
-	    // should never get here
-	    log.error("encountered unregistered namespace in node type name", npde);
-	    return ntd.getName().toString();
-	}
+        try {
+            return ntd.getName().toJCRName(nsResolver);
+        } catch (NoPrefixDeclaredException npde) {
+            // should never get here
+            log.error("encountered unregistered namespace in node type name", npde);
+            return ntd.getName().toString();
+        }
     }
 
     /**
      * @see NodeType#isMixin
      */
     public boolean isMixin() {
-	return ntd.isMixin();
+        return ntd.isMixin();
     }
 
     /**
      * @see NodeType#hasOrderableChildNodes
      */
     public boolean hasOrderableChildNodes() {
-	return ntd.hasOrderableChildNodes();
+        return ntd.hasOrderableChildNodes();
     }
 
     /**
      * @see NodeType#getSupertypes
      */
     public NodeType[] getSupertypes() {
-	QName[] ntNames = ent.getInheritedNodeTypes();
-	NodeType[] supertypes = new NodeType[ntNames.length];
-	for (int i = 0; i < ntNames.length; i++) {
-	    try {
-		supertypes[i] = ntMgr.getNodeType(ntNames[i]);
-	    } catch (NoSuchNodeTypeException e) {
-		// should never get here
-		log.error("undefined supertype", e);
-		return new NodeType[0];
-	    }
-	}
-	return supertypes;
+        QName[] ntNames = ent.getInheritedNodeTypes();
+        NodeType[] supertypes = new NodeType[ntNames.length];
+        for (int i = 0; i < ntNames.length; i++) {
+            try {
+                supertypes[i] = ntMgr.getNodeType(ntNames[i]);
+            } catch (NoSuchNodeTypeException e) {
+                // should never get here
+                log.error("undefined supertype", e);
+                return new NodeType[0];
+            }
+        }
+        return supertypes;
     }
 
     /**
      * @see NodeType#getChildNodeDefs
      */
     public NodeDef[] getChildNodeDefs() {
-	ChildNodeDef[] cnda = ent.getAllNodeDefs();
-	NodeDef[] nodeDefs = new NodeDef[cnda.length];
-	for (int i = 0; i < cnda.length; i++) {
-	    nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
-	}
-	return nodeDefs;
+        ChildNodeDef[] cnda = ent.getAllNodeDefs();
+        NodeDef[] nodeDefs = new NodeDef[cnda.length];
+        for (int i = 0; i < cnda.length; i++) {
+            nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
+        }
+        return nodeDefs;
     }
 
     /**
      * @see NodeType#getPropertyDefs
      */
     public PropertyDef[] getPropertyDefs() {
-	PropDef[] pda = ent.getAllPropDefs();
-	PropertyDef[] propDefs = new PropertyDef[pda.length];
-	for (int i = 0; i < pda.length; i++) {
-	    propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
-	}
-	return propDefs;
+        PropDef[] pda = ent.getAllPropDefs();
+        PropertyDef[] propDefs = new PropertyDef[pda.length];
+        for (int i = 0; i < pda.length; i++) {
+            propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
+        }
+        return propDefs;
     }
 
     /**
      * @see NodeType#getDeclaredSupertypes
      */
     public NodeType[] getDeclaredSupertypes() {
-	QName[] ntNames = ntd.getSupertypes();
-	NodeType[] supertypes = new NodeType[ntNames.length];
-	for (int i = 0; i < ntNames.length; i++) {
-	    try {
-		supertypes[i] = ntMgr.getNodeType(ntNames[i]);
-	    } catch (NoSuchNodeTypeException e) {
-		// should never get here
-		log.error("undefined supertype", e);
-		return new NodeType[0];
-	    }
-	}
-	return supertypes;
+        QName[] ntNames = ntd.getSupertypes();
+        NodeType[] supertypes = new NodeType[ntNames.length];
+        for (int i = 0; i < ntNames.length; i++) {
+            try {
+                supertypes[i] = ntMgr.getNodeType(ntNames[i]);
+            } catch (NoSuchNodeTypeException e) {
+                // should never get here
+                log.error("undefined supertype", e);
+                return new NodeType[0];
+            }
+        }
+        return supertypes;
     }
 
     /**
      * @see NodeType#getDeclaredChildNodeDefs
      */
     public NodeDef[] getDeclaredChildNodeDefs() {
-	ChildNodeDef[] cnda = ntd.getChildNodeDefs();
-	NodeDef[] nodeDefs = new NodeDef[cnda.length];
-	for (int i = 0; i < cnda.length; i++) {
-	    nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
-	}
-	return nodeDefs;
+        ChildNodeDef[] cnda = ntd.getChildNodeDefs();
+        NodeDef[] nodeDefs = new NodeDef[cnda.length];
+        for (int i = 0; i < cnda.length; i++) {
+            nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
+        }
+        return nodeDefs;
     }
 
     /**
      * @see NodeType#canSetProperty(String, Value)
      */
     public boolean canSetProperty(String propertyName, Value value) {
-	if (value == null) {
-	    // setting a property to null is equivalent of removing it
-	    return canRemoveItem(propertyName);
-	}
-	try {
-	    QName name = QName.fromJCRName(propertyName, nsResolver);
-	    int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
-	    PropertyDefImpl def = getApplicablePropertyDef(name, type, false);
-	    if (def.isProtected()) {
-		return false;
-	    }
-	    if (def.isMultiple()) {
-		return false;
-	    }
-	    InternalValue internalValue = InternalValue.create(value, nsResolver);
-	    checkSetPropertyValueConstraints(def, new InternalValue[]{internalValue});
-	    return true;
-	} catch (BaseException be) {
-	    // implementation specific exception, fall through
-	} catch (RepositoryException re) {
-	    // fall through
-	}
-	return false;
+        if (value == null) {
+            // setting a property to null is equivalent of removing it
+            return canRemoveItem(propertyName);
+        }
+        try {
+            QName name = QName.fromJCRName(propertyName, nsResolver);
+            int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
+            PropertyDefImpl def = getApplicablePropertyDef(name, type, false);
+            if (def.isProtected()) {
+                return false;
+            }
+            if (def.isMultiple()) {
+                return false;
+            }
+            InternalValue internalValue = InternalValue.create(value, nsResolver);
+            checkSetPropertyValueConstraints(def, new InternalValue[]{internalValue});
+            return true;
+        } catch (BaseException be) {
+            // implementation specific exception, fall through
+        } catch (RepositoryException re) {
+            // fall through
+        }
+        return false;
     }
 
     /**
      * @see NodeType#canSetProperty(String, Value[])
      */
     public boolean canSetProperty(String propertyName, Value[] values) {
-	if (values == null) {
-	    // setting a property to null is equivalent of removing it
-	    return canRemoveItem(propertyName);
-	}
-	try {
-	    QName name = QName.fromJCRName(propertyName, nsResolver);
-	    int type = (values == null || values.length == 0) ? PropertyType.UNDEFINED : values[0].getType();
-	    PropertyDefImpl def = getApplicablePropertyDef(name, type, true);
-	    if (def.isProtected()) {
-		return false;
-	    }
-	    if (!def.isMultiple()) {
-		return false;
-	    }
-	    ArrayList list = new ArrayList();
-	    // convert values and compact array (purge null entries)
-	    for (int i = 0; i < values.length; i++) {
-		if (values[i] != null) {
-		    InternalValue internalValue = InternalValue.create(values[i], nsResolver);
-		    list.add(internalValue);
-		}
-	    }
-	    InternalValue[] internalValues = (InternalValue[]) list.toArray(new InternalValue[list.size()]);
-	    checkSetPropertyValueConstraints(def, internalValues);
-	    return true;
-	} catch (BaseException be) {
-	    // implementation specific exception, fall through
-	} catch (RepositoryException re) {
-	    // fall through
-	}
-	return false;
+        if (values == null) {
+            // setting a property to null is equivalent of removing it
+            return canRemoveItem(propertyName);
+        }
+        try {
+            QName name = QName.fromJCRName(propertyName, nsResolver);
+            int type = (values == null || values.length == 0) ? PropertyType.UNDEFINED : values[0].getType();
+            PropertyDefImpl def = getApplicablePropertyDef(name, type, true);
+            if (def.isProtected()) {
+                return false;
+            }
+            if (!def.isMultiple()) {
+                return false;
+            }
+            ArrayList list = new ArrayList();
+            // convert values and compact array (purge null entries)
+            for (int i = 0; i < values.length; i++) {
+                if (values[i] != null) {
+                    InternalValue internalValue = InternalValue.create(values[i], nsResolver);
+                    list.add(internalValue);
+                }
+            }
+            InternalValue[] internalValues = (InternalValue[]) list.toArray(new InternalValue[list.size()]);
+            checkSetPropertyValueConstraints(def, internalValues);
+            return true;
+        } catch (BaseException be) {
+            // implementation specific exception, fall through
+        } catch (RepositoryException re) {
+            // fall through
+        }
+        return false;
     }
 
     /**
      * @see NodeType#canAddChildNode(String)
      */
     public boolean canAddChildNode(String childNodeName) {
-	try {
-	    ent.checkAddNodeConstraints(QName.fromJCRName(childNodeName, nsResolver));
-	    return true;
-	} catch (BaseException be) {
-	    // implementation specific exception, fall through
-	} catch (RepositoryException re) {
-	    // fall through
-	}
-	return false;
+        try {
+            ent.checkAddNodeConstraints(QName.fromJCRName(childNodeName, nsResolver));
+            return true;
+        } catch (BaseException be) {
+            // implementation specific exception, fall through
+        } catch (RepositoryException re) {
+            // fall through
+        }
+        return false;
     }
 
     /**
      * @see NodeType#canAddChildNode(String, String)
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
-	try {
-	    ent.checkAddNodeConstraints(QName.fromJCRName(childNodeName, nsResolver), QName.fromJCRName(nodeTypeName, nsResolver));
-	    return true;
-	} catch (BaseException be) {
-	    // implementation specific exception, fall through
-	} catch (RepositoryException re) {
-	    // fall through
-	}
-	return false;
+        try {
+            ent.checkAddNodeConstraints(QName.fromJCRName(childNodeName, nsResolver), QName.fromJCRName(nodeTypeName, nsResolver));
+            return true;
+        } catch (BaseException be) {
+            // implementation specific exception, fall through
+        } catch (RepositoryException re) {
+            // fall through
+        }
+        return false;
     }
 
     /**
      * @see NodeType#canRemoveItem(String)
      */
     public boolean canRemoveItem(String itemName) {
-	try {
-	    ent.checkRemoveItemConstraints(QName.fromJCRName(itemName, nsResolver));
-	    return true;
-	} catch (BaseException be) {
-	    // implementation specific exception, fall through
-	} catch (RepositoryException re) {
-	    // fall through
-	}
-	return false;
+        try {
+            ent.checkRemoveItemConstraints(QName.fromJCRName(itemName, nsResolver));
+            return true;
+        } catch (BaseException be) {
+            // implementation specific exception, fall through
+        } catch (RepositoryException re) {
+            // fall through
+        }
+        return false;
     }
 
     /**
      * @see NodeType#getDeclaredPropertyDefs
      */
     public PropertyDef[] getDeclaredPropertyDefs() {
-	PropDef[] pda = ntd.getPropertyDefs();
-	PropertyDef[] propDefs = new PropertyDef[pda.length];
-	for (int i = 0; i < pda.length; i++) {
-	    propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
-	}
-	return propDefs;
+        PropDef[] pda = ntd.getPropertyDefs();
+        PropertyDef[] propDefs = new PropertyDef[pda.length];
+        for (int i = 0; i < pda.length; i++) {
+            propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
+        }
+        return propDefs;
     }
 }

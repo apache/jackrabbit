@@ -21,9 +21,6 @@ import java.util.Collection;
  * The <code>DispatchAction</code> class is a simple struct that defines what
  * <code>EventState</code>s should be dispatched to which
  * <code>EventConsumer</code>s.
- *
- * @author Marcel Reutegger
- * @version $Revision: 1.3 $, $Date: 2004/08/02 16:19:47 $
  */
 class DispatchAction {
 
@@ -43,24 +40,26 @@ class DispatchAction {
      * <code>eventStates</code> and <code>eventConsumers</code>.
      */
     DispatchAction(EventStateCollection eventStates, Collection eventConsumers) {
-	this.eventStates = eventStates;
-	this.eventConsumers = eventConsumers;
+        this.eventStates = eventStates;
+        this.eventConsumers = eventConsumers;
     }
 
     /**
      * Returns a collection of {@link EventState}s to dispatch.
+     *
      * @return a collection of {@link EventState}s to dispatch.
      */
     EventStateCollection getEventStates() {
-	return eventStates;
+        return eventStates;
     }
 
     /**
      * Returns a <code>Collection</code> of {@link EventConsumer}s where
      * the events should be dispatched to.
+     *
      * @return a <code>Collection</code> of {@link EventConsumer}s.
      */
     Collection getEventConsumers() {
-	return eventConsumers;
+        return eventConsumers;
     }
 }

@@ -15,20 +15,17 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 
 import javax.jcr.RepositoryException;
 
 /**
  * The <code>EventFilter</code> class implements the filter logic based
  * on the session's access rights and the specified filter rules.
- *
- * @author Marcel Reutegger
- * @version $Revision: 1.5 $, $Date: 2004/08/25 16:44:50 $
  */
 class EventFilter {
 
@@ -99,22 +96,22 @@ class EventFilter {
      *                   that registered the {@link javax.jcr.observation.EventListener}.
      */
     EventFilter(ItemManager itemMgr,
-		SessionImpl session,
-		long eventTypes,
-		Path path,
-		boolean isDeep,
-		String[] uuids,
-		NodeTypeImpl[] nodeTypes,
-		boolean noLocal) {
+                SessionImpl session,
+                long eventTypes,
+                Path path,
+                boolean isDeep,
+                String[] uuids,
+                NodeTypeImpl[] nodeTypes,
+                boolean noLocal) {
 
-	this.itemMgr = itemMgr;
-	this.session = session;
-	this.eventTypes = eventTypes;
-	this.path = path;
-	this.isDeep = isDeep;
-	this.uuids = uuids;
-	this.noLocal = noLocal;
-	this.nodeTypes = nodeTypes;
+        this.itemMgr = itemMgr;
+        this.session = session;
+        this.eventTypes = eventTypes;
+        this.path = path;
+        this.isDeep = isDeep;
+        this.uuids = uuids;
+        this.noLocal = noLocal;
+        this.nodeTypes = nodeTypes;
     }
 
     /**
@@ -125,7 +122,7 @@ class EventFilter {
      *         <code>EventFilter</code>.
      */
     SessionImpl getSession() {
-	return session;
+        return session;
     }
 
     /**
@@ -136,7 +133,7 @@ class EventFilter {
      *         <code>EventFilter</code>.
      */
     ItemManager getItemManager() {
-	return itemMgr;
+        return itemMgr;
     }
 
     /**
@@ -149,66 +146,66 @@ class EventFilter {
      * @throws RepositoryException if an error occurs while checking.
      */
     boolean blocks(EventState eventState) throws RepositoryException {
-	// first do cheap checks
+        // first do cheap checks
 
-	// check event type
-	long type = eventState.getType();
-	if ((eventTypes & type) == 0) {
-	    return true;
-	}
+        // check event type
+        long type = eventState.getType();
+        if ((eventTypes & type) == 0) {
+            return true;
+        }
 
-	// check for session local changes
-	if (noLocal && session.equals(eventState.getSession())) {
-	    // listener does not wish to get local events
-	    return true;
-	}
+        // check for session local changes
+        if (noLocal && session.equals(eventState.getSession())) {
+            // listener does not wish to get local events
+            return true;
+        }
 
-	// check UUIDs
-	String parentUUID = eventState.getParentUUID();
-	if (uuids != null) {
-	    boolean match = false;
-	    for (int i = 0; i < uuids.length && !match; i++) {
-		match |= parentUUID.equals(uuids[i]);
-	    }
-	    if (!match) {
-		return true;
-	    }
-	}
+        // check UUIDs
+        String parentUUID = eventState.getParentUUID();
+        if (uuids != null) {
+            boolean match = false;
+            for (int i = 0; i < uuids.length && !match; i++) {
+                match |= parentUUID.equals(uuids[i]);
+            }
+            if (!match) {
+                return true;
+            }
+        }
 
-	/*
-	Node parent = null;
-	try {
-	    parent = (Node) itemMgr.getItem(new NodeId(eventState.getParentUUID()));
-	} catch (AccessDeniedException e) {
-	    log.debug("Access denied for " + eventState.getParentPath());
-	    return true;
-	}
-	*/
+        /*
+        Node parent = null;
+        try {
+            parent = (Node) itemMgr.getItem(new NodeId(eventState.getParentUUID()));
+        } catch (AccessDeniedException e) {
+            log.debug("Access denied for " + eventState.getParentPath());
+            return true;
+        }
+        */
 
-	// check node types
-	if (nodeTypes != null) {
-	    boolean match = false;
-	    for (int i = 0; i < nodeTypes.length && !match; i++) {
-		match |= eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
-	    }
-	    if (!match) {
-		return true;
-	    }
-	}
+        // check node types
+        if (nodeTypes != null) {
+            boolean match = false;
+            for (int i = 0; i < nodeTypes.length && !match; i++) {
+                match |= eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
+            }
+            if (!match) {
+                return true;
+            }
+        }
 
-	// finally check path
-	try {
-	    //parentPath = Path.create(parent.getPath(), session.getNamespaceResolver(), false);
-	    boolean match = eventState.getParentPath().equals(path);
-	    if (!match && isDeep) {
-		match = eventState.getParentPath().isDescendantOf(path);
-	    }
+        // finally check path
+        try {
+            //parentPath = Path.create(parent.getPath(), session.getNamespaceResolver(), false);
+            boolean match = eventState.getParentPath().equals(path);
+            if (!match && isDeep) {
+                match = eventState.getParentPath().isDescendantOf(path);
+            }
 
-	    return !match;
-	} catch (MalformedPathException mpe) {
-	    // should never get here...
-	    throw new RepositoryException("internal error: failed to check path filter", mpe);
-	}
+            return !match;
+        } catch (MalformedPathException mpe) {
+            // should never get here...
+            throw new RepositoryException("internal error: failed to check path filter", mpe);
+        }
     }
 
     /**
@@ -217,21 +214,21 @@ class EventFilter {
      */
     private static final class BlockAllFilter extends EventFilter {
 
-	/**
-	 * Creates a new <code>BlockAllFilter</code>.
-	 */
-	BlockAllFilter() {
-	    super(null, null, 0, null, true, null, null, true);
-	}
+        /**
+         * Creates a new <code>BlockAllFilter</code>.
+         */
+        BlockAllFilter() {
+            super(null, null, 0, null, true, null, null, true);
+        }
 
-	/**
-	 * Always return <code>true</code>.
-	 *
-	 * @return always <code>true</code>.
-	 */
-	boolean blocks(EventState eventState) {
-	    return true;
-	}
+        /**
+         * Always return <code>true</code>.
+         *
+         * @return always <code>true</code>.
+         */
+        boolean blocks(EventState eventState) {
+            return true;
+        }
     }
 
 }

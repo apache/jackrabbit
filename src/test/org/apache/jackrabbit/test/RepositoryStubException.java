@@ -17,8 +17,6 @@ package org.apache.jackrabbit.test;
 
 /**
  *
- * @version $Revision: 1.3 $, $Date: 2004/05/04 12:06:31 $
- * @author Marcel Reutegger
  */
 public class RepositoryStubException extends Exception {
 

@@ -21,9 +21,6 @@ import java.util.Arrays;
 
 /**
  * A <code>ChildNodeDef</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.25 $, $Date: 2004/09/09 15:23:43 $
  */
 public class ChildNodeDef extends ChildItemDef {
 
@@ -38,65 +35,65 @@ public class ChildNodeDef extends ChildItemDef {
     }
 
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof ChildNodeDef) {
-	    ChildNodeDef other = (ChildNodeDef) obj;
-	    return super.equals(obj)
-		    && Arrays.equals(requiredPrimaryTypes, requiredPrimaryTypes)
-		    && (defaultPrimaryType == null ? other.defaultPrimaryType == null : defaultPrimaryType.equals(other.defaultPrimaryType))
-		    && allowSameNameSibs == other.allowSameNameSibs;
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof ChildNodeDef) {
+            ChildNodeDef other = (ChildNodeDef) obj;
+            return super.equals(obj)
+                    && Arrays.equals(requiredPrimaryTypes, requiredPrimaryTypes)
+                    && (defaultPrimaryType == null ? other.defaultPrimaryType == null : defaultPrimaryType.equals(other.defaultPrimaryType))
+                    && allowSameNameSibs == other.allowSameNameSibs;
+        }
+        return false;
     }
 
     /**
      * @param defaultNodeType
      */
     public void setDefaultPrimaryType(QName defaultNodeType) {
-	this.defaultPrimaryType = defaultNodeType;
+        this.defaultPrimaryType = defaultNodeType;
     }
 
     /**
      * @param requiredPrimaryTypes
      */
     public void setRequiredPrimaryTypes(QName[] requiredPrimaryTypes) {
-	this.requiredPrimaryTypes = requiredPrimaryTypes;
+        this.requiredPrimaryTypes = requiredPrimaryTypes;
     }
 
     /**
      * @param allowSameNameSibs
      */
     public void setAllowSameNameSibs(boolean allowSameNameSibs) {
-	this.allowSameNameSibs = allowSameNameSibs;
+        this.allowSameNameSibs = allowSameNameSibs;
     }
 
     /**
      * @return
      */
     public QName getDefaultPrimaryType() {
-	return defaultPrimaryType;
+        return defaultPrimaryType;
     }
 
     /**
      * @return
      */
     public QName[] getRequiredPrimaryTypes() {
-	return requiredPrimaryTypes;
+        return requiredPrimaryTypes;
     }
 
     /**
      * @return
      */
     public boolean allowSameNameSibs() {
-	return allowSameNameSibs;
+        return allowSameNameSibs;
     }
 
     /**
      * @return
      */
     public boolean definesNode() {
-	return true;
+        return true;
     }
 }

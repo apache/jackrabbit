@@ -15,28 +15,25 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
+import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
+import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Hits;
-import org.apache.log4j.Logger;
-//import org.apache.lucene.search.Sort;
-//import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.Query;
 
 import java.io.IOException;
 
-import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
-
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class SearchIndex {
 
     private static final Logger log = Logger.getLogger(SearchIndex.class);
 
-    /** 512k default size */
+    /**
+     * 512k default size
+     */
     //private static final long DEFAULT_MERGE_SIZE = 512 * 1024 * 1024;
 
     //private long mergeSize = DEFAULT_MERGE_SIZE;
@@ -52,95 +49,95 @@ public class SearchIndex {
     private final FIFOReadWriteLock readWriteLock = new FIFOReadWriteLock();
 
     public SearchIndex(String location, Analyzer analyzer) throws IOException {
-	//volatileIndex = new VolatileIndex(analyzer);
-	persistentIndex = new PersistentIndex(location, analyzer);
-	persistentIndex.setUseCompoundFile(true);
-	this.location = location;
-	this.analyzer = analyzer;
+        //volatileIndex = new VolatileIndex(analyzer);
+        persistentIndex = new PersistentIndex(location, analyzer);
+        persistentIndex.setUseCompoundFile(true);
+        this.location = location;
+        this.analyzer = analyzer;
     }
 
     public void addDocument(Document doc) throws IOException {
-	try {
-	    readWriteLock.writeLock().acquire();
-	} catch (InterruptedException e) {
-	    // FIXME: ??? do logging, simply return?
-	    return;
-	}
+        try {
+            readWriteLock.writeLock().acquire();
+        } catch (InterruptedException e) {
+            // FIXME: ??? do logging, simply return?
+            return;
+        }
 
-	try {
-	    persistentIndex.addDocument(doc);
-	} finally {
-	    readWriteLock.writeLock().release();
-	}
+        try {
+            persistentIndex.addDocument(doc);
+        } finally {
+            readWriteLock.writeLock().release();
+        }
 
-	/*
-	volatileIndex.addDocument(doc);
-	if (volatileIndex.size() > mergeSize) {
-	    persistentIndex.mergeIndex(volatileIndex);
-	    // create new volatile index
-	    volatileIndex = new VolatileIndex(analyzer);
-	}
-	*/
+        /*
+        volatileIndex.addDocument(doc);
+        if (volatileIndex.size() > mergeSize) {
+            persistentIndex.mergeIndex(volatileIndex);
+            // create new volatile index
+            volatileIndex = new VolatileIndex(analyzer);
+        }
+        */
     }
 
     public void removeDocument(Term idTerm) throws IOException {
-	try {
-	    readWriteLock.writeLock().acquire();
-	} catch (InterruptedException e) {
-	    // FIXME: ??? do logging, simply return?
-	    return;
-	}
+        try {
+            readWriteLock.writeLock().acquire();
+        } catch (InterruptedException e) {
+            // FIXME: ??? do logging, simply return?
+            return;
+        }
 
-	try {
-	    persistentIndex.removeDocument(idTerm);
-	} finally {
-	    readWriteLock.writeLock().release();
-	}
+        try {
+            persistentIndex.removeDocument(idTerm);
+        } finally {
+            readWriteLock.writeLock().release();
+        }
 
-	//volatileIndex.removeDocument(idTerm);
+        //volatileIndex.removeDocument(idTerm);
     }
 
     public void close() {
-	/*
-	try {
-	    persistentIndex.mergeIndex(volatileIndex);
-	} catch (IOException e) {
-	    // FIXME do logging
-	}
-	volatileIndex.close();
-	*/
-	log.info("Closing index: " + location);
-    	persistentIndex.close();
+        /*
+        try {
+            persistentIndex.mergeIndex(volatileIndex);
+        } catch (IOException e) {
+            // FIXME do logging
+        }
+        volatileIndex.close();
+        */
+        log.info("Closing index: " + location);
+        persistentIndex.close();
     }
 
     public Hits executeQuery(Query query,
-			     String[] orderProps,
-			     boolean ascending) throws IOException {
+                             String[] orderProps,
+                             boolean ascending) throws IOException {
         try {
-	    readWriteLock.readLock().acquire();
-	} catch (InterruptedException e) {
-	    // FIXME: ??? do logging, simply return?
-	    return null;
-	}
+            readWriteLock.readLock().acquire();
+        } catch (InterruptedException e) {
+            // FIXME: ??? do logging, simply return?
+            return null;
+        }
 
-	/*
-	SortField[] sortFields = new SortField[orderProps.length];
-	for (int i = 0; i < orderProps.length; i++) {
-	    sortFields[i] = new SortField(orderProps[i], SortField.STRING, !ascending);
-	}
-        */
-	Hits hits = null;
-	try {
-	    hits = persistentIndex.getIndexSearcher().search(query
-		    /*, new Sort(sortFields) */);
-	} finally {
-	    readWriteLock.readLock().release();
-	}
+        /*
+        SortField[] sortFields = new SortField[orderProps.length];
+        for (int i = 0; i < orderProps.length; i++) {
+            sortFields[i] = new SortField(orderProps[i], SortField.STRING, !ascending);
+        }
+*/
+        Hits hits = null;
+        try {
+            hits = persistentIndex.getIndexSearcher().search(query
+                    /*, new Sort(sortFields) */);
+        } finally {
+            readWriteLock.readLock().release();
+        }
 
-	return hits;
+        return hits;
     }
 
     public Analyzer getAnalyzer() {
-	return analyzer;
+        return analyzer;
     }
 }

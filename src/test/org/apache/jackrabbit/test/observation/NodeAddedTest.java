@@ -15,17 +15,14 @@
  */
 package org.apache.jackrabbit.test.observation;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventType;
 
 /**
  * Test cases for {@link javax.jcr.observation.EventType#CHILD_NODE_ADDED
  * CHILD_NODE_ADDED} events.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class NodeAddedTest extends AbstractObservationTest {
 
@@ -36,7 +33,7 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[] { "foo" });
+        checkNodeAdded(events, new String[]{"foo"});
     }
 
     public void testMultipleNodeAdded1() throws RepositoryException {
@@ -47,7 +44,7 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[] { "foo", "bar" });
+        checkNodeAdded(events, new String[]{"foo", "bar"});
     }
 
     public void testMultipleNodeAdded2() throws RepositoryException {
@@ -58,7 +55,7 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[] { "foo", "foo/bar" });
+        checkNodeAdded(events, new String[]{"foo", "foo/bar"});
     }
 
     public void testTransientNodeAddedRemoved() throws RepositoryException {
@@ -70,7 +67,7 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeAdded(events, new String[] { "foo" });
+        checkNodeAdded(events, new String[]{"foo"});
     }
 
     /*

@@ -15,20 +15,18 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
 
 /**
  *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 abstract class AbstractIndex {
 
@@ -43,91 +41,92 @@ abstract class AbstractIndex {
     private boolean useCompoundFile = false;
 
     AbstractIndex(Analyzer analyzer, Directory directory) throws IOException {
-	this.analyzer = analyzer;
-	this.directory = directory;
+        this.analyzer = analyzer;
+        this.directory = directory;
 
-	if (!IndexReader.indexExists(directory)) {
-	    indexWriter = new IndexWriter(directory, analyzer, true);
-	    indexWriter.setUseCompoundFile(useCompoundFile);
-	}
+        if (!IndexReader.indexExists(directory)) {
+            indexWriter = new IndexWriter(directory, analyzer, true);
+            indexWriter.setUseCompoundFile(useCompoundFile);
+        }
     }
 
     synchronized void setUseCompoundFile(boolean b) {
-	useCompoundFile = b;
-	if (indexWriter != null) {
-	    indexWriter.setUseCompoundFile(b);
-	}
+        useCompoundFile = b;
+        if (indexWriter != null) {
+            indexWriter.setUseCompoundFile(b);
+        }
     }
 
 
     /**
      * Default implementation returns the same instance as passed
      * in the constructor.
+     *
      * @return the directory instance passed in the constructor
      * @throws IOException
      */
     Directory getDirectory() throws IOException {
-	return this.directory;
+        return this.directory;
     }
 
     IndexSearcher getIndexSearcher() throws IOException {
-	return new IndexSearcher(getIndexReader());
+        return new IndexSearcher(getIndexReader());
     }
 
     void addDocument(Document doc) throws IOException {
-	getIndexWriter().addDocument(doc);
+        getIndexWriter().addDocument(doc);
     }
 
     void removeDocument(Term idTerm) throws IOException {
-	getIndexReader().delete(idTerm);
+        getIndexReader().delete(idTerm);
     }
 
     protected synchronized IndexReader getIndexReader() throws IOException {
-	if (indexWriter != null) {
-	    indexWriter.close();
-	    indexWriter = null;
-	}
-	if (indexReader == null) {
-	    indexReader = IndexReader.open(getDirectory());
-	}
-	return indexReader;
+        if (indexWriter != null) {
+            indexWriter.close();
+            indexWriter = null;
+        }
+        if (indexReader == null) {
+            indexReader = IndexReader.open(getDirectory());
+        }
+        return indexReader;
     }
 
     protected synchronized IndexWriter getIndexWriter() throws IOException {
-	if (indexReader != null) {
-	    indexReader.close();
-	    indexReader = null;
-	}
-	if (indexWriter == null) {
-	    indexWriter = new IndexWriter(getDirectory(), analyzer, false);
-	    indexWriter.setUseCompoundFile(useCompoundFile);
-	}
-	return indexWriter;
+        if (indexReader != null) {
+            indexReader.close();
+            indexReader = null;
+        }
+        if (indexWriter == null) {
+            indexWriter = new IndexWriter(getDirectory(), analyzer, false);
+            indexWriter.setUseCompoundFile(useCompoundFile);
+        }
+        return indexWriter;
     }
 
     void close() {
-	if (indexWriter != null) {
-	    try {
-		indexWriter.close();
-	    } catch (IOException e) {
-		// FIXME do logging
-	    }
-	    indexWriter = null;
-	}
-	if (indexReader != null) {
-	    try {
-		indexReader.close();
-	    } catch (IOException e) {
-		// FIXME do logging
-	    }
-	    indexReader = null;
-	}
-	if (directory != null) {
-	    try {
-		directory.close();
-	    } catch (IOException e) {
-		directory = null;
-	    }
-	}
+        if (indexWriter != null) {
+            try {
+                indexWriter.close();
+            } catch (IOException e) {
+                // FIXME do logging
+            }
+            indexWriter = null;
+        }
+        if (indexReader != null) {
+            try {
+                indexReader.close();
+            } catch (IOException e) {
+                // FIXME do logging
+            }
+            indexReader = null;
+        }
+        if (directory != null) {
+            try {
+                directory.close();
+            } catch (IOException e) {
+                directory = null;
+            }
+        }
     }
 }

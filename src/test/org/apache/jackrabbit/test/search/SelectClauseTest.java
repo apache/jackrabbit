@@ -22,84 +22,81 @@ import javax.jcr.query.QueryResult;
 
 /**
  * Performs tests with on the <code>SELECT</code> clause.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class SelectClauseTest extends AbstractQueryTest {
 
     public void testSelect() throws RepositoryException {
-	Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
-	n.setProperty("myvalue", new String[] { "foo" });
-	n = testRoot.addNode("node2", NT_UNSTRUCTURED);
-	n.setProperty("myvalue", new String[] { "bar" });
-	n = testRoot.addNode("node3", NT_UNSTRUCTURED);
-	n.setProperty("yourvalue", new String[] { "foo" });
+        Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
+        n.setProperty("myvalue", new String[]{"foo"});
+        n = testRoot.addNode("node2", NT_UNSTRUCTURED);
+        n.setProperty("myvalue", new String[]{"bar"});
+        n = testRoot.addNode("node3", NT_UNSTRUCTURED);
+        n.setProperty("yourvalue", new String[]{"foo"});
 
-	testRoot.save();
+        testRoot.save();
 
-	String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "//";
-	Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-	QueryResult result = q.execute();
-	checkResult(result, 2);
+        String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "//";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        QueryResult result = q.execute();
+        checkResult(result, 2);
 
-	jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "// WHERE yourvalue = \"foo\"";
-	q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-	result = q.execute();
-	checkResult(result, 0);
+        jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "// WHERE yourvalue = \"foo\"";
+        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        result = q.execute();
+        checkResult(result, 0);
 
-	jcrql = "SELECT myvalue FROM *";
-	q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-	result = q.execute();
-	checkResult(result, 2);
+        jcrql = "SELECT myvalue FROM *";
+        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        result = q.execute();
+        checkResult(result, 2);
 
     }
 
     public void testPropertyCount() throws RepositoryException {
-	Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
-	n.setProperty("myvalue", new String[] { "foo" });
-	n = testRoot.addNode("node2", NT_UNSTRUCTURED);
-	n.setProperty("myvalue", new String[] { "bar" });
-	n = testRoot.addNode("node3", NT_UNSTRUCTURED);
-	n.setProperty("yourvalue", new String[] { "foo" });
+        Node n = testRoot.addNode("node1", NT_UNSTRUCTURED);
+        n.setProperty("myvalue", new String[]{"foo"});
+        n = testRoot.addNode("node2", NT_UNSTRUCTURED);
+        n.setProperty("myvalue", new String[]{"bar"});
+        n = testRoot.addNode("node3", NT_UNSTRUCTURED);
+        n.setProperty("yourvalue", new String[]{"foo"});
 
-	testRoot.save();
+        testRoot.save();
 
-	String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "//";
-	Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-	QueryResult result = q.execute();
-	checkResult(result, 2, 2);
+        String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "//";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        QueryResult result = q.execute();
+        checkResult(result, 2, 2);
 
-	jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "// WHERE yourvalue = \"foo\"";
-	q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-	result = q.execute();
-	checkResult(result, 0, 0);
+        jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "// WHERE yourvalue = \"foo\"";
+        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        result = q.execute();
+        checkResult(result, 0, 0);
 
-	jcrql = "SELECT myvalue FROM *";
-	q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-	result = q.execute();
-	checkResult(result, 2, 2);
+        jcrql = "SELECT myvalue FROM *";
+        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        result = q.execute();
+        checkResult(result, 2, 2);
 
-	jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE myvalue LIKE \"*\"";
-	q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-	result = q.execute();
-	checkResult(result, 2, 4);
+        jcrql = "SELECT * FROM * LOCATION /" + TEST_ROOT + "// WHERE myvalue LIKE \"*\"";
+        q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        result = q.execute();
+        checkResult(result, 2, 4);
     }
 
     public void testSameNameSibling() throws RepositoryException {
-	Node n = testRoot.addNode("node", NT_UNSTRUCTURED);
-	n.setProperty("myvalue", new String[] { "foo" });
-	n = testRoot.addNode("node", NT_UNSTRUCTURED);
-	n.setProperty("myvalue", new String[] { "bar" });
-	n = testRoot.addNode("node", NT_UNSTRUCTURED);
-	n.setProperty("yourvalue", new String[] { "foo" });
+        Node n = testRoot.addNode("node", NT_UNSTRUCTURED);
+        n.setProperty("myvalue", new String[]{"foo"});
+        n = testRoot.addNode("node", NT_UNSTRUCTURED);
+        n.setProperty("myvalue", new String[]{"bar"});
+        n = testRoot.addNode("node", NT_UNSTRUCTURED);
+        n.setProperty("yourvalue", new String[]{"foo"});
 
-	testRoot.save();
+        testRoot.save();
 
-	String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "/node";
-	Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
-	QueryResult result = q.execute();
-	checkResult(result, 2, 2);
+        String jcrql = "SELECT myvalue FROM * LOCATION /" + TEST_ROOT + "/node";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(jcrql, Query.JCRQL);
+        QueryResult result = q.execute();
+        checkResult(result, 2, 2);
 
     }
 

@@ -19,9 +19,6 @@ import javax.jcr.NamespaceException;
 
 /**
  * The <code>NamespaceResolver</code> interface ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.7 $
  */
 public interface NamespaceResolver {
 

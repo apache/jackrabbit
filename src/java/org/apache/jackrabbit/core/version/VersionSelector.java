@@ -15,21 +15,19 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.RepositoryException;
 
 /**
  * This Interface defines the version selector that needs to provide a version,
  * given some hints and a version history
- * 
- * @author Tobias Strasser
- * @version $Revision: 1.2 $, $Date: 2004/08/19 16:29:49 $
  */
 public interface VersionSelector {
     /**
      * Selects a version of the given version history. If this VersionSelector
      * is unable to select one, it can return <code>null</code>.
+     *
      * @param versionHistory
      * @return A version or <code>null</code>.
      * @throws RepositoryException if an error occurrs.

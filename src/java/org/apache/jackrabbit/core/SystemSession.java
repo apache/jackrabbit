@@ -22,9 +22,6 @@ import javax.jcr.RepositoryException;
 
 /**
  * A <code>SystemTicket</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.1 $, $Date: 2004/08/25 16:44:47 $
  */
 class SystemSession extends SessionImpl {
 
@@ -39,25 +36,25 @@ class SystemSession extends SessionImpl {
      * @param wspName
      */
     SystemSession(RepositoryImpl rep, String wspName)
-	    throws RepositoryException {
-	super(rep, SYSTEM_USER_ID, wspName);
+            throws RepositoryException {
+        super(rep, SYSTEM_USER_ID, wspName);
 
-	accessMgr = new SystemAccessManqager();
+        accessMgr = new SystemAccessManqager();
     }
 
     //--------------------------------------------------------< inner classes >
     private class SystemAccessManqager extends AccessManagerImpl {
 
-	SystemAccessManqager() {
-	    super(null, getHierarchyManager(), getNamespaceResolver());
-	}
+        SystemAccessManqager() {
+            super(null, getHierarchyManager(), getNamespaceResolver());
+        }
 
-	/**
-	 * @see AbstractAccessManager#getPermissions(String)
-	 */
-	public long getPermissions(String absPath)
-		throws PathNotFoundException, RepositoryException {
-	    return PermissionImpl.ALL_VALUES;
-	}
+        /**
+         * @see AbstractAccessManager#getPermissions(String)
+         */
+        public long getPermissions(String absPath)
+                throws PathNotFoundException, RepositoryException {
+            return PermissionImpl.ALL_VALUES;
+        }
     }
 }

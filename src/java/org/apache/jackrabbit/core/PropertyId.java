@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core;
 
 /**
  * <code>PropertyId</code> uniquely identifies a property in the repository.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.11 $
  */
 public class PropertyId extends ItemId {
 
@@ -29,41 +26,41 @@ public class PropertyId extends ItemId {
     private QName propName;
 
     public PropertyId(String parentUUID, QName propName) {
-	if (parentUUID == null) {
-	    throw new IllegalArgumentException("parentUUID can not be null");
-	}
-	if (propName == null) {
-	    throw new IllegalArgumentException("propName can not be null");
-	}
-	this.parentUUID = parentUUID;
-	this.propName = propName;
+        if (parentUUID == null) {
+            throw new IllegalArgumentException("parentUUID can not be null");
+        }
+        if (propName == null) {
+            throw new IllegalArgumentException("propName can not be null");
+        }
+        this.parentUUID = parentUUID;
+        this.propName = propName;
     }
 
     /**
      * @see ItemId#denotesNode
      */
     public boolean denotesNode() {
-	return false;
+        return false;
     }
 
     public String getParentUUID() {
-	return parentUUID;
+        return parentUUID;
     }
 
     public QName getName() {
-	return propName;
+        return propName;
     }
 
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof PropertyId) {
-	    PropertyId other = (PropertyId) obj;
-	    return parentUUID.equals(other.parentUUID)
-		    && propName.equals(other.propName);
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof PropertyId) {
+            PropertyId other = (PropertyId) obj;
+            return parentUUID.equals(other.parentUUID)
+                    && propName.equals(other.propName);
+        }
+        return false;
     }
 
     /**
@@ -79,28 +76,28 @@ public class PropertyId extends ItemId {
      * @see #toString()
      */
     public static PropertyId valueOf(String s) {
-	if (s == null) {
-	    throw new IllegalArgumentException("invalid PropertyId literal");
-	}
-	int i = s.indexOf('/');
-	if (i == -1) {
-	    throw new IllegalArgumentException("invalid PropertyId literal");
-	}
-	String uuid = s.substring(0, i);
-	QName name = QName.valueOf(s.substring(i + 1));
+        if (s == null) {
+            throw new IllegalArgumentException("invalid PropertyId literal");
+        }
+        int i = s.indexOf('/');
+        if (i == -1) {
+            throw new IllegalArgumentException("invalid PropertyId literal");
+        }
+        String uuid = s.substring(0, i);
+        QName name = QName.valueOf(s.substring(i + 1));
 
-	return new PropertyId(uuid, name);
+        return new PropertyId(uuid, name);
     }
 
     public String toString() {
-	return parentUUID + "/" + propName.toString();
+        return parentUUID + "/" + propName.toString();
     }
 
     public int hashCode() {
-	// PropertyId is immutable, we can store the computed hash code value
-	if (hash == 0) {
-	    hash = 577 * parentUUID.hashCode() + 43 * propName.hashCode();
-	}
-	return hash;
+        // PropertyId is immutable, we can store the computed hash code value
+        if (hash == 0) {
+            hash = 577 * parentUUID.hashCode() + 43 * propName.hashCode();
+        }
+        return hash;
     }
 }

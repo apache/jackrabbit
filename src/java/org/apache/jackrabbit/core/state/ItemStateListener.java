@@ -19,8 +19,6 @@ package org.apache.jackrabbit.core.state;
  * The <code>ItemStateListener</code> interface allows an implementing object
  * to be informed about changes on an <code>ItemState</code>.
  *
- * @author Stefan Guggisberg
- * @version $Revision: 1.5 $, $Date: 2004/08/02 16:19:48 $
  * @see ItemState#addListener
  */
 public interface ItemStateListener {

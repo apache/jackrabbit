@@ -25,12 +25,9 @@ import java.util.Iterator;
  * <code>IteratorHelper</code> is a utility class which
  * wraps an iterator and implements the various typed iterator
  * interfaces.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.14 $, $Date: 2004/08/25 16:44:53 $
  */
 public class IteratorHelper
-	implements NodeIterator, PropertyIterator, NodeTypeIterator, StringIterator {
+        implements NodeIterator, PropertyIterator, NodeTypeIterator, StringIterator {
 
     static final long UNDETERMINED_SIZE = -1;
 
@@ -45,8 +42,8 @@ public class IteratorHelper
      * @param c collection which should be iterated over.
      */
     public IteratorHelper(Collection c) {
-	this(c.iterator());
-	size = c.size();
+        this(c.iterator());
+        size = c.size();
     }
 
     /**
@@ -56,85 +53,85 @@ public class IteratorHelper
      * @param iter iterator which should be wrapped.
      */
     public IteratorHelper(Iterator iter) {
-	this.iter = iter;
-	pos = 0;
-	size = UNDETERMINED_SIZE;
+        this.iter = iter;
+        pos = 0;
+        size = UNDETERMINED_SIZE;
     }
 
     /**
      * @see RangeIterator#skip(long)
      */
     public void skip(long skipNum) {
-	while (skipNum-- > 0) {
-	    next();
-	}
+        while (skipNum-- > 0) {
+            next();
+        }
     }
 
     /**
      * @see RangeIterator#getSize()
      */
     public long getSize() {
-	return size;
+        return size;
     }
 
     /**
      * @see RangeIterator#getPos()
      */
     public long getPos() {
-	return pos;
+        return pos;
     }
 
     /**
      * @see Iterator#hasNext()
      */
     public boolean hasNext() {
-	return iter.hasNext();
+        return iter.hasNext();
     }
 
     /**
      * @see Iterator#next()
      */
     public Object next() {
-	// all typed nextXXX methods should
-	// delegate to this method
-	Object obj = iter.next();
-	// increment position
-	pos++;
-	return obj;
+        // all typed nextXXX methods should
+        // delegate to this method
+        Object obj = iter.next();
+        // increment position
+        pos++;
+        return obj;
     }
 
     /**
      * @see Iterator#remove()
      */
     public void remove() {
-	iter.remove();
+        iter.remove();
     }
 
     /**
      * @see NodeIterator#nextNode()
      */
     public Node nextNode() {
-	return (Node) next();
+        return (Node) next();
     }
 
     /**
      * @see PropertyIterator#nextProperty()
      */
     public Property nextProperty() {
-	return (Property) next();
+        return (Property) next();
     }
 
     /**
      * @see NodeTypeIterator#nextNodeType
      */
     public NodeType nextNodeType() {
-	return (NodeType) next();
+        return (NodeType) next();
     }
 
     /**
      * @see StringIterator#nextString()
      */
     public String nextString() {
-	return (String) next();
+        return (String) next();
     }
 }

@@ -15,33 +15,35 @@
  */
 package org.apache.jackrabbit.test.observation;
 
-import EDU.oswego.cs.dl.util.concurrent.Sync;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
+import EDU.oswego.cs.dl.util.concurrent.Sync;
+import org.apache.log4j.Logger;
 
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.log4j.Logger;
 
 /**
  * Utility class for <code>Event</code> retrieval with an
  * <code>EventListener</code>.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class EventResult implements EventListener {
 
-    /** The actual <code>Event</code>s delivered to this <code>EventListener</code> */
+    /**
+     * The actual <code>Event</code>s delivered to this <code>EventListener</code>
+     */
     private Event[] events;
 
-    /** Sync object for result synchronization */
+    /**
+     * Sync object for result synchronization
+     */
     private Sync sync = new Mutex();
 
-    /** <code>Logger</code> where log message are written. */
+    /**
+     * <code>Logger</code> where log message are written.
+     */
     private final Logger log;
 
     /**
@@ -62,7 +64,7 @@ public class EventResult implements EventListener {
     /**
      * Gets the events from the EventListener. Waits at most <code>wait</code>
      * milliseconds for the events.
-     * <p>
+     * <p/>
      * If the events are not delivered within <code>wait</code> time an empty
      * array is returned and a log message is written.
      *
@@ -90,6 +92,7 @@ public class EventResult implements EventListener {
 
     /**
      * Called when events are delivered.
+     *
      * @param events the events.
      */
     public void onEvent(EventIterator events) {
@@ -97,7 +100,7 @@ public class EventResult implements EventListener {
         while (events.hasNext()) {
             eventList.add(events.nextEvent());
         }
-        this.events = (Event[])eventList.toArray(new Event[eventList.size()]);
+        this.events = (Event[]) eventList.toArray(new Event[eventList.size()]);
         sync.release();
     }
 }

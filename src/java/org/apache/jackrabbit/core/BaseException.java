@@ -22,9 +22,6 @@ import java.io.PrintWriter;
  * The abstract class <code>BaseException</code> serves as the base class
  * for all exceptions that are specific to this JCR implementation and that
  * are not derived from <code>javax.jcr.RepositoryException</code>.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.5 $, $Date: 2004/09/01 15:14:27 $
  */
 public abstract class BaseException extends Exception {
     /**
@@ -37,7 +34,7 @@ public abstract class BaseException extends Exception {
      * detail message.
      */
     public BaseException() {
-	super();
+        super();
     }
 
     /**
@@ -48,7 +45,7 @@ public abstract class BaseException extends Exception {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public BaseException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -60,8 +57,8 @@ public abstract class BaseException extends Exception {
      * @param rootCause root failure cause
      */
     public BaseException(String message, Throwable rootCause) {
-	super(message);
-	this.rootCause = rootCause;
+        super(message);
+        this.rootCause = rootCause;
     }
 
     /**
@@ -70,8 +67,8 @@ public abstract class BaseException extends Exception {
      * @param rootCause root failure cause
      */
     public BaseException(Throwable rootCause) {
-	super();
-	this.rootCause = rootCause;
+        super();
+        this.rootCause = rootCause;
     }
 
     /**
@@ -81,13 +78,13 @@ public abstract class BaseException extends Exception {
      * @return the detail message (which may be <code>null</code>).
      */
     public String getMessage() {
-	String s = super.getMessage();
-	if (rootCause == null) {
-	    return s;
-	} else {
-	    String s2 = rootCause.getMessage();
-	    return s == null ? s2 : s + ": " + s2;
-	}
+        String s = super.getMessage();
+        if (rootCause == null) {
+            return s;
+        } else {
+            String s2 = rootCause.getMessage();
+            return s == null ? s2 : s + ": " + s2;
+        }
     }
 
     /**
@@ -100,7 +97,7 @@ public abstract class BaseException extends Exception {
      * @return The localized description of this exception.
      */
     public String getLocalizedMessage() {
-	return getMessage();
+        return getMessage();
     }
 
     /**
@@ -112,7 +109,7 @@ public abstract class BaseException extends Exception {
      *         cause is nonexistent or unknown.
      */
     public Throwable getCause() {
-	return rootCause;
+        return rootCause;
     }
 
     /**
@@ -120,7 +117,7 @@ public abstract class BaseException extends Exception {
      * standard error stream.
      */
     public void printStackTrace() {
-	printStackTrace(System.err);
+        printStackTrace(System.err);
     }
 
     /**
@@ -130,12 +127,12 @@ public abstract class BaseException extends Exception {
      * @param s <code>PrintStream</code> to use for output
      */
     public void printStackTrace(PrintStream s) {
-	synchronized (s) {
-	    super.printStackTrace(s);
-	    if (rootCause != null) {
-		rootCause.printStackTrace(s);
-	    }
-	}
+        synchronized (s) {
+            super.printStackTrace(s);
+            if (rootCause != null) {
+                rootCause.printStackTrace(s);
+            }
+        }
     }
 
     /**
@@ -145,11 +142,11 @@ public abstract class BaseException extends Exception {
      * @param s <code>PrintWriter</code> to use for output
      */
     public void printStackTrace(PrintWriter s) {
-	synchronized (s) {
-	    super.printStackTrace(s);
-	    if (rootCause != null) {
-		rootCause.printStackTrace(s);
-	    }
-	}
+        synchronized (s) {
+            super.printStackTrace(s);
+            if (rootCause != null) {
+                rootCause.printStackTrace(s);
+            }
+        }
     }
 }

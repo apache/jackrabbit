@@ -20,9 +20,6 @@ import org.apache.jackrabbit.core.WorkspaceDef;
 
 /**
  * <code>PersistenceManager</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.12 $, $Date: 2004/09/03 17:16:22 $
  */
 public interface PersistenceManager {
 
@@ -39,7 +36,7 @@ public interface PersistenceManager {
      * @throws ItemStateException
      */
     public PersistentNodeState loadNodeState(String uuid)
-	    throws NoSuchItemStateException, ItemStateException;
+            throws NoSuchItemStateException, ItemStateException;
 
     /**
      * @param state
@@ -55,7 +52,7 @@ public interface PersistenceManager {
      * @throws ItemStateException
      */
     public PersistentPropertyState loadPropertyState(String parentUUID, QName propName)
-	    throws NoSuchItemStateException, ItemStateException;
+            throws NoSuchItemStateException, ItemStateException;
 
     /**
      * @param state
@@ -70,7 +67,7 @@ public interface PersistenceManager {
      * @throws ItemStateException
      */
     public NodeReferences loadNodeReferences(String uuid)
-	    throws NoSuchItemStateException, ItemStateException;
+            throws NoSuchItemStateException, ItemStateException;
 
     /**
      * @param refs

@@ -19,8 +19,6 @@ package org.apache.jackrabbit.core;
  * The <code>ItemLifeCycleListener</code> interface allows an implementing
  * object to be informed about changes on an <code>Item</code> instance.
  *
- * @author Stefan Guggisberg
- * @version $Revision: 1.14 $, $Date: 2004/08/02 16:19:40 $
  * @see ItemImpl#addLifeCycleListener
  */
 public interface ItemLifeCycleListener {

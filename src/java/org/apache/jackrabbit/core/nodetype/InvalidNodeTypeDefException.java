@@ -19,9 +19,6 @@ import org.apache.jackrabbit.core.BaseException;
 
 /**
  * The <code>NodeTypeConflictException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.13 $, $Date: 2004/09/01 15:14:28 $
  */
 public class InvalidNodeTypeDefException extends BaseException {
     /**
@@ -29,7 +26,7 @@ public class InvalidNodeTypeDefException extends BaseException {
      * detail message.
      */
     public InvalidNodeTypeDefException() {
-	super();
+        super();
     }
 
     /**
@@ -40,7 +37,7 @@ public class InvalidNodeTypeDefException extends BaseException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public InvalidNodeTypeDefException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -52,7 +49,7 @@ public class InvalidNodeTypeDefException extends BaseException {
      * @param rootCause root failure cause
      */
     public InvalidNodeTypeDefException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -61,6 +58,6 @@ public class InvalidNodeTypeDefException extends BaseException {
      * @param rootCause root failure cause
      */
     public InvalidNodeTypeDefException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

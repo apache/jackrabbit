@@ -27,9 +27,6 @@ import java.util.*;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.37 $, $Date: 2004/08/02 16:19:48 $
  */
 public class NodeState extends ItemState {
 
@@ -63,14 +60,14 @@ public class NodeState extends ItemState {
      * @param initialStatus  the initial status of the node state object
      */
     NodeState(NodeState overlayedState, int initialStatus) {
-	super(overlayedState, initialStatus);
-	nodeTypeName = overlayedState.getNodeTypeName();
-	mixinTypeNames.addAll(overlayedState.getMixinTypeNames());
-	defId = overlayedState.getDefinitionId();
-	uuid = overlayedState.getUUID();
-	parentUUIDs.addAll(overlayedState.getParentUUIDs());
-	propertyEntries.addAll(overlayedState.getPropertyEntries());
-	childNodeEntries.addAll(overlayedState.getChildNodeEntries());
+        super(overlayedState, initialStatus);
+        nodeTypeName = overlayedState.getNodeTypeName();
+        mixinTypeNames.addAll(overlayedState.getMixinTypeNames());
+        defId = overlayedState.getDefinitionId();
+        uuid = overlayedState.getUUID();
+        parentUUIDs.addAll(overlayedState.getParentUUIDs());
+        propertyEntries.addAll(overlayedState.getPropertyEntries());
+        childNodeEntries.addAll(overlayedState.getChildNodeEntries());
     }
 
     /**
@@ -82,12 +79,12 @@ public class NodeState extends ItemState {
      * @param initialStatus the initial status of the node state object
      */
     NodeState(String uuid, QName nodeTypeName, String parentUUID, int initialStatus) {
-	super(parentUUID, new NodeId(uuid), initialStatus);
-	if (parentUUID != null) {
-	    parentUUIDs.add(parentUUID);
-	}
-	this.nodeTypeName = nodeTypeName;
-	this.uuid = uuid;
+        super(parentUUID, new NodeId(uuid), initialStatus);
+        if (parentUUID != null) {
+            parentUUIDs.add(parentUUID);
+        }
+        this.nodeTypeName = nodeTypeName;
+        this.uuid = uuid;
     }
 
     //-------------------------------------------------------< public methods >
@@ -98,7 +95,7 @@ public class NodeState extends ItemState {
      * @see ItemState#isNode
      */
     public boolean isNode() {
-	return true;
+        return true;
     }
 
     /**
@@ -107,7 +104,7 @@ public class NodeState extends ItemState {
      * @return the name of this node's node type.
      */
     public QName getNodeTypeName() {
-	return nodeTypeName;
+        return nodeTypeName;
     }
 
     /**
@@ -116,7 +113,7 @@ public class NodeState extends ItemState {
      * @return a set of the names of this node's mixin types.
      */
     public synchronized Set getMixinTypeNames() {
-	return Collections.unmodifiableSet(mixinTypeNames);
+        return Collections.unmodifiableSet(mixinTypeNames);
     }
 
     /**
@@ -125,8 +122,8 @@ public class NodeState extends ItemState {
      * @param names set of names of mixin types
      */
     public synchronized void setMixinTypeNames(Set names) {
-	mixinTypeNames.clear();
-	mixinTypeNames.addAll(names);
+        mixinTypeNames.clear();
+        mixinTypeNames.addAll(names);
     }
 
     /**
@@ -135,7 +132,7 @@ public class NodeState extends ItemState {
      * @return the id of the definition
      */
     public NodeDefId getDefinitionId() {
-	return defId;
+        return defId;
     }
 
     /**
@@ -144,7 +141,7 @@ public class NodeState extends ItemState {
      * @param defId the id of the definition
      */
     public void setDefinitionId(NodeDefId defId) {
-	this.defId = defId;
+        this.defId = defId;
     }
 
     /**
@@ -153,7 +150,7 @@ public class NodeState extends ItemState {
      * @return the UUID
      */
     public String getUUID() {
-	return uuid;
+        return uuid;
     }
 
     /**
@@ -166,7 +163,7 @@ public class NodeState extends ItemState {
      * @see #removeParentUUID
      */
     public synchronized List getParentUUIDs() {
-	return Collections.unmodifiableList(parentUUIDs);
+        return Collections.unmodifiableList(parentUUIDs);
     }
 
     /**
@@ -177,7 +174,7 @@ public class NodeState extends ItemState {
      * @see #removeParentUUID
      */
     public synchronized void addParentUUID(String uuid) {
-	parentUUIDs.add(uuid);
+        parentUUIDs.add(uuid);
     }
 
     /**
@@ -190,33 +187,33 @@ public class NodeState extends ItemState {
      * @see #addParentUUID
      */
     public synchronized boolean removeParentUUID(String uuid) {
-	if (parentUUID.equals(uuid)) {
-	    parentUUID = null;
-	}
-	boolean removed = parentUUIDs.remove(uuid);
-	if (parentUUID == null) {
-	    // change primary parent
-	    if (!parentUUIDs.isEmpty()) {
-		parentUUID = (String) parentUUIDs.iterator().next();
-	    }
-	}
-	return removed;
+        if (parentUUID.equals(uuid)) {
+            parentUUID = null;
+        }
+        boolean removed = parentUUIDs.remove(uuid);
+        if (parentUUID == null) {
+            // change primary parent
+            if (!parentUUIDs.isEmpty()) {
+                parentUUID = (String) parentUUIDs.iterator().next();
+            }
+        }
+        return removed;
     }
 
     /**
      * Removes all parent UUIDs of this node state.
      */
     public synchronized void removeAllParentUUIDs() {
-	parentUUIDs.clear();
-	parentUUID = null;
+        parentUUIDs.clear();
+        parentUUID = null;
     }
 
     /**
      * Sets the UUIDs of the parent <code>NodeState</code>s.
      */
     public synchronized void setParentUUIDs(List uuids) {
-	parentUUIDs.clear();
-	parentUUIDs.addAll(uuids);
+        parentUUIDs.clear();
+        parentUUIDs.addAll(uuids);
     }
 
     /**
@@ -228,14 +225,14 @@ public class NodeState extends ItemState {
      *         the specified <code>name</code>.
      */
     public synchronized boolean hasChildNodeEntry(QName name) {
-	Iterator iter = childNodeEntries.iterator();
-	while (iter.hasNext()) {
-	    ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-	    if (name.equals(entry.getName())) {
-		return true;
-	    }
-	}
-	return false;
+        Iterator iter = childNodeEntries.iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            if (name.equals(entry.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -248,20 +245,20 @@ public class NodeState extends ItemState {
      *         the specified <code>name</code> and <code>index</code>.
      */
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
-	if (index < 1) {
-	    throw new IllegalArgumentException("index is 1-based");
-	}
-	Iterator iter = childNodeEntries.iterator();
-	int count = 0;
-	while (iter.hasNext()) {
-	    ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-	    if (name.equals(entry.getName())) {
-		if (++count == index) {
-		    return true;
-		}
-	    }
-	}
-	return false;
+        if (index < 1) {
+            throw new IllegalArgumentException("index is 1-based");
+        }
+        Iterator iter = childNodeEntries.iterator();
+        int count = 0;
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            if (name.equals(entry.getName())) {
+                if (++count == index) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -273,8 +270,8 @@ public class NodeState extends ItemState {
      *         the specified <code>QName</code>.
      */
     public synchronized boolean hasPropertyEntry(QName propName) {
-	PropertyEntry entry = new PropertyEntry(propName);
-	return propertyEntries.contains(entry);
+        PropertyEntry entry = new PropertyEntry(propName);
+        return propertyEntries.contains(entry);
     }
 
     /**
@@ -286,14 +283,14 @@ public class NodeState extends ItemState {
      *         <code>null</code> if there's no such entry.
      */
     public synchronized PropertyEntry getPropertyEntry(QName propName) {
-	Iterator iter = propertyEntries.iterator();
-	while (iter.hasNext()) {
-	    PropertyEntry entry = (PropertyEntry) iter.next();
-	    if (propName.equals(entry.getName())) {
-		return entry;
-	    }
-	}
-	return null;
+        Iterator iter = propertyEntries.iterator();
+        while (iter.hasNext()) {
+            PropertyEntry entry = (PropertyEntry) iter.next();
+            if (propName.equals(entry.getName())) {
+                return entry;
+            }
+        }
+        return null;
     }
 
     /**
@@ -306,20 +303,20 @@ public class NodeState extends ItemState {
      *         or <code>null</code> if there's no such entry.
      */
     public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
-	if (index < 1) {
-	    throw new IllegalArgumentException("index is 1-based");
-	}
-	Iterator iter = childNodeEntries.iterator();
-	int count = 0;
-	while (iter.hasNext()) {
-	    ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-	    if (nodeName.equals(entry.getName())) {
-		if (++count == index) {
-		    return entry;
-		}
-	    }
-	}
-	return null;
+        if (index < 1) {
+            throw new IllegalArgumentException("index is 1-based");
+        }
+        Iterator iter = childNodeEntries.iterator();
+        int count = 0;
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            if (nodeName.equals(entry.getName())) {
+                if (++count == index) {
+                    return entry;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -331,7 +328,7 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries() {
-	return childNodeEntries.entries();
+        return childNodeEntries.entries();
     }
 
     /**
@@ -344,15 +341,15 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries(String uuid) {
-	ArrayList list = new ArrayList();
-	Iterator iter = childNodeEntries.iterator();
-	while (iter.hasNext()) {
-	    ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-	    if (entry.getUUID().equals(uuid)) {
-		list.add(entry);
-	    }
-	}
-	return Collections.unmodifiableList(list);
+        ArrayList list = new ArrayList();
+        Iterator iter = childNodeEntries.iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            if (entry.getUUID().equals(uuid)) {
+                list.add(entry);
+            }
+        }
+        return Collections.unmodifiableList(list);
     }
 
     /**
@@ -364,15 +361,15 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries(QName nodeName) {
-	ArrayList list = new ArrayList();
-	Iterator iter = childNodeEntries.iterator();
-	while (iter.hasNext()) {
-	    ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-	    if (entry.getName().equals(nodeName)) {
-		list.add(entry);
-	    }
-	}
-	return Collections.unmodifiableList(list);
+        ArrayList list = new ArrayList();
+        Iterator iter = childNodeEntries.iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            if (entry.getName().equals(nodeName)) {
+                list.add(entry);
+            }
+        }
+        return Collections.unmodifiableList(list);
     }
 
     /**
@@ -383,7 +380,7 @@ public class NodeState extends ItemState {
      * @return the newly added <code>ChildNodeEntry<code>
      */
     public synchronized ChildNodeEntry addChildNodeEntry(QName nodeName, String uuid) {
-	return childNodeEntries.add(nodeName, uuid);
+        return childNodeEntries.add(nodeName, uuid);
     }
 
     /**
@@ -395,14 +392,14 @@ public class NodeState extends ItemState {
      *         in the list of child node entries and could be removed.
      */
     public synchronized boolean removeChildNodeEntry(QName nodeName, int index) {
-	return childNodeEntries.remove(nodeName, index);
+        return childNodeEntries.remove(nodeName, index);
     }
 
     /**
      * Removes all <code>ChildNodeEntry<code>s.
      */
     public synchronized void removeAllChildNodeEntries() {
-	childNodeEntries.removeAll();
+        childNodeEntries.removeAll();
     }
 
     /**
@@ -410,8 +407,8 @@ public class NodeState extends ItemState {
      * child nodes of this node.
      */
     public synchronized void setChildNodeEntries(List nodeEntries) {
-	childNodeEntries.removeAll();
-	childNodeEntries.addAll(nodeEntries);
+        childNodeEntries.removeAll();
+        childNodeEntries.addAll(nodeEntries);
     }
 
     /**
@@ -423,7 +420,7 @@ public class NodeState extends ItemState {
      * @see #removePropertyEntry
      */
     public synchronized List getPropertyEntries() {
-	return Collections.unmodifiableList(propertyEntries);
+        return Collections.unmodifiableList(propertyEntries);
     }
 
     /**
@@ -432,8 +429,8 @@ public class NodeState extends ItemState {
      * @param propName <code>QName<code> object specifying the property name
      */
     public synchronized void addPropertyEntry(QName propName) {
-	PropertyEntry entry = new PropertyEntry(propName);
-	propertyEntries.add(entry);
+        PropertyEntry entry = new PropertyEntry(propName);
+        propertyEntries.add(entry);
     }
 
     /**
@@ -444,21 +441,21 @@ public class NodeState extends ItemState {
      *         in the list of property entries and could be removed.
      */
     public synchronized boolean removePropertyEntry(QName propName) {
-	PropertyEntry entry = new PropertyEntry(propName);
-	int pos = propertyEntries.indexOf(entry);
-	if (pos == -1) {
-	    return false;
-	} else {
-	    propertyEntries.remove(pos);
-	    return true;
-	}
+        PropertyEntry entry = new PropertyEntry(propName);
+        int pos = propertyEntries.indexOf(entry);
+        if (pos == -1) {
+            return false;
+        } else {
+            propertyEntries.remove(pos);
+            return true;
+        }
     }
 
     /**
      * Removes all <code>PropertyEntry<code>s.
      */
     public synchronized void removeAllPropertyEntries() {
-	propertyEntries.clear();
+        propertyEntries.clear();
     }
 
     /**
@@ -466,8 +463,8 @@ public class NodeState extends ItemState {
      * properties of this node.
      */
     public synchronized void setPropertyEntries(List propEntries) {
-	propertyEntries.clear();
-	propertyEntries.addAll(propEntries);
+        propertyEntries.clear();
+        propertyEntries.addAll(propEntries);
     }
 
     //---------------------------------------------------------< diff methods >
@@ -478,19 +475,19 @@ public class NodeState extends ItemState {
      * @return list of added parent UUID's
      */
     public synchronized List getAddedParentUUIDs() {
-	if (!hasOverlayedState()) {
-	    return Collections.EMPTY_LIST;
-	}
+        if (!hasOverlayedState()) {
+            return Collections.EMPTY_LIST;
+        }
 
-	ArrayList list = new ArrayList(parentUUIDs);
+        ArrayList list = new ArrayList(parentUUIDs);
 
-	NodeState other = (NodeState) getOverlayedState();
-	Iterator i = other.parentUUIDs.iterator();
-	while (i.hasNext()) {
-	    list.remove(i.next());
-	}
+        NodeState other = (NodeState) getOverlayedState();
+        Iterator i = other.parentUUIDs.iterator();
+        while (i.hasNext()) {
+            list.remove(i.next());
+        }
 
-	return list;
+        return list;
     }
 
     /**
@@ -500,19 +497,19 @@ public class NodeState extends ItemState {
      * @return list of added property entries
      */
     public synchronized List getAddedPropertyEntries() {
-	if (!hasOverlayedState()) {
-	    return Collections.unmodifiableList(propertyEntries);
-	}
+        if (!hasOverlayedState()) {
+            return Collections.unmodifiableList(propertyEntries);
+        }
 
-	ArrayList list = new ArrayList(propertyEntries);
+        ArrayList list = new ArrayList(propertyEntries);
 
-	NodeState other = (NodeState) getOverlayedState();
-	Iterator i = other.propertyEntries.iterator();
-	while (i.hasNext()) {
-	    list.remove(i.next());
-	}
+        NodeState other = (NodeState) getOverlayedState();
+        Iterator i = other.propertyEntries.iterator();
+        while (i.hasNext()) {
+            list.remove(i.next());
+        }
 
-	return list;
+        return list;
     }
 
     /**
@@ -522,19 +519,19 @@ public class NodeState extends ItemState {
      * @return list of added child node entries
      */
     public synchronized List getAddedChildNodeEntries() {
-	if (!hasOverlayedState()) {
-	    return Collections.unmodifiableList(childNodeEntries.entries());
-	}
+        if (!hasOverlayedState()) {
+            return Collections.unmodifiableList(childNodeEntries.entries());
+        }
 
-	ArrayList list = new ArrayList(childNodeEntries.entries());
+        ArrayList list = new ArrayList(childNodeEntries.entries());
 
-	NodeState other = (NodeState) getOverlayedState();
-	Iterator i = other.childNodeEntries.entries().iterator();
-	while (i.hasNext()) {
-	    list.remove(i.next());
-	}
+        NodeState other = (NodeState) getOverlayedState();
+        Iterator i = other.childNodeEntries.entries().iterator();
+        while (i.hasNext()) {
+            list.remove(i.next());
+        }
 
-	return list;
+        return list;
     }
 
     /**
@@ -544,19 +541,19 @@ public class NodeState extends ItemState {
      * @return list of removed parent UUID's
      */
     public synchronized List getRemovedParentUUIDs() {
-	if (!hasOverlayedState()) {
-	    return Collections.EMPTY_LIST;
-	}
+        if (!hasOverlayedState()) {
+            return Collections.EMPTY_LIST;
+        }
 
-	NodeState other = (NodeState) getOverlayedState();
-	ArrayList list = new ArrayList(other.parentUUIDs);
+        NodeState other = (NodeState) getOverlayedState();
+        ArrayList list = new ArrayList(other.parentUUIDs);
 
-	Iterator i = parentUUIDs.iterator();
-	while (i.hasNext()) {
-	    list.remove(i.next());
-	}
+        Iterator i = parentUUIDs.iterator();
+        while (i.hasNext()) {
+            list.remove(i.next());
+        }
 
-	return list;
+        return list;
     }
 
     /**
@@ -566,19 +563,19 @@ public class NodeState extends ItemState {
      * @return list of removed property entries
      */
     public synchronized List getRemovedPropertyEntries() {
-	if (!hasOverlayedState()) {
-	    return Collections.EMPTY_LIST;
-	}
+        if (!hasOverlayedState()) {
+            return Collections.EMPTY_LIST;
+        }
 
-	NodeState other = (NodeState) getOverlayedState();
-	ArrayList list = new ArrayList(other.propertyEntries);
+        NodeState other = (NodeState) getOverlayedState();
+        ArrayList list = new ArrayList(other.propertyEntries);
 
-	Iterator i = propertyEntries.iterator();
-	while (i.hasNext()) {
-	    list.remove(i.next());
-	}
+        Iterator i = propertyEntries.iterator();
+        while (i.hasNext()) {
+            list.remove(i.next());
+        }
 
-	return list;
+        return list;
     }
 
     /**
@@ -588,19 +585,19 @@ public class NodeState extends ItemState {
      * @return list of removed child node entries
      */
     public synchronized List getRemovedChildNodeEntries() {
-	if (!hasOverlayedState()) {
-	    return Collections.EMPTY_LIST;
-	}
+        if (!hasOverlayedState()) {
+            return Collections.EMPTY_LIST;
+        }
 
-	NodeState other = (NodeState) getOverlayedState();
-	ArrayList list = new ArrayList(other.childNodeEntries.entries());
+        NodeState other = (NodeState) getOverlayedState();
+        ArrayList list = new ArrayList(other.childNodeEntries.entries());
 
-	Iterator i = childNodeEntries.entries().iterator();
-	while (i.hasNext()) {
-	    list.remove(i.next());
-	}
+        Iterator i = childNodeEntries.entries().iterator();
+        while (i.hasNext()) {
+            list.remove(i.next());
+        }
 
-	return list;
+        return list;
     }
 
     //--------------------------------------------------< ItemState overrides >
@@ -608,22 +605,22 @@ public class NodeState extends ItemState {
      * @see ItemState#setParentUUID
      */
     public synchronized void setParentUUID(String parentUUID) {
-	// @todo is this correct?
-	if (!parentUUIDs.contains(parentUUID) && parentUUID != null) {
-	    parentUUIDs.add(parentUUID);
-	}
-	super.setParentUUID(parentUUID);
+        // @todo is this correct?
+        if (!parentUUIDs.contains(parentUUID) && parentUUID != null) {
+            parentUUIDs.add(parentUUID);
+        }
+        super.setParentUUID(parentUUID);
     }
 
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
-	// delegate to default implementation
-	out.defaultWriteObject();
+        // delegate to default implementation
+        out.defaultWriteObject();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-	// delegate to default implementation
-	in.defaultReadObject();
+        // delegate to default implementation
+        in.defaultReadObject();
     }
 
     //--------------------------------------------------------< inner classes >
@@ -634,107 +631,107 @@ public class NodeState extends ItemState {
      */
     private static class ChildNodeEntries implements Serializable {
 
-	// insertion-ordered collection of entries
-	List entries;
-	// mapping from names to list of same-name sibling entries
-	Map names;
+        // insertion-ordered collection of entries
+        List entries;
+        // mapping from names to list of same-name sibling entries
+        Map names;
 
-	ChildNodeEntries() {
-	    entries = new ArrayList();
-	    names = new HashMap();
-	}
+        ChildNodeEntries() {
+            entries = new ArrayList();
+            names = new HashMap();
+        }
 
-	ChildNodeEntry add(QName nodeName, String uuid) {
-	    List siblings = (List) names.get(nodeName);
-	    if (siblings == null) {
-		siblings = new ArrayList();
-		names.put(nodeName, siblings);
-	    }
+        ChildNodeEntry add(QName nodeName, String uuid) {
+            List siblings = (List) names.get(nodeName);
+            if (siblings == null) {
+                siblings = new ArrayList();
+                names.put(nodeName, siblings);
+            }
 
-	    int index = siblings.size() + 1;
+            int index = siblings.size() + 1;
 
-	    ChildNodeEntry entry = new ChildNodeEntry(nodeName, uuid, index);
-	    siblings.add(entry);
-	    entries.add(entry);
+            ChildNodeEntry entry = new ChildNodeEntry(nodeName, uuid, index);
+            siblings.add(entry);
+            entries.add(entry);
 
-	    return entry;
-	}
+            return entry;
+        }
 
-	void addAll(List entriesList) {
-	    Iterator iter = entriesList.iterator();
-	    while (iter.hasNext()) {
-		ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-		// delegate to add(QName, String) to maintain consistency
-		add(entry.getName(), entry.getUUID());
-	    }
-	}
+        void addAll(List entriesList) {
+            Iterator iter = entriesList.iterator();
+            while (iter.hasNext()) {
+                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+                // delegate to add(QName, String) to maintain consistency
+                add(entry.getName(), entry.getUUID());
+            }
+        }
 
-	public void removeAll() {
-	    names.clear();
-	    entries.clear();
-	}
+        public void removeAll() {
+            names.clear();
+            entries.clear();
+        }
 
-	public boolean remove(ChildNodeEntry entry) {
-	    return remove(entry.getName(), entry.getIndex());
-	}
+        public boolean remove(ChildNodeEntry entry) {
+            return remove(entry.getName(), entry.getIndex());
+        }
 
-	public boolean remove(QName nodeName, int index) {
-	    if (index < 1) {
-		throw new IllegalArgumentException("index is 1-based");
-	    }
-	    List siblings = (List) names.get(nodeName);
-	    if (siblings == null) {
-		return false;
-	    }
-	    if (index > siblings.size()) {
-		return false;
-	    }
-	    // remove from siblings list
-	    ChildNodeEntry removedEntry = (ChildNodeEntry) siblings.remove(index - 1);
-	    // remove from entries list
-	    entries.remove(removedEntry);
+        public boolean remove(QName nodeName, int index) {
+            if (index < 1) {
+                throw new IllegalArgumentException("index is 1-based");
+            }
+            List siblings = (List) names.get(nodeName);
+            if (siblings == null) {
+                return false;
+            }
+            if (index > siblings.size()) {
+                return false;
+            }
+            // remove from siblings list
+            ChildNodeEntry removedEntry = (ChildNodeEntry) siblings.remove(index - 1);
+            // remove from entries list
+            entries.remove(removedEntry);
 
-	    if (siblings.size() == 0) {
-		// short cut
-		names.remove(nodeName);
-		return true;
-	    }
+            if (siblings.size() == 0) {
+                // short cut
+                names.remove(nodeName);
+                return true;
+            }
 
-	    // update indices of subsequent same-name siblings
-	    for (int i = index - 1; i < siblings.size(); i++) {
-		ChildNodeEntry oldEntry = (ChildNodeEntry) siblings.get(i);
-		ChildNodeEntry newEntry = new ChildNodeEntry(nodeName, oldEntry.getUUID(), oldEntry.getIndex() - 1);
-		// overwrite old entry with updated entry in siblings list
-		siblings.set(i, newEntry);
-		// overwrite old entry with updated entry in entries list
-		entries.set(entries.indexOf(oldEntry), newEntry);
-	    }
+            // update indices of subsequent same-name siblings
+            for (int i = index - 1; i < siblings.size(); i++) {
+                ChildNodeEntry oldEntry = (ChildNodeEntry) siblings.get(i);
+                ChildNodeEntry newEntry = new ChildNodeEntry(nodeName, oldEntry.getUUID(), oldEntry.getIndex() - 1);
+                // overwrite old entry with updated entry in siblings list
+                siblings.set(i, newEntry);
+                // overwrite old entry with updated entry in entries list
+                entries.set(entries.indexOf(oldEntry), newEntry);
+            }
 
-	    return true;
-	}
+            return true;
+        }
 
-	Iterator iterator() {
-	    return entries.iterator();
-	}
+        Iterator iterator() {
+            return entries.iterator();
+        }
 
-	List entries() {
-	    return Collections.unmodifiableList(entries);
-	}
+        List entries() {
+            return Collections.unmodifiableList(entries);
+        }
     }
 
     /**
      * base class for <code>PropertyEntry</code> and <code>ChildNodeEntry</code>
      */
     private abstract static class ChildEntry implements Serializable {
-	protected QName name;
+        protected QName name;
 
-	protected ChildEntry(QName name) {
-	    this.name = name;
-	}
+        protected ChildEntry(QName name) {
+            this.name = name;
+        }
 
-	public QName getName() {
-	    return name;
-	}
+        public QName getName() {
+            return name;
+        }
     }
 
     /**
@@ -742,34 +739,34 @@ public class NodeState extends ItemState {
      */
     public static class PropertyEntry extends ChildEntry {
 
-	private int hash = 0;
+        private int hash = 0;
 
-	private PropertyEntry(QName propName) {
-	    super(propName);
-	}
+        private PropertyEntry(QName propName) {
+            super(propName);
+        }
 
-	public boolean equals(Object obj) {
-	    if (this == obj) {
-		return true;
-	    }
-	    if (obj instanceof PropertyEntry) {
-		PropertyEntry other = (PropertyEntry) obj;
-		return name.equals(other.name);
-	    }
-	    return false;
-	}
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj instanceof PropertyEntry) {
+                PropertyEntry other = (PropertyEntry) obj;
+                return name.equals(other.name);
+            }
+            return false;
+        }
 
-	public String toString() {
-	    return name.toString();
-	}
+        public String toString() {
+            return name.toString();
+        }
 
-	public int hashCode() {
-	    // PropertyEntry is immutable, we can store the computed hash code value
-	    if (hash == 0) {
-		hash = 191 * name.hashCode();
-	    }
-	    return hash;
-	}
+        public int hashCode() {
+            // PropertyEntry is immutable, we can store the computed hash code value
+            if (hash == 0) {
+                hash = 191 * name.hashCode();
+            }
+            return hash;
+        }
     }
 
     /**
@@ -778,55 +775,55 @@ public class NodeState extends ItemState {
      */
     public static class ChildNodeEntry extends ChildEntry {
 
-	private int hash = 0;
+        private int hash = 0;
 
-	private int index; // 1-based index for same-name siblings
-	private String uuid;
+        private int index; // 1-based index for same-name siblings
+        private String uuid;
 
-	private ChildNodeEntry(QName nodeName, String uuid, int index) {
-	    super(nodeName);
+        private ChildNodeEntry(QName nodeName, String uuid, int index) {
+            super(nodeName);
 
-	    if (uuid == null) {
-		throw new IllegalArgumentException("uuid can not be null");
-	    }
-	    this.uuid = uuid;
+            if (uuid == null) {
+                throw new IllegalArgumentException("uuid can not be null");
+            }
+            this.uuid = uuid;
 
-	    if (index < 1) {
-		throw new IllegalArgumentException("index is 1-based");
-	    }
-	    this.index = index;
-	}
+            if (index < 1) {
+                throw new IllegalArgumentException("index is 1-based");
+            }
+            this.index = index;
+        }
 
-	public String getUUID() {
-	    return uuid;
-	}
+        public String getUUID() {
+            return uuid;
+        }
 
-	public int getIndex() {
-	    return index;
-	}
+        public int getIndex() {
+            return index;
+        }
 
-	public boolean equals(Object obj) {
-	    if (this == obj) {
-		return true;
-	    }
-	    if (obj instanceof ChildNodeEntry) {
-		ChildNodeEntry other = (ChildNodeEntry) obj;
-		return (name.equals(other.name) && uuid.equals(other.uuid)
-			&& index == other.index);
-	    }
-	    return false;
-	}
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj instanceof ChildNodeEntry) {
+                ChildNodeEntry other = (ChildNodeEntry) obj;
+                return (name.equals(other.name) && uuid.equals(other.uuid)
+                        && index == other.index);
+            }
+            return false;
+        }
 
-	public String toString() {
-	    return name.toString() + "[" + index + "] -> " + uuid;
-	}
+        public String toString() {
+            return name.toString() + "[" + index + "] -> " + uuid;
+        }
 
-	public int hashCode() {
-	    // ChildNodeEntry is immutable, we can store the computed hash code value
-	    if (hash == 0) {
-		hash = 6547 * name.hashCode() + 7877 * uuid.hashCode() + 2897 * index;
-	    }
-	    return hash;
-	}
+        public int hashCode() {
+            // ChildNodeEntry is immutable, we can store the computed hash code value
+            if (hash == 0) {
+                hash = 6547 * name.hashCode() + 7877 * uuid.hashCode() + 2897 * index;
+            }
+            return hash;
+        }
     }
 }

@@ -16,15 +16,12 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Weight;
 
 /**
  * Specialized query that returns / scores all pages in the search index.
  * <p>Use this Query to perform a match '*'.
- *
- * @author Marcel Reutegger
- * @version $Revision: 1.2 $, $Date: 2004/06/14 09:28:03 $
  */
 class MatchAllQuery extends Query {
 
@@ -32,20 +29,21 @@ class MatchAllQuery extends Query {
 
     /**
      * Creates a new <code>MatchAllQuery</code> .
-     * <p>
+     * <p/>
      *
      * @param field the field name.
      * @throws NullPointerException if <code>field</code> is null.
      */
     MatchAllQuery(String field) {
         if (field == null) {
-	    throw new NullPointerException("field");
-	}
+            throw new NullPointerException("field");
+        }
         this.field = field.intern();
     }
 
     /**
      * Returns the <code>Weight</code> for this Query.
+     *
      * @param searcher the current searcher.
      * @return the <code>Weight</code> for this Query.
      */
@@ -55,6 +53,7 @@ class MatchAllQuery extends Query {
 
     /**
      * Returns the String "*".
+     *
      * @param field default field for the query.
      * @return the String "*".
      */

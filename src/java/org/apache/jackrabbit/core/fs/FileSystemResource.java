@@ -22,9 +22,6 @@ import java.io.OutputStream;
 /**
  * A <code>FileSystemResource</code> represents a resource (i.e. file) in a
  * <code>FileSystem</code>.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.9 $, $Date: 2004/08/25 16:44:52 $
  */
 public class FileSystemResource {
 
@@ -39,15 +36,15 @@ public class FileSystemResource {
      * @param path the path of the resource in the <code>FileSystem</code>
      */
     public FileSystemResource(FileSystem fs, String path) {
-	if (fs == null) {
-	    throw new IllegalArgumentException("invalid file system argument");
-	}
-	this.fs = fs;
+        if (fs == null) {
+            throw new IllegalArgumentException("invalid file system argument");
+        }
+        this.fs = fs;
 
-	if (path == null) {
-	    throw new IllegalArgumentException("invalid path argument");
-	}
-	this.path = path;
+        if (path == null) {
+            throw new IllegalArgumentException("invalid path argument");
+        }
+        this.path = path;
     }
 
     /**
@@ -56,7 +53,7 @@ public class FileSystemResource {
      * @return the <code>FileSystem</code> where this resource is located.
      */
     public FileSystem getFileSystem() {
-	return fs;
+        return fs;
     }
 
     /**
@@ -65,7 +62,7 @@ public class FileSystemResource {
      * @return the path of this resource.
      */
     public String getPath() {
-	return path;
+        return path;
     }
 
     /**
@@ -74,7 +71,7 @@ public class FileSystemResource {
      * @return the parent directory.
      */
     public String getParentDir() {
-	return FileSystemPathUtil.getParentDir(path);
+        return FileSystemPathUtil.getParentDir(path);
     }
 
     /**
@@ -83,7 +80,7 @@ public class FileSystemResource {
      * @return the name.
      */
     public String getName() {
-	return FileSystemPathUtil.getName(path);
+        return FileSystemPathUtil.getName(path);
     }
 
     /**
@@ -93,31 +90,31 @@ public class FileSystemResource {
      * @throws FileSystemException
      */
     public void makeParentDirs() throws FileSystemException {
-	String parentDir = getParentDir();
-	if (!fs.exists(parentDir)) {
-	    fs.createFolder(parentDir);
-	}
+        String parentDir = getParentDir();
+        if (!fs.exists(parentDir)) {
+            fs.createFolder(parentDir);
+        }
     }
 
     /**
      * @see FileSystem#deleteFile
      */
     public void delete() throws FileSystemException {
-	fs.deleteFile(path);
+        fs.deleteFile(path);
     }
 
     /**
      * @see FileSystem#exists
      */
     public boolean exists() throws FileSystemException {
-	return fs.exists(path);
+        return fs.exists(path);
     }
 
     /**
      * @see FileSystem#getInputStream
      */
     public InputStream getInputStream() throws FileSystemException {
-	return fs.getInputStream(path);
+        return fs.getInputStream(path);
     }
 
     /**
@@ -130,54 +127,54 @@ public class FileSystemResource {
      * @see FileSystem#getInputStream
      */
     public void spool(OutputStream out) throws FileSystemException, IOException {
-	InputStream in = fs.getInputStream(path);
-	try {
-	    byte[] buffer = new byte[8192];
-	    int read = 0;
-	    while ((read = in.read(buffer)) > 0) {
-		out.write(buffer, 0, read);
-	    }
-	} finally {
-	    try {
-		in.close();
-	    } catch (IOException ioe) {
-	    }
-	}
+        InputStream in = fs.getInputStream(path);
+        try {
+            byte[] buffer = new byte[8192];
+            int read = 0;
+            while ((read = in.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+            }
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ioe) {
+            }
+        }
     }
 
     /**
      * @see FileSystem#getOutputStream
      */
     public OutputStream getOutputStream() throws FileSystemException {
-	return fs.getOutputStream(path);
+        return fs.getOutputStream(path);
     }
 
     /**
      * @see FileSystem#lastModified
      */
     public long lastModified() throws FileSystemException {
-	return fs.lastModified(path);
+        return fs.lastModified(path);
     }
 
     /**
      * @see FileSystem#length
      */
     public long length() throws FileSystemException {
-	return fs.length(path);
+        return fs.length(path);
     }
 
     /**
      * @see FileSystem#touch
      */
     public void touch() throws FileSystemException {
-	fs.touch(path);
+        fs.touch(path);
     }
 
     /**
      * @see FileSystem#move
      */
     public void move(String destPath) throws FileSystemException {
-	fs.move(path, destPath);
+        fs.move(path, destPath);
     }
 
     //-------------------------------------------< java.lang.Object overrides >
@@ -188,18 +185,18 @@ public class FileSystemResource {
      * @return The path string of this resource
      */
     public String toString() {
-	return getPath();
+        return getPath();
     }
 
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof FileSystemResource) {
-	    FileSystemResource other = (FileSystemResource) obj;
-	    return (path == null ? other.path == null : path.equals(other.path))
-		    && (fs == null ? other.fs == null : fs.equals(other.fs));
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof FileSystemResource) {
+            FileSystemResource other = (FileSystemResource) obj;
+            return (path == null ? other.path == null : path.equals(other.path))
+                    && (fs == null ? other.fs == null : fs.equals(other.fs));
+        }
+        return false;
     }
 }

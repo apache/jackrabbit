@@ -18,12 +18,10 @@ package org.apache.jackrabbit.core.search.lucene;
 import org.apache.lucene.search.Query;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 class LocationStepQuery extends Query {
 
     public String toString(String s) {
-	return null;
+        return null;
     }
 }

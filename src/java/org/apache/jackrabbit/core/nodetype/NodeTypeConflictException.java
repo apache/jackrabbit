@@ -19,9 +19,6 @@ import org.apache.jackrabbit.core.BaseException;
 
 /**
  * The <code>NodeTypeConflictException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.13 $, $Date: 2004/09/01 15:14:28 $
  */
 public class NodeTypeConflictException extends BaseException {
     /**
@@ -29,7 +26,7 @@ public class NodeTypeConflictException extends BaseException {
      * detail message.
      */
     public NodeTypeConflictException() {
-	super();
+        super();
     }
 
     /**
@@ -40,7 +37,7 @@ public class NodeTypeConflictException extends BaseException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public NodeTypeConflictException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -52,7 +49,7 @@ public class NodeTypeConflictException extends BaseException {
      * @param rootCause root failure cause
      */
     public NodeTypeConflictException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -61,6 +58,6 @@ public class NodeTypeConflictException extends BaseException {
      * @param rootCause root failure cause
      */
     public NodeTypeConflictException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

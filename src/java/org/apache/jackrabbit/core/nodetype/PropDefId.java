@@ -20,9 +20,6 @@ import java.io.Serializable;
 /**
  * <code>PropDefId</code> uniquely identifies a <code>PropDef</code> in the
  * node type registry.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.2 $
  */
 public class PropDefId implements Serializable {
 
@@ -31,29 +28,29 @@ public class PropDefId implements Serializable {
     private final int id;
 
     public PropDefId(PropDef def) {
-	if (def == null) {
-	    throw new IllegalArgumentException("PropDef argument can not be null");
-	}
-	// build key (format: <declaringNodeType>/<name>/<requiredType>/<multiple>)
-	StringBuffer sb = new StringBuffer();
+        if (def == null) {
+            throw new IllegalArgumentException("PropDef argument can not be null");
+        }
+        // build key (format: <declaringNodeType>/<name>/<requiredType>/<multiple>)
+        StringBuffer sb = new StringBuffer();
 
-	sb.append(def.getDeclaringNodeType().toString());
-	sb.append('/');
-	if (def.definesResidual()) {
-	    sb.append('*');
-	} else {
-	    sb.append(def.getName().toString());
-	}
-	sb.append('/');
-	sb.append(def.getRequiredType());
-	sb.append('/');
-	sb.append(def.isMultiple() ? 1 : 0);
+        sb.append(def.getDeclaringNodeType().toString());
+        sb.append('/');
+        if (def.definesResidual()) {
+            sb.append('*');
+        } else {
+            sb.append(def.getName().toString());
+        }
+        sb.append('/');
+        sb.append(def.getRequiredType());
+        sb.append('/');
+        sb.append(def.isMultiple() ? 1 : 0);
 
-	id = sb.toString().hashCode();
+        id = sb.toString().hashCode();
     }
 
     private PropDefId(int id) {
-	this.id = id;
+        this.id = id;
     }
 
     /**
@@ -69,28 +66,28 @@ public class PropDefId implements Serializable {
      * @see #toString()
      */
     public static PropDefId valueOf(String s) {
-	if (s == null) {
-	    throw new IllegalArgumentException("invalid PropDefId literal");
-	}
-	return new PropDefId(Integer.parseInt(s));
+        if (s == null) {
+            throw new IllegalArgumentException("invalid PropDefId literal");
+        }
+        return new PropDefId(Integer.parseInt(s));
     }
 
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof PropDefId) {
-	    PropDefId other = (PropDefId) obj;
-	    return id == other.id;
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof PropDefId) {
+            PropDefId other = (PropDefId) obj;
+            return id == other.id;
+        }
+        return false;
     }
 
     public String toString() {
-	return Integer.toString(id);
+        return Integer.toString(id);
     }
 
     public int hashCode() {
-	return id;
+        return id;
     }
 }

@@ -16,13 +16,13 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.apache.jackrabbit.core.version.FrozenNode;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.core.util.IteratorHelper;
+import org.apache.log4j.Logger;
 
 import javax.jcr.*;
 import javax.jcr.access.AccessDeniedException;
@@ -54,9 +54,6 @@ import java.util.Map;
  * <li>maintaining a cache of the item instances it created.
  * <li>checking access rights of associated <code>Session</code> in all methods.
  * </ul>
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.91 $, $Date: 2004/09/10 15:23:37 $
  */
 public class ItemManager implements ItemLifeCycleListener {
 
@@ -87,14 +84,14 @@ public class ItemManager implements ItemLifeCycleListener {
      * @param rootNodeUUID      the UUID of the root node
      */
     ItemManager(ItemStateProvider itemStateProvider, HierarchyManager hierMgr,
-		SessionImpl session, NodeDef rootNodeDef, String rootNodeUUID) {
-	this.itemStateProvider = itemStateProvider;
-	this.hierMgr = hierMgr;
-	this.session = session;
-	this.rootNodeDef = rootNodeDef;
-	rootNodeId = new NodeId(rootNodeUUID);
-	// setup item cache with soft references to items
-	itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+                SessionImpl session, NodeDef rootNodeDef, String rootNodeUUID) {
+        this.itemStateProvider = itemStateProvider;
+        this.hierMgr = hierMgr;
+        this.session = session;
+        this.rootNodeDef = rootNodeDef;
+        rootNodeId = new NodeId(rootNodeUUID);
+        // setup item cache with soft references to items
+        itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
     }
 
     /**
@@ -104,20 +101,20 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws RepositoryException
      */
     private synchronized NodeImpl getRoot() throws RepositoryException {
-	// lazy instantiation of root node
-	// to avoid chicken & egg kind of problems
-	if (root == null) {
-	    try {
-		NodeState rootState = (NodeState) itemStateProvider.getItemState(rootNodeId);
-		// keep a hard reference to root node
-		root = createNodeInstance(rootState, rootNodeDef);
-	    } catch (ItemStateException ise) {
-		String msg = "failed to retrieve state of root node";
-		log.error(msg, ise);
-		throw new RepositoryException(msg, ise);
-	    }
-	}
-	return root;
+        // lazy instantiation of root node
+        // to avoid chicken & egg kind of problems
+        if (root == null) {
+            try {
+                NodeState rootState = (NodeState) itemStateProvider.getItemState(rootNodeId);
+                // keep a hard reference to root node
+                root = createNodeInstance(rootState, rootNodeDef);
+            } catch (ItemStateException ise) {
+                String msg = "failed to retrieve state of root node";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
+        }
+        return root;
     }
 
     /**
@@ -128,19 +125,19 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws RepositoryException
      */
     void dump(PrintStream ps) throws RepositoryException {
-	ps.println("ItemManager (" + this + ")");
-	ps.println();
-	ps.println("Items in cache:");
-	ps.println();
-	Iterator iter = itemCache.keySet().iterator();
-	while (iter.hasNext()) {
-	    ItemId id = (ItemId) iter.next();
-	    ItemImpl item = (ItemImpl) itemCache.get(id);
-	    ps.print(item.isNode() ? "Node: " : "Prop: ");
-	    ps.print(item.isTransient() ? "transient " : "          ");
-	    ps.println(id + "\t" + item.getPath() + " (" + item + ")");
-	}
-	ps.println();
+        ps.println("ItemManager (" + this + ")");
+        ps.println();
+        ps.println("Items in cache:");
+        ps.println();
+        Iterator iter = itemCache.keySet().iterator();
+        while (iter.hasNext()) {
+            ItemId id = (ItemId) iter.next();
+            ItemImpl item = (ItemImpl) itemCache.get(id);
+            ps.print(item.isNode() ? "Node: " : "Prop: ");
+            ps.print(item.isTransient() ? "transient " : "          ");
+            ps.println(id + "\t" + item.getPath() + " (" + item + ")");
+        }
+        ps.println();
     }
 
     //--------------------------------------------------< item access methods >
@@ -149,16 +146,16 @@ public class ItemManager implements ItemLifeCycleListener {
      * @return
      */
     boolean itemExists(Path path) {
-	try {
-	    getItem(path);
-	    return true;
-	} catch (PathNotFoundException pnfe) {
-	    return false;
-	} catch (AccessDeniedException ade) {
-	    return true;
-	} catch (RepositoryException re) {
-	    return false;
-	}
+        try {
+            getItem(path);
+            return true;
+        } catch (PathNotFoundException pnfe) {
+            return false;
+        } catch (AccessDeniedException ade) {
+            return true;
+        } catch (RepositoryException re) {
+            return false;
+        }
     }
 
     /**
@@ -166,16 +163,16 @@ public class ItemManager implements ItemLifeCycleListener {
      * @return
      */
     boolean itemExists(ItemId id) {
-	try {
-	    getItem(id);
-	    return true;
-	} catch (ItemNotFoundException infe) {
-	    return false;
-	} catch (AccessDeniedException ade) {
-	    return true;
-	} catch (RepositoryException re) {
-	    return false;
-	}
+        try {
+            getItem(id);
+            return true;
+        } catch (ItemNotFoundException infe) {
+            return false;
+        } catch (AccessDeniedException ade) {
+            return true;
+        } catch (RepositoryException re) {
+            return false;
+        }
     }
 
     /**
@@ -183,7 +180,7 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws RepositoryException
      */
     NodeImpl getRootNode() throws RepositoryException {
-	return getRoot();
+        return getRoot();
     }
 
     /**
@@ -194,13 +191,13 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws RepositoryException
      */
     synchronized ItemImpl getItem(Path path)
-	    throws PathNotFoundException, AccessDeniedException, RepositoryException {
-	ItemId id = hierMgr.resolvePath(path);
-	try {
-	    return getItem(id);
-	} catch (ItemNotFoundException infe) {
-	    throw new PathNotFoundException(safeGetJCRPath(path));
-	}
+            throws PathNotFoundException, AccessDeniedException, RepositoryException {
+        ItemId id = hierMgr.resolvePath(path);
+        try {
+            return getItem(id);
+        } catch (ItemNotFoundException infe) {
+            throw new PathNotFoundException(safeGetJCRPath(path));
+        }
     }
 
     /**
@@ -209,28 +206,28 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws RepositoryException
      */
     public synchronized ItemImpl getItem(ItemId id)
-	    throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-	// check privileges
-	if (!session.getAccessManager().isGranted(id, Permission.READ_ITEM)) {
-	    // clear cache
-	    if (isCached(id)) {
-		evictItem(id);
-	    }
-	    throw new AccessDeniedException("cannot read item " + id);
-	}
+            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check privileges
+        if (!session.getAccessManager().isGranted(id, Permission.READ_ITEM)) {
+            // clear cache
+            if (isCached(id)) {
+                evictItem(id);
+            }
+            throw new AccessDeniedException("cannot read item " + id);
+        }
 
-	// check cache
-	if (isCached(id)) {
-	    return retrieveItem(id);
-	}
+        // check cache
+        if (isCached(id)) {
+            return retrieveItem(id);
+        }
 
-	// shortcut
-	if (id.denotesNode() && ((NodeId) id).equals(rootNodeId)) {
-	    return getRoot();
-	}
+        // shortcut
+        if (id.denotesNode() && ((NodeId) id).equals(rootNodeId)) {
+            return getRoot();
+        }
 
-	// create instance of item using its state object
-	return createItemInstance(id);
+        // create instance of item using its state object
+        return createItemInstance(id);
     }
 
     /**
@@ -241,52 +238,52 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws RepositoryException
      */
     synchronized NodeIterator getChildNodes(NodeId parentId)
-	    throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-	// check privileges
-	if (!session.getAccessManager().isGranted(parentId, Permission.READ_ITEM)) {
-	    // clear cache
-	    ItemImpl item = retrieveItem(parentId);
-	    if (item != null) {
-		evictItem(parentId);
-	    }
-	    throw new AccessDeniedException("cannot read item " + parentId);
-	}
+            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check privileges
+        if (!session.getAccessManager().isGranted(parentId, Permission.READ_ITEM)) {
+            // clear cache
+            ItemImpl item = retrieveItem(parentId);
+            if (item != null) {
+                evictItem(parentId);
+            }
+            throw new AccessDeniedException("cannot read item " + parentId);
+        }
 
-	ArrayList children = new ArrayList();
+        ArrayList children = new ArrayList();
 
-	ItemState state = null;
-	try {
-	    state = itemStateProvider.getItemState(parentId);
-	} catch (NoSuchItemStateException nsise) {
-	    String msg = "no such item: " + parentId;
-	    log.error(msg);
-	    throw new ItemNotFoundException(msg);
-	} catch (ItemStateException ise) {
-	    String msg = "failed to retrieve item state of node " + parentId;
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
+        ItemState state = null;
+        try {
+            state = itemStateProvider.getItemState(parentId);
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "no such item: " + parentId;
+            log.error(msg);
+            throw new ItemNotFoundException(msg);
+        } catch (ItemStateException ise) {
+            String msg = "failed to retrieve item state of node " + parentId;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
 
-	if (!state.isNode()) {
-	    String msg = "can't list child nodes of property " + parentId;
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
-	NodeState nodeState = (NodeState) state;
-	Iterator iter = nodeState.getChildNodeEntries().iterator();
+        if (!state.isNode()) {
+            String msg = "can't list child nodes of property " + parentId;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+        NodeState nodeState = (NodeState) state;
+        Iterator iter = nodeState.getChildNodeEntries().iterator();
 
-	while (iter.hasNext()) {
-	    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-	    try {
-		Item item = getItem(new NodeId(entry.getUUID()));
-		children.add(item);
-	    } catch (AccessDeniedException ade) {
-		// ignore
-		continue;
-	    }
-	}
+        while (iter.hasNext()) {
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            try {
+                Item item = getItem(new NodeId(entry.getUUID()));
+                children.add(item);
+            } catch (AccessDeniedException ade) {
+                // ignore
+                continue;
+            }
+        }
 
-	return new IteratorHelper(Collections.unmodifiableList(children));
+        return new IteratorHelper(Collections.unmodifiableList(children));
     }
 
     /**
@@ -297,128 +294,128 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws RepositoryException
      */
     synchronized PropertyIterator getChildProperties(NodeId parentId)
-	    throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-	// check privileges
-	if (!session.getAccessManager().isGranted(parentId, Permission.READ_ITEM)) {
-	    ItemImpl item = retrieveItem(parentId);
-	    if (item != null) {
-		evictItem(parentId);
-	    }
-	    throw new AccessDeniedException("cannot read item " + parentId);
-	}
+            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check privileges
+        if (!session.getAccessManager().isGranted(parentId, Permission.READ_ITEM)) {
+            ItemImpl item = retrieveItem(parentId);
+            if (item != null) {
+                evictItem(parentId);
+            }
+            throw new AccessDeniedException("cannot read item " + parentId);
+        }
 
-	ArrayList children = new ArrayList();
+        ArrayList children = new ArrayList();
 
-	ItemState state = null;
-	try {
-	    state = itemStateProvider.getItemState(parentId);
-	} catch (NoSuchItemStateException nsise) {
-	    String msg = "no such item: " + parentId;
-	    log.error(msg);
-	    throw new ItemNotFoundException(msg);
-	} catch (ItemStateException ise) {
-	    String msg = "failed to retrieve item state of node " + parentId;
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
+        ItemState state = null;
+        try {
+            state = itemStateProvider.getItemState(parentId);
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "no such item: " + parentId;
+            log.error(msg);
+            throw new ItemNotFoundException(msg);
+        } catch (ItemStateException ise) {
+            String msg = "failed to retrieve item state of node " + parentId;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
 
-	if (!state.isNode()) {
-	    String msg = "can't list child properties of property " + parentId;
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
-	NodeState nodeState = (NodeState) state;
-	Iterator iter = nodeState.getPropertyEntries().iterator();
+        if (!state.isNode()) {
+            String msg = "can't list child properties of property " + parentId;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+        NodeState nodeState = (NodeState) state;
+        Iterator iter = nodeState.getPropertyEntries().iterator();
 
-	while (iter.hasNext()) {
-	    NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-	    try {
-		Item item = getItem(new PropertyId(parentId.getUUID(), entry.getName()));
-		children.add(item);
-	    } catch (AccessDeniedException ade) {
-		// ignore
-		continue;
-	    }
-	}
+        while (iter.hasNext()) {
+            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
+            try {
+                Item item = getItem(new PropertyId(parentId.getUUID(), entry.getName()));
+                children.add(item);
+            } catch (AccessDeniedException ade) {
+                // ignore
+                continue;
+            }
+        }
 
-	return new IteratorHelper(Collections.unmodifiableList(children));
+        return new IteratorHelper(Collections.unmodifiableList(children));
     }
 
     //-------------------------------------------------< item factory methods >
     private ItemImpl createItemInstance(ItemId id) throws ItemNotFoundException, RepositoryException {
-	// create instance of item using its state object
-	ItemImpl item = null;
-	ItemState state = null;
-	try {
-	    state = itemStateProvider.getItemState(id);
-	} catch (NoSuchItemStateException ise) {
-	    throw new ItemNotFoundException(id.toString());
-	} catch (ItemStateException ise) {
-	    String msg = "failed to retrieve item state of item " + id;
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
+        // create instance of item using its state object
+        ItemImpl item = null;
+        ItemState state = null;
+        try {
+            state = itemStateProvider.getItemState(id);
+        } catch (NoSuchItemStateException ise) {
+            throw new ItemNotFoundException(id.toString());
+        } catch (ItemStateException ise) {
+            String msg = "failed to retrieve item state of item " + id;
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
 
-	if (state.isNode()) {
-	    item = createNodeInstance((NodeState) state);
-	} else {
-	    item = createPropertyInstance((PropertyState) state);
-	}
-	return item;
+        if (state.isNode()) {
+            item = createNodeInstance((NodeState) state);
+        } else {
+            item = createPropertyInstance((PropertyState) state);
+        }
+        return item;
     }
 
     NodeImpl createNodeInstance(NodeState state, NodeDef def)
-	    throws RepositoryException {
-	NodeId id = new NodeId(state.getUUID());
-	// we want to be informed on life cycle changes of the new node object
-	// in order to maintain item cache consistency
-	ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
+            throws RepositoryException {
+        NodeId id = new NodeId(state.getUUID());
+        // we want to be informed on life cycle changes of the new node object
+        // in order to maintain item cache consistency
+        ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
-	// create node object; create specialized nodes for nodes of specific
-	// primary types (i.e. nt:version & nt:versionHistory)
-	if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION_HISTORY)) {
-	    return new VersionHistoryImpl(this, session, id, state, def, listeners);
-	} else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_FROZEN)) {
-	    return new FrozenNode(this, session, id, state, def, listeners);
-	} else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION)) {
-	    return new VersionImpl(this, session, id, state, def, listeners);
-	} else {
-	    return new NodeImpl(this, session, id, state, def, listeners);
-	}
+        // create node object; create specialized nodes for nodes of specific
+        // primary types (i.e. nt:version & nt:versionHistory)
+        if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION_HISTORY)) {
+            return new VersionHistoryImpl(this, session, id, state, def, listeners);
+        } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_FROZEN)) {
+            return new FrozenNode(this, session, id, state, def, listeners);
+        } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION)) {
+            return new VersionImpl(this, session, id, state, def, listeners);
+        } else {
+            return new NodeImpl(this, session, id, state, def, listeners);
+        }
     }
 
     NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
-	// 1. get definition of the specified node
-	NodeDef def = session.getNodeTypeManager().getNodeDef(state.getDefinitionId());
-	if (def == null) {
-	    String msg = "internal error: no definition found for node " + safeGetJCRPath(state.getId());
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
-	// 2. create instance
-	return createNodeInstance(state, def);
+        // 1. get definition of the specified node
+        NodeDef def = session.getNodeTypeManager().getNodeDef(state.getDefinitionId());
+        if (def == null) {
+            String msg = "internal error: no definition found for node " + safeGetJCRPath(state.getId());
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+        // 2. create instance
+        return createNodeInstance(state, def);
     }
 
     PropertyImpl createPropertyInstance(PropertyState state, PropertyDef def) {
-	PropertyId id = new PropertyId(state.getParentUUID(), state.getName());
-	// we want to be informed on life cycle changes of the new property object
-	// in order to maintain item cache consistency
-	ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
-	// create property object
-	PropertyImpl prop = new PropertyImpl(this, session, id, state, def, listeners);
-	return prop;
+        PropertyId id = new PropertyId(state.getParentUUID(), state.getName());
+        // we want to be informed on life cycle changes of the new property object
+        // in order to maintain item cache consistency
+        ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
+        // create property object
+        PropertyImpl prop = new PropertyImpl(this, session, id, state, def, listeners);
+        return prop;
     }
 
     PropertyImpl createPropertyInstance(PropertyState state) throws RepositoryException {
-	// 1. get definition for the specified property
-	PropertyDef def = session.getNodeTypeManager().getPropDef(state.getDefinitionId());
-	if (def == null) {
-	    String msg = "internal error: no definition found for property " + safeGetJCRPath(state.getId());
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
-	// 2. create instance
-	return createPropertyInstance(state, def);
+        // 1. get definition for the specified property
+        PropertyDef def = session.getNodeTypeManager().getPropDef(state.getDefinitionId());
+        if (def == null) {
+            String msg = "internal error: no definition found for property " + safeGetJCRPath(state.getId());
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+        // 2. create instance
+        return createPropertyInstance(state, def);
     }
 
     /**
@@ -430,16 +427,16 @@ public class ItemManager implements ItemLifeCycleListener {
      * @throws RepositoryException
      */
     void removeItem(ItemId id)
-	    throws ItemNotFoundException, RepositoryException {
-	// the removed instance is not directly removed from the cache;
-	// it will be removed when the instance notifies the item manager
-	// that it has been invalidated (see itemInvalidated method)
-	ItemImpl item = retrieveItem(id);
-	if (item == null) {
-	    // need to instantiate item first
-	    item = createItemInstance(id);
-	}
-	item.setRemoved();
+            throws ItemNotFoundException, RepositoryException {
+        // the removed instance is not directly removed from the cache;
+        // it will be removed when the instance notifies the item manager
+        // that it has been invalidated (see itemInvalidated method)
+        ItemImpl item = retrieveItem(id);
+        if (item == null) {
+            // need to instantiate item first
+            item = createItemInstance(id);
+        }
+        item.setRemoved();
     }
 
     //---------------------------------------------------< item cache methods >
@@ -450,7 +447,7 @@ public class ItemManager implements ItemLifeCycleListener {
      * @return true if there's a corresponding cache entry, otherwise false.
      */
     private boolean isCached(ItemId id) {
-	return itemCache.containsKey(id);
+        return itemCache.containsKey(id);
     }
 
     /**
@@ -461,7 +458,7 @@ public class ItemManager implements ItemLifeCycleListener {
      *         or <code>null</code> if there's no corresponding cache entry.
      */
     private ItemImpl retrieveItem(ItemId id) {
-	return (ItemImpl) itemCache.get(id);
+        return (ItemImpl) itemCache.get(id);
     }
 
     /**
@@ -471,12 +468,12 @@ public class ItemManager implements ItemLifeCycleListener {
      * @param item the item to cache
      */
     private void cacheItem(ItemImpl item) {
-	ItemId id = item.getId();
-	if (itemCache.containsKey(id)) {
-	    log.warn("overwriting cached item " + id);
-	}
-	log.debug("caching item " + id);
-	itemCache.put(id, item);
+        ItemId id = item.getId();
+        if (itemCache.containsKey(id)) {
+            log.warn("overwriting cached item " + id);
+        }
+        log.debug("caching item " + id);
+        itemCache.put(id, item);
     }
 
     /**
@@ -485,8 +482,8 @@ public class ItemManager implements ItemLifeCycleListener {
      * @param id id of the item to remove from the cache
      */
     private void evictItem(ItemId id) {
-	log.debug("removing item " + id + " from cache");
-	itemCache.remove(id);
+        log.debug("removing item " + id + " from cache");
+        itemCache.remove(id);
     }
 
     //-------------------------------------------------< misc. helper methods >
@@ -498,13 +495,13 @@ public class ItemManager implements ItemLifeCycleListener {
      * @return JCR path
      */
     String safeGetJCRPath(Path path) {
-	try {
-	    return path.toJCRPath(session.getNamespaceResolver());
-	} catch (NoPrefixDeclaredException npde) {
-	    log.error("failed to convert " + path.toString() + " to JCR path.");
-	    // return string representation of internal path as a fallback
-	    return path.toString();
-	}
+        try {
+            return path.toJCRPath(session.getNamespaceResolver());
+        } catch (NoPrefixDeclaredException npde) {
+            log.error("failed to convert " + path.toString() + " to JCR path.");
+            // return string representation of internal path as a fallback
+            return path.toString();
+        }
     }
 
     /**
@@ -515,13 +512,13 @@ public class ItemManager implements ItemLifeCycleListener {
      * @return JCR path
      */
     String safeGetJCRPath(ItemId id) {
-	try {
-	    return safeGetJCRPath(hierMgr.getPath(id));
-	} catch (RepositoryException re) {
-	    log.error(id + ": failed to determine path to");
-	    // return string representation if id as a fallback
-	    return id.toString();
-	}
+        try {
+            return safeGetJCRPath(hierMgr.getPath(id));
+        } catch (RepositoryException re) {
+            log.error(id + ": failed to determine path to");
+            // return string representation if id as a fallback
+            return id.toString();
+        }
     }
 
     //------------------------------------------------< ItemLifeCycleListener >
@@ -529,37 +526,37 @@ public class ItemManager implements ItemLifeCycleListener {
      * @see ItemLifeCycleListener#itemCreated
      */
     public void itemCreated(ItemImpl item) {
-	log.debug("created item " + item.getId());
-	// add instance to cache
-	cacheItem(item);
+        log.debug("created item " + item.getId());
+        // add instance to cache
+        cacheItem(item);
     }
 
     /**
      * @see ItemLifeCycleListener#itemInvalidated
      */
     public void itemInvalidated(ItemId id, ItemImpl item) {
-	log.debug("invalidated item " + id);
-	// remove instance from cache
-	evictItem(id);
+        log.debug("invalidated item " + id);
+        // remove instance from cache
+        evictItem(id);
     }
 
     /**
      * @see ItemLifeCycleListener#itemResurrected
      */
     public void itemResurrected(ItemImpl item) {
-	log.debug("resurrected item " + item.getId());
-	// add instance to cache
-	cacheItem(item);
+        log.debug("resurrected item " + item.getId());
+        // add instance to cache
+        cacheItem(item);
     }
 
     /**
      * @see ItemLifeCycleListener#itemDestroyed
      */
     public void itemDestroyed(ItemId id, ItemImpl item) {
-	log.debug("destroyed item " + id);
-	// we're no longer interested in this item
-	item.removeLifeCycleListener(this);
-	// remove instance from cache
-	evictItem(id);
+        log.debug("destroyed item " + id);
+        // we're no longer interested in this item
+        item.removeLifeCycleListener(this);
+        // remove instance from cache
+        evictItem(id);
     }
 }

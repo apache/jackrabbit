@@ -28,9 +28,6 @@ import java.io.*;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.20 $, $Date: 2004/08/02 16:19:48 $
  */
 public class PropertyState extends ItemState {
 
@@ -49,11 +46,11 @@ public class PropertyState extends ItemState {
      * @param initialStatus  the initial status of the property state object
      */
     PropertyState(PropertyState overlayedState, int initialStatus) {
-	super(overlayedState, initialStatus);
-	name = overlayedState.getName();
-	type = overlayedState.getType();
-	defId = overlayedState.getDefinitionId();
-	values = overlayedState.getValues();
+        super(overlayedState, initialStatus);
+        name = overlayedState.getName();
+        type = overlayedState.getType();
+        defId = overlayedState.getDefinitionId();
+        values = overlayedState.getValues();
     }
 
     /**
@@ -64,10 +61,10 @@ public class PropertyState extends ItemState {
      * @param initialStatus the initial status of the property state object
      */
     PropertyState(QName name, String parentUUID, int initialStatus) {
-	super(parentUUID, new PropertyId(parentUUID, name), initialStatus);
-	this.name = name;
-	type = PropertyType.UNDEFINED;
-	values = new InternalValue[0];
+        super(parentUUID, new PropertyId(parentUUID, name), initialStatus);
+        this.name = name;
+        type = PropertyType.UNDEFINED;
+        values = new InternalValue[0];
     }
 
     //-------------------------------------------------------< public methods >
@@ -78,7 +75,7 @@ public class PropertyState extends ItemState {
      * @see ItemState#isNode
      */
     public boolean isNode() {
-	return false;
+        return false;
     }
 
     /**
@@ -87,7 +84,7 @@ public class PropertyState extends ItemState {
      * @return the name of this property.
      */
     public QName getName() {
-	return name;
+        return name;
     }
 
     /**
@@ -97,7 +94,7 @@ public class PropertyState extends ItemState {
      * @see PropertyType
      */
     public void setType(int type) {
-	this.type = type;
+        this.type = type;
     }
 
     /**
@@ -107,7 +104,7 @@ public class PropertyState extends ItemState {
      * @see PropertyType
      */
     public int getType() {
-	return type;
+        return type;
     }
 
     /**
@@ -116,7 +113,7 @@ public class PropertyState extends ItemState {
      * @return the id of the definition
      */
     public PropDefId getDefinitionId() {
-	return defId;
+        return defId;
     }
 
     /**
@@ -125,7 +122,7 @@ public class PropertyState extends ItemState {
      * @param defId the id of the definition
      */
     public void setDefinitionId(PropDefId defId) {
-	this.defId = defId;
+        this.defId = defId;
     }
 
     /**
@@ -134,7 +131,7 @@ public class PropertyState extends ItemState {
      * @param values the new values
      */
     public void setValues(InternalValue[] values) {
-	this.values = values;
+        this.values = values;
     }
 
     /**
@@ -143,72 +140,72 @@ public class PropertyState extends ItemState {
      * @return the value(s) of this property.
      */
     public InternalValue[] getValues() {
-	return values;
+        return values;
     }
 
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
-	// important: fields must be written in same order as they are
-	// read in readObject(ObjectInputStream)
-	out.writeObject(name);
-	out.writeInt(type);
-	if (values == null) {
-	    out.writeObject(null);
-	} else {
-	    String[] strings = new String[values.length];
-	    for (int i = 0; i < values.length; i++) {
-		InternalValue val = values[i];
-		try {
-		    if (type == PropertyType.BINARY) {
-			// special handling required for binary value
-			BLOBFileValue blob = (BLOBFileValue) val.internalValue();
-			InputStream in = blob.getStream();
-			// use 32k initial buffer size as binary data is
-			// probably not just a couple of bytes
-			StringWriter writer = new StringWriter(32768);
-			try {
-			    Base64.encode(in, writer);
-			} finally {
-			    in.close();
-			    writer.close();
-			}
-			strings[i] = writer.toString();
-		    } else {
-			strings[i] = val.toString();
-		    }
-		} catch (IllegalStateException ise) {
-		    throw new IOException(ise.getMessage());
-		} catch (RepositoryException re) {
-		    throw new IOException(re.getMessage());
-		}
-	    }
-	    out.writeObject(strings);
-	}
+        // important: fields must be written in same order as they are
+        // read in readObject(ObjectInputStream)
+        out.writeObject(name);
+        out.writeInt(type);
+        if (values == null) {
+            out.writeObject(null);
+        } else {
+            String[] strings = new String[values.length];
+            for (int i = 0; i < values.length; i++) {
+                InternalValue val = values[i];
+                try {
+                    if (type == PropertyType.BINARY) {
+                        // special handling required for binary value
+                        BLOBFileValue blob = (BLOBFileValue) val.internalValue();
+                        InputStream in = blob.getStream();
+                        // use 32k initial buffer size as binary data is
+                        // probably not just a couple of bytes
+                        StringWriter writer = new StringWriter(32768);
+                        try {
+                            Base64.encode(in, writer);
+                        } finally {
+                            in.close();
+                            writer.close();
+                        }
+                        strings[i] = writer.toString();
+                    } else {
+                        strings[i] = val.toString();
+                    }
+                } catch (IllegalStateException ise) {
+                    throw new IOException(ise.getMessage());
+                } catch (RepositoryException re) {
+                    throw new IOException(re.getMessage());
+                }
+            }
+            out.writeObject(strings);
+        }
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-	// important: fields must be read in same order as they are
-	// written in writeObject(ObjectOutputStream)
-	name = (QName) in.readObject();
-	type = in.readInt();
-	Object obj = in.readObject();
-	if (obj == null) {
-	    values = null;
-	} else {
-	    String[] strings = (String[]) obj;
-	    values = new InternalValue[strings.length];
-	    for (int i = 0; i < strings.length; i++) {
-		String str = strings[i];
-		if (type == PropertyType.BINARY) {
-		    // special handling required for binary value
-		    ByteArrayOutputStream bos = new ByteArrayOutputStream(str.length());
-		    Base64.decode(str, bos);
-		    bos.close();
-		    values[i] = InternalValue.create(new ByteArrayInputStream(bos.toByteArray()));
-		} else {
-		    values[i] = InternalValue.valueOf(str, type);
-		}
-	    }
-	}
+        // important: fields must be read in same order as they are
+        // written in writeObject(ObjectOutputStream)
+        name = (QName) in.readObject();
+        type = in.readInt();
+        Object obj = in.readObject();
+        if (obj == null) {
+            values = null;
+        } else {
+            String[] strings = (String[]) obj;
+            values = new InternalValue[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                String str = strings[i];
+                if (type == PropertyType.BINARY) {
+                    // special handling required for binary value
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream(str.length());
+                    Base64.decode(str, bos);
+                    bos.close();
+                    values[i] = InternalValue.create(new ByteArrayInputStream(bos.toByteArray()));
+                } else {
+                    values[i] = InternalValue.valueOf(str, type);
+                }
+            }
+        }
     }
 }

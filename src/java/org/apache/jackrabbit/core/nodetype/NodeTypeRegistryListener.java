@@ -21,8 +21,6 @@ import org.apache.jackrabbit.core.QName;
  * The <code>NodeTypeRegistryListener</code> interface allows an implementing
  * object to be informed about node type (un)registration.
  *
- * @author Stefan Guggisberg
- * @version $Revision: 1.2 $, $Date: 2004/08/02 16:19:45 $
  * @see NodeTypeRegistry#addListener(NodeTypeRegistryListener)
  * @see NodeTypeRegistry#removeListener(NodeTypeRegistryListener)
  */

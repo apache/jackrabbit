@@ -19,11 +19,8 @@ package org.apache.jackrabbit.core.search;
  * Implements an abstract base class for nodes of a query tree that represents
  * a query. The query tree is independent from the query syntax which is used
  * to search the repository.
- *
+ * <p/>
  * todo: extend QueryNode with toString method for both XPath flavours
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public abstract class QueryNode {
 
@@ -40,7 +37,7 @@ public abstract class QueryNode {
      *               node of a query tree.
      */
     public QueryNode(QueryNode parent) {
-	this.parent = parent;
+        this.parent = parent;
     }
 
     /**
@@ -51,7 +48,7 @@ public abstract class QueryNode {
      *         the root node of a query tree.
      */
     public QueryNode getParent() {
-	return parent;
+        return parent;
     }
 
     /**
@@ -60,7 +57,7 @@ public abstract class QueryNode {
      * this <code>QueryNode</code>.
      *
      * @param visitor the visitor to call back.
-     * @param data arbitrary data for the visitor.
+     * @param data    arbitrary data for the visitor.
      * @return the return value of the <code>visitor.visit()</code> call.
      */
     public abstract Object accept(QueryNodeVisitor visitor, Object data);

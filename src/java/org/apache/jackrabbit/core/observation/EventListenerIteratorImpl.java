@@ -18,14 +18,12 @@ package org.apache.jackrabbit.core.observation;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.ArrayList;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision: 1.5 $, $Date: 2004/08/25 16:44:50 $
  */
 class EventListenerIteratorImpl implements EventListenerIterator {
 
@@ -61,42 +59,42 @@ class EventListenerIteratorImpl implements EventListenerIterator {
      *                              is <code>null</code>.
      */
     EventListenerIteratorImpl(Session session, Collection sConsumers, Collection aConsumers) {
-	if (session == null) {
-	    throw new NullPointerException("session");
-	}
-	if (sConsumers == null) {
-	    throw new NullPointerException("consumers");
-	}
-	if (aConsumers == null) {
-	    throw new NullPointerException("consumers");
-	}
-	this.session = session;
-	Collection allConsumers = new ArrayList(sConsumers);
-	allConsumers.addAll(aConsumers);
-	this.consumers = allConsumers.iterator();
-	fetchNext();
+        if (session == null) {
+            throw new NullPointerException("session");
+        }
+        if (sConsumers == null) {
+            throw new NullPointerException("consumers");
+        }
+        if (aConsumers == null) {
+            throw new NullPointerException("consumers");
+        }
+        this.session = session;
+        Collection allConsumers = new ArrayList(sConsumers);
+        allConsumers.addAll(aConsumers);
+        this.consumers = allConsumers.iterator();
+        fetchNext();
     }
 
     /**
      * @see javax.jcr.observation.EventListenerIterator#nextEventListener()
      */
     public EventListener nextEventListener() {
-	if (next == null) {
-	    throw new NoSuchElementException();
-	}
-	EventListener l = next;
-	fetchNext();
-	pos++;
-	return l;
+        if (next == null) {
+            throw new NoSuchElementException();
+        }
+        EventListener l = next;
+        fetchNext();
+        pos++;
+        return l;
     }
 
     /**
      * @see javax.jcr.RangeIterator#skip(long)
      */
     public void skip(long skipNum) {
-	while (skipNum-- > 0) {
-	    next();
-	}
+        while (skipNum-- > 0) {
+            next();
+        }
     }
 
     /**
@@ -105,14 +103,14 @@ class EventListenerIteratorImpl implements EventListenerIterator {
      * @return <code>-1</code>.
      */
     public long getSize() {
-	return -1;
+        return -1;
     }
 
     /**
      * @see javax.jcr.RangeIterator#getPos()
      */
     public long getPos() {
-	return pos;
+        return pos;
     }
 
     /**
@@ -121,7 +119,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
      * @throws UnsupportedOperationException
      */
     public void remove() {
-	throw new UnsupportedOperationException("EventListenerIterator.remove()");
+        throw new UnsupportedOperationException("EventListenerIterator.remove()");
     }
 
     /**
@@ -132,14 +130,14 @@ class EventListenerIteratorImpl implements EventListenerIterator {
      * @return <tt>true</tt> if the consumers has more elements.
      */
     public boolean hasNext() {
-	return (next != null);
+        return (next != null);
     }
 
     /**
      * @see Iterator#next()
      */
     public Object next() {
-	return nextEventListener();
+        return nextEventListener();
     }
 
     /**
@@ -149,15 +147,15 @@ class EventListenerIteratorImpl implements EventListenerIterator {
      * <code>EventListener</code>s
      */
     private void fetchNext() {
-	EventConsumer consumer;
-	next = null;
-	while (next == null && consumers.hasNext()) {
-	    consumer = (EventConsumer) consumers.next();
-	    // only return EventConsumers that belong to our session
-	    if (consumer.getSession().equals(session)) {
-		next = consumer.getEventListener();
-	    }
+        EventConsumer consumer;
+        next = null;
+        while (next == null && consumers.hasNext()) {
+            consumer = (EventConsumer) consumers.next();
+            // only return EventConsumers that belong to our session
+            if (consumer.getSession().equals(session)) {
+                next = consumer.getEventListener();
+            }
 
-	}
+        }
     }
 }

@@ -24,9 +24,6 @@ import java.util.Stack;
 /**
  * This Class implements a VersionIterator that iterates over a version
  * graph following the successor nodes.
- *
- * @author Tobias Strasser
- * @version $Revision: 1.4 $, $Date: 2004/08/25 16:44:51 $
  */
 public class VersionIteratorImpl implements VersionIterator {
 
@@ -47,48 +44,48 @@ public class VersionIteratorImpl implements VersionIterator {
      * @param rootVersion
      */
     public VersionIteratorImpl(Version rootVersion) throws RepositoryException {
-	successors.push(rootVersion);
+        successors.push(rootVersion);
     }
 
     /**
      * @see VersionIterator#nextVersion()
      */
     public Version nextVersion() {
-	if (successors.isEmpty()) {
-	    throw new NoSuchElementException();
-	}
-	Version ret = (Version) successors.peek();
-	pos++;
-	try {
-	    push(ret.getSuccessors());
-	} catch (RepositoryException e) {
-	    // ignore
-	}
-	return ret;
+        if (successors.isEmpty()) {
+            throw new NoSuchElementException();
+        }
+        Version ret = (Version) successors.peek();
+        pos++;
+        try {
+            push(ret.getSuccessors());
+        } catch (RepositoryException e) {
+            // ignore
+        }
+        return ret;
     }
 
     /**
      * @see VersionIterator#skip(long)
      */
     public void skip(long skipNum) {
-	while (skipNum > 0) {
-	    skipNum--;
-	    nextVersion();
-	}
+        while (skipNum > 0) {
+            skipNum--;
+            nextVersion();
+        }
     }
 
     /**
      * @see VersionIterator#getSize()
      */
     public long getSize() {
-	return -1;
+        return -1;
     }
 
     /**
      * @see VersionIterator#getPos()
      */
     public long getPos() {
-	return pos;
+        return pos;
     }
 
     /**
@@ -96,21 +93,21 @@ public class VersionIteratorImpl implements VersionIterator {
      * @see VersionIterator#remove()
      */
     public void remove() throws UnsupportedOperationException {
-	throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     /**
      * @see VersionIterator#hasNext()
      */
     public boolean hasNext() {
-	return !successors.isEmpty();
+        return !successors.isEmpty();
     }
 
     /**
      * @see VersionIterator#next()
      */
     public Object next() {
-	return nextVersion();
+        return nextVersion();
     }
 
     /**
@@ -119,8 +116,8 @@ public class VersionIteratorImpl implements VersionIterator {
      * @param versions
      */
     private void push(Version[] versions) {
-	for (int i = 0; i < versions.length; i++) {
-	    successors.push(versions[i]);
-	}
+        for (int i = 0; i < versions.length; i++) {
+            successors.push(versions[i]);
+        }
     }
 }

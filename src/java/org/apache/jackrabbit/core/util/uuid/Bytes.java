@@ -18,13 +18,11 @@ package org.apache.jackrabbit.core.util.uuid;
 /**
  * <p>Static methods for managing byte arrays (all methods follow Big
  * Endian order where most significant bits are in front).</p>
- *
+ * <p/>
  * <p>Copied from the Jakarta Commons-Id project</p>
  * <p/>
  * todo remove and use official commons-id release as soon as it is available
- *
- * @author Commons-Id Team
- * @version $Id: Bytes.java,v 1.2 2004/07/26 17:10:46 sguggisb Exp $
+ * <p/>
  * {@link http://jakarta.apache.org/turbine/turbine-2.3/}
  */
 public final class Bytes {
@@ -105,12 +103,12 @@ public final class Bytes {
     }
 
     /**
-    * Compares two byte arrays for equality.
-    *
-    * @param a A byte[].
-    * @param b A byte[].
-    * @return True if the arrays have identical contents.
-    */
+     * Compares two byte arrays for equality.
+     *
+     * @param a A byte[].
+     * @param b A byte[].
+     * @return True if the arrays have identical contents.
+     */
     public static boolean areEqual(byte[] a, byte[] b) {
         int aLength = a.length;
         if (aLength != b.length) {
@@ -130,8 +128,8 @@ public final class Bytes {
      *
      * @param lhs - left hand value in the comparison operation.
      * @param rhs - right hand value in the comparison operation.
-     * @return  a negative integer, zero, or a positive integer as <code>lhs</code>
-     *  is less than, equal to, or greater than <code>rhs</code>.
+     * @return a negative integer, zero, or a positive integer as <code>lhs</code>
+     *         is less than, equal to, or greater than <code>rhs</code>.
      */
     public static int compareTo(byte[] lhs, byte[] rhs) {
         if (lhs == rhs) {
@@ -163,6 +161,6 @@ public final class Bytes {
      * @return A short.
      */
     public static short toShort(byte[] b) {
-        return  (short) ((b[1] & 0xFF) + ((b[0] & 0xFF) << 8));
+        return (short) ((b[1] & 0xFF) + ((b[0] & 0xFF) << 8));
     }
 }

@@ -25,7 +25,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
- * @author Marcel Reutegger
  */
 class FilteredEventIterator implements EventIterator {
 
@@ -33,7 +32,7 @@ class FilteredEventIterator implements EventIterator {
      * Logger instance for this class
      */
     private static final Logger log
-	    = Logger.getLogger(FilteredEventIterator.class);
+            = Logger.getLogger(FilteredEventIterator.class);
 
     /**
      * The actual {@link EventState}s fired by the workspace (unfiltered)
@@ -68,41 +67,41 @@ class FilteredEventIterator implements EventIterator {
      *               <code>null</code> no <code>EventState</code> is denied.
      */
     public FilteredEventIterator(EventStateCollection c,
-				 EventFilter filter,
-				 Set denied) {
-	actualEvents = c.iterator();
-	this.filter = filter;
-	this.denied = denied;
-	fetchNext();
+                                 EventFilter filter,
+                                 Set denied) {
+        actualEvents = c.iterator();
+        this.filter = filter;
+        this.denied = denied;
+        fetchNext();
     }
 
     /**
      * @see Iterator#next()
      */
     public Object next() {
-	if (next == null) {
-	    throw new NoSuchElementException();
-	}
-	Event e = next;
-	fetchNext();
-	pos++;
-	return e;
+        if (next == null) {
+            throw new NoSuchElementException();
+        }
+        Event e = next;
+        fetchNext();
+        pos++;
+        return e;
     }
 
     /**
      * @see EventIterator#nextEvent()
      */
     public Event nextEvent() {
-	return (Event) next();
+        return (Event) next();
     }
 
     /**
      * @see javax.jcr.RangeIterator#skip(long)
      */
     public void skip(long skipNum) {
-	while (skipNum-- > 0) {
-	    next();
-	}
+        while (skipNum-- > 0) {
+            next();
+        }
     }
 
     /**
@@ -111,14 +110,14 @@ class FilteredEventIterator implements EventIterator {
      * @return <code>-1</code>.
      */
     public long getSize() {
-	return -1;
+        return -1;
     }
 
     /**
      * @see javax.jcr.RangeIterator#getPos()
      */
     public long getPos() {
-	return pos;
+        return pos;
     }
 
     /**
@@ -126,7 +125,7 @@ class FilteredEventIterator implements EventIterator {
      * Always throws a <code>UnsupportedOperationException</code>.
      */
     public void remove() {
-	throw new UnsupportedOperationException("EventIterator.remove()");
+        throw new UnsupportedOperationException("EventIterator.remove()");
     }
 
     /**
@@ -137,7 +136,7 @@ class FilteredEventIterator implements EventIterator {
      * @return <tt>true</tt> if the iterator has more elements.
      */
     public boolean hasNext() {
-	return (next != null);
+        return (next != null);
     }
 
     /**
@@ -146,20 +145,20 @@ class FilteredEventIterator implements EventIterator {
      * that is allowed by the {@link EventFilter}.
      */
     private void fetchNext() {
-	EventState state;
-	next = null;
-	while (next == null && actualEvents.hasNext()) {
-	    state = (EventState) actualEvents.next();
-	    // check denied set
-	    if (denied == null || !denied.contains(state)) {
-		try {
-		    next = filter.blocks(state) ? null : new EventImpl(filter.getSession(),
-			    /* filter.getItemManager(), */
-			    state);
-		} catch (RepositoryException e) {
-		    log.error("Exception while applying filter.", e);
-		}
-	    }
-	}
+        EventState state;
+        next = null;
+        while (next == null && actualEvents.hasNext()) {
+            state = (EventState) actualEvents.next();
+            // check denied set
+            if (denied == null || !denied.contains(state)) {
+                try {
+                    next = filter.blocks(state) ? null : new EventImpl(filter.getSession(),
+                            /* filter.getItemManager(), */
+                            state);
+                } catch (RepositoryException e) {
+                    log.error("Exception while applying filter.", e);
+                }
+            }
+        }
     }
 }

@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.log4j.Logger;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -30,9 +30,6 @@ import java.util.HashMap;
 
 /**
  * This Class implements a version history.
- *
- * @author Tobias Strasser
- * @version $Revision: 1.7 $, $Date: 2004/09/14 08:50:07 $
  */
 public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
@@ -64,7 +61,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @return a VersionHistory
      */
     protected static VersionHistoryImpl create(NodeImpl node) {
-	return (VersionHistoryImpl) node;
+        return (VersionHistoryImpl) node;
     }
 
     /**
@@ -74,41 +71,41 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see org.apache.jackrabbit.core.ItemManager#createNodeInstance(org.apache.jackrabbit.core.state.NodeState, javax.jcr.nodetype.NodeDef)
      */
     public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-			      NodeState state, NodeDef definition,
-			      ItemLifeCycleListener[] listeners)
-	    throws RepositoryException {
-	super(itemMgr, session, id, state, definition, listeners);
+                              NodeState state, NodeDef definition,
+                              ItemLifeCycleListener[] listeners)
+            throws RepositoryException {
+        super(itemMgr, session, id, state, definition, listeners);
     }
 
     /**
      * @see VersionHistory#getRootVersion()
      */
     public Version getRootVersion() throws RepositoryException {
-	return (Version) getNode(NODENAME_ROOTVERSION);
+        return (Version) getNode(NODENAME_ROOTVERSION);
     }
 
     /**
      * @see VersionHistory#getAllVersions()
      */
     public VersionIterator getAllVersions() throws RepositoryException {
-	return new VersionIteratorImpl(getRootVersion());
+        return new VersionIteratorImpl(getRootVersion());
     }
 
     /**
      * @see VersionHistory#getVersion(java.lang.String)
      */
     public Version getVersion(String versionName) throws RepositoryException {
-	return (Version) getNode(versionName);
+        return (Version) getNode(versionName);
     }
 
     /**
      * @see VersionHistory#getVersionByLabel(java.lang.String)
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
-	initLabelCache();
-	return labelCache.containsKey(label)
-		? (Version) getNode((String) labelCache.get(label))
-		: null;
+        initLabelCache();
+        return labelCache.containsKey(label)
+                ? (Version) getNode((String) labelCache.get(label))
+                : null;
     }
 
     /**
@@ -124,21 +121,21 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException todo: add to spec
      */
     public void removeVersion(String versionName) throws RepositoryException {
-	VersionImpl v = (VersionImpl) getVersion(versionName);
-	if (v.isSame(getRootVersion())) {
-	    String msg = "Removal of " + versionName + " not allowed.";
-	    log.error(msg);
-	    throw new VersionException(msg);
-	}
-	// check if any references to this node exist outside the version graph
-	// todo: check this
+        VersionImpl v = (VersionImpl) getVersion(versionName);
+        if (v.isSame(getRootVersion())) {
+            String msg = "Removal of " + versionName + " not allowed.";
+            log.error(msg);
+            throw new VersionException(msg);
+        }
+        // check if any references to this node exist outside the version graph
+        // todo: check this
 
-	// detach from the version graph
-	v.internalDetach();
+        // detach from the version graph
+        v.internalDetach();
 
-	// and remove from history
-	remove(versionName);
-	save();
+        // and remove from history
+        remove(versionName);
+        save();
     }
 
     /**
@@ -147,44 +144,45 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException
      */
     private void initLabelCache() throws RepositoryException {
-	if (labelCache != null) {
-	    return;
-	}
-	labelCache = new HashMap();
-	NodeIterator iter = getNodes();
-	while (iter.hasNext()) {
-	    // assuming all subnodes are 'versions'
-	    Version v = (Version) iter.nextNode();
-	    String[] labels = v.getVersionLabels();
-	    for (int i = 0; i < labels.length; i++) {
-		if (labelCache.containsKey(labels[i])) {
-		    log.error("Label " + labels[i] + " duplicate: in " + v.getName() + " and in " + labelCache.get(labels[i]));
-		} else {
-		    labelCache.put(labels[i], v.getName());
-		}
-	    }
-	}
+        if (labelCache != null) {
+            return;
+        }
+        labelCache = new HashMap();
+        NodeIterator iter = getNodes();
+        while (iter.hasNext()) {
+            // assuming all subnodes are 'versions'
+            Version v = (Version) iter.nextNode();
+            String[] labels = v.getVersionLabels();
+            for (int i = 0; i < labels.length; i++) {
+                if (labelCache.containsKey(labels[i])) {
+                    log.error("Label " + labels[i] + " duplicate: in " + v.getName() + " and in " + labelCache.get(labels[i]));
+                } else {
+                    labelCache.put(labels[i], v.getName());
+                }
+            }
+        }
     }
 
     /**
      * Adds a label to a version
+     *
      * @param version
      * @param label
      * @throws RepositoryException
      */
     public void addVersionLabel(Version version, String label) throws RepositoryException {
-	initLabelCache();
-	String vname = (String) labelCache.get(label);
-	if (vname == null) {
-	    // if not exists, add
-	    labelCache.put(label, version.getName());
-	    ((VersionImpl) version).internalAddVersionLabel(label);
-	} else if (vname.equals(version.getName())) {
-	    // if already defined to this version, ignore
-	} else {
-	    // already defined eslwhere, throw
-	    throw new RepositoryException("Version label " + label + " already defined for version " + vname);
-	}
+        initLabelCache();
+        String vname = (String) labelCache.get(label);
+        if (vname == null) {
+            // if not exists, add
+            labelCache.put(label, version.getName());
+            ((VersionImpl) version).internalAddVersionLabel(label);
+        } else if (vname.equals(version.getName())) {
+            // if already defined to this version, ignore
+        } else {
+            // already defined eslwhere, throw
+            throw new RepositoryException("Version label " + label + " already defined for version " + vname);
+        }
     }
 
     /**
@@ -194,12 +192,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException if the label does not exist
      */
     public void removeVersionLabel(String label) throws RepositoryException {
-	initLabelCache();
-	String name = (String) labelCache.remove(label);
-	if (name == null) {
-	    throw new RepositoryException("Version label " + label + " is not in version history.");
-	}
-	((VersionImpl) getVersion(name)).internalRemoveVersionLabel(label);
+        initLabelCache();
+        String name = (String) labelCache.remove(label);
+        if (name == null) {
+            throw new RepositoryException("Version label " + label + " is not in version history.");
+        }
+        ((VersionImpl) getVersion(name)).internalRemoveVersionLabel(label);
     }
 }
 

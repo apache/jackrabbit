@@ -21,9 +21,6 @@ import java.util.Date;
  * Implements <code>Date</code> &lt;-&gt; <code>String</code> conversions in
  * a way that the resulting <code>String</code> is suitable for indexing and
  * sorting.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 class DateField {
 
@@ -34,7 +31,7 @@ class DateField {
      * Date string length for about 3000 years
      */
     private static final int DATE_LEN = Long.toString(1000L * 365 * 24 * 60 * 60 * 3000,
-	    Character.MAX_RADIX).length();
+            Character.MAX_RADIX).length();
 
     /**
      * Date shift of 2'000 years this allows dates back to 30 BC
@@ -56,12 +53,12 @@ class DateField {
      * Initializes the constant {@link #MAX_DATE_STRING}.
      */
     static {
-	char[] buffer = new char[DATE_LEN];
-	char c = Character.forDigit(Character.MAX_RADIX - 1, Character.MAX_RADIX);
-	for (int i = 0; i < DATE_LEN; i++) {
-	    buffer[i] = c;
-	}
-	MAX_DATE_STRING = new String(buffer);
+        char[] buffer = new char[DATE_LEN];
+        char c = Character.forDigit(Character.MAX_RADIX - 1, Character.MAX_RADIX);
+        for (int i = 0; i < DATE_LEN; i++) {
+            buffer[i] = c;
+        }
+        MAX_DATE_STRING = new String(buffer);
     }
 
     /**
@@ -70,7 +67,7 @@ class DateField {
      * 30 BC or after 3189.
      */
     public static String dateToString(Date date) {
-	return timeToString(date.getTime());
+        return timeToString(date.getTime());
     }
 
     /**
@@ -79,29 +76,29 @@ class DateField {
      */
     public static String timeToString(long time) {
 
-	time += DATE_SHIFT;
+        time += DATE_SHIFT;
 
 
-	if (time < 0) {
-	    throw new RuntimeException("time too early");
-	}
+        if (time < 0) {
+            throw new RuntimeException("time too early");
+        }
 
-	String s = Long.toString(time, Character.MAX_RADIX);
+        String s = Long.toString(time, Character.MAX_RADIX);
 
-	if (s.length() > DATE_LEN) {
-	    throw new RuntimeException("time too late");
-	}
+        if (s.length() > DATE_LEN) {
+            throw new RuntimeException("time too late");
+        }
 
-	// Pad with leading zeros
-	if (s.length() < DATE_LEN) {
-	    StringBuffer sb = new StringBuffer(s);
-	    while (sb.length() < DATE_LEN) {
-		sb.insert(0, 0);
-	    }
-	    s = sb.toString();
-	}
+        // Pad with leading zeros
+        if (s.length() < DATE_LEN) {
+            StringBuffer sb = new StringBuffer(s);
+            while (sb.length() < DATE_LEN) {
+                sb.insert(0, 0);
+            }
+            s = sb.toString();
+        }
 
-	return s;
+        return s;
     }
 
 
@@ -109,13 +106,13 @@ class DateField {
      * Converts a string-encoded date into a millisecond time.
      */
     public static long stringToTime(String s) {
-	return Long.parseLong(s, Character.MAX_RADIX) - DATE_SHIFT;
+        return Long.parseLong(s, Character.MAX_RADIX) - DATE_SHIFT;
     }
 
     /**
      * Converts a string-encoded date into a Date object.
      */
     public static Date stringToDate(String s) {
-	return new Date(stringToTime(s));
+        return new Date(stringToTime(s));
     }
 }

@@ -15,11 +15,11 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateProvider;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.*;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -43,9 +43,6 @@ import java.util.Iterator;
  * <li><code>{@link #leaving(PropertyState, int)}</code></li>
  * </ul>
  * for every item state that is granted read access.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.1 $, $Date: 2004/08/24 09:30:55 $
  */
 abstract class AbstractSAXEventGenerator {
 
@@ -62,7 +59,7 @@ abstract class AbstractSAXEventGenerator {
 
     // dummy name for root node (jcr:root)
     public static final QName NODENAME_ROOT =
-	    new QName(NamespaceRegistryImpl.NS_JCR_URI, "root");
+            new QName(NamespaceRegistryImpl.NS_JCR_URI, "root");
     // jcr:uuid
     protected static final QName PROPNAME_UUID = ItemImpl.PROPNAME_UUID;
     // jcr:primaryType
@@ -85,19 +82,19 @@ abstract class AbstractSAXEventGenerator {
      * @param contentHandler the content handler to feed the SAX events to
      */
     protected AbstractSAXEventGenerator(NodeState nodeState, QName nodeName,
-					boolean noRecurse, boolean binaryAsLink,
-					ItemStateProvider stateProvider,
-					NamespaceRegistryImpl nsReg,
-					AccessManagerImpl accessMgr,
-					ContentHandler contentHandler) {
-	this.stateProvider = stateProvider;
-	this.nsReg = nsReg;
-	this.accessMgr = accessMgr;
-	startNodeState = nodeState;
-	startNodeName = nodeName;
-	this.contentHandler = contentHandler;
-	this.binaryAsLink = binaryAsLink;
-	this.noRecurse = noRecurse;
+                                        boolean noRecurse, boolean binaryAsLink,
+                                        ItemStateProvider stateProvider,
+                                        NamespaceRegistryImpl nsReg,
+                                        AccessManagerImpl accessMgr,
+                                        ContentHandler contentHandler) {
+        this.stateProvider = stateProvider;
+        this.nsReg = nsReg;
+        this.accessMgr = accessMgr;
+        startNodeState = nodeState;
+        startNodeName = nodeName;
+        this.contentHandler = contentHandler;
+        this.binaryAsLink = binaryAsLink;
+        this.noRecurse = noRecurse;
     }
 
     /**
@@ -107,28 +104,27 @@ abstract class AbstractSAXEventGenerator {
      * @throws org.xml.sax.SAXException      if an error occured while feeding the events to the content handler
      */
     public void serialize() throws RepositoryException, SAXException {
-	contentHandler.startDocument();
-	// namespace declarations
-	documentPrefixMappings();
-	// start serializing node state(s)
-	process(startNodeState, startNodeName, 0);
+        contentHandler.startDocument();
+        // namespace declarations
+        documentPrefixMappings();
+        // start serializing node state(s)
+        process(startNodeState, startNodeName, 0);
 
-	contentHandler.endDocument();
+        contentHandler.endDocument();
     }
 
     /**
-     *
      * @throws RepositoryException
      * @throws SAXException
      */
     protected void documentPrefixMappings() throws RepositoryException, SAXException {
-	// namespace declarations
-	String[] prefixes = nsReg.getPrefixes();
-	for (int i = 0; i < prefixes.length; i++) {
-	    String prefix = prefixes[i];
-	    String uri = nsReg.getURI(prefix);
-	    contentHandler.startPrefixMapping(prefix, uri);
-	}
+        // namespace declarations
+        String[] prefixes = nsReg.getPrefixes();
+        for (int i = 0; i < prefixes.length; i++) {
+            String prefix = prefixes[i];
+            String uri = nsReg.getURI(prefix);
+            contentHandler.startPrefixMapping(prefix, uri);
+        }
     }
 
     /**
@@ -138,80 +134,79 @@ abstract class AbstractSAXEventGenerator {
      * @throws SAXException
      */
     protected void process(NodeState nodeState, QName nodeName, int level)
-	    throws RepositoryException, SAXException {
+            throws RepositoryException, SAXException {
 
-	// enter node
-	entering(nodeState, nodeName, level);
+        // enter node
+        entering(nodeState, nodeName, level);
 
-	// enter properties
-	enteringProperties(nodeState, nodeName, level);
+        // enter properties
+        enteringProperties(nodeState, nodeName, level);
 
-	// serialize jcr:primaryType, jcr:mixinTypes & jcr:uuid first:
-	// jcr:primaryType
-	if (nodeState.hasPropertyEntry(PROPNAME_PRIMARYTYPE)) {
-	    process(nodeState.getPropertyEntry(PROPNAME_PRIMARYTYPE), nodeState.getUUID(), level + 1);
-	} else {
-	    String msg = "internal error: missing jcr:primaryType property on node " + nodeState.getUUID();
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
-	// jcr:mixinTypes
-	if (nodeState.hasPropertyEntry(PROPNAME_MIXINTYPES)) {
-	    process(nodeState.getPropertyEntry(PROPNAME_MIXINTYPES), nodeState.getUUID(), level + 1);
-	}
-	// jcr:uuid
-	if (nodeState.hasPropertyEntry(PROPNAME_UUID)) {
-	    process(nodeState.getPropertyEntry(PROPNAME_UUID), nodeState.getUUID(), level + 1);
-	}
+        // serialize jcr:primaryType, jcr:mixinTypes & jcr:uuid first:
+        // jcr:primaryType
+        if (nodeState.hasPropertyEntry(PROPNAME_PRIMARYTYPE)) {
+            process(nodeState.getPropertyEntry(PROPNAME_PRIMARYTYPE), nodeState.getUUID(), level + 1);
+        } else {
+            String msg = "internal error: missing jcr:primaryType property on node " + nodeState.getUUID();
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
+        // jcr:mixinTypes
+        if (nodeState.hasPropertyEntry(PROPNAME_MIXINTYPES)) {
+            process(nodeState.getPropertyEntry(PROPNAME_MIXINTYPES), nodeState.getUUID(), level + 1);
+        }
+        // jcr:uuid
+        if (nodeState.hasPropertyEntry(PROPNAME_UUID)) {
+            process(nodeState.getPropertyEntry(PROPNAME_UUID), nodeState.getUUID(), level + 1);
+        }
 
-	// serialize remaining properties
-	Iterator iter = nodeState.getPropertyEntries().iterator();
-	while (iter.hasNext()) {
-	    NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
-	    if (PROPNAME_PRIMARYTYPE.equals(pe.getName())
-		    || PROPNAME_MIXINTYPES.equals(pe.getName())
-		    || PROPNAME_UUID.equals(pe.getName())) {
-		continue;
-	    }
-	    PropertyId propId = new PropertyId(nodeState.getUUID(), pe.getName());
-	    // check read access
-	    if (accessMgr.isGranted(propId, Permission.READ_ITEM)) {
-		// serialize property
-		process(pe, nodeState.getUUID(), level + 1);
-	    }
-	}
+        // serialize remaining properties
+        Iterator iter = nodeState.getPropertyEntries().iterator();
+        while (iter.hasNext()) {
+            NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
+            if (PROPNAME_PRIMARYTYPE.equals(pe.getName())
+                    || PROPNAME_MIXINTYPES.equals(pe.getName())
+                    || PROPNAME_UUID.equals(pe.getName())) {
+                continue;
+            }
+            PropertyId propId = new PropertyId(nodeState.getUUID(), pe.getName());
+            // check read access
+            if (accessMgr.isGranted(propId, Permission.READ_ITEM)) {
+                // serialize property
+                process(pe, nodeState.getUUID(), level + 1);
+            }
+        }
 
-	// leaving properties
-	leavingProperties(nodeState, nodeName, level);
+        // leaving properties
+        leavingProperties(nodeState, nodeName, level);
 
-	if (!noRecurse) {
-	    // child nodes
-	    iter = nodeState.getChildNodeEntries().iterator();
-	    while (iter.hasNext()) {
-		NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
-		NodeId childId = new NodeId(cne.getUUID());
-		// check read access
-		if (accessMgr.isGranted(childId, Permission.READ_ITEM)) {
-		    NodeState childState;
-		    try {
-			childState = (NodeState) stateProvider.getItemState(childId);
-		    } catch (ItemStateException ise) {
-			String msg = "internal error: failed to retrieve state of node " + childId;
-			log.error(msg, ise);
-			throw new RepositoryException(msg, ise);
-		    }
-		    // recurse
-		    process(childState, cne.getName(), level + 1);
-		}
-	    }
-	}
+        if (!noRecurse) {
+            // child nodes
+            iter = nodeState.getChildNodeEntries().iterator();
+            while (iter.hasNext()) {
+                NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
+                NodeId childId = new NodeId(cne.getUUID());
+                // check read access
+                if (accessMgr.isGranted(childId, Permission.READ_ITEM)) {
+                    NodeState childState;
+                    try {
+                        childState = (NodeState) stateProvider.getItemState(childId);
+                    } catch (ItemStateException ise) {
+                        String msg = "internal error: failed to retrieve state of node " + childId;
+                        log.error(msg, ise);
+                        throw new RepositoryException(msg, ise);
+                    }
+                    // recurse
+                    process(childState, cne.getName(), level + 1);
+                }
+            }
+        }
 
-	// leaving node
-	leaving(nodeState, nodeName, level);
+        // leaving node
+        leaving(nodeState, nodeName, level);
     }
 
     /**
-     *
      * @param propEntry
      * @param parentUUID
      * @param level
@@ -219,22 +214,21 @@ abstract class AbstractSAXEventGenerator {
      * @throws SAXException
      */
     protected void process(NodeState.PropertyEntry propEntry, String parentUUID, int level)
-	    throws RepositoryException, SAXException {
-	PropertyId propId = new PropertyId(parentUUID, propEntry.getName());
-	try {
-	    PropertyState propState = (PropertyState) stateProvider.getItemState(propId);
-	    // serialize property
-	    entering(propState, level);
-	    leaving(propState, level);
-	} catch (ItemStateException ise) {
-	    String msg = "internal error: failed to retrieve state of property " + propId;
-	    log.error(msg, ise);
-	    throw new RepositoryException(msg, ise);
-	}
+            throws RepositoryException, SAXException {
+        PropertyId propId = new PropertyId(parentUUID, propEntry.getName());
+        try {
+            PropertyState propState = (PropertyState) stateProvider.getItemState(propId);
+            // serialize property
+            entering(propState, level);
+            leaving(propState, level);
+        } catch (ItemStateException ise) {
+            String msg = "internal error: failed to retrieve state of property " + propId;
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
+        }
     }
 
     /**
-     *
      * @param state
      * @param name
      * @param level
@@ -242,10 +236,9 @@ abstract class AbstractSAXEventGenerator {
      * @throws SAXException
      */
     protected abstract void entering(NodeState state, QName name, int level)
-	    throws RepositoryException, SAXException;
+            throws RepositoryException, SAXException;
 
     /**
-     *
      * @param state
      * @param name
      * @param level
@@ -253,10 +246,9 @@ abstract class AbstractSAXEventGenerator {
      * @throws SAXException
      */
     protected abstract void enteringProperties(NodeState state, QName name, int level)
-	    throws RepositoryException, SAXException;
+            throws RepositoryException, SAXException;
 
     /**
-     *
      * @param state
      * @param name
      * @param level
@@ -264,10 +256,9 @@ abstract class AbstractSAXEventGenerator {
      * @throws SAXException
      */
     protected abstract void leavingProperties(NodeState state, QName name, int level)
-	    throws RepositoryException, SAXException;
+            throws RepositoryException, SAXException;
 
     /**
-     *
      * @param state
      * @param name
      * @param level
@@ -275,25 +266,23 @@ abstract class AbstractSAXEventGenerator {
      * @throws SAXException
      */
     protected abstract void leaving(NodeState state, QName name, int level)
-	    throws RepositoryException, SAXException;
+            throws RepositoryException, SAXException;
 
     /**
-     *
      * @param state
      * @param level
      * @throws RepositoryException
      * @throws SAXException
      */
     protected abstract void entering(PropertyState state, int level)
-	    throws RepositoryException, SAXException;
+            throws RepositoryException, SAXException;
 
     /**
-     *
      * @param state
      * @param level
      * @throws RepositoryException
      * @throws SAXException
      */
     protected abstract void leaving(PropertyState state, int level)
-	    throws RepositoryException, SAXException;
+            throws RepositoryException, SAXException;
 }

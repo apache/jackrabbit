@@ -22,34 +22,34 @@ public class ASTLocationClause extends SimpleNode {
     private int type;
 
     public ASTLocationClause(int id) {
-	super(id);
+        super(id);
     }
 
     public ASTLocationClause(JCRQLParser p, int id) {
-	super(p, id);
+        super(p, id);
     }
 
     /**
      * Accept the visitor. *
      */
     public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     public String getStringLocation() {
-	return stringLocation;
+        return stringLocation;
     }
 
     public void setStringLocation(String stringLocation) {
-	this.stringLocation = stringLocation;
+        this.stringLocation = stringLocation;
     }
 
     public int getType() {
-	return type;
+        return type;
     }
 
     public void setType(int type) {
-	this.type = type;
+        this.type = type;
     }
 
 }

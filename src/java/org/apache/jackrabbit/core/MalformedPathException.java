@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core;
 
 /**
  * <code>MalformedPathException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.4 $, $Date: 2004/09/01 15:14:27 $
  */
 public class MalformedPathException extends BaseException {
     /**
@@ -27,7 +24,7 @@ public class MalformedPathException extends BaseException {
      * detail message.
      */
     public MalformedPathException() {
-	super();
+        super();
     }
 
     /**
@@ -38,7 +35,7 @@ public class MalformedPathException extends BaseException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public MalformedPathException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -50,7 +47,7 @@ public class MalformedPathException extends BaseException {
      * @param rootCause root failure cause
      */
     public MalformedPathException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -59,6 +56,6 @@ public class MalformedPathException extends BaseException {
      * @param rootCause root failure cause
      */
     public MalformedPathException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

@@ -22,34 +22,34 @@ public class ASTRelExpr extends SimpleNode {
     private int opType;
 
     public ASTRelExpr(int id) {
-	super(id);
+        super(id);
     }
 
     public ASTRelExpr(JCRQLParser p, int id) {
-	super(p, id);
+        super(p, id);
     }
 
 
     public String getProperty() {
-	return property;
+        return property;
     }
 
     public void setProperty(String property) {
-	this.property = property;
+        this.property = property;
     }
 
     public int getOperationType() {
-	return opType;
+        return opType;
     }
 
     public void setOperationType(int opType) {
-	this.opType = opType;
+        this.opType = opType;
     }
 
     /**
      * Accept the visitor. *
      */
     public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 }

@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.state.*;
+import org.apache.log4j.Logger;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
@@ -25,9 +25,6 @@ import java.util.*;
 
 /**
  * <code>HierarchyManagerImpl</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.7 $
  */
 public class HierarchyManagerImpl implements HierarchyManager {
 
@@ -39,9 +36,9 @@ public class HierarchyManagerImpl implements HierarchyManager {
     private final NamespaceResolver nsResolver;
 
     public HierarchyManagerImpl(String rootNodeUUID, ItemStateProvider provider, NamespaceResolver nsResolver) {
-	rootNodeId = new NodeId(rootNodeUUID);
-	this.provider = provider;
-	this.nsResolver = nsResolver;
+        rootNodeId = new NodeId(rootNodeUUID);
+        this.provider = provider;
+        this.nsResolver = nsResolver;
     }
 
     //-------------------------------------------------< misc. helper methods >
@@ -53,13 +50,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @return JCR path
      */
     public String safeGetJCRPath(Path path) {
-	try {
-	    return path.toJCRPath(nsResolver);
-	} catch (NoPrefixDeclaredException npde) {
-	    log.error("failed to convert " + path.toString() + " to JCR path.");
-	    // return string representation of internal path as a fallback
-	    return path.toString();
-	}
+        try {
+            return path.toJCRPath(nsResolver);
+        } catch (NoPrefixDeclaredException npde) {
+            log.error("failed to convert " + path.toString() + " to JCR path.");
+            // return string representation of internal path as a fallback
+            return path.toString();
+        }
     }
 
     /**
@@ -70,13 +67,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @return JCR path
      */
     public String safeGetJCRPath(ItemId id) {
-	try {
-	    return safeGetJCRPath(getPath(id));
-	} catch (RepositoryException re) {
-	    log.error(id + ": failed to determine path to");
-	    // return string representation if id as a fallback
-	    return id.toString();
-	}
+        try {
+            return safeGetJCRPath(getPath(id));
+        } catch (RepositoryException re) {
+            log.error(id + ": failed to determine path to");
+            // return string representation if id as a fallback
+            return id.toString();
+        }
     }
 
     //-----------------------------------------------------< HierarchyManager >
@@ -84,328 +81,327 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @see HierarchyManager#listParents(ItemId)
      */
     public NodeId[] listParents(ItemId id) throws ItemNotFoundException, RepositoryException {
-	ArrayList list = new ArrayList();
-	try {
-	    if (id.denotesNode()) {
-		NodeState state = (NodeState) getItemState(id, false);
-		Iterator iter = state.getParentUUIDs().iterator();
-		while (iter.hasNext()) {
-		    list.add(new NodeId((String) iter.next()));
-		}
-	    } else {
-		PropertyState state = (PropertyState) getItemState(id, false);
-		list.add(new NodeId(state.getParentUUID()));
-	    }
-	} catch (NoSuchItemStateException e) {
-	    String msg = "failed to retrieve state of item " + id;
-	    log.error(msg, e);
-	    throw new ItemNotFoundException(msg, e);
-	} catch (ItemStateException e) {
-	    String msg = "failed to retrieve state of item " + id;
-	    log.error(msg, e);
-	    throw new RepositoryException(msg, e);
-	}
-	return (NodeId[]) list.toArray(new NodeId[list.size()]);
+        ArrayList list = new ArrayList();
+        try {
+            if (id.denotesNode()) {
+                NodeState state = (NodeState) getItemState(id, false);
+                Iterator iter = state.getParentUUIDs().iterator();
+                while (iter.hasNext()) {
+                    list.add(new NodeId((String) iter.next()));
+                }
+            } else {
+                PropertyState state = (PropertyState) getItemState(id, false);
+                list.add(new NodeId(state.getParentUUID()));
+            }
+        } catch (NoSuchItemStateException e) {
+            String msg = "failed to retrieve state of item " + id;
+            log.error(msg, e);
+            throw new ItemNotFoundException(msg, e);
+        } catch (ItemStateException e) {
+            String msg = "failed to retrieve state of item " + id;
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
+        }
+        return (NodeId[]) list.toArray(new NodeId[list.size()]);
     }
 
     /**
      * @see HierarchyManager#listChildren(NodeId)
      */
     public ItemId[] listChildren(NodeId id) throws ItemNotFoundException, RepositoryException {
-	NodeState parentState;
-	try {
-	    parentState = (NodeState) getItemState(id, false);
-	} catch (NoSuchItemStateException e) {
-	    String msg = "failed to retrieve state of parent node " + id;
-	    log.error(msg, e);
-	    throw new ItemNotFoundException(msg, e);
-	} catch (ItemStateException e) {
-	    String msg = "failed to retrieve state of parent node " + id;
-	    log.error(msg, e);
-	    throw new RepositoryException(msg, e);
-	}
-	ArrayList list = new ArrayList();
-	Iterator iter = parentState.getPropertyEntries().iterator();
-	while (iter.hasNext()) {
-	    // properties
-	    NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
-	    list.add(new PropertyId(id.getUUID(), pe.getName()));
-	}
-	iter = parentState.getChildNodeEntries().iterator();
-	while (iter.hasNext()) {
-	    // child nodes
-	    NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
-	    list.add(new NodeId(cne.getUUID()));
-	}
-	return (ItemId[]) list.toArray(new ItemId[list.size()]);
+        NodeState parentState;
+        try {
+            parentState = (NodeState) getItemState(id, false);
+        } catch (NoSuchItemStateException e) {
+            String msg = "failed to retrieve state of parent node " + id;
+            log.error(msg, e);
+            throw new ItemNotFoundException(msg, e);
+        } catch (ItemStateException e) {
+            String msg = "failed to retrieve state of parent node " + id;
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
+        }
+        ArrayList list = new ArrayList();
+        Iterator iter = parentState.getPropertyEntries().iterator();
+        while (iter.hasNext()) {
+            // properties
+            NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
+            list.add(new PropertyId(id.getUUID(), pe.getName()));
+        }
+        iter = parentState.getChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            // child nodes
+            NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
+            list.add(new NodeId(cne.getUUID()));
+        }
+        return (ItemId[]) list.toArray(new ItemId[list.size()]);
     }
 
     /**
      * @see HierarchyManager#listZombieChildren(NodeId)
      */
     public ItemId[] listZombieChildren(NodeId id)
-	    throws ItemNotFoundException, RepositoryException {
-	// FIXME messy code
-	NodeState parentState;
-	try {
-	    parentState = (NodeState) getItemState(id, true);
-	} catch (NoSuchItemStateException nsise) {
-	    String msg = "failed to retrieve state of parent node " + id;
-	    log.error(msg, nsise);
-	    throw new ItemNotFoundException(msg, nsise);
-	} catch (ItemStateException ise) {
-	    String msg = "failed to retrieve state of parent node " + id;
-	    log.error(msg, ise);
-	    throw new RepositoryException(msg, ise);
-	}
+            throws ItemNotFoundException, RepositoryException {
+        // FIXME messy code
+        NodeState parentState;
+        try {
+            parentState = (NodeState) getItemState(id, true);
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "failed to retrieve state of parent node " + id;
+            log.error(msg, nsise);
+            throw new ItemNotFoundException(msg, nsise);
+        } catch (ItemStateException ise) {
+            String msg = "failed to retrieve state of parent node " + id;
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
+        }
 
-	ArrayList list = new ArrayList();
-	Iterator iter = parentState.getRemovedPropertyEntries().iterator();
-	while (iter.hasNext()) {
-	    // removed properties
-	    NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
-	    list.add(new PropertyId(id.getUUID(), pe.getName()));
-	}
-	iter = parentState.getRemovedChildNodeEntries().iterator();
-	while (iter.hasNext()) {
-	    // removed child nodes
-	    NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
-	    list.add(new NodeId(cne.getUUID()));
-	}
-	return (ItemId[]) list.toArray(new ItemId[list.size()]);
+        ArrayList list = new ArrayList();
+        Iterator iter = parentState.getRemovedPropertyEntries().iterator();
+        while (iter.hasNext()) {
+            // removed properties
+            NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
+            list.add(new PropertyId(id.getUUID(), pe.getName()));
+        }
+        iter = parentState.getRemovedChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            // removed child nodes
+            NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
+            list.add(new NodeId(cne.getUUID()));
+        }
+        return (ItemId[]) list.toArray(new ItemId[list.size()]);
     }
 
     /**
      * @see HierarchyManager#resolvePath(Path)
      */
     public synchronized ItemId resolvePath(Path path)
-	    throws PathNotFoundException, RepositoryException {
-	// shortcut
-	if (path.denotesRoot()) {
-	    return rootNodeId;
-	}
+            throws PathNotFoundException, RepositoryException {
+        // shortcut
+        if (path.denotesRoot()) {
+            return rootNodeId;
+        }
 
-	if (!path.isCanonical()) {
-	    String msg = "path is not canonical";
-	    log.error(msg);
-	    throw new RepositoryException(msg);
-	}
+        if (!path.isCanonical()) {
+            String msg = "path is not canonical";
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
 
-	NodeState parentState;
-	try {
-	    parentState = (NodeState) getItemState(rootNodeId, false);
-	} catch (ItemStateException e) {
-	    String msg = "failed to retrieve state of root node";
-	    log.error(msg, e);
-	    throw new RepositoryException(msg, e);
-	}
+        NodeState parentState;
+        try {
+            parentState = (NodeState) getItemState(rootNodeId, false);
+        } catch (ItemStateException e) {
+            String msg = "failed to retrieve state of root node";
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
+        }
 
-	Path.PathElement[] elems = path.getElements();
-	for (int i = 1; i < elems.length; i++) {
-	    Path.PathElement elem = elems[i];
-	    QName name = elem.getName();
-	    int index = elem.getIndex();
-	    if (parentState.hasChildNodeEntry(name, index == 0 ? 1 : index)) {
-		// child node
-		NodeState.ChildNodeEntry nodeEntry = parentState.getChildNodeEntry(name, index == 0 ? 1 : index);
-		if (i == elems.length - 1) {
-		    // last element in the path
-		    return new NodeId(nodeEntry.getUUID());
-		}
-		try {
-		    parentState = (NodeState) getItemState(new NodeId(nodeEntry.getUUID()), false);
-		} catch (ItemStateException e) {
-		    String msg = "failed to retrieve state of intermediary node";
-		    log.error(msg, e);
-		    throw new RepositoryException(msg, e);
-		}
-		continue;
-	    } else if (parentState.hasPropertyEntry(name)) {
-		// property
-		if (index > 1) {
-		    // properties can't have same name siblings
-		    throw new PathNotFoundException(safeGetJCRPath(path));
-		}
-		if (i == elems.length - 1) {
-		    return new PropertyId(parentState.getUUID(), name);
-		} else {
-		    // property is not the last element in the path
-		    throw new PathNotFoundException(safeGetJCRPath(path));
-		}
-	    } else {
-		// no such item
-		throw new PathNotFoundException(safeGetJCRPath(path));
-	    }
-	}
+        Path.PathElement[] elems = path.getElements();
+        for (int i = 1; i < elems.length; i++) {
+            Path.PathElement elem = elems[i];
+            QName name = elem.getName();
+            int index = elem.getIndex();
+            if (parentState.hasChildNodeEntry(name, index == 0 ? 1 : index)) {
+                // child node
+                NodeState.ChildNodeEntry nodeEntry = parentState.getChildNodeEntry(name, index == 0 ? 1 : index);
+                if (i == elems.length - 1) {
+                    // last element in the path
+                    return new NodeId(nodeEntry.getUUID());
+                }
+                try {
+                    parentState = (NodeState) getItemState(new NodeId(nodeEntry.getUUID()), false);
+                } catch (ItemStateException e) {
+                    String msg = "failed to retrieve state of intermediary node";
+                    log.error(msg, e);
+                    throw new RepositoryException(msg, e);
+                }
+                continue;
+            } else if (parentState.hasPropertyEntry(name)) {
+                // property
+                if (index > 1) {
+                    // properties can't have same name siblings
+                    throw new PathNotFoundException(safeGetJCRPath(path));
+                }
+                if (i == elems.length - 1) {
+                    return new PropertyId(parentState.getUUID(), name);
+                } else {
+                    // property is not the last element in the path
+                    throw new PathNotFoundException(safeGetJCRPath(path));
+                }
+            } else {
+                // no such item
+                throw new PathNotFoundException(safeGetJCRPath(path));
+            }
+        }
 
-	throw new PathNotFoundException(safeGetJCRPath(path));
+        throw new PathNotFoundException(safeGetJCRPath(path));
     }
 
     /**
      * @see HierarchyManager#getPath(ItemId)
      */
     public synchronized Path getPath(ItemId id) throws ItemNotFoundException, RepositoryException {
-	try {
-	    Path.PathBuilder builder = new Path.PathBuilder();
+        try {
+            Path.PathBuilder builder = new Path.PathBuilder();
 
-	    ItemState state = getItemState(id, false);
-	    String parentUUID = state.getParentUUID();
-	    if (parentUUID == null) {
-		// specified id denotes the root node
-		builder.addRoot();
-		return builder.getPath();
-	    }
+            ItemState state = getItemState(id, false);
+            String parentUUID = state.getParentUUID();
+            if (parentUUID == null) {
+                // specified id denotes the root node
+                builder.addRoot();
+                return builder.getPath();
+            }
 
-	    NodeState parent = (NodeState) getItemState(new NodeId(parentUUID), false);
-	    do {
-		if (state.isNode()) {
-		    NodeState nodeState = (NodeState) state;
-		    String uuid = nodeState.getUUID();
-		    List entries = parent.getChildNodeEntries(uuid);
-		    if (entries.isEmpty()) {
-			String msg = "failed to build path of " + id + ": " + parent.getUUID() + " has no child entry for " + uuid;
-			log.error(msg);
-			throw new RepositoryException(msg);
-		    }
-		    // if the parent has more than one child node entries pointing
-		    // to the same child node, always use the first one
-		    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
-		    QName name = entry.getName();
-		    // add to path
-		    builder.addFirst(name.getNamespaceURI(), name.getLocalName(), entry.getIndex());
-		} else {
-		    PropertyState propState = (PropertyState) state;
-		    QName name = propState.getName();
-		    // add to path
-		    builder.addFirst(name.getNamespaceURI(), name.getLocalName());
-		}
-		parentUUID = parent.getParentUUID();
-		if (parentUUID != null) {
-		    state = parent;
-		    parent = (NodeState) getItemState(new NodeId(parentUUID), false);
-		} else {
-		    parent = null;
-		    state = null;
-		}
-	    } while (parent != null);
+            NodeState parent = (NodeState) getItemState(new NodeId(parentUUID), false);
+            do {
+                if (state.isNode()) {
+                    NodeState nodeState = (NodeState) state;
+                    String uuid = nodeState.getUUID();
+                    List entries = parent.getChildNodeEntries(uuid);
+                    if (entries.isEmpty()) {
+                        String msg = "failed to build path of " + id + ": " + parent.getUUID() + " has no child entry for " + uuid;
+                        log.error(msg);
+                        throw new RepositoryException(msg);
+                    }
+                    // if the parent has more than one child node entries pointing
+                    // to the same child node, always use the first one
+                    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
+                    QName name = entry.getName();
+                    // add to path
+                    builder.addFirst(name.getNamespaceURI(), name.getLocalName(), entry.getIndex());
+                } else {
+                    PropertyState propState = (PropertyState) state;
+                    QName name = propState.getName();
+                    // add to path
+                    builder.addFirst(name.getNamespaceURI(), name.getLocalName());
+                }
+                parentUUID = parent.getParentUUID();
+                if (parentUUID != null) {
+                    state = parent;
+                    parent = (NodeState) getItemState(new NodeId(parentUUID), false);
+                } else {
+                    parent = null;
+                    state = null;
+                }
+            } while (parent != null);
 
-	    // add root to path
-	    builder.addRoot();
-	    return builder.getPath();
-	} catch (NoSuchItemStateException nsise) {
-	    String msg = "failed to build path of " + id;
-	    log.error(msg, nsise);
-	    throw new ItemNotFoundException(msg, nsise);
-	} catch (ItemStateException ise) {
-	    String msg = "failed to build path of " + id;
-	    log.error(msg, ise);
-	    throw new RepositoryException(msg, ise);
-	} catch (MalformedPathException mpe) {
-	    String msg = "failed to build path of " + id;
-	    log.error(msg, mpe);
-	    throw new RepositoryException(msg, mpe);
-	}
+            // add root to path
+            builder.addRoot();
+            return builder.getPath();
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "failed to build path of " + id;
+            log.error(msg, nsise);
+            throw new ItemNotFoundException(msg, nsise);
+        } catch (ItemStateException ise) {
+            String msg = "failed to build path of " + id;
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
+        } catch (MalformedPathException mpe) {
+            String msg = "failed to build path of " + id;
+            log.error(msg, mpe);
+            throw new RepositoryException(msg, mpe);
+        }
     }
 
     /**
      * @see HierarchyManager#getName(ItemId)
      */
     public QName getName(ItemId itemId) throws ItemNotFoundException, RepositoryException {
-	if (itemId.denotesNode()) {
-	    NodeId nodeId = (NodeId) itemId;
-	    NodeState parentState;
-	    if (!provider.hasItemState(nodeId)) {
-		String msg = "failed to resolve name of " + nodeId;
-		log.error(msg);
-		throw new ItemNotFoundException(nodeId.toString());
-	    }
-	    try {
-		NodeState nodeState = (NodeState) getItemState(nodeId, false);
-		String parentUUID = nodeState.getParentUUID();
-		if (parentUUID == null) {
-		    // this is the root or an orphaned node
-		    // FIXME
-		    return new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, "");
-		}
-		parentState = (NodeState) getItemState(new NodeId(parentUUID), true);
-	    } catch (ItemStateException ise) {
-		String msg = "failed to resolve name of " + nodeId;
-		log.error(msg, ise);
-		throw new RepositoryException(msg, ise);
-	    }
+        if (itemId.denotesNode()) {
+            NodeId nodeId = (NodeId) itemId;
+            NodeState parentState;
+            if (!provider.hasItemState(nodeId)) {
+                String msg = "failed to resolve name of " + nodeId;
+                log.error(msg);
+                throw new ItemNotFoundException(nodeId.toString());
+            }
+            try {
+                NodeState nodeState = (NodeState) getItemState(nodeId, false);
+                String parentUUID = nodeState.getParentUUID();
+                if (parentUUID == null) {
+                    // this is the root or an orphaned node
+                    // FIXME
+                    return new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, "");
+                }
+                parentState = (NodeState) getItemState(new NodeId(parentUUID), true);
+            } catch (ItemStateException ise) {
+                String msg = "failed to resolve name of " + nodeId;
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
 
-	    List entries = parentState.getChildNodeEntries(nodeId.getUUID());
-	    if (entries.size() == 0) {
-		String msg = "failed to resolve name of " + nodeId;
-		log.error(msg);
-		throw new RepositoryException(msg);
-	    }
-	    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
-	    return entry.getName();
-	} else {
-	    PropertyId propId = (PropertyId) itemId;
-	    return propId.getName();
-	}
+            List entries = parentState.getChildNodeEntries(nodeId.getUUID());
+            if (entries.size() == 0) {
+                String msg = "failed to resolve name of " + nodeId;
+                log.error(msg);
+                throw new RepositoryException(msg);
+            }
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
+            return entry.getName();
+        } else {
+            PropertyId propId = (PropertyId) itemId;
+            return propId.getName();
+        }
     }
 
     /**
      * @see HierarchyManager#getAllPaths(ItemId)
      */
     public synchronized Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException {
-	return getAllPaths(id, false);
+        return getAllPaths(id, false);
     }
 
     /**
      * @see HierarchyManager#getAllPaths(ItemId, boolean)
      */
     public synchronized Path[] getAllPaths(ItemId id, boolean includeZombies)
-	    throws ItemNotFoundException, RepositoryException {
-	Path.PathBuilder builder = new Path.PathBuilder();
-	ArrayList list = new ArrayList();
-	list.add(builder);
+            throws ItemNotFoundException, RepositoryException {
+        Path.PathBuilder builder = new Path.PathBuilder();
+        ArrayList list = new ArrayList();
+        list.add(builder);
 
-	NodeId nodeId = null;
-	if (!id.denotesNode()) {
-	    try {
-		PropertyState propState = (PropertyState) getItemState(id, includeZombies);
-		QName name = propState.getName();
-		// add to path
-		builder.addFirst(name.getNamespaceURI(), name.getLocalName());
-		nodeId = new NodeId(propState.getParentUUID());
-	    } catch (NoSuchItemStateException nsise) {
-		String msg = "failed to build path of " + id;
-		log.error(msg, nsise);
-		throw new ItemNotFoundException(msg, nsise);
-	    } catch (ItemStateException ise) {
-		String msg = "failed to build path of " + id;
-		log.error(msg, ise);
-		throw new RepositoryException(msg, ise);
-	    }
-	} else {
-	    nodeId = (NodeId) id;
-	}
+        NodeId nodeId = null;
+        if (!id.denotesNode()) {
+            try {
+                PropertyState propState = (PropertyState) getItemState(id, includeZombies);
+                QName name = propState.getName();
+                // add to path
+                builder.addFirst(name.getNamespaceURI(), name.getLocalName());
+                nodeId = new NodeId(propState.getParentUUID());
+            } catch (NoSuchItemStateException nsise) {
+                String msg = "failed to build path of " + id;
+                log.error(msg, nsise);
+                throw new ItemNotFoundException(msg, nsise);
+            } catch (ItemStateException ise) {
+                String msg = "failed to build path of " + id;
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
+        } else {
+            nodeId = (NodeId) id;
+        }
 
-	// recursively traverse parent nodes
-	recursiveBuildPaths(nodeId, builder, list, includeZombies);
+        // recursively traverse parent nodes
+        recursiveBuildPaths(nodeId, builder, list, includeZombies);
 
-	Path[] paths = new Path[list.size()];
-	int i = 0;
-	Iterator iter = list.iterator();
-	while (iter.hasNext()) {
-	    Path.PathBuilder pb = (Path.PathBuilder) iter.next();
-	    try {
-		paths[i++] = pb.getPath();
-	    } catch (MalformedPathException mpe) {
-		String msg = "failed to build all paths of " + id;
-		log.error(msg, mpe);
-		throw new RepositoryException(msg, mpe);
-	    }
-	}
-	return paths;
+        Path[] paths = new Path[list.size()];
+        int i = 0;
+        Iterator iter = list.iterator();
+        while (iter.hasNext()) {
+            Path.PathBuilder pb = (Path.PathBuilder) iter.next();
+            try {
+                paths[i++] = pb.getPath();
+            } catch (MalformedPathException mpe) {
+                String msg = "failed to build all paths of " + id;
+                log.error(msg, mpe);
+                throw new RepositoryException(msg, mpe);
+            }
+        }
+        return paths;
     }
 
     /**
-     *
      * @param id
      * @param includeZombies
      * @return
@@ -413,19 +409,19 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @throws ItemStateException
      */
     private ItemState getItemState(ItemId id, boolean includeZombies)
-	    throws NoSuchItemStateException, ItemStateException {
-	if (!includeZombies) {
-	    // get transient/persistent state
-	    return provider.getItemState(id);
-	}
+            throws NoSuchItemStateException, ItemStateException {
+        if (!includeZombies) {
+            // get transient/persistent state
+            return provider.getItemState(id);
+        }
 
-	try {
-	    // try attic first
-	    return provider.getItemStateInAttic(id);
-	} catch (NoSuchItemStateException e) {
-	    // fallback: get transient/persistent state
-	    return provider.getItemState(id);
-	}
+        try {
+            // try attic first
+            return provider.getItemStateInAttic(id);
+        } catch (NoSuchItemStateException e) {
+            // fallback: get transient/persistent state
+            return provider.getItemState(id);
+        }
     }
 
     /**
@@ -437,95 +433,95 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @throws RepositoryException
      */
     private void recursiveBuildPaths(NodeId nodeId, Path.PathBuilder builder,
-				     List builders, boolean includeZombies)
-	    throws ItemNotFoundException, RepositoryException {
-	try {
-	    NodeState nodeState = (NodeState) getItemState(nodeId, includeZombies);
+                                     List builders, boolean includeZombies)
+            throws ItemNotFoundException, RepositoryException {
+        try {
+            NodeState nodeState = (NodeState) getItemState(nodeId, includeZombies);
 
-	    String uuid = nodeState.getUUID();
-	    /**
-	     * the parent uuid list contains an entry for every parent-child
-	     * link to the specified node. this list may contain duplicate
-	     * entries if the same parent node has more than one child link to
-	     * the same target node. because the following code expects unique
-	     * entries in the parent uuid list, we put them into a set.
-	     */
-	    HashSet parentUUIDs = new HashSet(nodeState.getParentUUIDs());
-	    if (includeZombies) {
-		parentUUIDs.addAll(nodeState.getRemovedParentUUIDs());
-	    }
-	    if (parentUUIDs.size() == 0) {
-		// nodeId denotes the root node
-		builder.addRoot();
-		return;
-	    }
+            String uuid = nodeState.getUUID();
+            /**
+             * the parent uuid list contains an entry for every parent-child
+             * link to the specified node. this list may contain duplicate
+             * entries if the same parent node has more than one child link to
+             * the same target node. because the following code expects unique
+             * entries in the parent uuid list, we put them into a set.
+             */
+            HashSet parentUUIDs = new HashSet(nodeState.getParentUUIDs());
+            if (includeZombies) {
+                parentUUIDs.addAll(nodeState.getRemovedParentUUIDs());
+            }
+            if (parentUUIDs.size() == 0) {
+                // nodeId denotes the root node
+                builder.addRoot();
+                return;
+            }
 
-	    // if the specified node has n parents,
-	    // we need to create n - 1 path builder clones
-	    LinkedList queue = new LinkedList();
-	    queue.add(builder);
-	    int n = parentUUIDs.size() - 1;
-	    while (n-- > 0) {
-		Path.PathBuilder clone = (Path.PathBuilder) builder.clone();
-		queue.addLast(clone);
-		// add to list of path builders
-		builders.add(clone);
-	    }
+            // if the specified node has n parents,
+            // we need to create n - 1 path builder clones
+            LinkedList queue = new LinkedList();
+            queue.add(builder);
+            int n = parentUUIDs.size() - 1;
+            while (n-- > 0) {
+                Path.PathBuilder clone = (Path.PathBuilder) builder.clone();
+                queue.addLast(clone);
+                // add to list of path builders
+                builders.add(clone);
+            }
 
-	    Iterator iter = parentUUIDs.iterator();
-	    while (iter.hasNext()) {
-		String parentUUID = (String) iter.next();
-		NodeState parent = (NodeState) getItemState(new NodeId(parentUUID), includeZombies);
-		ArrayList entries = new ArrayList(parent.getChildNodeEntries(uuid));
-		if (includeZombies) {
-		    Iterator riter = parent.getRemovedChildNodeEntries().iterator();
-		    while (riter.hasNext()) {
-			NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) riter.next();
-			if (entry.getUUID().equals(uuid)) {
-			    entries.add(entry);
-			}
-		    }
-		}
-		if (entries.isEmpty()) {
-		    String msg = "failed to build path of " + nodeId + ": " + parent.getUUID() + " has no child entry for " + uuid;
-		    log.error(msg);
-		    throw new RepositoryException(msg);
-		}
-		n = entries.size() - 1;
-		while (n-- > 0) {
-		    // the same parent has multiple child references to
-		    // this node, more path builder clones are needed
+            Iterator iter = parentUUIDs.iterator();
+            while (iter.hasNext()) {
+                String parentUUID = (String) iter.next();
+                NodeState parent = (NodeState) getItemState(new NodeId(parentUUID), includeZombies);
+                ArrayList entries = new ArrayList(parent.getChildNodeEntries(uuid));
+                if (includeZombies) {
+                    Iterator riter = parent.getRemovedChildNodeEntries().iterator();
+                    while (riter.hasNext()) {
+                        NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) riter.next();
+                        if (entry.getUUID().equals(uuid)) {
+                            entries.add(entry);
+                        }
+                    }
+                }
+                if (entries.isEmpty()) {
+                    String msg = "failed to build path of " + nodeId + ": " + parent.getUUID() + " has no child entry for " + uuid;
+                    log.error(msg);
+                    throw new RepositoryException(msg);
+                }
+                n = entries.size() - 1;
+                while (n-- > 0) {
+                    // the same parent has multiple child references to
+                    // this node, more path builder clones are needed
 
-		    // since we are consuming the queue of path builders
-		    // starting at the tail, we can safely clone 'builder'
-		    // because it will be consumed as the very last queue entry
-		    Path.PathBuilder clone = (Path.PathBuilder) builder.clone();
-		    queue.add(clone);
-		    // add to list of path builders
-		    builders.add(clone);
-		}
-		for (int i = 0; i < entries.size(); i++) {
-		    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(i);
-		    QName name = entry.getName();
+                    // since we are consuming the queue of path builders
+                    // starting at the tail, we can safely clone 'builder'
+                    // because it will be consumed as the very last queue entry
+                    Path.PathBuilder clone = (Path.PathBuilder) builder.clone();
+                    queue.add(clone);
+                    // add to list of path builders
+                    builders.add(clone);
+                }
+                for (int i = 0; i < entries.size(); i++) {
+                    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(i);
+                    QName name = entry.getName();
 
-		    // get a path builder clone from the tail of the queue
-		    Path.PathBuilder pb = (Path.PathBuilder) queue.removeLast();
-		    // add entry to path
-		    pb.addFirst(name.getNamespaceURI(), name.getLocalName(), entry.getIndex());
+                    // get a path builder clone from the tail of the queue
+                    Path.PathBuilder pb = (Path.PathBuilder) queue.removeLast();
+                    // add entry to path
+                    pb.addFirst(name.getNamespaceURI(), name.getLocalName(), entry.getIndex());
 
-		    // recurse
-		    recursiveBuildPaths(new NodeId(parentUUID), pb, builders, includeZombies);
-		}
-	    }
-	} catch (NoSuchItemStateException nsise) {
-	    String msg = "failed to build path of " + nodeId;
-	    log.error(msg, nsise);
-	    throw new ItemNotFoundException(msg, nsise);
-	} catch (ItemStateException ise) {
-	    String msg = "failed to build path of " + nodeId;
-	    log.error(msg, ise);
-	    throw new RepositoryException(msg, ise);
-	}
+                    // recurse
+                    recursiveBuildPaths(new NodeId(parentUUID), pb, builders, includeZombies);
+                }
+            }
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "failed to build path of " + nodeId;
+            log.error(msg, nsise);
+            throw new ItemNotFoundException(msg, nsise);
+        } catch (ItemStateException ise) {
+            String msg = "failed to build path of " + nodeId;
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
+        }
     }
 }
 

@@ -22,37 +22,37 @@ public class ASTValue extends SimpleNode {
     private int type;
 
     public ASTValue(int id) {
-	super(id);
+        super(id);
     }
 
     public ASTValue(JCRQLParser p, int id) {
-	super(p, id);
+        super(p, id);
     }
 
     public String getValue() {
-	return value;
+        return value;
     }
 
     public void setValue(String value) {
-	this.value = value;
+        this.value = value;
     }
 
     public int getType() {
-	return type;
+        return type;
     }
 
     public void setType(int type) {
-	this.type = type;
+        this.type = type;
     }
 
     /**
      * Accept the visitor. *
      */
     public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     public String toString() {
-	return super.toString() + ": " + value + " type:" + type;
+        return super.toString() + ": " + value + " type:" + type;
     }
 }

@@ -65,219 +65,219 @@
 
     <!-- primary types -->
     <nodeType name="nt:base" mixin="false" orderableChildNodes="false">
-	<propertyDef name="jcr:primaryType" type="Name" autoCreate="true" mandatory="true" onParentVersion="COMPUTE" protected="true" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:mixinTypes" type="Name" autoCreate="false" mandatory="false" onParentVersion="COMPUTE" protected="true" primaryItem="false" multiple="true"/>
+        <propertyDef name="jcr:primaryType" type="Name" autoCreate="true" mandatory="true" onParentVersion="COMPUTE" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:mixinTypes" type="Name" autoCreate="false" mandatory="false" onParentVersion="COMPUTE" protected="true" primaryItem="false" multiple="true"/>
     </nodeType>
     <nodeType name="nt:unstructured" mixin="false" orderableChildNodes="true">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	</supertypes>
-	<childNodeDef name="*" defaultPrimaryType="nt:unstructured" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" sameNameSibs="true">
-	    <requiredPrimaryTypes>
-		<requiredPrimaryType>nt:base</requiredPrimaryType>
-	    </requiredPrimaryTypes>
-	</childNodeDef>
-	<propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
-	<propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <childNodeDef name="*" defaultPrimaryType="nt:unstructured" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" sameNameSibs="true">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:base</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
+        <propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
+        <propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:hierarchyNode" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	</supertypes>
-	<propertyDef name="jcr:created" type="Date" autoCreate="true" mandatory="true" onParentVersion="INITIALIZE" protected="true" primaryItem="false" multiple="false"/>
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDef name="jcr:created" type="Date" autoCreate="true" mandatory="true" onParentVersion="INITIALIZE" protected="true" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:file" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:hierarchyNode</supertype>
-	</supertypes>
-	<childNodeDef name="jcr:content" defaultPrimaryType="" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="true" sameNameSibs="false">
-	    <requiredPrimaryTypes>
-		<requiredPrimaryType>nt:base</requiredPrimaryType>
-	    </requiredPrimaryTypes>
-	</childNodeDef>
+        <supertypes>
+            <supertype>nt:hierarchyNode</supertype>
+        </supertypes>
+        <childNodeDef name="jcr:content" defaultPrimaryType="" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="true" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:base</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
     </nodeType>
     <nodeType name="nt:mimeResource" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	    <supertype>mix:referenceable</supertype>
-	</supertypes>
-	<propertyDef name="jcr:encoding" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:mimeType" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:data" type="Binary" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="true" multiple="false"/>
-	<propertyDef name="jcr:lastModified" type="Date" autoCreate="false" mandatory="true" onParentVersion="COMPUTE" protected="false" primaryItem="false" multiple="false"/>
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>mix:referenceable</supertype>
+        </supertypes>
+        <propertyDef name="jcr:encoding" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:mimeType" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:data" type="Binary" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="true" multiple="false"/>
+        <propertyDef name="jcr:lastModified" type="Date" autoCreate="false" mandatory="true" onParentVersion="COMPUTE" protected="false" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:folder" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:hierarchyNode</supertype>
-	</supertypes>
-	<childNodeDef name="*" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" primaryItem="false" sameNameSibs="false">
-	    <requiredPrimaryTypes>
-		<requiredPrimaryType>nt:hierarchyNode</requiredPrimaryType>
-	    </requiredPrimaryTypes>
-	</childNodeDef>
+        <supertypes>
+            <supertype>nt:hierarchyNode</supertype>
+        </supertypes>
+        <childNodeDef name="*" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" primaryItem="false" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:hierarchyNode</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
     </nodeType>
     <nodeType name="nt:nodeType" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	</supertypes>
-	<propertyDef name="jcr:nodeTypeName" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:supertypes" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
-	<propertyDef name="jcr:isMixin" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:orderableChildNodes" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<childNodeDef name="jcr:propertyDef" defaultPrimaryType="nt:propertyDef" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" primaryItem="false" sameNameSibs="true">
-	    <requiredPrimaryTypes>
-		<requiredPrimaryType>nt:propertyDef</requiredPrimaryType>
-	    </requiredPrimaryTypes>
-	</childNodeDef>
- 	<childNodeDef name="jcr:childNodeDef" defaultPrimaryType="nt:childNodeDef" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" primaryItem="false" sameNameSibs="true">
-	     <requiredPrimaryTypes>
-		 <requiredPrimaryType>nt:childNodeDef</requiredPrimaryType>
-	     </requiredPrimaryTypes>
-	 </childNodeDef>
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDef name="jcr:nodeTypeName" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:supertypes" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
+        <propertyDef name="jcr:isMixin" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:orderableChildNodes" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <childNodeDef name="jcr:propertyDef" defaultPrimaryType="nt:propertyDef" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" primaryItem="false" sameNameSibs="true">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:propertyDef</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
+        <childNodeDef name="jcr:childNodeDef" defaultPrimaryType="nt:childNodeDef" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" primaryItem="false" sameNameSibs="true">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:childNodeDef</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
     </nodeType>
     <nodeType name="nt:propertyDef" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	</supertypes>
-	<propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:type" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:valueConstraint" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:defaultValues" type="undefined" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:autoCreate" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:mandatory" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:onParentVersion" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:protected" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:primaryItem" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:multiple" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:type" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:valueConstraint" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:defaultValues" type="undefined" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:autoCreate" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:mandatory" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:onParentVersion" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:protected" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:primaryItem" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:multiple" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:childNodeDef" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	</supertypes>
-	<propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:requiredPrimaryTypes" type="String" autoCreate="true" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true">
-	    <defaultValues>
-		<defaultValue>nt:base</defaultValue>
-	    </defaultValues>
-	</propertyDef>
-	<propertyDef name="jcr:defaultPrimaryType" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:autoCreate" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:mandatory" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:onParentVersion" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:protected" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:primaryItem" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:sameNameSibs" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:requiredPrimaryTypes" type="String" autoCreate="true" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true">
+            <defaultValues>
+                <defaultValue>nt:base</defaultValue>
+            </defaultValues>
+        </propertyDef>
+        <propertyDef name="jcr:defaultPrimaryType" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:autoCreate" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:mandatory" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:onParentVersion" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:protected" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:primaryItem" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:sameNameSibs" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:versionHistory" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	    <supertype>mix:referenceable</supertype>
-	</supertypes>
-	<childNodeDef name="jcr:rootVersion" defaultPrimaryType="nt:version" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="false">
-	    <requiredPrimaryTypes>
-		<requiredPrimaryType>nt:version</requiredPrimaryType>
-	    </requiredPrimaryTypes>
-	</childNodeDef>
- 	<childNodeDef name="*" defaultPrimaryType="nt:version" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="false">
-	     <requiredPrimaryTypes>
-		 <requiredPrimaryType>nt:version</requiredPrimaryType>
-	     </requiredPrimaryTypes>
-	 </childNodeDef>
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>mix:referenceable</supertype>
+        </supertypes>
+        <childNodeDef name="jcr:rootVersion" defaultPrimaryType="nt:version" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:version</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
+        <childNodeDef name="*" defaultPrimaryType="nt:version" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:version</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
     </nodeType>
     <nodeType name="nt:frozenVersionableChild" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	</supertypes>
-	<propertyDef name="jcr:versionHistory" type="Reference" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false">
-	    <valueConstraints>
-		<valueConstraint>nt:versionHistory</valueConstraint>
-	    </valueConstraints>
-	</propertyDef>
-	<propertyDef name="jcr:baseVersion" type="Reference" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false">
-	    <valueConstraints>
-		<valueConstraint>nt:version</valueConstraint>
-	    </valueConstraints>
-	</propertyDef>
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDef name="jcr:versionHistory" type="Reference" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false">
+            <valueConstraints>
+                <valueConstraint>nt:versionHistory</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
+        <propertyDef name="jcr:baseVersion" type="Reference" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false">
+            <valueConstraints>
+                <valueConstraint>nt:version</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
     </nodeType>
     <nodeType name="nt:frozen" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	</supertypes>
-	<propertyDef name="jcr:frozenPrimaryType" type="Name" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:frozenMixinTypes" type="Name" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
-	<propertyDef name="jcr:frozenUUID" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-	<propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
-	<propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-	<childNodeDef name="*" defaultPrimaryType="nt:frozen" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="true">
-	    <requiredPrimaryTypes>
-		<requiredPrimaryType>nt:base</requiredPrimaryType>
-	    </requiredPrimaryTypes>
-	</childNodeDef>
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDef name="jcr:frozenPrimaryType" type="Name" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:frozenMixinTypes" type="Name" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
+        <propertyDef name="jcr:frozenUUID" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
+        <propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
+        <childNodeDef name="*" defaultPrimaryType="nt:frozen" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="true">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:base</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
     </nodeType>
     <nodeType name="nt:version" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:frozen</supertype>
-	    <supertype>mix:referenceable</supertype>
-	</supertypes>
-	<propertyDef name="jcr:versionLabels" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
-	<propertyDef name="jcr:created" type="Date" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:predecessors" type="Reference" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true">
-	    <valueConstraints>
-		<valueConstraint>nt:version</valueConstraint>
-	    </valueConstraints>
-	</propertyDef>
-	<propertyDef name="jcr:successors" type="Reference" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true">
-	    <valueConstraints>
-		<valueConstraint>nt:version</valueConstraint>
-	    </valueConstraints>
-	</propertyDef>
+        <supertypes>
+            <supertype>nt:frozen</supertype>
+            <supertype>mix:referenceable</supertype>
+        </supertypes>
+        <propertyDef name="jcr:versionLabels" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
+        <propertyDef name="jcr:created" type="Date" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:predecessors" type="Reference" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true">
+            <valueConstraints>
+                <valueConstraint>nt:version</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
+        <propertyDef name="jcr:successors" type="Reference" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true">
+            <valueConstraints>
+                <valueConstraint>nt:version</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
     </nodeType>
     <nodeType name="nt:query" mixin="false" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>nt:base</supertype>
-	</supertypes>
-	<propertyDef name="jcr:statement" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:language" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDef name="jcr:statement" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:language" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
     </nodeType>
 
     <!-- mixin types -->
     <nodeType name="mix:accessControllable" mixin="true" orderableChildNodes="false">
     </nodeType>
     <nodeType name="mix:lockable" mixin="true" orderableChildNodes="false">
-	<propertyDef name="jcr:lockOwner" type="String" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false"/>
-	<propertyDef name="jcr:lockIsDeep" type="Boolean" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:lockOwner" type="String" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:lockIsDeep" type="Boolean" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="mix:referenceable" mixin="true" orderableChildNodes="false">
-	<propertyDef name="jcr:uuid" type="String" autoCreate="true" mandatory="true" onParentVersion="INITIALIZE" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:uuid" type="String" autoCreate="true" mandatory="true" onParentVersion="INITIALIZE" protected="true" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="mix:versionable" mixin="true" orderableChildNodes="false">
-	<supertypes>
-	    <supertype>mix:referenceable</supertype>
-	</supertypes>
-	<propertyDef name="jcr:versionHistory" type="Reference" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="true" primaryItem="false" multiple="false">
-	    <valueConstraints>
-		<valueConstraint>nt:versionHistory</valueConstraint>
-	    </valueConstraints>
-	</propertyDef>
-	<propertyDef name="jcr:baseVersion" type="Reference" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
-	    <valueConstraints>
-		<valueConstraint>nt:version</valueConstraint>
-	    </valueConstraints>
-	</propertyDef>
-	<propertyDef name="jcr:isCheckedOut" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
-	    <defaultValues>
-		<defaultValue>true</defaultValue>
-	    </defaultValues>
-	</propertyDef>
-	<propertyDef name="jcr:predecessors" type="Reference" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="true" primaryItem="false" multiple="true">
-	    <valueConstraints>
-		<valueConstraint>nt:version</valueConstraint>
-	    </valueConstraints>
-	</propertyDef>
-	<propertyDef name="jcr:mergeFailed" type="Reference" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" primaryItem="false" multiple="true">
-	    <valueConstraints>
-		<valueConstraint>nt:version</valueConstraint>
-	    </valueConstraints>
-	</propertyDef>
+        <supertypes>
+            <supertype>mix:referenceable</supertype>
+        </supertypes>
+        <propertyDef name="jcr:versionHistory" type="Reference" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="true" primaryItem="false" multiple="false">
+            <valueConstraints>
+                <valueConstraint>nt:versionHistory</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
+        <propertyDef name="jcr:baseVersion" type="Reference" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
+            <valueConstraints>
+                <valueConstraint>nt:version</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
+        <propertyDef name="jcr:isCheckedOut" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="true" primaryItem="false" multiple="false">
+            <defaultValues>
+                <defaultValue>true</defaultValue>
+            </defaultValues>
+        </propertyDef>
+        <propertyDef name="jcr:predecessors" type="Reference" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="true" primaryItem="false" multiple="true">
+            <valueConstraints>
+                <valueConstraint>nt:version</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
+        <propertyDef name="jcr:mergeFailed" type="Reference" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" primaryItem="false" multiple="true">
+            <valueConstraints>
+                <valueConstraint>nt:version</valueConstraint>
+            </valueConstraints>
+        </propertyDef>
     </nodeType>
 </nodeTypes>

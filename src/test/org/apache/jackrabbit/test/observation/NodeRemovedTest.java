@@ -15,57 +15,54 @@
  */
 package org.apache.jackrabbit.test.observation;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.observation.EventType;
+import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.EventType;
 
 /**
  * Test cases for {@link javax.jcr.observation.EventType#CHILD_NODE_REMOVED
  * CHILD_NODE_REMOVED} events.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class NodeRemovedTest extends AbstractObservationTest {
 
     public void testSingleNodeRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-	addEventListener(result, EventType.CHILD_NODE_REMOVED);
+        addEventListener(result, EventType.CHILD_NODE_REMOVED);
         testRoot.addNode("foo", NT_UNSTRUCTURED);
         testRoot.save();
-	testRoot.remove("foo");
-	testRoot.save();
+        testRoot.remove("foo");
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeRemoved(events, new String[] { "foo" });
+        checkNodeRemoved(events, new String[]{"foo"});
     }
 
     public void testMultiNodesRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-	addEventListener(result, EventType.CHILD_NODE_REMOVED);
+        addEventListener(result, EventType.CHILD_NODE_REMOVED);
         Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.addNode("bar", NT_UNSTRUCTURED);
+        foo.addNode("bar", NT_UNSTRUCTURED);
         testRoot.save();
-	testRoot.remove("foo");
-	testRoot.save();
+        testRoot.remove("foo");
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkNodeRemoved(events, new String[] { "foo", "foo/bar" });
+        checkNodeRemoved(events, new String[]{"foo", "foo/bar"});
     }
 
     public void testMultiNodesRemovedWithRemaining() throws RepositoryException {
-	EventResult result = new EventResult(log);
-	addEventListener(result, EventType.CHILD_NODE_REMOVED);
-	Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	testRoot.addNode("foobar", NT_UNSTRUCTURED);
-	foo.addNode("bar", NT_UNSTRUCTURED);
-	testRoot.save();
-	testRoot.remove("foo");
-	testRoot.save();
-	removeEventListener(result);
-	Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkNodeRemoved(events, new String[] { "foo", "foo/bar" });
+        EventResult result = new EventResult(log);
+        addEventListener(result, EventType.CHILD_NODE_REMOVED);
+        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        testRoot.addNode("foobar", NT_UNSTRUCTURED);
+        foo.addNode("bar", NT_UNSTRUCTURED);
+        testRoot.save();
+        testRoot.remove("foo");
+        testRoot.save();
+        removeEventListener(result);
+        Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        checkNodeRemoved(events, new String[]{"foo", "foo/bar"});
     }
 
 }

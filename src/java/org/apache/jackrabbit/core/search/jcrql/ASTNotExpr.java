@@ -16,17 +16,19 @@
 package org.apache.jackrabbit.core.search.jcrql;
 
 public class ASTNotExpr extends SimpleNode {
-  public ASTNotExpr(int id) {
-    super(id);
-  }
+    public ASTNotExpr(int id) {
+        super(id);
+    }
 
-  public ASTNotExpr(JCRQLParser p, int id) {
-    super(p, id);
-  }
+    public ASTNotExpr(JCRQLParser p, int id) {
+        super(p, id);
+    }
 
 
-  /** Accept the visitor. **/
-  public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-    return visitor.visit(this, data);
-  }
+    /**
+     * Accept the visitor. *
+     */
+    public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
+        return visitor.visit(this, data);
+    }
 }

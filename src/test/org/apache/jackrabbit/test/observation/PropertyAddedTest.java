@@ -15,47 +15,42 @@
  */
 package org.apache.jackrabbit.test.observation;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.observation.EventType;
+import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.EventType;
 
 /**
  * Test cases for {@link javax.jcr.observation.EventType#PROPERTY_ADDED
  * PROPERTY_ADDED} events.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class PropertyAddedTest extends AbstractObservationTest {
 
     public void testSinglePropertyAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
-	addEventListener(result, EventType.PROPERTY_ADDED);
-	Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.setProperty("prop1", new String[] { "foo" });
-	testRoot.save();
+        addEventListener(result, EventType.PROPERTY_ADDED);
+        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("prop1", new String[]{"foo"});
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkPropertyAdded(events, new String[] { "foo/prop1",
-						  "foo/" + JCR_PRIMARY_TYPE });
+        checkPropertyAdded(events, new String[]{"foo/prop1",
+                                                "foo/" + JCR_PRIMARY_TYPE});
     }
 
     public void testMultiPropertyAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
-	addEventListener(result, EventType.PROPERTY_ADDED);
-	Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
-	foo.setProperty("prop1", new String[] { "foo" });
-	foo.setProperty("prop2", new String[] { "bar" });
-	testRoot.save();
+        addEventListener(result, EventType.PROPERTY_ADDED);
+        Node foo = testRoot.addNode("foo", NT_UNSTRUCTURED);
+        foo.setProperty("prop1", new String[]{"foo"});
+        foo.setProperty("prop2", new String[]{"bar"});
+        testRoot.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
-	checkPropertyAdded(events, new String[] { "foo/prop1",
-						  "foo/prop2",
-						  "foo/" + JCR_PRIMARY_TYPE });
+        checkPropertyAdded(events, new String[]{"foo/prop1",
+                                                "foo/prop2",
+                                                "foo/" + JCR_PRIMARY_TYPE});
     }
-
-
 
 
 }

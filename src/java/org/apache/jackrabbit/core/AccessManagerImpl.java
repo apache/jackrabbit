@@ -25,9 +25,6 @@ import javax.jcr.access.AccessManager;
 
 /**
  * <code>AccessManagerImpl</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.12 $, $Date: 2004/08/24 09:30:54 $
  */
 public class AccessManagerImpl extends AbstractAccessManager {
 
@@ -44,8 +41,8 @@ public class AccessManagerImpl extends AbstractAccessManager {
      * @param nsReg
      */
     AccessManagerImpl(Credentials credentials, HierarchyManager hierMgr, NamespaceResolver nsReg) {
-	this.hierMgr = hierMgr;
-	this.nsResolver = nsReg;
+        this.hierMgr = hierMgr;
+        this.nsResolver = nsReg;
     }
 
     /**
@@ -54,7 +51,7 @@ public class AccessManagerImpl extends AbstractAccessManager {
      * @return
      */
     public boolean isGranted(ItemId id, long permissions) throws ItemNotFoundException, RepositoryException {
-	return (getPermissions(id) & permissions) == permissions;
+        return (getPermissions(id) & permissions) == permissions;
     }
 
     /**
@@ -62,9 +59,9 @@ public class AccessManagerImpl extends AbstractAccessManager {
      * @return
      */
     public long getPermissions(ItemId id) throws ItemNotFoundException, RepositoryException {
-	// @todo implement resource-based access control
+        // @todo implement resource-based access control
 
-	return PermissionImpl.ALL_VALUES;
+        return PermissionImpl.ALL_VALUES;
     }
 
     //--------------------------------------------------------< AccessManager >
@@ -72,12 +69,12 @@ public class AccessManagerImpl extends AbstractAccessManager {
      * @see AccessManager#getPermissions(String)
      */
     public long getPermissions(String absPath) throws PathNotFoundException, RepositoryException {
-	try {
-	    return getPermissions(hierMgr.resolvePath(Path.create(absPath, nsResolver, true)));
-	} catch (MalformedPathException mpe) {
-	    String msg = "failed to check permissions for " + absPath;
-	    log.warn(msg, mpe);
-	    throw new RepositoryException(msg, mpe);
-	}
+        try {
+            return getPermissions(hierMgr.resolvePath(Path.create(absPath, nsResolver, true)));
+        } catch (MalformedPathException mpe) {
+            String msg = "failed to check permissions for " + absPath;
+            log.warn(msg, mpe);
+            throw new RepositoryException(msg, mpe);
+        }
     }
 }

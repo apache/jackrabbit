@@ -17,55 +17,56 @@ package org.apache.jackrabbit.core.search;
 
 /**
  * Implements a query node that defines a not operation on the child query.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class NotQueryNode extends NAryQueryNode {
 
     /**
      * Creates a new <code>NotQueryNode</code> instance.
+     *
      * @param parent the parent node for this query node.
      */
     public NotQueryNode(QueryNode parent) {
-	super(parent);
+        super(parent);
     }
 
     /**
      * Creates a new <code>NotQueryNode</code> instance.
+     *
      * @param parent the parent node for this query node.
-     * @param node the child query node to invert.
+     * @param node   the child query node to invert.
      */
     public NotQueryNode(QueryNode parent, QueryNode node) {
-	super(parent, new QueryNode[] {
-	    node
-	});
+        super(parent, new QueryNode[]{
+            node
+        });
     }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     /**
      * Returns a JCRQL representation for this query node.
+     *
      * @return a JCRQL representation for this query node.
      */
     public String toJCRQLString() {
         if (operands.size() > 0) {
-	    return "NOT " + ((QueryNode) operands.get(0)).toJCRQLString();
-	}
-	return "";
+            return "NOT " + ((QueryNode) operands.get(0)).toJCRQLString();
+        }
+        return "";
     }
 
     /**
      * Returns an XPath representation for this query node.
+     *
      * @return an XPath representation for this query node.
      */
     public String toXPathString() {
-	// todo implement
-	return "";
+        // todo implement
+        return "";
     }
 }

@@ -24,9 +24,6 @@ import java.io.ObjectOutputStream;
 /**
  * <code>PersistentNodeState</code> represents the persistent state of a
  * <code>Node</code>.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.9 $, $Date: 2004/08/02 16:19:48 $
  */
 public abstract class PersistentNodeState extends NodeState implements PersistableItemState {
 
@@ -43,8 +40,8 @@ public abstract class PersistentNodeState extends NodeState implements Persistab
      * @param persistMgr   the persistence manager
      */
     protected PersistentNodeState(String uuid, QName nodeTypeName, String parentUUID, PersistenceManager persistMgr) {
-	super(uuid, nodeTypeName, parentUUID, STATUS_NEW);
-	this.persistMgr = persistMgr;
+        super(uuid, nodeTypeName, parentUUID, STATUS_NEW);
+        this.persistMgr = persistMgr;
     }
 
     //-------------------------------------------------< PersistableItemState >
@@ -65,12 +62,12 @@ public abstract class PersistentNodeState extends NodeState implements Persistab
 
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
-	// delegate to default implementation
-	out.defaultWriteObject();
+        // delegate to default implementation
+        out.defaultWriteObject();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-	// delegate to default implementation
-	in.defaultReadObject();
+        // delegate to default implementation
+        in.defaultReadObject();
     }
 }

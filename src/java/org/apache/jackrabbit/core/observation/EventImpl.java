@@ -15,18 +15,15 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 
 /**
  * Implementation of the {@link javax.jcr.observation.Event} interface.
- *
- * @author Marcel Reutegger
- * @version $Revision: 1.6 $
  */
 public final class EventImpl implements Event {
 
@@ -65,49 +62,49 @@ public final class EventImpl implements Event {
      * @param eventState the underlying <code>EventState</code>.
      */
     EventImpl(SessionImpl session, EventState eventState) {
-	this.session = session;
-	this.eventState = eventState;
+        this.session = session;
+        this.eventState = eventState;
     }
 
     /**
      * @see Event#getType()
      */
     public long getType() {
-	return eventState.getType();
+        return eventState.getType();
     }
 
     /**
      * @see Event#getNodePath()
      */
     public String getNodePath() throws RepositoryException {
-	try {
-	    return eventState.getParentPath().toJCRPath(session.getNamespaceResolver());
-	} catch (NoPrefixDeclaredException e) {
-	    String msg = "internal error: encountered unregistered namespace in path";
-	    log.error(msg, e);
-	    throw new RepositoryException(msg, e);
-	}
+        try {
+            return eventState.getParentPath().toJCRPath(session.getNamespaceResolver());
+        } catch (NoPrefixDeclaredException e) {
+            String msg = "internal error: encountered unregistered namespace in path";
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
      * @see Event#getChildName()
      */
     public String getChildName() throws RepositoryException {
-	try {
-	    return eventState.getChildItemQName().toJCRName(session.getNamespaceResolver());
-	} catch (NoPrefixDeclaredException e) {
-	    // should never get here...
-	    String msg = "internal error: encountered unregistered namespace in name";
-	    log.error(msg, e);
-	    throw new RepositoryException(msg, e);
-	}
+        try {
+            return eventState.getChildItemQName().toJCRName(session.getNamespaceResolver());
+        } catch (NoPrefixDeclaredException e) {
+            // should never get here...
+            String msg = "internal error: encountered unregistered namespace in name";
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
      * @see Event#getUserId()
      */
     public String getUserId() {
-	return eventState.getUserId();
+        return eventState.getUserId();
     }
 
     /**
@@ -116,17 +113,18 @@ public final class EventImpl implements Event {
      * @return the uuid of the parent node.
      */
     public String getParentUUID() {
-	return eventState.getParentUUID();
+        return eventState.getParentUUID();
     }
 
     /**
      * Returns the UUID of a child node operation.
      * If this <code>Event</code> was generated for a property
      * operation this method returns <code>null</code>.
+     *
      * @return the UUID of a child node operation.
      */
     public String getChildUUID() {
-	return eventState.getChildUUID();
+        return eventState.getChildUUID();
     }
 
     /**
@@ -135,33 +133,33 @@ public final class EventImpl implements Event {
      * @return a String representation of this <code>Event</code>.
      */
     public String toString() {
-	if (stringValue == null) {
-	    StringBuffer sb = new StringBuffer();
-	    sb.append("Event: Path: ");
-	    try {
-		sb.append(getNodePath());
-	    } catch (RepositoryException e) {
-		log.error("Exception retrieving path: " + e);
-		sb.append("[Error retrieving path]");
-	    }
-	    sb.append(", ").append(EventState.valueOf(getType())).append(": ");
-	    try {
-		sb.append(getChildName());
-	    } catch (RepositoryException e) {
-		log.error("Exception retrieving child item name: " + e);
-		sb.append("[Error retrieving child item name]");
-	    }
-	    sb.append(", UserId: ").append(getUserId());
-	    stringValue = sb.toString();
-	}
-	return stringValue;
+        if (stringValue == null) {
+            StringBuffer sb = new StringBuffer();
+            sb.append("Event: Path: ");
+            try {
+                sb.append(getNodePath());
+            } catch (RepositoryException e) {
+                log.error("Exception retrieving path: " + e);
+                sb.append("[Error retrieving path]");
+            }
+            sb.append(", ").append(EventState.valueOf(getType())).append(": ");
+            try {
+                sb.append(getChildName());
+            } catch (RepositoryException e) {
+                log.error("Exception retrieving child item name: " + e);
+                sb.append("[Error retrieving child item name]");
+            }
+            sb.append(", UserId: ").append(getUserId());
+            stringValue = sb.toString();
+        }
+        return stringValue;
     }
 
     /**
      * @see Object#hashCode()
      */
     public int hashCode() {
-	return eventState.hashCode() ^ session.hashCode();
+        return eventState.hashCode() ^ session.hashCode();
     }
 
     /**
@@ -178,14 +176,14 @@ public final class EventImpl implements Event {
      *         object.
      */
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof EventImpl) {
-	    EventImpl other = (EventImpl) obj;
-	    return this.eventState.equals(other.eventState)
-		    && this.session.equals(other.session);
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof EventImpl) {
+            EventImpl other = (EventImpl) obj;
+            return this.eventState.equals(other.eventState)
+                    && this.session.equals(other.session);
+        }
+        return false;
     }
 }

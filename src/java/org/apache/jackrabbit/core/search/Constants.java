@@ -18,43 +18,62 @@ package org.apache.jackrabbit.core.search;
 /**
  * This interface defines constants for data types and operation types
  * used in queries.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public interface Constants {
 
-    /** long data type */
+    /**
+     * long data type
+     */
     public static int TYPE_LONG = 1;
 
-    /** double data type */
+    /**
+     * double data type
+     */
     public static int TYPE_DOUBLE = 2;
 
-    /** string data type */
+    /**
+     * string data type
+     */
     public static int TYPE_STRING = 3;
 
-    /** date data type */
+    /**
+     * date data type
+     */
     public static int TYPE_DATE = 4;
 
-    /** equal operation: = */
+    /**
+     * equal operation: =
+     */
     public static int OPERATION_EQ = 10;
 
-    /** not equal operation: <> */
+    /**
+     * not equal operation: <>
+     */
     public static int OPERATION_NE = 11;
 
-    /** less than operation: < */
+    /**
+     * less than operation: <
+     */
     public static int OPERATION_LT = 12;
 
-    /** greater than operation: > */
+    /**
+     * greater than operation: >
+     */
     public static int OPERATION_GT = 13;
 
-    /** greater or equal operation: >= */
+    /**
+     * greater or equal operation: >=
+     */
     public static int OPERATION_GE = 14;
 
-    /** less than or equal operation: <= */
+    /**
+     * less than or equal operation: <=
+     */
     public static int OPERATION_LE = 15;
 
-    /** like operation: LIKE */
+    /**
+     * like operation: LIKE
+     */
     public static int OPERATION_LIKE = 16;
 
 }

@@ -21,9 +21,6 @@ import javax.jcr.RepositoryException;
 
 /**
  * <code>HierarchyManager</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.11 $, $Date: 2004/08/06 21:05:33 $
  */
 public interface HierarchyManager {
 
@@ -60,7 +57,6 @@ public interface HierarchyManager {
     public Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
-     *
      * @param id
      * @param includeZombies
      * @return
@@ -68,7 +64,7 @@ public interface HierarchyManager {
      * @throws RepositoryException
      */
     public Path[] getAllPaths(ItemId id, boolean includeZombies)
-	    throws ItemNotFoundException, RepositoryException;
+            throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param id

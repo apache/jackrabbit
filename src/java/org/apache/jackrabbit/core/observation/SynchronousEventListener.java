@@ -24,9 +24,6 @@ import javax.jcr.observation.EventListener;
  * the call to {@link javax.jcr.Item#save()} returns. In contrast, a regular
  * {@link javax.jcr.observation.EventListener} might be called after
  * <code>save()</code> returns.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public interface SynchronousEventListener extends EventListener {
 }

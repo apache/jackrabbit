@@ -16,20 +16,19 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.19 $, $Date: 2004/08/02 16:19:48 $
  */
 public abstract class ItemState implements ItemStateListener, Serializable {
 
@@ -96,22 +95,22 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @param initialStatus the initial status of the item state object
      */
     protected ItemState(String parentUUID, ItemId id, int initialStatus) {
-	switch (initialStatus) {
-	    case STATUS_EXISTING:
-	    case STATUS_NEW:
-		status = initialStatus;
-		break;
-	    default:
-		String msg = "illegal status: " + initialStatus;
-		log.error(msg);
-		throw new IllegalArgumentException(msg);
-	}
-	this.id = id;
-	this.parentUUID = parentUUID;
-	baseVersionID = "v0.0";
-	// @todo use modification count instead of ms (not precise enough)
-	lastModified = System.currentTimeMillis();
-	overlayedState = null;
+        switch (initialStatus) {
+            case STATUS_EXISTING:
+            case STATUS_NEW:
+                status = initialStatus;
+                break;
+            default:
+                String msg = "illegal status: " + initialStatus;
+                log.error(msg);
+                throw new IllegalArgumentException(msg);
+        }
+        this.id = id;
+        this.parentUUID = parentUUID;
+        baseVersionID = "v0.0";
+        // @todo use modification count instead of ms (not precise enough)
+        lastModified = System.currentTimeMillis();
+        overlayedState = null;
     }
 
     /**
@@ -121,23 +120,23 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @param initialStatus  the initial status of the new <code>ItemState</code> instance
      */
     protected ItemState(ItemState overlayedState, int initialStatus) {
-	switch (initialStatus) {
-	    case STATUS_EXISTING_MODIFIED:
-	    case STATUS_EXISTING_REMOVED:
-		status = initialStatus;
-		break;
-	    default:
-		String msg = "illegal status: " + initialStatus;
-		log.error(msg);
-		throw new IllegalArgumentException(msg);
-	}
-	parentUUID = overlayedState.parentUUID;
-	baseVersionID = overlayedState.getBaseVersionID();
-	lastModified = overlayedState.getLastModified();
-	id = overlayedState.getId();
-	this.overlayedState = overlayedState;
-	// add this transient state as a listener on the overlayed state
-	this.overlayedState.addListener(this);
+        switch (initialStatus) {
+            case STATUS_EXISTING_MODIFIED:
+            case STATUS_EXISTING_REMOVED:
+                status = initialStatus;
+                break;
+            default:
+                String msg = "illegal status: " + initialStatus;
+                log.error(msg);
+                throw new IllegalArgumentException(msg);
+        }
+        parentUUID = overlayedState.parentUUID;
+        baseVersionID = overlayedState.getBaseVersionID();
+        lastModified = overlayedState.getLastModified();
+        id = overlayedState.getId();
+        this.overlayedState = overlayedState;
+        // add this transient state as a listener on the overlayed state
+        this.overlayedState.addListener(this);
     }
 
     /**
@@ -145,13 +144,13 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * is disposed.
      */
     void onDisposed() {
-	// prepare this instance so it can be gc'ed
-	listeners.clear();
-	if (overlayedState != null) {
-	    overlayedState.removeListener(this);
-	    overlayedState = null;
-	}
-	status = STATUS_UNDEFINED;
+        // prepare this instance so it can be gc'ed
+        listeners.clear();
+        if (overlayedState != null) {
+            overlayedState.removeListener(this);
+            overlayedState = null;
+        }
+        status = STATUS_UNDEFINED;
     }
 
     /**
@@ -159,18 +158,18 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * representing has been discarded.
      */
     protected void notifyStateDiscarded() {
-	// copy listeners to array to avoid ConcurrentModificationException
-	ItemStateListener[] la = new ItemStateListener[listeners.size()];
-	Iterator iter = listeners.values().iterator();
-	int cnt = 0;
-	while (iter.hasNext()) {
-	    la[cnt++] = (ItemStateListener) iter.next();
-	}
-	for (int i = 0; i < la.length; i++) {
-	    if (la[i] != null) {
-		la[i].stateDiscarded(this);
-	    }
-	}
+        // copy listeners to array to avoid ConcurrentModificationException
+        ItemStateListener[] la = new ItemStateListener[listeners.size()];
+        Iterator iter = listeners.values().iterator();
+        int cnt = 0;
+        while (iter.hasNext()) {
+            la[cnt++] = (ItemStateListener) iter.next();
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].stateDiscarded(this);
+            }
+        }
     }
 
     /**
@@ -178,18 +177,18 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * representing has been created.
      */
     protected void notifyStateCreated() {
-	// copy listeners to array to avoid ConcurrentModificationException
-	ItemStateListener[] la = new ItemStateListener[listeners.size()];
-	Iterator iter = listeners.values().iterator();
-	int cnt = 0;
-	while (iter.hasNext()) {
-	    la[cnt++] = (ItemStateListener) iter.next();
-	}
-	for (int i = 0; i < la.length; i++) {
-	    if (la[i] != null) {
-		la[i].stateCreated(this);
-	    }
-	}
+        // copy listeners to array to avoid ConcurrentModificationException
+        ItemStateListener[] la = new ItemStateListener[listeners.size()];
+        Iterator iter = listeners.values().iterator();
+        int cnt = 0;
+        while (iter.hasNext()) {
+            la[cnt++] = (ItemStateListener) iter.next();
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].stateCreated(this);
+            }
+        }
     }
 
     /**
@@ -197,18 +196,18 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * representing has been changed.
      */
     protected void notifyStateModified() {
-	// copy listeners to array to avoid ConcurrentModificationException
-	ItemStateListener[] la = new ItemStateListener[listeners.size()];
-	Iterator iter = listeners.values().iterator();
-	int cnt = 0;
-	while (iter.hasNext()) {
-	    la[cnt++] = (ItemStateListener) iter.next();
-	}
-	for (int i = 0; i < la.length; i++) {
-	    if (la[i] != null) {
-		la[i].stateModified(this);
-	    }
-	}
+        // copy listeners to array to avoid ConcurrentModificationException
+        ItemStateListener[] la = new ItemStateListener[listeners.size()];
+        Iterator iter = listeners.values().iterator();
+        int cnt = 0;
+        while (iter.hasNext()) {
+            la[cnt++] = (ItemStateListener) iter.next();
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].stateModified(this);
+            }
+        }
     }
 
     /**
@@ -216,18 +215,18 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * representing has been destroyed.
      */
     protected void notifyStateDestroyed() {
-	// copy listeners to array to avoid ConcurrentModificationException
-	ItemStateListener[] la = new ItemStateListener[listeners.size()];
-	Iterator iter = listeners.values().iterator();
-	int cnt = 0;
-	while (iter.hasNext()) {
-	    la[cnt++] = (ItemStateListener) iter.next();
-	}
-	for (int i = 0; i < la.length; i++) {
-	    if (la[i] != null) {
-		la[i].stateDestroyed(this);
-	    }
-	}
+        // copy listeners to array to avoid ConcurrentModificationException
+        ItemStateListener[] la = new ItemStateListener[listeners.size()];
+        Iterator iter = listeners.values().iterator();
+        int cnt = 0;
+        while (iter.hasNext()) {
+            la[cnt++] = (ItemStateListener) iter.next();
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].stateDestroyed(this);
+            }
+        }
     }
 
     //-------------------------------------------------------< public methods >
@@ -244,7 +243,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @return the identifier of this item state..
      */
     public ItemId getId() {
-	return id;
+        return id;
     }
 
     /**
@@ -256,7 +255,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *         otherwise <code>false</code>
      */
     public boolean isTransient() {
-	return status != STATUS_EXISTING;
+        return status != STATUS_EXISTING;
 
     }
 
@@ -268,7 +267,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @return the parent <code>NodeState</code>'s UUID
      */
     public String getParentUUID() {
-	return parentUUID;
+        return parentUUID;
     }
 
     /**
@@ -279,7 +278,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *                   should be 'free floating', i.e. detached from the repository's hierarchy.
      */
     public void setParentUUID(String parentUUID) {
-	this.parentUUID = parentUUID;
+        this.parentUUID = parentUUID;
     }
 
     /**
@@ -288,7 +287,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @return the status of this item.
      */
     public int getStatus() {
-	return status;
+        return status;
     }
 
     /**
@@ -297,32 +296,32 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @param newStatus the new status
      */
     public void setStatus(int newStatus) {
-	switch (newStatus) {
-	    case ItemState.STATUS_NEW:
-	    case ItemState.STATUS_EXISTING:
-	    case ItemState.STATUS_EXISTING_REMOVED:
-	    case ItemState.STATUS_EXISTING_MODIFIED:
-	    case ItemState.STATUS_STALE_MODIFIED:
-	    case ItemState.STATUS_STALE_DESTROYED:
-	    case ItemState.STATUS_UNDEFINED:
-		status = newStatus;
-		return;
-	}
-	String msg = "illegal status: " + newStatus;
-	log.error(msg);
-	throw new IllegalArgumentException(msg);
+        switch (newStatus) {
+            case ItemState.STATUS_NEW:
+            case ItemState.STATUS_EXISTING:
+            case ItemState.STATUS_EXISTING_REMOVED:
+            case ItemState.STATUS_EXISTING_MODIFIED:
+            case ItemState.STATUS_STALE_MODIFIED:
+            case ItemState.STATUS_STALE_DESTROYED:
+            case ItemState.STATUS_UNDEFINED:
+                status = newStatus;
+                return;
+        }
+        String msg = "illegal status: " + newStatus;
+        log.error(msg);
+        throw new IllegalArgumentException(msg);
     }
 
     /**
      * Discards this instance, i.e. renders it 'invalid'.
      */
     public void discard() {
-	if (status != STATUS_UNDEFINED) {
-	    // notify listeners
-	    notifyStateDiscarded();
-	    // reset status
-	    status = STATUS_UNDEFINED;
-	}
+        if (status != STATUS_UNDEFINED) {
+            // notify listeners
+            notifyStateDiscarded();
+            // reset status
+            status = STATUS_UNDEFINED;
+        }
     }
 
     /**
@@ -332,7 +331,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *         state, otherwise <code>false</code>.
      */
     public boolean hasOverlayedState() {
-	return overlayedState != null;
+        return overlayedState != null;
     }
 
     /**
@@ -344,7 +343,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *         no persistent state.
      */
     public ItemState getOverlayedState() {
-	return overlayedState;
+        return overlayedState;
     }
 
     /**
@@ -353,7 +352,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @return the timestamp when this item state was last modified.
      */
     public long getLastModified() {
-	return lastModified;
+        return lastModified;
     }
 
     /**
@@ -362,7 +361,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @return the id of the version this item state is based on.
      */
     public String getBaseVersionID() {
-	return baseVersionID;
+        return baseVersionID;
     }
 
     /**
@@ -371,9 +370,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @param listener the new listener to be informed on modifications
      */
     public void addListener(ItemStateListener listener) {
-	if (!listeners.containsKey(listener)) {
-	    listeners.put(listener, listener);
-	}
+        if (!listeners.containsKey(listener)) {
+            listeners.put(listener, listener);
+        }
     }
 
     /**
@@ -382,7 +381,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @param listener an existing listener
      */
     public void removeListener(ItemStateListener listener) {
-	listeners.remove(listener);
+        listeners.remove(listener);
     }
 
     //----------------------------------------------------< ItemStateListener >
@@ -396,16 +395,16 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @see ItemStateListener#stateDestroyed
      */
     public void stateDestroyed(ItemState destroyed) {
-	// underlying persistent state has been permanently destroyed
-	status = STATUS_STALE_DESTROYED;
+        // underlying persistent state has been permanently destroyed
+        status = STATUS_STALE_DESTROYED;
     }
 
     /**
      * @see ItemStateListener#stateModified
      */
     public void stateModified(ItemState modified) {
-	// underlying state has been modified
-	status = STATUS_STALE_MODIFIED;
+        // underlying state has been modified
+        status = STATUS_STALE_MODIFIED;
     }
 
     /**
@@ -416,12 +415,12 @@ public abstract class ItemState implements ItemStateListener, Serializable {
 
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
-	// delegate to default implementation
-	out.defaultWriteObject();
+        // delegate to default implementation
+        out.defaultWriteObject();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-	// delegate to default implementation
-	in.defaultReadObject();
+        // delegate to default implementation
+        in.defaultReadObject();
     }
 }

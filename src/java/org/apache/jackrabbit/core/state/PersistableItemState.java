@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core.state;
 
 /**
  * <code>PersistableItemState</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.4 $, $Date: 2004/08/02 16:19:48 $
  */
 public interface PersistableItemState {
 

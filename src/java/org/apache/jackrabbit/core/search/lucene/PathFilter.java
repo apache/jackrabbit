@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.search.lucene;
 import org.apache.jackrabbit.core.search.PathQueryNode;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class PathFilter {
 
@@ -28,40 +26,40 @@ public class PathFilter {
     private final int type;
 
     PathFilter(String path, int type) {
-	this.type = type;
+        this.type = type;
 
-	switch (type) {
-	    case PathQueryNode.TYPE_CHILDREN:
-	    case PathQueryNode.TYPE_DESCENDANT:
-		if (path.length() > 1) {
-		    this.basePath = path + "/";
-		} else {
-		    this.basePath = path;
-		}
-		break;
-	    case PathQueryNode.TYPE_EXACT:
-		basePath = path;
-		break;
-	    default:
-		throw new IllegalArgumentException("Unknown type: " + type);
-	}
+        switch (type) {
+            case PathQueryNode.TYPE_CHILDREN:
+            case PathQueryNode.TYPE_DESCENDANT:
+                if (path.length() > 1) {
+                    this.basePath = path + "/";
+                } else {
+                    this.basePath = path;
+                }
+                break;
+            case PathQueryNode.TYPE_EXACT:
+                basePath = path;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown type: " + type);
+        }
     }
 
     public boolean includes(String path) {
-	if (!path.startsWith(basePath)) {
-	    return false;
-	}
+        if (!path.startsWith(basePath)) {
+            return false;
+        }
 
-	switch (type) {
-	    case PathQueryNode.TYPE_CHILDREN:
-	        return (path.indexOf('/', basePath.length()) == -1);
-	    case PathQueryNode.TYPE_DESCENDANT:
-		return path.length() > basePath.length();
-	    case PathQueryNode.TYPE_EXACT:
-		return path.length() == basePath.length();
-	    default:
-		// will never happen, checked in constructor: unknown type
-		return false;
-	}
+        switch (type) {
+            case PathQueryNode.TYPE_CHILDREN:
+                return (path.indexOf('/', basePath.length()) == -1);
+            case PathQueryNode.TYPE_DESCENDANT:
+                return path.length() > basePath.length();
+            case PathQueryNode.TYPE_EXACT:
+                return path.length() == basePath.length();
+            default:
+                // will never happen, checked in constructor: unknown type
+                return false;
+        }
     }
 }

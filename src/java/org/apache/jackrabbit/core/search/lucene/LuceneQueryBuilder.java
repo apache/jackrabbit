@@ -15,41 +15,26 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.RangeQuery;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.search.QueryNodeVisitor;
-import org.apache.jackrabbit.core.search.QueryRootNode;
-import org.apache.jackrabbit.core.search.NamespaceMappings;
-import org.apache.jackrabbit.core.search.TextsearchQueryNode;
-import org.apache.jackrabbit.core.search.OrQueryNode;
-import org.apache.jackrabbit.core.search.AndQueryNode;
-import org.apache.jackrabbit.core.search.NotQueryNode;
-import org.apache.jackrabbit.core.search.ExactQueryNode;
-import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
-import org.apache.jackrabbit.core.search.RangeQueryNode;
-import org.apache.jackrabbit.core.search.PathQueryNode;
-import org.apache.jackrabbit.core.search.RelationQueryNode;
-import org.apache.jackrabbit.core.search.Constants;
-import org.apache.jackrabbit.core.search.OrderQueryNode;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.search.*;
 import org.apache.log4j.Logger;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.RangeQuery;
+import org.apache.lucene.search.TermQuery;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
-import java.util.List;
+import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class LuceneQueryBuilder implements QueryNodeVisitor {
 
@@ -66,253 +51,253 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     private List exceptions = new ArrayList();
 
     private LuceneQueryBuilder(QueryRootNode root,
-			       SessionImpl session,
-			       NamespaceMappings nsMappings,
-			       Analyzer analyzer) {
-	this.root = root;
-	this.session = session;
-	this.nsMappings = nsMappings;
-	this.analyzer = analyzer;
+                               SessionImpl session,
+                               NamespaceMappings nsMappings,
+                               Analyzer analyzer) {
+        this.root = root;
+        this.session = session;
+        this.nsMappings = nsMappings;
+        this.analyzer = analyzer;
     }
 
     public static Query createQuery(QueryRootNode root,
-				    SessionImpl session,
-				    NamespaceMappings nsMappings,
-				    Analyzer analyzer)
-	    throws RepositoryException {
+                                    SessionImpl session,
+                                    NamespaceMappings nsMappings,
+                                    Analyzer analyzer)
+            throws RepositoryException {
 
-	LuceneQueryBuilder builder = new LuceneQueryBuilder(root,
-		session, nsMappings, analyzer);
+        LuceneQueryBuilder builder = new LuceneQueryBuilder(root,
+                session, nsMappings, analyzer);
 
-	Query q = builder.createLuceneQuery();
-	if (builder.exceptions.size() > 0) {
-	    StringBuffer msg = new StringBuffer();
-	    for (Iterator it = builder.exceptions.iterator(); it.hasNext();) {
-		msg.append(it.next().toString()).append('\n');
-	    }
-	    throw new RepositoryException("Exception parsing query: " + msg.toString());
-	}
-	return q;
+        Query q = builder.createLuceneQuery();
+        if (builder.exceptions.size() > 0) {
+            StringBuffer msg = new StringBuffer();
+            for (Iterator it = builder.exceptions.iterator(); it.hasNext();) {
+                msg.append(it.next().toString()).append('\n');
+            }
+            throw new RepositoryException("Exception parsing query: " + msg.toString());
+        }
+        return q;
     }
 
     private Query createLuceneQuery() {
-	return (Query) root.accept(this, null);
+        return (Query) root.accept(this, null);
     }
 
     public Object visit(QueryRootNode node, Object data) {
-	BooleanQuery root = new BooleanQuery();
-	Query constraintQuery = (Query) node.getConstraintNode().accept(this, null);
-	if (constraintQuery != null) {
-	    root.add(constraintQuery, true, false);
-	}
+        BooleanQuery root = new BooleanQuery();
+        Query constraintQuery = (Query) node.getConstraintNode().accept(this, null);
+        if (constraintQuery != null) {
+            root.add(constraintQuery, true, false);
+        }
 
-	String[] props = node.getSelectProperties();
-	for (int i = 0; i < props.length; i++) {
-	    String prop = props[i];
-	    try {
-		prop = nsMappings.translatePropertyName(prop, session.getNamespaceResolver());
-	    } catch (MalformedPathException e) {
-		exceptions.add(e);
-	    }
-	    root.add(new MatchAllQuery(prop), true, false);
-	}
+        String[] props = node.getSelectProperties();
+        for (int i = 0; i < props.length; i++) {
+            String prop = props[i];
+            try {
+                prop = nsMappings.translatePropertyName(prop, session.getNamespaceResolver());
+            } catch (MalformedPathException e) {
+                exceptions.add(e);
+            }
+            root.add(new MatchAllQuery(prop), true, false);
+        }
 
-	TextsearchQueryNode textsearchNode = node.getTextsearchNode();
-	if (textsearchNode != null) {
-	    Query textsearch = (Query) textsearchNode.accept(this, null);
-	    if (textsearch != null) {
-		root.add(textsearch, true, false);
-	    }
-	}
+        TextsearchQueryNode textsearchNode = node.getTextsearchNode();
+        if (textsearchNode != null) {
+            Query textsearch = (Query) textsearchNode.accept(this, null);
+            if (textsearch != null) {
+                root.add(textsearch, true, false);
+            }
+        }
 
-	Query wrapped = root;
-	if (node.getLocationNode() != null) {
-	    wrapped = (Query) node.getLocationNode().accept(this, root);
-	}
+        Query wrapped = root;
+        if (node.getLocationNode() != null) {
+            wrapped = (Query) node.getLocationNode().accept(this, root);
+        }
 
-	return wrapped;
+        return wrapped;
     }
 
     public Object visit(OrQueryNode node, Object data) {
-	BooleanQuery orQuery = new BooleanQuery();
-	Object[] result = node.acceptOperands(this, null);
-	for (int i = 0; i < result.length; i++) {
-	    Query operand = (Query) result[i];
-	    orQuery.add(operand, false, false);
-	}
-	return orQuery;
+        BooleanQuery orQuery = new BooleanQuery();
+        Object[] result = node.acceptOperands(this, null);
+        for (int i = 0; i < result.length; i++) {
+            Query operand = (Query) result[i];
+            orQuery.add(operand, false, false);
+        }
+        return orQuery;
     }
 
     public Object visit(AndQueryNode node, Object data) {
-	Object[] result = node.acceptOperands(this, null);
-	if (result.length == 0) {
-	    return null;
-	}
-	BooleanQuery andQuery = new BooleanQuery();
-	for (int i = 0; i < result.length; i++) {
-	    Query operand = (Query) result[i];
-	    andQuery.add(operand, true, false);
-	}
-	return andQuery;
+        Object[] result = node.acceptOperands(this, null);
+        if (result.length == 0) {
+            return null;
+        }
+        BooleanQuery andQuery = new BooleanQuery();
+        for (int i = 0; i < result.length; i++) {
+            Query operand = (Query) result[i];
+            andQuery.add(operand, true, false);
+        }
+        return andQuery;
     }
 
     public Object visit(NotQueryNode node, Object data) {
-	BooleanQuery notQuery = new BooleanQuery();
-	Object[] result = node.acceptOperands(this, null);
-	for (int i = 0; i < result.length; i++) {
-	    Query operand = (Query) result[i];
-	    notQuery.add(operand, false, true);
-	}
-	return notQuery;
+        BooleanQuery notQuery = new BooleanQuery();
+        Object[] result = node.acceptOperands(this, null);
+        for (int i = 0; i < result.length; i++) {
+            Query operand = (Query) result[i];
+            notQuery.add(operand, false, true);
+        }
+        return notQuery;
     }
 
     public Object visit(ExactQueryNode node, Object data) {
-	String field = node.getPropertyName();
-	try {
-	    field = nsMappings.translatePropertyName(node.getPropertyName(),
-		    session.getNamespaceResolver());
-	} catch (MalformedPathException e) {
+        String field = node.getPropertyName();
+        try {
+            field = nsMappings.translatePropertyName(node.getPropertyName(),
+                    session.getNamespaceResolver());
+        } catch (MalformedPathException e) {
             exceptions.add(e);
-	}
-	String value = node.getValue();
-	return new TermQuery(new Term(field, value));
+        }
+        String value = node.getValue();
+        return new TermQuery(new Term(field, value));
     }
 
     public Object visit(NodeTypeQueryNode node, Object data) {
-	String field = node.getPropertyName();
-	String value = node.getValue();
-	try {
-	    field = nsMappings.getPrefix(NodeTypeRegistry.JCR_PRIMARY_TYPE.getNamespaceURI())
-		    + ":" + NodeTypeRegistry.JCR_PRIMARY_TYPE.getLocalName();
-	    value = nsMappings.translatePropertyName(node.getValue(),
-		    session.getNamespaceResolver());
-	} catch (NamespaceException e) {
-	    // will never happen
-	    log.error(e.toString());
-	} catch (MalformedPathException e) {
-	    exceptions.add(e);
-	}
-	return new TermQuery(new Term(field, value));
+        String field = node.getPropertyName();
+        String value = node.getValue();
+        try {
+            field = nsMappings.getPrefix(NodeTypeRegistry.JCR_PRIMARY_TYPE.getNamespaceURI())
+                    + ":" + NodeTypeRegistry.JCR_PRIMARY_TYPE.getLocalName();
+            value = nsMappings.translatePropertyName(node.getValue(),
+                    session.getNamespaceResolver());
+        } catch (NamespaceException e) {
+            // will never happen
+            log.error(e.toString());
+        } catch (MalformedPathException e) {
+            exceptions.add(e);
+        }
+        return new TermQuery(new Term(field, value));
     }
 
     public Object visit(RangeQueryNode node, Object data) {
-	return null;
+        return null;
     }
 
     public Object visit(TextsearchQueryNode node, Object data) {
-	try {
-	    org.apache.lucene.queryParser.QueryParser parser
-		    = new org.apache.lucene.queryParser.QueryParser(FieldNames.FULLTEXT, analyzer);
-	    parser.setOperator(org.apache.lucene.queryParser.QueryParser.DEFAULT_OPERATOR_AND);
-	    // replace unescaped ' with " and escaped ' with just '
-	    StringBuffer query = new StringBuffer();
-	    String textsearch = node.getQuery();
-	    boolean escaped = false;
-	    for (int i = 0; i < textsearch.length(); i++) {
-		if (textsearch.charAt(i) == '\\') {
-		    if (escaped) {
-			query.append("\\\\");
-			escaped = false;
-		    } else {
-			escaped = true;
-		    }
-		} else if (textsearch.charAt(i) == '\'') {
-		    if (escaped) {
-			query.append('\'');
-			escaped = false;
-		    } else {
-			query.append('\"');
-		    }
-		} else {
-		    if (escaped) {
-			query.append('\\');
-			escaped = false;
-		    }
-		    query.append(textsearch.charAt(i));
-		}
-	    }
-	    return parser.parse(query.toString());
-	} catch (ParseException e) {
-	    exceptions.add(e);
-	}
-	return null;
+        try {
+            org.apache.lucene.queryParser.QueryParser parser
+                    = new org.apache.lucene.queryParser.QueryParser(FieldNames.FULLTEXT, analyzer);
+            parser.setOperator(org.apache.lucene.queryParser.QueryParser.DEFAULT_OPERATOR_AND);
+            // replace unescaped ' with " and escaped ' with just '
+            StringBuffer query = new StringBuffer();
+            String textsearch = node.getQuery();
+            boolean escaped = false;
+            for (int i = 0; i < textsearch.length(); i++) {
+                if (textsearch.charAt(i) == '\\') {
+                    if (escaped) {
+                        query.append("\\\\");
+                        escaped = false;
+                    } else {
+                        escaped = true;
+                    }
+                } else if (textsearch.charAt(i) == '\'') {
+                    if (escaped) {
+                        query.append('\'');
+                        escaped = false;
+                    } else {
+                        query.append('\"');
+                    }
+                } else {
+                    if (escaped) {
+                        query.append('\\');
+                        escaped = false;
+                    }
+                    query.append(textsearch.charAt(i));
+                }
+            }
+            return parser.parse(query.toString());
+        } catch (ParseException e) {
+            exceptions.add(e);
+        }
+        return null;
     }
 
     public Object visit(PathQueryNode node, Object data) {
-	String path = node.getPath();
-	try {
-	    path = nsMappings.translatePropertyName(node.getPath(),
-		    session.getNamespaceResolver());
-	} catch (MalformedPathException e) {
-	    exceptions.add(e);
-	}
-	PathFilter filter = new PathFilter(path, node.getType());
-	return new PathFilterQuery((Query) data, new PackageFilter(filter));
+        String path = node.getPath();
+        try {
+            path = nsMappings.translatePropertyName(node.getPath(),
+                    session.getNamespaceResolver());
+        } catch (MalformedPathException e) {
+            exceptions.add(e);
+        }
+        PathFilter filter = new PathFilter(path, node.getType());
+        return new PathFilterQuery((Query) data, new PackageFilter(filter));
     }
 
     public Object visit(RelationQueryNode node, Object data) {
-	Query query;
-	String stringValue;
-	switch (node.getType()) {
-	    case Constants.TYPE_DATE:
-		stringValue = DateField.dateToString(node.getDateValue());
-		break;
-	    case Constants.TYPE_DOUBLE:
-		stringValue = DoubleField.doubleToString(node.getDoubleValue());
-		break;
-	    case Constants.TYPE_LONG:
-		stringValue = LongField.longToString(node.getLongValue());
-		break;
-	    case Constants.TYPE_STRING:
-		stringValue = node.getStringValue();
-		break;
-	    default:
-		throw new IllegalArgumentException("Unknown relation type: "
-			+ node.getType());
-	}
+        Query query;
+        String stringValue;
+        switch (node.getType()) {
+            case Constants.TYPE_DATE:
+                stringValue = DateField.dateToString(node.getDateValue());
+                break;
+            case Constants.TYPE_DOUBLE:
+                stringValue = DoubleField.doubleToString(node.getDoubleValue());
+                break;
+            case Constants.TYPE_LONG:
+                stringValue = LongField.longToString(node.getLongValue());
+                break;
+            case Constants.TYPE_STRING:
+                stringValue = node.getStringValue();
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown relation type: "
+                        + node.getType());
+        }
 
-	String field = node.getProperty();
-	try {
-	    field = nsMappings.translatePropertyName(node.getProperty(),
-		    session.getNamespaceResolver());
-	} catch (MalformedPathException e) {
-	    exceptions.add(e);
-	}
+        String field = node.getProperty();
+        try {
+            field = nsMappings.translatePropertyName(node.getProperty(),
+                    session.getNamespaceResolver());
+        } catch (MalformedPathException e) {
+            exceptions.add(e);
+        }
 
-	switch (node.getOperation()) {
-	    case Constants.OPERATION_EQ:	// =
-		query = new TermQuery(new Term(field, stringValue));
-		break;
-	    case Constants.OPERATION_GE:	// >=
-		query = new RangeQuery(new Term(field, stringValue), null, true);
-		break;
-	    case Constants.OPERATION_GT:	// >
-		query = new RangeQuery(new Term(field, stringValue), null, false);
-		break;
-	    case Constants.OPERATION_LE:	// <=
-		query = new RangeQuery(null, new Term(field, stringValue), true);
-		break;
-	    case Constants.OPERATION_LIKE:	// LIKE
-		query = new WildcardQuery(new Term(field, stringValue));
-		break;
-	    case Constants.OPERATION_LT:	// <
-		query = new RangeQuery(null, new Term(field, stringValue), false);
-		break;
-	    case Constants.OPERATION_NE:	// !=
-		BooleanQuery notQuery = new BooleanQuery();
-		notQuery.add(new MatchAllQuery(field), false, false);
-		notQuery.add(new TermQuery(new Term(field, stringValue)), false, true);
-		query = notQuery;
-		break;
-	    default:
-		throw new IllegalArgumentException("Unknown relation operation: "
-			+ node.getOperation());
-	}
-	return query;
+        switch (node.getOperation()) {
+            case Constants.OPERATION_EQ:	// =
+                query = new TermQuery(new Term(field, stringValue));
+                break;
+            case Constants.OPERATION_GE:	// >=
+                query = new RangeQuery(new Term(field, stringValue), null, true);
+                break;
+            case Constants.OPERATION_GT:	// >
+                query = new RangeQuery(new Term(field, stringValue), null, false);
+                break;
+            case Constants.OPERATION_LE:	// <=
+                query = new RangeQuery(null, new Term(field, stringValue), true);
+                break;
+            case Constants.OPERATION_LIKE:	// LIKE
+                query = new WildcardQuery(new Term(field, stringValue));
+                break;
+            case Constants.OPERATION_LT:	// <
+                query = new RangeQuery(null, new Term(field, stringValue), false);
+                break;
+            case Constants.OPERATION_NE:	// !=
+                BooleanQuery notQuery = new BooleanQuery();
+                notQuery.add(new MatchAllQuery(field), false, false);
+                notQuery.add(new TermQuery(new Term(field, stringValue)), false, true);
+                query = notQuery;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown relation operation: "
+                        + node.getOperation());
+        }
+        return query;
     }
 
     public Object visit(OrderQueryNode node, Object data) {
-	return null;
+        return null;
     }
 
     //---------------------------< internal >-----------------------------------

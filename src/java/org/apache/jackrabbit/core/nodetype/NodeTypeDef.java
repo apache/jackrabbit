@@ -23,9 +23,6 @@ import java.util.Set;
 
 /**
  * A <code>NodeTypeDef</code> holds the definition of a node type.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.24 $, $Date: 2004/08/02 16:19:45 $
  */
 public class NodeTypeDef implements Cloneable {
 
@@ -41,21 +38,21 @@ public class NodeTypeDef implements Cloneable {
      * Default constructor.
      */
     public NodeTypeDef() {
-	dependencies = null;
-	name = null;
-	nodeDefs = new ChildNodeDef[0];
-	propDefs = new PropDef[0];
-	supertypes = new QName[0];
-	mixin = false;
-	orderableChildNodes = false;
+        dependencies = null;
+        name = null;
+        nodeDefs = new ChildNodeDef[0];
+        propDefs = new PropDef[0];
+        supertypes = new QName[0];
+        mixin = false;
+        orderableChildNodes = false;
     }
 
     public Object clone() throws CloneNotSupportedException {
-	// create a shallow copy
-	NodeTypeDef clone = (NodeTypeDef) super.clone();
-	// clear dependencies (will be lazily built)
-	clone.resetDependencies();
-	return clone;
+        // create a shallow copy
+        NodeTypeDef clone = (NodeTypeDef) super.clone();
+        // clear dependencies (will be lazily built)
+        clone.resetDependencies();
+        return clone;
     }
 
     /**
@@ -66,29 +63,29 @@ public class NodeTypeDef implements Cloneable {
      * @return a collection of node type <code>QName</code>s
      */
     public Collection getDependencies() {
-	if (dependencies == null) {
-	    dependencies = new HashSet();
-	    for (int i = 0; i < supertypes.length; i++) {
-		dependencies.add(supertypes[i]);
-	    }
-	    for (int i = 0; i < nodeDefs.length; i++) {
-		QName ntName = nodeDefs[i].getDefaultPrimaryType();
-		if (ntName != null && !name.equals(ntName)) {
-		    dependencies.add(ntName);
-		}
-		QName[] ntNames = nodeDefs[i].getRequiredPrimaryTypes();
-		for (int j = 0; j < ntNames.length; j++) {
-		    if (ntNames[j] != null && !name.equals(ntNames[j])) {
-			dependencies.add(ntNames[j]);
-		    }
-		}
-	    }
-	}
-	return dependencies;
+        if (dependencies == null) {
+            dependencies = new HashSet();
+            for (int i = 0; i < supertypes.length; i++) {
+                dependencies.add(supertypes[i]);
+            }
+            for (int i = 0; i < nodeDefs.length; i++) {
+                QName ntName = nodeDefs[i].getDefaultPrimaryType();
+                if (ntName != null && !name.equals(ntName)) {
+                    dependencies.add(ntName);
+                }
+                QName[] ntNames = nodeDefs[i].getRequiredPrimaryTypes();
+                for (int j = 0; j < ntNames.length; j++) {
+                    if (ntNames[j] != null && !name.equals(ntNames[j])) {
+                        dependencies.add(ntNames[j]);
+                    }
+                }
+            }
+        }
+        return dependencies;
     }
 
     private void resetDependencies() {
-	dependencies = null;
+        dependencies = null;
     }
 
     /**
@@ -97,7 +94,7 @@ public class NodeTypeDef implements Cloneable {
      * @param name The name of the node type.
      */
     public void setName(QName name) {
-	this.name = name;
+        this.name = name;
     }
 
     /**
@@ -106,8 +103,8 @@ public class NodeTypeDef implements Cloneable {
      * @param names the names of the supertypes.
      */
     public void setSupertypes(QName[] names) {
-	resetDependencies();
-	supertypes = names;
+        resetDependencies();
+        supertypes = names;
     }
 
     /**
@@ -116,7 +113,7 @@ public class NodeTypeDef implements Cloneable {
      * @param mixin flag
      */
     public void setMixin(boolean mixin) {
-	this.mixin = mixin;
+        this.mixin = mixin;
     }
 
     /**
@@ -125,7 +122,7 @@ public class NodeTypeDef implements Cloneable {
      * @param orderableChildNodes flag
      */
     public void setOrderableChildNodes(boolean orderableChildNodes) {
-	this.orderableChildNodes = orderableChildNodes;
+        this.orderableChildNodes = orderableChildNodes;
     }
 
     /**
@@ -134,7 +131,7 @@ public class NodeTypeDef implements Cloneable {
      * @param defs An array of <code>PropertyDef</code> objects.
      */
     public void setPropertyDefs(PropDef[] defs) {
-	propDefs = defs;
+        propDefs = defs;
     }
 
     /**
@@ -143,8 +140,8 @@ public class NodeTypeDef implements Cloneable {
      * @param defs An array of <code>ChildNodeDef</code> objects
      */
     public void setChildNodeDefs(ChildNodeDef[] defs) {
-	resetDependencies();
-	nodeDefs = defs;
+        resetDependencies();
+        nodeDefs = defs;
     }
 
     /**
@@ -154,7 +151,7 @@ public class NodeTypeDef implements Cloneable {
      * @return the name of the node type or <code>null</code> if not set.
      */
     public QName getName() {
-	return name;
+        return name;
     }
 
     /**
@@ -165,7 +162,7 @@ public class NodeTypeDef implements Cloneable {
      *         <code>null</code> if not set.
      */
     public QName[] getSupertypes() {
-	return supertypes;
+        return supertypes;
     }
 
     /**
@@ -174,7 +171,7 @@ public class NodeTypeDef implements Cloneable {
      * @return true if this is a mixin node type; false otherwise.
      */
     public boolean isMixin() {
-	return mixin;
+        return mixin;
     }
 
     /**
@@ -183,7 +180,7 @@ public class NodeTypeDef implements Cloneable {
      * @return true if nodes of this node type can have orderable child nodes; false otherwise.
      */
     public boolean hasOrderableChildNodes() {
-	return orderableChildNodes;
+        return orderableChildNodes;
     }
 
     /**
@@ -194,7 +191,7 @@ public class NodeTypeDef implements Cloneable {
      *         <code>null</code> if not set.
      */
     public PropDef[] getPropertyDefs() {
-	return propDefs;
+        return propDefs;
     }
 
     /**
@@ -205,6 +202,6 @@ public class NodeTypeDef implements Cloneable {
      *         <code>null</code> if not set.
      */
     public ChildNodeDef[] getChildNodeDefs() {
-	return nodeDefs;
+        return nodeDefs;
     }
 }

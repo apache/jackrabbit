@@ -15,39 +15,36 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.analysis.Analyzer;
 
 import java.io.IOException;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class PersistentIndex extends AbstractIndex {
 
     private String location;
 
     PersistentIndex(String location, Analyzer analyzer) throws IOException {
-	super(analyzer,
-		IndexReader.indexExists(location)
-		? FSDirectory.getDirectory(location, false)
-		: FSDirectory.getDirectory(location, true));
+        super(analyzer,
+                IndexReader.indexExists(location)
+                ? FSDirectory.getDirectory(location, false)
+                : FSDirectory.getDirectory(location, true));
 
-	this.location = location;
+        this.location = location;
 
     }
 
     void mergeIndex(AbstractIndex index) throws IOException {
-	this.getIndexWriter().addIndexes(
-		new IndexReader[] {
-		    index.getIndexReader()
-		});
+        this.getIndexWriter().addIndexes(new IndexReader[]{
+            index.getIndexReader()
+        });
     }
 
     Directory getDirectory() throws IOException {
-	return FSDirectory.getDirectory(location, false);
+        return FSDirectory.getDirectory(location, false);
     }
 }

@@ -19,9 +19,6 @@ package org.apache.jackrabbit.core.observation;
  * The <code>EventDispatcher</code> interface defines a single method {@link
  * #dispatchEvents}, through this method a collection of {@link EventState}
  * instances is dispatched to registered {@link javax.jcr.observation.EventListener}s.
- *
- * @author Marcel Reutegger
- * @version $Revision: 1.2 $, $Date: 2004/08/02 16:19:47 $
  */
 public interface EventDispatcher {
 

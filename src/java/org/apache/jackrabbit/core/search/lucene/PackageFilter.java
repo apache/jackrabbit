@@ -15,27 +15,30 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.Filter;
 
-import java.util.BitSet;
 import java.io.IOException;
+import java.util.BitSet;
 
 /**
  * Implements a fulltext filter, based on a {@link PathFilter}.
- *
- * @version $Revision: 1.3 $, $Date: 2004/06/15 13:52:13 $
- * @author Marcel Reutegger
  */
 class PackageFilter extends Filter {
 
-    /** the <code>BitSet</code> representing the filter */
+    /**
+     * the <code>BitSet</code> representing the filter
+     */
     private BitSet filter = null;
 
-    /** number of bits set true */
+    /**
+     * number of bits set true
+     */
     private int bitCount = 0;
 
-    /** the {@link PathFilter} defining the filter range */
+    /**
+     * the {@link PathFilter} defining the filter range
+     */
     private final PathFilter pathFilter;
 
     /**
@@ -45,7 +48,7 @@ class PackageFilter extends Filter {
      * @param filter the {@link PathFilter} defining the filter range
      */
     public PackageFilter(PathFilter filter) {
-	pathFilter = filter;
+        pathFilter = filter;
     }
 
     /**
@@ -55,26 +58,26 @@ class PackageFilter extends Filter {
      *
      * @param reader the <code>IndexReader</code> of the search index.
      * @return a BitSet with true for documents which should be permitted in search
-     *     results, and false for those that should not.
+     *         results, and false for those that should not.
      * @throws IOException if an error occurs while reading from the search index.
      */
     public synchronized BitSet bits(IndexReader reader) throws IOException {
-	// check if previously calculated
-	if (filter == null) {
-	    filter = new BitSet(reader.maxDoc());
+        // check if previously calculated
+        if (filter == null) {
+            filter = new BitSet(reader.maxDoc());
 
-	    // Iterate over all docs
-	    for (int i = 0; i < reader.maxDoc(); i++) {
-		if (!reader.isDeleted(i)) {
-		    // check if document is in ContentPackage
-		    if (pathFilter.includes(reader.document(i).getField(FieldNames.PATH).stringValue())) {
-			filter.set(i);
-			bitCount++;
-		    }
-		}
-	    }
-	}
-	return filter;
+            // Iterate over all docs
+            for (int i = 0; i < reader.maxDoc(); i++) {
+                if (!reader.isDeleted(i)) {
+                    // check if document is in ContentPackage
+                    if (pathFilter.includes(reader.document(i).getField(FieldNames.PATH).stringValue())) {
+                        filter.set(i);
+                        bitCount++;
+                    }
+                }
+            }
+        }
+        return filter;
     }
 
     /**
@@ -82,9 +85,10 @@ class PackageFilter extends Filter {
      * otherwise. Please note that this method returns false when
      * this PackageFilter was never called with a reader before.
      * See {@link #bits}.
+     *
      * @return true if this <code>PackageFilter</code> blocks all pages.
      */
     public boolean blocksAll() {
-	return (filter != null && bitCount == 0);
+        return (filter != null && bitCount == 0);
     }
 }

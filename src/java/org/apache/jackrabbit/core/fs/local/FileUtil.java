@@ -22,9 +22,6 @@ import java.io.IOException;
 
 /**
  * A <code>FileUtil</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.11 $, $Date: 2004/08/02 16:19:52 $
  */
 
 public final class FileUtil {
@@ -41,50 +38,50 @@ public final class FileUtil {
      * @throws IOException
      */
     public static void copy(File src, File dest) throws IOException {
-	if (!src.canRead()) {
-	    throw new IOException(src.getPath() + " can't be read from.");
-	}
-	if (src.isDirectory()) {
-	    // src is a folder
-	    if (dest.isFile()) {
-		throw new IOException("can't copy a folder to a file");
-	    }
-	    if (!dest.exists()) {
-		dest.mkdirs();
-	    }
-	    if (!dest.canWrite()) {
-		throw new IOException("can't write to " + dest.getPath());
-	    }
-	    File[] children = src.listFiles();
-	    for (int i = 0; i < children.length; i++) {
-		copy(children[i], new File(dest, children[i].getName()));
-	    }
-	} else {
-	    // src is a file
-	    File destParent;
-	    if (dest.isDirectory()) {
-		// dest is a folder
-		destParent = dest;
-		dest = new File(destParent, src.getName());
-	    } else {
-		destParent = dest.getParentFile();
-	    }
-	    if (!destParent.canWrite()) {
-		throw new IOException("can't write to " + destParent.getPath());
-	    }
+        if (!src.canRead()) {
+            throw new IOException(src.getPath() + " can't be read from.");
+        }
+        if (src.isDirectory()) {
+            // src is a folder
+            if (dest.isFile()) {
+                throw new IOException("can't copy a folder to a file");
+            }
+            if (!dest.exists()) {
+                dest.mkdirs();
+            }
+            if (!dest.canWrite()) {
+                throw new IOException("can't write to " + dest.getPath());
+            }
+            File[] children = src.listFiles();
+            for (int i = 0; i < children.length; i++) {
+                copy(children[i], new File(dest, children[i].getName()));
+            }
+        } else {
+            // src is a file
+            File destParent;
+            if (dest.isDirectory()) {
+                // dest is a folder
+                destParent = dest;
+                dest = new File(destParent, src.getName());
+            } else {
+                destParent = dest.getParentFile();
+            }
+            if (!destParent.canWrite()) {
+                throw new IOException("can't write to " + destParent.getPath());
+            }
 
-	    FileInputStream fis = new FileInputStream(src);
-	    FileOutputStream fos = new FileOutputStream(dest);
+            FileInputStream fis = new FileInputStream(src);
+            FileOutputStream fos = new FileOutputStream(dest);
 
-	    byte[] buffer = new byte[8192];
-	    int read = 0;
-	    while ((read = fis.read(buffer)) > 0) {
-		fos.write(buffer, 0, read);
-	    }
+            byte[] buffer = new byte[8192];
+            int read = 0;
+            while ((read = fis.read(buffer)) > 0) {
+                fos.write(buffer, 0, read);
+            }
 
-	    fis.close();
-	    fos.close();
-	}
+            fis.close();
+            fos.close();
+        }
     }
 
     /**
@@ -92,13 +89,13 @@ public final class FileUtil {
      * @throws IOException
      */
     public static void delete(File f) throws IOException {
-	if (f.isDirectory()) {
-	    // it's a folder, list children first
-	    File[] children = f.listFiles();
-	    for (int i = 0; i < children.length; i++) {
-		delete(children[i]);
-	    }
-	}
-	f.delete();
+        if (f.isDirectory()) {
+            // it's a folder, list children first
+            File[] children = f.listFiles();
+            for (int i = 0; i < children.length; i++) {
+                delete(children[i]);
+            }
+        }
+        f.delete();
     }
 }

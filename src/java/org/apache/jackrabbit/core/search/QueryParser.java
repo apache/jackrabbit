@@ -17,15 +17,12 @@ package org.apache.jackrabbit.core.search;
 
 import org.apache.jackrabbit.core.search.jcrql.JCRQLQueryBuilder;
 
-import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
 
 /**
  * This class acts as the central entry point for parsing query statements from
  * different query syntaxes into a query tree.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class QueryParser {
 
@@ -46,18 +43,17 @@ public class QueryParser {
      * @param statement the query statement.
      * @param language  the language of the query statement.
      * @return the root node of the generated query tree.
-     *
      * @throws InvalidQueryException if an error occurs while parsing the
      *                               statement.
      */
     public static QueryRootNode parse(String statement, String language)
-	    throws InvalidQueryException {
+            throws InvalidQueryException {
 
-	if (language == Query.JCRQL) {
-	    return JCRQLQueryBuilder.createQuery(statement);
-	} else {
-	    throw new InvalidQueryException("unknown language");
-	}
+        if (language == Query.JCRQL) {
+            return JCRQLQueryBuilder.createQuery(statement);
+        } else {
+            throw new InvalidQueryException("unknown language");
+        }
     }
 
 }

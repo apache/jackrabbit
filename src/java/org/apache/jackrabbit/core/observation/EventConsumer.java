@@ -15,24 +15,19 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.log4j.Logger;
 
-import javax.jcr.Session;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.access.Permission;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventType;
-import java.util.Map;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * The <code>EventConsumer</code> class combines the {@link
@@ -41,9 +36,6 @@ import java.util.HashSet;
  * <p/>
  * Collections of {@link EventState} objects will be dispatched to {@link
  * #consumeEvents}.
- *
- * @author Marcel Reutegger
- * @version $Revision: 1.7 $, $Date: 2004/08/25 16:44:50 $
  */
 class EventConsumer {
 
@@ -92,19 +84,19 @@ class EventConsumer {
      *                              or <code>filter</code> is<code>null</code>.
      */
     EventConsumer(SessionImpl session, EventListener listener, EventFilter filter) {
-	if (session == null) {
-	    throw new NullPointerException("session");
-	}
-	if (listener == null) {
-	    throw new NullPointerException("listener");
-	}
-	if (filter == null) {
-	    throw new NullPointerException("filter");
-	}
+        if (session == null) {
+            throw new NullPointerException("session");
+        }
+        if (listener == null) {
+            throw new NullPointerException("listener");
+        }
+        if (filter == null) {
+            throw new NullPointerException("filter");
+        }
 
-	this.session = session;
-	this.listener = listener;
-	this.filter = filter;
+        this.session = session;
+        this.listener = listener;
+        this.filter = filter;
     }
 
     /**
@@ -114,7 +106,7 @@ class EventConsumer {
      * @return the <code>Session</code> of this <code>EventConsumer</code>.
      */
     Session getSession() {
-	return session;
+        return session;
     }
 
     /**
@@ -124,7 +116,7 @@ class EventConsumer {
      * @return the <code>EventListener</code> of this <code>EventConsumer</code>.
      */
     EventListener getEventListener() {
-	return listener;
+        return listener;
     }
 
     /**
@@ -133,46 +125,45 @@ class EventConsumer {
      *
      * @param events the collection of {@link EventState}s.
      * @throws RepositoryException if an error occurs while checking access
-     *   rights on the {@link EventStateCollection}.
+     *                             rights on the {@link EventStateCollection}.
      */
     void prepareEvents(EventStateCollection events) throws RepositoryException {
-	Iterator it = events.iterator();
-	Set denied = null;
-	while (it.hasNext()) {
-	    EventState state = (EventState) it.next();
-	    if (state.getType() == EventType.CHILD_NODE_REMOVED
-		    || state.getType() == EventType.PROPERTY_REMOVED) {
+        Iterator it = events.iterator();
+        Set denied = null;
+        while (it.hasNext()) {
+            EventState state = (EventState) it.next();
+            if (state.getType() == EventType.CHILD_NODE_REMOVED
+                    || state.getType() == EventType.PROPERTY_REMOVED) {
 
-		if (session.equals(state.getSession())) {
-		    // if we created the event, we can be sure that
-		    // we have enough access rights to see the event
-		    continue;
-		}
+                if (session.equals(state.getSession())) {
+                    // if we created the event, we can be sure that
+                    // we have enough access rights to see the event
+                    continue;
+                }
 
-		try {
-		    // FIXME is there a better way to check access right
-		    // without transforming path
-		    Path p = Path.create(state.getParentPath(), state.getChildItemQName(), false);
-		    if (!session.getWorkspace().getAccessManager().isGranted(
-			    p.toJCRPath(session.getNamespaceResolver()),
-			    Permission.READ_ITEM)) {
-			if (denied == null) {
-			    denied = new HashSet();
-			}
-			denied.add(state);
-		    }
-		} catch (MalformedPathException e) {
-		    // should actually never happen
-		    log.error("internal error: malformed path exception", e);
-		} catch (NoPrefixDeclaredException e) {
-		    // should actually never happen
-		    log.error("internal error: no prefix declared", e);
-		}
-	    }
-	}
-	if (denied != null) {
-	    accessDenied.put(events, denied);
-	}
+                try {
+                    // FIXME is there a better way to check access right
+                    // without transforming path
+                    Path p = Path.create(state.getParentPath(), state.getChildItemQName(), false);
+                    if (!session.getWorkspace().getAccessManager().isGranted(p.toJCRPath(session.getNamespaceResolver()),
+                            Permission.READ_ITEM)) {
+                        if (denied == null) {
+                            denied = new HashSet();
+                        }
+                        denied.add(state);
+                    }
+                } catch (MalformedPathException e) {
+                    // should actually never happen
+                    log.error("internal error: malformed path exception", e);
+                } catch (NoPrefixDeclaredException e) {
+                    // should actually never happen
+                    log.error("internal error: no prefix declared", e);
+                }
+            }
+        }
+        if (denied != null) {
+            accessDenied.put(events, denied);
+        }
     }
 
     /**
@@ -182,41 +173,40 @@ class EventConsumer {
      *               to dispatch.
      */
     void consumeEvents(EventStateCollection events) throws RepositoryException {
-	Set denied = (Set) accessDenied.remove(events);
-	// check permissions
-	for (Iterator it = events.iterator(); it.hasNext();) {
-	    EventState state = (EventState) it.next();
-	    if (state.getType() == EventType.CHILD_NODE_ADDED
-		    || state.getType() == EventType.PROPERTY_ADDED
-		    || state.getType() == EventType.PROPERTY_CHANGED) {
-		try {
-		    // FIXME is there a better way to check access right
-		    // without transforming path
-		    Path p = Path.create(state.getParentPath(), state.getChildItemQName(), false);
-		    if (!session.getWorkspace().getAccessManager().isGranted(
-			    p.toJCRPath(session.getNamespaceResolver()),
-			    Permission.READ_ITEM)) {
-			if (denied == null) {
-			    denied = new HashSet();
-			}
-			denied.add(state);
-		    }
-		} catch (MalformedPathException e) {
-		    // should actually never happen
-		    log.error("internal error: malformed path exception", e);
-		} catch (NoPrefixDeclaredException e) {
-		    // should actually never happen
-		    log.error("internal error: no prefix declared", e);
-		}
-	    }
-	}
-	// check if filtered iterator has at least one event
-	EventIterator it = new FilteredEventIterator(events, filter, denied);
-	if (it.hasNext()) {
-	    listener.onEvent(it);
-	} else {
-	    // otherwise skip this listener
-	}
+        Set denied = (Set) accessDenied.remove(events);
+        // check permissions
+        for (Iterator it = events.iterator(); it.hasNext();) {
+            EventState state = (EventState) it.next();
+            if (state.getType() == EventType.CHILD_NODE_ADDED
+                    || state.getType() == EventType.PROPERTY_ADDED
+                    || state.getType() == EventType.PROPERTY_CHANGED) {
+                try {
+                    // FIXME is there a better way to check access right
+                    // without transforming path
+                    Path p = Path.create(state.getParentPath(), state.getChildItemQName(), false);
+                    if (!session.getWorkspace().getAccessManager().isGranted(p.toJCRPath(session.getNamespaceResolver()),
+                            Permission.READ_ITEM)) {
+                        if (denied == null) {
+                            denied = new HashSet();
+                        }
+                        denied.add(state);
+                    }
+                } catch (MalformedPathException e) {
+                    // should actually never happen
+                    log.error("internal error: malformed path exception", e);
+                } catch (NoPrefixDeclaredException e) {
+                    // should actually never happen
+                    log.error("internal error: no prefix declared", e);
+                }
+            }
+        }
+        // check if filtered iterator has at least one event
+        EventIterator it = new FilteredEventIterator(events, filter, denied);
+        if (it.hasNext()) {
+            listener.onEvent(it);
+        } else {
+            // otherwise skip this listener
+        }
     }
 
     /**
@@ -233,15 +223,15 @@ class EventConsumer {
      *         other <code>EventConsumer</code>.
      */
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof EventConsumer) {
-	    EventConsumer other = (EventConsumer) obj;
-	    return session.equals(other.session)
-		    && listener.equals(other.listener);
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof EventConsumer) {
+            EventConsumer other = (EventConsumer) obj;
+            return session.equals(other.session)
+                    && listener.equals(other.listener);
+        }
+        return false;
     }
 
     /**
@@ -250,9 +240,9 @@ class EventConsumer {
      * @return the hash code for this <code>EventConsumer</code>.
      */
     public int hashCode() {
-	if (hashCode == 0) {
-	    hashCode = session.hashCode() ^ listener.hashCode();
-	}
-	return hashCode;
+        if (hashCode == 0) {
+            hashCode = session.hashCode() ^ listener.hashCode();
+        }
+        return hashCode;
     }
 }

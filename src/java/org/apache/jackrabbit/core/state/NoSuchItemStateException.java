@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core.state;
 
 /**
  * The <code>NoSuchItemStateException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.11 $, $Date: 2004/09/01 15:14:29 $
  */
 public class NoSuchItemStateException extends ItemStateException {
     /**
@@ -27,7 +24,7 @@ public class NoSuchItemStateException extends ItemStateException {
      * detail message.
      */
     public NoSuchItemStateException() {
-	super();
+        super();
     }
 
     /**
@@ -38,7 +35,7 @@ public class NoSuchItemStateException extends ItemStateException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public NoSuchItemStateException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -50,7 +47,7 @@ public class NoSuchItemStateException extends ItemStateException {
      * @param rootCause root failure cause
      */
     public NoSuchItemStateException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -59,6 +56,6 @@ public class NoSuchItemStateException extends ItemStateException {
      * @param rootCause root failure cause
      */
     public NoSuchItemStateException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

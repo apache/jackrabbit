@@ -29,9 +29,6 @@ import java.util.Stack;
 
 /**
  * <code>DocViewImportHandler</code>  ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.3 $, $Date: 2004/08/30 11:13:47 $
  */
 class DocViewImportHandler extends DefaultHandler {
 
@@ -41,10 +38,10 @@ class DocViewImportHandler extends DefaultHandler {
     private SessionImpl session;
 
     DocViewImportHandler(NodeImpl importTargetNode, SessionImpl session) {
-	this.session = session;
-	parents = new Stack();
+        this.session = session;
+        parents = new Stack();
 
-	parents.push(importTargetNode);
+        parents.push(importTargetNode);
     }
 
     //-------------------------------------------------------< ContentHandler >
@@ -52,68 +49,68 @@ class DocViewImportHandler extends DefaultHandler {
      * @see ContentHandler#startElement(String, String, String, Attributes)
      */
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
-	try {
-	    QName nodeName;
-	    if (qName == null || "".equals(qName)) {
-		nodeName = new QName(namespaceURI, localName);
-	    } else {
-		try {
-		    nodeName = QName.fromJCRName(qName, session.getNamespaceResolver());
-		} catch (IllegalNameException ine) {
-		    throw new SAXException("illegal node name: " + qName, ine);
-		} catch (UnknownPrefixException upe) {
-		    throw new SAXException("illegal node name: " + qName, upe);
-		}
-	    }
+        try {
+            QName nodeName;
+            if (qName == null || "".equals(qName)) {
+                nodeName = new QName(namespaceURI, localName);
+            } else {
+                try {
+                    nodeName = QName.fromJCRName(qName, session.getNamespaceResolver());
+                } catch (IllegalNameException ine) {
+                    throw new SAXException("illegal node name: " + qName, ine);
+                } catch (UnknownPrefixException upe) {
+                    throw new SAXException("illegal node name: " + qName, upe);
+                }
+            }
 
-	    // @todo how should 'system' properties be handled in document view (e.g. jcr:primaryType,jcr:mixinTypes, jcr:uuid)?
-	    NodeImpl currentParent = (NodeImpl) parents.peek();
-	    currentParent = (NodeImpl) currentParent.addNode(nodeName, NodeTypeRegistry.NT_UNSTRUCTURED);
-	    parents.push(currentParent);
+            // @todo how should 'system' properties be handled in document view (e.g. jcr:primaryType,jcr:mixinTypes, jcr:uuid)?
+            NodeImpl currentParent = (NodeImpl) parents.peek();
+            currentParent = (NodeImpl) currentParent.addNode(nodeName, NodeTypeRegistry.NT_UNSTRUCTURED);
+            parents.push(currentParent);
 
-	    // properties
-	    for (int i = 0; i < atts.getLength(); i++) {
-		QName propName;
-		if (atts.getQName(i) == null || "".equals(atts.getQName(i))) {
-		    propName = new QName(atts.getURI(i), atts.getLocalName(i));
-		} else {
-		    try {
-			propName = QName.fromJCRName(atts.getQName(i), session.getNamespaceResolver());
-		    } catch (IllegalNameException ine) {
-			throw new SAXException("illegal property name: " + atts.getQName(i), ine);
-		    } catch (UnknownPrefixException upe) {
-			throw new SAXException("illegal property name: " + atts.getQName(i), upe);
-		    }
-		}
-		StringValue val = new StringValue(atts.getValue(i));
-		currentParent.setProperty(propName, val);
-	    }
-	} catch (RepositoryException re) {
-	    throw new SAXException(re);
-	}
+            // properties
+            for (int i = 0; i < atts.getLength(); i++) {
+                QName propName;
+                if (atts.getQName(i) == null || "".equals(atts.getQName(i))) {
+                    propName = new QName(atts.getURI(i), atts.getLocalName(i));
+                } else {
+                    try {
+                        propName = QName.fromJCRName(atts.getQName(i), session.getNamespaceResolver());
+                    } catch (IllegalNameException ine) {
+                        throw new SAXException("illegal property name: " + atts.getQName(i), ine);
+                    } catch (UnknownPrefixException upe) {
+                        throw new SAXException("illegal property name: " + atts.getQName(i), upe);
+                    }
+                }
+                StringValue val = new StringValue(atts.getValue(i));
+                currentParent.setProperty(propName, val);
+            }
+        } catch (RepositoryException re) {
+            throw new SAXException(re);
+        }
     }
 
     /**
      * @see ContentHandler#characters(char[], int, int)
      */
     public void characters(char[] ch, int start, int length) throws SAXException {
-	// character data in document view:
-	// store as jcr:xmlcharacters property of jcr:xmltext node
-	// (need to store as node in order to maintain ordering)
-	try {
-	    NodeImpl currentParent = (NodeImpl) parents.peek();
-	    NodeImpl txtNode = (NodeImpl) currentParent.addNode(DocViewSAXEventGenerator.NODENAME_XMLTEXT);
-	    StringValue val = new StringValue(new String(ch, start, length));
-	    txtNode.setProperty(DocViewSAXEventGenerator.PROPNAME_XMLCHARACTERS, val);
-	} catch (RepositoryException re) {
-	    throw new SAXException(re);
-	}
+        // character data in document view:
+        // store as jcr:xmlcharacters property of jcr:xmltext node
+        // (need to store as node in order to maintain ordering)
+        try {
+            NodeImpl currentParent = (NodeImpl) parents.peek();
+            NodeImpl txtNode = (NodeImpl) currentParent.addNode(DocViewSAXEventGenerator.NODENAME_XMLTEXT);
+            StringValue val = new StringValue(new String(ch, start, length));
+            txtNode.setProperty(DocViewSAXEventGenerator.PROPNAME_XMLCHARACTERS, val);
+        } catch (RepositoryException re) {
+            throw new SAXException(re);
+        }
     }
 
     /**
      * @see ContentHandler#endElement(String, String, String)
      */
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
-	parents.pop();
+        parents.pop();
     }
 }

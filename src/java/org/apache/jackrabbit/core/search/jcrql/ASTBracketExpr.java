@@ -16,17 +16,19 @@
 package org.apache.jackrabbit.core.search.jcrql;
 
 public class ASTBracketExpr extends SimpleNode {
-  public ASTBracketExpr(int id) {
-    super(id);
-  }
+    public ASTBracketExpr(int id) {
+        super(id);
+    }
 
-  public ASTBracketExpr(JCRQLParser p, int id) {
-    super(p, id);
-  }
+    public ASTBracketExpr(JCRQLParser p, int id) {
+        super(p, id);
+    }
 
 
-  /** Accept the visitor. **/
-  public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-    return visitor.visit(this, data);
-  }
+    /**
+     * Accept the visitor. *
+     */
+    public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
+        return visitor.visit(this, data);
+    }
 }

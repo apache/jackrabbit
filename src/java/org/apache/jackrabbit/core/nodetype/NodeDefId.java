@@ -23,9 +23,6 @@ import java.util.TreeSet;
 /**
  * <code>NodeDefId</code> uniquely identifies a <code>ChildNodeDef</code> in the
  * node type registry.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.3 $
  */
 public class NodeDefId implements Serializable {
 
@@ -34,37 +31,37 @@ public class NodeDefId implements Serializable {
     private final int id;
 
     public NodeDefId(ChildNodeDef def) {
-	if (def == null) {
-	    throw new IllegalArgumentException("ChildNodeDef argument can not be null");
-	}
-	// build key (format: <declaringNodeType>/<name>/<defaultPrimaryType>/<requiredPrimaryTypes>)
-	StringBuffer sb = new StringBuffer();
+        if (def == null) {
+            throw new IllegalArgumentException("ChildNodeDef argument can not be null");
+        }
+        // build key (format: <declaringNodeType>/<name>/<defaultPrimaryType>/<requiredPrimaryTypes>)
+        StringBuffer sb = new StringBuffer();
 
-	sb.append(def.getDeclaringNodeType().toString());
-	sb.append('/');
-	if (def.definesResidual()) {
-	    sb.append('*');
-	} else {
-	    sb.append(def.getName().toString());
-	}
-	sb.append('/');
-	if (def.getDefaultPrimaryType() != null) {
-	    sb.append(def.getDefaultPrimaryType());
-	}
-	sb.append('/');
-	// set of required node type names, sorted in ascending order
-	TreeSet set = new TreeSet();
-	QName[] names = def.getRequiredPrimaryTypes();
-	for (int i = 0; i < names.length; i++) {
-	    set.add(names[i]);
-	}
-	sb.append(set.toString());
+        sb.append(def.getDeclaringNodeType().toString());
+        sb.append('/');
+        if (def.definesResidual()) {
+            sb.append('*');
+        } else {
+            sb.append(def.getName().toString());
+        }
+        sb.append('/');
+        if (def.getDefaultPrimaryType() != null) {
+            sb.append(def.getDefaultPrimaryType());
+        }
+        sb.append('/');
+        // set of required node type names, sorted in ascending order
+        TreeSet set = new TreeSet();
+        QName[] names = def.getRequiredPrimaryTypes();
+        for (int i = 0; i < names.length; i++) {
+            set.add(names[i]);
+        }
+        sb.append(set.toString());
 
-	id = sb.toString().hashCode();
+        id = sb.toString().hashCode();
     }
 
     private NodeDefId(int id) {
-	this.id = id;
+        this.id = id;
     }
 
     /**
@@ -80,28 +77,28 @@ public class NodeDefId implements Serializable {
      * @see #toString()
      */
     public static NodeDefId valueOf(String s) {
-	if (s == null) {
-	    throw new IllegalArgumentException("invalid NodeDefId literal");
-	}
-	return new NodeDefId(Integer.parseInt(s));
+        if (s == null) {
+            throw new IllegalArgumentException("invalid NodeDefId literal");
+        }
+        return new NodeDefId(Integer.parseInt(s));
     }
 
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof NodeDefId) {
-	    NodeDefId other = (NodeDefId) obj;
-	    return id == other.id;
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof NodeDefId) {
+            NodeDefId other = (NodeDefId) obj;
+            return id == other.id;
+        }
+        return false;
     }
 
     public String toString() {
-	return Integer.toString(id);
+        return Integer.toString(id);
     }
 
     public int hashCode() {
-	return id;
+        return id;
     }
 }

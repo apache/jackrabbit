@@ -20,15 +20,17 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @version $Revision: 1.4 $, $Date: 2004/05/04 12:06:31 $
- * @author Marcel Reutegger
  */
 public class JUnitTest extends TestCase {
 
-    /** Helper object to access repository transparently */
+    /**
+     * Helper object to access repository transparently
+     */
     public static final RepositoryHelper helper = new RepositoryHelper();
 
-    /** Logger instance for test cases */
+    /**
+     * Logger instance for test cases
+     */
     protected static final Logger log = Logger.getLogger(JUnitTest.class);
 
 }

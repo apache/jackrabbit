@@ -15,27 +15,21 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
+import org.apache.jackrabbit.core.search.PathQueryNode;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Weight;
-import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.HitCollector;
-import org.apache.jackrabbit.core.search.PathQueryNode;
+import org.apache.lucene.search.*;
 
 import java.io.IOException;
 
 /**
  *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 class PathQuery extends Query {
 
-    /** The path to query */
+    /**
+     * The path to query
+     */
     private final String path;
 
     private final int type;
@@ -45,7 +39,7 @@ class PathQuery extends Query {
     /**
      * Creates a <code>PathQuery</code> for a <code>path</code> and a path
      * <code>type</code>. The query does not care about a specific index.
-     * <p>
+     * <p/>
      * The path <code>type</code> must be one of:
      * <ul>
      * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_EXACT}</li>
@@ -60,21 +54,21 @@ class PathQuery extends Query {
      *                                  in {@link org.apache.jackrabbit.core.search.PathQueryNode}.
      */
     PathQuery(String path, int type) {
-	if (path == null) {
-	    throw new NullPointerException("path");
-	}
-	if (type < PathQueryNode.TYPE_EXACT || type > PathQueryNode.TYPE_DESCENDANT) {
-	    throw new IllegalArgumentException("type: " + type);
-	}
-	this.path = path;
-	this.type = type;
-	index = -1;
+        if (path == null) {
+            throw new NullPointerException("path");
+        }
+        if (type < PathQueryNode.TYPE_EXACT || type > PathQueryNode.TYPE_DESCENDANT) {
+            throw new IllegalArgumentException("type: " + type);
+        }
+        this.path = path;
+        this.type = type;
+        index = -1;
     }
 
     /**
      * Creates a <code>PathQuery</code> for a <code>path</code>, a path
      * <code>type</code> and a position index for the last location step.
-     * <p>
+     * <p/>
      * The path <code>type</code> must be one of:
      * <ul>
      * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_EXACT}</li>
@@ -82,109 +76,109 @@ class PathQuery extends Query {
      * <li>{@link org.apache.jackrabbit.core.search.PathQueryNode#TYPE_DESCENDANT}</li>
      * </ul>
      *
-     * @param path the base path
-     * @param type the path type.
+     * @param path  the base path
+     * @param type  the path type.
      * @param index position index of the last location step.
-     *
-     * @throws NullPointerException if path is null.
+     * @throws NullPointerException     if path is null.
      * @throws IllegalArgumentException if type is not one of the defined types
-     *   in {@link org.apache.jackrabbit.core.search.PathQueryNode}. Or if
-     *   <code>index</code> &lt; 1.
+     *                                  in {@link org.apache.jackrabbit.core.search.PathQueryNode}. Or if
+     *                                  <code>index</code> &lt; 1.
      */
     PathQuery(String path, int type, int index) {
-	if (path == null) {
-	    throw new NullPointerException("path");
-	}
-	if (type < PathQueryNode.TYPE_EXACT || type > PathQueryNode.TYPE_DESCENDANT) {
-	    throw new IllegalArgumentException("type: " + type);
-	}
-	if (index < 1) {
-	    throw new IllegalArgumentException("index: " + index);
-	}
-	this.path = path;
-	this.type = type;
-	this.index = index;
+        if (path == null) {
+            throw new NullPointerException("path");
+        }
+        if (type < PathQueryNode.TYPE_EXACT || type > PathQueryNode.TYPE_DESCENDANT) {
+            throw new IllegalArgumentException("type: " + type);
+        }
+        if (index < 1) {
+            throw new IllegalArgumentException("index: " + index);
+        }
+        this.path = path;
+        this.type = type;
+        this.index = index;
     }
 
     /**
      * Creates a new
+     *
      * @param searcher
      * @return
      */
     protected Weight createWeight(Searcher searcher) {
-	return new PathQueryWeight(searcher);
+        return new PathQueryWeight(searcher);
     }
 
     public String toString(String field) {
-	return "";
+        return "";
     }
 
     private class PathQueryWeight implements Weight {
 
-	private final Searcher searcher;
-	private float value;
-	private float idf;
-	private float queryNorm;
-	private float queryWeight;
+        private final Searcher searcher;
+        private float value;
+        private float idf;
+        private float queryNorm;
+        private float queryWeight;
 
 
-	public PathQueryWeight(Searcher searcher) {
-	    this.searcher = searcher;
-	}
+        public PathQueryWeight(Searcher searcher) {
+            this.searcher = searcher;
+        }
 
-	public Query getQuery() {
-	    return PathQuery.this;
-	}
+        public Query getQuery() {
+            return PathQuery.this;
+        }
 
-	public float getValue() {
-	    return value;
-	}
+        public float getValue() {
+            return value;
+        }
 
-	public float sumOfSquaredWeights() throws IOException {
-	    idf = searcher.getSimilarity().idf(searcher.maxDoc(), searcher.maxDoc()); // compute idf
-	    queryWeight = idf * getBoost();             // compute query weight
-	    return queryWeight * queryWeight;           // square it
-	}
+        public float sumOfSquaredWeights() throws IOException {
+            idf = searcher.getSimilarity().idf(searcher.maxDoc(), searcher.maxDoc()); // compute idf
+            queryWeight = idf * getBoost();             // compute query weight
+            return queryWeight * queryWeight;           // square it
+        }
 
-	public void normalize(float norm) {
-	    this.queryNorm = norm;
-	    queryWeight *= queryNorm;                   // normalize query weight
-	    value = queryWeight * idf;                  // idf for document
-	}
+        public void normalize(float norm) {
+            this.queryNorm = norm;
+            queryWeight *= queryNorm;                   // normalize query weight
+            value = queryWeight * idf;                  // idf for document
+        }
 
-	public Scorer scorer(IndexReader reader) throws IOException {
-	    return new PathQueryScorer(this, reader, searcher.getSimilarity());
-	}
+        public Scorer scorer(IndexReader reader) throws IOException {
+            return new PathQueryScorer(this, reader, searcher.getSimilarity());
+        }
 
-	public Explanation explain(IndexReader reader, int doc) throws IOException {
-	    throw new UnsupportedOperationException();
-	}
+        public Explanation explain(IndexReader reader, int doc) throws IOException {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private class PathQueryScorer extends Scorer {
 
-	private final Weight weight;
+        private final Weight weight;
 
-	private final IndexReader reader;
+        private final IndexReader reader;
 
-	private final float score;
+        private final float score;
 
-	protected PathQueryScorer(Weight weight,
-				  IndexReader reader,
-				  Similarity similarity) {
-	    super(similarity);
-	    this.weight = weight;
-	    this.reader = reader;
-	    score = similarity.tf(1) * weight.getValue();
-	}
+        protected PathQueryScorer(Weight weight,
+                                  IndexReader reader,
+                                  Similarity similarity) {
+            super(similarity);
+            this.weight = weight;
+            this.reader = reader;
+            score = similarity.tf(1) * weight.getValue();
+        }
 
-	public void score(HitCollector hc, int maxDoc) throws IOException {
-	    TermDocs docs = reader.termDocs();
-	    //hc.collect();
-	}
+        public void score(HitCollector hc, int maxDoc) throws IOException {
+            TermDocs docs = reader.termDocs();
+            //hc.collect();
+        }
 
-	public Explanation explain(int doc) throws IOException {
-	    throw new UnsupportedOperationException();
-	}
+        public Explanation explain(int doc) throws IOException {
+            throw new UnsupportedOperationException();
+        }
     }
 }

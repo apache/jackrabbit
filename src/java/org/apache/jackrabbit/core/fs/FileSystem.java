@@ -26,9 +26,6 @@ import java.io.OutputStream;
  * Implementations of this interface expose a file system-like resource.
  * File system-like resources include WebDAV-enabled servers, local file systems,
  * and so forth.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.14 $, $Date: 2004/08/02 16:19:51 $
  */
 public interface FileSystem {
 

@@ -15,15 +15,15 @@
  */
 package org.apache.jackrabbit.core.state.xml;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.state.*;
+import org.apache.log4j.Logger;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.filter.ContentFilter;
@@ -38,9 +38,6 @@ import java.util.*;
 
 /**
  * <code>XMLPersistenceManager</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.31 $, $Date: 2004/09/06 16:22:27 $
  */
 public class XMLPersistenceManager implements PersistenceManager {
 
@@ -96,268 +93,268 @@ public class XMLPersistenceManager implements PersistenceManager {
      * Creates a new <code>XMLPersistenceManager</code> instance.
      */
     public XMLPersistenceManager() {
-	initialized = false;
+        initialized = false;
     }
 
     private String buildNodeFolderPath(String uuid) {
-	StringBuffer sb = new StringBuffer();
-	char[] chars = uuid.toCharArray();
-	int cnt = 0;
-	for (int i = 0; i < chars.length; i++) {
-	    if (chars[i] == '-') {
-		continue;
-	    }
-	    //if (cnt > 0 && cnt % 4 == 0) {
-	    if (cnt == 4 || cnt == 8) {
-		sb.append('/');
-	    }
-	    sb.append(chars[i]);
-	    cnt++;
-	}
-	return sb.toString();
+        StringBuffer sb = new StringBuffer();
+        char[] chars = uuid.toCharArray();
+        int cnt = 0;
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] == '-') {
+                continue;
+            }
+            //if (cnt > 0 && cnt % 4 == 0) {
+            if (cnt == 4 || cnt == 8) {
+                sb.append('/');
+            }
+            sb.append(chars[i]);
+            cnt++;
+        }
+        return sb.toString();
     }
 
     private String buildPropFilePath(String parentUUID, QName propName) {
-	String fileName;
-	try {
-	    MessageDigest md5 = MessageDigest.getInstance("MD5");
-	    md5.update(propName.getNamespaceURI().getBytes());
-	    md5.update(propName.getLocalName().getBytes());
-	    byte[] bytes = md5.digest();
-	    char[] chars = new char[32];
-	    for (int i = 0, j = 0; i < 16; i++) {
-		chars[j++] = HEXDIGITS[(bytes[i] >> 4) & 0x0f];
-		chars[j++] = HEXDIGITS[bytes[i] & 0x0f];
-	    }
-	    //fileName = new String(chars) + ".xml";
-	    fileName = new String(chars);
-	} catch (NoSuchAlgorithmException nsae) {
-	    // should never get here as MD5 should always be available in the JRE
-	    String msg = "MD5 not available: ";
-	    log.fatal(msg, nsae);
-	    throw new InternalError(msg + nsae);
-	}
-	return buildNodeFolderPath(parentUUID) + "/" + fileName;
+        String fileName;
+        try {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            md5.update(propName.getNamespaceURI().getBytes());
+            md5.update(propName.getLocalName().getBytes());
+            byte[] bytes = md5.digest();
+            char[] chars = new char[32];
+            for (int i = 0, j = 0; i < 16; i++) {
+                chars[j++] = HEXDIGITS[(bytes[i] >> 4) & 0x0f];
+                chars[j++] = HEXDIGITS[bytes[i] & 0x0f];
+            }
+            //fileName = new String(chars) + ".xml";
+            fileName = new String(chars);
+        } catch (NoSuchAlgorithmException nsae) {
+            // should never get here as MD5 should always be available in the JRE
+            String msg = "MD5 not available: ";
+            log.fatal(msg, nsae);
+            throw new InternalError(msg + nsae);
+        }
+        return buildNodeFolderPath(parentUUID) + "/" + fileName;
     }
 
     private String buildBlobFilePath(String parentUUID, QName propName, int i) {
-	return buildNodeFolderPath(parentUUID) + "/"
-		+ FileSystemPathUtil.escapeName(propName.toString()) + "." + i + ".bin";
+        return buildNodeFolderPath(parentUUID) + "/"
+                + FileSystemPathUtil.escapeName(propName.toString()) + "." + i + ".bin";
     }
 
     private String buildNodeFilePath(String uuid) {
-	return buildNodeFolderPath(uuid) + "/" + NODEFILENAME;
+        return buildNodeFolderPath(uuid) + "/" + NODEFILENAME;
     }
 
     private String buildNodeReferencesFilePath(String uuid) {
-	return buildNodeFolderPath(uuid) + "/" + NODEREFSFILENAME;
+        return buildNodeFolderPath(uuid) + "/" + NODEREFSFILENAME;
     }
 
     private void readState(Element nodeElement, PersistentNodeState state)
-	    throws ItemStateException {
-	// first do some paranoid sanity checks
-	if (!nodeElement.getName().equals(NODE_ELEMENT)) {
-	    String msg = "invalid serialization format (unexpected element: " + nodeElement.getName() + ")";
-	    log.error(msg);
-	    throw new ItemStateException(msg);
-	}
-	// check uuid
-	if (!state.getUUID().equals(nodeElement.getAttributeValue(UUID_ATTRIBUTE))) {
-	    String msg = "invalid serialized state: uuid mismatch";
-	    log.error(msg);
-	    throw new ItemStateException(msg);
-	}
-	// check nodetype
-	String ntName = nodeElement.getAttributeValue(NODETYPE_ATTRIBUTE);
-	if (!QName.valueOf(ntName).equals(state.getNodeTypeName())) {
-	    String msg = "invalid serialized state: nodetype mismatch";
-	    log.error(msg);
-	    throw new ItemStateException(msg);
-	}
+            throws ItemStateException {
+        // first do some paranoid sanity checks
+        if (!nodeElement.getName().equals(NODE_ELEMENT)) {
+            String msg = "invalid serialization format (unexpected element: " + nodeElement.getName() + ")";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+        // check uuid
+        if (!state.getUUID().equals(nodeElement.getAttributeValue(UUID_ATTRIBUTE))) {
+            String msg = "invalid serialized state: uuid mismatch";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+        // check nodetype
+        String ntName = nodeElement.getAttributeValue(NODETYPE_ATTRIBUTE);
+        if (!QName.valueOf(ntName).equals(state.getNodeTypeName())) {
+            String msg = "invalid serialized state: nodetype mismatch";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
 
-	// now we're ready to read state
+        // now we're ready to read state
 
-	// primary parent
-	String parentUUID = nodeElement.getAttributeValue(PARENTUUID_ATTRIBUTE);
-	if (parentUUID.length() > 0) {
-	    state.setParentUUID(parentUUID);
-	}
+        // primary parent
+        String parentUUID = nodeElement.getAttributeValue(PARENTUUID_ATTRIBUTE);
+        if (parentUUID.length() > 0) {
+            state.setParentUUID(parentUUID);
+        }
 
-	// definition id
-	String definitionId = nodeElement.getAttributeValue(DEFINITIONID_ATTRIBUTE);
-	state.setDefinitionId(NodeDefId.valueOf(definitionId));
+        // definition id
+        String definitionId = nodeElement.getAttributeValue(DEFINITIONID_ATTRIBUTE);
+        state.setDefinitionId(NodeDefId.valueOf(definitionId));
 
-	// parent uuid's
-	Iterator iter = nodeElement.getChild(PARENTS_ELEMENT).getChildren(PARENT_ELEMENT).iterator();
-	ArrayList parentUUIDs = new ArrayList();
-	while (iter.hasNext()) {
-	    Element parentElement = (Element) iter.next();
-	    parentUUIDs.add(parentElement.getAttributeValue(UUID_ATTRIBUTE));
-	}
-	if (parentUUIDs.size() > 0) {
-	    state.setParentUUIDs(parentUUIDs);
-	}
+        // parent uuid's
+        Iterator iter = nodeElement.getChild(PARENTS_ELEMENT).getChildren(PARENT_ELEMENT).iterator();
+        ArrayList parentUUIDs = new ArrayList();
+        while (iter.hasNext()) {
+            Element parentElement = (Element) iter.next();
+            parentUUIDs.add(parentElement.getAttributeValue(UUID_ATTRIBUTE));
+        }
+        if (parentUUIDs.size() > 0) {
+            state.setParentUUIDs(parentUUIDs);
+        }
 
-	// mixin types
-	Element mixinsElement = nodeElement.getChild(MIXINTYPES_ELEMENT);
-	if (mixinsElement != null) {
-	    iter = mixinsElement.getChildren(MIXINTYPE_ELEMENT).iterator();
-	    Set mixins = new HashSet();
-	    while (iter.hasNext()) {
-		Element mixinElement = (Element) iter.next();
-		mixins.add(QName.valueOf(mixinElement.getAttributeValue(NAME_ATTRIBUTE)));
-	    }
-	    if (mixins.size() > 0) {
-		state.setMixinTypeNames(mixins);
-	    }
-	}
+        // mixin types
+        Element mixinsElement = nodeElement.getChild(MIXINTYPES_ELEMENT);
+        if (mixinsElement != null) {
+            iter = mixinsElement.getChildren(MIXINTYPE_ELEMENT).iterator();
+            Set mixins = new HashSet();
+            while (iter.hasNext()) {
+                Element mixinElement = (Element) iter.next();
+                mixins.add(QName.valueOf(mixinElement.getAttributeValue(NAME_ATTRIBUTE)));
+            }
+            if (mixins.size() > 0) {
+                state.setMixinTypeNames(mixins);
+            }
+        }
 
-	// property entries
-	iter = nodeElement.getChild(PROPERTIES_ELEMENT).getChildren(PROPERTY_ELEMENT).iterator();
-	while (iter.hasNext()) {
-	    Element propElement = (Element) iter.next();
-	    String propName = propElement.getAttributeValue(NAME_ATTRIBUTE);
-	    // @todo deserialize type and values
-	    state.addPropertyEntry(QName.valueOf(propName));
-	}
+        // property entries
+        iter = nodeElement.getChild(PROPERTIES_ELEMENT).getChildren(PROPERTY_ELEMENT).iterator();
+        while (iter.hasNext()) {
+            Element propElement = (Element) iter.next();
+            String propName = propElement.getAttributeValue(NAME_ATTRIBUTE);
+            // @todo deserialize type and values
+            state.addPropertyEntry(QName.valueOf(propName));
+        }
 
-	// child node entries
-	iter = nodeElement.getChild(NODES_ELEMENT).getChildren(NODE_ELEMENT).iterator();
-	while (iter.hasNext()) {
-	    Element childNodeElement = (Element) iter.next();
-	    String childName = childNodeElement.getAttributeValue(NAME_ATTRIBUTE);
-	    String childUUID = childNodeElement.getAttributeValue(UUID_ATTRIBUTE);
-	    state.addChildNodeEntry(QName.valueOf(childName), childUUID);
-	}
+        // child node entries
+        iter = nodeElement.getChild(NODES_ELEMENT).getChildren(NODE_ELEMENT).iterator();
+        while (iter.hasNext()) {
+            Element childNodeElement = (Element) iter.next();
+            String childName = childNodeElement.getAttributeValue(NAME_ATTRIBUTE);
+            String childUUID = childNodeElement.getAttributeValue(UUID_ATTRIBUTE);
+            state.addChildNodeEntry(QName.valueOf(childName), childUUID);
+        }
     }
 
     private void readState(Element propElement, PersistentPropertyState state)
-	    throws ItemStateException {
-	// first do some paranoid sanity checks
-	if (!propElement.getName().equals(PROPERTY_ELEMENT)) {
-	    String msg = "invalid serialization format (unexpected element: " + propElement.getName() + ")";
-	    log.error(msg);
-	    throw new ItemStateException(msg);
-	}
-	// check name
-	if (!state.getName().equals(QName.valueOf(propElement.getAttributeValue(NAME_ATTRIBUTE)))) {
-	    String msg = "invalid serialized state: name mismatch";
-	    log.error(msg);
-	    throw new ItemStateException(msg);
-	}
-	// check parentUUID
-	String parentUUID = propElement.getAttributeValue(PARENTUUID_ATTRIBUTE);
-	if (!parentUUID.equals(state.getParentUUID())) {
-	    String msg = "invalid serialized state: parentUUID mismatch";
-	    log.error(msg);
-	    throw new ItemStateException(msg);
-	}
+            throws ItemStateException {
+        // first do some paranoid sanity checks
+        if (!propElement.getName().equals(PROPERTY_ELEMENT)) {
+            String msg = "invalid serialization format (unexpected element: " + propElement.getName() + ")";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+        // check name
+        if (!state.getName().equals(QName.valueOf(propElement.getAttributeValue(NAME_ATTRIBUTE)))) {
+            String msg = "invalid serialized state: name mismatch";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
+        // check parentUUID
+        String parentUUID = propElement.getAttributeValue(PARENTUUID_ATTRIBUTE);
+        if (!parentUUID.equals(state.getParentUUID())) {
+            String msg = "invalid serialized state: parentUUID mismatch";
+            log.error(msg);
+            throw new ItemStateException(msg);
+        }
 
-	// now we're ready to read state
+        // now we're ready to read state
 
-	// type
-	String typeName = propElement.getAttributeValue(TYPE_ATTRIBUTE);
-	int type;
-	try {
-	    type = PropertyType.valueFromName(typeName);
-	} catch (IllegalArgumentException iae) {
-	    // should never be getting here
-	    throw new ItemStateException("unexpected property-type: " + typeName, iae);
-	}
-	state.setType(type);
+        // type
+        String typeName = propElement.getAttributeValue(TYPE_ATTRIBUTE);
+        int type;
+        try {
+            type = PropertyType.valueFromName(typeName);
+        } catch (IllegalArgumentException iae) {
+            // should never be getting here
+            throw new ItemStateException("unexpected property-type: " + typeName, iae);
+        }
+        state.setType(type);
 
-	// definition id
-	String definitionId = propElement.getAttributeValue(DEFINITIONID_ATTRIBUTE);
-	state.setDefinitionId(PropDefId.valueOf(definitionId));
+        // definition id
+        String definitionId = propElement.getAttributeValue(DEFINITIONID_ATTRIBUTE);
+        state.setDefinitionId(PropDefId.valueOf(definitionId));
 
-	// values
-	Iterator iter = propElement.getChild(VALUES_ELEMENT).getChildren(VALUE_ELEMENT).iterator();
-	ArrayList values = new ArrayList();
-	while (iter.hasNext()) {
-	    Element valueElement = (Element) iter.next();
-	    Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
-	    List content = valueElement.getContent(filter);
+        // values
+        Iterator iter = propElement.getChild(VALUES_ELEMENT).getChildren(VALUE_ELEMENT).iterator();
+        ArrayList values = new ArrayList();
+        while (iter.hasNext()) {
+            Element valueElement = (Element) iter.next();
+            Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
+            List content = valueElement.getContent(filter);
 
-	    InternalValue val;
-	    if (!content.isEmpty()) {
-		// read serialized value
-		String text = valueElement.getTextTrim();
-		if (type == PropertyType.BINARY) {
-		    // special handling required for binary value:
-		    // the value stores the path to the actual binary file in the blob store
-		    try {
-			val = InternalValue.create(new FileSystemResource(blobStore, text));
-		    } catch (IOException ioe) {
-			String msg = "error while reading serialized binary valuey";
-			log.error(msg, ioe);
-			throw new ItemStateException(msg, ioe);
-		    }
-		} else {
-		    val = InternalValue.valueOf(text, type);
-		}
-	    } else {
-		// null value
-		val = null;
-	    }
-	    values.add(val);
-	}
-	state.setValues((InternalValue[]) values.toArray(new InternalValue[values.size()]));
+            InternalValue val;
+            if (!content.isEmpty()) {
+                // read serialized value
+                String text = valueElement.getTextTrim();
+                if (type == PropertyType.BINARY) {
+                    // special handling required for binary value:
+                    // the value stores the path to the actual binary file in the blob store
+                    try {
+                        val = InternalValue.create(new FileSystemResource(blobStore, text));
+                    } catch (IOException ioe) {
+                        String msg = "error while reading serialized binary valuey";
+                        log.error(msg, ioe);
+                        throw new ItemStateException(msg, ioe);
+                    }
+                } else {
+                    val = InternalValue.valueOf(text, type);
+                }
+            } else {
+                // null value
+                val = null;
+            }
+            values.add(val);
+        }
+        state.setValues((InternalValue[]) values.toArray(new InternalValue[values.size()]));
     }
 
     private void readState(Properties props, PersistentPropertyState state)
-	    throws ItemStateException {
-	// type
-	String typeName = props.getProperty(TYPE_ATTRIBUTE);
-	int type;
-	try {
-	    type = PropertyType.valueFromName(typeName);
-	} catch (IllegalArgumentException iae) {
-	    // should never be getting here
-	    throw new ItemStateException("unexpected property-type: " + typeName, iae);
-	}
-	state.setType(type);
+            throws ItemStateException {
+        // type
+        String typeName = props.getProperty(TYPE_ATTRIBUTE);
+        int type;
+        try {
+            type = PropertyType.valueFromName(typeName);
+        } catch (IllegalArgumentException iae) {
+            // should never be getting here
+            throw new ItemStateException("unexpected property-type: " + typeName, iae);
+        }
+        state.setType(type);
 
-	// definition id
-	if (props.containsKey(DEFINITIONID_ATTRIBUTE)) {
-	    state.setDefinitionId(PropDefId.valueOf(props.getProperty(DEFINITIONID_ATTRIBUTE)));
-	}
+        // definition id
+        if (props.containsKey(DEFINITIONID_ATTRIBUTE)) {
+            state.setDefinitionId(PropDefId.valueOf(props.getProperty(DEFINITIONID_ATTRIBUTE)));
+        }
 
-	// # of values
-	int cnt = Integer.parseInt(props.getProperty(COUNT_ATTRIBUTE));
+        // # of values
+        int cnt = Integer.parseInt(props.getProperty(COUNT_ATTRIBUTE));
 
-	// values
-	InternalValue[] values = new InternalValue[cnt];
-	Enumeration names = props.propertyNames();
-	while (names.hasMoreElements()) {
-	    String name = (String) names.nextElement();
-	    if (TYPE_ATTRIBUTE.equals(name) || COUNT_ATTRIBUTE.equals(name)
-		    || DEFINITIONID_ATTRIBUTE.equals(name)) {
-		continue;
-	    }
-	    int i = Integer.parseInt(name);
-	    InternalValue val;
-	    String text = props.getProperty(name);
-	    if (text != null) {
-		if (type == PropertyType.BINARY) {
-		    // special handling required for binary value:
-		    // the value stores the path to the actual binary file in the blob store
-		    try {
-			val = InternalValue.create(new FileSystemResource(blobStore, text));
-		    } catch (IOException ioe) {
-			String msg = "error while reading serialized binary valuey";
-			log.error(msg, ioe);
-			throw new ItemStateException(msg, ioe);
-		    }
-		} else {
-		    val = InternalValue.valueOf(text, type);
-		}
-	    } else {
-		// null value
-		val = null;
-	    }
-	    values[i] = val;
-	}
-	state.setValues(values);
+        // values
+        InternalValue[] values = new InternalValue[cnt];
+        Enumeration names = props.propertyNames();
+        while (names.hasMoreElements()) {
+            String name = (String) names.nextElement();
+            if (TYPE_ATTRIBUTE.equals(name) || COUNT_ATTRIBUTE.equals(name)
+                    || DEFINITIONID_ATTRIBUTE.equals(name)) {
+                continue;
+            }
+            int i = Integer.parseInt(name);
+            InternalValue val;
+            String text = props.getProperty(name);
+            if (text != null) {
+                if (type == PropertyType.BINARY) {
+                    // special handling required for binary value:
+                    // the value stores the path to the actual binary file in the blob store
+                    try {
+                        val = InternalValue.create(new FileSystemResource(blobStore, text));
+                    } catch (IOException ioe) {
+                        String msg = "error while reading serialized binary valuey";
+                        log.error(msg, ioe);
+                        throw new ItemStateException(msg, ioe);
+                    }
+                } else {
+                    val = InternalValue.valueOf(text, type);
+                }
+            } else {
+                // null value
+                val = null;
+            }
+            values[i] = val;
+        }
+        state.setValues(values);
     }
 
     //---------------------------------------------------< PersistenceManager >
@@ -365,109 +362,109 @@ public class XMLPersistenceManager implements PersistenceManager {
      * @see PersistenceManager#init
      */
     public void init(WorkspaceDef wspDef) throws Exception {
-	itemStateStore = wspDef.getWorkspaceStore();
-	if (wspDef.getBlobStore() != null) {
-	    blobStore = wspDef.getBlobStore();
-	} else {
-	    blobStore = itemStateStore;
-	}
-	initialized = true;
+        itemStateStore = wspDef.getWorkspaceStore();
+        if (wspDef.getBlobStore() != null) {
+            blobStore = wspDef.getBlobStore();
+        } else {
+            blobStore = itemStateStore;
+        }
+        initialized = true;
     }
 
     /**
      * @see PersistenceManager#loadNodeState
      */
     public synchronized PersistentNodeState loadNodeState(String uuid)
-	    throws NoSuchItemStateException, ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+            throws NoSuchItemStateException, ItemStateException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	Exception e = null;
-	String nodeFilePath = buildNodeFilePath(uuid);
-	try {
-	    if (!itemStateStore.isFile(nodeFilePath)) {
-		throw new NoSuchItemStateException(uuid);
-	    }
-	    InputStream in = itemStateStore.getInputStream(nodeFilePath);
+        Exception e = null;
+        String nodeFilePath = buildNodeFilePath(uuid);
+        try {
+            if (!itemStateStore.isFile(nodeFilePath)) {
+                throw new NoSuchItemStateException(uuid);
+            }
+            InputStream in = itemStateStore.getInputStream(nodeFilePath);
 
-	    try {
-		SAXBuilder builder = new SAXBuilder();
-		Element rootElement = builder.build(in).getRootElement();
-		String ntName = rootElement.getAttributeValue(NODETYPE_ATTRIBUTE);
+            try {
+                SAXBuilder builder = new SAXBuilder();
+                Element rootElement = builder.build(in).getRootElement();
+                String ntName = rootElement.getAttributeValue(NODETYPE_ATTRIBUTE);
 
-		PersistentNodeState state = createNodeStateInstance(uuid, QName.valueOf(ntName));
-		readState(rootElement, state);
+                PersistentNodeState state = createNodeStateInstance(uuid, QName.valueOf(ntName));
+                readState(rootElement, state);
 
-		return state;
-	    } finally {
-		in.close();
-	    }
-	} catch (JDOMException jde) {
-	    e = jde;
-	    // fall through
-	} catch (IOException ioe) {
-	    e = ioe;
-	    // fall through
-	} catch (FileSystemException fse) {
-	    e = fse;
-	    // fall through
-	}
-	String msg = "failed to read node state: " + uuid;
-	log.error(msg, e);
-	throw new ItemStateException(msg, e);
+                return state;
+            } finally {
+                in.close();
+            }
+        } catch (JDOMException jde) {
+            e = jde;
+            // fall through
+        } catch (IOException ioe) {
+            e = ioe;
+            // fall through
+        } catch (FileSystemException fse) {
+            e = fse;
+            // fall through
+        }
+        String msg = "failed to read node state: " + uuid;
+        log.error(msg, e);
+        throw new ItemStateException(msg, e);
     }
 
     /**
      * @see PersistenceManager#reload
      */
     public synchronized void reload(PersistentNodeState state) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	Exception e = null;
-	String uuid = state.getUUID();
-	String nodeFilePath = buildNodeFilePath(uuid);
-	try {
-	    InputStream in = itemStateStore.getInputStream(nodeFilePath);
-	    try {
-		SAXBuilder builder = new SAXBuilder();
-		Element rootElement = builder.build(in).getRootElement();
+        Exception e = null;
+        String uuid = state.getUUID();
+        String nodeFilePath = buildNodeFilePath(uuid);
+        try {
+            InputStream in = itemStateStore.getInputStream(nodeFilePath);
+            try {
+                SAXBuilder builder = new SAXBuilder();
+                Element rootElement = builder.build(in).getRootElement();
 
-		// reset state
-		state.removeAllParentUUIDs();
-		state.removeAllPropertyEntries();
-		state.removeAllChildNodeEntries();
+                // reset state
+                state.removeAllParentUUIDs();
+                state.removeAllPropertyEntries();
+                state.removeAllChildNodeEntries();
 
-		readState(rootElement, state);
-		return;
-	    } finally {
-		in.close();
-	    }
-	} catch (JDOMException jde) {
-	    e = jde;
-	    // fall through
-	} catch (IOException ioe) {
-	    e = ioe;
-	    // fall through
-	} catch (FileSystemException fse) {
-	    e = fse;
-	    // fall through
-	}
-	String msg = "failed to read node state: " + uuid;
-	log.error(msg, e);
-	throw new ItemStateException(msg, e);
+                readState(rootElement, state);
+                return;
+            } finally {
+                in.close();
+            }
+        } catch (JDOMException jde) {
+            e = jde;
+            // fall through
+        } catch (IOException ioe) {
+            e = ioe;
+            // fall through
+        } catch (FileSystemException fse) {
+            e = fse;
+            // fall through
+        }
+        String msg = "failed to read node state: " + uuid;
+        log.error(msg, e);
+        throw new ItemStateException(msg, e);
     }
 
     /**
      * @see PersistenceManager#loadPropertyState
      */
     public synchronized PersistentPropertyState loadPropertyState(String parentUUID, QName propName)
-	    throws NoSuchItemStateException, ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+            throws NoSuchItemStateException, ItemStateException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
 /*
 	Exception e = null;
@@ -502,170 +499,170 @@ public class XMLPersistenceManager implements PersistenceManager {
 	log.error(msg, e);
 	throw new ItemStateException(msg, e);
 */
-	Exception e = null;
-	String propFilePath = buildPropFilePath(parentUUID, propName);
-	try {
-	    if (!itemStateStore.isFile(propFilePath)) {
-		throw new NoSuchItemStateException(parentUUID + "/" + propName);
-	    }
-	    InputStream in = itemStateStore.getInputStream(propFilePath);
-	    try {
-		Properties props = new Properties();
-		props.load(in);
-		PersistentPropertyState state = createPropertyStateInstance(propName, parentUUID);
-		readState(props, state);
+        Exception e = null;
+        String propFilePath = buildPropFilePath(parentUUID, propName);
+        try {
+            if (!itemStateStore.isFile(propFilePath)) {
+                throw new NoSuchItemStateException(parentUUID + "/" + propName);
+            }
+            InputStream in = itemStateStore.getInputStream(propFilePath);
+            try {
+                Properties props = new Properties();
+                props.load(in);
+                PersistentPropertyState state = createPropertyStateInstance(propName, parentUUID);
+                readState(props, state);
 
-		return state;
-	    } finally {
-		in.close();
-	    }
-	} catch (IOException ioe) {
-	    e = ioe;
-	    // fall through
-	} catch (FileSystemException fse) {
-	    e = fse;
-	    // fall through
-	}
-	String msg = "failed to read property state: " + parentUUID + "/" + propName;
-	log.error(msg, e);
-	throw new ItemStateException(msg, e);
+                return state;
+            } finally {
+                in.close();
+            }
+        } catch (IOException ioe) {
+            e = ioe;
+            // fall through
+        } catch (FileSystemException fse) {
+            e = fse;
+            // fall through
+        }
+        String msg = "failed to read property state: " + parentUUID + "/" + propName;
+        log.error(msg, e);
+        throw new ItemStateException(msg, e);
     }
 
     /**
      * @see PersistenceManager#reload
      */
     public synchronized void reload(PersistentPropertyState state) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	Exception e = null;
-	String parentUUID = state.getParentUUID();
-	QName propName = state.getName();
-	String propFilePath = buildPropFilePath(parentUUID, propName);
-	try {
-	    InputStream in = itemStateStore.getInputStream(propFilePath);
-	    try {
-		SAXBuilder builder = new SAXBuilder();
-		Element rootElement = builder.build(in).getRootElement();
-		readState(rootElement, state);
-		return;
-	    } finally {
-		in.close();
-	    }
-	} catch (JDOMException jde) {
-	    e = jde;
-	    // fall through
-	} catch (IOException ioe) {
-	    e = ioe;
-	    // fall through
-	} catch (FileSystemException fse) {
-	    e = fse;
-	    // fall through
-	}
-	String msg = "failed to read property state: " + parentUUID + "/" + propName;
-	log.error(msg, e);
-	throw new ItemStateException(msg, e);
+        Exception e = null;
+        String parentUUID = state.getParentUUID();
+        QName propName = state.getName();
+        String propFilePath = buildPropFilePath(parentUUID, propName);
+        try {
+            InputStream in = itemStateStore.getInputStream(propFilePath);
+            try {
+                SAXBuilder builder = new SAXBuilder();
+                Element rootElement = builder.build(in).getRootElement();
+                readState(rootElement, state);
+                return;
+            } finally {
+                in.close();
+            }
+        } catch (JDOMException jde) {
+            e = jde;
+            // fall through
+        } catch (IOException ioe) {
+            e = ioe;
+            // fall through
+        } catch (FileSystemException fse) {
+            e = fse;
+            // fall through
+        }
+        String msg = "failed to read property state: " + parentUUID + "/" + propName;
+        log.error(msg, e);
+        throw new ItemStateException(msg, e);
     }
 
     /**
      * @see PersistenceManager#store
      */
     public synchronized void store(PersistentNodeState state) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	String uuid = state.getUUID();
-	String nodeFilePath = buildNodeFilePath(uuid);
-	FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
-	try {
-	    nodeFile.makeParentDirs();
-	    OutputStream os = nodeFile.getOutputStream();
-	    Writer writer = null;
-	    try {
-		String encoding = DEFAULT_ENCODING;
-		try {
-		    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
-		} catch (UnsupportedEncodingException e) {
-		    // should never get here!
-		    OutputStreamWriter osw = new OutputStreamWriter(os);
-		    encoding = osw.getEncoding();
-		    writer = new BufferedWriter(osw);
-		}
+        String uuid = state.getUUID();
+        String nodeFilePath = buildNodeFilePath(uuid);
+        FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
+        try {
+            nodeFile.makeParentDirs();
+            OutputStream os = nodeFile.getOutputStream();
+            Writer writer = null;
+            try {
+                String encoding = DEFAULT_ENCODING;
+                try {
+                    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
+                } catch (UnsupportedEncodingException e) {
+                    // should never get here!
+                    OutputStreamWriter osw = new OutputStreamWriter(os);
+                    encoding = osw.getEncoding();
+                    writer = new BufferedWriter(osw);
+                }
 
-		writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
-		writer.write("<" + NODE_ELEMENT + " "
-			+ UUID_ATTRIBUTE + "=\"" + state.getUUID() + "\" "
-			+ PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentUUID() == null ? "" : state.getParentUUID()) + "\" "
-			+ DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
-			+ NODETYPE_ATTRIBUTE + "=\"" + state.getNodeTypeName() + "\">\n");
-		// parents
-		writer.write("\t<" + PARENTS_ELEMENT + ">\n");
-		Iterator iter = state.getParentUUIDs().iterator();
-		while (iter.hasNext()) {
-		    writer.write("\t\t<" + PARENT_ELEMENT + " "
-			    + UUID_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
-		}
-		writer.write("\t</" + PARENTS_ELEMENT + ">\n");
+                writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
+                writer.write("<" + NODE_ELEMENT + " "
+                        + UUID_ATTRIBUTE + "=\"" + state.getUUID() + "\" "
+                        + PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentUUID() == null ? "" : state.getParentUUID()) + "\" "
+                        + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
+                        + NODETYPE_ATTRIBUTE + "=\"" + state.getNodeTypeName() + "\">\n");
+                // parents
+                writer.write("\t<" + PARENTS_ELEMENT + ">\n");
+                Iterator iter = state.getParentUUIDs().iterator();
+                while (iter.hasNext()) {
+                    writer.write("\t\t<" + PARENT_ELEMENT + " "
+                            + UUID_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
+                }
+                writer.write("\t</" + PARENTS_ELEMENT + ">\n");
 
-		// mixin types
-		writer.write("\t<" + MIXINTYPES_ELEMENT + ">\n");
-		iter = state.getMixinTypeNames().iterator();
-		while (iter.hasNext()) {
-		    writer.write("\t\t<" + MIXINTYPE_ELEMENT + " "
-			    + NAME_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
-		}
-		writer.write("\t</" + MIXINTYPES_ELEMENT + ">\n");
+                // mixin types
+                writer.write("\t<" + MIXINTYPES_ELEMENT + ">\n");
+                iter = state.getMixinTypeNames().iterator();
+                while (iter.hasNext()) {
+                    writer.write("\t\t<" + MIXINTYPE_ELEMENT + " "
+                            + NAME_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
+                }
+                writer.write("\t</" + MIXINTYPES_ELEMENT + ">\n");
 
-		// properties
-		writer.write("\t<" + PROPERTIES_ELEMENT + ">\n");
-		iter = state.getPropertyEntries().iterator();
-		while (iter.hasNext()) {
-		    NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-		    writer.write("\t\t<" + PROPERTY_ELEMENT + " "
-			    + NAME_ATTRIBUTE + "=\"" + entry.getName() + "\">\n");
-		    // @todo serialize type, definition id and values
-		    writer.write("\t\t</" + PROPERTY_ELEMENT + ">\n");
-		}
-		writer.write("\t</" + PROPERTIES_ELEMENT + ">\n");
+                // properties
+                writer.write("\t<" + PROPERTIES_ELEMENT + ">\n");
+                iter = state.getPropertyEntries().iterator();
+                while (iter.hasNext()) {
+                    NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
+                    writer.write("\t\t<" + PROPERTY_ELEMENT + " "
+                            + NAME_ATTRIBUTE + "=\"" + entry.getName() + "\">\n");
+                    // @todo serialize type, definition id and values
+                    writer.write("\t\t</" + PROPERTY_ELEMENT + ">\n");
+                }
+                writer.write("\t</" + PROPERTIES_ELEMENT + ">\n");
 
-		// child nodes
-		writer.write("\t<" + NODES_ELEMENT + ">\n");
-		iter = state.getChildNodeEntries().iterator();
-		while (iter.hasNext()) {
-		    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-		    writer.write("\t\t<" + NODE_ELEMENT + " "
-			    + NAME_ATTRIBUTE + "=\"" + entry.getName() + "\" "
-			    + UUID_ATTRIBUTE + "=\"" + entry.getUUID() + "\">\n");
-		    writer.write("\t\t</" + NODE_ELEMENT + ">\n");
-		}
-		writer.write("\t</" + NODES_ELEMENT + ">\n");
+                // child nodes
+                writer.write("\t<" + NODES_ELEMENT + ">\n");
+                iter = state.getChildNodeEntries().iterator();
+                while (iter.hasNext()) {
+                    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+                    writer.write("\t\t<" + NODE_ELEMENT + " "
+                            + NAME_ATTRIBUTE + "=\"" + entry.getName() + "\" "
+                            + UUID_ATTRIBUTE + "=\"" + entry.getUUID() + "\">\n");
+                    writer.write("\t\t</" + NODE_ELEMENT + ">\n");
+                }
+                writer.write("\t</" + NODES_ELEMENT + ">\n");
 
-		writer.write("</" + NODE_ELEMENT + ">\n");
-	    } finally {
-		writer.close();
-	    }
-	} catch (Exception e) {
-	    String msg = "failed to write node state: " + uuid;
-	    log.error(msg, e);
-	    throw new ItemStateException(msg, e);
-	}
+                writer.write("</" + NODE_ELEMENT + ">\n");
+            } finally {
+                writer.close();
+            }
+        } catch (Exception e) {
+            String msg = "failed to write node state: " + uuid;
+            log.error(msg, e);
+            throw new ItemStateException(msg, e);
+        }
     }
 
     /**
      * @see PersistenceManager#store
      */
     public synchronized void store(PersistentPropertyState state) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
-	FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
-	try {
-	    propFile.makeParentDirs();
-	    OutputStream os = propFile.getOutputStream();
+        String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
+        FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
+        try {
+            propFile.makeParentDirs();
+            OutputStream os = propFile.getOutputStream();
 /*
 	    Writer writer = null;
 	    try {
@@ -760,347 +757,347 @@ public class XMLPersistenceManager implements PersistenceManager {
 		writer.close();
 	    }
 */
-	    Properties props = new Properties();
+            Properties props = new Properties();
 
-	    // type
-	    String typeName;
-	    int type = state.getType();
-	    try {
-		typeName = PropertyType.nameFromValue(type);
-	    } catch (IllegalArgumentException iae) {
-		// should never be getting here
-		throw new ItemStateException("unexpected property-type ordinal: " + type, iae);
-	    }
-	    props.setProperty(TYPE_ATTRIBUTE, typeName);
+            // type
+            String typeName;
+            int type = state.getType();
+            try {
+                typeName = PropertyType.nameFromValue(type);
+            } catch (IllegalArgumentException iae) {
+                // should never be getting here
+                throw new ItemStateException("unexpected property-type ordinal: " + type, iae);
+            }
+            props.setProperty(TYPE_ATTRIBUTE, typeName);
 
-	    // definition id
-	    props.setProperty(DEFINITIONID_ATTRIBUTE, state.getDefinitionId().toString());
+            // definition id
+            props.setProperty(DEFINITIONID_ATTRIBUTE, state.getDefinitionId().toString());
 
-	    InternalValue[] values = state.getValues();
+            InternalValue[] values = state.getValues();
 
-	    // # of values
-	    props.setProperty(COUNT_ATTRIBUTE, Integer.toString(values == null ? 0 : values.length));
+            // # of values
+            props.setProperty(COUNT_ATTRIBUTE, Integer.toString(values == null ? 0 : values.length));
 
-	    // values
-	    if (values != null) {
-		for (int i = 0; i < values.length; i++) {
-		    InternalValue val = values[i];
-		    if (val != null) {
-			if (type == PropertyType.BINARY) {
-			    // special handling required for binary value:
-			    // spool binary value to file in blob store
-			    BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+            // values
+            if (values != null) {
+                for (int i = 0; i < values.length; i++) {
+                    InternalValue val = values[i];
+                    if (val != null) {
+                        if (type == PropertyType.BINARY) {
+                            // special handling required for binary value:
+                            // spool binary value to file in blob store
+                            BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
 
-			    String binPath = buildBlobFilePath(state.getParentUUID(), state.getName(), i);
-			    OutputStream binOut = null;
-			    FileSystemResource internalBlobFile = new FileSystemResource(blobStore, binPath);
-			    internalBlobFile.makeParentDirs();
-			    try {
-				binOut = internalBlobFile.getOutputStream();
-				blobVal.spool(binOut);
-			    } finally {
-				try {
-				    if (binOut != null) {
-					binOut.close();
-				    }
-				} catch (IOException ioe) {
-				}
-			    }
-			    // store path to binary file as property value
-			    props.setProperty(Integer.toString(i), binPath);
-			    // FIXME: hack!
-			    // replace value instance with value
-			    // backed by internal file and delete temp file
-			    values[i] = InternalValue.create(internalBlobFile);
-			    if (blobVal.isTempFile()) {
-				blobVal.delete();
-				blobVal = null;
-			    }
-			} else {
-			    props.setProperty(Integer.toString(i), val.toString());
-			}
-		    } else {
-			// null value
-			props.setProperty(Integer.toString(i), null);
-		    }
-		}
-	    }
+                            String binPath = buildBlobFilePath(state.getParentUUID(), state.getName(), i);
+                            OutputStream binOut = null;
+                            FileSystemResource internalBlobFile = new FileSystemResource(blobStore, binPath);
+                            internalBlobFile.makeParentDirs();
+                            try {
+                                binOut = internalBlobFile.getOutputStream();
+                                blobVal.spool(binOut);
+                            } finally {
+                                try {
+                                    if (binOut != null) {
+                                        binOut.close();
+                                    }
+                                } catch (IOException ioe) {
+                                }
+                            }
+                            // store path to binary file as property value
+                            props.setProperty(Integer.toString(i), binPath);
+                            // FIXME: hack!
+                            // replace value instance with value
+                            // backed by internal file and delete temp file
+                            values[i] = InternalValue.create(internalBlobFile);
+                            if (blobVal.isTempFile()) {
+                                blobVal.delete();
+                                blobVal = null;
+                            }
+                        } else {
+                            props.setProperty(Integer.toString(i), val.toString());
+                        }
+                    } else {
+                        // null value
+                        props.setProperty(Integer.toString(i), null);
+                    }
+                }
+            }
 
-	    try {
-		props.store(os, null);
-	    } finally {
-		// make sure stream is closed
-		os.close();
-	    }
-	} catch (Exception e) {
-	    String msg = "failed to store property state: " + state.getParentUUID() + "/" + state.getName();
-	    log.error(msg, e);
-	    throw new ItemStateException(msg, e);
-	}
+            try {
+                props.store(os, null);
+            } finally {
+                // make sure stream is closed
+                os.close();
+            }
+        } catch (Exception e) {
+            String msg = "failed to store property state: " + state.getParentUUID() + "/" + state.getName();
+            log.error(msg, e);
+            throw new ItemStateException(msg, e);
+        }
     }
 
     /**
      * @see PersistenceManager#destroy
      */
     public synchronized void destroy(PersistentNodeState state) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	String uuid = state.getUUID();
-	String nodeFilePath = buildNodeFilePath(uuid);
-	FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
-	try {
-	    nodeFile.delete();
-	    // prune empty folders
-	    String parentDir = FileSystemPathUtil.getParentDir(nodeFilePath);
-	    while (!parentDir.equals(FileSystem.SEPARATOR)
-		    && !itemStateStore.hasChildren(parentDir)) {
-		itemStateStore.deleteFolder(parentDir);
-		parentDir = FileSystemPathUtil.getParentDir(parentDir);
-	    }
-	} catch (FileSystemException fse) {
-	    String msg = "failed to delete node state: " + uuid;
-	    log.error(msg, fse);
-	    throw new ItemStateException(msg, fse);
-	}
+        String uuid = state.getUUID();
+        String nodeFilePath = buildNodeFilePath(uuid);
+        FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
+        try {
+            nodeFile.delete();
+            // prune empty folders
+            String parentDir = FileSystemPathUtil.getParentDir(nodeFilePath);
+            while (!parentDir.equals(FileSystem.SEPARATOR)
+                    && !itemStateStore.hasChildren(parentDir)) {
+                itemStateStore.deleteFolder(parentDir);
+                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            }
+        } catch (FileSystemException fse) {
+            String msg = "failed to delete node state: " + uuid;
+            log.error(msg, fse);
+            throw new ItemStateException(msg, fse);
+        }
     }
 
     /**
      * @see PersistenceManager#destroy
      */
     public synchronized void destroy(PersistentPropertyState state) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	// delete binary values (stored as files)
-	InternalValue[] values = state.getValues();
-	if (values != null) {
-	    for (int i = 0; i < values.length; i++) {
-		InternalValue val = values[i];
-		if (val != null) {
-		    if (val.getType() == PropertyType.BINARY) {
-			BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
-			blobVal.delete();
-		    }
-		}
-	    }
-	}
-	// delete property xml file
-	String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
-	FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
-	try {
-	    propFile.delete();
-	    // prune empty folders
-	    String parentDir = FileSystemPathUtil.getParentDir(propFilePath);
-	    while (!parentDir.equals(FileSystem.SEPARATOR)
-		    && !itemStateStore.hasChildren(parentDir)) {
-		itemStateStore.deleteFolder(parentDir);
-		parentDir = FileSystemPathUtil.getParentDir(parentDir);
-	    }
-	} catch (FileSystemException fse) {
-	    String msg = "failed to delete property state: " + state.getParentUUID() + "/" + state.getName();
-	    log.error(msg, fse);
-	    throw new ItemStateException(msg, fse);
-	}
+        // delete binary values (stored as files)
+        InternalValue[] values = state.getValues();
+        if (values != null) {
+            for (int i = 0; i < values.length; i++) {
+                InternalValue val = values[i];
+                if (val != null) {
+                    if (val.getType() == PropertyType.BINARY) {
+                        BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                        blobVal.delete();
+                    }
+                }
+            }
+        }
+        // delete property xml file
+        String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
+        FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
+        try {
+            propFile.delete();
+            // prune empty folders
+            String parentDir = FileSystemPathUtil.getParentDir(propFilePath);
+            while (!parentDir.equals(FileSystem.SEPARATOR)
+                    && !itemStateStore.hasChildren(parentDir)) {
+                itemStateStore.deleteFolder(parentDir);
+                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            }
+        } catch (FileSystemException fse) {
+            String msg = "failed to delete property state: " + state.getParentUUID() + "/" + state.getName();
+            log.error(msg, fse);
+            throw new ItemStateException(msg, fse);
+        }
     }
 
     /**
      * @see PersistenceManager#createNodeStateInstance
      */
     public PersistentNodeState createNodeStateInstance(String uuid, QName nodeTypeName) {
-	return new XMLNodeState(uuid, nodeTypeName, null, this);
+        return new XMLNodeState(uuid, nodeTypeName, null, this);
     }
 
     /**
      * @see PersistenceManager#createPropertyStateInstance
      */
     public PersistentPropertyState createPropertyStateInstance(QName name, String parentUUID) {
-	return new XMLPropertyState(name, parentUUID, this);
+        return new XMLPropertyState(name, parentUUID, this);
     }
 
     /**
      * @see PersistenceManager#createNodeReferencesInstance(String)
      */
     public NodeReferences createNodeReferencesInstance(String uuid) {
-	return new NodeReferences(new NodeId(uuid));
+        return new NodeReferences(new NodeId(uuid));
     }
 
     /**
      * @see PersistenceManager#loadNodeReferences(String uuid)
      */
     public NodeReferences loadNodeReferences(String uuid) throws NoSuchItemStateException, ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	Exception e = null;
-	String refsFilePath = buildNodeReferencesFilePath(uuid);
-	try {
-	    if (!itemStateStore.isFile(refsFilePath)) {
-		throw new NoSuchItemStateException(uuid);
-	    }
-	    NodeReferences refs = createNodeReferencesInstance(uuid);
+        Exception e = null;
+        String refsFilePath = buildNodeReferencesFilePath(uuid);
+        try {
+            if (!itemStateStore.isFile(refsFilePath)) {
+                throw new NoSuchItemStateException(uuid);
+            }
+            NodeReferences refs = createNodeReferencesInstance(uuid);
 
-	    InputStream in = itemStateStore.getInputStream(refsFilePath);
-	    BufferedReader reader = null;
-	    try {
-		String encoding = DEFAULT_ENCODING;
-		try {
-		    reader = new BufferedReader(new InputStreamReader(in, encoding));
-		} catch (UnsupportedEncodingException uee) {
-		    // should never get here!
-		    InputStreamReader isw = new InputStreamReader(in);
-		    encoding = isw.getEncoding();
-		    reader = new BufferedReader(isw);
-		}
-		// read references (i.e. the id's of the REFERENCE properties)
-		String s;
-		while ((s = reader.readLine()) != null) {
-		    if (s.length() > 0) {
-			PropertyId propId = PropertyId.valueOf(s);
-			refs.addReference(propId);
-		    }
-		}
-	    } finally {
-		reader.close();
-	    }
+            InputStream in = itemStateStore.getInputStream(refsFilePath);
+            BufferedReader reader = null;
+            try {
+                String encoding = DEFAULT_ENCODING;
+                try {
+                    reader = new BufferedReader(new InputStreamReader(in, encoding));
+                } catch (UnsupportedEncodingException uee) {
+                    // should never get here!
+                    InputStreamReader isw = new InputStreamReader(in);
+                    encoding = isw.getEncoding();
+                    reader = new BufferedReader(isw);
+                }
+                // read references (i.e. the id's of the REFERENCE properties)
+                String s;
+                while ((s = reader.readLine()) != null) {
+                    if (s.length() > 0) {
+                        PropertyId propId = PropertyId.valueOf(s);
+                        refs.addReference(propId);
+                    }
+                }
+            } finally {
+                reader.close();
+            }
 
-	    return refs;
-	} catch (IOException ioe) {
-	    e = ioe;
-	    // fall through
-	} catch (FileSystemException fse) {
-	    e = fse;
-	    // fall through
-	}
-	String msg = "failed to load references: " + uuid;
-	log.error(msg, e);
-	throw new ItemStateException(msg, e);
+            return refs;
+        } catch (IOException ioe) {
+            e = ioe;
+            // fall through
+        } catch (FileSystemException fse) {
+            e = fse;
+            // fall through
+        }
+        String msg = "failed to load references: " + uuid;
+        log.error(msg, e);
+        throw new ItemStateException(msg, e);
     }
 
     /**
      * @see PersistenceManager#reload(NodeReferences)
      */
     public void reload(NodeReferences refs) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	Exception e = null;
-	String uuid = refs.getTargetId().getUUID();
-	String refsFilePath = buildNodeReferencesFilePath(uuid);
-	try {
-	    if (!itemStateStore.isFile(refsFilePath)) {
-		throw new NoSuchItemStateException(uuid);
-	    }
+        Exception e = null;
+        String uuid = refs.getTargetId().getUUID();
+        String refsFilePath = buildNodeReferencesFilePath(uuid);
+        try {
+            if (!itemStateStore.isFile(refsFilePath)) {
+                throw new NoSuchItemStateException(uuid);
+            }
 
-	    refs.clearAllReferences();
+            refs.clearAllReferences();
 
-	    InputStream in = itemStateStore.getInputStream(refsFilePath);
-	    BufferedReader reader = null;
-	    try {
-		String encoding = DEFAULT_ENCODING;
-		try {
-		    reader = new BufferedReader(new InputStreamReader(in, encoding));
-		} catch (UnsupportedEncodingException uee) {
-		    // should never get here!
-		    InputStreamReader isw = new InputStreamReader(in);
-		    encoding = isw.getEncoding();
-		    reader = new BufferedReader(isw);
-		}
-		// read references (i.e. the id's of the REFERENCE properties)
-		String s;
-		while ((s = reader.readLine()) != null) {
-		    if (s.length() > 0) {
-			PropertyId propId = PropertyId.valueOf(s);
-			refs.addReference(propId);
-		    }
-		}
-	    } finally {
-		reader.close();
-	    }
+            InputStream in = itemStateStore.getInputStream(refsFilePath);
+            BufferedReader reader = null;
+            try {
+                String encoding = DEFAULT_ENCODING;
+                try {
+                    reader = new BufferedReader(new InputStreamReader(in, encoding));
+                } catch (UnsupportedEncodingException uee) {
+                    // should never get here!
+                    InputStreamReader isw = new InputStreamReader(in);
+                    encoding = isw.getEncoding();
+                    reader = new BufferedReader(isw);
+                }
+                // read references (i.e. the id's of the REFERENCE properties)
+                String s;
+                while ((s = reader.readLine()) != null) {
+                    if (s.length() > 0) {
+                        PropertyId propId = PropertyId.valueOf(s);
+                        refs.addReference(propId);
+                    }
+                }
+            } finally {
+                reader.close();
+            }
 
-	    return;
-	} catch (IOException ioe) {
-	    e = ioe;
-	    // fall through
-	} catch (FileSystemException fse) {
-	    e = fse;
-	    // fall through
-	}
-	String msg = "failed to load references: " + uuid;
-	log.error(msg, e);
-	throw new ItemStateException(msg, e);
+            return;
+        } catch (IOException ioe) {
+            e = ioe;
+            // fall through
+        } catch (FileSystemException fse) {
+            e = fse;
+            // fall through
+        }
+        String msg = "failed to load references: " + uuid;
+        log.error(msg, e);
+        throw new ItemStateException(msg, e);
     }
 
     /**
      * @see PersistenceManager#store(NodeReferences)
      */
     public void store(NodeReferences refs) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	String uuid = refs.getTargetId().getUUID();
-	String refsFilePath = buildNodeReferencesFilePath(uuid);
-	FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
-	try {
-	    refsFile.makeParentDirs();
-	    OutputStream os = refsFile.getOutputStream();
-	    BufferedWriter writer = null;
-	    try {
-		String encoding = DEFAULT_ENCODING;
-		try {
-		    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
-		} catch (UnsupportedEncodingException e) {
-		    // should never get here!
-		    OutputStreamWriter osw = new OutputStreamWriter(os);
-		    encoding = osw.getEncoding();
-		    writer = new BufferedWriter(osw);
-		}
-		// write references (i.e. the id's of the REFERENCE properties)
-		Iterator iter = refs.getReferences().iterator();
-		while (iter.hasNext()) {
-		    PropertyId propId = (PropertyId) iter.next();
-		    writer.write(propId.toString());
-		    writer.newLine();
-		}
-	    } finally {
-		writer.close();
-	    }
-	} catch (Exception e) {
-	    String msg = "failed to store references: " + uuid;
-	    log.error(msg, e);
-	    throw new ItemStateException(msg, e);
-	}
+        String uuid = refs.getTargetId().getUUID();
+        String refsFilePath = buildNodeReferencesFilePath(uuid);
+        FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
+        try {
+            refsFile.makeParentDirs();
+            OutputStream os = refsFile.getOutputStream();
+            BufferedWriter writer = null;
+            try {
+                String encoding = DEFAULT_ENCODING;
+                try {
+                    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
+                } catch (UnsupportedEncodingException e) {
+                    // should never get here!
+                    OutputStreamWriter osw = new OutputStreamWriter(os);
+                    encoding = osw.getEncoding();
+                    writer = new BufferedWriter(osw);
+                }
+                // write references (i.e. the id's of the REFERENCE properties)
+                Iterator iter = refs.getReferences().iterator();
+                while (iter.hasNext()) {
+                    PropertyId propId = (PropertyId) iter.next();
+                    writer.write(propId.toString());
+                    writer.newLine();
+                }
+            } finally {
+                writer.close();
+            }
+        } catch (Exception e) {
+            String msg = "failed to store references: " + uuid;
+            log.error(msg, e);
+            throw new ItemStateException(msg, e);
+        }
     }
 
     /**
      * @see PersistenceManager#destroy(NodeReferences)
      */
     public void destroy(NodeReferences refs) throws ItemStateException {
-	if (!initialized) {
-	    throw new IllegalStateException("not initialized");
-	}
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
 
-	String uuid = refs.getTargetId().getUUID();
-	String refsFilePath = buildNodeReferencesFilePath(uuid);
-	FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
-	try {
-	    refsFile.delete();
-	    // prune empty folders
-	    String parentDir = FileSystemPathUtil.getParentDir(refsFilePath);
-	    while (!parentDir.equals(FileSystem.SEPARATOR)
-		    && !itemStateStore.hasChildren(parentDir)) {
-		itemStateStore.deleteFolder(parentDir);
-		parentDir = FileSystemPathUtil.getParentDir(parentDir);
-	    }
-	} catch (FileSystemException fse) {
-	    String msg = "failed to delete references: " + uuid;
-	    log.error(msg, fse);
-	    throw new ItemStateException(msg, fse);
-	}
+        String uuid = refs.getTargetId().getUUID();
+        String refsFilePath = buildNodeReferencesFilePath(uuid);
+        FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
+        try {
+            refsFile.delete();
+            // prune empty folders
+            String parentDir = FileSystemPathUtil.getParentDir(refsFilePath);
+            while (!parentDir.equals(FileSystem.SEPARATOR)
+                    && !itemStateStore.hasChildren(parentDir)) {
+                itemStateStore.deleteFolder(parentDir);
+                parentDir = FileSystemPathUtil.getParentDir(parentDir);
+            }
+        } catch (FileSystemException fse) {
+            String msg = "failed to delete references: " + uuid;
+            log.error(msg, fse);
+            throw new ItemStateException(msg, fse);
+        }
     }
 }

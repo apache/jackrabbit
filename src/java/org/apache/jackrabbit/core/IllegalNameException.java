@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core;
 
 /**
  * <code>IllegalNameException</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.2 $, $Date: 2004/09/01 15:14:27 $
  */
 public class IllegalNameException extends BaseException {
     /**
@@ -27,7 +24,7 @@ public class IllegalNameException extends BaseException {
      * detail message.
      */
     public IllegalNameException() {
-	super();
+        super();
     }
 
     /**
@@ -38,7 +35,7 @@ public class IllegalNameException extends BaseException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public IllegalNameException(String message) {
-	super(message);
+        super(message);
     }
 
     /**
@@ -50,7 +47,7 @@ public class IllegalNameException extends BaseException {
      * @param rootCause root failure cause
      */
     public IllegalNameException(String message, Throwable rootCause) {
-	super(message, rootCause);
+        super(message, rootCause);
     }
 
     /**
@@ -59,6 +56,6 @@ public class IllegalNameException extends BaseException {
      * @param rootCause root failure cause
      */
     public IllegalNameException(Throwable rootCause) {
-	super(rootCause);
+        super(rootCause);
     }
 }

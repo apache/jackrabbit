@@ -20,9 +20,6 @@ import java.util.BitSet;
 
 /**
  * The <code>FileSystemPathUtil</code> utility class ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.15 $, $Date: 2004/08/02 16:19:51 $
  */
 public final class FileSystemPathUtil {
 
@@ -45,25 +42,25 @@ public final class FileSystemPathUtil {
     public static final BitSet SAVE_PATHCHARS;
 
     static {
-	// build list of valid name characters
-	SAVE_NAMECHARS = new BitSet(256);
-	int i;
-	for (i = 'a'; i <= 'z'; i++) {
-	    SAVE_NAMECHARS.set(i);
-	}
-	for (i = 'A'; i <= 'Z'; i++) {
-	    SAVE_NAMECHARS.set(i);
-	}
-	for (i = '0'; i <= '9'; i++) {
-	    SAVE_NAMECHARS.set(i);
-	}
-	SAVE_NAMECHARS.set('-');
-	SAVE_NAMECHARS.set('_');
-	SAVE_NAMECHARS.set('.');
+        // build list of valid name characters
+        SAVE_NAMECHARS = new BitSet(256);
+        int i;
+        for (i = 'a'; i <= 'z'; i++) {
+            SAVE_NAMECHARS.set(i);
+        }
+        for (i = 'A'; i <= 'Z'; i++) {
+            SAVE_NAMECHARS.set(i);
+        }
+        for (i = '0'; i <= '9'; i++) {
+            SAVE_NAMECHARS.set(i);
+        }
+        SAVE_NAMECHARS.set('-');
+        SAVE_NAMECHARS.set('_');
+        SAVE_NAMECHARS.set('.');
 
-	// build list of valid path characters (inlcudes name characters)
-	SAVE_PATHCHARS = (BitSet) SAVE_NAMECHARS.clone();
-	SAVE_PATHCHARS.set(FileSystem.SEPARATOR_CHAR);
+        // build list of valid path characters (inlcudes name characters)
+        SAVE_PATHCHARS = (BitSet) SAVE_NAMECHARS.clone();
+        SAVE_PATHCHARS.set(FileSystem.SEPARATOR_CHAR);
     }
 
     /**
@@ -73,19 +70,19 @@ public final class FileSystemPathUtil {
     }
 
     private static String escape(String s, BitSet saveChars) {
-	byte[] bytes = s.getBytes();
-	StringBuffer out = new StringBuffer(bytes.length);
-	for (int i = 0; i < bytes.length; i++) {
-	    int c = bytes[i] & 0xff;
-	    if (saveChars.get(c) && c != ESCAPE_CHAR) {
-		out.append((char) c);
-	    } else {
-		out.append(ESCAPE_CHAR);
-		out.append(hexTable[(c >> 4) & 0x0f]);
-		out.append(hexTable[(c) & 0x0f]);
-	    }
-	}
-	return out.toString();
+        byte[] bytes = s.getBytes();
+        StringBuffer out = new StringBuffer(bytes.length);
+        for (int i = 0; i < bytes.length; i++) {
+            int c = bytes[i] & 0xff;
+            if (saveChars.get(c) && c != ESCAPE_CHAR) {
+                out.append((char) c);
+            } else {
+                out.append(ESCAPE_CHAR);
+                out.append(hexTable[(c >> 4) & 0x0f]);
+                out.append(hexTable[(c) & 0x0f]);
+            }
+        }
+        return out.toString();
     }
 
     /**
@@ -98,7 +95,7 @@ public final class FileSystemPathUtil {
      * @return the escaped path
      */
     public static String escapePath(String path) {
-	return escape(path, SAVE_PATHCHARS);
+        return escape(path, SAVE_PATHCHARS);
     }
 
     /**
@@ -111,7 +108,7 @@ public final class FileSystemPathUtil {
      * @return the escaped name
      */
     public static String escapeName(String name) {
-	return escape(name, SAVE_NAMECHARS);
+        return escape(name, SAVE_NAMECHARS);
     }
 
     /**
@@ -121,21 +118,21 @@ public final class FileSystemPathUtil {
      * @return the unescaped path/name
      */
     public static String unescape(String pathOrName) {
-	ByteArrayOutputStream out = new ByteArrayOutputStream(pathOrName.length());
-	for (int i = 0; i < pathOrName.length(); i++) {
-	    char c = pathOrName.charAt(i);
-	    if (c == ESCAPE_CHAR) {
-		try {
-		    out.write(Integer.parseInt(pathOrName.substring(i + 1, i + 3), 16));
-		} catch (NumberFormatException e) {
-		    throw new IllegalArgumentException();
-		}
-		i += 2;
-	    } else {
-		out.write(c);
-	    }
-	}
-	return new String(out.toByteArray());
+        ByteArrayOutputStream out = new ByteArrayOutputStream(pathOrName.length());
+        for (int i = 0; i < pathOrName.length(); i++) {
+            char c = pathOrName.charAt(i);
+            if (c == ESCAPE_CHAR) {
+                try {
+                    out.write(Integer.parseInt(pathOrName.substring(i + 1, i + 3), 16));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException();
+                }
+                i += 2;
+            } else {
+                out.write(c);
+            }
+        }
+        return new String(out.toByteArray());
     }
 
     /**
@@ -145,11 +142,11 @@ public final class FileSystemPathUtil {
      * @return the parent directory.
      */
     public static String getParentDir(String path) {
-	int pos = path.lastIndexOf(FileSystem.SEPARATOR_CHAR);
-	if (pos > 0) {
-	    return path.substring(0, pos);
-	}
-	return FileSystem.SEPARATOR;
+        int pos = path.lastIndexOf(FileSystem.SEPARATOR_CHAR);
+        if (pos > 0) {
+            return path.substring(0, pos);
+        }
+        return FileSystem.SEPARATOR;
     }
 
     /**
@@ -159,10 +156,10 @@ public final class FileSystemPathUtil {
      * @return the name.
      */
     public static String getName(String path) {
-	int pos = path.lastIndexOf(FileSystem.SEPARATOR_CHAR);
-	if (pos != -1) {
-	    return path.substring(pos + 1);
-	}
-	return path;
+        int pos = path.lastIndexOf(FileSystem.SEPARATOR_CHAR);
+        if (pos != -1) {
+            return path.substring(pos + 1);
+        }
+        return path;
     }
 }

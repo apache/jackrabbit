@@ -21,9 +21,6 @@ import java.util.HashMap;
 
 /**
  * A <code>WorkspaceDef</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.15 $, $Date: 2004/08/02 16:19:41 $
  */
 public abstract class WorkspaceDef {
 
@@ -43,12 +40,12 @@ public abstract class WorkspaceDef {
      * @param persistenceManagerParams parameters for the <code>PersistenceManager</code>
      */
     WorkspaceDef(String name, FileSystem wspStore, FileSystem blobStore,
-		 String persistenceManagerClass, HashMap persistenceManagerParams) {
-	this.name = name;
-	this.wspStore = wspStore;
-	this.blobStore = blobStore;
-	this.persistenceManagerClass = persistenceManagerClass;
-	this.persistenceManagerParams = persistenceManagerParams;
+                 String persistenceManagerClass, HashMap persistenceManagerParams) {
+        this.name = name;
+        this.wspStore = wspStore;
+        this.blobStore = blobStore;
+        this.persistenceManagerClass = persistenceManagerClass;
+        this.persistenceManagerParams = persistenceManagerParams;
     }
 
     /**
@@ -57,7 +54,7 @@ public abstract class WorkspaceDef {
      * @return the name of the workspace
      */
     public String getName() {
-	return name;
+        return name;
     }
 
     /**
@@ -67,7 +64,7 @@ public abstract class WorkspaceDef {
      * @return FQN of class
      */
     public String getPersistenceManagerClass() {
-	return persistenceManagerClass;
+        return persistenceManagerClass;
     }
 
     /**
@@ -76,7 +73,7 @@ public abstract class WorkspaceDef {
      * @return parameters for the <code>PersistenceManager</code>
      */
     public HashMap getPersistenceManagerParams() {
-	return persistenceManagerParams;
+        return persistenceManagerParams;
     }
 
     /**
@@ -85,7 +82,7 @@ public abstract class WorkspaceDef {
      * @return the file system where the workspace stores its state
      */
     public FileSystem getWorkspaceStore() {
-	return wspStore;
+        return wspStore;
     }
 
     /**
@@ -94,7 +91,7 @@ public abstract class WorkspaceDef {
      * @return the file system where the workspace stores BLOB data
      */
     public FileSystem getBlobStore() {
-	return blobStore;
+        return blobStore;
     }
 
     /**

@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.core.search.jcrql;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ASTOrderClause extends SimpleNode {
 
@@ -25,33 +25,33 @@ public class ASTOrderClause extends SimpleNode {
     private boolean ascending = false;
 
     public ASTOrderClause(int id) {
-	super(id);
+        super(id);
     }
 
     public ASTOrderClause(JCRQLParser p, int id) {
-	super(p, id);
+        super(p, id);
     }
 
     public void addProperty(String name) {
-	properties.add(name);
+        properties.add(name);
     }
 
     public String[] getProperties() {
-	return (String[]) properties.toArray(new String[properties.size()]);
+        return (String[]) properties.toArray(new String[properties.size()]);
     }
 
     public boolean isAscending() {
-	return ascending;
+        return ascending;
     }
 
     public void setAscending(boolean ascending) {
-	this.ascending = ascending;
+        this.ascending = ascending;
     }
 
     /**
      * Accept the visitor. *
      */
     public Object jjtAccept(JCRQLParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 }

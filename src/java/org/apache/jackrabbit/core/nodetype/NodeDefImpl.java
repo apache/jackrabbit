@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
+import org.apache.log4j.Logger;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDef;
@@ -25,9 +25,6 @@ import javax.jcr.nodetype.NodeType;
 
 /**
  * A <code>NodeDefImpl</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.10 $, $Date: 2004/09/09 15:23:43 $
  */
 public class NodeDefImpl extends ItemDefImpl implements NodeDef {
 
@@ -44,12 +41,12 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      * @param nsResolver namespace resolver
      */
     NodeDefImpl(ChildNodeDef nodeDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
-	super(nodeDef, ntMgr, nsResolver);
-	this.nodeDef = nodeDef;
+        super(nodeDef, ntMgr, nsResolver);
+        this.nodeDef = nodeDef;
     }
 
     public ChildNodeDef unwrap() {
-	return nodeDef;
+        return nodeDef;
     }
 
     //--------------------------------------------------------------< NodeDef >
@@ -57,49 +54,49 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      * @see NodeDef#getDefaultPrimaryType
      */
     public NodeType getDefaultPrimaryType() {
-	QName ntName = nodeDef.getDefaultPrimaryType();
-	try {
-	    if (ntName == null) {
-		// return "nt:unstructured"
-		return ntMgr.getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED);
-	    } else {
-		return ntMgr.getNodeType(ntName);
-	    }
-	} catch (NoSuchNodeTypeException e) {
-	    // should never get here
-	    log.error("default node type does not exist", e);
-	    return null;
-	}
+        QName ntName = nodeDef.getDefaultPrimaryType();
+        try {
+            if (ntName == null) {
+                // return "nt:unstructured"
+                return ntMgr.getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED);
+            } else {
+                return ntMgr.getNodeType(ntName);
+            }
+        } catch (NoSuchNodeTypeException e) {
+            // should never get here
+            log.error("default node type does not exist", e);
+            return null;
+        }
     }
 
     /**
      * @see NodeDef#getRequiredPrimaryTypes
      */
     public NodeType[] getRequiredPrimaryTypes() {
-	QName[] ntNames = nodeDef.getRequiredPrimaryTypes();
-	try {
-	    if (ntNames == null || ntNames.length == 0) {
-		// return "nt:base"
-		return new NodeType[]{ntMgr.getNodeType(NodeTypeRegistry.NT_BASE)};
-	    } else {
-		NodeType[] nodeTypes = new NodeType[ntNames.length];
-		for (int i = 0; i < ntNames.length; i++) {
-		    nodeTypes[i] = ntMgr.getNodeType(ntNames[i]);
-		}
-		return nodeTypes;
-	    }
-	} catch (NoSuchNodeTypeException e) {
-	    // should never get here
-	    log.error("required node type does not exist", e);
-	    return new NodeType[0];
-	}
+        QName[] ntNames = nodeDef.getRequiredPrimaryTypes();
+        try {
+            if (ntNames == null || ntNames.length == 0) {
+                // return "nt:base"
+                return new NodeType[]{ntMgr.getNodeType(NodeTypeRegistry.NT_BASE)};
+            } else {
+                NodeType[] nodeTypes = new NodeType[ntNames.length];
+                for (int i = 0; i < ntNames.length; i++) {
+                    nodeTypes[i] = ntMgr.getNodeType(ntNames[i]);
+                }
+                return nodeTypes;
+            }
+        } catch (NoSuchNodeTypeException e) {
+            // should never get here
+            log.error("required node type does not exist", e);
+            return new NodeType[0];
+        }
     }
 
     /**
      * @see NodeDef#allowSameNameSibs
      */
     public boolean allowSameNameSibs() {
-	return nodeDef.allowSameNameSibs();
+        return nodeDef.allowSameNameSibs();
     }
 }
 

@@ -16,12 +16,12 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.util.IteratorHelper;
+import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.*;
@@ -32,9 +32,6 @@ import java.util.Map;
 
 /**
  * A <code>NodeTypeManagerImpl</code> ...
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.54 $, $Date: 2004/08/27 15:48:20 $
  */
 public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryListener {
 
@@ -56,21 +53,21 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * Constructor.
      */
     public NodeTypeManagerImpl(NodeTypeRegistry ntReg, NamespaceResolver nsResolver) {
-	this.nsResolver = nsResolver;
-	this.ntReg = ntReg;
-	this.ntReg.addListener(this);
+        this.nsResolver = nsResolver;
+        this.ntReg = ntReg;
+        this.ntReg.addListener(this);
 
-	// setup item cache with soft references to node type instances
-	ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        // setup item cache with soft references to node type instances
+        ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
-	rootNodeDef = new RootNodeDefinition(ntReg.getRootNodeDef(), this, nsResolver);
+        rootNodeDef = new RootNodeDefinition(ntReg.getRootNodeDef(), this, nsResolver);
     }
 
     /**
      * @return
      */
     public NodeDefImpl getRootNodeDefinition() {
-	return rootNodeDef;
+        return rootNodeDef;
     }
 
     /**
@@ -78,11 +75,11 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @return
      */
     public NodeDefImpl getNodeDef(NodeDefId id) {
-	ChildNodeDef cnd = ntReg.getNodeDef(id);
-	if (cnd == null) {
-	    return null;
-	}
-	return new NodeDefImpl(cnd, this, nsResolver);
+        ChildNodeDef cnd = ntReg.getNodeDef(id);
+        if (cnd == null) {
+            return null;
+        }
+        return new NodeDefImpl(cnd, this, nsResolver);
     }
 
     /**
@@ -90,11 +87,11 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @return
      */
     public PropertyDefImpl getPropDef(PropDefId id) {
-	PropDef pd = ntReg.getPropDef(id);
-	if (pd == null) {
-	    return null;
-	}
-	return new PropertyDefImpl(pd, this, nsResolver);
+        PropDef pd = ntReg.getPropDef(id);
+        if (pd == null) {
+            return null;
+        }
+        return new PropertyDefImpl(pd, this, nsResolver);
     }
 
     /**
@@ -103,24 +100,24 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @throws NoSuchNodeTypeException
      */
     public synchronized NodeTypeImpl getNodeType(QName name) throws NoSuchNodeTypeException {
-	NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
-	if (nt != null) {
-	    return nt;
-	}
+        NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
+        if (nt != null) {
+            return nt;
+        }
 
-	EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
-	NodeTypeDef def = ntReg.getNodeTypeDef(name);
-	nt = new NodeTypeImpl(ent, def, this, nsResolver);
-	ntCache.put(name, nt);
+        EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
+        NodeTypeDef def = ntReg.getNodeTypeDef(name);
+        nt = new NodeTypeImpl(ent, def, this, nsResolver);
+        ntCache.put(name, nt);
 
-	return nt;
+        return nt;
     }
 
     /**
      * @return
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
-	return ntReg;
+        return ntReg;
     }
 
     //---------------------------------------------< NodeTypeRegistryListener >
@@ -128,15 +125,15 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @see NodeTypeRegistryListener#nodeTypeRegistered(QName)
      */
     public void nodeTypeRegistered(QName ntName) {
-	// ignore
+        // ignore
     }
 
     /**
      * @see NodeTypeRegistryListener#nodeTypeUnregistered(QName)
      */
     public void nodeTypeUnregistered(QName ntName) {
-	// sync cache
-	ntCache.remove(ntName);
+        // sync cache
+        ntCache.remove(ntName);
     }
 
     //------------------------------------------------------< NodeTypeManager >
@@ -144,55 +141,55 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @see NodeTypeManager#getAllNodeTypes
      */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
-	QName[] ntNames = ntReg.getRegisteredNodeTypes();
-	ArrayList list = new ArrayList(ntNames.length);
-	for (int i = 0; i < ntNames.length; i++) {
-	    list.add(getNodeType(ntNames[i]));
-	}
-	return new IteratorHelper(Collections.unmodifiableCollection(list));
+        QName[] ntNames = ntReg.getRegisteredNodeTypes();
+        ArrayList list = new ArrayList(ntNames.length);
+        for (int i = 0; i < ntNames.length; i++) {
+            list.add(getNodeType(ntNames[i]));
+        }
+        return new IteratorHelper(Collections.unmodifiableCollection(list));
     }
 
     /**
      * @see NodeTypeManager#getPrimaryNodeTypes
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
-	QName[] ntNames = ntReg.getRegisteredNodeTypes();
-	ArrayList list = new ArrayList(ntNames.length);
-	for (int i = 0; i < ntNames.length; i++) {
-	    NodeType nt = getNodeType(ntNames[i]);
-	    if (!nt.isMixin()) {
-		list.add(nt);
-	    }
-	}
-	return new IteratorHelper(Collections.unmodifiableCollection(list));
+        QName[] ntNames = ntReg.getRegisteredNodeTypes();
+        ArrayList list = new ArrayList(ntNames.length);
+        for (int i = 0; i < ntNames.length; i++) {
+            NodeType nt = getNodeType(ntNames[i]);
+            if (!nt.isMixin()) {
+                list.add(nt);
+            }
+        }
+        return new IteratorHelper(Collections.unmodifiableCollection(list));
     }
 
     /**
      * @see NodeTypeManager#getMixinNodeTypes
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
-	QName[] ntNames = ntReg.getRegisteredNodeTypes();
-	ArrayList list = new ArrayList(ntNames.length);
-	for (int i = 0; i < ntNames.length; i++) {
-	    NodeType nt = getNodeType(ntNames[i]);
-	    if (nt.isMixin()) {
-		list.add(nt);
-	    }
-	}
-	return new IteratorHelper(Collections.unmodifiableCollection(list));
+        QName[] ntNames = ntReg.getRegisteredNodeTypes();
+        ArrayList list = new ArrayList(ntNames.length);
+        for (int i = 0; i < ntNames.length; i++) {
+            NodeType nt = getNodeType(ntNames[i]);
+            if (nt.isMixin()) {
+                list.add(nt);
+            }
+        }
+        return new IteratorHelper(Collections.unmodifiableCollection(list));
     }
 
     /**
      * @see NodeTypeManager#getNodeType
      */
     public NodeType getNodeType(String nodeTypeName) throws NoSuchNodeTypeException {
-	try {
-	    return getNodeType(QName.fromJCRName(nodeTypeName, nsResolver));
-	} catch (UnknownPrefixException upe) {
-	    throw new NoSuchNodeTypeException(nodeTypeName, upe);
-	} catch (IllegalNameException ine) {
-	    throw new NoSuchNodeTypeException(nodeTypeName, ine);
-	}
+        try {
+            return getNodeType(QName.fromJCRName(nodeTypeName, nsResolver));
+        } catch (UnknownPrefixException upe) {
+            throw new NoSuchNodeTypeException(nodeTypeName, upe);
+        } catch (IllegalNameException ine) {
+            throw new NoSuchNodeTypeException(nodeTypeName, ine);
+        }
     }
 
     //----------------------------------------------------------< diagnostics >
@@ -203,9 +200,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @throws RepositoryException
      */
     public void dump(PrintStream ps) throws RepositoryException {
-	ps.println("NodeTypeManager (" + this + ")");
-	ps.println();
-	ntReg.dump(ps);
+        ps.println("NodeTypeManager (" + this + ")");
+        ps.println();
+        ntReg.dump(ps);
     }
 
     //--------------------------------------------------------< inner classes >
@@ -215,28 +212,28 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      */
     private static class RootNodeDefinition extends NodeDefImpl {
 
-	/**
-	 * Creates a new <code>RootNodeDefinition</code>.
-	 */
-	RootNodeDefinition(ChildNodeDef def, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
-	    super(def, ntMgr, nsResolver);
-	}
+        /**
+         * Creates a new <code>RootNodeDefinition</code>.
+         */
+        RootNodeDefinition(ChildNodeDef def, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+            super(def, ntMgr, nsResolver);
+        }
 
-	/**
-	 * @see NodeDef#getName
-	 */
-	public String getName() {
-	    // not applicable
-	    return "";
-	}
+        /**
+         * @see NodeDef#getName
+         */
+        public String getName() {
+            // not applicable
+            return "";
+        }
 
-	/**
-	 * @see NodeDef#getDeclaringNodeType
-	 */
-	public NodeType getDeclaringNodeType() {
-	    // not applicable
-	    return null;
-	}
+        /**
+         * @see NodeDef#getDeclaringNodeType
+         */
+        public NodeType getDeclaringNodeType() {
+            // not applicable
+            return null;
+        }
     }
 }
 

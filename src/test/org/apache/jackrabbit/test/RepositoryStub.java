@@ -15,23 +15,23 @@
  */
 package org.apache.jackrabbit.test;
 
-import javax.jcr.Repository;
 import javax.jcr.Credentials;
+import javax.jcr.Repository;
 import javax.jcr.SimpleCredentials;
-import java.util.Properties;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Properties;
 
 /**
  * The <code>RepositoryStub</code> is the entry point to the JCR Repository
  * for the TCK Test harness.
- * <p>
+ * <p/>
  * Implementors of the JCR specification need to provide an implementation
  * for the abstract methods defined in this class.
- *
- * @version $Revision: 1.3 $, $Date: 2004/05/04 12:06:31 $
- * @author Marcel Reutegger
  */
 public abstract class RepositoryStub {
 
@@ -69,20 +69,22 @@ public abstract class RepositoryStub {
      * @param env the environment variables. This parameter must not be null.
      */
     protected RepositoryStub(Properties env) {
-        if (env == null) throw new IllegalArgumentException("Parameter 'env' must not be null!");
+        if (env == null) {
+            throw new IllegalArgumentException("Parameter 'env' must not be null!");
+        }
         environment = env;
-	superuser = new SimpleCredentials(env.getProperty(PROP_SUPERUSER_NAME, ""),
-		env.getProperty(PROP_SUPERUSER_PWD, "").toCharArray());
-	readonly = new SimpleCredentials(env.getProperty(PROP_READONLY_NAME, ""),
-		env.getProperty(PROP_READONLY_PWD, "").toCharArray());
-	readwrite = new SimpleCredentials(env.getProperty(PROP_READWRITE_NAME, ""),
-		env.getProperty(PROP_READWRITE_PWD, "").toCharArray());
+        superuser = new SimpleCredentials(env.getProperty(PROP_SUPERUSER_NAME, ""),
+                env.getProperty(PROP_SUPERUSER_PWD, "").toCharArray());
+        readonly = new SimpleCredentials(env.getProperty(PROP_READONLY_NAME, ""),
+                env.getProperty(PROP_READONLY_PWD, "").toCharArray());
+        readwrite = new SimpleCredentials(env.getProperty(PROP_READWRITE_NAME, ""),
+                env.getProperty(PROP_READWRITE_PWD, "").toCharArray());
     }
 
     /**
      * Creates and/or returns the configured <code>RepositryStub</code>
      * implementation.
-     * <p>
+     * <p/>
      * The property file is located in the following sequence:
      * <ol>
      * <li>If the system property <code>-Djavax.jcr.tck.properties</code> is
@@ -92,6 +94,7 @@ public abstract class RepositoryStub {
      * as a resource from the ClassLoader of this <code>RepositryStub</code> class.</li>
      * <li>If none of the above is found, a {@link RepositoryStubException} is thrown.
      * </ol>
+     *
      * @return a <code>RepositoryStub</code> implementation.
      * @throws RepositoryStubException
      */
@@ -99,34 +102,34 @@ public abstract class RepositoryStub {
         if (instance == null) {
             Properties props = null;
             String implProp = System.getProperty(STUB_IMPL_SYS_PROPS);
-	    if (implProp != null) {
-		File implPropFile = new File(implProp);
-		if (implPropFile.exists()) {
-		    props = new Properties();
-		    try {
-			props.load(new FileInputStream(implPropFile));
-		    } catch (IOException e) {
-			throw new RepositoryStubException("Unable to load config file: "
-				+ implProp + " " + e.toString());
-		    }
-		} else {
-		    throw new RepositoryStubException("File does not exist: " + implProp);
-		}
-	    }
+            if (implProp != null) {
+                File implPropFile = new File(implProp);
+                if (implPropFile.exists()) {
+                    props = new Properties();
+                    try {
+                        props.load(new FileInputStream(implPropFile));
+                    } catch (IOException e) {
+                        throw new RepositoryStubException("Unable to load config file: "
+                                + implProp + " " + e.toString());
+                    }
+                } else {
+                    throw new RepositoryStubException("File does not exist: " + implProp);
+                }
+            }
 
-	    if (props == null) {
-		InputStream is = RepositoryStub.class.getClassLoader().getResourceAsStream(STUB_IMPL_PROPS);
-		if (is == null) {
-		    throw new RepositoryStubException(STUB_IMPL_PROPS + " not found in classpath!");
-		}
-		try {
-		    props = new Properties();
-		    props.load(is);
-		} catch (IOException e) {
-		    throw new RepositoryStubException("Exception reading "
-			    + STUB_IMPL_PROPS + ": " + e.toString());
-		}
-	    }
+            if (props == null) {
+                InputStream is = RepositoryStub.class.getClassLoader().getResourceAsStream(STUB_IMPL_PROPS);
+                if (is == null) {
+                    throw new RepositoryStubException(STUB_IMPL_PROPS + " not found in classpath!");
+                }
+                try {
+                    props = new Properties();
+                    props.load(is);
+                } catch (IOException e) {
+                    throw new RepositoryStubException("Exception reading "
+                            + STUB_IMPL_PROPS + ": " + e.toString());
+                }
+            }
 
             try {
                 String className = props.getProperty(PROP_STUB_IMPL_CLASS);
@@ -134,8 +137,8 @@ public abstract class RepositoryStub {
                     throw new RepositoryStubException("Property " + PROP_STUB_IMPL_CLASS + " not defined!");
                 }
                 Class stubClass = Class.forName(className);
-                Constructor constr = stubClass.getConstructor(new Class[] {Properties.class});
-                instance = (RepositoryStub)constr.newInstance(new Object[] {props});
+                Constructor constr = stubClass.getConstructor(new Class[]{Properties.class});
+                instance = (RepositoryStub) constr.newInstance(new Object[]{props});
             } catch (ClassCastException e) {
                 throw new RepositoryStubException(e.toString());
             } catch (NoSuchMethodException e) {
@@ -156,6 +159,7 @@ public abstract class RepositoryStub {
     /**
      * Returns a reference to the <code>Repository</code> provided by this
      * <code>RepositoryStub</code>.
+     *
      * @return
      */
     public abstract Repository getRepository() throws RepositoryStubException;
@@ -163,51 +167,51 @@ public abstract class RepositoryStub {
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p>
+     * <p/>
      * The <code>Credentials</code> returned has 'superuser' rights. That
      * is, the <code>Ticket</code> object returned by {@link Repository#login}
      * has read write access to the whole Content Repository.
      *
      * @return a <code>Credentials</code> object, that allows to login to the
-     *      <code>Repository</code> as 'superuser'.
+     *         <code>Repository</code> as 'superuser'.
      */
     public Credentials getSuperuserCredentials() {
-	return superuser;
+        return superuser;
     }
 
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p>
+     * <p/>
      * The <code>Credentials</code> returned has read/write rights. That
      * is, the <code>Ticket</code> object returned by {@link Repository#login}
      * has read write access to the <code>Node</code> configured in the
      * JCR TCK Interview.
-     * <p>
+     * <p/>
      * For details, see: JCR TCK User Guide.
      *
      * @return a <code>Credentials</code> object, that allows to login to the
-     *      <code>Repository</code> with read/write right.
+     *         <code>Repository</code> with read/write right.
      */
     public Credentials getReadWriteCredentials() {
-	return readwrite;
+        return readwrite;
     }
 
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p>
+     * <p/>
      * The <code>Credentials</code> returned must have read-only rights. That
      * is, the <code>Ticket</code> object returned by {@link Repository#login}
      * has read-only access to the <code>Node</code> configured in the
      * JCR TCK Interview.
-     * <p>
+     * <p/>
      * For details, see: JCR TCK User Guide.
      *
      * @return a <code>Credentials</code> object, that allows to login to the
-     *      <code>Repository</code> with read-only right.
+     *         <code>Repository</code> with read-only right.
      */
     public Credentials getReadOnlyCredentials() {
-	return readonly;
+        return readonly;
     }
 }

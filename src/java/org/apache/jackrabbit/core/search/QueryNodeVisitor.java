@@ -17,9 +17,6 @@ package org.apache.jackrabbit.core.search;
 
 /**
  * Defines the interface for a <code>QueryNodeVisitor</code>.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public interface QueryNodeVisitor {
 

@@ -16,28 +16,26 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.RAMDirectory;
 
 import java.io.IOException;
 
 /**
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class VolatileIndex extends AbstractIndex {
 
     VolatileIndex(Analyzer analyzer) throws IOException {
-	super(analyzer, new RAMDirectory());
+        super(analyzer, new RAMDirectory());
     }
 
     long size() throws IOException {
- 	Directory dir = getDirectory();
-	String[] files = dir.list();
-	long size = 0;
-	for (int i = 0; i < files.length; i++) {
-	    size += dir.fileLength(files[i]);
-	}
-	return size;
+        Directory dir = getDirectory();
+        String[] files = dir.list();
+        long size = 0;
+        for (int i = 0; i < files.length; i++) {
+            size += dir.fileLength(files[i]);
+        }
+        return size;
     }
 }

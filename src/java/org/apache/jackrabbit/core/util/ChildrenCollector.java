@@ -26,9 +26,6 @@ import java.util.Collection;
  * which can be used to 'collect' child elements of a
  * node. It implements the <code>ItemVisitor</code>
  * interface.
- *
- * @author Stefan Guggisberg
- * @version $Revision: 1.12 $, $Date: 2004/08/02 16:19:52 $
  */
 public class ChildrenCollector extends TraversingItemVisitor.Default {
 
@@ -46,29 +43,29 @@ public class ChildrenCollector extends TraversingItemVisitor.Default {
      *                          (e.g. 1 for direct children only, 2 for children and their children, and so on)
      */
     public ChildrenCollector(Collection children, boolean collectNodes, boolean collectProperties, int maxLevel) {
-	super(false, maxLevel);
-	this.children = children;
-	this.collectNodes = collectNodes;
-	this.collectProperties = collectProperties;
+        super(false, maxLevel);
+        this.children = children;
+        this.collectNodes = collectNodes;
+        this.collectProperties = collectProperties;
     }
 
     /**
      * @see TraversingItemVisitor#entering(Node, int)
      */
     protected void entering(Node node, int level)
-	    throws RepositoryException {
-	if (level > 0 && collectNodes) {
-	    children.add(node);
-	}
+            throws RepositoryException {
+        if (level > 0 && collectNodes) {
+            children.add(node);
+        }
     }
 
     /**
      * @see TraversingItemVisitor#entering(Property, int)
      */
     protected void entering(Property property, int level)
-	    throws RepositoryException {
-	if (level > 0 && collectProperties) {
-	    children.add(property);
-	}
+            throws RepositoryException {
+        if (level > 0 && collectProperties) {
+            children.add(property);
+        }
     }
 }

@@ -18,16 +18,17 @@ package org.apache.jackrabbit.core.search;
 /**
  * Implements a query node that defines an exact match of a property and a
  * value.
- *
- * @author Marcel Reutegger
- * @version $Revision:  $, $Date:  $
  */
 public class ExactQueryNode extends QueryNode {
 
-    /** The name of the property to match */
+    /**
+     * The name of the property to match
+     */
     private final String property;
 
-    /** The value of the property to match */
+    /**
+     * The value of the property to match
+     */
     private final String value;
 
     /**
@@ -38,54 +39,58 @@ public class ExactQueryNode extends QueryNode {
      * @param value    the value of the property to match.
      */
     public ExactQueryNode(QueryNode parent, String property, String value) {
-	super(parent);
-	if (parent == null) {
-	    throw new NullPointerException("parent");
-	}
-	this.property = property;
-	this.value = value;
+        super(parent);
+        if (parent == null) {
+            throw new NullPointerException("parent");
+        }
+        this.property = property;
+        this.value = value;
     }
 
     /**
      * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
-	return visitor.visit(this, data);
+        return visitor.visit(this, data);
     }
 
     /**
      * Returns the name of the property to match.
+     *
      * @return the name of the property to match.
      */
     public String getPropertyName() {
-	return property;
+        return property;
     }
 
     /**
      * Returns the value of the property to match.
+     *
      * @return the value of the property to match.
      */
     public String getValue() {
-	return value;
+        return value;
     }
 
     /**
      * Returns a JCRQL representation for this query node.
+     *
      * @return a JCRQL representation for this query node.
      */
     public String toJCRQLString() {
-	if (property.indexOf(' ') > -1) {
-	    return "\"" + property + "\"=\"" + value + "\"";
-	}
-	return property + "=\"" + value + "\"";
+        if (property.indexOf(' ') > -1) {
+            return "\"" + property + "\"=\"" + value + "\"";
+        }
+        return property + "=\"" + value + "\"";
     }
 
     /**
      * Returns an XPath representation for this query node.
+     *
      * @return an XPath representation for this query node.
      */
     public String toXPathString() {
-	// todo implement
-	return "";
+        // todo implement
+        return "";
     }
 }
