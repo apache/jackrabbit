@@ -44,7 +44,7 @@ import java.util.Arrays;
 
 /**
  */
-public class LuceneQueryBuilder implements QueryNodeVisitor {
+class LuceneQueryBuilder implements QueryNodeVisitor {
 
     private static final Logger log = Logger.getLogger(LuceneQueryBuilder.class);
 

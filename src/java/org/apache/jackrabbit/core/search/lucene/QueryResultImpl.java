@@ -27,7 +27,7 @@ import javax.jcr.query.QueryResult;
 /**
  * Implements the <code>javax.jcr.query.QueryResult</code> interface.
  */
-public class QueryResultImpl implements QueryResult {
+class QueryResultImpl implements QueryResult {
 
     private static final Logger log = Logger.getLogger(QueryResultImpl.class);
 

@@ -20,7 +20,7 @@ package org.apache.jackrabbit.core.search.lucene;
  * Defines field names that are used internally to store UUID, etc in the
  * search index.
  */
-public class FieldNames {
+class FieldNames {
 
     /**
      * Name of the field that contains the UUID of the node. Terms are stored

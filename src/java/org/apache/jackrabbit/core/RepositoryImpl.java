@@ -924,13 +924,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
                     // no search index configured
                     return null;
                 }
-                try {
-                    searchMgr = new SearchManager(getSystemSession(), config.getSearchConfig());
-                } catch (IOException ioe) {
-                    String msg = "failed to instantiate search manager";
-                    log.error(msg, ioe);
-                    throw new RepositoryException(msg, ioe);
-                }
+                searchMgr = new SearchManager(getSystemSession(), config.getSearchConfig());
             }
             return searchMgr;
         }

@@ -27,7 +27,7 @@ import java.io.IOException;
  * Implements a lucene index which is based on a
  * {@link org.apache.jackrabbit.core.fs.FileSystem}.
  */
-public class PersistentIndex extends AbstractIndex {
+class PersistentIndex extends AbstractIndex {
 
     private final FileSystem fs;
 

@@ -31,11 +31,21 @@ import java.util.Iterator;
  */
 public class SearchConfig {
 
+    /** FQN of the default query handler implementation */
+    private static final String DEFAULT_QUERY_HANDLER
+            = "org.apache.jackrabbit.core.search.lucene.SearchIndex";
+
     /** The <code>FileSystem</code> for the search index. */
     private final FileSystem fs;
 
     /** Parameters for configuring the search index. */
     private Map params = new HashMap();
+
+    /**
+     * The FQN of the class implementing the
+     * {@link org.apache.jackrabbit.core.search.QueryHandler} interface.
+     */
+    private final String handlerClassName;
 
     /**
      * Creates a new <code>SearchConfig</code>.
@@ -60,6 +70,10 @@ public class SearchConfig {
         }
         // seal
         params = Collections.unmodifiableMap(params);
+
+        // handler class name
+        handlerClassName = config.getAttributeValue(AbstractConfig.CLASS_ATTRIB, 
+                DEFAULT_QUERY_HANDLER);
     }
 
     /**
@@ -77,6 +91,16 @@ public class SearchConfig {
      */
     public FileSystem getFileSystem() {
         return fs;
+    }
+
+    /**
+     * Returns the name of the class implementing the <code>QueryHandler</code>
+     * interface.
+     * @return the name of the class implementing the <code>QueryHandler</code>
+     *   interface.
+     */
+    public String getHandlerClassName() {
+        return handlerClassName;
     }
 
 }

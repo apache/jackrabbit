@@ -17,29 +17,22 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.search.NamespaceMappings;
-import org.apache.jackrabbit.core.search.OrderQueryNode;
-import org.apache.jackrabbit.core.search.QueryRootNode;
-import org.apache.jackrabbit.core.search.lucene.*;
+import org.apache.jackrabbit.core.search.QueryHandler;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.config.SearchConfig;
 import org.apache.log4j.Logger;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.Query;
 import org.apache.commons.collections.BeanMap;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.Event;
 import java.io.IOException;
@@ -53,9 +46,6 @@ public class SearchManager implements SynchronousEventListener {
     /** Logger instance for this class */
     private static final Logger log = Logger.getLogger(SearchManager.class);
 
-    /** Name of the file to persist search internal namespace mappings */
-    private static final String NS_MAPPING_FILE = "ns_mappings.properties";
-
     /** Namespace URI for xpath functions */
     // @todo this is not final! What should we use?
     private static final String NS_FN_PREFIX = "fn";
@@ -64,12 +54,6 @@ public class SearchManager implements SynchronousEventListener {
     /** Namespace URI for XML schema */
     private static final String NS_XS_PREFIX = "xs";
     public static final String NS_XS_URI = "http://www.w3.org/2001/XMLSchema";
-
-    /** The actual search index */
-    private final SearchIndex index;
-
-    /** State manager to retrieve content */
-    private final ItemStateProvider stateProvider;
 
     /** HierarchyManager for path resolution */
     private final HierarchyManager hmgr;
@@ -80,18 +64,14 @@ public class SearchManager implements SynchronousEventListener {
     /** Storage for search index */
     private final FileSystem fs;
 
-    /** Namespace resolver for search internal prefixes */
-    private final NamespaceMappings nsMappings;
+    /** QueryHandler where query execution is delegated to */
+    private final QueryHandler handler;
 
     public SearchManager(SessionImpl session, SearchConfig config)
-            throws RepositoryException, IOException {
+            throws RepositoryException {
         this.session = session;
-        this.stateProvider = session.getItemStateManager();
         this.hmgr = session.getHierarchyManager();
         this.fs = config.getFileSystem();
-        index = new SearchIndex(fs, new StandardAnalyzer());
-        FileSystemResource mapFile = new FileSystemResource(fs, NS_MAPPING_FILE);
-        nsMappings = new NamespaceMappings(mapFile);
 
         // register namespaces
         NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
@@ -108,8 +88,17 @@ public class SearchManager implements SynchronousEventListener {
             nsReg.registerNamespace(NS_FN_PREFIX, NS_FN_URI);
         }
 
+        // initialize query handler
+        try {
+            Class handlerClass = Class.forName(config.getHandlerClassName());
+            handler = (QueryHandler) handlerClass.newInstance();
+            handler.init(fs, session.getItemStateManager());
+        } catch (Exception e) {
+            throw new RepositoryException(e.getMessage(), e);
+        }
+
         // set properties
-        BeanMap bm = new BeanMap(this);
+        BeanMap bm = new BeanMap(handler);
         try {
             bm.putAll(config.getParameters());
         } catch (IllegalArgumentException e) {
@@ -121,15 +110,15 @@ public class SearchManager implements SynchronousEventListener {
      * Adds a <code>Node</code> to the search index.
      * @param node the NodeState to add.
      * @param path the path of the node.
-     * @throws IOException if an error occurs while adding the node to
-     * the search index.
+     * @throws RepositoryException if an error occurs while indexing the node.
+     * @throws IOException if an error occurs while adding the node to the index.
      */
-    public void addNode(NodeState node, Path path) throws IOException {
+    public void addNode(NodeState node, Path path)
+            throws RepositoryException, IOException {
         if (log.isDebugEnabled()) {
             log.debug("add node to index: " + path);
         }
-        Document doc = NodeIndexer.createDocument(node, stateProvider, path, nsMappings);
-        index.addDocument(doc);
+        handler.addNode(node);
     }
 
     /**
@@ -142,69 +131,66 @@ public class SearchManager implements SynchronousEventListener {
         if (log.isDebugEnabled()) {
             log.debug("remove node from index: " + path.toString());
         }
-        index.removeDocument(new Term(FieldNames.UUID, uuid));
+        handler.deleteNode(uuid);
     }
 
     /**
      * Closes this <code>SearchManager</code> and also closes the
-     * {@link org.apache.jackrabbit.core.fs.FileSystem} passed in the
-     * constructor of this <code>SearchManager</code>.
+     * {@link org.apache.jackrabbit.core.fs.FileSystem} configured in
+     * {@link org.apache.jackrabbit.core.config.SearchConfig}.
      */
     public void close() {
-        index.close();
         try {
+            handler.close();
             fs.close();
+        } catch (IOException e) {
+            log.error("Exception closing QueryHandler.", e);
         } catch (FileSystemException e) {
             log.error("Exception closing FileSystem.", e);
         }
     }
 
-    public QueryResultImpl execute(ItemManager itemMgr,
-                                   QueryRootNode root,
-                                   SessionImpl session)
-            throws RepositoryException {
-
-        // build lucene query
-        Query query = LuceneQueryBuilder.createQuery(root,
-                session, nsMappings, index.getAnalyzer());
-
-        OrderQueryNode orderNode = root.getOrderNode();
-        // FIXME according to spec this should be descending
-        // by default. this contrasts to standard sql semantics
-        // where default is ascending.
-        boolean[] orderSpecs = null;
-        String[] orderProperties = null;
-        if (orderNode != null) {
-            orderProperties = orderNode.getOrderByProperties();
-            orderSpecs = orderNode.getOrderBySpecs();
-        } else {
-            orderProperties = new String[0];
-            orderSpecs = new boolean[0];
-        }
-
-
-        List uuids;
-        AccessManagerImpl accessMgr = session.getAccessManager();
-
-        // execute it
-        try {
-            Hits result = index.executeQuery(query, orderProperties, orderSpecs);
-            uuids = new ArrayList(result.length());
-            for (int i = 0; i < result.length(); i++) {
-                String uuid = result.doc(i).get(FieldNames.UUID);
-                // check access
-                if (accessMgr.isGranted(new NodeId(uuid), AccessManager.READ)) {
-                    uuids.add(uuid);
-                }
-            }
-        } catch (IOException e) {
-            uuids = Collections.EMPTY_LIST;
-        }
-
-        // return QueryResult
-        return new QueryResultImpl(itemMgr,
-                (String[]) uuids.toArray(new String[uuids.size()]),
-                root.getSelectProperties());
+    /**
+     * Creates a query object that can be executed on the workspace.
+     *
+     * @param session the session of the user executing the query.
+     * @param itemMgr the item manager of the user executing the query. Needed
+     *   to return <code>Node</code> instances in the result set.
+     * @param statement the actual query statement.
+     * @param language the syntax of the query statement.
+     * @return a <code>Query</code> instance to execute.
+     *
+     * @throws InvalidQueryException if the query is malformed or the
+     *   <code>language</code> is unknown.
+     * @throws RepositoryException if any other error occurs.
+     */
+    public Query createQuery(SessionImpl session,
+                             ItemManager itemMgr,
+                             String statement,
+                             String language)
+            throws InvalidQueryException, RepositoryException {
+        return handler.createQuery(session, itemMgr, statement, language);
+    }
+    
+    /**
+     * Creates a query object from a node that can be executed on the workspace.
+     *
+     * @param session the session of the user executing the query.
+     * @param itemMgr the item manager of the user executing the query. Needed
+     *   to return <code>Node</code> instances in the result set.
+     * @param absPath absolute path to a node of type nt:query.
+     * @return a <code>Query</code> instance to execute.
+     *
+     * @throws InvalidQueryException if <code>absPath</code> is not a valid
+     *   persisted query (that is, a node of type nt:query)
+     * @throws ItemNotFoundException if there is no node at <code>absPath</code>.
+     * @throws RepositoryException if any other error occurs.
+     */
+    public Query createQuery(SessionImpl session,
+                             ItemManager itemMgr,
+                             String absPath)
+            throws InvalidQueryException, ItemNotFoundException, RepositoryException {
+        return handler.createQuery(session, itemMgr, absPath);
     }
 
     //---------------< EventListener interface >--------------------------------
@@ -225,6 +211,7 @@ public class SearchManager implements SynchronousEventListener {
                 long type = e.getType();
                 if (type == Event.NODE_ADDED) {
 
+                    // @todo use UUIDs for pending nodes?
                     Path path = Path.create(e.getPath(),
                             session.getNamespaceResolver(),
                             true);
@@ -276,8 +263,7 @@ public class SearchManager implements SynchronousEventListener {
             try {
                 Path path = (Path) it.next();
                 ItemId id = hmgr.resolvePath(path);
-                path = getIndexlessPath(path);
-                addNode((NodeState) stateProvider.getItemState(id), path);
+                addNode((NodeState) session.getItemStateManager().getItemState(id), path);
             } catch (ItemStateException e) {
                 log.error("error indexing node.", e);
             } catch (RepositoryException e) {
@@ -293,56 +279,4 @@ public class SearchManager implements SynchronousEventListener {
         }
     }
 
-    //---------------------< properties >---------------------------------------
-
-    public void setUseCompoundFile(boolean b) {
-        index.setUseCompoundFile(b);
-    }
-
-    public void setMinMergeDocs(int minMergeDocs) {
-        index.setMinMergeDocs(minMergeDocs);
-    }
-
-    public void setMaxMergeDocs(int maxMergeDocs) {
-        index.setMaxMergeDocs(maxMergeDocs);
-    }
-
-    public void setMergeFactor(int mergeFactor) {
-        index.setMergeFactor(mergeFactor);
-    }
-
-    //-----------------------< internal >---------------------------------------
-
-    /**
-     * Returns a <code>Path</code>, which contains the same sequence of path
-     * elements as <code>p</code>, but has cut off any existing indexes on the
-     * path elements.
-     *
-     * @param p the source path, possibly containing indexed path elements.
-     * @return a <code>Path</code> without indexed path elements.
-     */
-    private Path getIndexlessPath(Path p) {
-        boolean hasIndexes = false;
-        Path.PathElement[] elements = p.getElements();
-        for (int i = 0; i < elements.length && !hasIndexes; i++) {
-            hasIndexes = (elements[i].getIndex() > 0);
-        }
-
-        if (hasIndexes) {
-            // create Path without indexes
-            Path.PathBuilder builder = new Path.PathBuilder();
-            builder.addRoot();
-            for (int i = 1; i < elements.length; i++) {
-                builder.addLast(elements[i].getName());
-            }
-            try {
-                return builder.getPath();
-            } catch (MalformedPathException e) {
-                // will never happen, because Path p is always valid
-                log.error("internal error: malformed path.", e);
-            }
-        }
-        // return original path if it does not contain indexed path elements
-        return p;
-    }
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.search;
+package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
@@ -45,7 +45,7 @@ import java.util.Properties;
  * prefix is created on the fly and associated with the namespace. Known
  * namespace mappings are stored in a properties file.
  */
-public class NamespaceMappings implements NamespaceResolver {
+class NamespaceMappings implements NamespaceResolver {
 
     /**
      * Default logger instance for this class

@@ -17,27 +17,40 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
-import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.search.AbstractQueryHandler;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
 
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.io.IOException;
 
 /**
+ * Implements a {@link org.apache.jackrabbit.core.search.QueryHandler} using
+ * Lucene.
  */
-public class SearchIndex {
+public class SearchIndex extends AbstractQueryHandler {
 
     private static final Logger log = Logger.getLogger(SearchIndex.class);
+
+    /** Name of the file to persist search internal namespace mappings */
+    private static final String NS_MAPPING_FILE = "ns_mappings.properties";
 
     /**
      * 512k default size
      */
-    //private static final long DEFAULT_MERGE_SIZE = 512 * 1024 * 1024;
+    //private static final long DEFAULT_MERGE_SIZE = 512 * 1024;
 
     //private long mergeSize = DEFAULT_MERGE_SIZE;
 
@@ -47,23 +60,43 @@ public class SearchIndex {
 
     private final Analyzer analyzer;
 
+    private NamespaceMappings nsMappings;
+
     private final FIFOReadWriteLock readWriteLock = new FIFOReadWriteLock();
 
-    public SearchIndex(FileSystem fs, Analyzer analyzer)
-            throws IOException {
+    /**
+     * Default constructor.
+     */
+    public SearchIndex() {
+        this.analyzer = new StandardAnalyzer();
         //volatileIndex = new VolatileIndex(analyzer);
+    }
+
+    /**
+     * Initializes this <code>QueryHandler</code>.
+     * @throws IOException if an error occurs while initializing this handler.
+     */
+    protected void doInit() throws IOException {
         boolean create;
         try {
-            create = !fs.exists("segments");
-            persistentIndex = new PersistentIndex(fs, create, analyzer);
+            create = !getFileSystem().exists("segments");
+            persistentIndex = new PersistentIndex(getFileSystem(), create, analyzer);
             persistentIndex.setUseCompoundFile(true);
-            this.analyzer = analyzer;
+            FileSystemResource mapFile = new FileSystemResource(getFileSystem(), NS_MAPPING_FILE);
+            nsMappings = new NamespaceMappings(mapFile);
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
         }
     }
 
-    public void addDocument(Document doc) throws IOException {
+    /**
+     * Adds the <code>node</code> to the search index.
+     * @param node the node to add.
+     * @throws RepositoryException if an error occurs while indexing the node.
+     * @throws IOException if an error occurs while adding the node to the index.
+     */
+    public void addNode(NodeState node) throws RepositoryException, IOException {
+        Document doc = NodeIndexer.createDocument(node, getItemStateProvider(), nsMappings);
         try {
             readWriteLock.writeLock().acquire();
         } catch (InterruptedException e) {
@@ -87,7 +120,14 @@ public class SearchIndex {
         */
     }
 
-    public void removeDocument(Term idTerm) throws IOException {
+    /**
+     * Removes the node with <code>uuid</code> from the search index.
+     * @param uuid the UUID of the node to remove from the index.
+     * @throws IOException if an error occurs while removing the node from
+     * the index.
+     */
+    public void deleteNode(String uuid) throws IOException {
+        Term idTerm = new Term(FieldNames.UUID, uuid);
         try {
             readWriteLock.writeLock().acquire();
         } catch (InterruptedException e) {
@@ -104,6 +144,53 @@ public class SearchIndex {
         //volatileIndex.removeDocument(idTerm);
     }
 
+    /**
+     * Creates a new query by specifying the query statement itself and the
+     * language in which the query is stated.  If the query statement is
+     * syntactically invalid, given the language specified, an
+     * InvalidQueryException is thrown. <code>language</code> must specify a query language
+     * string from among those returned by QueryManager.getSupportedQueryLanguages(); if it is not
+     * then an <code>InvalidQueryException</code> is thrown.
+     *
+     * @param session the session of the current user creating the query object.
+     * @param itemMgr the item manager of the current user.
+     * @param statement the query statement.
+     * @param language the syntax of the query statement.
+     * @throws InvalidQueryException if statement is invalid or language is unsupported.
+     * @return A <code>Query</code> object.
+     */
+    public javax.jcr.query.Query createQuery(SessionImpl session,
+                                             ItemManager itemMgr,
+                                             String statement,
+                                             String language)
+            throws InvalidQueryException {
+        return new QueryImpl(session, itemMgr, this, statement, language);
+    }
+
+    /**
+     * Retrieves an existing persistent query. If <code>node</code>
+     * is not a valid persisted query (that is, a node of type
+     * <code>nt:query</code>), an <code>InvalidQueryException</code>
+     * is thrown.
+     *
+     * @param absPath path to a persisted query (that is, a node of type
+     *   <code>nt:query</code>).
+     * @throws InvalidQueryException If <code>absPath</code> is not a valid persisted query
+     *   (that is, a node of type <code>nt:query</code>).
+     * @throws RepositoryException if another error occurs
+     * @return a <code>Query</code> object.
+     */
+    public javax.jcr.query.Query createQuery(SessionImpl session,
+                                             ItemManager itemMgr,
+                                             String absPath)
+            throws ItemNotFoundException, RepositoryException {
+        return new QueryImpl(session, itemMgr, this, absPath);
+    }
+
+    /**
+     * Closes this <code>QueryHandler</code> and frees resources attached
+     * to this handler.
+     */
     public void close() {
         /*
         try {
@@ -117,7 +204,7 @@ public class SearchIndex {
         persistentIndex.close();
     }
 
-    public Hits executeQuery(Query query,
+    Hits executeQuery(Query query,
                              String[] orderProps,
                              boolean[] orderSpecs) throws IOException {
         try {
@@ -144,8 +231,12 @@ public class SearchIndex {
         return hits;
     }
 
-    public Analyzer getAnalyzer() {
+    Analyzer getAnalyzer() {
         return analyzer;
+    }
+
+    NamespaceMappings getNamespaceMappings() {
+        return nsMappings;
     }
 
     //--------------------------< properties >----------------------------------

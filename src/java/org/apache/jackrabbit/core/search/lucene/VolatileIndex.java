@@ -24,7 +24,7 @@ import java.io.IOException;
 
 /**
  */
-public class VolatileIndex extends AbstractIndex {
+class VolatileIndex extends AbstractIndex {
 
     VolatileIndex(Analyzer analyzer) throws IOException {
         super(analyzer, new RAMDirectory());

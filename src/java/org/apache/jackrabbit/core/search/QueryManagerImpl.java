@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.search;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.search.lucene.QueryImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
@@ -84,7 +83,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
 
-        return new QueryImpl(session, itemMgr, searchMgr, statement, language);
+        return searchMgr.createQuery(session, itemMgr, statement, language);
     }
 
     /**
@@ -92,7 +91,8 @@ public class QueryManagerImpl implements QueryManager {
      */
     public Query getQuery(String absPath)
             throws InvalidQueryException, RepositoryException {
-        return new QueryImpl(session, itemMgr, searchMgr, absPath);
+
+        return searchMgr.createQuery(session, itemMgr, absPath);
     }
 
     /**

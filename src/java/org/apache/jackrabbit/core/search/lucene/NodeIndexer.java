@@ -16,49 +16,85 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.search.NamespaceMappings;
-import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.QName;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import javax.jcr.NamespaceException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
 /**
+ * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
  *
+ * @todo add support for indexing of nt:resource. e.g. when mime type is text/*
  */
-public class NodeIndexer {
+class NodeIndexer {
 
+    /** The <code>NodeState</code> of the node to index */
     private final NodeState node;
+
+    /** The persistent item state provider */
     private final ItemStateProvider stateProvider;
-    private final Path path;
+
+    /**
+     * Namespace mappings to use for indexing. This is the internal
+     * namespace mapping.
+     */
     private final NamespaceMappings mappings;
 
+    /**
+     * Creates a new node indexer.
+     * @param node the node state to index.
+     * @param stateProvider the persistent item state manager to retrieve properties.
+     * @param mappings internal namespace mappings.
+     */
     private NodeIndexer(NodeState node,
-                        ItemStateProvider stateMgr,
-                        Path path,
+                        ItemStateProvider stateProvider,
                         NamespaceMappings mappings) {
         this.node = node;
-        this.stateProvider = stateMgr;
-        this.path = path;
+        this.stateProvider = stateProvider;
         this.mappings = mappings;
     }
 
+    /**
+     * Creates a lucene Document from a node.
+     * @param node the node state to index.
+     * @param stateProvider the state provider to retrieve property values.
+     * @param mappings internal namespace mappings.
+     * @return the lucene Document.
+     * @throws RepositoryException if an error occurs while reading property
+     *   values from the <code>ItemStateProvider</code>.
+     */
     public static Document createDocument(NodeState node,
-                                          ItemStateProvider stateMgr,
-                                          Path path,
-                                          NamespaceMappings mappings) {
-        NodeIndexer indexer = new NodeIndexer(node, stateMgr, path, mappings);
+                                          ItemStateProvider stateProvider,
+                                          NamespaceMappings mappings)
+            throws RepositoryException {
+        NodeIndexer indexer = new NodeIndexer(node, stateProvider, mappings);
         return indexer.createDoc();
     }
 
-    private Document createDoc() {
+    /**
+     * Creates a lucene Document.
+     * @return the lucene Document with the index layout.
+     * @throws RepositoryException if an error occurs while reading property
+     *   values from the <code>ItemStateProvider</code>.
+     */
+    private Document createDoc() throws RepositoryException {
         Document doc = new Document();
 
         // special fields
@@ -66,14 +102,25 @@ public class NodeIndexer {
         doc.add(new Field(FieldNames.UUID, node.getUUID(), true, true, false));
         try {
             // parent UUID
-            if (path.denotesRoot()) {
+            if (node.getParentUUID() == null) {
+                // root node
                 doc.add(new Field(FieldNames.PARENT, "", true, true, false));
+                doc.add(new Field(FieldNames.LABEL, "", false, true, false));
             } else {
                 doc.add(new Field(FieldNames.PARENT, node.getParentUUID(), true, true, false));
+                NodeState parent = (NodeState) stateProvider.getItemState(
+                        new NodeId(node.getParentUUID()));
+                List entries = parent.getChildNodeEntries(node.getUUID());
+                for (Iterator it = entries.iterator(); it.hasNext();) {
+                    NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
+                    String name = child.getName().toJCRName(mappings);
+                    doc.add(new Field(FieldNames.LABEL, name, false, true, false));
+                }
             }
-            // Label
-            doc.add(new Field(FieldNames.LABEL, path.getNameElement().toJCRName(mappings),
-                    false, true, false));
+        } catch (NoSuchItemStateException e) {
+            throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
         } catch (NoPrefixDeclaredException e) {
             // will never happen, because this.mappings will dynamically add
             // unknown uri<->prefix mappings
@@ -90,14 +137,20 @@ public class NodeIndexer {
                     addValue(doc, values[i], propState.getName());
                 }
             } catch (NoSuchItemStateException e) {
-                // FIXME do logging? throw?
+                throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
             } catch (ItemStateException e) {
-                // FIXME do logging? throw?
+                throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
             }
         }
         return doc;
     }
 
+    /**
+     * Adds a value to the lucene Document.
+     * @param doc the document.
+     * @param value the internal jackrabbit value.
+     * @param name the name of the property.
+     */
     private void addValue(Document doc, InternalValue value, QName name) {
         String fieldName = name.toString();
         try {

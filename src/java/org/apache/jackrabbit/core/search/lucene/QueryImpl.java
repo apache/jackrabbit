@@ -16,22 +16,42 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.search.QueryParser;
 import org.apache.jackrabbit.core.search.QueryRootNode;
+import org.apache.jackrabbit.core.search.OrderQueryNode;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.AccessManagerImpl;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.AccessManager;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.lucene.search.Hits;
+import org.apache.lucene.search.Query;
 
-import javax.jcr.*;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.ItemExistsException;
+import javax.jcr.PathNotFoundException;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.io.IOException;
 
 /**
  */
-public class QueryImpl implements Query {
+class QueryImpl implements javax.jcr.query.Query {
 
     /**
      * jcr:statement
@@ -51,22 +71,22 @@ public class QueryImpl implements Query {
 
     private final ItemManager itemMgr;
 
+    private final SearchIndex index;
+
     private final String statement;
 
     private final String language;
-
-    private final SearchManager searchMgr;
 
     private Path path;
 
     public QueryImpl(SessionImpl session,
                      ItemManager itemMgr,
-                     SearchManager searchMgr,
+                     SearchIndex index,
                      String statement,
                      String language) throws InvalidQueryException {
         this.session = session;
         this.itemMgr = itemMgr;
-        this.searchMgr = searchMgr;
+        this.index = index;
         this.statement = statement;
         this.language = language;
 
@@ -77,13 +97,13 @@ public class QueryImpl implements Query {
 
     public QueryImpl(SessionImpl session,
                      ItemManager itemMgr,
-                     SearchManager searchMgr,
+                     SearchIndex index,
                      String absPath)
             throws ItemNotFoundException, InvalidQueryException, RepositoryException {
 
         this.session = session;
         this.itemMgr = itemMgr;
-        this.searchMgr = searchMgr;
+        this.index = index;
 
         try {
             Node query = null;
@@ -117,7 +137,47 @@ public class QueryImpl implements Query {
     }
 
     public QueryResult execute() throws RepositoryException {
-        return searchMgr.execute(itemMgr, root, session);
+        // build lucene query
+        Query query = LuceneQueryBuilder.createQuery(root,
+                session, index.getNamespaceMappings(), index.getAnalyzer());
+
+        OrderQueryNode orderNode = root.getOrderNode();
+        // FIXME according to spec this should be descending
+        // by default. this contrasts to standard sql semantics
+        // where default is ascending.
+        boolean[] orderSpecs = null;
+        String[] orderProperties = null;
+        if (orderNode != null) {
+            orderProperties = orderNode.getOrderByProperties();
+            orderSpecs = orderNode.getOrderBySpecs();
+        } else {
+            orderProperties = new String[0];
+            orderSpecs = new boolean[0];
+        }
+
+
+        List uuids;
+        AccessManagerImpl accessMgr = session.getAccessManager();
+
+        // execute it
+        try {
+            Hits result = index.executeQuery(query, orderProperties, orderSpecs);
+            uuids = new ArrayList(result.length());
+            for (int i = 0; i < result.length(); i++) {
+                String uuid = result.doc(i).get(FieldNames.UUID);
+                // check access
+                if (accessMgr.isGranted(new NodeId(uuid), AccessManager.READ)) {
+                    uuids.add(uuid);
+                }
+            }
+        } catch (IOException e) {
+            uuids = Collections.EMPTY_LIST;
+        }
+
+        // return QueryResult
+        return new QueryResultImpl(itemMgr,
+                (String[]) uuids.toArray(new String[uuids.size()]),
+                root.getSelectProperties());
     }
 
     public String getStatement() {
