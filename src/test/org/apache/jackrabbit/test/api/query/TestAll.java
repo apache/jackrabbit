@@ -41,10 +41,12 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SQLOrderByTest.class);
         suite.addTestSuite(SQLQueryLevel2Test.class);
         suite.addTestSuite(SQLJoinTest.class);
+        suite.addTestSuite(SQLJcrPathTest.class);
         suite.addTestSuite(XPathPosIndexTest.class);
         suite.addTestSuite(XPathDocOrderTest.class);
         suite.addTestSuite(XPathOrderByTest.class);
         suite.addTestSuite(XPathQueryLevel2Test.class);
+        suite.addTestSuite(XPathJcrPathTest.class);
 
         suite.addTestSuite(DerefQueryLevel1Test.class);
         suite.addTestSuite(ElementTest.class);
@@ -55,7 +57,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(GetStatementTest.class);
         suite.addTestSuite(GetSupportedQueryLanguagesTest.class);
 
-        suite.addTestSuite(JcrPathTest.class);
         suite.addTestSuite(GetPropertyNamesTest.class);
         suite.addTestSuite(PredicatesTest.class);
         suite.addTestSuite(SimpleSelectionTest.class);
