@@ -15,25 +15,20 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.PropertyState;
 
 /**
  * This Class implements a virtual property state
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class VirtualPropertyState extends PropertyState {
 
     /**
-     *
      * @param name
      * @param parentUUID
      */
     public VirtualPropertyState(QName name, String parentUUID) {
         super(name, parentUUID, ItemState.STATUS_EXISTING);
     }
-
 }

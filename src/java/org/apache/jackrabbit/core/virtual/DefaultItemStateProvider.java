@@ -21,8 +21,8 @@ import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,9 +30,6 @@ import java.util.HashSet;
 
 /**
  * This Class implements a virtual item state provider.
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class DefaultItemStateProvider implements VirtualItemStateProvider {
 
@@ -59,7 +56,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
     /**
      * Creates a new item state provider.
      *
-     * @param ntMgr         the nodetype manager
+     * @param ntMgr the nodetype manager
      */
     public DefaultItemStateProvider(NodeTypeManagerImpl ntMgr) {
         this.ntMgr = ntMgr;
@@ -124,7 +121,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
     }
 
     public VirtualNodeState addOverlay(NodeState original) throws RepositoryException {
-        VirtualNodeState ns= new VirtualNodeState(original.getUUID(), original.getNodeTypeName(), original.getParentUUID());
+        VirtualNodeState ns = new VirtualNodeState(original.getUUID(), original.getNodeTypeName(), original.getParentUUID());
         ns.setDefinitionId(original.getDefinitionId());
         setPropertyValue(ns, ItemImpl.PROPNAME_PRIMARYTYPE, InternalValue.create(original.getNodeTypeName()));
         ns.setMixinTypeNames(original.getMixinTypeNames());

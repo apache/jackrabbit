@@ -16,12 +16,9 @@
 package org.apache.jackrabbit.core.virtual;
 
 import org.apache.jackrabbit.core.state.ItemStateProvider;
+
 /**
- * This Interface defines a virtual item state provide.
- *
- * @author tripod
- * @version $Revision:$, $Date:$
+ * This Interface defines a virtual item state provider.
  */
 public interface VirtualItemStateProvider extends ItemStateProvider {
-
 }

@@ -15,19 +15,16 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.NodeState;
 
 /**
  * This Class implements a virtual node state
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class VirtualNodeState extends NodeState {
 
     /**
-     *
      * @param uuid
      * @param nodeTypeName
      * @param parentUUID

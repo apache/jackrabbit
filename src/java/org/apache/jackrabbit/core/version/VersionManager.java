@@ -16,27 +16,28 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.virtual.*;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.virtual.DefaultItemStateProvider;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.log4j.Logger;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeDef;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
-import java.util.*;
+import javax.jcr.version.VersionHistory;
+import java.util.Iterator;
 
 /**
  * This Class implements the session tied version manager. It is also repsonsible
  * for mapping the internal versions to the presentation layer using virtual
  * nodes and items.
- *
- * @author tripod
- * @version $Revision:$, $Date:$
  */
 public class VersionManager {
 
@@ -68,7 +69,7 @@ public class VersionManager {
     /**
      * name of the 'jcr:versionLabels' property
      */
-    public static final QName PROPNAME_VERSION_LABELS= new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
+    public static final QName PROPNAME_VERSION_LABELS = new QName(NamespaceRegistryImpl.NS_JCR_URI, "versionLabels");
     /**
      * name of the 'jcr:successors' property
      */
@@ -120,11 +121,12 @@ public class VersionManager {
     /**
      * returns the virtual item state provider that exposes the internal versions
      * as items.
+     *
      * @param base
      * @return
      */
     public synchronized VirtualItemStateProvider getVirtualItemStateProvider(SessionImpl session, ItemStateProvider base) {
-        if (virtProvider==null) {
+        if (virtProvider == null) {
             try {
                 // check, if workspace of session has history root
                 NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
@@ -200,6 +202,7 @@ public class VersionManager {
     /**
      * Creates a new VersionHistoryImpl instance. this is usually called by
      * the {@link ItemManager}.
+     *
      * @param session
      * @param state
      * @param def
@@ -224,6 +227,7 @@ public class VersionManager {
     /**
      * Creates a new VersionImpl instance. this is usually called by
      * the {@link ItemManager}.
+     *
      * @param session
      * @param state
      * @param def
@@ -250,6 +254,7 @@ public class VersionManager {
     /**
      * invokes the checkin() on the persistent version manager and remaps the
      * newly created version objects.
+     *
      * @param node
      * @return
      * @throws RepositoryException
@@ -260,7 +265,7 @@ public class VersionManager {
 
         // invalidate predecessors 'sucessors' properties
         InternalVersion[] pred = version.getPredecessors();
-        for (int i=0; i<pred.length; i++) {
+        for (int i = 0; i < pred.length; i++) {
             onVersionModified(pred[i]);
         }
         return (Version) node.getSession().getNodeByUUID(version.getId());
@@ -269,6 +274,7 @@ public class VersionManager {
     /**
      * Called when a internal version has changed its internal structure, and
      * some of the properties has to be remapped to the content.
+     *
      * @param v
      * @throws RepositoryException
      */
@@ -285,6 +291,7 @@ public class VersionManager {
     /**
      * Called when a internal version history has changed its internal structure,
      * and the structure has to be remapped to the content.
+     *
      * @param vh
      * @throws RepositoryException
      */
@@ -295,6 +302,7 @@ public class VersionManager {
 
     /**
      * Maps the version history and it's versions to the content representation.
+     *
      * @param vh
      * @throws RepositoryException
      */
@@ -338,6 +346,7 @@ public class VersionManager {
 
     /**
      * Maps the internal version to its respective content representation
+     *
      * @param vhNode
      * @param version
      * @throws RepositoryException
@@ -376,6 +385,7 @@ public class VersionManager {
     /**
      * Maps those properties of the internal version to the content that might
      * change over time. such as labels and successors.
+     *
      * @param vNode
      * @param version
      * @throws RepositoryException
@@ -387,30 +397,30 @@ public class VersionManager {
         // add predecessors
         InternalVersion[] preds = version.getPredecessors();
         InternalValue[] predV = new InternalValue[preds.length];
-        for (int i=0; i<preds.length; i++) {
+        for (int i = 0; i < preds.length; i++) {
             predV[i] = InternalValue.create(new UUID(preds[i].getId()));
         }
         virtProvider.setPropertyValues(vNode, VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, predV);
 
         // add successors
-        InternalVersion[] succ= version.getSuccessors();
+        InternalVersion[] succ = version.getSuccessors();
         InternalValue[] succV = new InternalValue[succ.length];
-        for (int i=0; i<succ.length; i++) {
+        for (int i = 0; i < succ.length; i++) {
             succV[i] = InternalValue.create(new UUID(succ[i].getId()));
         }
         virtProvider.setPropertyValues(vNode, VersionManager.PROPNAME_SUCCESSORS, PropertyType.REFERENCE, succV);
     }
 
-    private void mapFrozenProperties(VirtualNodeState  node, InternalFrozenNode fNode)
+    private void mapFrozenProperties(VirtualNodeState node, InternalFrozenNode fNode)
             throws RepositoryException {
         try {
             // initialize the content
             PersistentProperty[] props = fNode.getFrozenProperties();
-            for (int i=0; i<props.length; i++) {
+            for (int i = 0; i < props.length; i++) {
                 virtProvider.setPropertyValues(node, props[i].getName(), props[i].getType(), props[i].getValues(), props[i].isMultiple());
             }
             InternalFreeze[] freezes = fNode.getFrozenChildNodes();
-            for (int i=0; i<freezes.length; i++) {
+            for (int i = 0; i < freezes.length; i++) {
                 if (freezes[i] instanceof InternalFrozenVersionHistory) {
                     InternalFrozenVersionHistory vh = (InternalFrozenVersionHistory) freezes[i];
                     VirtualNodeState fChild = virtProvider.addNode(node.getId(), vh.getName(), null, NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD);
@@ -428,6 +438,7 @@ public class VersionManager {
     /**
      * Maps the frozen content of an internal version to the content
      * representation.
+     *
      * @param parent
      * @param name
      * @param fNode
@@ -439,11 +450,11 @@ public class VersionManager {
 
             // initialize the content
             PersistentProperty[] props = fNode.getFrozenProperties();
-            for (int i=0; i<props.length; i++) {
+            for (int i = 0; i < props.length; i++) {
                 virtProvider.setPropertyValues(node, props[i].getName(), props[i].getType(), props[i].getValues(), props[i].isMultiple());
             }
             InternalFreeze[] freezes = fNode.getFrozenChildNodes();
-            for (int i=0; i<freezes.length; i++) {
+            for (int i = 0; i < freezes.length; i++) {
                 if (freezes[i] instanceof InternalFrozenVersionHistory) {
                     InternalFrozenVersionHistory vh = (InternalFrozenVersionHistory) freezes[i];
                     VirtualNodeState fChild = virtProvider.addNode(node.getId(), vh.getName(), null, NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD);
