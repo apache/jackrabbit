@@ -274,7 +274,7 @@
        <field-descriptor
          name="size"
          column="BLOB_SIZE"
-         jdbc-type="INTEGER"
+         jdbc-type="BIGINT"
       />
        <field-descriptor
          name="blobValue"
