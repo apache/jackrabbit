@@ -45,10 +45,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -77,15 +74,6 @@ public class RepositoryImpl implements Repository, SessionListener,
     // names of well known repository properties
     public static final String STATS_NODE_COUNT_PROPERTY = "jcr.repository.stats.nodes.count";
     public static final String STATS_PROP_COUNT_PROPERTY = "jcr.repository.stats.properties.count";
-
-    // pre-defined values of well known repository properties
-    // @todo update as necessary
-    private static final String SPEC_VERSION = "0.16.2";
-    private static final String SPEC_NAME = "Content Repository API for Java(TM) Technology Specification";
-    private static final String REP_VENDOR = "Apache Software Foundation";
-    private static final String REP_VENDOR_URL = "http://www.apache.org/";
-    private static final String REP_NAME = "Jackrabbit";
-    private static final String REP_VERSION = "0.16.2";
 
     private String rootNodeUUID;
 
@@ -545,26 +533,11 @@ public class RepositoryImpl implements Repository, SessionListener,
             repProps.clear();
             if (!propFile.exists() || propFile.length() == 0) {
                 // initialize properties with pre-defined values
-                repProps.setProperty(SPEC_VERSION_DESC, SPEC_VERSION);
-                repProps.setProperty(SPEC_NAME_DESC, SPEC_NAME);
-                repProps.setProperty(REP_VENDOR_DESC, REP_VENDOR);
-                repProps.setProperty(REP_VENDOR_URL_DESC, REP_VENDOR_URL);
-                repProps.setProperty(REP_NAME_DESC, REP_NAME);
-                repProps.setProperty(REP_VERSION_DESC, REP_VERSION);
+                InputStream in = RepositoryImpl.class.getResourceAsStream("repository.properties");
+                repProps.load(in);
+                in.close();
 
-                // @todo check repository descriptor values with current state of implementation
-                repProps.setProperty(LEVEL_1_SUPPORTED, "true");
-                repProps.setProperty(LEVEL_2_SUPPORTED, "true");
-                repProps.setProperty(OPTION_TRANSACTIONS_SUPPORTED, "true");
-                repProps.setProperty(OPTION_VERSIONING_SUPPORTED, "true");
-                repProps.setProperty(OPTION_OBSERVATION_SUPPORTED, "true");
-                repProps.setProperty(OPTION_LOCKING_SUPPORTED, "true");
-                repProps.setProperty(OPTION_QUERY_SQL_SUPPORTED, "true");
-                repProps.setProperty(QUERY_XPATH_POS_INDEX, "true");
-                repProps.setProperty(QUERY_XPATH_DOC_ORDER, "true");
-                repProps.setProperty(QUERY_JCRPATH, "true");
-                repProps.setProperty(QUERY_JCRSCORE, "true");
-
+                // set counts
                 repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
                 repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
 
@@ -729,7 +702,9 @@ public class RepositoryImpl implements Repository, SessionListener,
      * @see Repository#getDescriptorKeys()
      */
     public String[] getDescriptorKeys() {
-        return (String[]) repProps.keySet().toArray(new String[repProps.keySet().size()]);
+        String[] keys = (String[]) repProps.keySet().toArray(new String[repProps.keySet().size()]);
+        Arrays.sort(keys);
+        return keys;
     }
 
     //------------------------------------------------------< SessionListener >
