@@ -24,6 +24,7 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
+import javax.jcr.nodetype.ItemDef;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -34,6 +35,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -155,6 +157,20 @@ public interface LocalAdapterFactory {
      * @return local node type adapter
      */
     NodeType getNodeType(RemoteNodeType remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote item
+     * definition. Note that before calling this method, the client may want to
+     * introspect the remote item definition to determine whether to use the
+     * {@link #getNodeDef(RemoteNodeDef) getNodeDef} or
+     * {@link #getPropertyDef(RemotePropertyDef) getPropertyDef} method
+     * instead, as the adapter returned by this method will only cover
+     * the {@link ItemDef ItemDef} base interface.
+     *
+     * @param remote remote item definition
+     * @return local item definition adapter
+     */
+    ItemDef getItemDef(RemoteItemDef remote);
 
     /**
      * Factory method for creating a local adapter for a remote node

@@ -24,6 +24,7 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
+import javax.jcr.nodetype.ItemDef;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -34,6 +35,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -146,6 +148,15 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      */
     public NodeType getNodeType(RemoteNodeType remote) {
         return new ClientNodeType(remote, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientItemDef ClientItemDef} instance.
+     *
+     * {@inheritDoc}
+     */
+    public ItemDef getItemDef(RemoteItemDef remote) {
+        return new ClientItemDef(remote, this);
     }
 
     /**
