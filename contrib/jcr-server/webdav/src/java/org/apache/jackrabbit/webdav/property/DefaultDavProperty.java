@@ -17,6 +17,9 @@ package org.apache.jackrabbit.webdav.property;
 
 import org.apache.log4j.Logger;
 import org.jdom.Namespace;
+import org.jdom.Element;
+import org.jdom.Content;
+import org.jdom.Text;
 
 /**
  * <code>DefaultDavProperty</code>...
@@ -93,5 +96,45 @@ public class DefaultDavProperty extends AbstractDavProperty {
      */
     public Object getValue() {
         return value;
+    }
+
+    /**
+     * Create a new <code>DefaultDavProperty</code> instance from the given Xml
+     * element. Name and namespace of the element are building the {@link DavPropertyName},
+     * while the element's content forms the property value. The following logic
+     * is applied:
+     * <pre>
+     * - empty Element           -&gt; <code>null</code> value
+     * - single Text content     -&gt; <code>String</code> value
+     * - single non-Text content -&gt; Element.getContent(0) is used as value
+     * - other: List obtained from Element.getContent() is used as value
+     * </pre>
+     *
+     * @param propertyElement
+     * @return
+     */
+    public static DefaultDavProperty createFromXml(Element propertyElement) {
+	if (propertyElement == null) {
+	    throw new IllegalArgumentException("Cannot create a new DavProperty from a 'null' element.");
+	}
+	DavPropertyName name = DavPropertyName.createFromXml(propertyElement);
+	Object value;
+	int size = propertyElement.getContentSize();
+	switch (size) {
+	    case 0:
+		value = null;
+		break;
+	    case 1:
+		Content c = propertyElement.getContent(0);
+		if (c instanceof Text) {
+		    value = ((Text)c).getText();
+		} else {
+		    value = c;
+		}
+		break;
+	    default:
+		value = propertyElement.getContent();
+	}
+	return new DefaultDavProperty(name, value, false);
     }
 }

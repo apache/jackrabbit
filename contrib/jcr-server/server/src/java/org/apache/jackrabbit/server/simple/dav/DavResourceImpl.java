@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.server.simple.dav;
 
 import javax.jcr.*;
+import javax.jcr.lock.Lock;
 import java.util.*;
 import java.io.*;
 
@@ -304,6 +305,9 @@ public class DavResourceImpl implements DavResource {
         if (!exists() || in == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
+	if (isLocked(this)) {
+            throw new DavException(DavServletResponse.SC_LOCKED);
+        }
 
         try {
             String fileName = member.getDisplayName();
@@ -329,6 +333,9 @@ public class DavResourceImpl implements DavResource {
 		importFile(file, in, "application/octet-stream");
 	    }
             session.getRepositorySession().save();
+        } catch (ItemExistsException e) {
+            // according to RFC 2518: MKCOL only possible on non-existing/deleted resource
+            throw new JcrDavException(e, DavServletResponse.SC_METHOD_NOT_ALLOWED);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         } catch (IOException e) {
@@ -375,6 +382,9 @@ public class DavResourceImpl implements DavResource {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
+	if (isLocked(this)) {
+            throw new DavException(DavServletResponse.SC_LOCKED);
+        }
         try {
             node.addNode(member.getDisplayName(), "nt:folder");
             node.save();
@@ -396,16 +406,12 @@ public class DavResourceImpl implements DavResource {
 
         try {
             // make sure, non-jcr locks are removed.
-	    /*
-	     do not use jcr locks until implemented
-
             if (!isJsrLockable()) {
                 ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
                 if (lock != null) {
                     lockManager.releaseLock(lock.getToken(), member);
                 }
             }
-	    */
 	    ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
 	    if (lock != null && lockManager.hasLock(lock.getToken(), member)) {
 		lockManager.releaseLock(lock.getToken(), member);
@@ -453,6 +459,9 @@ public class DavResourceImpl implements DavResource {
         }
         try {
             session.getRepositorySession().getWorkspace().copy(getResourcePath(), destination.getResourcePath());
+        } catch (PathNotFoundException e) {
+            // according to rfc 2518: missing parent
+            throw new DavException(DavServletResponse.SC_CONFLICT, e.getMessage());
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -482,10 +491,7 @@ public class DavResourceImpl implements DavResource {
         ActiveLock lock = null;
         if (exists() && Type.WRITE.equals(type) && Scope.EXCLUSIVE.equals(scope)) {
             // try to retrieve the repository lock information first
-	    /*
-	    do not use jcr locks until implemented
-
-            if (isJsrLockable()) {
+	    if (isJsrLockable()) {
                 try {
                     Lock jcrLock = node.getLock();
                     if (jcrLock != null && jcrLock.isLive()) {
@@ -499,8 +505,6 @@ public class DavResourceImpl implements DavResource {
                 // not-jcr lockable >> check for webdav lock
                 lock = lockManager.getLock(type, scope, this);
             }
-	    */
-	    lock = lockManager.getLock(type, scope, this);
         }
         return lock;
     }
@@ -518,9 +522,6 @@ public class DavResourceImpl implements DavResource {
     public ActiveLock lock(LockInfo lockInfo) throws DavException {
 	ActiveLock lock = null;
 	if (isLockable(lockInfo.getType(), lockInfo.getScope())) {
-	    /*
-	    do not use jcr lock until implemented
-
 	    if (isJsrLockable()) {
 		try {
 		    // try to execute the lock operation
@@ -535,8 +536,8 @@ public class DavResourceImpl implements DavResource {
 		// create a new lock which creates a random lock token
 		lock = lockManager.createLock(lockInfo, this);
 	    }
-	    */
-	    lock = lockManager.createLock(lockInfo, this);
+	} else {
+	    throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Unsupported lock type or scope.");
 	}
 	return lock;
     }
@@ -548,7 +549,6 @@ public class DavResourceImpl implements DavResource {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-
         /* since lock is always has infinite timeout >> no extra refresh needed
         return a lockdiscovery with the lock-info and the default scope and type */
         ActiveLock lock = getLock(lockInfo.getType(), lockInfo.getScope());

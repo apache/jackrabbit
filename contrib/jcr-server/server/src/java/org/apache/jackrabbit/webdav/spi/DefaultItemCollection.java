@@ -659,17 +659,15 @@ public class DefaultItemCollection extends AbstractItemResource
                 log.warn("Error while accessing jcr:created property");
             }
 
-            // add jcr-specific resource properties: primary-nodetype and mixin-nodetypes
-            try {
+            // add node-specific resource properties
+	    try {
                 properties.add(new NodeTypeProperty(JCR_PRIMARYNODETYPE, n.getPrimaryNodeType(), false));
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
                 properties.add(new DefaultDavProperty(JCR_INDEX, new Integer(n.getIndex())));
-                addHrefProperty(JCR_REFERENCES, n.getReferences(), false);
+		addHrefProperty(JCR_REFERENCES, n.getReferences(), false);
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve primary nodetype property: " + e.getMessage());
             }
-
-            // jcr-specific primaryitem property
             try {
                 Item primaryItem = n.getPrimaryItem();
                 addHrefProperty(JCR_PRIMARYITEM, new Item[] {primaryItem}, false);

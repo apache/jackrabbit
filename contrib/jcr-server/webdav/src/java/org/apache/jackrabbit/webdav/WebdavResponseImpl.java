@@ -122,7 +122,7 @@ public class WebdavResponseImpl implements WebdavResponse {
         if (xmlDoc != null) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             // Write dom tree into byte array output stream
-            XMLOutputter xmli = new XMLOutputter(Format.getPrettyFormat());
+            XMLOutputter xmli = new XMLOutputter(Format.getRawFormat());
             xmli.output(xmlDoc, out);
             byte[] bytes = out.toByteArray();
             httpResponse.setContentType("text/xml; charset=UTF-8");

@@ -64,7 +64,10 @@ public class NodeTypeProperty extends AbstractDavProperty {
                 }
             }
             value = (NodeTypeElement[]) ntElemList.toArray(new NodeTypeElement[ntElemList.size()]);
-        } else {
+        } else if (property.getValue() instanceof Element) {
+	    NodeTypeElement ntElem = new NodeTypeElement((Element)property.getValue());
+	    value = new NodeTypeElement [] {ntElem};
+	} else {
             value = new NodeTypeElement[0];
         }
     }

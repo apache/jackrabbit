@@ -49,7 +49,7 @@ import java.security.Principal;
 /**
  * <code>WebdavRequestImpl</code>...
  */
-public class WebdavRequestImpl implements WebdavRequest {
+public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
     private static Logger log = Logger.getLogger(WebdavRequestImpl.class);
 
@@ -60,7 +60,7 @@ public class WebdavRequestImpl implements WebdavRequest {
 
     private DavSession session;
 
-    private int propfindType = DavConstants.PROPFIND_ALL_PROP;
+    private int propfindType = PROPFIND_ALL_PROP;
     private DavPropertyNameSet propfindProps;
     private DavPropertySet proppatchSet;
     private DavPropertyNameSet proppatchRemove;
@@ -131,11 +131,11 @@ public class WebdavRequestImpl implements WebdavRequest {
      * resource.
      *
      * @return path of the destination resource.
-     * @see DavConstants#HEADER_DESTINATION
+     * @see #HEADER_DESTINATION
      * @see DavServletRequest#getDestinationLocator
      */
     public DavResourceLocator getDestinationLocator() {
-        String destination = httpRequest.getHeader(DavConstants.HEADER_DESTINATION);
+        String destination = httpRequest.getHeader(HEADER_DESTINATION);
         if (destination != null) {
 	    try {
 		URI uri = new URI(destination);
@@ -164,13 +164,13 @@ public class WebdavRequestImpl implements WebdavRequest {
      * Return true if the overwrite header does not inhibit overwriting.
      *
      * @return true if the overwrite header requests 'overwriting'
-     * @see DavConstants#HEADER_OVERWRITE
+     * @see #HEADER_OVERWRITE
      * @see DavServletRequest#isOverwrite()
      */
     public boolean isOverwrite() {
 	boolean doOverwrite = true;
-	String overwriteHeader = httpRequest.getHeader(DavConstants.HEADER_OVERWRITE);
-	if (overwriteHeader != null && !overwriteHeader.equalsIgnoreCase(DavConstants.NO_OVERWRITE)){
+	String overwriteHeader = httpRequest.getHeader(HEADER_OVERWRITE);
+	if (overwriteHeader != null && !overwriteHeader.equalsIgnoreCase(NO_OVERWRITE)){
 	    doOverwrite = false;
 	}
 	return doOverwrite;
@@ -180,14 +180,14 @@ public class WebdavRequestImpl implements WebdavRequest {
      * @see DavServletRequest#getDepth(int)
      */
     public int getDepth(int defaultValue) {
-	return DepthHeader.parse(httpRequest.getHeader(DavConstants.HEADER_DEPTH), defaultValue).getDepth();
+	return DepthHeader.parse(httpRequest.getHeader(HEADER_DEPTH), defaultValue).getDepth();
     }
 
     /**
      * @see DavServletRequest#getDepth()
      */
     public int getDepth() {
-        return getDepth(DavConstants.DEPTH_INFINITY);
+        return getDepth(DEPTH_INFINITY);
     }
 
     /**
@@ -201,8 +201,8 @@ public class WebdavRequestImpl implements WebdavRequest {
      * @see DavServletRequest#getTimeout()
      */
     public long getTimeout() {
-	String timeoutStr = httpRequest.getHeader(DavConstants.HEADER_TIMEOUT);
-	long timeout = DavConstants.UNDEFINED_TIMEOUT;
+	String timeoutStr = httpRequest.getHeader(HEADER_TIMEOUT);
+	long timeout = UNDEFINED_TIMEOUT;
 	if (timeoutStr != null && timeoutStr.length() > 0) {
 	    int secondsInd = timeoutStr.indexOf("Second-");
 	    if (secondsInd >= 0) {
@@ -217,8 +217,8 @@ public class WebdavRequestImpl implements WebdavRequest {
 		    // ignore an let the lock define the default timeout
                     log.error("Invalid timeout format: "+timeoutStr);
 		}
-	    } else if (timeoutStr.equalsIgnoreCase(DavConstants.TIMEOUT_INFINITE)) {
-		timeout = DavConstants.INFINITE_TIMEOUT;
+	    } else if (timeoutStr.equalsIgnoreCase(TIMEOUT_INFINITE)) {
+		timeout = INFINITE_TIMEOUT;
 	    }
 	}
 	return timeout;
@@ -229,11 +229,11 @@ public class WebdavRequestImpl implements WebdavRequest {
      *
      * @return String representing the lock token sent in the Lock-Token header.
      * @throws IllegalArgumentException If the value has not the correct format.
-     * @see DavConstants#HEADER_LOCK_TOKEN
+     * @see #HEADER_LOCK_TOKEN
      * @see DavServletRequest#getLockToken()
      */
     public String getLockToken() {
-	return getCodedURLHeader(DavConstants.HEADER_LOCK_TOKEN);
+	return getCodedURLHeader(HEADER_LOCK_TOKEN);
     }
 
     /**
@@ -260,8 +260,7 @@ public class WebdavRequestImpl implements WebdavRequest {
     /**
      * Returns the type of PROPFIND as indicated by the request body.
      *
-     * @return type of the PROPFIND request. Default value is
-     * {@link DavConstants#PROPFIND_ALL_PROP allprops}
+     * @return type of the PROPFIND request. Default value is {@link #PROPFIND_ALL_PROP allprops}
      * @see DavServletRequest#getPropFindType()
      */
     public int getPropFindType() {
@@ -305,7 +304,7 @@ public class WebdavRequestImpl implements WebdavRequest {
 
 	// propfind httpRequest with invalid body >> treat as if empty body
 	Element root = requestDocument.getRootElement();
-	if (!root.getName().equals(DavConstants.XML_PROPFIND)) {
+	if (!root.getName().equals(XML_PROPFIND)) {
 	    log.info("PropFind-Request has no <profind> tag.");
 	    return;
 	}
@@ -314,15 +313,15 @@ public class WebdavRequestImpl implements WebdavRequest {
 	for (int i = 0; i < childList.size(); i++) {
 	    Element child = (Element) childList.get(i);
 	    String nodeName = child.getName();
-	    if (DavConstants.XML_PROP.equals(nodeName)) {
-		propfindType = DavConstants.PROPFIND_BY_PROPERTY;
+	    if (XML_PROP.equals(nodeName)) {
+		propfindType = PROPFIND_BY_PROPERTY;
 		propfindProps = new DavPropertyNameSet(child);
                 break;
-	    } else if (DavConstants.XML_PROPNAME.equals(nodeName)) {
-		propfindType = DavConstants.PROPFIND_PROPERTY_NAMES;
+	    } else if (XML_PROPNAME.equals(nodeName)) {
+		propfindType = PROPFIND_PROPERTY_NAMES;
                 break;
-	    } else if (DavConstants.XML_ALLPROP.equals(nodeName)) {
-		propfindType = DavConstants.PROPFIND_ALL_PROP;
+	    } else if (XML_ALLPROP.equals(nodeName)) {
+		propfindType = PROPFIND_ALL_PROP;
                 break;
 	    }
 	}
@@ -372,35 +371,35 @@ public class WebdavRequestImpl implements WebdavRequest {
         }
 
         Element root = requestDocument.getRootElement();
-        if (!root.getName().equals(DavConstants.XML_PROPERTYUPDATE)) {
+        if (!root.getName().equals(XML_PROPERTYUPDATE)) {
             // we should also check for correct namespace
             log.warn("PropPatch-Request has no <propertyupdate> tag.");
             return;
         }
 
-        List setList = root.getChildren(DavConstants.XML_SET, DavConstants.NAMESPACE);
+        List setList = root.getChildren(XML_SET, NAMESPACE);
         if (!setList.isEmpty()) {
             Iterator setIter = setList.iterator();
             while (setIter.hasNext()) {
-                Element propElem = ((Element) setIter.next()).getChild(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-                List properties = propElem.getChildren();
-                for (int i = 0; i < properties.size(); i++) {
-                    Element property = (Element) properties.get(i);
-                    proppatchSet.add(new DefaultDavProperty(property.getName(), property.getContent(), property.getNamespace()));
+                Element propElem = ((Element) setIter.next()).getChild(XML_PROP, NAMESPACE);
+                Iterator it = propElem.getChildren().iterator();
+                while (it.hasNext()) {
+                    Element propertyElem = (Element) it.next();
+                    proppatchSet.add(DefaultDavProperty.createFromXml(propertyElem));
                 }
             }
         }
 
         // get <remove> properties
-        List removeList = root.getChildren(DavConstants.XML_REMOVE, DavConstants.NAMESPACE);
+        List removeList = root.getChildren(XML_REMOVE, NAMESPACE);
         if (!removeList.isEmpty()) {
             Iterator removeIter = removeList.iterator();
             while (removeIter.hasNext()) {
-                Element propElem = ((Element) removeIter.next()).getChild(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-                Iterator propIter = propElem.getChildren().iterator();
-                while (propIter.hasNext()) {
-                    Element property = (Element) propIter.next();
-                    proppatchRemove.add(DavPropertyName.create(property.getName(), property.getNamespace()));
+                Element propElem = ((Element) removeIter.next()).getChild(XML_PROP, NAMESPACE);
+                Iterator it = propElem.getChildren().iterator();
+                while (it.hasNext()) {
+                    Element propertyElem = (Element) it.next();
+                    proppatchRemove.add(DavPropertyName.createFromXml(propertyElem));
                 }
             }
         }
@@ -419,13 +418,13 @@ public class WebdavRequestImpl implements WebdavRequest {
      */
     public LockInfo getLockInfo() {
         LockInfo lockInfo = null;
-        boolean isDeep = getDepth(DavConstants.DEPTH_INFINITY) == DavConstants.DEPTH_INFINITY;
+        boolean isDeep = (getDepth(DEPTH_INFINITY) == DEPTH_INFINITY);
 	Document requestDocument = getRequestDocument();
         // check if XML request body is present. It SHOULD have one for
 	// 'create Lock' request and missing for a 'refresh Lock' request
 	if (requestDocument != null) {
 	    Element root = requestDocument.getRootElement();
-	    if (root.getName().equals(DavConstants.XML_LOCKINFO)) {
+	    if (root.getName().equals(XML_LOCKINFO)) {
                 lockInfo = new LockInfo(root, getTimeout(), isDeep);
 	    } else {
 		log.debug("Lock-Request has no <lockinfo> tag.");
@@ -554,8 +553,8 @@ public class WebdavRequestImpl implements WebdavRequest {
         if (requestDocument != null) {
             Element root = requestDocument.getRootElement();
             if (ObservationConstants.XML_SUBSCRIPTIONINFO.equals(root.getName())) {
-                int depth = getDepth(DavConstants.DEPTH_0);
-                return new SubscriptionInfo(root, getTimeout(), depth == DavConstants.DEPTH_INFINITY);
+                int depth = getDepth(DEPTH_0);
+                return new SubscriptionInfo(root, getTimeout(), depth == DEPTH_INFINITY);
             }
         }
         return null;
@@ -640,7 +639,7 @@ public class WebdavRequestImpl implements WebdavRequest {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
             Element root = requestDocument.getRootElement();
-            int depth = getDepth(DavConstants.DEPTH_0);
+            int depth = getDepth(DEPTH_0);
             try {
                lInfo = new LabelInfo(root, depth);
             } catch (IllegalArgumentException e) {
@@ -689,7 +688,7 @@ public class WebdavRequestImpl implements WebdavRequest {
         ReportInfo rInfo = null;
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
-            rInfo = new ReportInfo(requestDocument.getRootElement(), getDepth(DavConstants.DEPTH_0));
+            rInfo = new ReportInfo(requestDocument.getRootElement(), getDepth(DEPTH_0));
         }
         return rInfo;
     }

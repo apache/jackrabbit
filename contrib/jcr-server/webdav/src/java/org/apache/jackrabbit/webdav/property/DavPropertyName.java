@@ -97,6 +97,25 @@ public class DavPropertyName implements DavConstants {
     }
 
     /**
+     * Create a new <code>DavPropertyName</code> with the name and namespace
+     * of the given Xml element.
+     *
+     * @param nameElement
+     * @return <code>DavPropertyName</code> instance
+     */
+    public synchronized static DavPropertyName createFromXml(Element nameElement) {
+	if (nameElement == null) {
+	    throw new IllegalArgumentException("Cannot build DavPropertyName from a 'null' element.");
+	}
+	Namespace ns = nameElement.getNamespace();
+	if (ns == null) {
+	    return create(nameElement.getName());
+	} else {
+	    return create(nameElement.getName(), ns);
+	}
+    }
+
+    /**
      * Creates a new <code>DavPropertyName</code> with the given name and
      * Namespace.
      *
@@ -158,10 +177,11 @@ public class DavPropertyName implements DavConstants {
 
     /**
      * Returns a string representation of this property suitable for debugging
+     *
      * @return a human readable string representation
      */
     public String toString() {
-        return name + " (" + namespace + ")";
+        return "{" + namespace.getURI() + "}" + name;
     }
 
     /**

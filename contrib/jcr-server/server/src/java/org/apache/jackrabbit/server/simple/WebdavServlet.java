@@ -69,7 +69,14 @@ public class WebdavServlet extends AbstractWebdavServlet {
         super.init();
 
 	resourcePathPrefix = getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX);
-	log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = " + resourcePathPrefix);
+	if (resourcePathPrefix == null) {
+	    log.debug("Missing path prefix > setting to empty string.");
+	    resourcePathPrefix = "";
+	} else if (resourcePathPrefix.endsWith("/")) {
+	    log.debug("Path prefix ends with '/' > removing trailing slash.");
+	    resourcePathPrefix = resourcePathPrefix.substring(0, resourcePathPrefix.length()-1);
+	}
+	log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = '" + resourcePathPrefix + "'");
 
 	lockManager = new SimpleLockManager();
         resourceFactory = new ResourceFactoryImpl(lockManager);

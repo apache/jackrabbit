@@ -17,8 +17,13 @@ package org.apache.jackrabbit.webdav.spi;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.spi.version.report.RegisteredNamespacesReport;
+import org.apache.jackrabbit.webdav.spi.version.report.NodeTypesReport;
+import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.util.*;
 import java.io.InputStream;
 
@@ -154,5 +159,44 @@ public class RootCollection extends AbstractResource implements DavResource {
      */
     public void removeMember(DavResource member) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * @see AbstractResource#initLockSupport()
+     */
+    protected void initLockSupport() {
+        // no locking supported
+    }
+
+    /**
+     * @see AbstractResource#initSupportedReports()
+     */
+    protected void initSupportedReports() {
+        if (exists()) {
+            supportedReports = new SupportedReportSetProperty(new ReportType[] {
+	    ReportType.EXPAND_PROPERTY,
+	    NodeTypesReport.NODETYPES_REPORT,
+	    RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT
+            });
+        }
+    }
+
+    /**
+     * Since the root resource does not represent a repository item and therefore
+     * is not member of a workspace resource, the workspace href is calculated
+     * from the workspace name retrieved from the underlaying repository session.
+     *
+     * @return workspace href build from workspace name.
+     * @see AbstractResource#getWorkspaceHref()
+     */
+    protected String getWorkspaceHref() {
+	Session session = this.getRepositorySession();
+	if (session != null) {
+	    String workspaceName = session.getWorkspace().getName();
+	    DavResourceLocator loc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), "/"+workspaceName, ItemResourceConstants.ROOT_ITEM_PATH);
+	    return loc.getHref(true);
+	}
+	return null;
     }
 }

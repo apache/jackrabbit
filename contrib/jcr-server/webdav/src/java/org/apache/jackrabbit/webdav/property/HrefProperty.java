@@ -145,6 +145,6 @@ public class HrefProperty extends AbstractDavProperty {
      * @return
      */
     public List getHrefs() {
-        return Arrays.asList(value);
+        return (value != null) ? Arrays.asList(value) : new ArrayList();
     }
 }

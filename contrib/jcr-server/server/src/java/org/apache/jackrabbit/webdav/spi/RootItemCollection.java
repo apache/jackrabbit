@@ -17,6 +17,12 @@ package org.apache.jackrabbit.webdav.spi;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.jdom.Element;
+
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>RootItemCollection</code> represents the root node of the underlaying
@@ -67,5 +73,33 @@ public class RootItemCollection extends VersionControlledItemCollection {
             log.error("Unexpected error while retrieving collection: " + e.getMessage());
         }
         return collection;
+    }
+
+    public void setProperty(DavProperty property) throws DavException {
+	if (ItemResourceConstants.JCR_NAMESPACES.equals(property.getName())) {
+	    // todo: register and unregister namespaces
+	} else {
+	    super.setProperty(property);
+	}
+    }
+
+    //--------------------------------------------------------------------------
+    protected void initProperties() {
+	super.initProperties();
+	try {
+	    // init workspace specific properties
+	    NamespaceRegistry nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
+	    String[] prefixes = nsReg.getPrefixes();
+	    Element[] nsElems = new Element[prefixes.length];
+	    for (int i = 0; i < prefixes.length; i++) {
+		Element elem = new Element(XML_NAMESPACE, NAMESPACE);
+		elem.addContent(new Element(XML_NSPREFIX).setText(prefixes[i]));
+		elem.addContent(new Element(XML_NSURI)).setText(nsReg.getURI(prefixes[i]));
+		nsElems[i] = elem;
+	    }
+	    properties.add(new DefaultDavProperty(ItemResourceConstants.JCR_NAMESPACES, nsElems, false));
+	} catch (RepositoryException e) {
+	    log.error("Failed to access NamespaceRegistry from the session/workspace: " + e.getMessage());
+	}
     }
 }
