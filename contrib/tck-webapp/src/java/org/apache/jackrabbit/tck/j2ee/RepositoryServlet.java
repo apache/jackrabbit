@@ -143,13 +143,15 @@ public class RepositoryServlet extends HttpServlet {
 
             log_info("JSR170 RI Repository initialized.");
 
-            // set jaas config file
+            // set jaas config file path
             String jaasConfigFile = getServletConfig().getInitParameter(JAAS_CONFIG_FILE);
-            if (jaasConfigFile == null) {
-                jaasConfigFile = "etc/jaas.config";
+            if (jaasConfigFile != null && !"".equals(jaasConfigFile)) {
+                System.setProperty("java.security.auth.login.config", jaasConfigFile);
+                log_info("JAAS config path set by the tck webapp. java.security.auth.login.config = " + jaasConfigFile);
+            } else {
+                log_info("No JAAS config path set by the tck webapp.");
             }
-            System.setProperty("java.security.auth.login.config", jaasConfigFile);
-            log_info("JAAS config set");
+
 
             // set user id and password to read/write test results and configuration
             uid = getServletConfig().getInitParameter(USER_ID);

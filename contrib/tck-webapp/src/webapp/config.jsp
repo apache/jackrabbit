@@ -59,9 +59,23 @@ String mode = request.getParameter("mode");
                 <td colspan="3">
                     <%
                     if (mode == null || !mode.equals("view")) {
+                        // check for property additions
+                        String newid = request.getParameter("newid");
+                        String newvalue = request.getParameter("newvalue");
+                        if (newvalue != null && !"".equals(newvalue) && newid != null && !"".equals(newid)) {
+                            WebAppTestConfig.saveProperty(newid, newvalue, repSession);
+                        }
+
+                        // reset to default configuration (from properties file) if requested
+                        String resetConfig = request.getParameter("resetconfig");
+                        if (resetConfig != null && "yes".equals(resetConfig)) {
+                            WebAppTestConfig.resetConfiguration();
+                        }
+
+                        // load current configuration
                         Map props = WebAppTestConfig.getCurrentConfig();
                         %>
-                        <form name="test" action="graph.jsp?" target="graph" method="post">
+                        <form name="test" action="graph.jsp" target="graph" method="post">
                             <table width="100%">
                                 <tr><th class="content" width="40%" >Default Configuration</td><td width="60%" class="content" align="right"><input type="submit" value="start" class="submit"><input type="hidden" name="mode" value="testnow"></td></tr>
                                 <%
@@ -93,9 +107,11 @@ String mode = request.getParameter("mode");
                                             String title = (ckey.length() > 80) ? ckey.substring(0, 80) + " " + ckey.substring(81) : ckey;
                                             %><tr><td class="graph"><%= title %></td><td class="graph"><input class="input" name="<%= ckey %>" value="<%= configs.get(ckey) %>"></td><%
                                         }
+                                        %><tr><td class="graph" valign="top"><input class="input" id="newid<%= key  %>"></td><td class="graph"><input class="input" id="newvalue<%= key  %>"></td></tr>
+                                          <tr><td class="content" colspan="2" align="right"><input type="button" value="add" class="submit" onclick="window.location.href='config.jsp?newid='+document.getElementById('newid<%= key  %>').value+'&newvalue='+document.getElementById('newvalue<%= key  %>').value;"></td></tr><%
                                     }
                                 }
-                                %>
+                                %><tr><td class="content">Set default configuration</td></td><td class="content" align="right"><input type="button" value="reset" class="submit" onclick="window.location.href='config.jsp?resetconfig=yes';"></td></tr>
                             </table>
                         </form>
                     <%

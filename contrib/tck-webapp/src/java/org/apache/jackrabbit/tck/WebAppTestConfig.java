@@ -20,9 +20,7 @@ import org.apache.jackrabbit.tck.j2ee.RepositoryServlet;
 import org.apache.jackrabbit.test.JNDIRepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStub;
 
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
+import javax.jcr.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.io.InputStream;
@@ -65,16 +63,13 @@ public class WebAppTestConfig {
     public static Map getConfig() {
         Map config = new HashMap();
         try {
-            Iterator allPropNames = getOriConfig().keySet().iterator();
-
             Session repSession = RepositoryServlet.getSession();
             Node configNode = repSession.getRootNode().getNode("testconfig");
+            PropertyIterator pitr = configNode.getProperties();
 
-            while (allPropNames.hasNext()) {
-                String pName = (String) allPropNames.next();
-                if (configNode.hasProperty(pName)) {
-                    config.put(pName, configNode.getProperty(pName).getString());
-                }
+            while (pitr.hasNext()) {
+                Property p = pitr.nextProperty();
+                config.put(p.getName(), p.getString());
             }
         } catch (RepositoryException e) {
             return new HashMap();
@@ -124,12 +119,36 @@ public class WebAppTestConfig {
         }
 
         // save config entries
-        Iterator allPropNames = getOriConfig().keySet().iterator();
+        Iterator allPropNames = getCurrentConfig().keySet().iterator();
 
         while (allPropNames.hasNext()) {
             String pName = (String) allPropNames.next();
             setEntry(pName, request, testConfig);
         }
+
+        // save
+        testConfig.save();
+    }
+
+    /**
+     * This method saves a single property
+     *
+     * @param propName property name
+     * @param propValue property value
+     * @param repSession session
+     * @throws RepositoryException
+     */
+    public static void saveProperty(String propName, String propValue, Session repSession) throws RepositoryException {
+        // create config node if not yet existing
+        Node testConfig;
+        if (repSession.getRootNode().hasNode("testconfig")) {
+            testConfig = repSession.getRootNode().getNode("testconfig");
+        } else {
+            testConfig = repSession.getRootNode().addNode("testconfig", "nt:unstructured");
+            repSession.getRootNode().save();
+        }
+
+        testConfig.setProperty(propName, propValue);
 
         // save
         testConfig.save();
@@ -220,5 +239,18 @@ public class WebAppTestConfig {
             }
         }
         return props;
+    }
+
+    /**
+     * Removes the custom config entries
+     *
+     * @throws RepositoryException
+     */
+    public static void resetConfiguration() throws RepositoryException {
+        Session repSession = RepositoryServlet.getSession();
+        if (repSession.getRootNode().hasNode("testconfig")) {
+            repSession.getRootNode().getNode("testconfig").remove();
+        }
+        repSession.getRootNode().save();
     }
 }
