@@ -58,6 +58,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(CanAddChildNodeCallWithNodeTypeTest.class);
         suite.addTestSuite(CanAddChildNodeCallWithoutNodeTypeTest.class);
 
+        suite.addTestSuite(CanRemoveItemTest.class);
+
         return suite;
     }
 }

@@ -45,6 +45,25 @@ import java.text.ParseException;
  */
 class NodeTypeUtil {
 
+    /**
+     * Locate a child node def parsing all node types
+     *
+     * @param session:      the session to access the node types
+     * @param regardDefaultPrimaryType:
+     *                      if true, the default primary type of the returned
+     *                      <code>NodeDef</code> is according to param
+     *                      <code>defaultPrimaryType</code>. If false, the returned
+     *                      <code>NodeDef</code> might have a default primary type
+     *                      or not.
+     * @param defaultPrimaryType:
+     *                      if <code>regardDefaultPrimaryType</code> is true:
+     *                      if true, the returned <code>NodeDef</code> has a
+     *                      default primary type, else not
+     * @param residual:     if true, the returned <code>NodeDef</code> is of
+     *                      the residual name "*", else not
+     * @return
+     * @throws RepositoryException
+     */
     public static NodeDef locateChildNodeDef(Session session,
                                              boolean regardDefaultPrimaryType,
                                              boolean defaultPrimaryType,
@@ -99,6 +118,56 @@ class NodeTypeUtil {
                         overjump = false;
                         break;
                     }
+                }
+
+                return nodeDef;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Locate a child node def parsing all node types
+     *
+     * @param session:      the session to access the node types
+     * @param isProtected:  if true, the returned <code>NodeDef</code> is
+     *                      protected, else not
+     * @param mandatory:    if true, the returned <code>NodeDef</code> is
+     *                      mandatory, else not
+     * @return the first <code>NodeDef</code> found fitting the
+     *         requirements
+     */
+    public static NodeDef locateChildNodeDef(Session session,
+                                             boolean isProtected,
+                                             boolean mandatory)
+        throws RepositoryException {
+
+        NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
+        NodeTypeIterator types = manager.getAllNodeTypes();
+
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            NodeDef nodeDefs[] = type.getDeclaredChildNodeDefs();
+
+            for (int i = 0; i < nodeDefs.length; i++) {
+                NodeDef nodeDef = nodeDefs[i];
+
+                if (nodeDef.getName().equals("*")) {
+                    continue;
+                }
+
+                if (isProtected && !nodeDef.isProtected()) {
+                    continue;
+                }
+                if (!isProtected && nodeDef.isProtected()) {
+                    continue;
+                }
+
+                if (mandatory && !nodeDef.isMandatory()) {
+                    continue;
+                }
+                if (!mandatory && nodeDef.isMandatory()) {
+                    continue;
                 }
 
                 return nodeDef;
@@ -183,6 +252,59 @@ class NodeTypeUtil {
                 }
 
                 if (!residual && propDef.getName().equals("*")) {
+                    continue;
+                }
+
+                if (residual && !propDef.getName().equals("*")) {
+                    continue;
+                }
+
+                return propDef;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Locate a property def parsing all node types
+     *
+     * @param session:      the session to access the node types
+     * @param isProtected:  if true, the returned <code>PropertyDef</code> is
+     *                      protected, else not
+     * @param mandatory:    if true, the returned <code>PropertyDef</code> is
+     *                      mandatory, else not
+     * @return the first <code>PropertyDef</code> found fitting the
+     *         requirements
+     */
+    public static PropertyDef locatePropertyDef(Session session,
+                                                boolean isProtected,
+                                                boolean mandatory)
+            throws RepositoryException {
+
+        NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
+        NodeTypeIterator types = manager.getAllNodeTypes();
+
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            PropertyDef propDefs[] = type.getDeclaredPropertyDefs();
+            for (int i = 0; i < propDefs.length; i++) {
+                PropertyDef propDef = propDefs[i];
+
+                if (propDef.getName().equals("*")) {
+                    continue;
+                }
+
+                if (isProtected && !propDef.isProtected()) {
+                    continue;
+                }
+                if (!isProtected && propDef.isProtected()) {
+                    continue;
+                }
+
+                if (mandatory && !propDef.isMandatory()) {
+                    continue;
+                }
+                if (!mandatory && propDef.isMandatory()) {
                     continue;
                 }
 
