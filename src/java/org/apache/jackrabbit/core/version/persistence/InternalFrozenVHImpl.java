@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.version.*;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.version.*;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;

@@ -18,29 +18,28 @@ package org.apache.jackrabbit.core;
 
 import javax.jcr.NamespaceException;
 import java.io.Serializable;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <code>QName</code> represents the qualified name of a repository item
  * (i.e. <code>Node</code> or <code>Property</code>) or a node type.
- * <p>
+ * <p/>
  * The external string representation is specified as follows:
  * <xmp>
- *           name ::= [prefix ':'] simplename
- *         prefix ::= << Any valid XML Name >>
- *     simplename ::= nonspacestring [[string] nonspacestring]
- *         string ::= [string] char
- *           char ::= nonspace | space
+ * name ::= [prefix ':'] simplename
+ * prefix ::= << Any valid XML Name >>
+ * simplename ::= nonspacestring [[string] nonspacestring]
+ * string ::= [string] char
+ * char ::= nonspace | space
  * nonspacestring ::= [nonspacestring] nonspace
- *          space ::= << ' ' (the space character) >>
- *       nonspace ::= << Any Unicode character except
- *                    '/', ':', '[', ']', '*',
- *                    '''(the single quote),
- *                    '"'(the double quote),
- *                    any whitespace character >>
+ * space ::= << ' ' (the space character) >>
+ * nonspace ::= << Any Unicode character except
+ * '/', ':', '[', ']', '*',
+ * '''(the single quote),
+ * '"'(the double quote),
+ * any whitespace character >>
  * </xmp>
- *
  */
 public class QName implements Cloneable, Comparable, Serializable {
 
@@ -93,7 +92,7 @@ public class QName implements Cloneable, Comparable, Serializable {
      */
     public static QName fromJCRName(String rawName, NamespaceResolver resolver)
             throws IllegalNameException, UnknownPrefixException {
-        if (resolver==null) {
+        if (resolver == null) {
             throw new NullPointerException("resolver must not be null");
         }
         return internalFromJCRName(rawName, resolver);
@@ -157,7 +156,7 @@ public class QName implements Cloneable, Comparable, Serializable {
      * internally just to check the format of the given string by passing a
      * <code>null</code> value as <code>resolver</code>
      *
-     * @param rawName the jcr name to parse
+     * @param rawName  the jcr name to parse
      * @param resolver the namespace resolver or <code>null</code>
      * @return a new resolved QName
      * @throws IllegalNameException
@@ -192,7 +191,7 @@ public class QName implements Cloneable, Comparable, Serializable {
             throw new IllegalNameException("'" + rawName + "' is not a valid name");
         }
 
-        if (resolver==null) {
+        if (resolver == null) {
             return null;
         } else {
             String uri;

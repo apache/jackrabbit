@@ -16,24 +16,24 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.state.*;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 
 import javax.jcr.RepositoryException;
 
 /**
  * This Interface defines a virtual item state provider.
  */
-public interface VirtualItemStateProvider extends ItemStateProvider {
+public interface VirtualItemStateProvider extends ItemStateManager {
 
     /**
-     * Checks if the id referrs to the root of a virtual tree.
+     * Checks if the id refers to the root of a virtual tree.
+     *
      * @param id
      * @return
      */
@@ -41,12 +41,14 @@ public interface VirtualItemStateProvider extends ItemStateProvider {
 
     /**
      * Returns the id of the root node of the virtual tree.
+     *
      * @return
      */
     public NodeId getVirtualRootId();
 
     /**
      * Checks if the node with the given id exists in this item state provider.
+     *
      * @param id
      * @return
      */
@@ -54,6 +56,7 @@ public interface VirtualItemStateProvider extends ItemStateProvider {
 
     /**
      * Checks if the property with the given id exists in this item state provider.
+     *
      * @param id
      * @return
      */
@@ -61,6 +64,7 @@ public interface VirtualItemStateProvider extends ItemStateProvider {
 
     /**
      * Returns the node state for the given node id
+     *
      * @param id
      * @return
      * @throws ItemStateException
@@ -71,6 +75,7 @@ public interface VirtualItemStateProvider extends ItemStateProvider {
 
     /**
      * Returns the property state for the give property id
+     *
      * @param id
      * @return
      * @throws ItemStateException
@@ -81,6 +86,7 @@ public interface VirtualItemStateProvider extends ItemStateProvider {
 
     /**
      * Creats a new virtual property state
+     *
      * @param parent
      * @param name
      * @param type
@@ -95,6 +101,7 @@ public interface VirtualItemStateProvider extends ItemStateProvider {
 
     /**
      * Creates a new virtual node state
+     *
      * @param parent
      * @param name
      * @param uuid

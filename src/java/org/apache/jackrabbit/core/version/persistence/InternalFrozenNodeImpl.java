@@ -16,24 +16,24 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.version.*;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.version.*;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.NodeType;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *
@@ -77,9 +77,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
      * @throws javax.jcr.RepositoryException
      */
     protected InternalFrozenNodeImpl(PersistentVersionManager vMgr,
-                                 PersistentNode node,
-                                 String id,
-                                 InternalVersionItem parent) throws RepositoryException {
+                                     PersistentNode node,
+                                     String id,
+                                     InternalVersionItem parent) throws RepositoryException {
         super(vMgr, parent);
         this.node = node;
         this.id = id;
@@ -173,7 +173,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
             List entries = node.getState().getChildNodeEntries();
             InternalFreeze[] freezes = new InternalFreeze[entries.size()];
             Iterator iter = entries.iterator();
-            int i=0;
+            int i = 0;
             while (iter.hasNext()) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
                 freezes[i++] = (InternalFreeze) getVersionManager().getItemByInternal(entry.getUUID());

@@ -32,13 +32,26 @@ public class HierarchyManagerImpl implements HierarchyManager {
     private static Logger log = Logger.getLogger(HierarchyManagerImpl.class);
 
     private final NodeId rootNodeId;
-    private final ItemStateProvider provider;
+    private final ItemStateManager provider;
+    private final ItemStateManager attic;
     // used for outputting user-friendly paths and names
     private final NamespaceResolver nsResolver;
 
-    public HierarchyManagerImpl(String rootNodeUUID, ItemStateProvider provider, NamespaceResolver nsResolver) {
-        rootNodeId = new NodeId(rootNodeUUID);
+    public HierarchyManagerImpl(String rootNodeUUID,
+                                ItemStateManager provider,
+                                NamespaceResolver nsResolver) {
+
+        this(rootNodeUUID, provider, nsResolver, null);
+    }
+
+    public HierarchyManagerImpl(String rootNodeUUID,
+                                ItemStateManager provider,
+                                NamespaceResolver nsResolver,
+                                ItemStateManager attic) {
+
+        this.rootNodeId = new NodeId(rootNodeUUID);
         this.provider = provider;
+        this.attic = attic;
         this.nsResolver = nsResolver;
     }
 
@@ -85,13 +98,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
         ArrayList list = new ArrayList();
         try {
             if (id.denotesNode()) {
-                NodeState state = (NodeState) getItemState(id, false);
+                NodeState state = (NodeState) getItemState(id);
                 Iterator iter = state.getParentUUIDs().iterator();
                 while (iter.hasNext()) {
                     list.add(new NodeId((String) iter.next()));
                 }
             } else {
-                PropertyState state = (PropertyState) getItemState(id, false);
+                PropertyState state = (PropertyState) getItemState(id);
                 list.add(new NodeId(state.getParentUUID()));
             }
         } catch (NoSuchItemStateException e) {
@@ -112,7 +125,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     public ItemId[] listChildren(NodeId id) throws ItemNotFoundException, RepositoryException {
         NodeState parentState;
         try {
-            parentState = (NodeState) getItemState(id, false);
+            parentState = (NodeState) getItemState(id);
         } catch (NoSuchItemStateException e) {
             String msg = "failed to retrieve state of parent node " + id;
             log.error(msg, e);
@@ -191,7 +204,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
         NodeState parentState;
         try {
-            parentState = (NodeState) getItemState(rootNodeId, false);
+            parentState = (NodeState) getItemState(rootNodeId);
         } catch (ItemStateException e) {
             String msg = "failed to retrieve state of root node";
             log.error(msg, e);
@@ -211,7 +224,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     return new NodeId(nodeEntry.getUUID());
                 }
                 try {
-                    parentState = (NodeState) getItemState(new NodeId(nodeEntry.getUUID()), false);
+                    parentState = (NodeState) getItemState(new NodeId(nodeEntry.getUUID()));
                 } catch (ItemStateException e) {
                     String msg = "failed to retrieve state of intermediary node";
                     log.error(msg, e);
@@ -246,7 +259,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         try {
             Path.PathBuilder builder = new Path.PathBuilder();
 
-            ItemState state = getItemState(id, false);
+            ItemState state = getItemState(id);
             String parentUUID = state.getParentUUID();
             if (parentUUID == null) {
                 // specified id denotes the root node
@@ -254,7 +267,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 return builder.getPath();
             }
 
-            NodeState parent = (NodeState) getItemState(new NodeId(parentUUID), false);
+            NodeState parent = (NodeState) getItemState(new NodeId(parentUUID));
             do {
                 if (state.isNode()) {
                     NodeState nodeState = (NodeState) state;
@@ -279,7 +292,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 parentUUID = parent.getParentUUID();
                 if (parentUUID != null) {
                     state = parent;
-                    parent = (NodeState) getItemState(new NodeId(parentUUID), false);
+                    parent = (NodeState) getItemState(new NodeId(parentUUID));
                 } else {
                     parent = null;
                     state = null;
@@ -317,14 +330,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 throw new ItemNotFoundException(nodeId.toString());
             }
             try {
-                NodeState nodeState = (NodeState) getItemState(nodeId, false);
+                NodeState nodeState = (NodeState) getItemState(nodeId);
                 String parentUUID = nodeState.getParentUUID();
                 if (parentUUID == null) {
                     // this is the root or an orphaned node
                     // FIXME
                     return new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, "");
                 }
-                parentState = (NodeState) getItemState(new NodeId(parentUUID), true);
+                parentState = (NodeState) getItemState(new NodeId(parentUUID));
             } catch (ItemStateException ise) {
                 String msg = "failed to resolve name of " + nodeId;
                 log.error(msg, ise);
@@ -403,6 +416,18 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     /**
      * @param id
+     * @return
+     * @throws NoSuchItemStateException
+     * @throws ItemStateException
+     */
+    private ItemState getItemState(ItemId id)
+            throws NoSuchItemStateException, ItemStateException {
+
+        return provider.getItemState(id);
+    }
+
+    /**
+     * @param id
      * @param includeZombies
      * @return
      * @throws NoSuchItemStateException
@@ -410,14 +435,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     private ItemState getItemState(ItemId id, boolean includeZombies)
             throws NoSuchItemStateException, ItemStateException {
-        if (!includeZombies) {
+        if (!includeZombies || attic == null) {
             // get transient/persistent state
             return provider.getItemState(id);
         }
 
         try {
             // try attic first
-            return provider.getItemStateInAttic(id);
+            return attic.getItemState(id);
         } catch (NoSuchItemStateException e) {
             // fallback: get transient/persistent state
             return provider.getItemState(id);

@@ -17,10 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PersistentPropertyState;
-import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
@@ -66,7 +63,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             // make transient (copy-on-write)
             try {
                 PropertyState transientState =
-                        itemStateMgr.createTransientPropertyState((PropertyState) state, ItemState.STATUS_EXISTING_MODIFIED);
+                        stateMgr.createTransientPropertyState((PropertyState) state, ItemState.STATUS_EXISTING_MODIFIED);
                 // remove listener on persistent state
                 state.removeListener(this);
                 // add listener on transient state
@@ -82,40 +79,35 @@ public class PropertyImpl extends ItemImpl implements Property {
         return state;
     }
 
-    protected void makePersistent() throws RepositoryException {
+    protected void makePersistent(UpdateOperation update) {
         if (!isTransient()) {
-            String msg = "there's no transient state to persist";
-            log.error(msg);
-            throw new RepositoryException(msg);
+            log.debug(safeGetJCRPath() + " (" + id + "): there's no transient state to persist");
+            return;
         }
 
-        try {
-            PropertyState transientState = (PropertyState) state;
-            PersistentPropertyState persistentState = (PersistentPropertyState) transientState.getOverlayedState();
-            if (persistentState == null) {
-                // this property is 'new'
-                persistentState = itemStateMgr.createPersistentPropertyState(transientState.getParentUUID(), transientState.getName());
-            }
-            // copy state from transient state
-            persistentState.setDefinitionId(transientState.getDefinitionId());
-            persistentState.setType(transientState.getType());
-            persistentState.setMultiValued(transientState.isMultiValued());
-            persistentState.setValues(transientState.getValues());
-            // make state persistent
-            persistentState.store();
-            // remove listener from transient state
-            transientState.removeListener(this);
-            // add listener to persistent state
-            persistentState.addListener(this);
-            // swap transient state with persistent state
-            state = persistentState;
-            // reset status
-            status = STATUS_NORMAL;
-        } catch (ItemStateException ise) {
-            String msg = "failed to persist transient state of " + safeGetJCRPath();
-            log.error(msg, ise);
-            throw new RepositoryException(msg, ise);
+        PropertyState transientState = (PropertyState) state;
+        PropertyState persistentState = (PropertyState) transientState.getOverlayedState();
+        if (persistentState == null) {
+            // this property is 'new'
+            persistentState = update.createNew(
+                    transientState.getName(),
+                    transientState.getParentUUID());
         }
+        // copy state from transient state
+        persistentState.setDefinitionId(transientState.getDefinitionId());
+        persistentState.setType(transientState.getType());
+        persistentState.setMultiValued(transientState.isMultiValued());
+        persistentState.setValues(transientState.getValues());
+        // make state persistent
+        update.store(persistentState);
+        // remove listener from transient state
+        transientState.removeListener(this);
+        // add listener to persistent state
+        persistentState.addListener(this);
+        // swap transient state with persistent state
+        state = persistentState;
+        // reset status
+        status = STATUS_NORMAL;
     }
 
     /**
@@ -190,7 +182,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -243,7 +235,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -533,7 +525,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -578,7 +570,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -618,7 +610,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -669,7 +661,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -713,7 +705,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -764,7 +756,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -804,7 +796,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -856,7 +848,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
@@ -896,7 +888,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             String msg = "Cannot alter the value of a property of a checked-in node " + safeGetJCRPath();
             log.error(msg);
             throw new VersionException(msg);
@@ -942,7 +934,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         sanityCheck();
 
         // check if versioning allows write
-        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheep call yet
+        if (!((NodeImpl) getParent()).isCheckedOut(false)) { // only cheap call yet
             throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
         }
 

@@ -31,6 +31,6 @@ public class VirtualPropertyState extends PropertyState {
      * @param parentUUID
      */
     public VirtualPropertyState(QName name, String parentUUID) {
-        super(name, parentUUID, ItemState.STATUS_EXISTING);
+        super(name, parentUUID, ItemState.STATUS_EXISTING, false);
     }
 }

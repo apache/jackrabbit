@@ -46,11 +46,13 @@ public class PropertyState extends ItemState {
      *
      * @param overlayedState the backing property state being overlayed
      * @param initialStatus  the initial status of the property state object
+     * @param isTransient   flag indicating whether this state is transient or not
      */
-    PropertyState(PropertyState overlayedState, int initialStatus) {
-        super(overlayedState, initialStatus);
+    public PropertyState(PropertyState overlayedState, int initialStatus,
+                         boolean isTransient) {
+        super(overlayedState, initialStatus, isTransient);
 
-        copy(overlayedState);
+        pull();
     }
 
     /**
@@ -59,9 +61,11 @@ public class PropertyState extends ItemState {
      * @param name          name of the property
      * @param parentUUID    the uuid of the parent node
      * @param initialStatus the initial status of the property state object
+     * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected PropertyState(QName name, String parentUUID, int initialStatus) {
-        super(parentUUID, new PropertyId(parentUUID, name), initialStatus);
+    public PropertyState(QName name, String parentUUID, int initialStatus,
+                         boolean isTransient) {
+        super(parentUUID, new PropertyId(parentUUID, name), initialStatus, isTransient);
         this.name = name;
         type = PropertyType.UNDEFINED;
         values = new InternalValue[0];

@@ -22,7 +22,7 @@ import org.apache.commons.collections.UnboundedFifoBuffer;
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -151,7 +151,7 @@ public final class ObservationManagerFactory implements Runnable {
     }
 
     public EventStateCollection createEventStateCollection(SessionImpl session,
-                                                           ItemStateProvider provider,
+                                                           ItemStateManager provider,
                                                            HierarchyManager hmgr) {
         return new EventStateCollection(this, session, provider, hmgr);
     }

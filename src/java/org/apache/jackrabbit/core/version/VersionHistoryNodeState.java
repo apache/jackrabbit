@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.version.InternalVersionHistory;
-import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
@@ -39,14 +37,15 @@ public class VersionHistoryNodeState extends VirtualNodeState {
 
     /**
      * Creates a new versiom history node state
+     *
      * @param vm
      * @param vh
      * @param parentUUID
      * @throws RepositoryException
      */
     protected VersionHistoryNodeState(VersionItemStateProvider vm,
-                                   InternalVersionHistory vh,
-                                   String parentUUID)
+                                      InternalVersionHistory vh,
+                                      String parentUUID)
             throws RepositoryException {
         super(vm, parentUUID, vh.getId(), NodeTypeRegistry.NT_VERSION_HISTORY, new QName[0]);
         this.vh = vh;

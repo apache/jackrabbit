@@ -194,7 +194,7 @@ public class NodeImpl extends ItemImpl implements Node {
             try {
                 // make transient (copy-on-write)
                 NodeState transientState =
-                        itemStateMgr.createTransientNodeState((NodeState) state, ItemState.STATUS_EXISTING_MODIFIED);
+                        stateMgr.createTransientNodeState((NodeState) state, ItemState.STATUS_EXISTING_MODIFIED);
                 // remove listener on persistent state
                 state.removeListener(this);
                 // add listener on transient state
@@ -308,10 +308,15 @@ public class NodeImpl extends ItemImpl implements Node {
             throws RepositoryException {
         status.clear();
 
-        PropertyId propId = new PropertyId(((NodeState) state).getUUID(), name);
-        if (itemMgr.itemExists(propId)) {
+        NodeState thisState = (NodeState) state;
+        if (thisState.hasPropertyEntry(name)) {
+            /**
+             * the following call will throw ItemNotFoundException if the
+             * current session doesn't have read access
+             */
             return getProperty(name);
         }
+
         // does not exist yet:
         // find definition for the specified property and create property
         PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
@@ -328,7 +333,7 @@ public class NodeImpl extends ItemImpl implements Node {
             log.error(msg);
             throw new RepositoryException(msg);
         }
-        // check if versioning allows write (only cheep call)
+        // check if versioning allows write (only cheap call)
         if (!isCheckedOut(false)) {
             String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath() + "/" + name.toString();
             log.error(msg);
@@ -340,7 +345,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // create a new property state
         PropertyState propState = null;
         try {
-            propState = itemStateMgr.createTransientPropertyState(parentUUID, name, ItemState.STATUS_NEW);
+            propState = stateMgr.createTransientPropertyState(parentUUID, name, ItemState.STATUS_NEW);
             propState.setType(type);
             propState.setMultiValued(def.isMultiple());
             propState.setDefinitionId(new PropDefId(def.unwrap()));
@@ -386,7 +391,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (uuid == null) {
                 uuid = UUID.randomUUID().toString();	// version 4 uuid
             }
-            nodeState = itemStateMgr.createTransientNodeState(uuid, nodeType.getQName(), parentUUID, ItemState.STATUS_NEW);
+            nodeState = stateMgr.createTransientNodeState(uuid, nodeType.getQName(), parentUUID, ItemState.STATUS_NEW);
             nodeState.setDefinitionId(new NodeDefId(def.unwrap()));
         } catch (ItemStateException ise) {
             String msg = "failed to add child node " + name + " to " + safeGetJCRPath();
@@ -400,7 +405,7 @@ public class NodeImpl extends ItemImpl implements Node {
             node = itemMgr.createNodeInstance(nodeState, def);
         } catch (RepositoryException re) {
             // something went wrong
-            itemStateMgr.disposeTransientItemState(nodeState);
+            stateMgr.disposeTransientItemState(nodeState);
             // re-throw
             throw re;
         }
@@ -663,7 +668,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
-        // check if versioning allows write (only cheep call)
+        // check if versioning allows write (only cheap call)
         if (!isCheckedOut(false)) {
             String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
             log.error(msg);
@@ -767,48 +772,43 @@ public class NodeImpl extends ItemImpl implements Node {
         return session.getNodeTypeManager().getPropDef(new PropDefId(pd));
     }
 
-    protected void makePersistent() throws RepositoryException {
+    protected void makePersistent(UpdateOperation update) {
         if (!isTransient()) {
             log.debug(safeGetJCRPath() + " (" + id + "): there's no transient state to persist");
             return;
         }
 
-        try {
-            NodeState transientState = (NodeState) state;
+        NodeState transientState = (NodeState) state;
 
-            PersistentNodeState persistentState = (PersistentNodeState) transientState.getOverlayedState();
-            if (persistentState == null) {
-                // this node is 'new'
-                persistentState = itemStateMgr.createPersistentNodeState(transientState.getUUID(), transientState.getNodeTypeName(), transientState.getParentUUID());
-            }
-            // copy state from transient state:
-            // parent uuid's
-            persistentState.setParentUUID(transientState.getParentUUID());
-            persistentState.setParentUUIDs(transientState.getParentUUIDs());
-            // mixin types
-            persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
-            // id of definition
-            persistentState.setDefinitionId(transientState.getDefinitionId());
-            // child node entries
-            persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
-            // property entries
-            persistentState.setPropertyEntries(transientState.getPropertyEntries());
-
-            // make state persistent
-            persistentState.store();
-            // remove listener from transient state
-            transientState.removeListener(this);
-            // add listener to persistent state
-            persistentState.addListener(this);
-            // swap transient state with persistent state
-            state = persistentState;
-            // reset status
-            status = STATUS_NORMAL;
-        } catch (ItemStateException ise) {
-            String msg = "failed to persist transient state of " + safeGetJCRPath() + " (" + id + ")";
-            log.error(msg, ise);
-            throw new RepositoryException(msg, ise);
+        NodeState persistentState = (NodeState) transientState.getOverlayedState();
+        if (persistentState == null) {
+            // this node is 'new'
+            persistentState = update.createNew(transientState.getUUID(),
+                    transientState.getNodeTypeName(), transientState.getParentUUID());
         }
+        // copy state from transient state:
+        // parent uuid's
+        persistentState.setParentUUID(transientState.getParentUUID());
+        persistentState.setParentUUIDs(transientState.getParentUUIDs());
+        // mixin types
+        persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
+        // id of definition
+        persistentState.setDefinitionId(transientState.getDefinitionId());
+        // child node entries
+        persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
+        // property entries
+        persistentState.setPropertyEntries(transientState.getPropertyEntries());
+
+        // make state persistent
+        update.store(persistentState);
+        // remove listener from transient state
+        transientState.removeListener(this);
+        // add listener to persistent state
+        persistentState.addListener(this);
+        // swap transient state with persistent state
+        state = persistentState;
+        // reset status
+        status = STATUS_NORMAL;
     }
 
     /**
@@ -850,7 +850,7 @@ public class NodeImpl extends ItemImpl implements Node {
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
         try {
             if (value == null) {
-                prop.internalSetValue((InternalValue[]) null, type);
+                prop.internalSetValue(null, type);
             } else {
                 prop.internalSetValue(new InternalValue[]{value}, type);
             }
@@ -1334,7 +1334,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException(safeGetJCRPath() + " has no child node with name " + destName);
         }
 
-        // check if versioning allows write (only cheep call)
+        // check if versioning allows write (only cheap call)
         if (!isCheckedOut(false)) {
             String msg = safeGetJCRPath() + ": cannot change child node ordering of a checked-in node";
             log.error(msg);
@@ -2209,13 +2209,15 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#getReferences()
      */
     public PropertyIterator getReferences() throws RepositoryException {
-        WorkspaceImpl wsp = (WorkspaceImpl) session.getWorkspace();
-        ReferenceManager refMgr = wsp.getReferenceManager();
-        synchronized (refMgr) {
-            NodeReferences refs = refMgr.get((NodeId) id);
+        try {
+            NodeReferences refs = stateMgr.getNodeReferences((NodeId) id);
             // refs.getReferences returns a list of PropertyId's
             List idList = refs.getReferences();
             return new LazyItemIterator(itemMgr, idList);
+        } catch (ItemStateException e) {
+            String msg = "Unable to retrieve node references for: " + id;
+            log.error(msg);
+            throw new RepositoryException(msg, e);
         }
     }
 
@@ -2840,7 +2842,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // get frozen node type
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        NodeTypeImpl nt = (NodeTypeImpl) ntMgr.getNodeType(frozen.getFrozenPrimaryType());
+        NodeTypeImpl nt = ntMgr.getNodeType(frozen.getFrozenPrimaryType());
 
         // get frozen uuid
         String uuid = frozen.getFrozenUUID();
@@ -2888,7 +2890,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // get frozen node type
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        NodeTypeImpl nt = (NodeTypeImpl) ntMgr.getNodeType(frozen.getFrozenPrimaryType());
+        NodeTypeImpl nt = ntMgr.getNodeType(frozen.getFrozenPrimaryType());
 
         // get frozen uuid
         String uuid = frozen.getFrozenUUID();

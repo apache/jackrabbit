@@ -79,9 +79,13 @@ public abstract class ItemState implements ItemStateListener, Serializable {
 
     protected long lastModified;
 
-    protected String baseVersionID;
 
     protected ItemId id;
+
+    /**
+     * Flag indicating whether this state is transient
+     */
+    private final boolean isTransient;
 
     /**
      * Listeners (weak references)
@@ -98,8 +102,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @param parentUUID    the UUID of the (primary) parent node or <code>null</code>
      * @param id            the id of the item state object
      * @param initialStatus the initial status of the item state object
+     * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(String parentUUID, ItemId id, int initialStatus) {
+    protected ItemState(String parentUUID, ItemId id, int initialStatus,
+                        boolean isTransient) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_NEW:
@@ -112,10 +118,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
         }
         this.id = id;
         this.parentUUID = parentUUID;
-        baseVersionID = "v0.0";
         // @todo use modification count instead of ms (not precise enough)
         lastModified = System.currentTimeMillis();
         overlayedState = null;
+        this.isTransient = isTransient;
     }
 
     /**
@@ -123,8 +129,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *
      * @param overlayedState backing persistent item state
      * @param initialStatus  the initial status of the new <code>ItemState</code> instance
+     * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(ItemState overlayedState, int initialStatus) {
+    protected ItemState(ItemState overlayedState, int initialStatus,
+                        boolean isTransient) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_EXISTING_MODIFIED:
@@ -137,21 +145,36 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 throw new IllegalArgumentException(msg);
         }
         this.overlayedState = overlayedState;
-        // add this transient state as a listener on the overlayed state
         this.overlayedState.addListener(this);
+        this.isTransient = isTransient;
     }
 
     /**
-     * Copy state from another state. Copies over all state variables from
-     * another state.
-     *
-     * @param state state to copy
+     * Copy state information from a state into this state
+     * @param state source state information
      */
     protected void copy(ItemState state) {
-        parentUUID = state.parentUUID;
-        baseVersionID = state.getBaseVersionID();
+        parentUUID = state.getParentUUID();
         lastModified = state.getLastModified();
         id = state.getId();
+    }
+
+    /**
+     * Pull state information from overlayed state.
+     */
+    void pull() {
+        if (overlayedState != null) {
+            copy(overlayedState);
+        }
+    }
+
+    /**
+     * Push state information into overlayed state.
+     */
+    void push() {
+        if (overlayedState != null) {
+            overlayedState.copy(this);
+        }
     }
 
     /**
@@ -163,6 +186,17 @@ public abstract class ItemState implements ItemStateListener, Serializable {
         listeners.clear();
         disconnect();
         status = STATUS_UNDEFINED;
+    }
+
+    /**
+     * Connect this state to some underlying overlayed state.
+     */
+    protected void connect(ItemState overlayedState) {
+        if (this.overlayedState != null) {
+            throw new IllegalStateException("Item state already connected: " + this);
+        }
+        this.overlayedState = overlayedState;
+        this.overlayedState.addListener(this);
     }
 
     /**
@@ -277,7 +311,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *         otherwise <code>false</code>
      */
     public boolean isTransient() {
-        return status != STATUS_EXISTING;
+        return isTransient;
 
     }
 
@@ -319,13 +353,13 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     public void setStatus(int newStatus) {
         switch (newStatus) {
-            case ItemState.STATUS_NEW:
-            case ItemState.STATUS_EXISTING:
-            case ItemState.STATUS_EXISTING_REMOVED:
-            case ItemState.STATUS_EXISTING_MODIFIED:
-            case ItemState.STATUS_STALE_MODIFIED:
-            case ItemState.STATUS_STALE_DESTROYED:
-            case ItemState.STATUS_UNDEFINED:
+            case STATUS_NEW:
+            case STATUS_EXISTING:
+            case STATUS_EXISTING_REMOVED:
+            case STATUS_EXISTING_MODIFIED:
+            case STATUS_STALE_MODIFIED:
+            case STATUS_STALE_DESTROYED:
+            case STATUS_UNDEFINED:
                 status = newStatus;
                 return;
         }
@@ -378,15 +412,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Returns the id of the version this item state is based on.
-     *
-     * @return the id of the version this item state is based on.
-     */
-    public String getBaseVersionID() {
-        return baseVersionID;
-    }
-
-    /**
      * Add an <code>ItemStateListener</code>
      *
      * @param listener the new listener to be informed on modifications
@@ -411,14 +436,21 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @see ItemStateListener#stateCreated
      */
     public void stateCreated(ItemState created) {
+        // underlying state has been permanently created
+        status = STATUS_EXISTING;
     }
 
     /**
      * @see ItemStateListener#stateDestroyed
      */
     public void stateDestroyed(ItemState destroyed) {
-        // underlying persistent state has been permanently destroyed
-        status = STATUS_STALE_DESTROYED;
+        // underlying state has been permanently destroyed
+        if (isTransient || status != STATUS_EXISTING) {
+            status = STATUS_STALE_DESTROYED;
+        } else {
+            status = STATUS_EXISTING_REMOVED;
+        }
+        // @todo propagate event to our listeners too?
     }
 
     /**
@@ -426,13 +458,21 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     public void stateModified(ItemState modified) {
         // underlying state has been modified
-        status = STATUS_STALE_MODIFIED;
+        if (isTransient || status != STATUS_EXISTING) {
+            status = STATUS_STALE_MODIFIED;
+        } else {
+            // this instance represents existing state, update it
+            pull();
+        }
+        // @todo propagate event to our listeners too?
     }
 
     /**
      * @see ItemStateListener#stateDiscarded
      */
     public void stateDiscarded(ItemState discarded) {
+        // underlying persistent state has been discarded, discard this instance too
+        discard();
     }
 
     //-------------------------------------------------< Serializable support >

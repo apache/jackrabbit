@@ -48,7 +48,8 @@ import java.util.Map;
  * </ul>
  * <b>Please note that this class should only be used for testing purposes.</b>
  */
-public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
+public class InMemPersistenceManager extends AbstractPersistenceManager
+        implements BLOBStore {
 
     private static Logger log = Logger.getLogger(InMemPersistenceManager.class);
 
@@ -377,61 +378,67 @@ public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#load(PersistentNodeState)
+     * @see PersistenceManager#load
      */
-    public synchronized void load(PersistentNodeState state)
+    public synchronized NodeState load(String uuid)
             throws NoSuchItemStateException, ItemStateException {
+
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        byte[] data = (byte[]) stateStore.get(state.getId());
+        NodeId id = new NodeId(uuid);
+
+        byte[] data = (byte[]) stateStore.get(id);
         if (data == null) {
-            throw new NoSuchItemStateException(state.getId().toString());
+            throw new NoSuchItemStateException(id.toString());
         }
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
+            NodeState state = createNew(uuid, null, null);
             ObjectPersistenceManager.deserialize(state, in);
-            // there's no need to close a ByteArrayInputStream
-            //in.close();
+            return state;
         } catch (Exception e) {
-            String msg = "failed to read node state: " + state.getId();
+            String msg = "failed to read node state: " + id;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
 
     /**
-     * @see PersistenceManager#load(PersistentPropertyState)
+     * @see PersistenceManager#load
      */
-    public synchronized void load(PersistentPropertyState state)
+    public synchronized PropertyState load(QName name, String parentUUID)
             throws NoSuchItemStateException, ItemStateException {
+
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        byte[] data = (byte[]) stateStore.get(state.getId());
+        PropertyId id = new PropertyId(parentUUID, name);
+
+        byte[] data = (byte[]) stateStore.get(id);
         if (data == null) {
-            throw new NoSuchItemStateException(state.getId().toString());
+            throw new NoSuchItemStateException(id.toString());
         }
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
+            PropertyState state = createNew(name, parentUUID);
             ObjectPersistenceManager.deserialize(state, in, this);
-            // there's no need to close a ByteArrayInputStream
-            //in.close();
+            return state;
         } catch (Exception e) {
-            String msg = "failed to read property state: " + state.getId();
+            String msg = "failed to read property state: " + id;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
 
     /**
-     * @see PersistenceManager#store
+     * @see AbstractPersistenceManager#store
      */
-    public synchronized void store(PersistentNodeState state) throws ItemStateException {
+    protected void store(NodeState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -453,9 +460,9 @@ public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#store
+     * @see AbstractPersistenceManager#store
      */
-    public synchronized void store(PersistentPropertyState state) throws ItemStateException {
+    protected void store(PropertyState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -477,9 +484,9 @@ public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#destroy
+     * @see AbstractPersistenceManager#destroy
      */
-    public synchronized void destroy(PersistentNodeState state) throws ItemStateException {
+    protected void destroy(NodeState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -489,9 +496,9 @@ public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#destroy
+     * @see AbstractPersistenceManager#destroy
      */
-    public synchronized void destroy(PersistentPropertyState state) throws ItemStateException {
+    protected void destroy(PropertyState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -516,35 +523,36 @@ public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#load(NodeReferences)
+     * @see PersistenceManager#load
      */
-    public synchronized void load(NodeReferences refs)
+    public synchronized NodeReferences load(NodeId targetId)
             throws NoSuchItemStateException, ItemStateException {
+
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        byte[] data = (byte[]) refsStore.get(refs.getTargetId());
+        byte[] data = (byte[]) refsStore.get(targetId);
         if (data == null) {
-            throw new NoSuchItemStateException(refs.getTargetId().toString());
+            throw new NoSuchItemStateException(targetId.toString());
         }
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
+            NodeReferences refs = new NodeReferences(targetId);
             ObjectPersistenceManager.deserialize(refs, in);
-            // there's no need to close a ByteArrayInputStream
-            //in.close();
+            return refs;
         } catch (Exception e) {
-            String msg = "failed to load references: " + refs.getTargetId();
+            String msg = "failed to load references: " + targetId;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
 
     /**
-     * @see PersistenceManager#store(NodeReferences)
+     * @see AbstractPersistenceManager#store
      */
-    public synchronized void store(NodeReferences refs) throws ItemStateException {
+    protected void store(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -566,9 +574,9 @@ public class InMemPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#destroy(NodeReferences)
+     * @see AbstractPersistenceManager#destroy
      */
-    public synchronized void destroy(NodeReferences refs) throws ItemStateException {
+    protected void destroy(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }

@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.version.*;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.version.*;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
-import java.util.Arrays;
 
 /**
  *
@@ -142,7 +142,7 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
         // get frozen node
         try {
             NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(VersionManager.NODENAME_FROZEN, 1);
-            if (entry==null) {
+            if (entry == null) {
                 throw new IllegalStateException("version has no frozen node: " + getId());
             }
             return (InternalFrozenNode) getVersionManager().getItemByInternal(entry.getUUID());

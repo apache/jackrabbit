@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.log4j.Logger;
@@ -48,7 +48,7 @@ abstract class AbstractSAXEventGenerator {
 
     private static Logger log = Logger.getLogger(AbstractSAXEventGenerator.class);
 
-    protected final ItemStateProvider stateProvider;
+    protected final ItemStateManager stateProvider;
     protected final NamespaceRegistryImpl nsReg;
     protected final AccessManagerImpl accessMgr;
     protected final ContentHandler contentHandler;
@@ -83,7 +83,7 @@ abstract class AbstractSAXEventGenerator {
      */
     protected AbstractSAXEventGenerator(NodeState nodeState, QName nodeName,
                                         boolean noRecurse, boolean binaryAsLink,
-                                        ItemStateProvider stateProvider,
+                                        ItemStateManager stateProvider,
                                         NamespaceRegistryImpl nsReg,
                                         AccessManagerImpl accessMgr,
                                         ContentHandler contentHandler) {

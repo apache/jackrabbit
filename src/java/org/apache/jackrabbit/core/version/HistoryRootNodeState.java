@@ -18,16 +18,14 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
 import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * The history root node state represents the root node of all version histories.
@@ -51,6 +49,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
 
     /**
      * creates a new history root state
+     *
      * @param stateMgr
      * @param parentUUID
      * @param uuid
@@ -58,8 +57,8 @@ public class HistoryRootNodeState extends VirtualNodeState {
      */
     protected HistoryRootNodeState(VersionItemStateProvider stateMgr,
                                    VersionManager vm,
-                                String parentUUID,
-                                String uuid) throws RepositoryException {
+                                   String parentUUID,
+                                   String uuid) throws RepositoryException {
         super(stateMgr, parentUUID, uuid, NodeTypeRegistry.NT_UNSTRUCTURED, new QName[0]);
         this.vm = vm;
     }

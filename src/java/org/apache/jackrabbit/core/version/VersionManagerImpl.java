@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 import java.util.Iterator;
 
 /**
@@ -58,6 +58,7 @@ public class VersionManagerImpl implements VersionManager {
 
     /**
      * Creates a bew vesuion manager
+     *
      * @param vMgr
      */
     public VersionManagerImpl(PersistentVersionManager vMgr) {
@@ -71,7 +72,7 @@ public class VersionManagerImpl implements VersionManager {
      * @param base
      * @return
      */
-    public synchronized VirtualItemStateProvider getVirtualItemStateProvider(SessionImpl session, ItemStateProvider base) {
+    public synchronized VirtualItemStateProvider getVirtualItemStateProvider(SessionImpl session, ItemStateManager base) {
         if (virtProvider == null) {
             try {
                 // init the definition id mgr
@@ -99,6 +100,7 @@ public class VersionManagerImpl implements VersionManager {
 
     /**
      * returns the node type manager
+     *
      * @return
      */
     NodeTypeManagerImpl getNodeTypeManager() {
@@ -183,6 +185,7 @@ public class VersionManagerImpl implements VersionManager {
 
     /**
      * checks, if the node with the given id exists
+     *
      * @param id
      * @return
      */
@@ -192,6 +195,7 @@ public class VersionManagerImpl implements VersionManager {
 
     /**
      * Returns the version item with the given id
+     *
      * @param id
      * @return
      * @throws RepositoryException

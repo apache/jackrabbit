@@ -65,13 +65,7 @@ public class WorkspaceImpl implements Workspace {
      * The persistent state mgr associated with the workspace represented by <i>this</i>
      * <code>Workspace</code> instance.
      */
-    protected final PersistentItemStateProvider persistentStateMgr;
-
-    /**
-     * The reference mgr associated with the workspace represented by <i>this</i>
-     * <code>Workspace</code> instance.
-     */
-    protected final ReferenceManager refMgr;
+    protected final LocalItemStateManager stateMgr;
 
     /**
      * The hierarchy mgr that reflects persistent state only
@@ -99,17 +93,17 @@ public class WorkspaceImpl implements Workspace {
      * Package private constructor.
      *
      * @param wspConfig
-     * @param persistentStateMgr
+     * @param stateMgr
      * @param rep
      * @param session
      */
-    WorkspaceImpl(WorkspaceConfig wspConfig, PersistentItemStateProvider persistentStateMgr,
-                  ReferenceManager refMgr, RepositoryImpl rep, SessionImpl session) {
+    WorkspaceImpl(WorkspaceConfig wspConfig, SharedItemStateManager stateMgr,
+                  RepositoryImpl rep, SessionImpl session) {
         this.wspConfig = wspConfig;
         this.rep = rep;
-        this.persistentStateMgr = persistentStateMgr;
-        this.refMgr = refMgr;
-        hierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(), persistentStateMgr, session.getNamespaceResolver());
+        this.stateMgr = new LocalItemStateManager(stateMgr);
+        this.hierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(),
+                this.stateMgr, session.getNamespaceResolver());
         this.session = session;
     }
 
@@ -117,12 +111,8 @@ public class WorkspaceImpl implements Workspace {
         return rep;
     }
 
-    public PersistentItemStateProvider getPersistentStateManager() {
-        return persistentStateMgr;
-    }
-
-    ReferenceManager getReferenceManager() {
-        return refMgr;
+    public LocalItemStateManager getItemStateManager() {
+        return stateMgr;
     }
 
     /**
@@ -175,10 +165,10 @@ public class WorkspaceImpl implements Workspace {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    protected static PersistentNodeState getNodeState(String nodePath,
-                                                      NamespaceResolver nsResolver,
-                                                      HierarchyManagerImpl hierMgr,
-                                                      PersistentItemStateProvider stateMgr)
+    protected static NodeState getNodeState(String nodePath,
+                                            NamespaceResolver nsResolver,
+                                            HierarchyManagerImpl hierMgr,
+                                            ItemStateManager stateMgr)
             throws PathNotFoundException, RepositoryException {
         try {
             return getNodeState(Path.create(nodePath, nsResolver, true), hierMgr, stateMgr);
@@ -198,10 +188,10 @@ public class WorkspaceImpl implements Workspace {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    protected static PersistentNodeState getParentNodeState(String path,
-                                                            NamespaceResolver nsResolver,
-                                                            HierarchyManagerImpl hierMgr,
-                                                            PersistentItemStateProvider stateMgr)
+    protected static NodeState getParentNodeState(String path,
+                                                  NamespaceResolver nsResolver,
+                                                  HierarchyManagerImpl hierMgr,
+                                                  ItemStateManager stateMgr)
 
             throws PathNotFoundException, RepositoryException {
         try {
@@ -221,9 +211,9 @@ public class WorkspaceImpl implements Workspace {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    protected static PersistentNodeState getNodeState(Path nodePath,
-                                                      HierarchyManagerImpl hierMgr,
-                                                      PersistentItemStateProvider stateMgr)
+    protected static NodeState getNodeState(Path nodePath,
+                                            HierarchyManagerImpl hierMgr,
+                                            ItemStateManager stateMgr)
             throws PathNotFoundException, RepositoryException {
         try {
             ItemId id = hierMgr.resolvePath(nodePath);
@@ -247,10 +237,10 @@ public class WorkspaceImpl implements Workspace {
      * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
-    protected static PersistentNodeState getNodeState(NodeId id,
-                                                      PersistentItemStateProvider stateMgr)
+    protected static NodeState getNodeState(NodeId id,
+                                            ItemStateManager stateMgr)
             throws NoSuchItemStateException, ItemStateException {
-        return (PersistentNodeState) stateMgr.getItemState(id);
+        return (NodeState) stateMgr.getItemState(id);
     }
 
     /**
@@ -270,12 +260,12 @@ public class WorkspaceImpl implements Workspace {
                                        NodeTypeRegistry ntReg,
                                        AccessManagerImpl accessMgr,
                                        HierarchyManagerImpl hierMgr,
-                                       PersistentItemStateProvider stateMgr)
+                                       ItemStateManager stateMgr)
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, ItemExistsException, RepositoryException {
 
         Path parentPath = nodePath.getAncestor(1);
-        PersistentNodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
+        NodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
 
         // 1. check path & access rights
 
@@ -348,13 +338,13 @@ public class WorkspaceImpl implements Workspace {
                                           NodeTypeRegistry ntReg,
                                           AccessManagerImpl accessMgr,
                                           HierarchyManagerImpl hierMgr,
-                                          PersistentItemStateProvider stateMgr)
+                                          ItemStateManager stateMgr)
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, RepositoryException {
 
-        PersistentNodeState targetState = getNodeState(nodePath, hierMgr, stateMgr);
+        NodeState targetState = getNodeState(nodePath, hierMgr, stateMgr);
         Path parentPath = nodePath.getAncestor(1);
-        PersistentNodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
+        NodeState parentState = getNodeState(parentPath, hierMgr, stateMgr);
 
         // 1. check path & access rights
 
@@ -402,7 +392,7 @@ public class WorkspaceImpl implements Workspace {
             throws RepositoryException {
         // build effective node type of mixins & primary type:
         // existing mixin's
-        HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+        HashSet set = new HashSet((state).getMixinTypeNames());
         // primary type
         set.add(state.getNodeTypeName());
         try {
@@ -437,15 +427,17 @@ public class WorkspaceImpl implements Workspace {
         return entParent.getApplicableChildNodeDef(name, nodeTypeName);
     }
 
-    private static PersistentNodeState copyNodeState(NodeState srcState,
-                                                     String parentUUID,
-                                                     NodeTypeRegistry ntReg,
-                                                     HierarchyManagerImpl srcHierMgr,
-                                                     PersistentItemStateProvider srcStateMgr,
-                                                     PersistentItemStateProvider destStateMgr,
-                                                     boolean clone)
+    private static NodeState copyNodeState(NodeState srcState,
+                                           String parentUUID,
+                                           NodeTypeRegistry ntReg,
+                                           HierarchyManagerImpl srcHierMgr,
+                                           ItemStateManager srcStateMgr,
+                                           ItemStateManager destStateMgr,
+                                           boolean clone,
+                                           UpdateOperation update)
             throws RepositoryException {
-        PersistentNodeState newState;
+
+        NodeState newState;
         try {
             String uuid;
             if (clone) {
@@ -453,7 +445,7 @@ public class WorkspaceImpl implements Workspace {
             } else {
                 uuid = UUID.randomUUID().toString();	// create new version 4 uuid
             }
-            newState = destStateMgr.createNodeState(uuid, srcState.getNodeTypeName(), parentUUID);
+            newState = update.createNew(uuid, srcState.getNodeTypeName(), parentUUID);
             // copy node state
             // @todo special handling required for nodes with special semantics (e.g. those defined by mix:versionable, et.al.)
             // FIXME delegate to 'node type instance handler'
@@ -465,10 +457,10 @@ public class WorkspaceImpl implements Workspace {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
                 NodeState srcChildState = (NodeState) srcStateMgr.getItemState(new NodeId(entry.getUUID()));
                 // recursive copying of child node
-                PersistentNodeState newChildState = copyNodeState(srcChildState, uuid,
-                        ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
+                NodeState newChildState = copyNodeState(srcChildState, uuid,
+                        ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone, update);
                 // persist new child node
-                newChildState.store();
+                update.store(newChildState);
                 // add new child node entry to new node
                 newState.addChildNodeEntry(entry.getName(), newChildState.getUUID());
             }
@@ -477,10 +469,10 @@ public class WorkspaceImpl implements Workspace {
             while (iter.hasNext()) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
                 PropertyState srcChildState = (PropertyState) srcStateMgr.getItemState(new PropertyId(srcState.getUUID(), entry.getName()));
-                PersistentPropertyState newChildState = copyPropertyState(srcChildState, uuid, entry.getName(),
-                        ntReg, srcHierMgr, srcStateMgr, destStateMgr);
+                PropertyState newChildState = copyPropertyState(srcChildState, uuid, entry.getName(),
+                        ntReg, srcHierMgr, srcStateMgr, destStateMgr, update);
                 // persist new property
-                newChildState.store();
+                update.store(newChildState);
                 // add new property entry to new node
                 newState.addPropertyEntry(entry.getName());
             }
@@ -492,53 +484,48 @@ public class WorkspaceImpl implements Workspace {
         }
     }
 
-    private static PersistentPropertyState copyPropertyState(PropertyState srcState,
-                                                             String parentUUID,
-                                                             QName propName,
-                                                             NodeTypeRegistry ntReg,
-                                                             HierarchyManagerImpl srcHierMgr,
-                                                             PersistentItemStateProvider srcStateMgr,
-                                                             PersistentItemStateProvider destStateMgr)
+    private static PropertyState copyPropertyState(PropertyState srcState,
+                                                   String parentUUID,
+                                                   QName propName,
+                                                   NodeTypeRegistry ntReg,
+                                                   HierarchyManagerImpl srcHierMgr,
+                                                   ItemStateManager srcStateMgr,
+                                                   ItemStateManager destStateMgr,
+                                                   UpdateOperation update)
             throws RepositoryException {
+
         // @todo special handling required for properties with special semantics (e.g. those defined by mix:versionable, mix:lockable, et.al.)
-        PersistentPropertyState newState;
-        try {
-            newState = destStateMgr.createPropertyState(parentUUID, propName);
-            PropDefId defId = srcState.getDefinitionId();
-            newState.setDefinitionId(defId);
-            newState.setType(srcState.getType());
-            newState.setMultiValued(srcState.isMultiValued());
-            InternalValue[] values = srcState.getValues();
-            if (values != null) {
-                InternalValue[] newValues = new InternalValue[values.length];
-                for (int i = 0; i < values.length; i++) {
-                    newValues[i] = values[i] != null ? values[i].createCopy() : null;
-                }
-                newState.setValues(values);
-                // FIXME delegate to 'node type instance handler'
-                if (defId != null) {
-                    PropDef def = ntReg.getPropDef(defId);
-                    if (def.getDeclaringNodeType().equals(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-                        if (propName.equals(ItemImpl.PROPNAME_UUID)) {
-                            // set correct value of jcr:uuid property
-                            newState.setValues(new InternalValue[]{InternalValue.create(parentUUID)});
-                        }
+        PropertyState newState = update.createNew(propName, parentUUID);
+        PropDefId defId = srcState.getDefinitionId();
+        newState.setDefinitionId(defId);
+        newState.setType(srcState.getType());
+        newState.setMultiValued(srcState.isMultiValued());
+        InternalValue[] values = srcState.getValues();
+        if (values != null) {
+            InternalValue[] newValues = new InternalValue[values.length];
+            for (int i = 0; i < values.length; i++) {
+                newValues[i] = values[i] != null ? values[i].createCopy() : null;
+            }
+            newState.setValues(values);
+            // FIXME delegate to 'node type instance handler'
+            if (defId != null) {
+                PropDef def = ntReg.getPropDef(defId);
+                if (def.getDeclaringNodeType().equals(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+                    if (propName.equals(ItemImpl.PROPNAME_UUID)) {
+                        // set correct value of jcr:uuid property
+                        newState.setValues(new InternalValue[]{InternalValue.create(parentUUID)});
                     }
                 }
             }
-            return newState;
-        } catch (ItemStateException ise) {
-            String msg = "internal error: failed to copy state of " + srcHierMgr.safeGetJCRPath(srcState.getId());
-            log.error(msg, ise);
-            throw new RepositoryException(msg, ise);
         }
+        return newState;
     }
 
     private static void internalCopy(String srcAbsPath,
-                                     PersistentItemStateProvider srcStateMgr,
+                                     ItemStateManager srcStateMgr,
                                      HierarchyManagerImpl srcHierMgr,
                                      String destAbsPath,
-                                     PersistentItemStateProvider destStateMgr,
+                                     ItemStateManager destStateMgr,
                                      HierarchyManagerImpl destHierMgr,
                                      AccessManagerImpl accessMgr,
                                      NamespaceResolver nsResolver,
@@ -550,7 +537,7 @@ public class WorkspaceImpl implements Workspace {
         // 1. check paths & retrieve state
 
         Path srcPath;
-        PersistentNodeState srcState;
+        NodeState srcState;
         try {
             srcPath = Path.create(srcAbsPath, nsResolver, true);
             srcState = getNodeState(srcPath, srcHierMgr, srcStateMgr);
@@ -563,7 +550,7 @@ public class WorkspaceImpl implements Workspace {
         Path destPath;
         Path.PathElement destName;
         Path destParentPath;
-        PersistentNodeState destParentState;
+        NodeState destParentState;
         try {
             destPath = Path.create(destAbsPath, nsResolver, true);
             destName = destPath.getNameElement();
@@ -596,62 +583,28 @@ public class WorkspaceImpl implements Workspace {
         }
         // check node type constraints
         checkAddNode(destPath, srcState.getNodeTypeName(), ntReg, accessMgr, destHierMgr, destStateMgr);
-/*
-	// check if target node needs to be inserted at specific location in child node entries list
-	boolean insertTargetEntry = false;
-	int ind = destName.getIndex();
-	if (ind > 0) {
-	    // target name contains subscript:
-	    // validate subscript
-	    List sameNameSibs = destParentState.getChildNodeEntries(destName.getName());
-	    if (ind > sameNameSibs.size() + 1) {
-		String msg = "invalid subscript in name: " + destAbsPath;
-		log.error(msg);
-		throw new RepositoryException(msg);
-	    }
-	    insertTargetEntry = (ind < sameNameSibs.size() + 1) ? true : false;
-	}
-	if (insertTargetEntry) {
-	    // check hasOrderableChildNodes flag
-	    if (!ntReg.getNodeTypeDef(destParentState.getNodeTypeName()).hasOrderableChildNodes()) {
-		throw new ConstraintViolationException(destAbsPath + ": parent node's node type does not allow explicit ordering of child nodes");
-	    }
-	}
-*/
+
         // 3. do copy operation (modify and persist affected states)
-
-        // create deep copy of source node state
-        PersistentNodeState newState = copyNodeState(srcState, destParentState.getUUID(),
-                ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone);
-
-        // add to new parent
-        destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
-/*
-	if (!insertTargetEntry) {
-	    // append target entry
-	    destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
-	} else {
-	    // insert target entry at specified position
-	    Iterator iter = new ArrayList(destParentState.getChildNodeEntries()).iterator();
-	    destParentState.removeAllChildNodeEntries();
-	    while (iter.hasNext()) {
-		NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-		if (entry.getName().equals(destName.getName()) &&
-			entry.getIndex() == destName.getIndex()) {
-		    destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
-		}
-		destParentState.addChildNodeEntry(entry.getName(), entry.getUUID());
-	    }
-	}
-*/
-        // change definition (id) of new node
-        ChildNodeDef newNodeDef = findApplicableDefinition(destName.getName(), srcState.getNodeTypeName(), destParentState, ntReg);
-        newState.setDefinitionId(new NodeDefId(newNodeDef));
-
-        // persist states
         try {
-            newState.store();
-            destParentState.store();
+            UpdateOperation update = destStateMgr.beginUpdate();
+
+            // create deep copy of source node state
+            NodeState newState = copyNodeState(srcState, destParentState.getUUID(),
+                    ntReg, srcHierMgr, srcStateMgr, destStateMgr, clone, update);
+
+            // add to new parent
+            destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
+
+            // change definition (id) of new node
+            ChildNodeDef newNodeDef = findApplicableDefinition(destName.getName(), srcState.getNodeTypeName(), destParentState, ntReg);
+            newState.setDefinitionId(new NodeDefId(newNodeDef));
+
+            // persist states
+            update.store(newState);
+            update.store(destParentState);
+
+            // finish update operations
+            update.end();
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
             log.error(msg, ise);
@@ -697,12 +650,12 @@ public class WorkspaceImpl implements Workspace {
             ItemExistsException, RepositoryException {
         // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
-        PersistentItemStateProvider srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
+        ItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
         // FIXME need to setup a hierarchy manager for source workspace
         HierarchyManagerImpl srcHierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
         // do cross-workspace copy
         internalCopy(srcAbsPath, srcStateMgr, srcHierMgr,
-                destAbsPath, persistentStateMgr, hierMgr,
+                destAbsPath, stateMgr, hierMgr,
                 session.getAccessManager(), session.getNamespaceResolver(),
                 rep.getNodeTypeRegistry(), true);
     }
@@ -714,8 +667,8 @@ public class WorkspaceImpl implements Workspace {
             throws ConstraintViolationException, AccessDeniedException,
             PathNotFoundException, ItemExistsException, RepositoryException {
         // do intra-workspace copy
-        internalCopy(srcAbsPath, persistentStateMgr, hierMgr,
-                destAbsPath, persistentStateMgr, hierMgr,
+        internalCopy(srcAbsPath, stateMgr, hierMgr,
+                destAbsPath, stateMgr, hierMgr,
                 session.getAccessManager(), session.getNamespaceResolver(),
                 rep.getNodeTypeRegistry(), false);
     }
@@ -729,12 +682,12 @@ public class WorkspaceImpl implements Workspace {
             RepositoryException {
         // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
-        PersistentItemStateProvider srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
+        ItemStateManager srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
         // FIXME need to setup a hierarchy manager for source workspace
         HierarchyManagerImpl srcHierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
         // do cross-workspace copy
         internalCopy(srcAbsPath, srcStateMgr, srcHierMgr,
-                destAbsPath, persistentStateMgr, hierMgr,
+                destAbsPath, stateMgr, hierMgr,
                 session.getAccessManager(), session.getNamespaceResolver(),
                 rep.getNodeTypeRegistry(), false);
     }
@@ -749,18 +702,18 @@ public class WorkspaceImpl implements Workspace {
         // intra-workspace move...
 
         // 1. check paths & retrieve state
-
         Path srcPath;
         Path.PathElement srcName;
         Path srcParentPath;
-        PersistentNodeState targetState;
-        PersistentNodeState srcParentState;
+        NodeState targetState;
+        NodeState srcParentState;
+
         try {
             srcPath = Path.create(srcAbsPath, session.getNamespaceResolver(), true);
             srcName = srcPath.getNameElement();
             srcParentPath = srcPath.getAncestor(1);
-            targetState = getNodeState(srcPath, hierMgr, persistentStateMgr);
-            srcParentState = getNodeState(srcParentPath, hierMgr, persistentStateMgr);
+            targetState = getNodeState(srcPath, hierMgr, stateMgr);
+            srcParentState = getNodeState(srcParentPath, hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + srcAbsPath;
             log.error(msg, mpe);
@@ -770,17 +723,19 @@ public class WorkspaceImpl implements Workspace {
         Path destPath;
         Path.PathElement destName;
         Path destParentPath;
-        PersistentNodeState destParentState;
+        NodeState destParentState;
+
         try {
             destPath = Path.create(destAbsPath, session.getNamespaceResolver(), true);
             destName = destPath.getNameElement();
             destParentPath = destPath.getAncestor(1);
-            destParentState = getNodeState(destParentPath, hierMgr, persistentStateMgr);
+            destParentState = getNodeState(destParentPath, hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + destAbsPath;
             log.error(msg, mpe);
             throw new RepositoryException(msg, mpe);
         }
+
         int ind = destName.getIndex();
         if (ind > 0) {
             // subscript in name element
@@ -791,88 +746,46 @@ public class WorkspaceImpl implements Workspace {
 
         // 2. check node type constraints & access rights
 
-        checkRemoveNode(srcPath, rep.getNodeTypeRegistry(), session.getAccessManager(), hierMgr, persistentStateMgr);
+        checkRemoveNode(srcPath, rep.getNodeTypeRegistry(),
+                session.getAccessManager(), hierMgr, stateMgr);
         checkAddNode(destPath, targetState.getNodeTypeName(),
                 rep.getNodeTypeRegistry(), session.getAccessManager(),
-                hierMgr, persistentStateMgr);
-/*
-	// check if target node needs to be inserted at specific location in child node entries list
-	boolean insertTargetEntry = false;
-	int ind = destName.getIndex();
-	if (ind > 0) {
-	    // target name contains subscript:
-	    // validate subscript
-	    List sameNameSibs = destParentState.getChildNodeEntries(destName.getName());
-	    if (ind > sameNameSibs.size() + 1) {
-		String msg = "invalid subscript in name: " + destAbsPath;
-		log.error(msg);
-		throw new RepositoryException(msg);
-	    }
-	    insertTargetEntry = (ind < sameNameSibs.size() + 1) ? true : false;
-	}
-	if (insertTargetEntry) {
-	    // check hasOrderableChildNodes flag
-	    if (!rep.getNodeTypeRegistry().getNodeTypeDef(destParentState.getNodeTypeName()).hasOrderableChildNodes()) {
-		throw new ConstraintViolationException(destAbsPath + ": parent node's node type does not allow explicit ordering of child nodes");
-	    }
-	}
-*/
+                hierMgr, stateMgr);
+
         // 3. do move operation (modify and persist affected states)
-
-        boolean renameOnly = srcParentState.getUUID().equals(destParentState.getUUID());
-
-        // add to new parent
-        if (!renameOnly) {
-            targetState.addParentUUID(destParentState.getUUID());
-        }
-        destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
-/*
-	if (!insertTargetEntry) {
-	    // append target entry
-	    destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
-	} else {
-	    // insert target entry at specified position
-	    Iterator iter = new ArrayList(destParentState.getChildNodeEntries()).iterator();
-	    destParentState.removeAllChildNodeEntries();
-	    while (iter.hasNext()) {
-		NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-		if (entry.getName().equals(destName.getName()) &&
-			entry.getIndex() == destName.getIndex()) {
-		    destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
-		}
-		destParentState.addChildNodeEntry(entry.getName(), entry.getUUID());
-	    }
-	}
-*/
-        // change definition (id) of target node
-        ChildNodeDef newTargetDef = findApplicableDefinition(destName.getName(), targetState.getNodeTypeName(), destParentState, rep.getNodeTypeRegistry());
-        targetState.setDefinitionId(new NodeDefId(newTargetDef));
-
-        // remove from old parent
-        if (!renameOnly) {
-            targetState.removeParentUUID(srcParentState.getUUID());
-        }
-        int srcNameIndex = srcName.getIndex() == 0 ? 1 : srcName.getIndex();
-/*
-	// if the net result of the move is changing the position of a child node
-	// among its same-same siblings, the subscript of the child node entry
-	// to be removed might need adjustment
-	if (renameOnly && srcName.getName().equals(destName.getName()) &&
-		insertTargetEntry && destName.getIndex() <= srcNameIndex) {
-	    srcNameIndex++;
-	}
-*/
-        srcParentState.removeChildNodeEntry(srcName.getName(), srcNameIndex);
-
-        // persist states
         try {
-            targetState.store();
-            if (renameOnly) {
-                srcParentState.store();
-            } else {
-                destParentState.store();
-                srcParentState.store();
+            UpdateOperation update = stateMgr.beginUpdate();
+            boolean renameOnly = srcParentState.getUUID().equals(destParentState.getUUID());
+
+            // add to new parent
+            if (!renameOnly) {
+                targetState.addParentUUID(destParentState.getUUID());
             }
+            destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
+
+            // change definition (id) of target node
+            ChildNodeDef newTargetDef = findApplicableDefinition(destName.getName(), targetState.getNodeTypeName(), destParentState, rep.getNodeTypeRegistry());
+            targetState.setDefinitionId(new NodeDefId(newTargetDef));
+
+            // remove from old parent
+            if (!renameOnly) {
+                targetState.removeParentUUID(srcParentState.getUUID());
+            }
+
+            int srcNameIndex = srcName.getIndex() == 0 ? 1 : srcName.getIndex();
+            srcParentState.removeChildNodeEntry(srcName.getName(), srcNameIndex);
+
+            // persist states
+            update.store(targetState);
+            if (renameOnly) {
+                update.store(srcParentState);
+            } else {
+                update.store(destParentState);
+                update.store(srcParentState);
+            }
+
+            // finish update
+            update.end();
         } catch (ItemStateException ise) {
             String msg = "internal error: failed to persist state of " + destAbsPath;
             log.error(msg, ise);
@@ -938,11 +851,11 @@ public class WorkspaceImpl implements Workspace {
         // check path & retrieve state
         Path path;
         Path.PathElement name;
-        PersistentNodeState state;
+        NodeState state;
         try {
             path = Path.create(absPath, session.getNamespaceResolver(), true);
             name = path.getNameElement();
-            state = getNodeState(path, hierMgr, persistentStateMgr);
+            state = getNodeState(path, hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + absPath;
             log.error(msg, mpe);
@@ -955,7 +868,7 @@ public class WorkspaceImpl implements Workspace {
         }
 
         new DocViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
-                persistentStateMgr, (NamespaceRegistryImpl) rep.getNamespaceRegistry(),
+                stateMgr, rep.getNamespaceRegistry(),
                 session.getAccessManager(), hierMgr, contentHandler).serialize();
     }
 
@@ -981,11 +894,11 @@ public class WorkspaceImpl implements Workspace {
         // check path & retrieve state
         Path path;
         Path.PathElement name;
-        PersistentNodeState state;
+        NodeState state;
         try {
             path = Path.create(absPath, session.getNamespaceResolver(), true);
             name = path.getNameElement();
-            state = getNodeState(path, hierMgr, persistentStateMgr);
+            state = getNodeState(path, hierMgr, stateMgr);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + absPath;
             log.error(msg, mpe);
@@ -998,7 +911,7 @@ public class WorkspaceImpl implements Workspace {
         }
 
         new SysViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
-                persistentStateMgr, (NamespaceRegistryImpl) rep.getNamespaceRegistry(),
+                stateMgr, rep.getNamespaceRegistry(),
                 session.getAccessManager(), hierMgr, contentHandler).serialize();
     }
 

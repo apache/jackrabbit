@@ -27,10 +27,10 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
-import org.apache.jackrabbit.core.state.*;
-import org.apache.jackrabbit.core.state.xml.XMLPersistenceManager;
-import org.apache.jackrabbit.core.state.tx.TransactionManager;
-import org.apache.jackrabbit.core.state.tx.XASessionImpl;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PMContext;
+import org.apache.jackrabbit.core.state.PersistenceManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.jackrabbit.core.version.VersionManager;
@@ -58,7 +58,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     /**
      * hardcoded uuid of the repository root node
      */
-    private static final String ROOT_NODE_UUID = "ac3b5c25-613d-4798-8494-ffbcca9c5c6c";
+    private static final String ROOT_NODE_UUID = "cafebabe-cafe-babe-cafe-babecafebabe";
 
     private static final String ANONYMOUS_USER = "anonymous";
 
@@ -90,7 +90,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
     private final NodeTypeRegistry ntReg;
     private final PersistentVersionManager pvMgr;
     private final VersionManager vMgr;
-    private final TransactionManager txMgr;
 
     // configuration of the repository
     private final RepositoryConfig repConfig;
@@ -152,7 +151,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new RepositoryException(msg, fse);
         }
         versionStore = new BasedFileSystem(repStore, fsRootPath);
-
 
         FileSystemResource uuidFile = new FileSystemResource(metaDataStore, "rootUUID");
         try {
@@ -249,17 +247,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
         propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
 
-        // setup internal transaction manager
-        // @todo rewrite to use file system abstraction (FileSystem interface)
-        try {
-            File txRootDir = new File(repConfig.getHomeDir(), "tx");
-            txMgr = new TransactionManager(txRootDir);
-        } catch (IOException ioe) {
-            String msg = "failed to initialize internal transaction manager";
-            log.error(msg, ioe);
-            throw new RepositoryException(msg, ioe);
-        }
-
         // workspaces
         Iterator iter = repConfig.getWorkspaceConfigs().iterator();
         while (iter.hasNext()) {
@@ -280,14 +267,9 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         }
 
         // init version manager
-        // todo: improve configurability
-        XMLPersistenceManager pm = new XMLPersistenceManager();
-        try {
-            pm.init(versionStore, repConfig.getHomeDir()+"/versions");
-        } catch (Exception e) {
-            throw new RepositoryException(e);
-        }
-        pvMgr = new NativePVM(pm, getNodeTypeRegistry());
+        // todo: as soon as dynamic workspaces are available, base on system ws
+        SessionImpl verSession = getSystemSession(repConfig.getDefaultWorkspaceName());
+        pvMgr = new NativePVM(verSession);
         vMgr = new VersionManagerImpl(pvMgr);
 
         // finally register shutdown hook
@@ -415,7 +397,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
      *                             already exists or if another error occurs
      * @see SessionImpl#createWorkspace(String)
      */
-     synchronized void createWorkspace(String workspaceName) throws RepositoryException {
+    synchronized void createWorkspace(String workspaceName) throws RepositoryException {
         if (wspInfos.containsKey(workspaceName)) {
             throw new RepositoryException("workspace '" + workspaceName + "' already exists.");
         }
@@ -429,7 +411,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         initWorkspace(workspaceName);
     }
 
-    PersistentItemStateProvider getWorkspaceStateManager(String workspaceName)
+    SharedItemStateManager getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
         if (disposed) {
@@ -441,20 +423,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             throw new NoSuchWorkspaceException(workspaceName);
         }
         return wspInfo.getItemStateProvider();
-    }
-
-    ReferenceManager getWorkspaceReferenceManager(String workspaceName)
-            throws NoSuchWorkspaceException, RepositoryException {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
-
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        return wspInfo.getReferenceManager();
     }
 
     ObservationManagerFactory getObservationManagerFactory(String workspaceName)
@@ -674,13 +642,13 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         }
         if (credentials == null) {
             // anonymous login
-            SessionImpl ses = new XASessionImpl(this, ANONYMOUS_CREDENTIALS, wspInfo.getConfig(), txMgr);
+            SessionImpl ses = new XASessionImpl(this, ANONYMOUS_CREDENTIALS, wspInfo.getConfig());
             activeSessions.put(ses, ses);
             return ses;
         } else if (credentials instanceof SimpleCredentials) {
             // username/password credentials
             // @todo implement authentication/authorization
-            Session ses = new XASessionImpl(this, credentials, wspInfo.getConfig(), txMgr);
+            Session ses = new XASessionImpl(this, credentials, wspInfo.getConfig());
             activeSessions.put(ses, ses);
             return ses;
         } else {
@@ -764,12 +732,7 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         /**
          * item state provider
          */
-        private PersistentItemStateManager itemStateMgr;
-
-        /**
-         * reference manager
-         */
-        private ReferenceManager refMgr;
+        private SharedItemStateManager itemStateMgr;
 
         /**
          * system session
@@ -873,32 +836,17 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         }
 
         /**
-         * Returns the reference manager for this workspace
-         *
-         * @return the reference manager for this workspace
-         * @throws RepositoryException if the reference manager could not be created
-         */
-        synchronized ReferenceManager getReferenceManager()
-                throws RepositoryException {
-            if (refMgr == null) {
-                // create reference mgr that uses this workspace's perstistence mgr
-                refMgr = new ReferenceManager(getPersistenceManager());
-            }
-            return refMgr;
-        }
-
-        /**
          * Returns the workspace item state provider
          *
          * @return the workspace item state provider
          * @throws RepositoryException if the workspace item state provider could not be created
          */
-        synchronized PersistentItemStateProvider getItemStateProvider()
+        synchronized SharedItemStateManager getItemStateProvider()
                 throws RepositoryException {
             if (itemStateMgr == null) {
                 // create item state manager
                 try {
-                    itemStateMgr = new PersistentItemStateManager(getPersistenceManager(), rootNodeUUID, ntReg);
+                    itemStateMgr = new SharedItemStateManager(getPersistenceManager(), rootNodeUUID, ntReg);
                 } catch (ItemStateException ise) {
                     String msg = "failed to instantiate persistent item state manager";
                     log.error(msg, ise);
@@ -974,12 +922,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
                     log.error("error while closing persistence manager of workspace " + config.getName(), e);
                 }
                 persistMgr = null;
-            }
-
-            // dispose reference manager
-            if (refMgr != null) {
-                //refMgr.dispose();
-                refMgr = null;
             }
 
             // close workspace file system

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import org.apache.jackrabbit.core.state.ItemStateProvider;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 
 import java.io.IOException;
 
@@ -26,21 +26,25 @@ import java.io.IOException;
  */
 public abstract class AbstractQueryHandler implements QueryHandler {
 
-    /** A <code>FileSystem</code> to store the search index */
+    /**
+     * A <code>FileSystem</code> to store the search index
+     */
     private FileSystem fs;
 
-    /** The persistent <code>ItemStateProvider</code> */
-    private ItemStateProvider stateProvider;
+    /**
+     * The persistent <code>ItemStateManager</code>
+     */
+    private ItemStateManager stateProvider;
 
     /**
      * Initializes this query handler by setting all properties in this class
      * with appropriate parameter values.
      *
-     * @param fs a {@link org.apache.jackrabbit.core.fs.FileSystem} this
-     *  <code>QueryHandler</code> may use to store its index.
+     * @param fs            a {@link FileSystem} this
+     *                      <code>QueryHandler</code> may use to store its index.
      * @param stateProvider provides persistent item states.
      */
-    public final void init(FileSystem fs, ItemStateProvider stateProvider)
+    public final void init(FileSystem fs, ItemStateManager stateProvider)
             throws IOException {
         this.fs = fs;
         this.stateProvider = stateProvider;
@@ -54,21 +58,22 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     protected abstract void doInit() throws IOException;
 
     /**
-     * Returns the persistent {@link org.apache.jackrabbit.core.state.ItemStateProvider}
+     * Returns the persistent {@link ItemStateManager}
      * of the workspace this <code>QueryHandler</code> is based on.
      *
      * @return the persistent <code>ItemStateProvider</code> of the current
-     *   workspace.
+     *         workspace.
      */
-    protected ItemStateProvider getItemStateProvider() {
+    protected ItemStateManager getItemStateProvider() {
         return stateProvider;
     }
 
     /**
      * Returns the {@link org.apache.jackrabbit.core.fs.FileSystem} instance
      * this <code>QueryHandler</code> may use to store its index.
+     *
      * @return the <code>FileSystem</code> instance for this
-     *   <code>QueryHandler</code>.
+     *         <code>QueryHandler</code>.
      */
     protected FileSystem getFileSystem() {
         return fs;

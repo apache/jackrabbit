@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
@@ -154,8 +154,8 @@ public class SessionImpl implements Session {
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
         String wspName = wspConfig.getName();
         wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
-                rep.getWorkspaceReferenceManager(wspName), rep, this);
-        itemStateMgr = createSessionItemStateManager(wsp.getPersistentStateManager());
+                rep, this);
+        itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(credentials, hierMgr);
@@ -187,8 +187,8 @@ public class SessionImpl implements Session {
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
         String wspName = wspConfig.getName();
         wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
-                rep.getWorkspaceReferenceManager(wspName), rep, this);
-        itemStateMgr = new SessionItemStateManager(rep.getRootNodeUUID(), wsp.getPersistentStateManager(), getNamespaceResolver());
+                rep, this);
+        itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         versionMgr = rep.getVersionManager();
@@ -208,8 +208,9 @@ public class SessionImpl implements Session {
      *
      * @return session item state manager
      */
-    protected SessionItemStateManager createSessionItemStateManager(PersistentItemStateProvider provider) {
-        return new SessionItemStateManager(rep.getRootNodeUUID(), provider, getNamespaceResolver());
+    protected SessionItemStateManager createSessionItemStateManager(ItemStateManager manager) {
+        return new SessionItemStateManager(rep.getRootNodeUUID(),
+                manager, getNamespaceResolver());
     }
 
     /**
@@ -318,10 +319,12 @@ public class SessionImpl implements Session {
      * @param ps
      * @throws RepositoryException
      */
-    void dump(PrintStream ps) throws RepositoryException {
+    public void dump(PrintStream ps) throws RepositoryException {
         ps.println("Session: " + (userId == null ? "unknown" : userId) + " (" + this + ")");
         ps.println();
-        getItemManager().dump(ps);
+        itemMgr.dump(ps);
+        ps.println();
+        itemStateMgr.dump(ps);
     }
 
     /**

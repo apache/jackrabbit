@@ -16,23 +16,23 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.version.*;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.util.Text;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.version.*;
 import org.apache.log4j.Logger;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyType;
 import javax.jcr.version.VersionException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Calendar;
 
 /**
  *
@@ -172,7 +172,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
     }
 
     /**
-     *
      * @param versionName
      * @return
      */

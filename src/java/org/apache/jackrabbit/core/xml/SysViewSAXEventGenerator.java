@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.Base64;
@@ -74,7 +74,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      */
     public SysViewSAXEventGenerator(NodeState nodeState, QName nodeName,
                                     boolean noRecurse, boolean binaryAsLink,
-                                    ItemStateProvider stateProvider,
+                                    ItemStateManager stateProvider,
                                     NamespaceRegistryImpl nsReg,
                                     AccessManagerImpl accessMgr,
                                     HierarchyManager hierMgr,

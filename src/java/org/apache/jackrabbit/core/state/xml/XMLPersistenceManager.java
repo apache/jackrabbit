@@ -41,7 +41,7 @@ import java.util.*;
  * <code>PersistenceManager</code> that persists <code>ItemState</code>
  * and <code>NodeReferences</code> objects in XML format.
  */
-public class XMLPersistenceManager implements PersistenceManager {
+public class XMLPersistenceManager extends AbstractPersistenceManager {
 
     private static Logger log = Logger.getLogger(XMLPersistenceManager.class);
 
@@ -157,7 +157,7 @@ public class XMLPersistenceManager implements PersistenceManager {
         return buildNodeFolderPath(uuid) + "/" + NODEREFSFILENAME;
     }
 
-    private void readState(Element nodeElement, PersistentNodeState state)
+    private void readState(Element nodeElement, NodeState state)
             throws ItemStateException {
         // first do some paranoid sanity checks
         if (!nodeElement.getName().equals(NODE_ELEMENT)) {
@@ -235,7 +235,7 @@ public class XMLPersistenceManager implements PersistenceManager {
         }
     }
 
-    private void readState(Element propElement, PersistentPropertyState state)
+    private void readState(Element propElement, PropertyState state)
             throws ItemStateException {
         // first do some paranoid sanity checks
         if (!propElement.getName().equals(PROPERTY_ELEMENT)) {
@@ -392,10 +392,12 @@ public class XMLPersistenceManager implements PersistenceManager {
         }
     }
 
+
+
     /**
-     * @see PersistenceManager#load(PersistentNodeState)
+     * @see PersistenceManager#load
      */
-    public synchronized void load(PersistentNodeState state)
+    public synchronized NodeState load(String uuid)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -403,7 +405,6 @@ public class XMLPersistenceManager implements PersistenceManager {
         }
 
         Exception e = null;
-        String uuid = state.getUUID();
         String nodeFilePath = buildNodeFilePath(uuid);
 
         try {
@@ -416,10 +417,11 @@ public class XMLPersistenceManager implements PersistenceManager {
                 SAXBuilder builder = new SAXBuilder();
                 Element rootElement = builder.build(in).getRootElement();
                 String ntName = rootElement.getAttributeValue(NODETYPE_ATTRIBUTE);
-                state.setNodeTypeName(QName.valueOf(ntName));
 
+                NodeState state = createNew(uuid, null, null);
+                state.setNodeTypeName(QName.valueOf(ntName));
                 readState(rootElement, state);
-                return;
+                return state;
             } finally {
                 in.close();
             }
@@ -439,9 +441,9 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#load(PersistentPropertyState)
+     * @see PersistenceManager#load
      */
-    public synchronized void load(PersistentPropertyState state)
+    public synchronized PropertyState load(QName name, String parentUUID)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -449,21 +451,20 @@ public class XMLPersistenceManager implements PersistenceManager {
         }
 
         Exception e = null;
-        String parentUUID = state.getParentUUID();
-        QName propName = state.getName();
-        String propFilePath = buildPropFilePath(parentUUID, propName);
+        String propFilePath = buildPropFilePath(parentUUID, name);
 
         try {
             if (!itemStateStore.isFile(propFilePath)) {
-                throw new NoSuchItemStateException(parentUUID + "/" + propName);
+                throw new NoSuchItemStateException(parentUUID + "/" + name);
             }
             InputStream in = itemStateStore.getInputStream(propFilePath);
             try {
                 SAXBuilder builder = new SAXBuilder();
                 Element rootElement = builder.build(in).getRootElement();
 
+                PropertyState state = createNew(name, parentUUID);
                 readState(rootElement, state);
-                return;
+                return state;
             } finally {
                 in.close();
             }
@@ -477,15 +478,15 @@ public class XMLPersistenceManager implements PersistenceManager {
             e = fse;
             // fall through
         }
-        String msg = "failed to read property state: " + parentUUID + "/" + propName;
+        String msg = "failed to read property state: " + parentUUID + "/" + name;
         log.error(msg, e);
         throw new ItemStateException(msg, e);
     }
 
     /**
-     * @see PersistenceManager#store
+     * @see AbstractPersistenceManager#store
      */
-    public synchronized void store(PersistentNodeState state) throws ItemStateException {
+    protected void store(NodeState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -568,9 +569,9 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#store
+     * @see AbstractPersistenceManager#store
      */
-    public synchronized void store(PersistentPropertyState state) throws ItemStateException {
+    protected void store(PropertyState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -682,9 +683,9 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#destroy
+     * @see AbstractPersistenceManager#destroy
      */
-    public synchronized void destroy(PersistentNodeState state) throws ItemStateException {
+    protected void destroy(NodeState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -705,9 +706,9 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#destroy
+     * @see AbstractPersistenceManager#destroy
      */
-    public synchronized void destroy(PersistentPropertyState state) throws ItemStateException {
+    protected void destroy(PropertyState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -742,9 +743,9 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#load(NodeReferences)
+     * @see PersistenceManager#load
      */
-    public synchronized void load(NodeReferences refs)
+    public synchronized NodeReferences load(NodeId targetId)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -752,14 +753,13 @@ public class XMLPersistenceManager implements PersistenceManager {
         }
 
         Exception e = null;
-        String uuid = refs.getTargetId().getUUID();
+        String uuid = targetId.getUUID();
 
         String refsFilePath = buildNodeReferencesFilePath(uuid);
         try {
             if (!itemStateStore.isFile(refsFilePath)) {
                 throw new NoSuchItemStateException(uuid);
             }
-            refs.clearAllReferences();
 
             InputStream in = itemStateStore.getInputStream(refsFilePath);
 
@@ -767,8 +767,9 @@ public class XMLPersistenceManager implements PersistenceManager {
                 SAXBuilder builder = new SAXBuilder();
                 Element rootElement = builder.build(in).getRootElement();
 
+                NodeReferences refs = new NodeReferences(targetId);
                 readState(rootElement, refs);
-                return;
+                return refs;
             } finally {
                 in.close();
             }
@@ -788,9 +789,9 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#store(NodeReferences)
+     * @see AbstractPersistenceManager#store
      */
-    public synchronized void store(NodeReferences refs) throws ItemStateException {
+    protected void store(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -834,9 +835,9 @@ public class XMLPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#destroy(NodeReferences)
+     * @see AbstractPersistenceManager#destroy
      */
-    public synchronized void destroy(NodeReferences refs) throws ItemStateException {
+    protected void destroy(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }

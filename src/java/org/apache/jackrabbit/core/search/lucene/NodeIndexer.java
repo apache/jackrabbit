@@ -16,18 +16,8 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.state.*;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -45,11 +35,14 @@ import java.util.List;
  */
 class NodeIndexer {
 
-    /** The <code>NodeState</code> of the node to index */
+    /**
+     * The <code>NodeState</code> of the node to index
+     */
     private final NodeState node;
-
-    /** The persistent item state provider */
-    private final ItemStateProvider stateProvider;
+    /**
+     * The persistent item state provider
+     */
+    private final ItemStateManager stateProvider;
 
     /**
      * Namespace mappings to use for indexing. This is the internal
@@ -59,12 +52,13 @@ class NodeIndexer {
 
     /**
      * Creates a new node indexer.
-     * @param node the node state to index.
+     *
+     * @param node          the node state to index.
      * @param stateProvider the persistent item state manager to retrieve properties.
-     * @param mappings internal namespace mappings.
+     * @param mappings      internal namespace mappings.
      */
     private NodeIndexer(NodeState node,
-                        ItemStateProvider stateProvider,
+                        ItemStateManager stateProvider,
                         NamespaceMappings mappings) {
         this.node = node;
         this.stateProvider = stateProvider;
@@ -73,15 +67,16 @@ class NodeIndexer {
 
     /**
      * Creates a lucene Document from a node.
-     * @param node the node state to index.
+     *
+     * @param node          the node state to index.
      * @param stateProvider the state provider to retrieve property values.
-     * @param mappings internal namespace mappings.
+     * @param mappings      internal namespace mappings.
      * @return the lucene Document.
      * @throws RepositoryException if an error occurs while reading property
-     *   values from the <code>ItemStateProvider</code>.
+     *                             values from the <code>ItemStateProvider</code>.
      */
     public static Document createDocument(NodeState node,
-                                          ItemStateProvider stateProvider,
+                                          ItemStateManager stateProvider,
                                           NamespaceMappings mappings)
             throws RepositoryException {
         NodeIndexer indexer = new NodeIndexer(node, stateProvider, mappings);
@@ -90,9 +85,10 @@ class NodeIndexer {
 
     /**
      * Creates a lucene Document.
+     *
      * @return the lucene Document with the index layout.
      * @throws RepositoryException if an error occurs while reading property
-     *   values from the <code>ItemStateProvider</code>.
+     *                             values from the <code>ItemStateProvider</code>.
      */
     private Document createDoc() throws RepositoryException {
         Document doc = new Document();
@@ -108,8 +104,7 @@ class NodeIndexer {
                 doc.add(new Field(FieldNames.LABEL, "", false, true, false));
             } else {
                 doc.add(new Field(FieldNames.PARENT, node.getParentUUID(), true, true, false));
-                NodeState parent = (NodeState) stateProvider.getItemState(
-                        new NodeId(node.getParentUUID()));
+                NodeState parent = (NodeState) stateProvider.getItemState(new NodeId(node.getParentUUID()));
                 List entries = parent.getChildNodeEntries(node.getUUID());
                 for (Iterator it = entries.iterator(); it.hasNext();) {
                     NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
@@ -147,9 +142,10 @@ class NodeIndexer {
 
     /**
      * Adds a value to the lucene Document.
-     * @param doc the document.
+     *
+     * @param doc   the document.
      * @param value the internal jackrabbit value.
-     * @param name the name of the property.
+     * @param name  the name of the property.
      */
     private void addValue(Document doc, InternalValue value, QName name) {
         String fieldName = name.toString();
@@ -195,7 +191,7 @@ class NodeIndexer {
                         false));
                 break;
             case PropertyType.REFERENCE:
-                String uuid = ((UUID) internalValue).toString();
+                String uuid = internalValue.toString();
                 doc.add(new Field(fieldName,
                         uuid,
                         false,
@@ -203,7 +199,7 @@ class NodeIndexer {
                         false));
                 break;
             case PropertyType.PATH:
-                String path = ((Path) internalValue).toString();
+                String path = internalValue.toString();
                 doc.add(new Field(fieldName,
                         path,
                         false,

@@ -59,7 +59,7 @@ public class VirtualNodeState extends NodeState {
                                    QName nodeTypeName,
                                    QName[] mixins)
             throws RepositoryException {
-        super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING);
+        super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING, false);
         this.stateMgr = stateMgr;
 
         // add default properties

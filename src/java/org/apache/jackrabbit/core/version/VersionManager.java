@@ -16,8 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 
 import javax.jcr.RepositoryException;
@@ -91,7 +94,7 @@ public interface VersionManager {
      * @return
      */
     public VirtualItemStateProvider getVirtualItemStateProvider(SessionImpl session,
-                                                                ItemStateProvider base);
+                                                                ItemStateManager base);
 
     /**
      * Creates a new version history. This action is needed either when creating
@@ -168,6 +171,7 @@ public interface VersionManager {
 
     /**
      * checks, if the node with the given id exists
+     *
      * @param id
      * @return
      */
@@ -175,6 +179,7 @@ public interface VersionManager {
 
     /**
      * Returns the version item with the given id
+     *
      * @param id
      * @return
      * @throws RepositoryException

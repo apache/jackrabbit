@@ -26,12 +26,14 @@ public interface InternalVersionItem {
 
     /**
      * Returns the external id of this item
+     *
      * @return
      */
     public String getId();
 
     /**
      * returns the parent version item or null
+     *
      * @return
      */
     public InternalVersionItem getParent();

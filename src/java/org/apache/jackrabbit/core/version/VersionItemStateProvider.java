@@ -16,19 +16,20 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.state.*;
-import org.apache.jackrabbit.core.virtual.*;
+import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.jackrabbit.core.virtual.VirtualNodeState;
+import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 import org.apache.log4j.Logger;
-import org.apache.commons.collections.ReferenceMap;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.Map;
+import javax.jcr.RepositoryException;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * This Class implements a virtual item state provider, in order to expose the
@@ -70,12 +71,13 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * creates a new version item state provide
+     *
      * @param vMgr
      * @param rootId
      * @param parentId
      * @throws RepositoryException
      */
-    public VersionItemStateProvider(VersionManager vMgr, NodeTypeManagerImpl ntMgr, String rootId, String parentId)  throws RepositoryException {
+    public VersionItemStateProvider(VersionManager vMgr, NodeTypeManagerImpl ntMgr, String rootId, String parentId) throws RepositoryException {
         this.vMgr = vMgr;
         this.ntMgr = ntMgr;
         NDEF_UNSTRUCTURED = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_UNSTRUCTURED).unwrap());
@@ -86,10 +88,9 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         this.root.setDefinitionId(NDEF_UNSTRUCTURED);
     }
 
-    //--------------------------------------------------< ItemStateProvider >---
-
+    //-----------------------------------------------------< ItemStateManager >
     /**
-     * @see ItemStateProvider#hasItemState(org.apache.jackrabbit.core.ItemId)
+     * @see ItemStateManager#hasItemState(org.apache.jackrabbit.core.ItemId)
      */
     public boolean hasItemState(ItemId id) {
         if (id instanceof NodeId) {
@@ -100,7 +101,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * @see ItemStateProvider#getItemState(org.apache.jackrabbit.core.ItemId)
+     * @see ItemStateManager#getItemState(ItemId)
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -113,36 +114,32 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * virtual item state provider do not have attics.
-     *
-     * @throws NoSuchItemStateException always
+     * @see ItemStateManager#getNodeReferences(NodeId)
      */
-    public ItemState getItemStateInAttic(ItemId id) throws NoSuchItemStateException {
-        // never has states in attic
-        throw new NoSuchItemStateException(id.toString());
+    public NodeReferences getNodeReferences(NodeId targetId)
+            throws NoSuchItemStateException, ItemStateException {
+
+        //@todo return node references
+        throw new NoSuchItemStateException(targetId.getUUID());
     }
 
     /**
-     * virtual item state provider do not have attics.
-     *
-     * @return <code>false</code>
+     * @see ItemStateManager#beginUpdate
      */
-    public boolean hasItemStateInAttic(ItemId id) {
-        // never has states in attic
-        return false;
+    public UpdateOperation beginUpdate() throws ItemStateException {
+        throw new ItemStateException("Update not available");
     }
 
     //-------------------------------------------< VirtualItemStateProvider >---
-
     /**
-     * @see VirtualItemStateProvider#isVirtualRoot(org.apache.jackrabbit.core.ItemId)
+     * @see VirtualItemStateProvider#isVirtualRoot(ItemId)
      */
     public boolean isVirtualRoot(ItemId id) {
         return id.equals(root.getId());
     }
 
     /**
-     * @see org.apache.jackrabbit.core.virtual.VirtualItemStateProvider#getVirtualRootId()
+     * @see VirtualItemStateProvider#getVirtualRootId()
      */
     public NodeId getVirtualRootId() {
         return (NodeId) root.getId();
@@ -162,7 +159,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * @see VirtualItemStateProvider#getNodeState(org.apache.jackrabbit.core.NodeId)
+     * @see VirtualItemStateProvider#getNodeState(NodeId)
      */
     public VirtualNodeState getNodeState(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -174,7 +171,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
 
         // check cache
         VirtualNodeState state = (VirtualNodeState) nodes.get(id);
-        if (state==null) {
+        if (state == null) {
             try {
                 InternalVersionItem vi = vMgr.getItem(id.getUUID());
                 if (vi instanceof InternalVersionHistory) {
@@ -197,8 +194,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
                 } else if (vi instanceof InternalFrozenNode) {
                     InternalFrozenNode fn = (InternalFrozenNode) vi;
                     VirtualNodeState parent = getNodeState(new NodeId(fn.getParent().getId()));
-                    state = createNodeState(
-                            parent,
+                    state = createNodeState(parent,
                             VersionManager.NODENAME_FROZEN,
                             id.getUUID(),
                             fn.getFrozenPrimaryType());
@@ -207,8 +203,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
                 } else if (vi instanceof InternalFrozenVersionHistory) {
                     InternalFrozenVersionHistory fn = (InternalFrozenVersionHistory) vi;
                     VirtualNodeState parent = getNodeState(new NodeId(fn.getParent().getId()));
-                    state = createNodeState(
-                            parent,
+                    state = createNodeState(parent,
                             fn.getName(),
                             id.getUUID(),
                             NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD);
@@ -231,7 +226,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * @see VirtualItemStateProvider#hasPropertyState(org.apache.jackrabbit.core.PropertyId)
+     * @see VirtualItemStateProvider#hasPropertyState(PropertyId)
      */
     public boolean hasPropertyState(PropertyId id) {
 
@@ -250,7 +245,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * @see VirtualItemStateProvider#getPropertyState(org.apache.jackrabbit.core.PropertyId)
+     * @see VirtualItemStateProvider#getPropertyState(PropertyId)
      */
     public VirtualPropertyState getPropertyState(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -266,7 +261,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * @see VirtualItemStateProvider#createPropertyState(org.apache.jackrabbit.core.virtual.VirtualNodeState, org.apache.jackrabbit.core.QName, int, boolean)
+     * @see VirtualItemStateProvider#createPropertyState(VirtualNodeState, QName, int, boolean)
      */
     public VirtualPropertyState createPropertyState(VirtualNodeState parent,
                                                     QName name, int type,
@@ -281,7 +276,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * @see VirtualItemStateProvider#createNodeState(org.apache.jackrabbit.core.virtual.VirtualNodeState, org.apache.jackrabbit.core.QName, String, org.apache.jackrabbit.core.QName)
+     * @see VirtualItemStateProvider#createNodeState(VirtualNodeState, QName, String, QName)
      */
     public VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
                                             String uuid, QName nodeTypeName)
@@ -319,6 +314,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * returns the node type manager
+     *
      * @return
      */
     private NodeTypeManagerImpl getNodeTypeManager() {
@@ -326,7 +322,8 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
-     * mapps a frozen node
+     * maps a frozen node
+     *
      * @param state
      * @param node
      * @return
@@ -338,13 +335,13 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
 
         // map native stuff
         state.setMixinNodeTypes(node.getFrozenMixinTypes());
-        if (node.getFrozenUUID()!=null) {
+        if (node.getFrozenUUID() != null) {
             state.setPropertyValue(ItemImpl.PROPNAME_UUID, InternalValue.create(node.getFrozenUUID()));
         }
 
         // map properties
         PropertyState[] props = node.getFrozenProperties();
-        for (int i=0; i<props.length; i++) {
+        for (int i = 0; i < props.length; i++) {
             if (props[i].isMultiValued()) {
                 state.setPropertyValues(props[i].getName(), props[i].getType(), props[i].getValues());
             } else {
@@ -353,7 +350,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         }
         // map child nodes
         InternalFreeze[] nodes = node.getFrozenChildNodes();
-        for (int i=0; i<nodes.length; i++) {
+        for (int i = 0; i < nodes.length; i++) {
             state.addChildNodeEntry(nodes[i].getName(), nodes[i].getId());
         }
         return state;

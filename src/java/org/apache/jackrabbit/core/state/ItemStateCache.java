@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.io.PrintStream;
 
 /**
  * An <code>ItemStateCache</code> maintains a cache of <code>ItemState</code>
@@ -157,5 +158,50 @@ public abstract class ItemStateCache {
         // use temp collection to avoid ConcurrentModificationException
         Collection tmp = new ArrayList(cache.values());
         return tmp.iterator();
+    }
+
+    /**
+     * Dumps the state of this <code>ItemStateCache</code> instance
+     * (used for diagnostic purposes).
+     *
+     * @param ps
+     */
+    void dump(PrintStream ps) {
+        ps.println("entries in cache:");
+        ps.println();
+        Iterator iter = keys();
+        while (iter.hasNext()) {
+            ItemId id = (ItemId) iter.next();
+            ItemState state = retrieve(id);
+            dumpItemState(id, state, ps);
+        }
+    }
+
+    private void dumpItemState(ItemId id, ItemState state, PrintStream ps) {
+        ps.print(state.isNode() ? "Node: " : "Prop: ");
+        switch (state.getStatus()) {
+            case ItemState.STATUS_EXISTING:
+                ps.print("[existing]           ");
+                break;
+            case ItemState.STATUS_EXISTING_MODIFIED:
+                ps.print("[existing, modified] ");
+                break;
+            case ItemState.STATUS_EXISTING_REMOVED:
+                ps.print("[existing, removed]  ");
+                break;
+            case ItemState.STATUS_NEW:
+                ps.print("[new]                ");
+                break;
+            case ItemState.STATUS_STALE_DESTROYED:
+                ps.print("[stale, destroyed]   ");
+                break;
+            case ItemState.STATUS_STALE_MODIFIED:
+                ps.print("[stale, modified]    ");
+                break;
+            case ItemState.STATUS_UNDEFINED:
+                ps.print("[undefined]          ");
+                break;
+        }
+        ps.println(id + " (" + state + ")");
     }
 }

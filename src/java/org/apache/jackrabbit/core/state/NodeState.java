@@ -55,27 +55,32 @@ public class NodeState extends ItemState {
     protected List propertyEntries = new ArrayList();
 
     /**
-     * Package private constructor
+     * Constructor
      *
      * @param overlayedState the backing node state being overlayed
      * @param initialStatus  the initial status of the node state object
+     * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected NodeState(NodeState overlayedState, int initialStatus) {
-        super(overlayedState, initialStatus);
+    public NodeState(NodeState overlayedState, int initialStatus,
+                     boolean isTransient) {
+        super(overlayedState, initialStatus, isTransient);
 
-        copy(overlayedState);
+        pull();
     }
 
     /**
-     * Package private constructor
+     * Constructor
      *
      * @param uuid          the UUID of the this node
      * @param nodeTypeName  node type of this node
      * @param parentUUID    the UUID of the parent node
      * @param initialStatus the initial status of the node state object
+     * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected NodeState(String uuid, QName nodeTypeName, String parentUUID, int initialStatus) {
-        super(parentUUID, new NodeId(uuid), initialStatus);
+    public NodeState(String uuid, QName nodeTypeName, String parentUUID,
+                     int initialStatus, boolean isTransient) {
+        super(parentUUID, new NodeId(uuid), initialStatus, isTransient);
+
         if (parentUUID != null) {
             parentUUIDs.add(parentUUID);
         }
@@ -483,6 +488,16 @@ public class NodeState extends ItemState {
         propertyEntries.addAll(propEntries);
     }
 
+    /**
+     * Set the node type name. Needed for deserialization and should therefore
+     * not change the internal status.
+     *
+     * @param nodeTypeName node type name
+     */
+    public synchronized void setNodeTypeName(QName nodeTypeName) {
+        this.nodeTypeName = nodeTypeName;
+    }
+    
     //---------------------------------------------------------< diff methods >
     /**
      * Returns a list of parent UUID's, that do not exist in the overlayed node

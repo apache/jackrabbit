@@ -23,12 +23,15 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import javax.jcr.*;
+import javax.jcr.xa.XASession;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.util.TraversingItemVisitor;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -64,75 +67,16 @@ public class Test {
         RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
         Repository r = (Repository) ctx.lookup("repo");
         Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
-/*
-        XASession session = (XASession) r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
-        XAResource xares = session.getXAResource();
 
-        Xid xid = new Xid() {
-            public byte[] getBranchQualifier() {
-                return new byte[0];
-            }
-
-            public int getFormatId() {
-                return 0;
-            }
-
-            public byte[] getGlobalTransactionId() {
-                return new byte[0];
-            }
-        };
-
-        xares.start(xid, XAResource.TMNOFLAGS);
-
-        // ....
-
-        xares.end(xid, XAResource.TMSUCCESS);
-
-        xares.prepare(xid);
-        xares.commit(xid, false);
-*/
         Workspace wsp = session.getWorkspace();
 
-        NodeTypeManager ntMgr = wsp.getNodeTypeManager();
-        NodeTypeIterator ntIter = ntMgr.getAllNodeTypes();
-        while (ntIter.hasNext()) {
-            NodeType nt = ntIter.nextNodeType();
-            System.out.println("built-in nodetype: " + nt.getName());
-        }
-
-        System.out.println();
-        ((NodeTypeManagerImpl) ntMgr).dump(System.out);
-        System.out.println();
-
         Node root = session.getRootNode();
-/*
-	String svExportFilePath = "d:/temp/sv_export0.xml";
-	String dvExportFilePath = "d:/temp/dv_export0.xml";
-	String importTargetName = "sandbox";
-
-	//wsp.exportSysView("/", new FileOutputStream(svExportFilePath), true, false);
-	//wsp.exportDocView("/", new FileOutputStream(dvExportFilePath), true, false);
-	if (!root.hasNode(importTargetName)) {
-	    root.addNode(importTargetName, "nt:unstructured");
-	}
-	//FileInputStream fin = new FileInputStream(svExportFilePath);
-        FileInputStream fin = new FileInputStream("d:/temp/test.xml");
-	session.importXML("/" + importTargetName, fin);
-	session.save();
-*/
-        String ntName = root.getProperty("jcr:primaryType").getString();
-        session.setNamespacePrefix("bla", "http://www.jcp.org/jcr/nt/1.0");
-        ntName = root.getProperty("jcr:primaryType").getString();
-        session.setNamespacePrefix("nt", "http://www.jcp.org/jcr/nt/1.0");
 
         System.out.println("initial...");
         System.out.println();
         dumpTree(root, System.out);
-
-        System.out.println("after move...");
-        System.out.println();
-        dumpTree(root, System.out);
-
+        ((SessionImpl)session).dump(System.out);
+/*
         if (root.canAddMixin("mix:versionable")) {
             root.addMixin("mix:versionable");
             if (root.canAddMixin("mix:accessControllable")) {
@@ -141,18 +85,36 @@ public class Test {
             dumpTree(root, System.out);
             boolean accessControllable = root.isNodeType("mix:accessControllable");
             root.removeMixin("mix:versionable");
-            dumpTree(root, System.out);
             root.save();
         }
-
+*/
         //root.setProperty("blob", new FileInputStream(new File("d:/temp/jackrabbit.zip")));
 
         if (root.hasProperty("blah")) {
+            Property p = root.getProperty("blah");
             root.getProperty("blah").remove();
+            System.out.println("before save()...");
+            System.out.println();
+            dumpTree(root, System.out);
+            ((SessionImpl)session).dump(System.out);
+            root.save();
+            System.out.println("after save()...");
+            System.out.println();
+            dumpTree(root, System.out);
+            ((SessionImpl)session).dump(System.out);
+            if (root.hasProperty("blah")) {
+                p = root.getProperty("blah");
+            }
         }
-        root.setProperty("blah", 1);
+
+        Property p1 = root.setProperty("blah", 1);
         root.setProperty("blah", 1.4);
         root.setProperty("blah", "blahblah");
+
+//        root.save();
+//        if (true) return;
+
+/*
         Node file = root.addNode("blu", "nt:file");
         file.addNode("jcr:content", "nt:unstructured");
         root.addNode("blu", "nt:folder");
@@ -171,8 +133,14 @@ public class Test {
         System.out.println("before save()...");
         System.out.println();
         dumpTree(root, System.out);
-
+        ((SessionImpl)session).dump(System.out);
+*/
         root.save();
+
+        System.out.println("after save()...");
+        System.out.println();
+        dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
 
         if (root.hasProperty("blah")) {
             root.setProperty("blah", (String) null);
@@ -187,11 +155,7 @@ public class Test {
             }
             System.out.println(list);
         }
-
-        System.out.println("after save()...");
-        System.out.println();
-        dumpTree(root, System.out);
-
+/*
         if (root.hasProperty("blob")) {
             Property blob = root.getProperty("blob");
             InputStream in = blob.getStream();
@@ -212,18 +176,47 @@ public class Test {
         Node misc = root.addNode("misc", "nt:unstructured");
         misc.addMixin("mix:referenceable");
         Property link = misc.setProperty("link", PathValue.valueOf("../blu[2]"));
+*/
+        System.out.println("before save()...");
+        System.out.println();
+        dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
+
         root.save();
+
+        System.out.println("after save()...");
+        System.out.println();
+        dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
+/*
         Node linkTarget = link.getParent().getNode(link.getValue().getString());
         System.out.println(link.getPath() + " refers to " + linkTarget.getPath());
 
         root.setProperty("ref", new ReferenceValue(misc));
+*/
+        boolean mult = root.getProperty("blah").getDefinition().isMultiple();
+
+        System.out.println("before save()...");
+        System.out.println();
+        dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
+
         root.save();
+
+        mult = root.getProperty("blah").getDefinition().isMultiple();
+
+        System.out.println("after save()...");
+        System.out.println();
+        dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
+/*
         PropertyIterator pi = misc.getReferences();
         while (pi.hasNext()) {
             Property prop = pi.nextProperty();
             Node target = prop.getNode();
             System.out.println(prop.getPath() + " is a reference to " + target.getPath());
         }
+*/
 /*
 	misc.remove();
 	try {
@@ -233,6 +226,7 @@ public class Test {
 	    root.save();
 	}
 */
+/*
         root.setProperty("date", DateValue.valueOf("2003-07-28T06:18:57.848+01:00"));
         Property p = root.getProperty("date");
         Value val = p.getValue();
@@ -245,7 +239,7 @@ public class Test {
             imported = root.getNode("imported");
         }
 
-        importNode(new File("d:/dev/jackrabbit/src/test"), imported);
+        //importNode(new File("d:/dev/jackrabbit/src/test"), imported);
 
         if (root.hasNode("foo")) {
             root.getNode("foo").remove();
@@ -260,15 +254,22 @@ public class Test {
         System.out.println("before save()...");
         System.out.println();
         dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
 
         root.save();
-
-        session.getWorkspace().copy("/imported", "/misc/blah");
-        session.getWorkspace().move("/misc/blah", "/misc/blahblah");
 
         System.out.println("after save()...");
         System.out.println();
         dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
+
+        session.getWorkspace().copy("/imported", "/misc/blah");
+        session.getWorkspace().move("/misc/blah", "/misc/blahblah");
+
+        System.out.println("after Workspace.copy/move()...");
+        System.out.println();
+        dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
 
         prop1.remove();
 
@@ -278,12 +279,14 @@ public class Test {
         System.out.println("before refresh()...");
         System.out.println();
         dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
 
         root.refresh(false);
 
         System.out.println("after refresh()...");
         System.out.println();
         dumpTree(root, System.out);
+        ((SessionImpl)session).dump(System.out);
 
         System.out.println("exiting...");
         System.out.println();
@@ -295,7 +298,7 @@ public class Test {
         repProps = r.getProperties();
         System.out.println("repository properties:");
         System.out.println(repProps);
-
+*/
         //((RepositoryImpl) r).shutdown();
     }
 
@@ -323,7 +326,8 @@ public class Test {
                 while (i-- > 0) {
                     System.out.print('\t');
                 }
-                ps.println("[node] " + node.getName());
+                String status = node.isModified() ? "*" : (node.isNew() ? "+" : " ");
+                ps.println("[node] " + status + " " + node.getName());
 
                 super.entering(node, i);
             }
@@ -354,7 +358,8 @@ public class Test {
                         sb.append(val.getString());
                     }
                 }
-                ps.println("[prop] " + property.getName() + " " + sb.toString());
+                String status = property.isModified() ? "*" : (property.isNew() ? "+" : " ");
+                ps.println("[prop] " + status + " " + property.getName() + " " + sb.toString());
 
                 super.entering(property, i);
             }

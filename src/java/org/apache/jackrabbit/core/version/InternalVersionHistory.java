@@ -29,12 +29,14 @@ public interface InternalVersionHistory extends InternalVersionItem {
 
     /**
      * Aequivalalent to {@link VersionHistory#getRootVersion()}.
+     *
      * @see VersionHistory#getRootVersion()
      */
     public InternalVersion getRootVersion();
 
     /**
      * Aequivalent to {@link VersionHistory#getVersion(java.lang.String)}.
+     *
      * @see VersionHistory#getVersion(java.lang.String)
      */
     public InternalVersion getVersion(QName versionName) throws VersionException;
@@ -95,9 +97,9 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * label is removed from the previously assigned version and added to the
      * specified one.
      *
-     * @param name the name of the version
+     * @param name  the name of the version
      * @param label the label to assgign
-     * @param move flag what to do by collisions
+     * @param move  flag what to do by collisions
      * @return the version that was previously assigned by this label or <code>null</code>.
      * @throws VersionException
      */

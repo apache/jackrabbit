@@ -51,9 +51,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException
      */
     public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                                 NodeState state, NodeDef definition,
-                                 ItemLifeCycleListener[] listeners,
-                                 InternalVersionHistory history) throws RepositoryException {
+                              NodeState state, NodeDef definition,
+                              ItemLifeCycleListener[] listeners,
+                              InternalVersionHistory history) throws RepositoryException {
         super(itemMgr, session, id, state, definition, listeners);
         this.history = history;
     }

@@ -29,7 +29,7 @@ import java.util.Iterator;
 /**
  * <code>TransientItemStateManager</code> ...
  */
-class TransientItemStateManager extends ItemStateCache implements ItemStateProvider {
+class TransientItemStateManager extends ItemStateCache implements ItemStateManager {
 
     private static Logger log = Logger.getLogger(TransientItemStateManager.class);
 
@@ -53,57 +53,16 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
     void dump(PrintStream ps) {
         ps.println("TransientItemStateManager (" + this + ")");
         ps.println();
-        ps.println("entries in cache:");
+        ps.print("[transient] ");
+        super.dump(ps);
         ps.println();
-        Iterator iter = keys();
-        while (iter.hasNext()) {
-            ItemId id = (ItemId) iter.next();
-            ItemState state = retrieve(id);
-            dumpItemState(id, state, ps);
-        }
-
-        ps.println();
-        ps.println("entries in attic:");
-        ps.println();
-        iter = attic.keys();
-        while (iter.hasNext()) {
-            ItemId id = (ItemId) iter.next();
-            ItemState state = attic.retrieve(id);
-            dumpItemState(id, state, ps);
-        }
-    }
-
-    private void dumpItemState(ItemId id, ItemState state, PrintStream ps) {
-        ps.print(state.isNode() ? "Node: " : "Prop: ");
-        switch (state.getStatus()) {
-            case ItemState.STATUS_EXISTING:
-                ps.print("[existing]           ");
-                break;
-            case ItemState.STATUS_EXISTING_MODIFIED:
-                ps.print("[existing, modified] ");
-                break;
-            case ItemState.STATUS_EXISTING_REMOVED:
-                ps.print("[existing, removed]  ");
-                break;
-            case ItemState.STATUS_NEW:
-                ps.print("[new]                ");
-                break;
-            case ItemState.STATUS_STALE_DESTROYED:
-                ps.print("[stale, destroyed]   ");
-                break;
-            case ItemState.STATUS_STALE_MODIFIED:
-                ps.print("[stale, modified]    ");
-                break;
-            case ItemState.STATUS_UNDEFINED:
-                ps.print("[undefined]          ");
-                break;
-        }
-        ps.println(id + " (" + state + ")");
+        ps.print("[attic]     ");
+        attic.dump(ps);
     }
 
     //----------------------------------------------------< ItemStateProvider >
     /**
-     * @see ItemStateProvider#getItemState(ItemId)
+     * @see ItemStateManager#getItemState(ItemId)
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -116,33 +75,30 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
     }
 
     /**
-     * @see ItemStateProvider#hasItemState(ItemId)
+     * @see ItemStateManager#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
         return isCached(id);
     }
 
     /**
-     * @see ItemStateProvider#getItemStateInAttic(ItemId)
+     * @see ItemStateManager#getNodeReferences
      */
-    public ItemState getItemStateInAttic(ItemId id)
+    public NodeReferences getNodeReferences(NodeId targetId)
             throws NoSuchItemStateException, ItemStateException {
-        ItemState state = attic.retrieve(id);
-        if (state != null) {
-            return state;
-        } else {
-            throw new NoSuchItemStateException(id.toString());
-        }
+
+        throw new ItemStateException("getNodeReferences() not implemented");
     }
 
     /**
-     * @see ItemStateProvider#hasItemStateInAttic(ItemId)
+     * @see ItemStateManager#beginUpdate
      */
-    public boolean hasItemStateInAttic(ItemId id) {
-        return attic.isCached(id);
+    public UpdateOperation beginUpdate() throws ItemStateException {
+        throw new ItemStateException("beginUpdate() not implemented");
     }
 
     //------------------< methods for listing & querying state of cache/attic >
+
     /**
      * @return
      */
@@ -204,7 +160,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
             throw new ItemStateException(msg);
         }
 
-        NodeState state = new NodeState(uuid, nodeTypeName, parentUUID, initialStatus);
+        NodeState state = new NodeState(uuid, nodeTypeName, parentUUID, initialStatus, true);
         // put it in cache
         cache(state);
         return state;
@@ -226,7 +182,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
             throw new ItemStateException(msg);
         }
 
-        NodeState state = new NodeState(overlayedState, initialStatus);
+        NodeState state = new NodeState(overlayedState, initialStatus, true);
         // put it in cache
         cache(state);
         return state;
@@ -249,7 +205,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
             throw new ItemStateException(msg);
         }
 
-        PropertyState state = new PropertyState(propName, parentUUID, initialStatus);
+        PropertyState state = new PropertyState(propName, parentUUID, initialStatus, true);
         // put it in cache
         cache(state);
         return state;
@@ -271,7 +227,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
             throw new ItemStateException(msg);
         }
 
-        PropertyState state = new PropertyState(overlayedState, initialStatus);
+        PropertyState state = new PropertyState(overlayedState, initialStatus, true);
         // put it in cache
         cache(state);
         return state;
@@ -341,11 +297,57 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateProvi
         }
     }
 
+    /**
+     * Return the attic item state provider that holds all items
+     * moved into the attic.
+     * @return attic
+     */
+    ItemStateManager getAttic() {
+        return attic;
+    }
+
     //--------------------------------------------------------< inner classes >
-    class Attic extends ItemStateCache {
+    class Attic extends ItemStateCache implements ItemStateManager {
 
         Attic() {
             super(ReferenceMap.HARD, ReferenceMap.HARD);
+        }
+
+        /**
+         * @see ItemStateManager#getItemState
+         */
+        public ItemState getItemState(ItemId id)
+                throws NoSuchItemStateException, ItemStateException {
+
+            ItemState state = retrieve(id);
+            if (state != null) {
+                return state;
+            } else {
+                throw new NoSuchItemStateException(id.toString());
+            }
+        }
+
+        /**
+         * @see ItemStateManager#hasItemState
+         */
+        public boolean hasItemState(ItemId id) {
+            return isCached(id);
+        }
+
+        /**
+         * @see ItemStateManager#getNodeReferences
+         */
+        public NodeReferences getNodeReferences(NodeId targetId)
+                throws NoSuchItemStateException, ItemStateException {
+
+            throw new ItemStateException("getNodeReferences() not implemented");
+        }
+
+        /**
+         * @see ItemStateManager#beginUpdate
+         */
+        public UpdateOperation beginUpdate() throws ItemStateException {
+            throw new ItemStateException("beginUpdate() not implemented");
         }
     }
 }

@@ -1,6 +1,5 @@
 /*
- * Copyright 2004-2005 The Apache Software Foundation or its licensors,
- *                     as applicable.
+ * Copyright 2004 The Apache Software Foundation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +24,8 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.PropertyDef;
 import java.util.HashSet;
 import java.util.List;
 
@@ -32,17 +33,22 @@ import java.util.List;
  * This Class provides some basic node operations directly on the persistent
  * state.
  */
-class PersistentNode {
+public class PersistentNode {
 
     /**
      * the underlaying persistent state
      */
-    private PersistentNodeState nodeState;
+    private NodeState nodeState;
 
     /**
      * the state manager
      */
-    private final PersistentItemStateProvider stateMgr;
+    private final ItemStateManager stateMgr;
+
+    /**
+     * the node type manager
+     */
+    private final NodeTypeManagerImpl ntMgr;
 
     /**
      * the cached name
@@ -52,13 +58,16 @@ class PersistentNode {
     /**
      * Creates a new persistent node
      *
-     * @param statemgr
+     * @param stateMgr
+     * @param ntMgr
      * @param nodeState
      */
-    protected PersistentNode(PersistentItemStateProvider statemgr,
-                             PersistentNodeState nodeState) {
+    protected PersistentNode(ItemStateManager stateMgr,
+                             NodeTypeManagerImpl ntMgr,
+                             NodeState nodeState) {
         this.nodeState = nodeState;
-        this.stateMgr = statemgr;
+        this.stateMgr = stateMgr;
+        this.ntMgr = ntMgr;
     }
 
 
@@ -94,7 +103,7 @@ class PersistentNode {
         return nodeState.getParentUUID();
     }
 
-    protected PersistentNodeState getState() {
+    protected NodeState getState() {
         return nodeState;
     }
 
@@ -192,7 +201,8 @@ class PersistentNode {
      */
     protected void setPropertyValues(QName name, int type, InternalValue[] values, boolean multiple)
             throws RepositoryException {
-        PersistentPropertyState prop = getOrCreatePropertyState(name, type, multiple);
+
+        PropertyState prop = getOrCreatePropertyState(name, type, multiple);
         prop.setValues(values);
     }
 
@@ -205,40 +215,84 @@ class PersistentNode {
      * @return
      * @throws RepositoryException
      */
-    private PersistentPropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued)
+    private PropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued)
             throws RepositoryException {
 
         PropertyId propId = new PropertyId(nodeState.getUUID(), name);
         if (stateMgr.hasItemState(propId)) {
             try {
-                PersistentPropertyState propState = (PersistentPropertyState) stateMgr.getItemState(propId);
+                PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
                 // someone calling this method will always alter the property state, so set status to modified
-                if (propState.getStatus()==ItemState.STATUS_EXISTING) {
-                    propState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
-                }
-                // although this is not quite correct, we mark node as modified aswell
-                if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
-                    nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
-                }
+                propState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 return propState;
             } catch (ItemStateException e) {
                 throw new RepositoryException("Unable to create property: " + e.toString());
             }
         } else {
-            try {
-                PersistentPropertyState propState = stateMgr.createPropertyState(nodeState.getUUID(), name);
-                propState.setType(type);
-                propState.setMultiValued(multiValued);
-                propState.setDefinitionId(PropDefId.valueOf("0"));
-                // need to store nodestate
-                nodeState.addPropertyEntry(name);
-                if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
-                    nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
-                }
-                return propState;
-            } catch (ItemStateException e) {
-                throw new RepositoryException("Unable to store property: " + e.toString());
-            }
+            PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
+            //@todo create property state inside an update
+            PropertyState propState = new PropertyState(name, nodeState.getUUID(),
+                    PropertyState.STATUS_NEW, false);
+            propState.setType(type);
+            propState.setMultiValued(multiValued);
+            propState.setDefinitionId(new PropDefId(def.unwrap()));
+
+            // need to store nodestate
+            nodeState.addPropertyEntry(name);
+            nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+            return propState;
+        }
+    }
+
+    /**
+     * retrieves the property definition for the given contraints
+     *
+     * @param propertyName
+     * @param type
+     * @param multiValued
+     * @return
+     * @throws RepositoryException
+     */
+    protected PropertyDefImpl getApplicablePropertyDef(QName propertyName,
+                                                       int type, boolean multiValued)
+            throws RepositoryException {
+        PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(propertyName, type, multiValued);
+        return ntMgr.getPropDef(new PropDefId(pd));
+    }
+
+    /**
+     * Retrieves the node definition for the given contraints.
+     *
+     * @param nodeName
+     * @param nodeTypeName
+     * @return
+     * @throws RepositoryException
+     */
+    protected NodeDefImpl getApplicableChildNodeDef(QName nodeName, QName nodeTypeName)
+            throws RepositoryException {
+        ChildNodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(nodeName, nodeTypeName);
+        return ntMgr.getNodeDef(new NodeDefId(cnd));
+    }
+
+    /**
+     * Returns the effective (i.e. merged and resolved) node type representation
+     * of this node's primary and mixin node types.
+     *
+     * @return the effective node type
+     * @throws RepositoryException
+     */
+    protected EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
+        // build effective node type of mixins & primary type
+        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+        // existing mixin's
+        HashSet set = new HashSet(nodeState.getMixinTypeNames());
+        // primary type
+        set.add(nodeState.getNodeTypeName());
+        try {
+            return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+        } catch (NodeTypeConflictException ntce) {
+            String msg = "internal error: failed to build effective node type for node " + nodeState.getUUID();
+            throw new RepositoryException(msg, ntce);
         }
     }
 
@@ -273,9 +327,7 @@ class PersistentNode {
      */
     protected boolean removeNode(QName name, int index) throws RepositoryException {
         if (nodeState.removeChildNodeEntry(name, index)) {
-            if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
-                nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
-            }
+            nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
             return true;
         } else {
             return false;
@@ -297,8 +349,8 @@ class PersistentNode {
             return null;
         }
         try {
-            PersistentNodeState state = (PersistentNodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
-            return new PersistentNode(stateMgr, state);
+            NodeState state = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+            return new PersistentNode(stateMgr, ntMgr, state);
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to getNode: " + e.toString());
         }
@@ -313,8 +365,8 @@ class PersistentNode {
      */
     protected PersistentNode getNodeByUUID(String uuid) throws RepositoryException {
         try {
-            PersistentNodeState state = (PersistentNodeState) stateMgr.getItemState(new NodeId(uuid));
-            return new PersistentNode(stateMgr, state);
+            NodeState state = (NodeState) stateMgr.getItemState(new NodeId(uuid));
+            return new PersistentNode(stateMgr, ntMgr, state);
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to getNode: " + e.toString());
         }
@@ -332,41 +384,77 @@ class PersistentNode {
      */
     protected PersistentNode addNode(QName nodeName, QName nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException, RepositoryException {
-        return createChildNode(nodeName, nodeTypeName, null);
+        NodeTypeImpl nodeType = ntMgr.getNodeType(nodeTypeName);
+        NodeDefImpl def;
+        try {
+            def = getApplicableChildNodeDef(name, nodeType == null ? null : nodeType.getQName());
+        } catch (RepositoryException re) {
+            // hack, use nt:unstructured as parent
+            try {
+                NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+                EffectiveNodeType ent = ntReg.getEffectiveNodeType(new QName[]{NodeTypeRegistry.NT_UNSTRUCTURED});
+                ChildNodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
+                def = ntMgr.getNodeDef(new NodeDefId(cnd));
+            } catch (NodeTypeConflictException e) {
+                String msg = "no definition found in parent node's node type for new node";
+                throw new ConstraintViolationException(msg, re);
+            }
+        }
+
+        if (nodeType == null) {
+            // use default node type
+            nodeType = (NodeTypeImpl) def.getDefaultPrimaryType();
+        }
+        return createChildNode(nodeName, def, nodeType, null);
     }
 
     /**
      * creates a new child node
      *
      * @param name
+     * @param def
+     * @param nodeType
      * @param uuid
      * @return
      * @throws RepositoryException
      */
-    private PersistentNode createChildNode(QName name, QName nodeTypeName, String uuid)
+    private PersistentNode createChildNode(QName name, NodeDefImpl def,
+                                           NodeTypeImpl nodeType, String uuid)
             throws RepositoryException {
 
         String parentUUID = nodeState.getUUID();
         // create a new node state
-        PersistentNodeState state = null;
-        try {
-            if (uuid == null) {
-                uuid = UUID.randomUUID().toString();	// version 4 uuid
-            }
-            state = stateMgr.createNodeState(uuid, nodeTypeName, parentUUID);
-            state.setDefinitionId(NodeDefId.valueOf("0"));
-        } catch (ItemStateException ise) {
-            String msg = "failed to add child node " + name + " to " + parentUUID;
-            throw new RepositoryException(msg, ise);
+        NodeState state = null;
+        if (uuid == null) {
+            uuid = UUID.randomUUID().toString();	// version 4 uuid
         }
+        //@todo create node state inside an update
+        state = new NodeState(uuid, nodeType.getQName(), parentUUID,
+                NodeState.STATUS_NEW, false);
+        state.setDefinitionId(new NodeDefId(def.unwrap()));
 
         // create Node instance wrapping new node state
-        PersistentNode node = new PersistentNode(stateMgr, state);
+        PersistentNode node = new PersistentNode(stateMgr, ntMgr, state);
         // add new child node entry
         nodeState.addChildNodeEntry(name, state.getUUID());
-        if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
-            nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+        nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+
+        // add 'auto-create' properties defined in node type
+        PropertyDef[] pda = nodeType.getAutoCreatePropertyDefs();
+        for (int i = 0; i < pda.length; i++) {
+            PropertyDefImpl pd = (PropertyDefImpl) pda[i];
+            node.getOrCreatePropertyState(pd.getQName(), pd.getRequiredType(), pd.isMultiple());
         }
+
+        // recursively add 'auto-create' child nodes defined in node type
+        NodeDef[] nda = nodeType.getAutoCreateNodeDefs();
+        for (int i = 0; i < nda.length; i++) {
+            NodeDefImpl nd = (NodeDefImpl) nda[i];
+            node.createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+        }
+
+        // store primary type
+        node.setPropertyValue(ItemImpl.PROPNAME_PRIMARYTYPE, InternalValue.create(nodeType.getQName()));
         return node;
     }
 
@@ -382,8 +470,8 @@ class PersistentNode {
             PersistentNode[] children = new PersistentNode[entries.size()];
             for (int i = 0; i < entries.size(); i++) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(i);
-                PersistentNodeState state = (PersistentNodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
-                children[i] = new PersistentNode(stateMgr, state);
+                NodeState state = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+                children[i] = new PersistentNode(stateMgr, ntMgr, state);
             }
             return children;
         } catch (ItemStateException e) {
@@ -398,7 +486,9 @@ class PersistentNode {
      */
     protected void store() throws RepositoryException {
         try {
-            store(nodeState);
+            UpdateOperation update = stateMgr.beginUpdate();
+            store(nodeState, update);
+            update.end();
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
@@ -408,28 +498,31 @@ class PersistentNode {
      * stores the given persistent state recursively
      *
      * @param state
+     * @param update update operation
      * @throws ItemStateException
      */
-    private void store(PersistentNodeState state) throws ItemStateException {
+    private void store(NodeState state, UpdateOperation update)
+            throws ItemStateException {
+
         if (state.isTransient()) {
             // first store all transient properties
             List props = state.getPropertyEntries();
             for (int i = 0; i < props.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
-                PersistentPropertyState pstate = (PersistentPropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
+                PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
                 if (pstate.isTransient()) {
-                    pstate.store();
+                    update.store(pstate);
                 }
             }
             // now store all child node entries
             List nodes = state.getChildNodeEntries();
             for (int i = 0; i < nodes.size(); i++) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
-                PersistentNodeState nstate = (PersistentNodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
-                store(nstate);
+                NodeState nstate = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+                store(nstate, update);
             }
             // and store itself
-            state.store();
+            update.store(state);
         }
     }
 
@@ -442,7 +535,7 @@ class PersistentNode {
         try {
             reload(nodeState);
             // refetch nodestate if discarded
-            nodeState = (PersistentNodeState) stateMgr.getItemState(nodeState.getId());
+            nodeState = (NodeState) stateMgr.getItemState(nodeState.getId());
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
@@ -454,13 +547,13 @@ class PersistentNode {
      * @param state
      * @throws ItemStateException
      */
-    private void reload(PersistentNodeState state) throws ItemStateException {
+    private void reload(NodeState state) throws ItemStateException {
         if (state.isTransient()) {
             // first discard all all transient properties
             List props = state.getPropertyEntries();
             for (int i = 0; i < props.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
-                PersistentPropertyState pstate = (PersistentPropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
+                PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
                 if (pstate.isTransient()) {
                     pstate.discard();
                 }
@@ -469,7 +562,7 @@ class PersistentNode {
             List nodes = state.getChildNodeEntries();
             for (int i = 0; i < nodes.size(); i++) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
-                PersistentNodeState nstate = (PersistentNodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+                NodeState nstate = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
                 reload(nstate);
             }
             // and reload itself
@@ -486,7 +579,8 @@ class PersistentNode {
     protected void copyFrom(PropertyImpl prop) throws RepositoryException {
         if (prop.getDefinition().isMultiple()) {
             InternalValue[] values = prop.internalGetValues();
-            setPropertyValues(prop.getQName(), values[0].getType(), values);
+            int type = values.length>0 ? values[0].getType() : prop.getDefinition().getRequiredType();
+            setPropertyValues(prop.getQName(), type, values);
         } else {
             setPropertyValue(prop.getQName(), prop.internalGetValue());
         }

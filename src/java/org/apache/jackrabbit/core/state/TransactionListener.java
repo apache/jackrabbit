@@ -16,23 +16,30 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.jackrabbit.core.state.TransactionContext;
+import org.apache.jackrabbit.core.state.TransactionException;
+
 /**
- * <code>PersistableItemState</code> ...
+ * Listener on a transaction. Will receive notifications about commit
+ * and rollback actions.
+ *
+ * @see org.apache.jackrabbit.core.state.TransactionContext
  */
-public interface PersistableItemState {
+public interface TransactionListener {
 
     /**
-     * @throws ItemStateException
+     * Transaction was committed
+     *
+     * @param tx transaction that was committed
      */
-    public void reload() throws ItemStateException;
+    public void transactionCommitted(TransactionContext tx)
+            throws TransactionException;
 
     /**
-     * @throws ItemStateException
+     * Transaction was rolled back
+     *
+     * @param tx transaction that was rolled back
      */
-    public void store() throws ItemStateException;
-
-    /**
-     * @throws ItemStateException
-     */
-    public void destroy() throws ItemStateException;
+    public void transactionRolledBack(TransactionContext tx)
+            throws TransactionException;
 }

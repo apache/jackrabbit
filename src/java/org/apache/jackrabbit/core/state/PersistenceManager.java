@@ -18,7 +18,9 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.QName;
+
+import java.util.Iterator;
 
 /**
  * <code>PersistenceManager</code> ...
@@ -26,85 +28,74 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 public interface PersistenceManager {
 
     /**
-     * @param context
-     * @throws Exception
+     * Initialize this persistent manager.
+     * @param context persistence manager context
+     * @throws Exception if an error occurs
      */
     public void init(PMContext context) throws Exception;
 
     /**
-     * @throws Exception
+     * Close this persistence manager. After having closed a persistence
+     * manager, further operations on this object are treated as illegal
+     * and throw
+     * @throws Exception if an error occurs
      */
     public void close() throws Exception;
 
     /**
-     * @param state
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
+     * Create a new node state instance.
+     * @param uuid          the UUID of the this node
+     * @param nodeTypeName  node type of this node
+     * @param parentUUID    the UUID of the parent node
+     * @return node state instance.
      */
-    public void load(PersistentNodeState state)
+    public NodeState createNew(String uuid, QName nodeTypeName,
+                               String parentUUID);
+
+    /**
+     * Create a new property state instance.
+     * @param name          name of the property
+     * @param parentUUID    the uuid of the parent node
+     * @return property state instance.
+     */
+    public PropertyState createNew(QName name, String parentUUID);
+
+    /**
+     * Load the persistent members of a node state.
+     * @param uuid uuid of the node to load
+     * @return loaded node state
+     * @throws NoSuchItemStateException if the item does not exist
+     * @throws ItemStateException if an error occurs
+     */
+    public NodeState load(String uuid)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
-     * @param state
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
+     * Load the persistent members of a property state.
+     * @param name name of the property
+     * @param parentUUID the uuid of the parent node
+     * @return loaded property state
+     * @throws NoSuchItemStateException if the item does not exist
+     * @throws ItemStateException if an error occurs
      */
-    public void load(PersistentPropertyState state)
+    public PropertyState load(QName name, String parentUUID)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
-     * @param refs
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
+     * Load the persistent members of a node references object.
+     * @param targetId node target id
+     * @return loaded references object
+     * @throws NoSuchItemStateException if the item does not exist
+     * @throws ItemStateException if an error occurs
      */
-    public void load(NodeReferences refs)
+    public NodeReferences load(NodeId targetId)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
-     * @param state
-     * @throws ItemStateException
-     */
-    public void store(PersistentNodeState state) throws ItemStateException;
-
-    /**
-     * @param state
-     * @throws ItemStateException
-     */
-    public void store(PersistentPropertyState state) throws ItemStateException;
-
-    /**
-     * @param refs
-     * @throws ItemStateException
-     */
-    public void store(NodeReferences refs) throws ItemStateException;
-
-    /**
-     * @param state
-     * @throws ItemStateException
-     */
-    public void destroy(PersistentNodeState state) throws ItemStateException;
-
-    /**
-     * @param state
-     * @throws ItemStateException
-     */
-    public void destroy(PersistentPropertyState state) throws ItemStateException;
-
-    /**
-     * @param refs
-     * @throws ItemStateException
-     */
-    public void destroy(NodeReferences refs) throws ItemStateException;
-
-    /**
-     * Determines if there's <code>PersistentItemState</code> data for
-     * the given item.
-     *
+     * Determines if there's <code>ItemState</code> data for the given item.
      * @param id
      * @return
      * @throws ItemStateException
-     * @see #load(PersistentNodeState)
-     * @see #load(PersistentPropertyState)
      */
     public boolean exists(ItemId id) throws ItemStateException;
 
@@ -115,7 +106,16 @@ public interface PersistenceManager {
      * @param targetId
      * @return
      * @throws ItemStateException
-     * @see #load(NodeReferences)
      */
     public boolean referencesExist(NodeId targetId) throws ItemStateException;
+
+    /**
+     * Save all modified states and node references, atomically.
+     * @param states states that have been modified
+     * @param refsIterator refs to store
+     * @throws ItemStateException if an error occurs
+     */
+    public void store(Iterator states, Iterator refsIterator)
+            throws ItemStateException;
+
 }

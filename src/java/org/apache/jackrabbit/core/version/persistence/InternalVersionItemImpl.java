@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionItem;
+import org.apache.jackrabbit.core.version.PersistentVersionManager;
 
 /**
  *
@@ -31,6 +31,7 @@ abstract class InternalVersionItemImpl {
 
     /**
      * Creates a new Internal version item impl
+     *
      * @param vMgr
      */
     protected InternalVersionItemImpl(PersistentVersionManager vMgr) {
@@ -39,6 +40,7 @@ abstract class InternalVersionItemImpl {
 
     /**
      * Returns the persistent version manager for this item
+     *
      * @return
      */
     protected PersistentVersionManager getVersionManager() {
@@ -47,12 +49,14 @@ abstract class InternalVersionItemImpl {
 
     /**
      * Returns the internal persistent id of this item
+     *
      * @return
      */
     protected abstract String getPersistentId();
 
     /**
      * Returns the external id of this item
+     *
      * @return
      */
     public abstract String getId();
@@ -60,6 +64,7 @@ abstract class InternalVersionItemImpl {
 
     /**
      * returns the parent version item or null
+     *
      * @return
      */
     public abstract InternalVersionItem getParent();

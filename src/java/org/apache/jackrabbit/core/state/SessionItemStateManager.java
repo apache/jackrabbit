@@ -29,12 +29,12 @@ import java.util.*;
 /**
  * <code>SessionItemStateManager</code> ...
  */
-public class SessionItemStateManager implements ItemStateProvider {
+public class SessionItemStateManager implements ItemStateManager {
 
     private static Logger log = Logger.getLogger(SessionItemStateManager.class);
 
     private final NodeId rootNodeId;
-    private final PersistentItemStateProvider persistentStateMgr;
+    private final ItemStateManager persistentStateMgr;
     private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
     private final TransientItemStateManager transientStateMgr;
     private HierarchyManager hierMgr;
@@ -46,13 +46,17 @@ public class SessionItemStateManager implements ItemStateProvider {
      * @param persistentStateMgr
      * @param nsResolver
      */
-    public SessionItemStateManager(String rootNodeUUID, PersistentItemStateProvider persistentStateMgr, NamespaceResolver nsResolver) {
+    public SessionItemStateManager(String rootNodeUUID,
+                                   ItemStateManager persistentStateMgr,
+                                   NamespaceResolver nsResolver) {
+
         rootNodeId = new NodeId(rootNodeUUID);
         this.persistentStateMgr = persistentStateMgr;
         // create transient item state manager
         transientStateMgr = new TransientItemStateManager();
         // create hierarchy manager that uses both transient and persistent state
-        hierMgr = new HierarchyManagerImpl(rootNodeUUID, this, nsResolver);
+        hierMgr = new HierarchyManagerImpl(rootNodeUUID, this, nsResolver,
+                transientStateMgr.getAttic());
     }
 
     /**
@@ -92,102 +96,8 @@ public class SessionItemStateManager implements ItemStateProvider {
         virtualProviders = provs;
     }
 
-    private synchronized void collectDescendantItemStates(ItemId id, List descendents) {
-        // XXX very inefficient implementation, especially if # of transient states
-        // is relatively small compared to the total # of persistent states
-        if (descendents.size() == transientStateMgr.getEntriesCount()) {
-            return;
-        }
-        try {
-            if (id.denotesNode()) {
-                NodeId parentId = (NodeId) id;
-                ItemId[] childIds = hierMgr.listChildren(parentId);
-                for (int i = 0; i < childIds.length; i++) {
-                    ItemId childId = childIds[i];
-                    if (transientStateMgr.hasItemState(childId)) {
-                        ItemState state = transientStateMgr.getItemState(childId);
-                        if (!descendents.contains(state)) {
-                            descendents.add(state);
-                        }
-                    }
-                    if (childId.denotesNode()) {
-                        // recurse
-                        collectDescendantItemStates(childId, descendents);
-                    }
-                }
-                // also add transient child nodes that have been unlinked from
-                // the specified parent node but are not orphaned yet (i.e.
-                // they are still linked to at least one other parent node)
-                if (transientStateMgr.hasItemState(parentId)) {
-                    NodeState parentState = (NodeState) transientStateMgr.getItemState(parentId);
-                    Iterator iter = parentState.getRemovedChildNodeEntries().iterator();
-                    while (iter.hasNext()) {
-                        // removed child nodes
-                        NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
-                        NodeId removedChildId = new NodeId(cne.getUUID());
-                        if (transientStateMgr.hasItemState(removedChildId)) {
-                            ItemState state = transientStateMgr.getItemState(removedChildId);
-                            if (!descendents.contains(state)) {
-                                descendents.add(state);
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (ItemStateException ise) {
-            log.warn("inconsistent hierarchy state", ise);
-        } catch (RepositoryException re) {
-            log.warn("inconsistent hierarchy state", re);
-        }
-    }
-
-    private synchronized void collectDescendantItemStatesInAttic(ItemId id, List descendents) {
-        // XXX very inefficient implementation, especially if # of transient states
-        // is relatively small compared to the total # of persistent states
-        if (descendents.size() == transientStateMgr.getEntriesInAtticCount()) {
-            return;
-        }
-        try {
-            if (id.denotesNode()) {
-                NodeId parentId = (NodeId) id;
-
-                // traverse zombie children (i.e. children marked as removed)
-                ItemId[] childIds = hierMgr.listZombieChildren(parentId);
-                for (int i = 0; i < childIds.length; i++) {
-                    ItemId childId = childIds[i];
-                    // check attic
-                    if (transientStateMgr.hasItemStateInAttic(childId)) {
-                        // found on attic, add to descendents list
-                        ItemState state = transientStateMgr.getItemStateInAttic(childId);
-                        if (!descendents.contains(state)) {
-                            descendents.add(state);
-                        }
-                    }
-                    if (childId.denotesNode()) {
-                        // recurse
-                        collectDescendantItemStatesInAttic(childId, descendents);
-                    }
-                }
-
-                // traverse existing children (because they might have zombie children)
-                childIds = hierMgr.listChildren(parentId);
-                for (int i = 0; i < childIds.length; i++) {
-                    ItemId childId = childIds[i];
-                    if (childId.denotesNode()) {
-                        // recurse
-                        collectDescendantItemStatesInAttic(childId, descendents);
-                    }
-                }
-            }
-        } catch (ItemStateException ise) {
-            log.warn("inconsistent hierarchy state", ise);
-        } catch (RepositoryException re) {
-            log.warn("inconsistent hierarchy state", re);
-        }
-    }
-
     /**
-     * Dumps the state of this <code>TransientItemStateManager</code> instance
+     * Dumps the state of this <code>SessionItemStateManager</code> instance
      * (used for diagnostic purposes).
      *
      * @param ps
@@ -195,8 +105,11 @@ public class SessionItemStateManager implements ItemStateProvider {
     public void dump(PrintStream ps) {
         ps.println("SessionItemStateManager (" + this + ")");
         ps.println();
-        //persistentStateMgr.dump(ps);
-        ps.println();
+        // FIXME hack!
+        if (persistentStateMgr instanceof ItemStateCache) {
+            ((ItemStateCache) persistentStateMgr).dump(ps);
+            ps.println();
+        }
         transientStateMgr.dump(ps);
         ps.println();
     }
@@ -210,15 +123,15 @@ public class SessionItemStateManager implements ItemStateProvider {
         return hierMgr;
     }
 
-    //----------------------------------------------------< ItemStateProvider >
+    //-----------------------------------------------------< ItemStateManager >
     /**
-     * @see ItemStateProvider#getItemState(ItemId)
+     * @see ItemStateManager#getItemState(ItemId)
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
         // first check if the specified item has been transiently removed
-        if (transientStateMgr.hasItemStateInAttic(id)) {
+        if (transientStateMgr.getAttic().hasItemState(id)) {
             /**
              * check if there's new transient state for the specified item
              * (e.g. if a property with name 'x' has been removed and a new
@@ -257,11 +170,11 @@ public class SessionItemStateManager implements ItemStateProvider {
     }
 
     /**
-     * @see ItemStateProvider#hasItemState(ItemId)
+     * @see ItemStateManager#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
         // first check if the specified item has been transiently removed
-        if (transientStateMgr.hasItemStateInAttic(id)) {
+        if (transientStateMgr.getAttic().hasItemState(id)) {
             /**
              * check if there's new transient state for the specified item
              * (e.g. if a property with name 'x' has been removed and a new
@@ -281,6 +194,7 @@ public class SessionItemStateManager implements ItemStateProvider {
                 return true;
             }
         }
+
         // check if there's persistent state for the specified item
         if (persistentStateMgr.hasItemState(id)) {
             return true;
@@ -297,21 +211,23 @@ public class SessionItemStateManager implements ItemStateProvider {
     }
 
     /**
-     * @see ItemStateProvider#getItemStateInAttic(ItemId)
+     * @see ItemStateManager#getNodeReferences
      */
-    public ItemState getItemStateInAttic(ItemId id)
+    public NodeReferences getNodeReferences(NodeId targetId)
             throws NoSuchItemStateException, ItemStateException {
-        return transientStateMgr.getItemStateInAttic(id);
+
+        return persistentStateMgr.getNodeReferences(targetId);
     }
 
     /**
-     * @see ItemStateProvider#hasItemStateInAttic(ItemId)
+     * @see ItemStateManager#beginUpdate
      */
-    public boolean hasItemStateInAttic(ItemId id) {
-        return transientStateMgr.hasItemStateInAttic(id);
+    public UpdateOperation beginUpdate() throws ItemStateException {
+        return persistentStateMgr.beginUpdate();
     }
 
     //< more methods for listing and retrieving transient ItemState instances >
+
     /**
      * @param id
      * @return
@@ -658,38 +574,6 @@ public class SessionItemStateManager implements ItemStateProvider {
      */
     public void disposeAllTransientItemStates() {
         transientStateMgr.disposeAllItemStates();
-    }
-
-    //------------------< methods for creating persistent ItemState instances >
-    /**
-     * Creates a <code>PersistentNodeState</code> instance representing new,
-     * i.e. not yet existing state. Call <code>{@link PersistentNodeState#store()}</code>
-     * on the returned object to make it persistent.
-     *
-     * @param uuid
-     * @param nodeTypeName
-     * @param parentUUID
-     * @return
-     * @throws ItemStateException
-     */
-    public PersistentNodeState createPersistentNodeState(String uuid, QName nodeTypeName, String parentUUID)
-            throws ItemStateException {
-        return persistentStateMgr.createNodeState(uuid, nodeTypeName, parentUUID);
-    }
-
-    /**
-     * Creates a <code>PersistentPropertyState</code> instance representing new,
-     * i.e. not yet existing state. Call <code>{@link PersistentPropertyState#store()}</code>
-     * on the returned object to make it persistent.
-     *
-     * @param parentUUID
-     * @param propName
-     * @return
-     * @throws ItemStateException
-     */
-    public PersistentPropertyState createPersistentPropertyState(String parentUUID, QName propName)
-            throws ItemStateException {
-        return persistentStateMgr.createPropertyState(parentUUID, propName);
     }
 
     //--------------------------------------------------------< inner classes >

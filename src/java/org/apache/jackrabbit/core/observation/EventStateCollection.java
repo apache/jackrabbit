@@ -57,7 +57,7 @@ public final class EventStateCollection {
     /**
      * The ItemStateProvider of the session that creates the events.
      */
-    private final ItemStateProvider provider;
+    private final ItemStateManager provider;
 
     /**
      * The HierarchyManager of the session that creates the events.
@@ -71,7 +71,7 @@ public final class EventStateCollection {
      */
     EventStateCollection(ObservationManagerFactory dispatcher,
                          SessionImpl session,
-                         ItemStateProvider provider,
+                         ItemStateManager provider,
                          HierarchyManager hmgr) {
         this.dispatcher = dispatcher;
         this.session = session;

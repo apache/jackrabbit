@@ -18,9 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.version.VersionItemStateProvider;
-import org.apache.jackrabbit.core.version.InternalVersion;
-import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -43,13 +40,14 @@ public class VersionNodeState extends VirtualNodeState {
 
     /**
      * Creates a new version node state
+     *
      * @param vm
      * @param v
      * @param parentUUID
      * @throws RepositoryException
      */
     protected VersionNodeState(VersionItemStateProvider vm, InternalVersion v,
-                            String parentUUID)
+                               String parentUUID)
             throws RepositoryException {
         super(vm, parentUUID, v.getId(), NodeTypeRegistry.NT_VERSION, new QName[0]);
         this.v = v;
@@ -66,7 +64,7 @@ public class VersionNodeState extends VirtualNodeState {
     public VirtualPropertyState getProperty(QName name)
             throws NoSuchItemStateException {
         VirtualPropertyState state = super.getProperty(name);
-        if (state!=null) {
+        if (state != null) {
             if (name.equals(VersionManager.PROPNAME_VERSION_LABELS)) {
                 state.setValues(InternalValue.create(v.getLabels()));
             } else if (name.equals(VersionManager.PROPNAME_PREDECESSORS)) {

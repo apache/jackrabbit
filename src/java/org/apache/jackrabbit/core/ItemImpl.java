@@ -95,7 +95,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     /**
      * <code>SessionItemStateManager</code> associated with this <code>Item</code>
      */
-    protected final SessionItemStateManager itemStateMgr;
+    protected final SessionItemStateManager stateMgr;
 
     /**
      * Listeners (weak references)
@@ -116,7 +116,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
              ItemLifeCycleListener[] listeners) {
         this.session = session;
         rep = (RepositoryImpl) session.getRepository();
-        itemStateMgr = session.getItemStateManager();
+        stateMgr = session.getItemStateManager();
         this.id = id;
         this.itemMgr = itemMgr;
         this.state = state;
@@ -171,7 +171,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
     protected abstract ItemState getOrCreateTransientItemState() throws RepositoryException;
 
-    protected abstract void makePersistent() throws RepositoryException;
+    protected abstract void makePersistent(UpdateOperation update);
 
     /**
      * Marks this instance as 'removed' and notifies its listeners.
@@ -191,13 +191,13 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             // this is a 'new' item, simply dispose the transient state
             // (it is no longer used); this will indirectly (through
             // stateDiscarded listener method) invalidate this instance permanently
-            itemStateMgr.disposeTransientItemState(transientState);
+            stateMgr.disposeTransientItemState(transientState);
         } else {
             // this is an 'existing' item (i.e. it is backed by persistent
             // state), mark it as 'removed'
             transientState.setStatus(ItemState.STATUS_EXISTING_REMOVED);
             // transfer the transient state to the attic
-            itemStateMgr.moveTransientItemStateToAttic(transientState);
+            stateMgr.moveTransientItemStateToAttic(transientState);
 
             // set state of this instance to 'invalid'
             status = STATUS_INVALIDATED;
@@ -382,7 +382,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
         if (isNode()) {
             // build list of 'new' or 'modified' descendents
-            Iterator iter = itemStateMgr.getDescendantTransientItemStates(id);
+            Iterator iter = stateMgr.getDescendantTransientItemStates(id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 switch (transientState.getStatus()) {
@@ -431,7 +431,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         ItemState transientState;
 
         if (isNode()) {
-            Iterator iter = itemStateMgr.getDescendantTransientItemStatesInAttic(id);
+            Iterator iter = stateMgr.getDescendantTransientItemStatesInAttic(id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 // check if stale
@@ -658,9 +658,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
     }
 
-    private void checkReferences(Iterator iterDirty, Iterator iterRemoved,
-                                 ReferenceManager refMgr)
+    private Collection checkReferences(Iterator iterDirty, Iterator iterRemoved)
             throws ReferentialIntegrityException, RepositoryException {
+
         // map of target (node) id's and modified NodeReferences objects
         HashMap dirtyNodeRefs = new HashMap();
 
@@ -685,7 +685,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             if (dirtyNodeRefs.containsKey(targetId)) {
                                 refs = (NodeReferences) dirtyNodeRefs.get(targetId);
                             } else {
-                                refs = refMgr.get(targetId);
+                                try {
+                                    refs = stateMgr.getNodeReferences(targetId);
+                                } catch (ItemStateException e) {
+                                    String msg = itemMgr.safeGetJCRPath(targetId)
+                                            + ": failed to load node references";
+                                    log.error(msg, e);
+                                    throw new RepositoryException(msg, e);
+                                }
                                 dirtyNodeRefs.put(targetId, refs);
                             }
                             // remove reference from target node
@@ -728,7 +735,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         if (dirtyNodeRefs.containsKey(targetId)) {
                             refs = (NodeReferences) dirtyNodeRefs.get(targetId);
                         } else {
-                            refs = refMgr.get(targetId);
+                            try {
+                                refs = stateMgr.getNodeReferences(targetId);
+                            } catch (ItemStateException e) {
+                                String msg = itemMgr.safeGetJCRPath(targetId)
+                                        + ": failed to load node references";
+                                log.error(msg, e);
+                                throw new RepositoryException(msg, e);
+                            }
                             dirtyNodeRefs.put(targetId, refs);
                         }
                         // add reference to target node
@@ -761,7 +775,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         if (dirtyNodeRefs.containsKey(targetId)) {
                             refs = (NodeReferences) dirtyNodeRefs.get(targetId);
                         } else {
-                            refs = refMgr.get(targetId);
+                            try {
+                                refs = stateMgr.getNodeReferences(targetId);
+                            } catch (ItemStateException e) {
+                                String msg = itemMgr.safeGetJCRPath(targetId)
+                                        + ": failed to load node references";
+                                log.error(msg, e);
+                                throw new RepositoryException(msg, e);
+                            }
                             dirtyNodeRefs.put(targetId, refs);
                         }
                         // remove reference to target node
@@ -783,7 +804,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             if (dirtyNodeRefs.containsKey(targetId)) {
                 refs = (NodeReferences) dirtyNodeRefs.get(targetId);
             } else {
-                refs = refMgr.get(targetId);
+                try {
+                    refs = stateMgr.getNodeReferences(targetId);
+                } catch (ItemStateException e) {
+                    String msg = itemMgr.safeGetJCRPath(targetId)
+                            + ": failed to load node references";
+                    log.error(msg, e);
+                    throw new RepositoryException(msg, e);
+                }
             }
             if (refs.hasReferences()) {
                 String msg = nodeState.getId()
@@ -793,45 +821,40 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             }
         }
 
-        // persist dirty NodeReferences objects
-        iter = dirtyNodeRefs.values().iterator();
-        while (iter.hasNext()) {
-            NodeReferences refs = (NodeReferences) iter.next();
-            refMgr.save(refs);
-        }
+        // return dirty NodeReferences objects
+        return dirtyNodeRefs.values();
     }
 
-    private void removeTransientItems(Iterator iter) throws RepositoryException {
+    private void removeTransientItems(UpdateOperation update,
+                                      Iterator iter) {
+
         /**
          * walk through list of transient items marked 'removed' and
          * definitively remove each one
          */
         while (iter.hasNext()) {
             ItemState transientState = (ItemState) iter.next();
-            PersistableItemState persistentState = (PersistableItemState) transientState.getOverlayedState();
+            ItemState persistentState = transientState.getOverlayedState();
             /**
-             * remove persistent state (incl. descendents, if there are any)
+             * remove persistent state
              *
              * this will indirectly (through stateDestroyed listener method)
              * permanently invalidate all Item instances wrapping it
              */
-            try {
-                persistentState.destroy();
-            } catch (ItemStateException ise) {
-                String msg = "failed to remove item " + transientState.getId();
-                log.error(msg, ise);
-                throw new RepositoryException(msg, ise);
-            }
+            update.destroy(persistentState);
         }
     }
 
-    private void persistTransientItems(Iterator iter) throws RepositoryException {
+    private void persistTransientItems(UpdateOperation update,
+                                       Iterator iter)
+            throws RepositoryException {
+
         // walk through list of transient items and persist each one
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
             ItemImpl item = itemMgr.getItem(itemState.getId());
             // persist state of transient item
-            item.makePersistent();
+            item.makePersistent(update);
         }
     }
 
@@ -1126,7 +1149,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                  * turn on temporary path caching for better performance
                  * (assuming that the paths won't change during this save() call)
                  */
-                itemStateMgr.enablePathCaching(true);
+                stateMgr.enablePathCaching(true);
 
                 // build list of transient states that should be persisted
                 Collection dirty = getTransientStates();
@@ -1157,7 +1180,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             NodeId id = new NodeId((String) parentsIter.next());
                             NodeState parentState = null;
                             try {
-                                parentState = (NodeState) itemStateMgr.getTransientItemState(id);
+                                parentState = (NodeState) stateMgr.getTransientItemState(id);
                             } catch (ItemStateException ise) {
                                 // should never get here...
                                 String msg = "inconsistency: failed to retrieve transient state for " + itemMgr.safeGetJCRPath(id);
@@ -1189,49 +1212,36 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         session.getItemStateManager(), session.getHierarchyManager());
 
                 /**
-                 * we need to make sure that we are not interrupted while
-                 * verifying/persisting node references
+                 * build list of transient descendents in the attic
+                 * (i.e. those marked as 'removed')
                  */
-                ReferenceManager refMgr = wsp.getReferenceManager();
-                synchronized (refMgr) {
-                    /**
-                     * build list of transient descendents in the attic
-                     * (i.e. those marked as 'removed')
-                     */
-                    Collection removed = getRemovedStates();
+                Collection removed = getRemovedStates();
 
-                    /**
-                     * referential integrity checks:
-                     * make sure that a referenced node cannot be removed and
-                     * that all references are updated and persisted
-                     */
-                    checkReferences(dirty.iterator(), removed.iterator(), refMgr);
+                /**
+                 * referential integrity checks:
+                 * make sure that a referenced node cannot be removed and
+                 * that all references are updated and persisted
+                 */
+                Collection dirtyRefs =
+                        checkReferences(dirty.iterator(), removed.iterator());
 
-                    /**
-                     * create event states for the affected item states and
-                     * prepare them for event dispatch (this step is necessary in order
-                     * to check access rights on items that will be removed)
-                     *
-                     * todo consolidate event generating and dispatching code (ideally one method call after save has succeeded)
-                     */
-                    events.createEventStates(dirty);
-                    events.createEventStates(removed);
-                    events.prepare();
+                /**
+                 * create event states for the affected item states and
+                 * prepare them for event dispatch (this step is necessary in order
+                 * to check access rights on items that will be removed)
+                 *
+                 * todo consolidate event generating and dispatching code (ideally one method call after save has succeeded)
+                 */
+                events.createEventStates(removed);
+                events.createEventStates(dirty);
+                events.prepare();
 
-                    // definitively remove transient items marked as 'removed'
-                    removeTransientItems(removed.iterator());
+                try {
+                    // start the update operation
+                    UpdateOperation update = stateMgr.beginUpdate();
 
-                    // dispose the transient states marked 'removed'
-                    iter = removed.iterator();
-                    while (iter.hasNext()) {
-                        transientState = (ItemState) iter.next();
-                        /**
-                         * dispose the transient state, it is no longer used
-                         * this will indirectly (through stateDiscarded listener method)
-                         * permanently invalidate the wrapping Item instance
-                         */
-                        itemStateMgr.disposeTransientItemStateInAttic(transientState);
-                    }
+                    // process transient items marked as 'removed'
+                    removeTransientItems(update, removed.iterator());
 
                     // initialize version histories for new nodes (might generate new transient state)
                     if (initVersionHistories(dirty.iterator())) {
@@ -1242,16 +1252,39 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         dirty = getTransientStates();
                     }
 
-                    // persist 'new' or 'modified' transient states
-                    persistTransientItems(dirty.iterator());
-                } // synchronized(refMgr)
+                    // process 'new' or 'modified' transient states
+                    persistTransientItems(update, dirty.iterator());
 
-                // now it is safe to dispose the transient states
+                    // store the references calculated above
+                    for (Iterator it = dirtyRefs.iterator(); it.hasNext();) {
+                        update.store((NodeReferences) it.next());
+                    }
+
+                    // end update operation
+                    update.end();
+
+                } catch (ItemStateException e) {
+
+                    String msg = safeGetJCRPath() + ": unable to update item.";
+                    log.error(msg);
+                    throw new RepositoryException(msg, e);
+
+                }
+
+                // now it is safe to dispose the transient states:
+                // dispose the transient states marked 'removed'
+                iter = removed.iterator();
+                while (iter.hasNext()) {
+                    transientState = (ItemState) iter.next();
+                    // dispose the transient state, it is no longer used
+                    stateMgr.disposeTransientItemStateInAttic(transientState);
+                }
+                // dispose the transient states marked 'new' or 'modified'
                 iter = dirty.iterator();
                 while (iter.hasNext()) {
                     transientState = (ItemState) iter.next();
                     // dispose the transient state, it is no longer used
-                    itemStateMgr.disposeTransientItemState(transientState);
+                    stateMgr.disposeTransientItemState(transientState);
                 }
 
                 /**
@@ -1261,9 +1294,10 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                  * transactional support
                  */
                 session.dispatch(events);
+
             } finally {
                 // turn off temporary path caching
-                itemStateMgr.enablePathCaching(false);
+                stateMgr.enablePathCaching(false);
             }
         }
     }
@@ -1287,7 +1321,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             // check if this is the repository root node
             if (((NodeImpl) this).isRepositoryRoot()) {
                 // optimization
-                itemStateMgr.disposeAllTransientItemStates();
+                stateMgr.disposeAllTransientItemStates();
                 return;
             }
         }
@@ -1298,7 +1332,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
         // check status of this item's state
         if (isTransient()) {
-            transientState = (ItemState) state;
+            transientState = state;
             switch (transientState.getStatus()) {
                 case ItemState.STATUS_STALE_MODIFIED:
                 case ItemState.STATUS_STALE_DESTROYED:
@@ -1323,7 +1357,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
         if (isNode()) {
             // build list of 'new', 'modified' or 'stale' descendents
-            Iterator iter = itemStateMgr.getDescendantTransientItemStates(id);
+            Iterator iter = stateMgr.getDescendantTransientItemStates(id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 switch (transientState.getStatus()) {
@@ -1350,17 +1384,17 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             // dispose the transient state, it is no longer used;
             // this will indirectly (through stateDiscarded listener method)
             // either restore or permanently invalidate the wrapping Item instances
-            itemStateMgr.disposeTransientItemState(transientState);
+            stateMgr.disposeTransientItemState(transientState);
         }
 
         // discard all transient descendents in the attic (i.e. those marked
         // as 'removed'); this will resurrect the removed items
-        iter = itemStateMgr.getDescendantTransientItemStatesInAttic(id);
+        iter = stateMgr.getDescendantTransientItemStatesInAttic(id);
         while (iter.hasNext()) {
             transientState = (ItemState) iter.next();
             // dispose the transient state; this will indirectly (through
             // stateDiscarded listener method) resurrect the wrapping Item instances
-            itemStateMgr.disposeTransientItemStateInAttic(transientState);
+            stateMgr.disposeTransientItemStateInAttic(transientState);
         }
     }
 

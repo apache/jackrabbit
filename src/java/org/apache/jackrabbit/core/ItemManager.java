@@ -65,7 +65,7 @@ public class ItemManager implements ItemLifeCycleListener {
 
     private final SessionImpl session;
 
-    private final ItemStateProvider itemStateProvider;
+    private final ItemStateManager itemStateProvider;
     private final HierarchyManager hierMgr;
 
     private NodeImpl root;
@@ -84,7 +84,7 @@ public class ItemManager implements ItemLifeCycleListener {
      * @param rootNodeDef       the definition of the root node
      * @param rootNodeUUID      the UUID of the root node
      */
-    ItemManager(ItemStateProvider itemStateProvider, HierarchyManager hierMgr,
+    ItemManager(ItemStateManager itemStateProvider, HierarchyManager hierMgr,
                 SessionImpl session, NodeDef rootNodeDef, String rootNodeUUID) {
         this.itemStateProvider = itemStateProvider;
         this.hierMgr = hierMgr;
@@ -138,7 +138,6 @@ public class ItemManager implements ItemLifeCycleListener {
             ps.print(item.isTransient() ? "transient " : "          ");
             ps.println(id + "\t" + item.getPath() + " (" + item + ")");
         }
-        ps.println();
     }
 
     /**
@@ -329,7 +328,7 @@ public class ItemManager implements ItemLifeCycleListener {
         }
 
         // shortcut
-        if (id.denotesNode() && ((NodeId) id).equals(rootNodeId)) {
+        if (id.denotesNode() && id.equals(rootNodeId)) {
             return getRoot();
         }
 

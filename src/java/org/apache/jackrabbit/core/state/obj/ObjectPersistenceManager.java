@@ -37,7 +37,8 @@ import java.util.*;
  * and <code>NodeReferences</code> objects using a simple custom serialization
  * format.
  */
-public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
+public class ObjectPersistenceManager extends AbstractPersistenceManager
+        implements BLOBStore {
 
     private static Logger log = Logger.getLogger(ObjectPersistenceManager.class);
 
@@ -125,9 +126,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
      * @param state  <code>state</code> to serialize
      * @param stream the stream where the <code>state</code> should be serialized to
      * @throws Exception if an error occurs during the serialization
-     * @see #deserialize(PersistentNodeState, InputStream)
+     * @see #deserialize(NodeState, InputStream)
      */
-    public static void serialize(PersistentNodeState state, OutputStream stream)
+    public static void serialize(NodeState state, OutputStream stream)
             throws Exception {
         DataOutputStream out = new DataOutputStream(stream);
         // uuid
@@ -173,9 +174,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
      * @param state  <code>state</code> to deserialize
      * @param stream the stream where the <code>state</code> should be deserialized from
      * @throws Exception if an error occurs during the deserialization
-     * @see #serialize(PersistentNodeState, OutputStream)
+     * @see #serialize(NodeState, OutputStream)
      */
-    public static void deserialize(PersistentNodeState state, InputStream stream)
+    public static void deserialize(NodeState state, InputStream stream)
             throws Exception {
         DataInputStream in = new DataInputStream(stream);
         // check uuid
@@ -239,9 +240,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
      * @param stream    the stream where the <code>state</code> should be serialized to
      * @param blobStore handler for blob data
      * @throws Exception if an error occurs during the serialization
-     * @see #deserialize(PersistentPropertyState, InputStream, BLOBStore)
+     * @see #deserialize(PropertyState, InputStream, BLOBStore)
      */
-    public static void serialize(PersistentPropertyState state,
+    public static void serialize(PropertyState state,
                                  OutputStream stream,
                                  BLOBStore blobStore)
             throws Exception {
@@ -295,9 +296,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
      * @param stream    the stream where the <code>state</code> should be deserialized from
      * @param blobStore handler for blob data
      * @throws Exception if an error occurs during the deserialization
-     * @see #serialize(PersistentPropertyState, OutputStream, BLOBStore)
+     * @see #serialize(PropertyState, OutputStream, BLOBStore)
      */
-    public static void deserialize(PersistentPropertyState state,
+    public static void deserialize(PropertyState state,
                                    InputStream stream,
                                    BLOBStore blobStore)
             throws Exception {
@@ -463,22 +464,22 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#load(PersistentNodeState)
+     * @see PersistenceManager#load
      */
-    public synchronized void load(PersistentNodeState state)
+    public synchronized NodeState load(String uuid)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        String nodeFilePath = buildNodeFilePath(state.getUUID());
+        String nodeFilePath = buildNodeFilePath(uuid);
 
         try {
             if (!itemStateFS.isFile(nodeFilePath)) {
-                throw new NoSuchItemStateException(state.getId().toString());
+                throw new NoSuchItemStateException(nodeFilePath);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to read node state: " + state.getId();
+            String msg = "failed to read node state: " + nodeFilePath;
             log.error(msg, fse);
             throw new ItemStateException(msg, fse);
         }
@@ -487,39 +488,40 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
             BufferedInputStream in =
                     new BufferedInputStream(itemStateFS.getInputStream(nodeFilePath));
             try {
+                NodeState state = createNew(uuid, null, null);
                 deserialize(state, in);
-                return;
+                return state;
             } catch (Exception e) {
-                String msg = "failed to read node state: " + state.getId();
+                String msg = "failed to read node state: " + uuid;
                 log.error(msg, e);
                 throw new ItemStateException(msg, e);
             } finally {
                 in.close();
             }
         } catch (Exception e) {
-            String msg = "failed to read node state: " + state.getId();
+            String msg = "failed to read node state: " + nodeFilePath;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
 
     /**
-     * @see PersistenceManager#load(PersistentPropertyState)
+     * @see PersistenceManager#load
      */
-    public synchronized void load(PersistentPropertyState state)
+    public synchronized PropertyState load(QName name, String parentUUID)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
-        String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
+        String propFilePath = buildPropFilePath(parentUUID, name);
 
         try {
             if (!itemStateFS.isFile(propFilePath)) {
-                throw new NoSuchItemStateException(state.getId().toString());
+                throw new NoSuchItemStateException(propFilePath);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to read property state: " + state.getId();
+            String msg = "failed to read property state: " + propFilePath;
             log.error(msg, fse);
             throw new ItemStateException(msg, fse);
         }
@@ -528,22 +530,61 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
             BufferedInputStream in =
                     new BufferedInputStream(itemStateFS.getInputStream(propFilePath));
             try {
+                PropertyState state = createNew(name, parentUUID);
                 deserialize(state, in, this);
-                return;
+                return state;
             } finally {
                 in.close();
             }
         } catch (Exception e) {
-            String msg = "failed to read property state: " + state.getId();
+            String msg = "failed to read property state: " + propFilePath;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
 
     /**
-     * @see PersistenceManager#store
+     * @see PersistenceManager#load
      */
-    public synchronized void store(PersistentNodeState state) throws ItemStateException {
+    public synchronized NodeReferences load(NodeId targetId)
+            throws NoSuchItemStateException, ItemStateException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
+        String refsFilePath = buildNodeReferencesFilePath(targetId.getUUID());
+
+        try {
+            if (!itemStateFS.isFile(refsFilePath)) {
+                throw new NoSuchItemStateException(targetId.toString());
+            }
+        } catch (FileSystemException fse) {
+            String msg = "failed to load references: " + targetId;
+            log.error(msg, fse);
+            throw new ItemStateException(msg, fse);
+        }
+
+        try {
+            BufferedInputStream in =
+                    new BufferedInputStream(itemStateFS.getInputStream(refsFilePath));
+            try {
+                NodeReferences refs = new NodeReferences(targetId);
+                deserialize(refs, in);
+                return refs;
+            } finally {
+                in.close();
+            }
+        } catch (Exception e) {
+            String msg = "failed to load references: " + targetId;
+            log.error(msg, e);
+            throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * @see AbstractPersistenceManager#store
+     */
+    protected void store(NodeState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -569,9 +610,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#store
+     * @see AbstractPersistenceManager#store
      */
-    public synchronized void store(PersistentPropertyState state) throws ItemStateException {
+    protected void store(PropertyState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -596,9 +637,35 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#destroy
+     * @see AbstractPersistenceManager#store
      */
-    public synchronized void destroy(PersistentNodeState state) throws ItemStateException {
+    protected void store(NodeReferences refs) throws ItemStateException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
+        String uuid = refs.getTargetId().getUUID();
+        String refsFilePath = buildNodeReferencesFilePath(uuid);
+        FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
+        try {
+            refsFile.makeParentDirs();
+            OutputStream out = new BufferedOutputStream(refsFile.getOutputStream());
+            try {
+                serialize(refs, out);
+            } finally {
+                out.close();
+            }
+        } catch (Exception e) {
+            String msg = "failed to store references: " + uuid;
+            log.error(msg, e);
+            throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * @see AbstractPersistenceManager#destroy
+     */
+    protected void destroy(NodeState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -619,9 +686,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#destroy
+     * @see AbstractPersistenceManager#destroy
      */
-    public synchronized void destroy(PersistentPropertyState state) throws ItemStateException {
+    protected void destroy(PropertyState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -656,72 +723,9 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#load(NodeReferences)
+     * @see AbstractPersistenceManager#destroy
      */
-    public synchronized void load(NodeReferences refs)
-            throws NoSuchItemStateException, ItemStateException {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-
-        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId().getUUID());
-
-        try {
-            if (!itemStateFS.isFile(refsFilePath)) {
-                throw new NoSuchItemStateException(refs.getTargetId().toString());
-            }
-        } catch (FileSystemException fse) {
-            String msg = "failed to load references: " + refs.getTargetId();
-            log.error(msg, fse);
-            throw new ItemStateException(msg, fse);
-        }
-
-        try {
-            BufferedInputStream in =
-                    new BufferedInputStream(itemStateFS.getInputStream(refsFilePath));
-            try {
-                deserialize(refs, in);
-                return;
-            } finally {
-                in.close();
-            }
-        } catch (Exception e) {
-            String msg = "failed to load references: " + refs.getTargetId();
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        }
-    }
-
-    /**
-     * @see PersistenceManager#store(NodeReferences)
-     */
-    public synchronized void store(NodeReferences refs) throws ItemStateException {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-
-        String uuid = refs.getTargetId().getUUID();
-        String refsFilePath = buildNodeReferencesFilePath(uuid);
-        FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
-        try {
-            refsFile.makeParentDirs();
-            OutputStream out = new BufferedOutputStream(refsFile.getOutputStream());
-            try {
-                serialize(refs, out);
-            } finally {
-                out.close();
-            }
-        } catch (Exception e) {
-            String msg = "failed to store references: " + uuid;
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        }
-    }
-
-    /**
-     * @see PersistenceManager#destroy(NodeReferences)
-     */
-    public synchronized void destroy(NodeReferences refs) throws ItemStateException {
+    protected void destroy(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }

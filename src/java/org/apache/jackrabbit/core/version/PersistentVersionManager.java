@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.NodeImpl;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import java.util.*;
+import java.util.Iterator;
 
 /**
  * This interface defines the access to the persistence layer of the
@@ -103,6 +103,7 @@ public interface PersistentVersionManager {
 
     /**
      * checks, if the item with the given external id exists
+     *
      * @param externalId
      * @return
      */
@@ -110,6 +111,7 @@ public interface PersistentVersionManager {
 
     /**
      * returns the item referred by the external id
+     *
      * @param externalId
      * @return
      * @throws RepositoryException
@@ -119,6 +121,7 @@ public interface PersistentVersionManager {
 
     /**
      * returns the item referred by the internal id
+     *
      * @param internalId
      * @return
      * @throws RepositoryException

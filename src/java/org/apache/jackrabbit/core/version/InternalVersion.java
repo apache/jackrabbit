@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.QName;
+
 import javax.jcr.version.Version;
 import java.util.Calendar;
 
@@ -42,18 +43,21 @@ public interface InternalVersion extends InternalVersionItem {
 
     /**
      * Aequivalent to {@link javax.jcr.version.Version#getCreated()}
+     *
      * @see Version#getCreated()
      */
     public Calendar getCreated();
 
     /**
      * Aequivalent to {@link javax.jcr.version.Version#getSuccessors()}}
+     *
      * @see Version#getSuccessors()
      */
     public InternalVersion[] getSuccessors();
 
     /**
      * Aequivalent to {@link javax.jcr.version.Version#getPredecessors()}}
+     *
      * @see javax.jcr.version.Version#getPredecessors()
      */
     public InternalVersion[] getPredecessors();
@@ -86,6 +90,7 @@ public interface InternalVersion extends InternalVersionItem {
 
     /**
      * Checks, if this version has the given label assosiated
+     *
      * @param label the label to check.
      * @return <code>true</code> if the label is assigned to this version;
      *         <code>false</code> otherwise.
@@ -94,6 +99,7 @@ public interface InternalVersion extends InternalVersionItem {
 
     /**
      * returns the labels that are assigned to this version
+     *
      * @return a string array of labels.
      */
     public String[] getLabels();
