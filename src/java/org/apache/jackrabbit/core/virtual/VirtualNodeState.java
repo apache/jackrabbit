@@ -256,4 +256,14 @@ public class VirtualNodeState extends NodeState implements Constants {
             stateRefs.remove(state);
         }
     }
+
+    /**
+     * Returns the hard references of this state
+     */
+    public HashSet removeAllStateReferences() {
+        HashSet set = stateRefs;
+        stateRefs = null;
+        return set;
+    }
+
 }

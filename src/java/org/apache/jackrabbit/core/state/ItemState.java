@@ -251,7 +251,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * Notify the listeners that the persistent state this object is
      * representing has been updated.
      */
-    protected void notifyStateUpdated() {
+    public void notifyStateUpdated() {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemStateListener[] la = new ItemStateListener[listeners.size()];
         Iterator iter = listeners.values().iterator();

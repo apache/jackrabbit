@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 
@@ -60,6 +61,33 @@ public interface VersionManager {
      * @throws RepositoryException
      */
     public Version checkin(NodeImpl node) throws RepositoryException;
+
+    /**
+     * Removes the specified version from the given version history.
+     * @param history
+     * @param versionName
+     * @throws RepositoryException
+     */
+    public void removeVersion(VersionHistory history, QName versionName)
+            throws RepositoryException;
+
+    /**
+     * Sets the version <code>label</code> to the given <code>version</code>.
+     * If the label is already assigned to another version, a VersionException is
+     * thrown unless <code>move</code> is <code>true</code>. If <code>version</code>
+     * is <code>null</code>, the label is removed from the respective version.
+     * In either case, the version the label was previously assigned is returned,
+     * or <code>null</code> of the label was not moved.
+     * 
+     * @param history
+     * @param version
+     * @param label
+     * @param move
+     * @return
+     * @throws RepositoryException
+     */
+    public Version setVersionLabel(VersionHistory history, QName version, QName label, boolean move)
+            throws RepositoryException;
 
     //-----------------------------------------------------< internal stuff >---
 

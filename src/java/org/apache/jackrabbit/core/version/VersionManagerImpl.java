@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
@@ -34,6 +35,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
+import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.Iterator;
@@ -46,7 +48,7 @@ import java.util.ArrayList;
  * version storage ({@link VersionItemStateProvider}) and the persistent
  * version manager.
  */
-public class VersionManagerImpl implements VersionManager, Constants, InternalVersionItemListener {
+public class VersionManagerImpl implements VersionManager, Constants {
 
     /**
      * the default logger
@@ -140,11 +142,10 @@ public class VersionManagerImpl implements VersionManager, Constants, InternalVe
      */
     public VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException {
         InternalVersionHistory history = vMgr.createVersionHistory(node);
-        history.addListener(this);
-        onVersionStorageChanged();
+        virtProvider.invalidateItem(new NodeId(VERSION_STORAGE_NODE_UUID));
         VersionHistoryImpl vh = (VersionHistoryImpl) node.getSession().getNodeByUUID(history.getId());
 
-        // now generate observation events
+        // generate observation events
         List events = new ArrayList();
         recursiveAdd(events, (NodeImpl) vh.getParent(), vh);
         obsMgr.dispatch(events, (SessionImpl) node.getSession());
@@ -170,11 +171,7 @@ public class VersionManagerImpl implements VersionManager, Constants, InternalVe
      * @throws RepositoryException
      */
     public InternalVersionHistory getVersionHistory(String id) throws RepositoryException {
-        InternalVersionHistory hist = vMgr.getVersionHistory(id);
-        if (hist != null) {
-            hist.addListener(this);
-        }
-        return hist;
+        return vMgr.getVersionHistory(id);
     }
 
     /**
@@ -215,11 +212,7 @@ public class VersionManagerImpl implements VersionManager, Constants, InternalVe
      * @throws RepositoryException
      */
     public InternalVersion getVersion(String id) throws RepositoryException {
-        InternalVersion vers = vMgr.getVersion(id);
-        if (vers != null) {
-            vers.addListener(this);
-        }
-        return vers;
+        return vMgr.getVersion(id);
     }
 
     /**
@@ -240,11 +233,7 @@ public class VersionManagerImpl implements VersionManager, Constants, InternalVe
      * @throws RepositoryException
      */
     public InternalVersionItem getItem(String id) throws RepositoryException {
-        InternalVersionItem item = vMgr.getItem(id);
-        if (item != null) {
-            item.addListener(this);
-        }
-        return item;
+        return vMgr.getItem(id);
     }
 
     /**
@@ -258,15 +247,81 @@ public class VersionManagerImpl implements VersionManager, Constants, InternalVe
     public Version checkin(NodeImpl node) throws RepositoryException {
         SessionImpl session = (SessionImpl) node.getSession();
         InternalVersion version = vMgr.checkin(node);
-        version.addListener(this);
+        virtProvider.invalidateItem(new NodeId(version.getVersionHistory().getId()));
         VersionImpl v = (VersionImpl) session.getNodeByUUID(version.getId());
 
-        // now generate observation events
+        // generate observation events
         List events = new ArrayList();
         recursiveAdd(events, (NodeImpl) v.getParent(), v);
         obsMgr.dispatch(events, session);
 
         return v;
+    }
+
+    /**
+     * Removes the specified version from the history
+     * @param history
+     * @param name
+     */
+    public void removeVersion(VersionHistory history, QName name)
+            throws RepositoryException {
+        // generate observation events
+        VersionImpl version = (VersionImpl) ((VersionHistoryImpl) history).getNode(name);
+        List events = new ArrayList();
+        recursiveRemove(events, (NodeImpl) history, version);
+
+        InternalVersionHistory vh = ((VersionHistoryImpl) history).getInternalVersionHistory();
+        vh.removeVersion(name);
+
+        virtProvider.invalidateItem(new NodeId(vh.getId()));
+        obsMgr.dispatch(events, (SessionImpl) history.getSession());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Version setVersionLabel(VersionHistory history, QName version,
+                                   QName label, boolean move)
+            throws RepositoryException {
+        Session session = history.getSession();
+
+        InternalVersionHistory vh = ((VersionHistoryImpl) history).getInternalVersionHistory();
+        NodeImpl labelNode = ((VersionHistoryImpl) history).getNode(JCR_VERSIONLABELS);
+        InternalVersion v = vh.setVersionLabel(version, label, move);
+
+        // collect observation events
+        List events = new ArrayList();
+        if (version == null && v != null) {
+            // label removed
+            events.add(EventState.propertyRemoved(
+                    labelNode.internalGetUUID(),
+                    labelNode.getPrimaryPath(),
+                    Path.PathElement.fromString(label.toString()),
+                    (NodeTypeImpl) labelNode.getPrimaryNodeType(),
+                    labelNode.getSession()
+            ));
+        } else if (v == null) {
+            // label added
+            events.add(EventState.propertyAdded(
+                    labelNode.internalGetUUID(),
+                    labelNode.getPrimaryPath(),
+                    Path.PathElement.fromString(label.toString()),
+                    (NodeTypeImpl) labelNode.getPrimaryNodeType(),
+                    labelNode.getSession()
+            ));
+        } else {
+            // label modified
+            events.add(EventState.propertyChanged(
+                    labelNode.internalGetUUID(),
+                    labelNode.getPrimaryPath(),
+                    Path.PathElement.fromString(label.toString()),
+                    (NodeTypeImpl) labelNode.getPrimaryNodeType(),
+                    labelNode.getSession()
+            ));
+        }
+        virtProvider.invalidateItem(new NodeId(vh.getId()));
+        obsMgr.dispatch(events, (SessionImpl) history.getSession());
+        return v == null ? null : (VersionImpl) session.getNodeByUUID(v.getId());
     }
 
     /**
@@ -308,6 +363,32 @@ public class VersionManagerImpl implements VersionManager, Constants, InternalVe
     }
 
     /**
+     * Adds a subtree of itemstates as 'removed' to a list of events
+     *
+     * @param events
+     * @param parent
+     * @param node
+     * @throws RepositoryException
+     */
+    private void recursiveRemove(List events, NodeImpl parent, NodeImpl node)
+            throws RepositoryException {
+
+        events.add(EventState.childNodeRemoved(
+                parent.internalGetUUID(),
+                parent.getPrimaryPath(),
+                node.internalGetUUID(),
+                node.getPrimaryPath().getNameElement(),
+                (NodeTypeImpl) parent.getPrimaryNodeType(),
+                node.getSession()
+        ));
+        NodeIterator niter = node.getNodes();
+        while (niter.hasNext()) {
+            NodeImpl n = (NodeImpl) niter.nextNode();
+            recursiveRemove(events, node, n);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public List getItemReferences(InternalVersionItem item) {
@@ -328,33 +409,5 @@ public class VersionManagerImpl implements VersionManager, Constants, InternalVe
             }
         }
         vMgr.setItemReferences(item, refs);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void itemModifed(InternalVersionItem item) {
-        try {
-            NodeId id = new NodeId(item.getId());
-            if (virtProvider.hasItemState(id)) {
-                virtProvider.getItemState(id).discard();
-            }
-        } catch (ItemStateException e) {
-            log.error("Error while refreshing virtual item.", e);
-        }
-    }
-
-    /**
-     * Flushes the virtual node state information of the version storage
-     */
-    public void onVersionStorageChanged() {
-        try {
-            NodeId id = new NodeId(VERSION_STORAGE_NODE_UUID);
-            if (virtProvider.hasItemState(id)) {
-                virtProvider.getItemState(id).discard();
-            }
-        } catch (ItemStateException e) {
-            log.error("Error while refreshing virtual version storage.", e);
-        }
     }
 }

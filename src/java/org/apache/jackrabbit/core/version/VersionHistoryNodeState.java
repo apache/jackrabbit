@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
 import javax.jcr.RepositoryException;
@@ -52,6 +53,9 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
 
         // version history is referenceable
         setPropertyValue(JCR_UUID, InternalValue.create(vh.getId()));
+
+        // enable for spec 0.16.3
+        // setPropertyValue(JCR_VERSIONABLEUUID, InternalValue.create(vh.getVersionableUUID()));
 
         this.vh = vh;
     }

@@ -21,24 +21,27 @@ import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import javax.jcr.version.OnParentVersionAction;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * This Class implements a virtual item state provider that exposes the
  * registered nodetypes.
  */
-public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements NodeTypeRegistryListener {
+public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
 
     /**
      * the parent id
@@ -54,7 +57,6 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements
     public VirtualNodeTypeStateProvider(NodeTypeRegistry ntReg, String rootNodeId, String parentId) {
         super(ntReg, new NodeId(rootNodeId));
         this.parentId = parentId;
-        ntReg.addListener(this);
     }
 
     /**
@@ -92,36 +94,42 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeRegistered(QName ntName) {
-        // todo: do more efficient reloading
+    public void onNodeTypeAdded(QName ntName) throws RepositoryException {
         try {
-            getRootState().discard();
+            VirtualNodeState root = (VirtualNodeState) getRootState();
+            NodeTypeDef ntDef = ntReg.getNodeTypeDef(ntName);
+            VirtualNodeState ntState = createNodeTypeState(root, ntDef);
+            root.addChildNodeEntry(ntName, ntState.getUUID());
+
+            // add as hard reference
+            root.addStateReference(ntState);
+            root.notifyStateUpdated();
         } catch (ItemStateException e) {
-            // ignore
+            throw new RepositoryException(e);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeReRegistered(QName ntName) {
+    public void onNodeTypeModified(QName ntName) throws RepositoryException {
         // todo: do more efficient reloading
         try {
             getRootState().discard();
         } catch (ItemStateException e) {
-            // ignore
+            throw new RepositoryException(e);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeUnregistered(QName ntName) {
+    public void onNodeTypeRemoved(QName ntName) throws RepositoryException {
         // todo: do more efficient reloading
         try {
             getRootState().discard();
         } catch (ItemStateException e) {
-            // ignore
+            throw new RepositoryException(e);
         }
     }
 
@@ -133,7 +141,8 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements
      * @throws RepositoryException
      */
     private VirtualNodeState createNodeTypeState(VirtualNodeState parent, NodeTypeDef ntDef) throws RepositoryException {
-        VirtualNodeState ntState = createNodeState(parent, ntDef.getName(), null, NT_NODETYPE);
+        String uuid = calculateStableUUID(ntDef.getName().toString());
+        VirtualNodeState ntState = createNodeState(parent, ntDef.getName(), uuid, NT_NODETYPE);
 
         // add properties
         ntState.setPropertyValue(JCR_NODETYPENAME, InternalValue.create(ntDef.getName()));
@@ -147,7 +156,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements
         // add property defs
         PropDef[] propDefs = ntDef.getPropertyDefs();
         for (int i=0; i<propDefs.length; i++) {
-            VirtualNodeState pdState = createPropertyDefState(ntState, propDefs[i]);
+            VirtualNodeState pdState = createPropertyDefState(ntState, propDefs[i], ntDef, i);
             ntState.addChildNodeEntry(JCR_PROPERTYDEF, pdState.getUUID());
             // add as hard reference
             ntState.addStateReference(pdState);
@@ -156,7 +165,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements
         // add child node defs
         ChildNodeDef[] cnDefs = ntDef.getChildNodeDefs();
         for (int i=0; i<cnDefs.length; i++) {
-            VirtualNodeState cnState = createChildNodeDefState(ntState, cnDefs[i]);
+            VirtualNodeState cnState = createChildNodeDefState(ntState, cnDefs[i], ntDef, i);
             ntState.addChildNodeEntry(JCR_CHILDNODEDEF, cnState.getUUID());
             // add as hard reference
             ntState.addStateReference(cnState);
@@ -172,8 +181,12 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements
      * @return
      * @throws RepositoryException
      */
-    private VirtualNodeState createPropertyDefState(VirtualNodeState parent, PropDef propDef) throws RepositoryException {
-        VirtualNodeState pState = createNodeState(parent, JCR_PROPERTYDEF, null, NT_PROPERTYDEF);
+    private VirtualNodeState createPropertyDefState(VirtualNodeState parent,
+                                                    PropDef propDef,
+                                                    NodeTypeDef ntDef, int n)
+            throws RepositoryException {
+        String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + JCR_PROPERTYDEF.toString() + "/" + n);
+        VirtualNodeState pState = createNodeState(parent, JCR_PROPERTYDEF, uuid, NT_PROPERTYDEF);
         // add properties
         pState.setPropertyValue(JCR_NAME, InternalValue.create(propDef.getName()));
         pState.setPropertyValue(JCR_AUTOCREATE, InternalValue.create(propDef.isAutoCreate()));
@@ -199,8 +212,12 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements
      * @return
      * @throws RepositoryException
      */
-    private VirtualNodeState createChildNodeDefState(VirtualNodeState parent, ChildNodeDef cnDef) throws RepositoryException {
-        VirtualNodeState pState = createNodeState(parent, JCR_CHILDNODEDEF, null, NT_CHILDNODEDEF);
+    private VirtualNodeState createChildNodeDefState(VirtualNodeState parent,
+                                                     ChildNodeDef cnDef,
+                                                     NodeTypeDef ntDef, int n)
+            throws RepositoryException {
+        String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + JCR_CHILDNODEDEF.toString() + "/" + n);
+        VirtualNodeState pState = createNodeState(parent, JCR_CHILDNODEDEF, uuid, NT_CHILDNODEDEF);
         // add properties
         pState.setPropertyValue(JCR_NAME, InternalValue.create(cnDef.getName()));
         pState.setPropertyValue(JCR_AUTOCREATE, InternalValue.create(cnDef.isAutoCreate()));
@@ -213,5 +230,25 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider implements
         }
         pState.setPropertyValue(JCR_SAMENAMESIBS, InternalValue.create(cnDef.allowSameNameSibs()));
         return pState;
+    }
+    
+    /**
+     * Calclulates a stable uuid out of the given string. The alogrith does a
+     * MD5 digest from the string an converts it into the uuid format.
+     * 
+     * @param name
+     * @return
+     * @throws RepositoryException
+     */ 
+    private static String calculateStableUUID(String name) throws RepositoryException {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(name.getBytes("utf-8"));
+            return new UUID(digest).toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RepositoryException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException(e);
+        }
     }
 }

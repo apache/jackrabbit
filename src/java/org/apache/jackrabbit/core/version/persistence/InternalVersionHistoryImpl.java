@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.VersionException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -235,7 +236,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @param versionName
      * @throws VersionException
      */
-    public void removeVersion(QName versionName) throws VersionException {
+    public void removeVersion(QName versionName) throws RepositoryException {
 
         InternalVersionImpl v = (InternalVersionImpl) getVersion(versionName);
         if (v.equals(rootVersion)) {
@@ -246,7 +247,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         // check if any references (from outside the version storage) exist on this version
         List refs = getVersionManager().getItemReferences(v);
         if (!refs.isEmpty()) {
-            throw new VersionException("Unable to remove version. At least once referenced.");
+            throw new ReferentialIntegrityException("Unable to remove version. At least once referenced.");
         }
 
         try {
@@ -275,7 +276,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
                 stateMgr.update();
                 succeeded = true;
-                notifyModifed();
             } finally {
                 if (!succeeded) {
                     // update operation failed, cancel all modifications
@@ -292,83 +292,60 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public InternalVersion addVersionLabel(QName versionName, QName label, boolean move)
+    public InternalVersion setVersionLabel(QName versionName, QName label, boolean move)
             throws VersionException {
 
-        InternalVersion version = getVersion(versionName);
-        if (version == null) {
+        InternalVersion version = versionName == null ? null : getVersion(versionName);
+        if (versionName !=null && version == null) {
             throw new VersionException("Version " + versionName + " does not exist in this version history.");
         }
-
         InternalVersionImpl prev = (InternalVersionImpl) labelCache.get(label);
-        if (version.equals(prev)) {
-            // ignore
-            return version;
-        } else if (prev != null && !move) {
-            // already defined elsewhere, throw
-            throw new VersionException("Version label " + label + " already defined for version " + prev.getName());
-        } else if (prev != null) {
-            // if already defined, but move, remove old label first
-            removeVersionLabel(label);
-        }
-        labelCache.put(label, version);
-        ((InternalVersionImpl) version).internalAddLabel(label);
-        UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
-        boolean succeeded = false;
-        try {
-            stateMgr.edit();
-            PersistentNode lNode = labelNode.addNode(label, NT_UNSTRUCTURED, null);
-            lNode.setPropertyValue(NativePVM.PROPNAME_NAME, InternalValue.create(label));
-            lNode.setPropertyValue(NativePVM.PROPNAME_VERSION, InternalValue.create(version.getId()));
-            labelNode.store();
-
-            stateMgr.update();
-            succeeded = true;
-        } catch (ItemStateException e) {
-            throw new VersionException("Error while storing modifications", e);
-        } catch (RepositoryException e) {
-            throw new VersionException("Error while storing modifications", e);
-        } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
+        if (prev == null) {
+            if (version == null) {
+                return null;
+            }
+        } else {
+            if (prev.equals(version)) {
+                return version;
+            } else if (!move) {
+                // already defined elsewhere, throw
+                throw new VersionException("Version label " + label + " already defined for version " + prev.getName());
             }
         }
-        notifyModifed();
+
+        // update persistence
+        UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
+        try {
+            stateMgr.edit();
+
+            if (prev != null) {
+                labelNode.removeNode(label);
+            }
+            if (version != null) {
+                PersistentNode lNode = labelNode.addNode(label, NT_UNSTRUCTURED, null);
+                lNode.setPropertyValue(NativePVM.PROPNAME_NAME, InternalValue.create(label));
+                lNode.setPropertyValue(NativePVM.PROPNAME_VERSION, InternalValue.create(version.getId()));
+            }
+            labelNode.store();
+            stateMgr.update();
+        } catch (ItemStateException e) {
+            stateMgr.cancel();
+            throw new VersionException("Error while storing modifications", e);
+        } catch (RepositoryException e) {
+            stateMgr.cancel();
+            throw new VersionException("Error while storing modifications", e);
+        }
+
+        // update internal structures
+        if (prev != null) {
+            prev.internalRemoveLabel(label);
+            labelCache.remove(label);
+        }
+        if (version != null) {
+            labelCache.put(label, version);
+            ((InternalVersionImpl) version).internalAddLabel(label);
+        }
         return prev;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InternalVersion removeVersionLabel(QName label) throws VersionException {
-
-
-        InternalVersionImpl v = (InternalVersionImpl) labelCache.remove(label);
-        if (v == null) {
-            throw new VersionException("Version label " + label + " is not in version history.");
-        }
-        v.internalRemoveLabel(label);
-        UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
-        boolean succeeded = false;
-        try {
-            stateMgr.edit();
-            labelNode.removeNode(label);
-            labelNode.store();
-            stateMgr.update();
-            succeeded = true;
-        } catch (ItemStateException e) {
-            throw new VersionException("Unable to store modifications", e);
-        } catch (RepositoryException e) {
-            throw new VersionException("Unable to store modifications", e);
-        } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-        }
-        notifyModifed();
-        return v;
     }
 
     /**
@@ -484,7 +461,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         pNode.setPropertyValue(NativePVM.PROPNAME_VERSIONABLE_ID, InternalValue.create(src.internalGetUUID()));
 
         // create label node
-        pNode.addNode(NativePVM.NODENAME_VERSION_LABELS, NT_UNSTRUCTURED, null);
+        pNode.addNode(NativePVM.NODENAME_VERSION_LABELS, NativePVM.NT_REP_VERSION_LABELS, null);
 
         // create root version
         String versionId = UUID.randomUUID().toString();

@@ -42,6 +42,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.RepositoryException;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Iterator;
 
 /**
  * This Class implements a virtual item state provider, in order to expose the
@@ -123,9 +124,6 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
                 s = getRootState();
             } else {
                 s = cache(internalGetNodeState((NodeId) id));
-            }
-            if (s instanceof VersionHistoryNodeState) {
-                s.getId();
             }
             return s;
         } else {
@@ -304,6 +302,36 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
      */
     protected NodeState evict(NodeId id) {
         return (NodeState) nodes.remove(id);
+    }
+
+    /**
+     * Removes the item and all hard refernces from the cache and discards the
+     * states.
+     * @param id
+     */
+    public void invalidateItem(ItemId id) {
+        if (id.equals(rootNodeId)) {
+            if (root != null) {
+                root.discard();
+                try {
+                    root = createRootNodeState();
+                } catch (RepositoryException e) {
+                    // ignore
+                }
+            }
+            return;
+        }
+        VirtualNodeState state = (VirtualNodeState) nodes.remove(id);
+        if (state != null) {
+            HashSet set = state.removeAllStateReferences();
+            if (set != null) {
+                Iterator iter = set.iterator();
+                while (iter.hasNext()) {
+                    invalidateItem(((NodeState) iter.next()).getId());
+                }
+            }
+            state.discard();
+        }
     }
 
     /**

@@ -17,18 +17,10 @@
 package org.apache.jackrabbit.core.version;
 
 /**
- * This Interface defines a listener on versionitem events
+ * This Interface defines...
  *
  * @author tripod
  * @version $Revision:$, $Date:$
  */
-public interface InternalVersionItemListener {
-
-    /**
-     * is called, when the version item was modified
-     *
-     * @param item
-     */
-    public void itemModifed(InternalVersionItem item);
-
+public interface InternalVersionLabels extends InternalVersionItem {
 }

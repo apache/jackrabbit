@@ -82,4 +82,6 @@ public interface VirtualItemStateProvider extends ItemStateManager, ItemStateLis
      * @return <code>true</code> if the reference target is one of its items.
      */
     public boolean setNodeReferences(NodeReferences refs);
+
+
 }

@@ -38,10 +38,4 @@ public interface InternalVersionItem {
      */
     public InternalVersionItem getParent();
 
-    /**
-     * Adds a vesion item state listener to this item
-     *
-     * @param listener
-     */
-    public void addListener(InternalVersionItemListener listener);
 }

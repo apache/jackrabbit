@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.RepositoryException;
 import java.util.Iterator;
 
 /**
@@ -86,34 +87,26 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * version node and all its subnodes are removed.
      *
      * @param versionName the name of the version to be removed
-     * @throws VersionException if an error occurrs.
+     * @throws RepositoryException if an error occurrs.
      */
-    public void removeVersion(QName versionName) throws VersionException;
+    public void removeVersion(QName versionName) throws RepositoryException;
 
     /**
-     * Adds a label to a version. If the given label is already assigned to
-     * another version in this version history, a VersionException is thrown,
-     * unless <code>move</code> is set to <code>true</code>. in this case, the
-     * label is removed from the previously assigned version and added to the
-     * specified one.
+     * Sets the version <code>label</code> to the given <code>version</code>.
+     * If the label is already assigned to another version, a VersionException is
+     * thrown unless <code>move</code> is <code>true</code>. If <code>version</code>
+     * is <code>null</code>, the label is removed from the respective version.
+     * In either case, the version the label was previously assigned to is returned,
+     * or <code>null</code> of the label was not moved.
      *
-     * @param name  the name of the version
+     * @param version the name of the version
      * @param label the label to assgign
      * @param move  flag what to do by collisions
      * @return the version that was previously assigned by this label or <code>null</code>.
      * @throws VersionException
      */
-    public InternalVersion addVersionLabel(QName name, QName label, boolean move)
+    public InternalVersion setVersionLabel(QName version, QName label, boolean move)
             throws VersionException;
-
-    /**
-     * Removes the label from the respective version.
-     *
-     * @param label the label to be removed
-     * @return the version that had the label assigned
-     * @throws VersionException if the label does not exist
-     */
-    public InternalVersion removeVersionLabel(QName label) throws VersionException;
 
     /**
      * Returns an iterator over all versions (not ordered yet), including the
@@ -147,7 +140,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
 
     /**
      * Returns the UUID of the version labels node
-     * 
+     *
      * @return
      */
     public String getVersionLabelsUUID();

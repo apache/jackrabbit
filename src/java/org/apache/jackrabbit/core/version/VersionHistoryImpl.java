@@ -22,11 +22,9 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 
 import javax.jcr.Item;
@@ -123,12 +121,15 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      */
-    public void addVersionLabel(String version, String label, boolean move)
+    public void addVersionLabel(String versionName, String label, boolean move)
             throws VersionException, RepositoryException {
         try {
-            QName name = QName.fromJCRName(version, session.getNamespaceResolver());
-            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
-            history.addVersionLabel(name, qLabel, move);
+            session.getVersionManager().setVersionLabel(
+                    this,
+                    QName.fromJCRName(versionName, session.getNamespaceResolver()),
+                    QName.fromJCRName(label, session.getNamespaceResolver()),
+                    move
+            );
         } catch (IllegalNameException e) {
             throw new RepositoryException(e);
         } catch (UnknownPrefixException e) {
@@ -141,8 +142,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public void removeVersionLabel(String label) throws RepositoryException {
         try {
-            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
-            history.removeVersionLabel(qLabel);
+            session.getVersionManager().setVersionLabel(
+                    this,
+                    null,
+                    QName.fromJCRName(label, session.getNamespaceResolver()),
+                    true
+            );
         } catch (IllegalNameException e) {
             throw new RepositoryException(e);
         } catch (UnknownPrefixException e) {
@@ -222,8 +227,10 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws UnsupportedRepositoryOperationException, VersionException,
             RepositoryException {
         try {
-            QName name = QName.fromJCRName(versionName, session.getNamespaceResolver());
-            history.removeVersion(name);
+            session.getVersionManager().removeVersion(
+                    this,
+                    QName.fromJCRName(versionName, session.getNamespaceResolver())
+            );
         } catch (IllegalNameException e) {
             throw new RepositoryException(e);
         } catch (UnknownPrefixException e) {
@@ -282,5 +289,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public PropertyIterator getReferences() throws RepositoryException {
         return getReferences(true);
+    }
+
+
+    /**
+     * Returns the internal version history
+     * @return
+     */
+    public InternalVersionHistory getInternalVersionHistory() {
+        return history;
     }
 }

@@ -30,7 +30,7 @@ import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateProvider;
+import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.security.CredentialsCallbackHandler;
@@ -107,6 +107,7 @@ public class RepositoryImpl implements Repository, SessionListener,
     private final NodeTypeRegistry ntReg;
     private final PersistentVersionManager pvMgr;
     private final VersionManager vMgr;
+    private final VirtualNodeTypeStateManager virtNTMgr;
 
     // configuration of the repository
     private final RepositoryConfig repConfig;
@@ -277,7 +278,12 @@ public class RepositoryImpl implements Repository, SessionListener,
                 nsReg,
                 ntReg);
         pvMgr = new NativePVM(pm, getNodeTypeRegistry());
-        vMgr = new VersionManagerImpl(pvMgr, ntReg, delegatingDispatcher, VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
+        vMgr = new VersionManagerImpl(pvMgr, ntReg, delegatingDispatcher,
+                VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
+
+        // init virtual nodetype manager
+        virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
+                delegatingDispatcher, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
 
         // initialize workspaces
         iter = wspInfos.keySet().iterator();
@@ -285,6 +291,10 @@ public class RepositoryImpl implements Repository, SessionListener,
             String wspName = (String) iter.next();
             initWorkspace(wspName);
         }
+
+        // after the workspaces are initialized, we setup a system session for
+        // the virtual nodetype manager
+        virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
 
         // finally register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -1017,9 +1027,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                     itemStateMgr = new SharedItemStateManager(getPersistenceManager(config.getPersistenceManagerConfig()), rootNodeUUID, ntReg);
                     try {
                         itemStateMgr.addVirtualItemStateProvider(vMgr.getVirtualItemStateProvider(itemStateMgr));
-                        itemStateMgr.addVirtualItemStateProvider(
-                                new VirtualNodeTypeStateProvider(ntReg, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID)
-                        );
+                        itemStateMgr.addVirtualItemStateProvider(virtNTMgr.getVirtualItemStateProvider());
                     } catch (Exception e) {
                         log.error("Unable to add vmgr: " + e.toString(), e);
                     }

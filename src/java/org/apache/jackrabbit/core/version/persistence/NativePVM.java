@@ -111,6 +111,11 @@ public class NativePVM implements PersistentVersionManager, Constants {
     protected static final QName NT_REP_VERSION_HISTORY = new QName(NS_REP_URI, "versionHistory");
 
     /**
+     * The nodetype name of a presistent version label
+     */
+    protected static final QName NT_REP_VERSION_LABELS = new QName(NS_REP_URI, "versionLabels");
+
+    /**
      * the nodetype name of a persistent frozen node
      */
     protected static final QName NT_REP_FROZEN = new QName(NS_REP_URI, "frozen");
@@ -261,7 +266,7 @@ public class NativePVM implements PersistentVersionManager, Constants {
         }
 
         versionedUUIDs.put(hist.getVersionableUUID(), hist.getId());
-        
+
         log.info("Created new version history " + hist.getId() + " for " + node.safeGetJCRPath() + ". NumHistories=" + versionedUUIDs.size());
         return hist;
     }
@@ -383,6 +388,8 @@ public class NativePVM implements PersistentVersionManager, Constants {
                     item = ((InternalVersionHistory) parent).getVersion(uuid);
                 } else if (ntName.equals(NT_REP_VERSION_HISTORY)) {
                     item = new InternalVersionHistoryImpl(this, pNode);
+                } else if (ntName.equals(NT_REP_VERSION_LABELS)) {
+                    item = new InternalVersionLabelsImpl(this, pNode, parent);
                 } else {
                     //return null;
                 }
@@ -453,9 +460,6 @@ public class NativePVM implements PersistentVersionManager, Constants {
             InternalVersionImpl v = history.checkin(new QName("", versionName), node);
             stateMgr.update();
             succeeded = true;
-
-            // notify listeners
-            history.notifyModifed();
 
             return v;
         } catch (ItemStateException e) {

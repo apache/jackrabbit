@@ -363,11 +363,7 @@ public class SearchIndex extends AbstractQueryHandler {
         for (Iterator it = children.iterator(); it.hasNext();) {
             NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
             NodeState childState = (NodeState) isMgr.getItemState(new NodeId(child.getUUID()));
-            // only traverse if node is not a virtual node state
-            if (!(childState instanceof VirtualNodeState)
-                    && !(childState.getOverlayedState() instanceof VirtualNodeState)) {
-                createIndex(childState);
-            }
+            createIndex(childState);
         }
     }
 

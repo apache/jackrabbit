@@ -382,7 +382,7 @@ public class SessionImpl implements Session, Constants {
      *
      * @return the <code>VersionManager</code> associated with this session
      */
-    protected VersionManager getVersionManager() {
+    public VersionManager getVersionManager() {
         return versionMgr;
     }
 

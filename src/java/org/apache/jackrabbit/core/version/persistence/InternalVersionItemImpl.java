@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.version.persistence;
 
 import org.apache.jackrabbit.core.version.InternalVersionItem;
 import org.apache.jackrabbit.core.version.PersistentVersionManager;
-import org.apache.jackrabbit.core.version.InternalVersionItemListener;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersion;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,11 +34,6 @@ abstract class InternalVersionItemImpl implements InternalVersionItem {
      * the version manager
      */
     private final PersistentVersionManager vMgr;
-
-    /**
-     * the item listeners
-     */
-    private final Set listeners = new HashSet();
 
     /**
      * Creates a new Internal version item impl
@@ -58,29 +54,11 @@ abstract class InternalVersionItemImpl implements InternalVersionItem {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public void addListener(InternalVersionItemListener listener) {
-        listeners.add(listener);
-    }
-
-    /**
-     * notifys the listeners that this item was modified
-     */
-    protected void notifyModifed() {
-        Iterator iter = listeners.iterator();
-        while (iter.hasNext()) {
-            ((InternalVersionItemListener) iter.next()).itemModifed(this);
-        }
-    }
-
-    /**
      * Returns the external id of this item
      *
      * @return
      */
     public abstract String getId();
-
 
     /**
      * returns the parent version item or null

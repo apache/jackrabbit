@@ -346,8 +346,14 @@
             </requiredPrimaryTypes>
         </childNodeDef>
     </nodeType>
+
     <!-- internal node types for persistent version manager -->
     <nodeType name="rep:versionHistory" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>nt:unstructured</supertype>
+        </supertypes>
+    </nodeType>
+    <nodeType name="rep:versionLabels" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
         <supertypes>
             <supertype>nt:unstructured</supertype>
         </supertypes>

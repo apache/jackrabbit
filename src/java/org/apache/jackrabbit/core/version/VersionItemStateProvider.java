@@ -182,6 +182,12 @@ public class VersionItemStateProvider extends AbstractVISProvider {
                 state.addStateReference(vlns);
                 cache(vlns);
 
+            } else if (vi instanceof InternalVersionLabels) {
+                // load parent, that must be a version history
+                getItemState(new NodeId(vi.getParent().getId()));
+                // this is a bit dangerous
+                state = (VirtualNodeState) getItemState(id);
+
             } else if (vi instanceof InternalVersion) {
                 InternalVersion v = (InternalVersion) vi;
                 state = new VersionNodeState(this, v, vi.getParent().getId());
