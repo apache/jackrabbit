@@ -88,6 +88,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     static final QName FN_POSITION_FULL = new QName("", "position()");
 
     /**
+     * QName for jcr:xmltext
+     */
+    static final QName JCR_XMLTEXT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "xmltext");
+
+    /**
      * QName for last function.
      */
     static final QName FN_LAST = new QName("", "last");
@@ -344,6 +349,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     if (child.getId() != JJTANYNAME) {
                         createNodeTest(child, queryNode);
                     }
+                }
+                break;
+            case JJTTEXTTEST:
+                if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
+                    LocationStepQueryNode loc = (LocationStepQueryNode) queryNode;
+                    loc.setNameTest(JCR_XMLTEXT);
                 }
                 break;
             case JJTTYPENAME:
