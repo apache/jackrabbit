@@ -121,7 +121,13 @@ public class WorkspaceConfig extends AbstractConfig {
         wspFS = createFileSystem(fsConfig, vars);
 
         // search index directory
-        searchIndexDir = replaceVars(wspElem.getChild(SEARCH_INDEX_ELEMENT).getAttributeValue(PATH_ATTRIB), vars);
+        Element searchConfig = wspElem.getChild(SEARCH_INDEX_ELEMENT);
+        if (searchConfig != null) {
+            String pathAttr = searchConfig.getAttributeValue(PATH_ATTRIB);
+            if (pathAttr != null && pathAttr.length() > 0) {
+                searchIndexDir = replaceVars(pathAttr, vars);
+            }
+        }
 
         // persistence manager
         String className = wspElem.getChild(PERSISTENCE_MANAGER_ELEMENT).getAttributeValue(CLASS_ATTRIB);
