@@ -78,6 +78,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     static final QName FN_POSITION = new QName("", "position");
 
     /**
+     * QName for element function.
+     */
+    static final QName FN_ELEMENT = new QName("", "element");
+
+    /**
      * QName for the full position function including bracket
      */
     static final QName FN_POSITION_FULL = new QName("", "position()");
@@ -333,6 +338,29 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     node.childrenAccept(this, queryNode);
                 }
                 break;
+            case JJTELEMENTNAMEORWILDCARD:
+                if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
+                    SimpleNode child = (SimpleNode) node.jjtGetChild(0);
+                    if (child.getId() != JJTANYNAME) {
+                        createNodeTest(child, queryNode);
+                    }
+                }
+                break;
+            case JJTTYPENAME:
+                if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
+                    LocationStepQueryNode loc = (LocationStepQueryNode) queryNode;
+                    String ntName = ((SimpleNode) node.jjtGetChild(0)).getValue();
+                    try {
+                        QName nt = QName.fromJCRName(ntName, resolver);
+                        NodeTypeQueryNode nodeType = new NodeTypeQueryNode(loc, nt);
+                        loc.addPredicate(nodeType);
+                    } catch (IllegalNameException e) {
+                        exceptions.add(new InvalidQueryException("Not a valid name: " + ntName));
+                    } catch (UnknownPrefixException e) {
+                        exceptions.add(new InvalidQueryException("Unknown prefix in name: " + ntName));
+                    }
+                }
+                break;
             case JJTOREXPR:
                 NAryQueryNode parent = (NAryQueryNode) queryNode;
                 queryNode = new OrQueryNode(parent);
@@ -430,7 +458,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     private void createNodeTest(SimpleNode node, QueryNode queryNode) {
         if (node.jjtGetNumChildren() > 0) {
             SimpleNode child = (SimpleNode) node.jjtGetChild(0);
-            if (child.getId() == JJTQNAME) {
+            if (child.getId() == JJTQNAME || child.getId() == JJTQNAMEFORITEMTYPE) {
                 try {
                     if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));

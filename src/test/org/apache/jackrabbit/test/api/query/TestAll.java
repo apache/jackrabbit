@@ -46,6 +46,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(XPathQueryLevel2Test.class);
 
         suite.addTestSuite(DerefQueryLevel1Test.class);
+        suite.addTestSuite(ElementTest.class);
         suite.addTestSuite(GetLanguageTest.class);
         suite.addTestSuite(GetPersistentQueryPathLevel1Test.class);
         suite.addTestSuite(GetPersistentQueryPathTest.class);
