@@ -24,7 +24,6 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -78,7 +77,7 @@ public class ImportHandler extends DefaultHandler {
 
     //---------------------------------------------------------< ErrorHandler >
     /**
-     * @see ErrorHandler#warning(SAXParseException)
+     * {@inheritDoc}
      */
     public void warning(SAXParseException e) throws SAXException {
         // log exception and carry on...
@@ -88,7 +87,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ErrorHandler#error(SAXParseException)
+     * {@inheritDoc}
      */
     public void error(SAXParseException e) throws SAXException {
         // log exception and carry on...
@@ -98,7 +97,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ErrorHandler#fatalError(SAXParseException)
+     * {@inheritDoc}
      */
     public void fatalError(SAXParseException e) throws SAXException {
         // log and re-throw exception
@@ -110,7 +109,7 @@ public class ImportHandler extends DefaultHandler {
 
     //-------------------------------------------------------< ContentHandler >
     /**
-     * @see ContentHandler#startDocument()
+     * {@inheritDoc}
      */
     public void startDocument() throws SAXException {
         systemViewXML = false;
@@ -137,7 +136,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ContentHandler#endDocument()
+     * {@inheritDoc}
      */
     public void endDocument() throws SAXException {
         // delegate to target handler
@@ -147,7 +146,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ContentHandler#startPrefixMapping(String, String)
+     * {@inheritDoc}
      */
     public void startPrefixMapping(String prefix, String uri)
             throws SAXException {
@@ -187,7 +186,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ContentHandler#endPrefixMapping(String)
+     * {@inheritDoc}
      */
     public void endPrefixMapping(String prefix) throws SAXException {
         /**
@@ -197,7 +196,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ContentHandler#startElement(String, String, String, Attributes)
+     * {@inheritDoc}
      */
     public void startElement(String namespaceURI, String localName, String qName,
                              Attributes atts) throws SAXException {
@@ -243,7 +242,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ContentHandler#characters(char[], int, int)
+     * {@inheritDoc}
      */
     public void characters(char[] ch, int start, int length) throws SAXException {
         // delegate to target handler
@@ -251,7 +250,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ContentHandler#endElement(String, String, String)
+     * {@inheritDoc}
      */
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
@@ -263,7 +262,7 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
-     * @see ContentHandler#setDocumentLocator(Locator)
+     * {@inheritDoc}
      */
     public void setDocumentLocator(Locator locator) {
         this.locator = locator;
@@ -288,28 +287,28 @@ public class ImportHandler extends DefaultHandler {
         }
 
         /**
-         * @see NamespaceSupport#popContext()
+         * {@inheritDoc}
          */
         void popContext() {
             nsContext.popContext();
         }
 
         /**
-         * @see NamespaceSupport#pushContext()
+         * {@inheritDoc}
          */
         void pushContext() {
             nsContext.pushContext();
         }
 
         /**
-         * @see NamespaceSupport#reset()
+         * {@inheritDoc}
          */
         void reset() {
             nsContext.reset();
         }
 
         /**
-         * @see NamespaceSupport#declarePrefix(String, String)
+         * {@inheritDoc}
          */
         boolean declarePrefix(String prefix, String uri) {
             uri = DEFAULT_URI.equals(uri) ? DUMMY_DEFAULT_URI : uri;
@@ -318,7 +317,7 @@ public class ImportHandler extends DefaultHandler {
 
         //------------------------------------------------< NamespaceResolver >
         /**
-         * @see NamespaceResolver#getURI(String)
+         * {@inheritDoc}
          */
         public String getURI(String prefix) throws NamespaceException {
             String uri = nsContext.getURI(prefix);
@@ -329,7 +328,7 @@ public class ImportHandler extends DefaultHandler {
         }
 
         /**
-         * @see NamespaceResolver#getPrefix(String)
+         * {@inheritDoc}
          */
         public String getPrefix(String uri) throws NamespaceException {
             uri = DEFAULT_URI.equals(uri) ? DUMMY_DEFAULT_URI : uri;

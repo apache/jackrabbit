@@ -60,7 +60,7 @@ public class UserPrincipal implements Principal, Serializable {
 
     //------------------------------------------------------------< Principal >
     /**
-     * @see Principal#getName()
+     * {@inheritDoc}
      */
     public String getName() {
         return name;

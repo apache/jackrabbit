@@ -94,7 +94,7 @@ class SystemSession extends SessionImpl {
 
         //----------------------------------------------------< AccessManager >
         /**
-         * @see AccessManager#checkPermission(ItemId, int)
+         * {@inheritDoc}
          */
         public void checkPermission(ItemId id, int permissions)
                 throws AccessDeniedException, ItemNotFoundException,
@@ -103,7 +103,7 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see AccessManager#isGranted(ItemId, int)
+         * {@inheritDoc}
          */
         public boolean isGranted(ItemId id, int permissions)
                 throws ItemNotFoundException, RepositoryException {
@@ -112,14 +112,14 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see AccessManager#init(AMContext)
+         * {@inheritDoc}
          */
         public void init(AMContext context) throws Exception {
             // nop
         }
 
         /**
-         * @see AccessManager#close()
+         * {@inheritDoc}
          */
         public void close() throws Exception {
             // nop

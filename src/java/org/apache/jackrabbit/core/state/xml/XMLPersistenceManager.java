@@ -16,13 +16,27 @@
  */
 package org.apache.jackrabbit.core.state.xml;
 
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.fs.*;
+import org.apache.jackrabbit.core.BLOBFileValue;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.AbstractPersistenceManager;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PMContext;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.log4j.Logger;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -31,10 +45,21 @@ import org.jdom.filter.Filter;
 import org.jdom.input.SAXBuilder;
 
 import javax.jcr.PropertyType;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <code>XMLPersistenceManager</code> is a <code>FileSystem</code>-based
@@ -339,7 +364,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
     //---------------------------------------------------< PersistenceManager >
     /**
-     * @see PersistenceManager#init
+     * {@inheritDoc}
      */
     public void init(PMContext context) throws Exception {
         if (initialized) {
@@ -363,7 +388,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#close
+     * {@inheritDoc}
      */
     public synchronized void close() throws Exception {
         if (!initialized) {
@@ -384,10 +409,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
     }
 
-
-
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -433,7 +456,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -476,7 +499,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(NodeState state) throws ItemStateException {
         if (!initialized) {
@@ -561,7 +584,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(PropertyState state) throws ItemStateException {
         if (!initialized) {
@@ -675,7 +698,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(NodeState state) throws ItemStateException {
         if (!initialized) {
@@ -698,7 +721,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(PropertyState state) throws ItemStateException {
         if (!initialized) {
@@ -735,7 +758,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -781,7 +804,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
@@ -827,7 +850,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
@@ -850,7 +873,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#exists(NodeId)
+     * {@inheritDoc}
      */
     public synchronized boolean exists(NodeId id) throws ItemStateException {
         if (!initialized) {
@@ -870,7 +893,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#exists(PropertyId)
+     * {@inheritDoc}
      */
     public synchronized boolean exists(PropertyId id) throws ItemStateException {
         if (!initialized) {
@@ -889,7 +912,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#exists(NodeReferencesId id)
+     * {@inheritDoc}
      */
     public synchronized boolean exists(NodeReferencesId id)
             throws ItemStateException {

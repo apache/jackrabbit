@@ -16,7 +16,20 @@
  */
 package org.apache.jackrabbit.core.jndi.provider;
 
-import javax.naming.*;
+import javax.naming.Binding;
+import javax.naming.CompositeName;
+import javax.naming.CompoundName;
+import javax.naming.Context;
+import javax.naming.InvalidNameException;
+import javax.naming.Name;
+import javax.naming.NameAlreadyBoundException;
+import javax.naming.NameClassPair;
+import javax.naming.NameNotFoundException;
+import javax.naming.NameParser;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.NotContextException;
+import javax.naming.OperationNotSupportedException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
@@ -81,7 +94,7 @@ class DummyContext extends Hashtable implements Context, Cloneable {
 
     //--------------------------------------------------------------< Context >
     /**
-     * @see Context#bind(Name, Object)
+     * {@inheritDoc}
      */
     public void bind(Name name, Object obj) throws NamingException {
         if (name.isEmpty()) {
@@ -95,20 +108,20 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#bind(String, Object)
+     * {@inheritDoc}
      */
     public void bind(String name, Object obj) throws NamingException {
         bind(new CompositeName(name), obj);
     }
 
     /**
-     * @see Context#close()
+     * {@inheritDoc}
      */
     public void close() throws NamingException {
     }
 
     /**
-     * @see Context#composeName(Name, Name)
+     * {@inheritDoc}
      */
     public Name composeName(Name name, Name prefix) throws NamingException {
         Name newName = (Name) prefix.clone();
@@ -116,70 +129,70 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#composeName(String, String)
+     * {@inheritDoc}
      */
     public String composeName(String name, String prefix) throws NamingException {
         return composeName(new CompositeName(name), new CompositeName(prefix)).toString();
     }
 
     /**
-     * @see Context#createSubcontext(Name)
+     * {@inheritDoc}
      */
     public Context createSubcontext(Name name) throws NamingException {
         throw new OperationNotSupportedException("subcontexts are not supported");
     }
 
     /**
-     * @see Context#createSubcontext(String)
+     * {@inheritDoc}
      */
     public Context createSubcontext(String name) throws NamingException {
         return createSubcontext(new CompositeName(name));
     }
 
     /**
-     * @see Context#destroySubcontext(Name)
+     * {@inheritDoc}
      */
     public void destroySubcontext(Name name) throws NamingException {
         throw new OperationNotSupportedException("subcontexts are not supported");
     }
 
     /**
-     * @see Context#destroySubcontext(String)
+     * {@inheritDoc}
      */
     public void destroySubcontext(String name) throws NamingException {
         destroySubcontext(new CompositeName(name));
     }
 
     /**
-     * @see Context#getEnvironment()
+     * {@inheritDoc}
      */
     public Hashtable getEnvironment() throws NamingException {
         return (Hashtable) environment.clone();
     }
 
     /**
-     * @see Context#getNameInNamespace()
+     * {@inheritDoc}
      */
     public String getNameInNamespace() throws NamingException {
         throw new OperationNotSupportedException();
     }
 
     /**
-     * @see Context#getNameParser(Name)
+     * {@inheritDoc}
      */
     public NameParser getNameParser(Name name) throws NamingException {
         return nameParser;
     }
 
     /**
-     * @see Context#getNameParser(String)
+     * {@inheritDoc}
      */
     public NameParser getNameParser(String name) throws NamingException {
         return nameParser;
     }
 
     /**
-     * @see Context#list(Name)
+     * {@inheritDoc}
      */
     public NamingEnumeration list(Name name) throws NamingException {
         if (name.isEmpty()) {
@@ -195,14 +208,14 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#list(String)
+     * {@inheritDoc}
      */
     public NamingEnumeration list(String name) throws NamingException {
         return list(new CompositeName(name));
     }
 
     /**
-     * @see Context#listBindings(Name)
+     * {@inheritDoc}
      */
     public NamingEnumeration listBindings(Name name) throws NamingException {
         if (name.isEmpty()) {
@@ -218,14 +231,14 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#listBindings(String)
+     * {@inheritDoc}
      */
     public NamingEnumeration listBindings(String name) throws NamingException {
         return listBindings(new CompositeName(name));
     }
 
     /**
-     * @see Context#lookup(Name)
+     * {@inheritDoc}
      */
     public Object lookup(Name name) throws NamingException {
         if (name.isEmpty()) {
@@ -236,14 +249,14 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#lookup(String)
+     * {@inheritDoc}
      */
     public Object lookup(String name) throws NamingException {
         return lookup(new CompositeName(name));
     }
 
     /**
-     * @see Context#lookupLink(Name)
+     * {@inheritDoc}
      */
     public Object lookupLink(Name name) throws NamingException {
         // no special handling of links, delegate to lookup(Name)
@@ -251,14 +264,14 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#lookupLink(String)
+     * {@inheritDoc}
      */
     public Object lookupLink(String name) throws NamingException {
         return lookupLink(new CompositeName(name));
     }
 
     /**
-     * @see Context#rebind(Name, Object)
+     * {@inheritDoc}
      */
     public void rebind(Name name, Object obj) throws NamingException {
         if (name.isEmpty()) {
@@ -269,21 +282,21 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#rebind(String, Object)
+     * {@inheritDoc}
      */
     public void rebind(String name, Object obj) throws NamingException {
         rebind(new CompositeName(name), obj);
     }
 
     /**
-     * @see Context#removeFromEnvironment(String)
+     * {@inheritDoc}
      */
     public Object removeFromEnvironment(String propName) throws NamingException {
         return environment.remove(propName);
     }
 
     /**
-     * @see Context#rename(Name, Name)
+     * {@inheritDoc}
      */
     public void rename(Name oldName, Name newName) throws NamingException {
         if (oldName.isEmpty() || newName.isEmpty()) {
@@ -296,14 +309,14 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#rename(String, String)
+     * {@inheritDoc}
      */
     public void rename(String oldName, String newName) throws NamingException {
         rename(new CompositeName(oldName), new CompositeName(newName));
     }
 
     /**
-     * @see Context#unbind(Name)
+     * {@inheritDoc}
      */
     public void unbind(Name name) throws NamingException {
         if (name.isEmpty()) {
@@ -314,14 +327,14 @@ class DummyContext extends Hashtable implements Context, Cloneable {
     }
 
     /**
-     * @see Context#unbind(String)
+     * {@inheritDoc}
      */
     public void unbind(String name) throws NamingException {
         unbind(new CompositeName(name));
     }
 
     /**
-     * @see Context#addToEnvironment(String, Object)
+     * {@inheritDoc}
      */
     public Object addToEnvironment(String propName, Object propVal) throws NamingException {
         return environment.put(propName, propVal);

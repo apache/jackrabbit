@@ -17,7 +17,12 @@
 package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 
@@ -64,21 +69,21 @@ class MatchAllWeight implements Weight {
     }
 
     /**
-     * @see Weight#getQuery()
+     * {@inheritDoc}
      */
     public Query getQuery() {
         return query;
     }
 
     /**
-     * @see Weight#getValue()
+     * {@inheritDoc}
      */
     public float getValue() {
         return value;
     }
 
     /**
-     * @see Weight#sumOfSquaredWeights()
+     * {@inheritDoc}
      */
     public float sumOfSquaredWeights() throws IOException {
         idf = searcher.getSimilarity().idf(searcher.maxDoc(), searcher.maxDoc()); // compute idf
@@ -87,7 +92,7 @@ class MatchAllWeight implements Weight {
     }
 
     /**
-     * @see Weight#normalize(float)
+     * {@inheritDoc}
      */
     public void normalize(float queryNorm) {
         queryWeight *= queryNorm;                   // normalize query weight
@@ -95,14 +100,14 @@ class MatchAllWeight implements Weight {
     }
 
     /**
-     * @see Weight#scorer(org.apache.lucene.index.IndexReader)
+     * {@inheritDoc}
      */
     public Scorer scorer(IndexReader reader) throws IOException {
         return new MatchAllScorer(reader, this, field);
     }
 
     /**
-     * @see Weight#explain(org.apache.lucene.index.IndexReader, int)
+     * {@inheritDoc}
      */
     public Explanation explain(IndexReader reader, int doc) throws IOException {
         return new Explanation(Similarity.getDefault().idf(reader.maxDoc(), reader.maxDoc()),

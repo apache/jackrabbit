@@ -66,7 +66,7 @@ public class BasedFileSystem implements FileSystem {
 
     //-----------------------------------------------------------< FileSystem >
     /**
-     * @see FileSystem#init
+     * {@inheritDoc}
      */
     public void init() throws FileSystemException {
         // check base path
@@ -76,63 +76,63 @@ public class BasedFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#close
+     * {@inheritDoc}
      */
     public void close() throws FileSystemException {
         // do nothing; base file system should be closed explicitly
     }
 
     /**
-     * @see FileSystem#copy
+     * {@inheritDoc}
      */
     public void copy(String srcPath, String destPath) throws FileSystemException {
         fsBase.copy(buildBasePath(srcPath), buildBasePath(destPath));
     }
 
     /**
-     * @see FileSystem#createFolder
+     * {@inheritDoc}
      */
     public void createFolder(String folderPath) throws FileSystemException {
         fsBase.createFolder(buildBasePath(folderPath));
     }
 
     /**
-     * @see FileSystem#deleteFile
+     * {@inheritDoc}
      */
     public void deleteFile(String filePath) throws FileSystemException {
         fsBase.deleteFile(buildBasePath(filePath));
     }
 
     /**
-     * @see FileSystem#deleteFolder
+     * {@inheritDoc}
      */
     public void deleteFolder(String folderPath) throws FileSystemException {
         fsBase.deleteFolder(buildBasePath(folderPath));
     }
 
     /**
-     * @see FileSystem#exists
+     * {@inheritDoc}
      */
     public boolean exists(String path) throws FileSystemException {
         return fsBase.exists(buildBasePath(path));
     }
 
     /**
-     * @see FileSystem#getInputStream
+     * {@inheritDoc}
      */
     public InputStream getInputStream(String filePath) throws FileSystemException {
         return fsBase.getInputStream(buildBasePath(filePath));
     }
 
     /**
-     * @see FileSystem#getOutputStream
+     * {@inheritDoc}
      */
     public OutputStream getOutputStream(String filePath) throws FileSystemException {
         return fsBase.getOutputStream(buildBasePath(filePath));
     }
 
     /**
-     * @see FileSystem#getRandomAccessOutputStream
+     * {@inheritDoc}
      */
     public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
             throws FileSystemException {
@@ -140,70 +140,70 @@ public class BasedFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#hasChildren
+     * {@inheritDoc}
      */
     public boolean hasChildren(String path) throws FileSystemException {
         return fsBase.hasChildren(buildBasePath(path));
     }
 
     /**
-     * @see FileSystem#isFile
+     * {@inheritDoc}
      */
     public boolean isFile(String path) throws FileSystemException {
         return fsBase.isFile(buildBasePath(path));
     }
 
     /**
-     * @see FileSystem#isFolder
+     * {@inheritDoc}
      */
     public boolean isFolder(String path) throws FileSystemException {
         return fsBase.isFolder(buildBasePath(path));
     }
 
     /**
-     * @see FileSystem#lastModified
+     * {@inheritDoc}
      */
     public long lastModified(String path) throws FileSystemException {
         return fsBase.lastModified(buildBasePath(path));
     }
 
     /**
-     * @see FileSystem#length
+     * {@inheritDoc}
      */
     public long length(String filePath) throws FileSystemException {
         return fsBase.length(buildBasePath(filePath));
     }
 
     /**
-     * @see FileSystem#touch
+     * {@inheritDoc}
      */
     public void touch(String filePath) throws FileSystemException {
         fsBase.touch(buildBasePath(filePath));
     }
 
     /**
-     * @see FileSystem#list
+     * {@inheritDoc}
      */
     public String[] list(String folderPath) throws FileSystemException {
         return fsBase.list(buildBasePath(folderPath));
     }
 
     /**
-     * @see FileSystem#listFiles
+     * {@inheritDoc}
      */
     public String[] listFiles(String folderPath) throws FileSystemException {
         return fsBase.listFiles(buildBasePath(folderPath));
     }
 
     /**
-     * @see FileSystem#listFolders
+     * {@inheritDoc}
      */
     public String[] listFolders(String folderPath) throws FileSystemException {
         return fsBase.listFolders(buildBasePath(folderPath));
     }
 
     /**
-     * @see FileSystem#move
+     * {@inheritDoc}
      */
     public void move(String srcPath, String destPath) throws FileSystemException {
         fsBase.move(buildBasePath(srcPath), buildBasePath(destPath));

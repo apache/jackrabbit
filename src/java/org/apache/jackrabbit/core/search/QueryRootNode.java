@@ -106,7 +106,7 @@ public class QueryRootNode extends QueryNode {
     }
 
     /**
-     * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
+     * {@inheritDoc}
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
         return visitor.visit(this, data);
@@ -114,6 +114,7 @@ public class QueryRootNode extends QueryNode {
 
     /**
      * Returns the type of this node.
+     *
      * @return the type of this node.
      */
     public int getType() {

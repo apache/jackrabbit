@@ -16,7 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.ItemLifeCycleListener;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeReferences;
@@ -62,14 +66,14 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     * @see Version#getCreated()
+     * {@inheritDoc}
      */
     public Calendar getCreated() throws RepositoryException {
         return version.getCreated();
     }
 
     /**
-     * @see Version#getSuccessors()
+     * {@inheritDoc}
      */
     public Version[] getSuccessors() throws RepositoryException {
         // need to wrap it around proper node
@@ -82,7 +86,7 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     * @see Version#getPredecessors()
+     * {@inheritDoc}
      */
     public Version[] getPredecessors() throws RepositoryException {
         // need to wrap it around proper node
@@ -95,7 +99,7 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     * @see javax.jcr.Node#getUUID()
+     * {@inheritDoc}
      */
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
         return version.getId();
@@ -121,7 +125,7 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     * @see Item#isSame(javax.jcr.Item)
+     * {@inheritDoc}
      */
     public boolean isSame(Item otherItem) {
         if (otherItem instanceof VersionImpl) {

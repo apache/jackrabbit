@@ -20,7 +20,11 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -86,7 +90,7 @@ class MatchAllScorer extends Scorer {
     }
 
     /**
-     * @see Scorer#score(org.apache.lucene.search.HitCollector)
+     * {@inheritDoc}
      */
     public void score(HitCollector hc) throws IOException {
         while (next()) {
@@ -94,9 +98,8 @@ class MatchAllScorer extends Scorer {
         }
     }
 
-
     /**
-     * @see org.apache.lucene.search.Scorer#next()
+     * {@inheritDoc}
      */
     public boolean next() throws IOException {
         nextDoc = docFilter.nextSetBit(nextDoc + 1);
@@ -104,21 +107,21 @@ class MatchAllScorer extends Scorer {
     }
 
     /**
-     * @see org.apache.lucene.search.Scorer#doc()
+     * {@inheritDoc}
      */
     public int doc() {
         return nextDoc;
     }
 
     /**
-     * @see org.apache.lucene.search.Scorer#score()
+     * {@inheritDoc}
      */
     public float score() throws IOException {
         return 1.0f;
     }
 
     /**
-     * @see org.apache.lucene.search.Scorer#skipTo(int)
+     * {@inheritDoc}
      */
     public boolean skipTo(int target) throws IOException {
         nextDoc = target - 1;
@@ -126,7 +129,7 @@ class MatchAllScorer extends Scorer {
     }
 
     /**
-     * @see Scorer#explain
+     * {@inheritDoc}
      */
     public Explanation explain(int doc) {
         return matchExpl;

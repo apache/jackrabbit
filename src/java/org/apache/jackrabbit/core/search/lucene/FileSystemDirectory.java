@@ -117,7 +117,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#list()
+     * {@inheritDoc}
      */
     public String[] list() throws IOException {
         if (log.isDebugEnabled()) {
@@ -131,7 +131,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#fileExists(String)
+     * {@inheritDoc}
      */
     public boolean fileExists(String name) throws IOException {
         if (log.isDebugEnabled()) {
@@ -145,7 +145,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#fileModified(String)
+     * {@inheritDoc}
      */
     public long fileModified(String name) throws IOException {
         if (log.isDebugEnabled()) {
@@ -159,7 +159,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#touchFile(String)
+     * {@inheritDoc}
      */
     public void touchFile(String name) throws IOException {
         if (log.isDebugEnabled()) {
@@ -173,7 +173,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#deleteFile(String)
+     * {@inheritDoc}
      */
     public void deleteFile(String name) throws IOException {
         if (log.isDebugEnabled()) {
@@ -187,7 +187,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#renameFile(String, String)
+     * {@inheritDoc}
      */
     public void renameFile(String from, String to) throws IOException {
         if (log.isDebugEnabled()) {
@@ -201,7 +201,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#fileLength(String)
+     * {@inheritDoc}
      */
     public long fileLength(String name) throws IOException {
         if (log.isDebugEnabled()) {
@@ -215,7 +215,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#createFile(String)
+     * {@inheritDoc}
      */
     public OutputStream createFile(String name) throws IOException {
         if (log.isDebugEnabled()) {
@@ -225,7 +225,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#openFile(String)
+     * {@inheritDoc}
      */
     public InputStream openFile(String name) throws IOException {
         if (log.isDebugEnabled()) {
@@ -235,7 +235,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#makeLock(String)
+     * {@inheritDoc}
      */
     public Lock makeLock(String name) {
         final FileSystemResource lock = new FileSystemResource(fs, name);
@@ -285,7 +285,7 @@ class FileSystemDirectory extends Directory {
     }
 
     /**
-     * @see Directory#close()
+     * {@inheritDoc}
      */
     public void close() throws IOException {
         // there is nothing to close here.

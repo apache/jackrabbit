@@ -62,7 +62,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
 
     //----------------------------------------------------< ItemStateProvider >
     /**
-     * @see ItemStateManager#getItemState(ItemId)
+     * {@inheritDoc}
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -75,14 +75,14 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
     }
 
     /**
-     * @see ItemStateManager#hasItemState(ItemId)
+     * {@inheritDoc}
      */
     public boolean hasItemState(ItemId id) {
         return isCached(id);
     }
 
     /**
-     * @see ItemStateManager#getNodeReferences
+     * {@inheritDoc}
      */
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -293,6 +293,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
     /**
      * Return the attic item state provider that holds all items
      * moved into the attic.
+     *
      * @return attic
      */
     ItemStateManager getAttic() {
@@ -307,7 +308,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         }
 
         /**
-         * @see ItemStateManager#getItemState
+         * {@inheritDoc}
          */
         public ItemState getItemState(ItemId id)
                 throws NoSuchItemStateException, ItemStateException {
@@ -321,14 +322,14 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         }
 
         /**
-         * @see ItemStateManager#hasItemState
+         * {@inheritDoc}
          */
         public boolean hasItemState(ItemId id) {
             return isCached(id);
         }
 
         /**
-         * @see ItemStateManager#getNodeReferences
+         * {@inheritDoc}
          */
         public NodeReferences getNodeReferences(NodeReferencesId id)
                 throws NoSuchItemStateException, ItemStateException {

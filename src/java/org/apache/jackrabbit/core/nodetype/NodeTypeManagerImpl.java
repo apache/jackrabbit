@@ -25,7 +25,10 @@ import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.*;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -123,14 +126,14 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
 
     //---------------------------------------------< NodeTypeRegistryListener >
     /**
-     * @see NodeTypeRegistryListener#nodeTypeRegistered(QName)
+     * {@inheritDoc}
      */
     public void nodeTypeRegistered(QName ntName) {
         // ignore
     }
 
     /**
-     * @see NodeTypeRegistryListener#nodeTypeReRegistered(QName)
+     * {@inheritDoc}
      */
     public void nodeTypeReRegistered(QName ntName) {
         // flush cache
@@ -138,7 +141,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     }
 
     /**
-     * @see NodeTypeRegistryListener#nodeTypeUnregistered(QName)
+     * {@inheritDoc}
      */
     public void nodeTypeUnregistered(QName ntName) {
         // sync cache
@@ -147,7 +150,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
 
     //------------------------------------------------------< NodeTypeManager >
     /**
-     * @see NodeTypeManager#getAllNodeTypes
+     * {@inheritDoc}
      */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
         QName[] ntNames = ntReg.getRegisteredNodeTypes();
@@ -159,7 +162,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     }
 
     /**
-     * @see NodeTypeManager#getPrimaryNodeTypes
+     * {@inheritDoc}
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
         QName[] ntNames = ntReg.getRegisteredNodeTypes();
@@ -174,7 +177,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     }
 
     /**
-     * @see NodeTypeManager#getMixinNodeTypes
+     * {@inheritDoc}
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
         QName[] ntNames = ntReg.getRegisteredNodeTypes();
@@ -189,7 +192,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     }
 
     /**
-     * @see NodeTypeManager#getNodeType
+     * {@inheritDoc}
      */
     public NodeType getNodeType(String nodeTypeName) throws NoSuchNodeTypeException {
         try {
@@ -229,7 +232,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         }
 
         /**
-         * @see NodeDef#getName
+         * {@inheritDoc}
          */
         public String getName() {
             // not applicable
@@ -237,7 +240,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         }
 
         /**
-         * @see NodeDef#getDeclaringNodeType
+         * {@inheritDoc}
          */
         public NodeType getDeclaringNodeType() {
             // not applicable

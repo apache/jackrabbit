@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -726,7 +726,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
 
     //------------------------------------------------< ItemLifeCycleListener >
     /**
-     * @see ItemLifeCycleListener#itemCreated
+     * {@inheritDoc}
      */
     public void itemCreated(ItemImpl item) {
         log.debug("created item " + item.getId());
@@ -735,7 +735,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
     }
 
     /**
-     * @see ItemLifeCycleListener#itemInvalidated
+     * {@inheritDoc}
      */
     public void itemInvalidated(ItemId id, ItemImpl item) {
         log.debug("invalidated item " + id);
@@ -744,7 +744,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
     }
 
     /**
-     * @see ItemLifeCycleListener#itemDestroyed
+     * {@inheritDoc}
      */
     public void itemDestroyed(ItemId id, ItemImpl item) {
         log.debug("destroyed item " + id);

@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -63,11 +64,11 @@ public class LocalItemStateManager extends ItemStateCache
      * todo LocalItemStateManager without a wspImpl will not generate observation events!
      *
      * @param sharedStateMgr shared state manager
-     * @param wspImpl the workspace instance where this item state manager
-     * belongs to, or <code>null</code> if this item state manager is not
-     * associated with a workspace. This is the case for the version item state
-     * manager. Version item states are not associated with a specific workspace
-     * instance.
+     * @param wspImpl        the workspace instance where this item state manager
+     *                       belongs to, or <code>null</code> if this item state manager is not
+     *                       associated with a workspace. This is the case for the version item state
+     *                       manager. Version item states are not associated with a specific workspace
+     *                       instance.
      */
     public LocalItemStateManager(SharedItemStateManager sharedStateMgr, WorkspaceImpl wspImpl) {
         this.sharedStateMgr = sharedStateMgr;
@@ -86,6 +87,7 @@ public class LocalItemStateManager extends ItemStateCache
      * Retrieve a node state from the parent shared state manager and
      * wraps it into a intermediate object that helps us handle local
      * modifications.
+     *
      * @param id node id
      * @return node state
      * @throws NoSuchItemStateException
@@ -110,6 +112,7 @@ public class LocalItemStateManager extends ItemStateCache
      * Retrieve a property state from the parent shared state manager and
      * wraps it into a intermediate object that helps us handle local
      * modifications.
+     *
      * @param id property id
      * @return property state
      * @throws NoSuchItemStateException
@@ -148,9 +151,8 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     //-----------------------------------------------------< ItemStateManager >
-
     /**
-     * @see ItemStateManager#getItemState(ItemId)
+     * {@inheritDoc}
      */
     public synchronized ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -175,7 +177,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see ItemStateManager#hasItemState(ItemId)
+     * {@inheritDoc}
      */
     public boolean hasItemState(ItemId id) {
 
@@ -199,7 +201,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see ItemStateManager#getNodeReferences
+     * {@inheritDoc}
      */
     public synchronized NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -213,8 +215,9 @@ public class LocalItemStateManager extends ItemStateCache
         return sharedStateMgr.getNodeReferences(id);
     }
 
+    //--------------------------------------------< UpdatableItemStateManager >
     /**
-     * @see UpdatableItemStateManager#edit
+     * {@inheritDoc}
      */
     public void edit() throws ItemStateException {
         if (editMode) {
@@ -226,7 +229,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see UpdatableItemStateManager#createNew
+     * {@inheritDoc}
      */
     public NodeState createNew(String uuid, QName nodeTypeName, String parentUUID) {
         if (!editMode) {
@@ -240,7 +243,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see UpdatableItemStateManager#createNew
+     * {@inheritDoc}
      */
     public PropertyState createNew(QName propName, String parentUUID) {
         if (!editMode) {
@@ -253,7 +256,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see UpdatableItemStateManager#store
+     * {@inheritDoc}
      */
     public void store(ItemState state) {
         if (!editMode) {
@@ -263,7 +266,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see UpdatableItemStateManager#store
+     * {@inheritDoc}
      */
     public void store(NodeReferences refs) {
         if (!editMode) {
@@ -273,7 +276,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see UpdatableItemStateManager#destroy
+     * {@inheritDoc}
      */
     public void destroy(ItemState state) {
         if (!editMode) {
@@ -283,7 +286,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see UpdatableItemStateManager#cancel
+     * {@inheritDoc}
      */
     public void cancel() {
         if (!editMode) {
@@ -295,7 +298,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see UpdatableItemStateManager#update
+     * {@inheritDoc}
      */
     public void update() throws ItemStateException {
         if (!editMode) {
@@ -307,19 +310,20 @@ public class LocalItemStateManager extends ItemStateCache
         editMode = false;
     }
 
-
     /**
      * End an update operation. Fetch the states and references from
      * the parent (shared) item manager, reconnect them to the items
      * collected in our (local) change log and overwrite the shared
      * items with our copies.
+     *
      * @param changeLog change log containing local states and references
      */
     protected void update(ChangeLog changeLog)
             throws ItemStateException {
 
         try {
-            sharedStateMgr.store(changeLog, (wspImpl != null) ? wspImpl.getObservationManagerImpl() : null);
+            sharedStateMgr.store(changeLog,
+                    (wspImpl != null) ? (ObservationManagerImpl) wspImpl.getObservationManager() : null);
         } catch (RepositoryException e) {
             // should never get here
             String msg = "ObservationManager unavailable";
@@ -332,19 +336,19 @@ public class LocalItemStateManager extends ItemStateCache
 
     //----------------------------------------------------< ItemStateListener >
     /**
-     * @see ItemStateListener#stateCreated
+     * {@inheritDoc}
      */
     public void stateCreated(ItemState created) {
     }
 
     /**
-     * @see ItemStateListener#stateModified
+     * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
     }
 
     /**
-     * @see ItemStateListener#stateDestroyed
+     * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
         destroyed.removeListener(this);
@@ -352,7 +356,7 @@ public class LocalItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see ItemStateListener#stateDiscarded
+     * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
         discarded.removeListener(this);

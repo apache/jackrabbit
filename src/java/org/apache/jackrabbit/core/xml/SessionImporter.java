@@ -141,14 +141,14 @@ public class SessionImporter implements Importer {
 
     //-------------------------------------------------------------< Importer >
     /**
-     * @see Importer#start()
+     * {@inheritDoc}
      */
     public void start() throws RepositoryException {
         // nop
     }
 
     /**
-     * @see Importer#startNode(NodeInfo, List, NamespaceResolver)
+     * {@inheritDoc}
      */
     public void startNode(NodeInfo nodeInfo, List propInfos,
                           NamespaceResolver nsContext)
@@ -225,14 +225,14 @@ public class SessionImporter implements Importer {
     }
 
     /**
-     * @see Importer#endNode(NodeInfo)
+     * {@inheritDoc}
      */
     public void endNode(NodeInfo node) throws RepositoryException {
         parents.pop();
     }
 
     /**
-     * @see Importer#end()
+     * {@inheritDoc}
      */
     public void end() throws RepositoryException {
         /**

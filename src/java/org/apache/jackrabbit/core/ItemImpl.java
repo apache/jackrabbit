@@ -880,14 +880,14 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
     //----------------------------------------------------< ItemStateListener >
     /**
-     * @see ItemStateListener#stateCreated
+     * {@inheritDoc}
      */
     public void stateCreated(ItemState created) {
         status = STATUS_NORMAL;
     }
 
     /**
-     * @see ItemStateListener#stateDestroyed
+     * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
         // underlying state has been permanently destroyed
@@ -907,14 +907,14 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     }
 
     /**
-     * @see ItemStateListener#stateModified
+     * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
         status = STATUS_MODIFIED;
     }
 
     /**
-     * @see ItemStateListener#stateDiscarded
+     * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
         /**
@@ -997,50 +997,50 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
     //-----------------------------------------------------------------< Item >
     /**
-     * @see Item#accept
+     * {@inheritDoc}
      */
     public abstract void accept(ItemVisitor visitor)
             throws RepositoryException;
 
     /**
-     * @see Item#isNode
+     * {@inheritDoc}
      */
     public abstract boolean isNode();
 
     /**
-     * @see Item#getName
+     * {@inheritDoc}
      */
     public abstract String getName() throws RepositoryException;
 
     /**
-     * @see Item#getParent
+     * {@inheritDoc}
      */
     public abstract Node getParent()
             throws ItemNotFoundException, AccessDeniedException, RepositoryException;
 
     /**
-     * @see Item#isNew
+     * {@inheritDoc}
      */
     public boolean isNew() {
         return state.getStatus() == ItemState.STATUS_NEW;
     }
 
     /**
-     * @see Item#isModified
+     * {@inheritDoc}
      */
     public boolean isModified() {
         return state.isTransient() && state.getOverlayedState() != null;
     }
 
     /**
-     * @see Item#remove
+     * {@inheritDoc}
      */
     public void remove() throws VersionException, LockException, RepositoryException {
         internalRemove(false);
     }
 
     /**
-     * @see Item#remove
+     * {@inheritDoc}
      */
     protected void internalRemove(boolean noChecks)
             throws VersionException, LockException, RepositoryException {
@@ -1103,7 +1103,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     }
 
     /**
-     * @see Item#save
+     * {@inheritDoc}
      */
     public void save()
             throws AccessDeniedException, ConstraintViolationException,
@@ -1258,7 +1258,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     }
 
     /**
-     * @see Item#refresh
+     * {@inheritDoc}
      */
     public synchronized void refresh(boolean keepChanges)
             throws InvalidItemStateException, RepositoryException {
@@ -1354,7 +1354,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     }
 
     /**
-     * @see Item#getAncestor
+     * {@inheritDoc}
      */
     public Item getAncestor(int degree)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
@@ -1381,7 +1381,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     }
 
     /**
-     * @see Item#getPath
+     * {@inheritDoc}
      */
     public String getPath() throws RepositoryException {
         try {
@@ -1395,21 +1395,21 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     }
 
     /**
-     * @see Item#getDepth
+     * {@inheritDoc}
      */
     public int getDepth() throws RepositoryException {
         return getPrimaryPath().getAncestorCount();
     }
 
     /**
-     * @see Item#getSession
+     * {@inheritDoc}
      */
     public Session getSession() throws RepositoryException {
         return session;
     }
 
     /**
-     * @see Item#isSame(Item)
+     * {@inheritDoc}
      */
     public boolean isSame(Item otherItem) {
         if (this == otherItem) {

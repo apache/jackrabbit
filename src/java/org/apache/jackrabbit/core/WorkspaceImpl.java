@@ -716,21 +716,21 @@ public class WorkspaceImpl implements Workspace, Constants {
 
     //------------------------------------------------------------< Workspace >
     /**
-     * @see Workspace#getName
+     * {@inheritDoc}
      */
     public String getName() {
         return wspConfig.getName();
     }
 
     /**
-     * @see Workspace#getSession
+     * {@inheritDoc}
      */
     public Session getSession() {
         return session;
     }
 
     /**
-     * @see Workspace#getNamespaceRegistry
+     * {@inheritDoc}
      */
     public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
         // check state of this instance
@@ -740,7 +740,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#getNodeTypeManager
+     * {@inheritDoc}
      */
     public NodeTypeManager getNodeTypeManager() throws RepositoryException {
         // check state of this instance
@@ -750,7 +750,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#clone(String, String, String, boolean)
+     * {@inheritDoc}
      */
     public void clone(String srcWorkspace, String srcAbsPath,
                       String destAbsPath, boolean removeExisting)
@@ -777,7 +777,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#copy(String, String)
+     * {@inheritDoc}
      */
     public void copy(String srcAbsPath, String destAbsPath)
             throws ConstraintViolationException, VersionException,
@@ -795,7 +795,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#copy(String, String, String)
+     * {@inheritDoc}
      */
     public void copy(String srcWorkspace, String srcAbsPath, String destAbsPath)
             throws NoSuchWorkspaceException, ConstraintViolationException,
@@ -818,7 +818,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#move
+     * {@inheritDoc}
      */
     public void move(String srcAbsPath, String destAbsPath)
             throws ConstraintViolationException, VersionException,
@@ -934,21 +934,10 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#getObservationManager
+     * {@inheritDoc}
      */
     public ObservationManager getObservationManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return getObservationManagerImpl();
-    }
-
-    /**
-     * Returns the ObservationManagerImpl for this workspace instance.
-     *
-     * @return the ObservationManagerImpl for this workspace instance.
-     */
-    public synchronized ObservationManagerImpl getObservationManagerImpl()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-
         // check state of this instance
         sanityCheck();
 
@@ -966,7 +955,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#getQueryManager
+     * {@inheritDoc}
      */
     public synchronized QueryManager getQueryManager() throws RepositoryException {
 
@@ -994,7 +983,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#restore(Version[], boolean)
+     * {@inheritDoc}
      */
     public void restore(Version[] versions, boolean removeExisting)
             throws ItemExistsException, UnsupportedRepositoryOperationException,
@@ -1009,7 +998,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#getAccessibleWorkspaceNames
+     * {@inheritDoc}
      */
     public String[] getAccessibleWorkspaceNames() throws RepositoryException {
         // check state of this instance
@@ -1019,7 +1008,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#getImportContentHandler(String, int)
+     * {@inheritDoc}
      */
     public ContentHandler getImportContentHandler(String parentAbsPath,
                                                   int uuidBehavior)
@@ -1034,7 +1023,7 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * @see Workspace#importXML(String, InputStream, int)
+     * {@inheritDoc}
      */
     public void importXML(String parentAbsPath, InputStream in,
                           int uuidBehavior)

@@ -21,7 +21,15 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 
 /**
  * A <code>LocalFileSystem</code> ...
@@ -78,7 +86,7 @@ public class LocalFileSystem implements FileSystem {
 
     //-----------------------------------------------------------< FileSystem >
     /**
-     * @see FileSystem#init()
+     * {@inheritDoc}
      */
     public void init() throws FileSystemException {
         if (root == null) {
@@ -103,14 +111,14 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#close
+     * {@inheritDoc}
      */
     public void close() throws FileSystemException {
         root = null;
     }
 
     /**
-     * @see FileSystem#copy(String, String)
+     * {@inheritDoc}
      */
     public void copy(String srcPath, String destPath) throws FileSystemException {
         File src = new File(root, osPath(srcPath));
@@ -125,7 +133,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#createFolder(String)
+     * {@inheritDoc}
      */
     public void createFolder(String folderPath) throws FileSystemException {
         File f = new File(root, osPath(folderPath));
@@ -142,7 +150,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#deleteFile(String)
+     * {@inheritDoc}
      */
     public void deleteFile(String filePath) throws FileSystemException {
         File f = new File(root, osPath(filePath));
@@ -159,7 +167,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#deleteFolder(String)
+     * {@inheritDoc}
      */
     public void deleteFolder(String folderPath) throws FileSystemException {
         File f = new File(root, osPath(folderPath));
@@ -178,7 +186,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#exists(String)
+     * {@inheritDoc}
      */
     public boolean exists(String path) throws FileSystemException {
         File f = new File(root, osPath(path));
@@ -186,7 +194,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#getInputStream(String)
+     * {@inheritDoc}
      */
     public InputStream getInputStream(String filePath) throws FileSystemException {
         File f = new File(root, osPath(filePath));
@@ -200,7 +208,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#getOutputStream(String)
+     * {@inheritDoc}
      */
     public OutputStream getOutputStream(String filePath) throws FileSystemException {
         File f = new File(root, osPath(filePath));
@@ -214,7 +222,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#getRandomAccessOutputStream(String)
+     * {@inheritDoc}
      */
     public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
             throws FileSystemException {
@@ -229,7 +237,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#hasChildren(String)
+     * {@inheritDoc}
      */
     public boolean hasChildren(String path) throws FileSystemException {
         File f = new File(root, osPath(path));
@@ -245,7 +253,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#isFile(String)
+     * {@inheritDoc}
      */
     public boolean isFile(String path) throws FileSystemException {
         File f = new File(root, osPath(path));
@@ -253,7 +261,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#isFolder(String)
+     * {@inheritDoc}
      */
     public boolean isFolder(String path) throws FileSystemException {
         File f = new File(root, osPath(path));
@@ -261,7 +269,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#lastModified(String)
+     * {@inheritDoc}
      */
     public long lastModified(String path) throws FileSystemException {
         File f = new File(root, osPath(path));
@@ -269,7 +277,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#length(String)
+     * {@inheritDoc}
      */
     public long length(String filePath) throws FileSystemException {
         File f = new File(root, osPath(filePath));
@@ -280,7 +288,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#touch(String)
+     * {@inheritDoc}
      */
     public void touch(String filePath) throws FileSystemException {
         File f = new File(root, osPath(filePath));
@@ -288,7 +296,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#list(String)
+     * {@inheritDoc}
      */
     public String[] list(String folderPath) throws FileSystemException {
         File f = new File(root, osPath(folderPath));
@@ -302,7 +310,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#listFiles(String)
+     * {@inheritDoc}
      */
     public String[] listFiles(String folderPath) throws FileSystemException {
         File folder = new File(root, osPath(folderPath));
@@ -324,7 +332,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#listFolders(String)
+     * {@inheritDoc}
      */
     public String[] listFolders(String folderPath) throws FileSystemException {
         File file = new File(root, osPath(folderPath));
@@ -346,7 +354,7 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
-     * @see FileSystem#move(String, String)
+     * {@inheritDoc}
      */
     public void move(String srcPath, String destPath) throws FileSystemException {
         File src = new File(root, osPath(srcPath));

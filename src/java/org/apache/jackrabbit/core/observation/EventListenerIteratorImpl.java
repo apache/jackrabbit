@@ -77,7 +77,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
     }
 
     /**
-     * @see javax.jcr.observation.EventListenerIterator#nextEventListener()
+     * {@inheritDoc}
      */
     public EventListener nextEventListener() {
         if (next == null) {
@@ -90,7 +90,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
     }
 
     /**
-     * @see javax.jcr.RangeIterator#skip(long)
+     * {@inheritDoc}
      */
     public void skip(long skipNum) {
         while (skipNum-- > 0) {
@@ -108,7 +108,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
     }
 
     /**
-     * @see javax.jcr.RangeIterator#getPos()
+     * {@inheritDoc}
      */
     public long getPos() {
         return pos;
@@ -135,7 +135,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
     }
 
     /**
-     * @see Iterator#next()
+     * {@inheritDoc}
      */
     public Object next() {
         return nextEventListener();

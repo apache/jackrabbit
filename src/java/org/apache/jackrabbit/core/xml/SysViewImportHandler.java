@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -99,7 +98,7 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
 
     //-------------------------------------------------------< ContentHandler >
     /**
-     * @see ContentHandler#startDocument()
+     * {@inheritDoc}
      */
     public void startDocument() throws SAXException {
         try {
@@ -110,7 +109,7 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
     }
 
     /**
-     * @see ContentHandler#startElement(String, String, String, Attributes)
+     * {@inheritDoc}
      */
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
@@ -212,7 +211,7 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
     }
 
     /**
-     * @see ContentHandler#characters(char[], int, int)
+     * {@inheritDoc}
      */
     public void characters(char[] ch, int start, int length) throws SAXException {
         if (currentPropValue != null) {
@@ -222,7 +221,7 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
     }
 
     /**
-     * @see ContentHandler#endElement(String, String, String)
+     * {@inheritDoc}
      */
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
         try {
@@ -325,7 +324,7 @@ class SysViewImportHandler extends DefaultHandler implements Constants {
     }
 
     /**
-     * @see ContentHandler#endDocument()
+     * {@inheritDoc}
      */
     public void endDocument() throws SAXException {
         try {

@@ -16,22 +16,22 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Weight;
-import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.HitCollector;
-import org.apache.lucene.search.Similarity;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Implements a lucene <code>Query</code> which returns the child nodes of the
@@ -39,15 +39,20 @@ import java.util.ArrayList;
  */
 class ChildAxisQuery extends Query {
 
-    /** The context query */
+    /**
+     * The context query
+     */
     private final Query contextQuery;
 
-    /** The scorer of the context query */
+    /**
+     * The scorer of the context query
+     */
     private Scorer contextScorer;
 
     /**
      * Creates a new <code>ChildAxisQuery</code> based on a <code>context</code>
      * query.
+     *
      * @param context the context for this query.
      */
     ChildAxisQuery(Query context) {
@@ -56,6 +61,7 @@ class ChildAxisQuery extends Query {
 
     /**
      * Creates a <code>Weight</code> instance for this query.
+     *
      * @param searcher the <code>Searcher</code> instance to use.
      * @return a <code>ChildAxisWeight</code>.
      */
@@ -65,6 +71,7 @@ class ChildAxisQuery extends Query {
 
     /**
      * Always returns 'ChildAxisQuery'.
+     *
      * @param field the name of a field.
      * @return 'ChildAxisQuery'.
      */
@@ -79,12 +86,15 @@ class ChildAxisQuery extends Query {
      */
     private class ChildAxisWeight implements Weight {
 
-        /** The searcher in use */
+        /**
+         * The searcher in use
+         */
         private final Searcher searcher;
 
         /**
          * Creates a new <code>ChildAxisWeight</code> instance using
          * <code>searcher</code>.
+         *
          * @param searcher a <code>Searcher</code> instance.
          */
         private ChildAxisWeight(Searcher searcher) {
@@ -93,6 +103,7 @@ class ChildAxisQuery extends Query {
 
         /**
          * Returns this <code>ChildAxisQuery</code>.
+         *
          * @return this <code>ChildAxisQuery</code>.
          */
         public Query getQuery() {
@@ -100,7 +111,7 @@ class ChildAxisQuery extends Query {
         }
 
         /**
-         * @see org.apache.lucene.search.Weight#getValue()
+         * {@inheritDoc}
          */
         public float getValue() {
             // @todo implement properly
@@ -108,7 +119,7 @@ class ChildAxisQuery extends Query {
         }
 
         /**
-         * @see org.apache.lucene.search.Weight#sumOfSquaredWeights()
+         * {@inheritDoc}
          */
         public float sumOfSquaredWeights() throws IOException {
             // @todo implement properly
@@ -116,7 +127,7 @@ class ChildAxisQuery extends Query {
         }
 
         /**
-         * @see org.apache.lucene.search.Weight#normalize(float)
+         * {@inheritDoc}
          */
         public void normalize(float norm) {
             // @todo implement properly
@@ -124,6 +135,7 @@ class ChildAxisQuery extends Query {
 
         /**
          * Creates a scorer for this <code>ChildAxisQuery</code>.
+         *
          * @param reader a reader for accessing the index.
          * @return a <code>ChildAxisScorer</code>.
          * @throws IOException if an error occurs while reading from the index.
@@ -134,7 +146,7 @@ class ChildAxisQuery extends Query {
         }
 
         /**
-         * @see org.apache.lucene.search.Weight#explain(org.apache.lucene.index.IndexReader, int)
+         * {@inheritDoc}
          */
         public Explanation explain(IndexReader reader, int doc) throws IOException {
             return new Explanation();
@@ -148,22 +160,31 @@ class ChildAxisQuery extends Query {
      */
     private class ChildAxisScorer extends Scorer {
 
-        /** An <code>IndexReader</code> to access the index. */
+        /**
+         * An <code>IndexReader</code> to access the index.
+         */
         private final IndexReader reader;
 
-        /** BitSet storing the id's of selected documents */
+        /**
+         * BitSet storing the id's of selected documents
+         */
         private final BitSet hits;
 
-        /** List of UUIDs of selected nodes */
+        /**
+         * List of UUIDs of selected nodes
+         */
         private List uuids = null;
 
-        /** The next document id to return */
+        /**
+         * The next document id to return
+         */
         private int nextDoc = -1;
 
         /**
          * Creates a new <code>ChildAxisScorer</code>.
+         *
          * @param similarity the <code>Similarity</code> instance to use.
-         * @param reader for index access.
+         * @param reader     for index access.
          */
         protected ChildAxisScorer(Similarity similarity, IndexReader reader) {
             super(similarity);
@@ -172,7 +193,7 @@ class ChildAxisQuery extends Query {
         }
 
         /**
-         * @see Scorer#score(org.apache.lucene.search.HitCollector)
+         * {@inheritDoc}
          */
         public void score(HitCollector hc) throws IOException {
             calculateChildren();
@@ -185,29 +206,43 @@ class ChildAxisQuery extends Query {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public boolean next() throws IOException {
             calculateChildren();
             nextDoc = hits.nextSetBit(nextDoc + 1);
             return nextDoc > -1;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public int doc() {
             return nextDoc;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public float score() throws IOException {
             // todo implement
             return 1.0f;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public boolean skipTo(int target) throws IOException {
             nextDoc = hits.nextSetBit(target);
             return nextDoc > -1;
         }
 
         /**
-         * @exception UnsupportedOperationException this implementation always
-         * throws an <code>UnsupportedOperationException</code>.
+         * {@inheritDoc}
+         *
+         * @throws UnsupportedOperationException this implementation always
+         *                                       throws an <code>UnsupportedOperationException</code>.
          */
         public Explanation explain(int doc) throws IOException {
             throw new UnsupportedOperationException();

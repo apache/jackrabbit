@@ -16,43 +16,50 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.QueryResult;
 import javax.jcr.query.Query;
-import javax.jcr.lock.LockException;
+import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 
 /**
  * Implements the {@link Query} interface.
  */
 public class QueryImpl implements Query {
 
-    /** The session of the user executing this query */
+    /**
+     * The session of the user executing this query
+     */
     private final SessionImpl session;
 
-    /** The query statement */
+    /**
+     * The query statement
+     */
     private final String statement;
 
-    /** The syntax of the query statement */
+    /**
+     * The syntax of the query statement
+     */
     private final String language;
 
-    /** The actual query implementation that can be executed */
+    /**
+     * The actual query implementation that can be executed
+     */
     private final ExecutableQuery query;
 
     /**
@@ -63,13 +70,14 @@ public class QueryImpl implements Query {
 
     /**
      * Creates a new query instance from a query string.
-     * @param session the session of the user executing this query.
-     * @param itemMgr the item manager of the session executing this query.
-     * @param handler the query handler of the search index.
+     *
+     * @param session   the session of the user executing this query.
+     * @param itemMgr   the item manager of the session executing this query.
+     * @param handler   the query handler of the search index.
      * @param statement the query statement.
-     * @param language the syntax of the query statement.
+     * @param language  the syntax of the query statement.
      * @throws InvalidQueryException if the query statement is invalid according
-     * to the specified <code>language</code>.
+     *                               to the specified <code>language</code>.
      */
     public QueryImpl(SessionImpl session,
                      ItemManager itemMgr,
@@ -84,13 +92,14 @@ public class QueryImpl implements Query {
 
     /**
      * Create a new query instance from a nt:query node.
+     *
      * @param session the session of the user executing this query.
      * @param itemMgr the item manager of the session executing this query.
      * @param handler the query handler of the search index.
-     * @param node a node of type <code>nt:query</code>.
+     * @param node    a node of type <code>nt:query</code>.
      * @throws InvalidQueryException If <code>node</code> is not a valid persisted query
-     *   (that is, a node of type <code>nt:query</code>).
-     * @throws RepositoryException if another error occurs
+     *                               (that is, a node of type <code>nt:query</code>).
+     * @throws RepositoryException   if another error occurs
      */
     public QueryImpl(SessionImpl session,
                      ItemManager itemMgr,
@@ -117,28 +126,28 @@ public class QueryImpl implements Query {
      * This method simply forwards the <code>execute</code> call to the
      * {@link ExecutableQuery} object returned by
      * {@link QueryHandler#createExecutableQuery}.
-     * @see Query#execute()
+     * {@inheritDoc}
      */
     public QueryResult execute() throws RepositoryException {
         return query.execute();
     }
 
     /**
-     * @see Query#getStatement()
+     * {@inheritDoc}
      */
     public String getStatement() {
         return statement;
     }
 
     /**
-     * @see Query#getLanguage()
+     * {@inheritDoc}
      */
     public String getLanguage() {
         return language;
     }
 
     /**
-     * @see Query#getPersistentQueryPath()
+     * {@inheritDoc}
      */
     public String getPersistentQueryPath() throws ItemNotFoundException, RepositoryException {
         if (node == null) {
@@ -148,7 +157,7 @@ public class QueryImpl implements Query {
     }
 
     /**
-     * @see Query#save(String)
+     * {@inheritDoc}
      */
     public void save(String absPath)
             throws ItemExistsException,

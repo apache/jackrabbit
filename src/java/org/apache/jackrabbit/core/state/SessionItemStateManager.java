@@ -139,7 +139,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
 
     //-----------------------------------------------------< ItemStateManager >
     /**
-     * @see ItemStateManager#getItemState(ItemId)
+     * {@inheritDoc}
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -170,7 +170,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     }
 
     /**
-     * @see ItemStateManager#hasItemState(ItemId)
+     * {@inheritDoc}
      */
     public boolean hasItemState(ItemId id) {
         // first check if the specified item has been transiently removed
@@ -191,7 +191,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     }
 
     /**
-     * @see ItemStateManager#getNodeReferences
+     * {@inheritDoc}
      */
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -199,57 +199,58 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         return persistentStateMgr.getNodeReferences(id);
     }
 
+    //--------------------------------------------< UpdatableItemStateManager >
     /**
-     * @see UpdatableItemStateManager#edit
+     * {@inheritDoc}
      */
     public void edit() throws ItemStateException {
         persistentStateMgr.edit();
     }
 
     /**
-     * @see UpdatableItemStateManager#createNew
+     * {@inheritDoc}
      */
     public NodeState createNew(String uuid, QName nodeTypeName, String parentUUID) {
         return persistentStateMgr.createNew(uuid, nodeTypeName, parentUUID);
     }
 
     /**
-     * @see UpdatableItemStateManager#createNew
+     * {@inheritDoc}
      */
     public PropertyState createNew(QName propName, String parentUUID) {
         return persistentStateMgr.createNew(propName, parentUUID);
     }
 
     /**
-     * @see UpdatableItemStateManager#store
+     * {@inheritDoc}
      */
     public void store(ItemState state) {
         persistentStateMgr.store(state);
     }
 
     /**
-     * @see UpdatableItemStateManager#store
+     * {@inheritDoc}
      */
     public void store(NodeReferences refs) {
         persistentStateMgr.store(refs);
     }
 
     /**
-     * @see UpdatableItemStateManager#destroy
+     * {@inheritDoc}
      */
     public void destroy(ItemState state) {
         persistentStateMgr.destroy(state);
     }
 
     /**
-     * @see UpdatableItemStateManager#cancel
+     * {@inheritDoc}
      */
     public void cancel() {
         persistentStateMgr.cancel();
     }
 
     /**
-     * @see UpdatableItemStateManager#update
+     * {@inheritDoc}
      */
     public void update() throws ItemStateException {
         persistentStateMgr.update();

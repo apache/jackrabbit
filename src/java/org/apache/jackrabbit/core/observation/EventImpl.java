@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -70,18 +70,18 @@ public final class EventImpl implements Event {
     }
 
     /**
-     * @see Event#getType()
+     * {@inheritDoc}
      */
     public int getType() {
         return eventState.getType();
     }
 
     /**
-     * @see Event#getPath()
+     * {@inheritDoc}
      */
     public String getPath() throws RepositoryException {
         try {
-            Path p = null;
+            Path p;
             if (eventState.getChildRelPath().getIndex() > 0) {
                 p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), eventState.getChildRelPath().getIndex(), false);
             } else {
@@ -100,7 +100,7 @@ public final class EventImpl implements Event {
     }
 
     /**
-     * @see Event#getUserId()
+     * {@inheritDoc}
      */
     public String getUserId() {
         return eventState.getUserId();

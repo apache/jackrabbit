@@ -16,18 +16,38 @@
  */
 package org.apache.jackrabbit.core.state.mem;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.BLOBFileValue;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.AbstractPersistenceManager;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PMContext;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.obj.BLOBStore;
 import org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -265,14 +285,14 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
 
     //------------------------------------------------------------< BLOBStore >
     /**
-     * @see BLOBStore#get
+     * {@inheritDoc}
      */
     public FileSystemResource get(String blobId) throws Exception {
         return new FileSystemResource(blobFS, blobId);
     }
 
     /**
-     * @see BLOBStore#put
+     * {@inheritDoc}
      */
     public String put(PropertyId id, int index, InputStream in, long size) throws Exception {
         String path = buildBlobFilePath(id.getParentUUID(), id.getName(), index);
@@ -293,7 +313,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see BLOBStore#remove
+     * {@inheritDoc}
      */
     public boolean remove(String blobId) throws Exception {
         FileSystemResource res = new FileSystemResource(blobFS, blobId);
@@ -307,7 +327,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
 
     //---------------------------------------------------< PersistenceManager >
     /**
-     * @see PersistenceManager#init
+     * {@inheritDoc}
      */
     public void init(PMContext context) throws Exception {
         if (initialized) {
@@ -337,7 +357,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#close
+     * {@inheritDoc}
      */
     public synchronized void close() throws Exception {
         if (!initialized) {
@@ -378,7 +398,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -405,7 +425,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -432,7 +452,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(NodeState state) throws ItemStateException {
         if (!initialized) {
@@ -456,7 +476,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(PropertyState state) throws ItemStateException {
         if (!initialized) {
@@ -480,7 +500,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(NodeState state) throws ItemStateException {
         if (!initialized) {
@@ -492,7 +512,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(PropertyState state) throws ItemStateException {
         if (!initialized) {
@@ -519,7 +539,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -546,7 +566,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
@@ -570,7 +590,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
@@ -582,7 +602,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#exists(PropertyId id)
+     * {@inheritDoc}
      */
     public boolean exists(PropertyId id) throws ItemStateException {
         if (!initialized) {
@@ -592,7 +612,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#exists(PropertyId id)
+     * {@inheritDoc}
      */
     public boolean exists(NodeId id) throws ItemStateException {
         if (!initialized) {
@@ -602,7 +622,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#exists(NodeReferencesId targetId)
+     * {@inheritDoc}
      */
     public boolean exists(NodeReferencesId id) throws ItemStateException {
         if (!initialized) {

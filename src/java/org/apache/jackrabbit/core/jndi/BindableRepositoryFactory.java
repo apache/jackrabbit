@@ -46,7 +46,7 @@ public class BindableRepositoryFactory implements ObjectFactory {
 
     //--------------------------------------------------------< ObjectFactory >
     /**
-     * @see ObjectFactory#getObjectInstance(Object, Name, Context, Hashtable)
+     * {@inheritDoc}
      */
     public Object getObjectInstance(Object obj, Name name, Context nameCtx,
                                     Hashtable environment)

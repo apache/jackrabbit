@@ -28,7 +28,7 @@ import java.util.Iterator;
 public abstract class AbstractPersistenceManager implements PersistenceManager {
 
     /**
-     * @see PersistenceManager#createNew
+     * {@inheritDoc}
      */
     public NodeState createNew(NodeId id) {
         return new NodeState(id.getUUID(), null, null,
@@ -36,7 +36,7 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#createNew
+     * {@inheritDoc}
      */
     public PropertyState createNew(PropertyId id) {
         return new PropertyState(id.getName(), id.getParentUUID(),
@@ -44,13 +44,13 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
     }
 
     /**
-     * @see PersistenceManager#store(ChangeLog)
-     *
      * Right now, this iterates over all items in the changelog and
      * calls the individual methods that handle single item states
      * or node references objects. Properly implemented, this method
      * should ensure that changes are either written completely to
      * the underlying persistence layer, or not at all.
+     *
+     * {@inheritDoc}
      */
     public synchronized void store(ChangeLog changeLog) throws ItemStateException {
         Iterator iter = changeLog.deletedStates();

@@ -150,15 +150,14 @@ public class LocationStepQueryNode extends NAryQueryNode {
     }
 
     /**
-     * @see QueryNode#accept(QueryNodeVisitor, Object)
+     * {@inheritDoc}
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
         return visitor.visit(this, data);
     }
 
     /**
-     * Returns the type of this node.
-     * @return the type of this node.
+     * {@inheritDoc}
      */
     public int getType() {
         return QueryNode.TYPE_LOCATION;

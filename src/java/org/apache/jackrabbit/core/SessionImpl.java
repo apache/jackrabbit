@@ -441,7 +441,7 @@ public class SessionImpl implements Session, Constants {
 
     //--------------------------------------------------------------< Session >
     /**
-     * @see Session#checkPermission(String, String)
+     * {@inheritDoc}
      */
     public void checkPermission(String absPath, String actions)
             throws AccessControlException {
@@ -588,14 +588,14 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getWorkspace()
+     * {@inheritDoc}
      */
     public Workspace getWorkspace() {
         return wsp;
     }
 
     /**
-     * @see Session#impersonate(Credentials)
+     * {@inheritDoc}
      */
     public Session impersonate(Credentials otherCredentials)
             throws LoginException, RepositoryException {
@@ -621,7 +621,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getRootNode
+     * {@inheritDoc}
      */
     public Node getRootNode() throws RepositoryException {
         // check sanity of this session
@@ -631,7 +631,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getNodeByUUID(String)
+     * {@inheritDoc}
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
         // check sanity of this session
@@ -651,7 +651,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getItem(String)
+     * {@inheritDoc}
      */
     public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
         // check sanity of this session
@@ -669,7 +669,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#itemExists(String)
+     * {@inheritDoc}
      */
     public boolean itemExists(String absPath) {
         try {
@@ -687,7 +687,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#save
+     * {@inheritDoc}
      */
     public void save()
             throws AccessDeniedException, ConstraintViolationException,
@@ -700,7 +700,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#refresh(boolean)
+     * {@inheritDoc}
      */
     public void refresh(boolean keepChanges) throws RepositoryException {
         // check sanity of this session
@@ -715,7 +715,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#hasPendingChanges
+     * {@inheritDoc}
      */
     public boolean hasPendingChanges() throws RepositoryException {
         // check sanity of this session
@@ -725,7 +725,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#move(String, String)
+     * {@inheritDoc}
      */
     public void move(String srcAbsPath, String destAbsPath)
             throws ItemExistsException, PathNotFoundException,
@@ -862,7 +862,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getImportContentHandler(String)
+     * {@inheritDoc}
      */
     public ContentHandler getImportContentHandler(String parentAbsPath)
             throws PathNotFoundException, ConstraintViolationException,
@@ -904,7 +904,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#importXML(String, InputStream)
+     * {@inheritDoc}
      */
     public void importXML(String parentAbsPath, InputStream in)
             throws IOException, PathNotFoundException, ItemExistsException,
@@ -933,7 +933,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#exportDocView(String, ContentHandler, boolean, boolean)
+     * {@inheritDoc}
      */
     public void exportDocView(String absPath, ContentHandler contentHandler,
                               boolean skipBinary, boolean noRecurse)
@@ -952,7 +952,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#exportDocView(String, OutputStream, boolean, boolean)
+     * {@inheritDoc}
      */
     public void exportDocView(String absPath, OutputStream out,
                               boolean skipBinary, boolean noRecurse)
@@ -969,7 +969,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#exportSysView(String, ContentHandler, boolean, boolean)
+     * {@inheritDoc}
      */
     public void exportSysView(String absPath, ContentHandler contentHandler,
                               boolean skipBinary, boolean noRecurse)
@@ -987,7 +987,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#exportSysView(String, OutputStream, boolean, boolean)
+     * {@inheritDoc}
      */
     public void exportSysView(String absPath, OutputStream out,
                               boolean skipBinary, boolean noRecurse)
@@ -1003,7 +1003,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#logout()
+     * {@inheritDoc}
      */
     public synchronized void logout() {
         if (!alive) {
@@ -1044,35 +1044,35 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getRepository
+     * {@inheritDoc}
      */
     public Repository getRepository() {
         return rep;
     }
 
     /**
-     * @see Session#getUserId
+     * {@inheritDoc}
      */
     public String getUserId() {
         return userId;
     }
 
     /**
-     * @see Session#getAttribute
+     * {@inheritDoc}
      */
     public Object getAttribute(String name) {
         return attributes.get(name);
     }
 
     /**
-     * @see Session#getAttributeNames
+     * {@inheritDoc}
      */
     public String[] getAttributeNames() {
         return (String[]) attributes.keySet().toArray(new String[attributes.size()]);
     }
 
     /**
-     * @see Session#setNamespacePrefix(String, String)
+     * {@inheritDoc}
      */
     public void setNamespacePrefix(String prefix, String uri)
             throws NamespaceException, RepositoryException {
@@ -1080,7 +1080,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getNamespacePrefixes
+     * {@inheritDoc}
      */
     public String[] getNamespacePrefixes()
             throws NamespaceException, RepositoryException {
@@ -1088,7 +1088,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getNamespaceURI(String)
+     * {@inheritDoc}
      */
     public String getNamespaceURI(String prefix)
             throws NamespaceException, RepositoryException {
@@ -1096,7 +1096,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getNamespaceURI(String)
+     * {@inheritDoc}
      */
     public String getNamespacePrefix(String uri)
             throws NamespaceException, RepositoryException {
@@ -1105,7 +1105,7 @@ public class SessionImpl implements Session, Constants {
 
     //------------------------------------------------------< locking support >
     /**
-     * @see Session#addLockToken(String)
+     * {@inheritDoc}
      */
     public void addLockToken(String lt) {
         // @todo implement locking support
@@ -1113,7 +1113,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#getLockTokens()
+     * {@inheritDoc}
      */
     public String[] getLockTokens() {
         // @todo implement locking support
@@ -1121,7 +1121,7 @@ public class SessionImpl implements Session, Constants {
     }
 
     /**
-     * @see Session#removeLockToken(String)
+     * {@inheritDoc}
      */
     public void removeLockToken(String lt) {
         // @todo implement locking support

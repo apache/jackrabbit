@@ -52,7 +52,7 @@ public class PropertyDefImpl extends ItemDefImpl implements PropertyDef {
 
     //----------------------------------------------------------< PropertyDef >
     /**
-     * @see PropertyDef#getDefaultValues
+     * {@inheritDoc}
      */
     public Value[] getDefaultValues() {
         InternalValue[] defVals = propDef.getDefaultValues();
@@ -74,14 +74,14 @@ public class PropertyDefImpl extends ItemDefImpl implements PropertyDef {
     }
 
     /**
-     * @see PropertyDef#getRequiredType
+     * {@inheritDoc}
      */
     public int getRequiredType() {
         return propDef.getRequiredType();
     }
 
     /**
-     * @see PropertyDef#getValueConstraints
+     * {@inheritDoc}
      */
     public String[] getValueConstraints() {
         ValueConstraint[] constraints = propDef.getValueConstraints();
@@ -96,7 +96,7 @@ public class PropertyDefImpl extends ItemDefImpl implements PropertyDef {
     }
 
     /**
-     * @see PropertyDef#isMultiple
+     * {@inheritDoc}
      */
     public boolean isMultiple() {
         return propDef.isMultiple();

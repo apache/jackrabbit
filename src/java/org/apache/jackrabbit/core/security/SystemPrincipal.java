@@ -52,7 +52,7 @@ public class SystemPrincipal implements Principal, Serializable {
 
     //------------------------------------------------------------< Principal >
     /**
-     * @see Principal#getName()
+     * {@inheritDoc}
      */
     public String getName() {
         return SYSTEM_USER;

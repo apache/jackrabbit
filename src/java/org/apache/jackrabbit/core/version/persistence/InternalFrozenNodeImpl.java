@@ -168,7 +168,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     }
 
     /**
-     * @see org.apache.jackrabbit.core.version.InternalFrozenNode#getFrozenChildNodes()
+     * {@inheritDoc}
      */
     public InternalFreeze[] getFrozenChildNodes() throws VersionException {
         try {

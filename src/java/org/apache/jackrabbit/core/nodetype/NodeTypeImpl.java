@@ -16,14 +16,24 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.BaseException;
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.nodetype.*;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDef;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -276,7 +286,7 @@ public class NodeTypeImpl implements NodeType {
 
     //-------------------------------------------------------------< NodeType >
     /**
-     * @see NodeType#getName
+     * {@inheritDoc}
      */
     public String getName() {
         try {
@@ -289,7 +299,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#getPrimaryItemName
+     * {@inheritDoc}
      */
     public String getPrimaryItemName() {
         try {
@@ -303,14 +313,14 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#isMixin
+     * {@inheritDoc}
      */
     public boolean isMixin() {
         return ntd.isMixin();
     }
 
     /**
-     * @see NodeType#isNodeType(String)
+     * {@inheritDoc}
      */
     public boolean isNodeType(String nodeTypeName) {
         QName ntName;
@@ -331,14 +341,14 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#hasOrderableChildNodes
+     * {@inheritDoc}
      */
     public boolean hasOrderableChildNodes() {
         return ntd.hasOrderableChildNodes();
     }
 
     /**
-     * @see NodeType#getSupertypes
+     * {@inheritDoc}
      */
     public NodeType[] getSupertypes() {
         QName[] ntNames = ent.getInheritedNodeTypes();
@@ -356,7 +366,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#getChildNodeDefs
+     * {@inheritDoc}
      */
     public NodeDef[] getChildNodeDefs() {
         ChildNodeDef[] cnda = ent.getAllNodeDefs();
@@ -368,7 +378,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#getPropertyDefs
+     * {@inheritDoc}
      */
     public PropertyDef[] getPropertyDefs() {
         PropDef[] pda = ent.getAllPropDefs();
@@ -380,7 +390,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#getDeclaredSupertypes
+     * {@inheritDoc}
      */
     public NodeType[] getDeclaredSupertypes() {
         QName[] ntNames = ntd.getSupertypes();
@@ -398,7 +408,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#getDeclaredChildNodeDefs
+     * {@inheritDoc}
      */
     public NodeDef[] getDeclaredChildNodeDefs() {
         ChildNodeDef[] cnda = ntd.getChildNodeDefs();
@@ -410,7 +420,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#canSetProperty(String, Value)
+     * {@inheritDoc}
      */
     public boolean canSetProperty(String propertyName, Value value) {
         if (value == null) {
@@ -439,7 +449,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#canSetProperty(String, Value[])
+     * {@inheritDoc}
      */
     public boolean canSetProperty(String propertyName, Value[] values) {
         if (values == null) {
@@ -476,7 +486,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#canAddChildNode(String)
+     * {@inheritDoc}
      */
     public boolean canAddChildNode(String childNodeName) {
         try {
@@ -491,7 +501,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#canAddChildNode(String, String)
+     * {@inheritDoc}
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
         try {
@@ -506,7 +516,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#canRemoveItem(String)
+     * {@inheritDoc}
      */
     public boolean canRemoveItem(String itemName) {
         try {
@@ -521,7 +531,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see NodeType#getDeclaredPropertyDefs
+     * {@inheritDoc}
      */
     public PropertyDef[] getDeclaredPropertyDefs() {
         PropDef[] pda = ntd.getPropertyDefs();

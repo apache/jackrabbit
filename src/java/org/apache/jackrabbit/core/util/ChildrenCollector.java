@@ -51,7 +51,7 @@ public class ChildrenCollector extends TraversingItemVisitor.Default {
     }
 
     /**
-     * @see TraversingItemVisitor#entering(Node, int)
+     * {@inheritDoc}
      */
     protected void entering(Node node, int level)
             throws RepositoryException {
@@ -61,7 +61,7 @@ public class ChildrenCollector extends TraversingItemVisitor.Default {
     }
 
     /**
-     * @see TraversingItemVisitor#entering(Property, int)
+     * {@inheritDoc}
      */
     protected void entering(Property property, int level)
             throws RepositoryException {

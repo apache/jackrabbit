@@ -61,7 +61,7 @@ public class VersionIteratorImpl implements VersionIterator {
     }
 
     /**
-     * @see VersionIterator#nextVersion()
+     * {@inheritDoc}
      */
     public Version nextVersion() {
         if (versions.isEmpty()) {
@@ -78,7 +78,7 @@ public class VersionIteratorImpl implements VersionIterator {
     }
 
     /**
-     * @see VersionIterator#skip(long)
+     * {@inheritDoc}
      */
     public void skip(long skipNum) {
         while (skipNum > 0) {
@@ -88,36 +88,36 @@ public class VersionIteratorImpl implements VersionIterator {
     }
 
     /**
-     * @see VersionIterator#getSize()
+     * {@inheritDoc}
      */
     public long getSize() {
         return versions.size();
     }
 
     /**
-     * @see VersionIterator#getPos()
+     * {@inheritDoc}
      */
     public long getPos() {
         return pos;
     }
 
     /**
+     * {@inheritDoc}
      * @throws UnsupportedOperationException since this operation is not supported
-     * @see VersionIterator#remove()
      */
     public void remove() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @see VersionIterator#hasNext()
+     * {@inheritDoc}
      */
     public boolean hasNext() {
         return !versions.isEmpty();
     }
 
     /**
-     * @see VersionIterator#next()
+     * {@inheritDoc}
      */
     public Object next() {
         return nextVersion();

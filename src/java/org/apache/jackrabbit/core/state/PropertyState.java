@@ -73,7 +73,7 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * @see ItemState#copy
+     * {@inheritDoc}
      */
     protected void copy(ItemState state) {
         super.copy(state);

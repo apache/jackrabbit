@@ -53,7 +53,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
 
     //--------------------------------------------------------------< NodeDef >
     /**
-     * @see NodeDef#getDefaultPrimaryType
+     * {@inheritDoc}
      */
     public NodeType getDefaultPrimaryType() {
         QName ntName = nodeDef.getDefaultPrimaryType();
@@ -70,7 +70,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     }
 
     /**
-     * @see NodeDef#getRequiredPrimaryTypes
+     * {@inheritDoc}
      */
     public NodeType[] getRequiredPrimaryTypes() {
         QName[] ntNames = nodeDef.getRequiredPrimaryTypes();
@@ -93,7 +93,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     }
 
     /**
-     * @see NodeDef#allowSameNameSibs
+     * {@inheritDoc}
      */
     public boolean allowSameNameSibs() {
         return nodeDef.allowSameNameSibs();

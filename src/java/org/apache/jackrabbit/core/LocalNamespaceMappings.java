@@ -161,7 +161,7 @@ class LocalNamespaceMappings implements NamespaceResolver {
 
     //----------------------------------------------------< NamespaceResolver >
     /**
-     * @see NamespaceResolver#getURI
+     * {@inheritDoc}
      */
     public String getURI(String prefix) throws NamespaceException {
         if (prefixToURI.isEmpty()) {
@@ -182,7 +182,7 @@ class LocalNamespaceMappings implements NamespaceResolver {
     }
 
     /**
-     * @see NamespaceResolver#getPrefix
+     * {@inheritDoc}
      */
     public String getPrefix(String uri) throws NamespaceException {
         if (prefixToURI.isEmpty()) {

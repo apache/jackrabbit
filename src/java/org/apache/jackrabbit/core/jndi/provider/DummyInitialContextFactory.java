@@ -33,7 +33,7 @@ public class DummyInitialContextFactory implements InitialContextFactory {
     private static HashMap contexts = new HashMap();
 
     /**
-     * @see InitialContextFactory#getInitialContext(java.util.Hashtable)
+     * {@inheritDoc}
      */
     public Context getInitialContext(Hashtable environment) throws NamingException {
 

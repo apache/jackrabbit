@@ -25,6 +25,7 @@ public class NodeReferencesId extends NodeId {
 
     /**
      * Create a new instance of this class. Takes a UUID as parameter.
+     *
      * @param uuid uuid of node
      */
     public NodeReferencesId(String uuid) {
@@ -33,7 +34,7 @@ public class NodeReferencesId extends NodeId {
 
 
     /**
-     * @see Object#equals
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (this == obj) {

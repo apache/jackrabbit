@@ -21,7 +21,9 @@ package org.apache.jackrabbit.core.search;
  */
 public class PathQueryNode extends NAryQueryNode {
 
-    /** Flag indicating whether this path is absolute. */
+    /**
+     * Flag indicating whether this path is absolute.
+     */
     private boolean absolute = false;
 
     /**
@@ -31,6 +33,7 @@ public class PathQueryNode extends NAryQueryNode {
 
     /**
      * Creates a relative <code>PathQueryNode</code> with no location steps.
+     *
      * @param parent the parent query node.
      */
     public PathQueryNode(QueryNode parent) {
@@ -38,7 +41,7 @@ public class PathQueryNode extends NAryQueryNode {
     }
 
     /**
-     * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
+     * {@inheritDoc}
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
         return visitor.visit(this, data);
@@ -46,6 +49,7 @@ public class PathQueryNode extends NAryQueryNode {
 
     /**
      * Returns the type of this node.
+     *
      * @return the type of this node.
      */
     public int getType() {
@@ -54,6 +58,7 @@ public class PathQueryNode extends NAryQueryNode {
 
     /**
      * Adds a path step to this <code>PathQueryNode</code>.
+     *
      * @param step the step to add.
      */
     public void addPathStep(LocationStepQueryNode step) {
@@ -62,6 +67,7 @@ public class PathQueryNode extends NAryQueryNode {
 
     /**
      * Returns an array of all currently set location step nodes.
+     *
      * @return an array of all currently set location step nodes.
      */
     public LocationStepQueryNode[] getPathSteps() {
@@ -76,6 +82,7 @@ public class PathQueryNode extends NAryQueryNode {
      * If <code>absolute</code> is <code>true</code> sets this
      * <code>PathQueryNode</code> to an absolute path. If <code>absolute</code>
      * is <code>false</code> this path is considered relative.
+     *
      * @param absolute sets the absolute property to this new value.
      */
     public void setAbsolute(boolean absolute) {
@@ -85,8 +92,9 @@ public class PathQueryNode extends NAryQueryNode {
     /**
      * Returns <code>true</code> if this is an absolute path; <code>false</code>
      * otherwise.
+     *
      * @return <code>true</code> if this is an absolute path; <code>false</code>
-     *   otherwise.
+     *         otherwise.
      */
     public boolean isAbsolute() {
         return absolute;

@@ -58,7 +58,7 @@ public class SimpleAccessManager implements AccessManager {
 
     //--------------------------------------------------------< AccessManager >
     /**
-     * @see AccessManager#init(AMContext)
+     * {@inheritDoc}
      */
     public void init(AMContext context) throws Exception {
         if (initialized) {
@@ -74,7 +74,7 @@ public class SimpleAccessManager implements AccessManager {
     }
 
     /**
-     * @see AccessManager#close
+     * {@inheritDoc}
      */
     public synchronized void close() throws Exception {
         if (!initialized) {
@@ -85,7 +85,7 @@ public class SimpleAccessManager implements AccessManager {
     }
 
     /**
-     * @see AccessManager#checkPermission(ItemId, int)
+     * {@inheritDoc}
      */
     public void checkPermission(ItemId id, int permissions)
             throws AccessDeniedException, ItemNotFoundException,
@@ -108,7 +108,7 @@ public class SimpleAccessManager implements AccessManager {
     }
 
     /**
-     * @see AccessManager#isGranted(ItemId, int)
+     * {@inheritDoc}
      */
     public boolean isGranted(ItemId id, int permissions)
             throws ItemNotFoundException, RepositoryException {

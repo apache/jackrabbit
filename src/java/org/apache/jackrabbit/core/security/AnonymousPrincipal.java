@@ -52,7 +52,7 @@ public class AnonymousPrincipal implements Principal, Serializable {
 
     //------------------------------------------------------------< Principal >
     /**
-     * @see Principal#getName()
+     * {@inheritDoc}
      */
     public String getName() {
         return ANONYMOUS_USER;

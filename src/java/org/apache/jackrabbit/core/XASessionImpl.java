@@ -23,12 +23,11 @@ import org.apache.jackrabbit.core.state.TransactionException;
 import org.apache.jackrabbit.core.state.TransactionListener;
 import org.apache.log4j.Logger;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
+import javax.security.auth.login.LoginContext;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import javax.security.auth.login.LoginContext;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,9 +60,9 @@ public class XASessionImpl extends SessionImpl
     /**
      * Create a new instance of this class.
      *
-     * @param rep         repository
+     * @param rep          repository
      * @param loginContext credentials
-     * @param wspConfig   workspace configuration
+     * @param wspConfig    workspace configuration
      * @throws RepositoryException if an error occurs
      */
     public XASessionImpl(RepositoryImpl rep, LoginContext loginContext,
@@ -74,25 +73,23 @@ public class XASessionImpl extends SessionImpl
     }
 
     //-------------------------------------------------------------< XASession >
-
     /**
-     * @see XASession#getXAResource
+     * {@inheritDoc}
      */
     public XAResource getXAResource() {
         return this;
     }
 
     //------------------------------------------------------------< XAResource >
-
     /**
-     * @see javax.transaction.xa.XAResource#getTransactionTimeout
+     * {@inheritDoc}
      */
     public int getTransactionTimeout() throws XAException {
         return txTimeout;
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#setTransactionTimeout
+     * {@inheritDoc}
      */
     public boolean setTransactionTimeout(int seconds) throws XAException {
         txTimeout = seconds;
@@ -100,10 +97,10 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#isSameRM
-     *      <p/>
-     *      Two resources belong to the same resource manager if both connections
-     *      (i.e. sessions) have the same credentials.
+     * {@inheritDoc}
+     * <p/>
+     * Two resources belong to the same resource manager if both connections
+     * (i.e. sessions) have the same credentials.
      */
     public boolean isSameRM(XAResource xares) throws XAException {
         if (xares instanceof XASessionImpl) {
@@ -114,16 +111,16 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#start
-     *      <p/>
-     *      If <code>TMNOFLAGS</code> is specified, we create a new transaction
-     *      context and associate it with this resource.
-     *      If <code>TMJOIN</code> is specified, this resource should use the
-     *      same transaction context as another, already known transaction.
-     *      If <code>TMRESUME</code> is specified, we should resume work on
-     *      a transaction context that was suspended earlier.
-     *      All other flags generate an <code>XAException</code> of type
-     *      <code>XAER_INVAL</code>
+     * {@inheritDoc}
+     * <p/>
+     * If <code>TMNOFLAGS</code> is specified, we create a new transaction
+     * context and associate it with this resource.
+     * If <code>TMJOIN</code> is specified, this resource should use the
+     * same transaction context as another, already known transaction.
+     * If <code>TMRESUME</code> is specified, we should resume work on
+     * a transaction context that was suspended earlier.
+     * All other flags generate an <code>XAException</code> of type
+     * <code>XAER_INVAL</code>
      */
     public void start(Xid xid, int flags) throws XAException {
         if (isAssociated()) {
@@ -168,16 +165,16 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#end
-     *      <p/>
-     *      If <code>TMSUCCESS</code> is specified, we disassociate this session
-     *      from the transaction specified.
-     *      If <code>TMFAIL</code> is specified, we disassociate this session from
-     *      the transaction specified and mark the transaction rollback only.
-     *      If <code>TMSUSPEND</code> is specified, we disassociate this session
-     *      from the transaction specified.
-     *      All other flags generate an <code>XAException</code> of type
-     *      <code>XAER_INVAL</code>
+     * {@inheritDoc}
+     * <p/>
+     * If <code>TMSUCCESS</code> is specified, we disassociate this session
+     * from the transaction specified.
+     * If <code>TMFAIL</code> is specified, we disassociate this session from
+     * the transaction specified and mark the transaction rollback only.
+     * If <code>TMSUSPEND</code> is specified, we disassociate this session
+     * from the transaction specified.
+     * All other flags generate an <code>XAException</code> of type
+     * <code>XAER_INVAL</code>
      */
     public void end(Xid xid, int flags) throws XAException {
         if (!isAssociated()) {
@@ -201,7 +198,7 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#prepare
+     * {@inheritDoc}
      */
     public synchronized int prepare(Xid xid) throws XAException {
         TransactionContext tx = (TransactionContext) txGlobal.get(xid);
@@ -212,7 +209,7 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#rollback
+     * {@inheritDoc}
      */
     public void rollback(Xid xid) throws XAException {
         TransactionContext tx = (TransactionContext) txGlobal.get(xid);
@@ -223,7 +220,7 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#commit
+     * {@inheritDoc}
      */
     public void commit(Xid xid, boolean onePhase) throws XAException {
         TransactionContext tx = (TransactionContext) txGlobal.get(xid);
@@ -240,18 +237,18 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#recover
-     *      <p/>
-     *      No recovery support yet.
+     * {@inheritDoc}
+     * <p/>
+     * No recovery support yet.
      */
     public Xid[] recover(int flags) throws XAException {
         return new Xid[0];
     }
 
     /**
-     * @see javax.transaction.xa.XAResource#recover
-     *      <p/>
-     *      No recovery support yet.
+     * {@inheritDoc}
+     * <p/>
+     * No recovery support yet.
      */
     public void forget(Xid xid) throws XAException {
     }
@@ -289,10 +286,10 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * @see org.apache.jackrabbit.core.SessionImpl#dispatch
-     *      <p/>
-     *      If we are currently associated with a transaction, the dispatch operation
-     *      will be postponed until commit.
+     * {@inheritDoc}
+     * <p/>
+     * If we are currently associated with a transaction, the dispatch operation
+     * will be postponed until commit.
      */
     protected void dispatch(EventStateCollection events) {
         if (tx != null) {
@@ -303,7 +300,7 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * Internal {@link org.apache.jackrabbit.core.state.TransactionListener} implementation that will dispatch
+     * Internal {@link TransactionListener} implementation that will dispatch
      * events only when a transaction has actually been committed.
      */
     static class EventDispatcher implements TransactionListener {
@@ -323,18 +320,18 @@ public class XASessionImpl extends SessionImpl
         }
 
         /**
-         * @see org.apache.jackrabbit.core.state.TransactionListener#transactionCommitted
-         *      <p/>
-         *      Dispatch events.
+         * {@inheritDoc}
+         * <p/>
+         * Dispatch events.
          */
         public void transactionCommitted(TransactionContext tx) {
             events.dispatch();
         }
 
         /**
-         * @see org.apache.jackrabbit.core.state.TransactionListener#transactionCommitted
-         *      <p/>
-         *      Nothing to do.
+         * {@inheritDoc}
+         * <p/>
+         * Nothing to do.
          */
         public void transactionRolledBack(TransactionContext tx) {
         }

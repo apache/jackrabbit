@@ -43,7 +43,7 @@ public class NotQueryNode extends NAryQueryNode {
     }
 
     /**
-     * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
+     * {@inheritDoc}
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
         return visitor.visit(this, data);
@@ -51,6 +51,7 @@ public class NotQueryNode extends NAryQueryNode {
 
     /**
      * Returns the type of this node.
+     *
      * @return the type of this node.
      */
     public int getType() {

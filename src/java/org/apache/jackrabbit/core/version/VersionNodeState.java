@@ -61,7 +61,7 @@ public class VersionNodeState extends VirtualNodeState {
     }
 
     /**
-     * @see VirtualNodeState#getProperty(QName)
+     * {@inheritDoc}
      */
     public VirtualPropertyState getProperty(QName name)
             throws NoSuchItemStateException {

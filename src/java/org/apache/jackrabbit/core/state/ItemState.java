@@ -433,7 +433,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
 
     //----------------------------------------------------< ItemStateListener >
     /**
-     * @see ItemStateListener#stateCreated
+     * {@inheritDoc}
      */
     public void stateCreated(ItemState created) {
         // underlying state has been permanently created
@@ -441,7 +441,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * @see ItemStateListener#stateDestroyed
+     * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
         // underlying state has been permanently destroyed
@@ -454,7 +454,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * @see ItemStateListener#stateModified
+     * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
         // underlying state has been modified
@@ -468,7 +468,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * @see ItemStateListener#stateDiscarded
+     * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
         // underlying persistent state has been discarded, discard this instance too

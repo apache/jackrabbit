@@ -16,7 +16,10 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import javax.jcr.*;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import java.util.Collection;
@@ -60,7 +63,7 @@ public class IteratorHelper
     }
 
     /**
-     * @see RangeIterator#skip(long)
+     * {@inheritDoc}
      */
     public void skip(long skipNum) {
         while (skipNum-- > 0) {
@@ -69,28 +72,28 @@ public class IteratorHelper
     }
 
     /**
-     * @see RangeIterator#getSize()
+     * {@inheritDoc}
      */
     public long getSize() {
         return size;
     }
 
     /**
-     * @see RangeIterator#getPos()
+     * {@inheritDoc}
      */
     public long getPos() {
         return pos;
     }
 
     /**
-     * @see Iterator#hasNext()
+     * {@inheritDoc}
      */
     public boolean hasNext() {
         return iter.hasNext();
     }
 
     /**
-     * @see Iterator#next()
+     * {@inheritDoc}
      */
     public Object next() {
         // all typed nextXXX methods should
@@ -102,28 +105,28 @@ public class IteratorHelper
     }
 
     /**
-     * @see Iterator#remove()
+     * {@inheritDoc}
      */
     public void remove() {
         iter.remove();
     }
 
     /**
-     * @see NodeIterator#nextNode()
+     * {@inheritDoc}
      */
     public Node nextNode() {
         return (Node) next();
     }
 
     /**
-     * @see PropertyIterator#nextProperty()
+     * {@inheritDoc}
      */
     public Property nextProperty() {
         return (Property) next();
     }
 
     /**
-     * @see NodeTypeIterator#nextNodeType
+     * {@inheritDoc}
      */
     public NodeType nextNodeType() {
         return (NodeType) next();

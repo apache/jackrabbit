@@ -1521,14 +1521,14 @@ public class NodeImpl extends ItemImpl implements Node {
 
     //-----------------------------------------------------------------< Item >
     /**
-     * @see Item#isNode()
+     * {@inheritDoc}
      */
     public boolean isNode() {
         return true;
     }
 
     /**
-     * @see Item#getName
+     * {@inheritDoc}
      */
     public String getName() throws RepositoryException {
         if (state.getParentUUID() == null) {
@@ -1549,7 +1549,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Item#accept(ItemVisitor)
+     * {@inheritDoc}
      */
     public void accept(ItemVisitor visitor) throws RepositoryException {
         // check state of this instance
@@ -1559,7 +1559,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Item#getParent
+     * {@inheritDoc}
      */
     public Node getParent()
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
@@ -1580,7 +1580,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     //-----------------------------------------------------------------< Node >
     /**
-     * @see Node#addNode(String)
+     * {@inheritDoc}
      */
     public synchronized Node addNode(String relPath)
             throws ItemExistsException, PathNotFoundException, VersionException,
@@ -1592,7 +1592,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#addNode(String, String)
+     * {@inheritDoc}
      */
     public synchronized Node addNode(String relPath, String nodeTypeName)
             throws ItemExistsException, PathNotFoundException,
@@ -1606,7 +1606,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#orderBefore(String, String)
+     * {@inheritDoc}
      */
     public synchronized void orderBefore(String srcName, String destName)
             throws UnsupportedRepositoryOperationException, VersionException,
@@ -1734,7 +1734,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, Value[])
+     * {@inheritDoc}
      */
     public Property setProperty(String name, Value[] values)
             throws ValueFormatException, VersionException, LockException,
@@ -1749,7 +1749,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, Value[], int)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, Value[] values, int type)
             throws ValueFormatException, VersionException, LockException,
@@ -1780,7 +1780,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, String[])
+     * {@inheritDoc}
      */
     public Property setProperty(String name, String[] values)
             throws ValueFormatException, VersionException, LockException,
@@ -1793,7 +1793,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, String[], int)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, String[] values, int type)
             throws ValueFormatException, VersionException, LockException,
@@ -1824,7 +1824,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, String)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, String value)
             throws ValueFormatException, VersionException, LockException,
@@ -1859,7 +1859,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, Value)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, Value value)
             throws ValueFormatException, VersionException, LockException,
@@ -1892,7 +1892,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, InputStream)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, InputStream value)
             throws ValueFormatException, VersionException, LockException,
@@ -1923,7 +1923,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, boolean)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, boolean value)
             throws ValueFormatException, VersionException, LockException,
@@ -1954,7 +1954,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, double)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, double value)
             throws ValueFormatException, VersionException, LockException,
@@ -1985,7 +1985,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, long)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, long value)
             throws ValueFormatException, VersionException, LockException,
@@ -2016,7 +2016,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, Calendar)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, Calendar value)
             throws ValueFormatException, VersionException, LockException,
@@ -2047,7 +2047,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#setProperty(String, Node)
+     * {@inheritDoc}
      */
     public Property setProperty(String name, Node value)
             throws ValueFormatException, VersionException, LockException,
@@ -2078,7 +2078,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getNode(String)
+     * {@inheritDoc}
      */
     public Node getNode(String relPath)
             throws PathNotFoundException, RepositoryException {
@@ -2118,7 +2118,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getNodes()
+     * {@inheritDoc}
      */
     public NodeIterator getNodes() throws RepositoryException {
         // check state of this instance
@@ -2145,7 +2145,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getProperties()
+     * {@inheritDoc}
      */
     public PropertyIterator getProperties() throws RepositoryException {
         // check state of this instance
@@ -2172,7 +2172,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getProperty(String)
+     * {@inheritDoc}
      */
     public Property getProperty(String relPath)
             throws PathNotFoundException, RepositoryException {
@@ -2212,7 +2212,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#hasNode(String)
+     * {@inheritDoc}
      */
     public boolean hasNode(String relPath) throws RepositoryException {
 /*
@@ -2231,7 +2231,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#hasNodes()
+     * {@inheritDoc}
      */
     public boolean hasNodes() throws RepositoryException {
         // check state of this instance
@@ -2247,7 +2247,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#hasProperties()
+     * {@inheritDoc}
      */
     public boolean hasProperties() throws RepositoryException {
         // check state of this instance
@@ -2263,7 +2263,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#isNodeType(String)
+     * {@inheritDoc}
      */
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
         QName ntName;
@@ -2278,14 +2278,14 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getPrimaryNodeType()
+     * {@inheritDoc}
      */
     public NodeType getPrimaryNodeType() throws RepositoryException {
         return nodeType;
     }
 
     /**
-     * @see Node#getMixinNodeTypes()
+     * {@inheritDoc}
      */
     public NodeType[] getMixinNodeTypes() throws RepositoryException {
         Set mixinNames = ((NodeState) state).getMixinTypeNames();
@@ -2302,7 +2302,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#addMixin(String)
+     * {@inheritDoc}
      */
     public void addMixin(String mixinName)
             throws NoSuchNodeTypeException, VersionException,
@@ -2320,7 +2320,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#removeMixin(String)
+     * {@inheritDoc}
      */
     public void removeMixin(String mixinName)
             throws NoSuchNodeTypeException, VersionException,
@@ -2338,7 +2338,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#canAddMixin(String)
+     * {@inheritDoc}
      */
     public boolean canAddMixin(String mixinName) throws RepositoryException {
         // check state of this instance
@@ -2397,7 +2397,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#hasProperty(String)
+     * {@inheritDoc}
      */
     public boolean hasProperty(String relPath) throws RepositoryException {
 /*
@@ -2416,7 +2416,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getReferences()
+     * {@inheritDoc}
      */
     public PropertyIterator getReferences() throws RepositoryException {
         return getReferences(false);
@@ -2447,14 +2447,14 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getDefinition()
+     * {@inheritDoc}
      */
     public NodeDef getDefinition() throws RepositoryException {
         return definition;
     }
 
     /**
-     * @see Node#getNodes(String)
+     * {@inheritDoc}
      */
     public NodeIterator getNodes(String namePattern) throws RepositoryException {
         // check state of this instance
@@ -2467,7 +2467,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getProperties(String)
+     * {@inheritDoc}
      */
     public PropertyIterator getProperties(String namePattern) throws RepositoryException {
         // check state of this instance
@@ -2480,7 +2480,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getPrimaryItem()
+     * {@inheritDoc}
      */
     public Item getPrimaryItem() throws ItemNotFoundException, RepositoryException {
         // check state of this instance
@@ -2500,7 +2500,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getUUID()
+     * {@inheritDoc}
      */
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
         // check state of this instance
@@ -2514,7 +2514,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getCorrespondingNodePath(String)
+     * {@inheritDoc}
      */
     public String getCorrespondingNodePath(String workspaceName)
             throws ItemNotFoundException, NoSuchWorkspaceException,
@@ -2570,7 +2570,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getIndex()
+     * {@inheritDoc}
      */
     public int getIndex() throws RepositoryException {
         // check state of this instance
@@ -2583,7 +2583,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     //------------------------------< versioning support: public Node methods >
     /**
-     * @see Node#checkin()
+     * {@inheritDoc}
      */
     public Version checkin()
             throws VersionException, UnsupportedRepositoryOperationException,
@@ -2626,7 +2626,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#checkout()
+     * {@inheritDoc}
      */
     public void checkout()
             throws UnsupportedRepositoryOperationException, LockException,
@@ -2654,7 +2654,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#update(String)
+     * {@inheritDoc}
      */
     public void update(String srcWorkspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
@@ -2700,112 +2700,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * updates this node with the state given by <code>srcNode</code>
-     *
-     * @param srcNode
-     * @param removeExisting
-     * @param replaceExisting
-     * @throws RepositoryException
-     */
-    private void internalUpdate(NodeImpl srcNode, boolean removeExisting, boolean replaceExisting)
-            throws RepositoryException {
-        /*
-         * The "state" of the node in this context means the set of properties and
-         * child nodes it has. In other words, when a node is updated, its set of
-         * properties and child nodes is replaced by that of its corresponding node in the
-         * source workspace. One repercussion of this is that if a node further down the
-         * subtree does not have a corresponding node, then that node is removed (thus
-         * aligning the state of its parent with <i>its</i> correspondee in the other
-         * workspace).
-         */
-
-        // update the properties
-        PropertyIterator iter = getProperties();
-        while (iter.hasNext()) {
-            PropertyImpl p = (PropertyImpl) iter.nextProperty();
-            if (!srcNode.hasProperty(p.getQName())) {
-                p.internalRemove(true);
-            }
-        }
-        iter = srcNode.getProperties();
-        while (iter.hasNext()) {
-            PropertyImpl p = (PropertyImpl) iter.nextProperty();
-            // ignore system types
-            if (p.getQName().equals(JCR_PRIMARYTYPE)
-                    || p.getQName().equals(JCR_MIXINTYPES)
-                    || p.getQName().equals(JCR_UUID)) {
-                continue;
-            }
-            if (p.getDefinition().isMultiple()) {
-                internalSetProperty(p.getQName(), p.internalGetValues());
-            } else {
-                internalSetProperty(p.getQName(), p.internalGetValue());
-            }
-        }
-
-        // update the nodes. remove all dst nodes first
-        NodeIterator niter = getNodes();
-        while (niter.hasNext()) {
-            ((NodeImpl) niter.nextNode()).internalRemove(true);
-        }
-        // add src ones
-        niter = srcNode.getNodes();
-        while (niter.hasNext()) {
-            NodeImpl child = (NodeImpl) niter.nextNode();
-            NodeImpl dstNode = null;
-            String uuid = child.internalGetUUID();
-            if (child.isNodeType(MIX_REFERENCEABLE)) {
-                // if child is referenceable, check if correspondance exist in this workspace
-                try {
-                    dstNode = (NodeImpl) session.getNodeByUUID(uuid);
-                    if (removeExisting) {
-                        // get applicable definition of target node at new location
-                        NodeTypeImpl nt = (NodeTypeImpl) dstNode.getPrimaryNodeType();
-                        NodeDefImpl newTargetDef;
-                        try {
-                            newTargetDef = ((NodeImpl) getParent()).getApplicableChildNodeDef(child.getQName(), nt.getQName());
-                        } catch (RepositoryException re) {
-                            String msg = dstNode.safeGetJCRPath() + ": no definition found in parent node's node type for new node";
-                            log.debug(msg);
-                            throw new ConstraintViolationException(msg, re);
-                        }
-
-                        // add target to new parent and remove from old one
-                        createChildNodeLink(child.getQName(), uuid);
-                        ((NodeImpl) dstNode.getParent()).removeChildNode(child.getQName(), child.getIndex() == 0 ? 1 : child.getIndex());
-                        // change definition of target if necessary
-                        NodeDefImpl oldTargetDef = (NodeDefImpl) dstNode.getDefinition();
-                        NodeDefId oldTargetDefId = new NodeDefId(oldTargetDef.unwrap());
-                        NodeDefId newTargetDefId = new NodeDefId(newTargetDef.unwrap());
-                        if (!oldTargetDefId.equals(newTargetDefId)) {
-                            dstNode.onRedefine(newTargetDefId);
-                        }
-                    } else if (replaceExisting) {
-                        // node exists outside of this update tree, so continue there
-                    } else {
-                        throw new ItemExistsException("Unable to update node: " + dstNode.safeGetJCRPath());
-                    }
-                } catch (ItemNotFoundException e) {
-                    // does not exist
-                }
-            } else {
-                // if child is not referenceable, adjust state
-                uuid = null;
-            }
-            if (dstNode == null) {
-                dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), uuid);
-                // add mixins
-                NodeType[] mixins = child.getMixinNodeTypes();
-                for (int i = 0; i < mixins.length; i++) {
-                    dstNode.addMixin(mixins[i].getName());
-                }
-            }
-            dstNode.internalUpdate(child, removeExisting, replaceExisting);
-        }
-    }
-
-    /**
-     * @see Node#merge(String, boolean)
+     * {@inheritDoc}
      */
     public void merge(String srcWorkspace, boolean bestEffort)
             throws UnsupportedRepositoryOperationException,
@@ -2883,7 +2778,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#cancelMerge(Version)
+     * {@inheritDoc}
      */
     public void cancelMerge(Version version)
             throws VersionException, InvalidItemStateException,
@@ -2903,7 +2798,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#doneMerge(Version)
+     * {@inheritDoc}
      */
     public void doneMerge(Version version) throws VersionException,
             InvalidItemStateException, UnsupportedRepositoryOperationException,
@@ -2923,7 +2818,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#isCheckedOut()
+     * {@inheritDoc}
      */
     public boolean isCheckedOut() throws RepositoryException {
         // check state of this instance
@@ -2933,7 +2828,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#restore(String, boolean)
+     * {@inheritDoc}
      */
     public void restore(String versionName, boolean removeExisting)
             throws VersionException, ItemExistsException,
@@ -2957,7 +2852,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#restore(Version, boolean)
+     * {@inheritDoc}
      */
     public void restore(Version version, boolean removeExisting)
             throws VersionException, ItemExistsException,
@@ -2984,7 +2879,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#restore(Version, String, boolean)
+     * {@inheritDoc}
      */
     public void restore(Version version, String relPath, boolean removeExisting)
             throws PathNotFoundException, ItemExistsException, VersionException,
@@ -3012,7 +2907,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#restoreByLabel(String, boolean)
+     * {@inheritDoc}
      */
     public void restoreByLabel(String versionLabel, boolean removeExisting)
             throws VersionException, ItemExistsException,
@@ -3037,7 +2932,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getVersionHistory()
+     * {@inheritDoc}
      */
     public VersionHistory getVersionHistory()
             throws UnsupportedRepositoryOperationException, RepositoryException {
@@ -3049,7 +2944,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getBaseVersion()
+     * {@inheritDoc}
      */
     public Version getBaseVersion()
             throws UnsupportedRepositoryOperationException, RepositoryException {
@@ -3327,6 +3222,110 @@ public class NodeImpl extends ItemImpl implements Node {
         return node;
     }
 
+    /**
+     * updates this node with the state given by <code>srcNode</code>
+     *
+     * @param srcNode
+     * @param removeExisting
+     * @param replaceExisting
+     * @throws RepositoryException
+     */
+    private void internalUpdate(NodeImpl srcNode, boolean removeExisting, boolean replaceExisting)
+            throws RepositoryException {
+        /*
+         * The "state" of the node in this context means the set of properties and
+         * child nodes it has. In other words, when a node is updated, its set of
+         * properties and child nodes is replaced by that of its corresponding node in the
+         * source workspace. One repercussion of this is that if a node further down the
+         * subtree does not have a corresponding node, then that node is removed (thus
+         * aligning the state of its parent with <i>its</i> correspondee in the other
+         * workspace).
+         */
+
+        // update the properties
+        PropertyIterator iter = getProperties();
+        while (iter.hasNext()) {
+            PropertyImpl p = (PropertyImpl) iter.nextProperty();
+            if (!srcNode.hasProperty(p.getQName())) {
+                p.internalRemove(true);
+            }
+        }
+        iter = srcNode.getProperties();
+        while (iter.hasNext()) {
+            PropertyImpl p = (PropertyImpl) iter.nextProperty();
+            // ignore system types
+            if (p.getQName().equals(JCR_PRIMARYTYPE)
+                    || p.getQName().equals(JCR_MIXINTYPES)
+                    || p.getQName().equals(JCR_UUID)) {
+                continue;
+            }
+            if (p.getDefinition().isMultiple()) {
+                internalSetProperty(p.getQName(), p.internalGetValues());
+            } else {
+                internalSetProperty(p.getQName(), p.internalGetValue());
+            }
+        }
+
+        // update the nodes. remove all dst nodes first
+        NodeIterator niter = getNodes();
+        while (niter.hasNext()) {
+            ((NodeImpl) niter.nextNode()).internalRemove(true);
+        }
+        // add src ones
+        niter = srcNode.getNodes();
+        while (niter.hasNext()) {
+            NodeImpl child = (NodeImpl) niter.nextNode();
+            NodeImpl dstNode = null;
+            String uuid = child.internalGetUUID();
+            if (child.isNodeType(MIX_REFERENCEABLE)) {
+                // if child is referenceable, check if correspondance exist in this workspace
+                try {
+                    dstNode = (NodeImpl) session.getNodeByUUID(uuid);
+                    if (removeExisting) {
+                        // get applicable definition of target node at new location
+                        NodeTypeImpl nt = (NodeTypeImpl) dstNode.getPrimaryNodeType();
+                        NodeDefImpl newTargetDef;
+                        try {
+                            newTargetDef = ((NodeImpl) getParent()).getApplicableChildNodeDef(child.getQName(), nt.getQName());
+                        } catch (RepositoryException re) {
+                            String msg = dstNode.safeGetJCRPath() + ": no definition found in parent node's node type for new node";
+                            log.debug(msg);
+                            throw new ConstraintViolationException(msg, re);
+                        }
+
+                        // add target to new parent and remove from old one
+                        createChildNodeLink(child.getQName(), uuid);
+                        ((NodeImpl) dstNode.getParent()).removeChildNode(child.getQName(), child.getIndex() == 0 ? 1 : child.getIndex());
+                        // change definition of target if necessary
+                        NodeDefImpl oldTargetDef = (NodeDefImpl) dstNode.getDefinition();
+                        NodeDefId oldTargetDefId = new NodeDefId(oldTargetDef.unwrap());
+                        NodeDefId newTargetDefId = new NodeDefId(newTargetDef.unwrap());
+                        if (!oldTargetDefId.equals(newTargetDefId)) {
+                            dstNode.onRedefine(newTargetDefId);
+                        }
+                    } else if (replaceExisting) {
+                        // node exists outside of this update tree, so continue there
+                    } else {
+                        throw new ItemExistsException("Unable to update node: " + dstNode.safeGetJCRPath());
+                    }
+                } catch (ItemNotFoundException e) {
+                    // does not exist
+                }
+            } else {
+                // if child is not referenceable, adjust state
+                uuid = null;
+            }
+            if (dstNode == null) {
+                dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), uuid);
+                // add mixins
+                NodeType[] mixins = child.getMixinNodeTypes();
+                for (int i = 0; i < mixins.length; i++) {
+                    dstNode.addMixin(mixins[i].getName());
+                }
+            }
+            dstNode.internalUpdate(child, removeExisting, replaceExisting);
+        }
+    }
 
     /**
      * Internal method to restore a version.
@@ -3539,7 +3538,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     //------------------------------------------------------< locking support >
     /**
-     * @see Node#lock(boolean, boolean)
+     * {@inheritDoc}
      */
     public Lock lock(boolean isDeep, boolean isSessionScoped)
             throws UnsupportedRepositoryOperationException, LockException,
@@ -3562,7 +3561,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#getLock()
+     * {@inheritDoc}
      */
     public Lock getLock()
             throws UnsupportedRepositoryOperationException, LockException,
@@ -3577,7 +3576,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#unlock()
+     * {@inheritDoc}
      */
     public void unlock()
             throws UnsupportedRepositoryOperationException, LockException,
@@ -3600,7 +3599,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#holdsLock()
+     * {@inheritDoc}
      */
     public boolean holdsLock() throws RepositoryException {
         // check state of this instance
@@ -3611,7 +3610,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see Node#isLocked()
+     * {@inheritDoc}
      */
     public boolean isLocked() throws RepositoryException {
         // check state of this instance

@@ -24,7 +24,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -59,7 +66,7 @@ public class NodeState extends ItemState {
      *
      * @param overlayedState the backing node state being overlayed
      * @param initialStatus  the initial status of the node state object
-     * @param isTransient   flag indicating whether this state is transient or not
+     * @param isTransient    flag indicating whether this state is transient or not
      */
     public NodeState(NodeState overlayedState, int initialStatus,
                      boolean isTransient) {
@@ -89,7 +96,7 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * @see ItemState#copy
+     * {@inheritDoc}
      */
     protected void copy(ItemState state) {
         super.copy(state);
@@ -632,7 +639,6 @@ public class NodeState extends ItemState {
     }
 
     //--------------------------------------------------< ItemState overrides >
-
     /**
      * Sets the UUID of the parent <code>NodeState</code>.
      *

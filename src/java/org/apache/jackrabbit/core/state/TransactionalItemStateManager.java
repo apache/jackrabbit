@@ -63,6 +63,7 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
 
     /**
      * Set transaction context.
+     *
      * @param tx transaction context.
      */
     public void setTransactionContext(TransactionContext tx) {
@@ -79,6 +80,7 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
 
     /**
      * Commit changes made within a transaction
+     *
      * @param tx transaction context
      * @throws TransactionException if an error occurs
      */
@@ -103,6 +105,7 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
 
     /**
      * Rollback changes made within a transaction
+     *
      * @param tx transaction context
      */
     public void rollback(TransactionContext tx) {
@@ -114,10 +117,9 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     }
 
     //-----------------------------------------------------< ItemStateManager >
-
     /**
-     * @see ItemStateManager#getItemState(org.apache.jackrabbit.core.ItemId)
-     *
+     * {@inheritDoc}
+     * <p/>
      * If this state manager is committing changes, this method first checks
      * the commitLog ThreadLocal. Else if associated to a transaction check
      * the transactional change log. Fallback is always the call to the base
@@ -144,8 +146,8 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     }
 
     /**
-     * @see ItemStateManager#hasItemState(org.apache.jackrabbit.core.ItemId)
-     *
+     * {@inheritDoc}
+     * <p/>
      * If this state manager is committing changes, this method first checks
      * the commitLog ThreadLocal. Else if associated to a transaction check
      * the transactional change log. Fallback is always the call to the base
@@ -178,8 +180,8 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     }
 
     /**
-     * @see ItemStateManager#getNodeReferences
-     *
+     * {@inheritDoc}
+     * <p/>
      * If this state manager is committing changes, this method first
      * checks the commitLog ThreadLocal. Else if associated to a transaction
      * check the transactional change log. Fallback is always the call to
@@ -206,8 +208,8 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     }
 
     /**
-     * @see LocalItemStateManager#update
-     *
+     * {@inheritDoc}
+     * <p/>
      * If associated to a transaction, simply merge the changes given to
      * the ones already known (removing items that were first added and
      * then again deleted).
@@ -230,13 +232,16 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
      */
     private static class CommitLog {
 
-        /** The changes that are about to be committed */
+        /**
+         * The changes that are about to be committed
+         */
         private ChangeLog changes;
 
         /**
          * Sets changes that are about to be committed.
+         *
          * @param changes that are about to be committed, or <code>null</code>
-         * if changes have been committed and the commit log should be reset.
+         *                if changes have been committed and the commit log should be reset.
          */
         private void setChanges(ChangeLog changes) {
             this.changes = changes;
@@ -246,6 +251,7 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
          * The changes that are about to be committed, or <code>null</code> if
          * the <code>TransactionalItemStateManager</code> is currently not
          * committing any changes.
+         *
          * @return the changes about to be committed.
          */
         private ChangeLog getChanges() {

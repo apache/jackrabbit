@@ -19,12 +19,20 @@ package org.apache.jackrabbit.core.jndi;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
-import javax.jcr.*;
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 /**
  * <code>BindableRepository</code> ...
@@ -73,7 +81,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
 
     //-----------------------------------------------------------< Repository >
     /**
-     * @see Repository#login(Credentials, String)
+     * {@inheritDoc}
      */
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
@@ -81,7 +89,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     }
 
     /**
-     * @see Repository#login(String)
+     * {@inheritDoc}
      */
     public Session login(String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
@@ -89,14 +97,14 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     }
 
     /**
-     * @see Repository#login()
+     * {@inheritDoc}
      */
     public Session login() throws LoginException, RepositoryException {
         return delegatee.login();
     }
 
     /**
-     * @see Repository#login(Credentials)
+     * {@inheritDoc}
      */
     public Session login(Credentials credentials)
             throws LoginException, RepositoryException {
@@ -104,14 +112,14 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     }
 
     /**
-     * @see Repository#getDescriptor(String)
+     * {@inheritDoc}
      */
     public String getDescriptor(String key) {
         return delegatee.getDescriptor(key);
     }
 
     /**
-     * @see Repository#getDescriptorKeys()
+     * {@inheritDoc}
      */
     public String[] getDescriptorKeys() {
         return delegatee.getDescriptorKeys();
@@ -119,7 +127,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
 
     //--------------------------------------------------------< Referenceable >
     /**
-     * @see Referenceable#getReference()
+     * {@inheritDoc}
      */
     public Reference getReference() throws NamingException {
         Reference ref = new Reference(BindableRepository.class.getName(),
@@ -136,7 +144,8 @@ class BindableRepository implements Repository, Referenceable, Serializable {
         out.defaultWriteObject();
     }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
         // delegate deserialization to default implementation
         in.defaultReadObject();
         // initialize reconstructed instance

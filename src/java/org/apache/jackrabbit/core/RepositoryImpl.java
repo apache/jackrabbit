@@ -654,7 +654,7 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     //-----------------------------------------------------------< Repository >
     /**
-     * @see Repository#login(Credentials, String)
+     * {@inheritDoc}
      */
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
@@ -687,7 +687,7 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * @see Repository#login(String)
+     * {@inheritDoc}
      */
     public Session login(String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
@@ -695,14 +695,14 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * @see Repository#login()
+     * {@inheritDoc}
      */
     public Session login() throws LoginException, RepositoryException {
         return login(null, null);
     }
 
     /**
-     * @see Repository#login(Credentials)
+     * {@inheritDoc}
      */
     public Session login(Credentials credentials)
             throws LoginException, RepositoryException {
@@ -710,14 +710,14 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * @see Repository#getDescriptor(String)
+     * {@inheritDoc}
      */
     public String getDescriptor(String key) {
         return repProps.getProperty(key);
     }
 
     /**
-     * @see Repository#getDescriptorKeys()
+     * {@inheritDoc}
      */
     public String[] getDescriptorKeys() {
         String[] keys = (String[]) repProps.keySet().toArray(new String[repProps.keySet().size()]);
@@ -727,7 +727,7 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     //------------------------------------------------------< SessionListener >
     /**
-     * @see SessionListener#loggedOut(SessionImpl)
+     * {@inheritDoc}
      */
     public void loggedOut(SessionImpl session) {
         // remove session from active sessions
@@ -736,7 +736,7 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     //--------------------------------------------------------< EventListener >
     /**
-     * @see EventListener#onEvent(EventIterator)
+     * {@inheritDoc}
      */
     public void onEvent(EventIterator events) {
         // check state

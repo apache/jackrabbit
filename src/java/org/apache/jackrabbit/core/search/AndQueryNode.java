@@ -49,7 +49,7 @@ public class AndQueryNode extends NAryQueryNode {
     /**
      * This method can return <code>null</code> to indicate that this
      * <code>AndQueryNode</code> does not contain any operands.
-     * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
+     * {@inheritDoc}
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
         return visitor.visit(this, data);

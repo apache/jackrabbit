@@ -42,23 +42,23 @@ public interface InternalVersion extends InternalVersionItem {
     public InternalFrozenNode getFrozenNode();
 
     /**
-     * Aequivalent to {@link javax.jcr.version.Version#getCreated()}
+     * Equivalent to {@link Version#getCreated()}
      *
      * @see Version#getCreated()
      */
     public Calendar getCreated();
 
     /**
-     * Aequivalent to {@link javax.jcr.version.Version#getSuccessors()}}
+     * Equivalent to {@link Version#getSuccessors()}}
      *
      * @see Version#getSuccessors()
      */
     public InternalVersion[] getSuccessors();
 
     /**
-     * Aequivalent to {@link javax.jcr.version.Version#getPredecessors()}}
+     * Equivalent to {@link Version#getPredecessors()}}
      *
-     * @see javax.jcr.version.Version#getPredecessors()
+     * @see Version#getPredecessors()
      */
     public InternalVersion[] getPredecessors();
 

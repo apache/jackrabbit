@@ -59,7 +59,7 @@ public class SimpleLoginModule implements LoginModule {
 
     //----------------------------------------------------------< LoginModule >
     /**
-     * @see LoginModule#initialize(Subject, CallbackHandler, Map, Map)
+     * {@inheritDoc}
      */
     public void initialize(Subject subject, CallbackHandler callbackHandler,
                            Map sharedState, Map options) {
@@ -73,7 +73,7 @@ public class SimpleLoginModule implements LoginModule {
     }
 
     /**
-     * @see LoginModule#login()
+     * {@inheritDoc}
      */
     public boolean login() throws LoginException {
         // prompt for a user name and password
@@ -122,7 +122,7 @@ public class SimpleLoginModule implements LoginModule {
     }
 
     /**
-     * @see LoginModule#commit()
+     * {@inheritDoc}
      */
     public boolean commit() throws LoginException {
         if (principals.isEmpty()) {
@@ -135,7 +135,7 @@ public class SimpleLoginModule implements LoginModule {
     }
 
     /**
-     * @see LoginModule#abort()
+     * {@inheritDoc}
      */
     public boolean abort() throws LoginException {
         if (principals.isEmpty()) {
@@ -147,7 +147,7 @@ public class SimpleLoginModule implements LoginModule {
     }
 
     /**
-     * @see LoginModule#logout()
+     * {@inheritDoc}
      */
     public boolean logout() throws LoginException {
         subject.getPrincipals().removeAll(principals);

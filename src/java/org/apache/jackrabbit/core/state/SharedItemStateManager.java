@@ -212,9 +212,8 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     //-----------------------------------------------------< ItemStateManager >
-
     /**
-     * @see ItemStateManager#getItemState(ItemId)
+     * {@inheritDoc}
      */
     public synchronized ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -251,7 +250,7 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see ItemStateManager#hasItemState(ItemId)
+     * {@inheritDoc}
      */
     public synchronized boolean hasItemState(ItemId id) {
         if (isCached(id)) {
@@ -297,7 +296,7 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see ItemStateManager#getNodeReferences
+     * {@inheritDoc}
      */
     public synchronized NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -487,23 +486,22 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     //----------------------------------------------------< ItemStateListener >
-
     /**
-     * @see ItemStateListener#stateCreated
+     * {@inheritDoc}
      */
     public void stateCreated(ItemState created) {
         cache(created);
     }
 
     /**
-     * @see ItemStateListener#stateModified
+     * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
         // not interested
     }
 
     /**
-     * @see ItemStateListener#stateDestroyed
+     * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
         destroyed.removeListener(this);
@@ -511,7 +509,7 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
-     * @see ItemStateListener#stateDiscarded
+     * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
         discarded.removeListener(this);

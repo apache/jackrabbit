@@ -75,21 +75,21 @@ public class CachingHierarchyManager implements HierarchyManager {
 
     //-----------------------------------------------------< HierarchyManager >
     /**
-     * @see HierarchyManager#listParents(ItemId)
+     * {@inheritDoc}
      */
     public NodeId[] listParents(ItemId id) throws ItemNotFoundException, RepositoryException {
         return delegatee.listParents(id);
     }
 
     /**
-     * @see HierarchyManager#listChildren(NodeId)
+     * {@inheritDoc}
      */
     public ItemId[] listChildren(NodeId id) throws ItemNotFoundException, RepositoryException {
         return delegatee.listChildren(id);
     }
 
     /**
-     * @see HierarchyManager#listZombieChildren(NodeId)
+     * {@inheritDoc}
      */
     public ItemId[] listZombieChildren(NodeId id)
             throws ItemNotFoundException, RepositoryException {
@@ -97,7 +97,7 @@ public class CachingHierarchyManager implements HierarchyManager {
     }
 
     /**
-     * @see HierarchyManager#resolvePath(Path)
+     * {@inheritDoc}
      */
     public synchronized ItemId resolvePath(Path path)
             throws PathNotFoundException, RepositoryException {
@@ -112,14 +112,14 @@ public class CachingHierarchyManager implements HierarchyManager {
     }
 
     /**
-     * @see HierarchyManager#getPath(ItemId)
+     * {@inheritDoc}
      */
     public synchronized Path getPath(ItemId id) throws ItemNotFoundException, RepositoryException {
         return getAllPaths(id, false)[0];
     }
 
     /**
-     * @see HierarchyManager#getName(ItemId)
+     * {@inheritDoc}
      */
     public QName getName(ItemId itemId) throws ItemNotFoundException, RepositoryException {
         if (itemId.denotesNode()) {
@@ -131,14 +131,14 @@ public class CachingHierarchyManager implements HierarchyManager {
     }
 
     /**
-     * @see HierarchyManager#getAllPaths(ItemId)
+     * {@inheritDoc}
      */
     public synchronized Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException {
         return getAllPaths(id, false);
     }
 
     /**
-     * @see HierarchyManager#getAllPaths(ItemId, boolean)
+     * {@inheritDoc}
      */
     public synchronized Path[] getAllPaths(ItemId id, boolean includeZombies)
             throws ItemNotFoundException, RepositoryException {

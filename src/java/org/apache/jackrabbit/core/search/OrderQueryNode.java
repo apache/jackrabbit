@@ -18,8 +18,8 @@ package org.apache.jackrabbit.core.search;
 
 import org.apache.jackrabbit.core.QName;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implements a query node that defines the order of nodes according to the
@@ -36,7 +36,7 @@ public class OrderQueryNode extends QueryNode {
      * Creates a new <code>OrderQueryNode</code> with a reference to a parent
      * node and sort properties.
      *
-     * @param parent     the parent node of this query node.
+     * @param parent the parent node of this query node.
      */
     public OrderQueryNode(QueryNode parent) {
         super(parent);
@@ -44,6 +44,7 @@ public class OrderQueryNode extends QueryNode {
 
     /**
      * Returns the type of this node.
+     *
      * @return the type of this node.
      */
     public int getType() {
@@ -52,9 +53,10 @@ public class OrderQueryNode extends QueryNode {
 
     /**
      * Adds an order specification to this query node.
-     * @param property the name of the property.
+     *
+     * @param property  the name of the property.
      * @param ascending if <code>true</code> values of this properties are
-     *   ordered ascending; descending if <code>false</code>.
+     *                  ordered ascending; descending if <code>false</code>.
      */
     public void addOrderSpec(QName property, boolean ascending) {
         specs.add(new OrderSpec(property, ascending));
@@ -62,6 +64,7 @@ public class OrderQueryNode extends QueryNode {
 
     /**
      * Adds an order specification to this query node.
+     *
      * @param spec the order spec.
      */
     public void addOrderSpec(OrderSpec spec) {
@@ -69,7 +72,7 @@ public class OrderQueryNode extends QueryNode {
     }
 
     /**
-     * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
+     * {@inheritDoc}
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
         return visitor.visit(this, data);
@@ -78,12 +81,11 @@ public class OrderQueryNode extends QueryNode {
     /**
      * Returns <code>true</code> if the property <code>i</code> should be orderd
      * ascending. If <code>false</code> the property is ordered descending.
+     *
      * @param i index of the property
-     *
      * @return the order spec for the property <code>i</code>.
-     *
-     * @exception IndexOutOfBoundsException if there is no property with
-     * index <code>i</code>.
+     * @throws IndexOutOfBoundsException if there is no property with
+     *                                   index <code>i</code>.
      */
     public boolean isAscending(int i) {
         return ((OrderSpec) specs.get(i)).ascending;
@@ -107,17 +109,22 @@ public class OrderQueryNode extends QueryNode {
      */
     public static final class OrderSpec {
 
-        /** The name of the property */
+        /**
+         * The name of the property
+         */
         private QName property;
 
-        /** If <code>true</code> this property is orderd ascending */
+        /**
+         * If <code>true</code> this property is orderd ascending
+         */
         private boolean ascending;
 
         /**
          * Creates a new <code>OrderSpec</code> for <code>property</code>.
-         * @param property the name of the property.
+         *
+         * @param property  the name of the property.
          * @param ascending if <code>true</code> the property is ordered
-         * ascending, otherwise descending.
+         *                  ascending, otherwise descending.
          */
         public OrderSpec(QName property, boolean ascending) {
             this.property = property;
@@ -126,6 +133,7 @@ public class OrderQueryNode extends QueryNode {
 
         /**
          * Returns the name of the property.
+         *
          * @return the name of the property.
          */
         public QName getProperty() {
@@ -135,8 +143,9 @@ public class OrderQueryNode extends QueryNode {
         /**
          * If <code>true</code> the property is ordered ascending, otherwise
          * descending.
+         *
          * @return <code>true</code> for ascending; <code>false</code> for
-         * descending.
+         *         descending.
          */
         public boolean isAscending() {
             return ascending;
@@ -144,8 +153,9 @@ public class OrderQueryNode extends QueryNode {
 
         /**
          * Sets the new value for the ascending property.
+         *
          * @param ascending <code>true</code> for ascending; <code>false</code>
-         * for descending.
+         *                  for descending.
          */
         public void setAscending(boolean ascending) {
             this.ascending = ascending;

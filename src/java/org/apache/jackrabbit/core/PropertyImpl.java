@@ -16,12 +16,25 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.BooleanValue;
+import javax.jcr.DateValue;
+import javax.jcr.DoubleValue;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
+import javax.jcr.LongValue;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDef;
@@ -90,8 +103,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         PropertyState persistentState = (PropertyState) transientState.getOverlayedState();
         if (persistentState == null) {
             // this property is 'new'
-            persistentState = stateMgr.createNew(
-                    transientState.getName(),
+            persistentState = stateMgr.createNew(transientState.getName(),
                     transientState.getParentUUID());
         }
         // copy state from transient state
@@ -279,7 +291,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see ItemImpl#getQName()
+     * {@inheritDoc}
      */
     public QName getQName() {
         PropertyId propId = (PropertyId) id;
@@ -327,7 +339,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     //-------------------------------------------------------------< Property >
     /**
-     * @see Property#getValues()
+     * {@inheritDoc}
      */
     public Value[] getValues() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -348,7 +360,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getValue()
+     * {@inheritDoc}
      */
     public Value getValue() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -372,7 +384,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getString()
+     * {@inheritDoc}
      */
     public String getString() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -387,7 +399,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getStream()
+     * {@inheritDoc}
      */
     public InputStream getStream() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -402,7 +414,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getLong()
+     * {@inheritDoc}
      */
     public long getLong() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -424,7 +436,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getDouble()
+     * {@inheritDoc}
      */
     public double getDouble() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -447,7 +459,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getDate()
+     * {@inheritDoc}
      */
     public Calendar getDate() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -470,7 +482,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getBoolean()
+     * {@inheritDoc}
      */
     public boolean getBoolean() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -493,7 +505,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getNode()
+     * {@inheritDoc}
      */
     public Node getNode() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -516,7 +528,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(Calendar)
+     * {@inheritDoc}
      */
     public void setValue(Calendar date)
             throws ValueFormatException, VersionException,
@@ -563,7 +575,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(double)
+     * {@inheritDoc}
      */
     public void setValue(double number)
             throws ValueFormatException, VersionException,
@@ -605,7 +617,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(java.io.InputStream)
+     * {@inheritDoc}
      */
     public void setValue(InputStream stream)
             throws ValueFormatException, VersionException,
@@ -658,7 +670,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(String)
+     * {@inheritDoc}
      */
     public void setValue(String string)
             throws ValueFormatException, VersionException,
@@ -704,7 +716,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(String)
+     * {@inheritDoc}
      */
     public void setValue(String[] strings)
             throws ValueFormatException, VersionException,
@@ -757,7 +769,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(boolean)
+     * {@inheritDoc}
      */
     public void setValue(boolean b)
             throws ValueFormatException, VersionException,
@@ -799,7 +811,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(Node)
+     * {@inheritDoc}
      */
     public void setValue(Node target)
             throws ValueFormatException, VersionException,
@@ -853,7 +865,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(long)
+     * {@inheritDoc}
      */
     public void setValue(long number)
             throws ValueFormatException, VersionException,
@@ -895,7 +907,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(Value)
+     * {@inheritDoc}
      */
     public synchronized void setValue(Value value)
             throws ValueFormatException, VersionException,
@@ -943,7 +955,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#setValue(Value[])
+     * {@inheritDoc}
      */
     public void setValue(Value[] values)
             throws ValueFormatException, VersionException,
@@ -998,7 +1010,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getLength
+     * {@inheritDoc}
      */
     public long getLength() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -1050,7 +1062,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getLengths
+     * {@inheritDoc}
      */
     public long[] getLengths() throws ValueFormatException, RepositoryException {
         // check state of this instance
@@ -1108,14 +1120,14 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Property#getDefinition()
+     * {@inheritDoc}
      */
     public PropertyDef getDefinition() {
         return definition;
     }
 
     /**
-     * @see Property#getType()
+     * {@inheritDoc}
      */
     public int getType() throws RepositoryException {
         // check state of this instance
@@ -1126,14 +1138,14 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     //-----------------------------------------------------------------< Item >
     /**
-     * @see Item#isNode()
+     * {@inheritDoc}
      */
     public boolean isNode() {
         return false;
     }
 
     /**
-     * @see Item#getName
+     * {@inheritDoc}
      */
     public String getName() throws RepositoryException {
         PropertyId propId = (PropertyId) id;
@@ -1149,7 +1161,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Item#accept(ItemVisitor)
+     * {@inheritDoc}
      */
     public void accept(ItemVisitor visitor) throws RepositoryException {
         // check state of this instance
@@ -1159,7 +1171,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * @see Item#getParent
+     * {@inheritDoc}
      */
     public Node getParent()
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {

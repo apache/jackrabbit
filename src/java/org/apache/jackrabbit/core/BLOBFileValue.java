@@ -24,7 +24,15 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.util.ISO8601;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 
 /**
@@ -262,14 +270,14 @@ public class BLOBFileValue implements Value {
 
     //----------------------------------------------------------------< Value >
     /**
-     * @see Value#getType
+     * {@inheritDoc}
      */
     public int getType() {
         return TYPE;
     }
 
     /**
-     * @see Value#getString
+     * {@inheritDoc}
      */
     public String getString() throws ValueFormatException, IllegalStateException, RepositoryException {
         if (text == null) {
@@ -294,7 +302,7 @@ public class BLOBFileValue implements Value {
     }
 
     /**
-     * @see Value#getStream
+     * {@inheritDoc}
      */
     public InputStream getStream() throws ValueFormatException, IllegalStateException, RepositoryException {
         // always return a 'fresh' stream
@@ -316,7 +324,7 @@ public class BLOBFileValue implements Value {
     }
 
     /**
-     * @see Value#getDouble
+     * {@inheritDoc}
      */
     public double getDouble() throws ValueFormatException, IllegalStateException, RepositoryException {
         try {
@@ -327,7 +335,7 @@ public class BLOBFileValue implements Value {
     }
 
     /**
-     * @see Value#getDate
+     * {@inheritDoc}
      */
     public Calendar getDate() throws ValueFormatException, IllegalStateException, RepositoryException {
         Calendar cal = ISO8601.parse(getString());
@@ -339,7 +347,7 @@ public class BLOBFileValue implements Value {
     }
 
     /**
-     * @see Value#getLong
+     * {@inheritDoc}
      */
     public long getLong() throws ValueFormatException, IllegalStateException, RepositoryException {
         try {
@@ -350,7 +358,7 @@ public class BLOBFileValue implements Value {
     }
 
     /**
-     * @see Value#getBoolean
+     * {@inheritDoc}
      */
     public boolean getBoolean() throws ValueFormatException, IllegalStateException, RepositoryException {
         return Boolean.valueOf(getString()).booleanValue();

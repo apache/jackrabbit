@@ -261,7 +261,7 @@ class EventState {
     }
 
     /**
-     * @see javax.jcr.observation.Event#getType()
+     * {@inheritDoc}
      */
     public int getType() {
         return type;
@@ -316,7 +316,7 @@ class EventState {
     }
 
     /**
-     * @see javax.jcr.observation.Event#getUserId()
+     * {@inheritDoc}
      */
     public String getUserId() {
         return session.getUserId();

@@ -16,7 +16,11 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ISO9075;
 import org.apache.jackrabbit.core.util.Text;
@@ -69,7 +73,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     }
 
     /**
-     * @see AbstractSAXEventGenerator#entering(NodeImpl, int)
+     * {@inheritDoc}
      */
     protected void entering(NodeImpl node, int level)
             throws RepositoryException, SAXException {
@@ -77,7 +81,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     }
 
     /**
-     * @see AbstractSAXEventGenerator#enteringProperties(NodeImpl, int)
+     * {@inheritDoc}
      */
     protected void enteringProperties(NodeImpl node, int level)
             throws RepositoryException, SAXException {
@@ -86,7 +90,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     }
 
     /**
-     * @see AbstractSAXEventGenerator#leavingProperties(NodeImpl, int)
+     * {@inheritDoc}
      */
     protected void leavingProperties(NodeImpl node, int level)
             throws RepositoryException, SAXException {
@@ -201,7 +205,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     }
 
     /**
-     * @see AbstractSAXEventGenerator#leaving(NodeImpl, int)
+     * {@inheritDoc}
      */
     protected void leaving(NodeImpl node, int level)
             throws RepositoryException, SAXException {
@@ -232,7 +236,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     }
 
     /**
-     * @see AbstractSAXEventGenerator#entering(PropertyImpl, int)
+     * {@inheritDoc}
      */
     protected void entering(PropertyImpl prop, int level)
             throws RepositoryException, SAXException {
@@ -240,7 +244,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     }
 
     /**
-     * @see AbstractSAXEventGenerator#leaving(PropertyImpl, int)
+     * {@inheritDoc}
      */
     protected void leaving(PropertyImpl prop, int level)
             throws RepositoryException, SAXException {

@@ -193,7 +193,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
 
     //----------------------------------------------------< NamespaceRegistry >
     /**
-     * @see NamespaceRegistry#registerNamespace
+     * {@inheritDoc}
      */
     public void registerNamespace(String prefix, String uri)
             throws NamespaceException, UnsupportedRepositoryOperationException,
@@ -254,7 +254,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
     }
 
     /**
-     * @see NamespaceRegistry#unregisterNamespace
+     * {@inheritDoc}
      */
     public void unregisterNamespace(String prefix)
             throws NamespaceException, UnsupportedRepositoryOperationException,
@@ -274,14 +274,14 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
     }
 
     /**
-     * @see NamespaceRegistry#getPrefixes
+     * {@inheritDoc}
      */
     public String[] getPrefixes() throws RepositoryException {
         return (String[]) prefixToURI.keySet().toArray(new String[prefixToURI.keySet().size()]);
     }
 
     /**
-     * @see NamespaceRegistry#getURIs
+     * {@inheritDoc}
      */
     public String[] getURIs() throws RepositoryException {
         return (String[]) uriToPrefix.keySet().toArray(new String[uriToPrefix.keySet().size()]);
@@ -289,8 +289,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
 
     //--------------------------------< NamespaceRegistry & NamespaceResolver >
     /**
-     * @see NamespaceRegistry#getURI
-     * @see NamespaceResolver#getURI
+     * {@inheritDoc}
      */
     public String getURI(String prefix) throws NamespaceException {
         if (!prefixToURI.containsKey(prefix)) {
@@ -300,8 +299,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
     }
 
     /**
-     * @see NamespaceRegistry#getPrefix
-     * @see NamespaceResolver#getPrefix
+     * {@inheritDoc}
      */
     public String getPrefix(String uri) throws NamespaceException {
         if (!uriToPrefix.containsKey(uri)) {

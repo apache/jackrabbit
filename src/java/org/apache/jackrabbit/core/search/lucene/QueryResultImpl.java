@@ -32,31 +32,44 @@ import javax.jcr.query.RowIterator;
  */
 class QueryResultImpl implements QueryResult {
 
-    /** The logger instance for this class */
+    /**
+     * The logger instance for this class
+     */
     private static final Logger log = Logger.getLogger(QueryResultImpl.class);
 
-    /** The item manager of the session executing the query */
+    /**
+     * The item manager of the session executing the query
+     */
     private final ItemManager itemMgr;
 
-    /** The UUIDs of the result nodes */
+    /**
+     * The UUIDs of the result nodes
+     */
     private final String[] uuids;
 
-    /** The scores of the result nodes */
+    /**
+     * The scores of the result nodes
+     */
     private final Float[] scores;
 
-    /** The select properties */
+    /**
+     * The select properties
+     */
     private final QName[] selectProps;
 
-    /** The namespace resolver of the session executing the query */
+    /**
+     * The namespace resolver of the session executing the query
+     */
     private final NamespaceResolver resolver;
 
     /**
      * Creates a new query result.
-     * @param itemMgr the item manager of the session executing the query.
-     * @param uuids the UUIDs of the result nodes.
-     * @param scores the score values of the result nodes.
+     *
+     * @param itemMgr     the item manager of the session executing the query.
+     * @param uuids       the UUIDs of the result nodes.
+     * @param scores      the score values of the result nodes.
      * @param selectProps the select properties of the query.
-     * @param resolver the namespace resolver of the session executing the query.
+     * @param resolver    the namespace resolver of the session executing the query.
      */
     public QueryResultImpl(ItemManager itemMgr,
                            String[] uuids,
@@ -71,7 +84,7 @@ class QueryResultImpl implements QueryResult {
     }
 
     /**
-     * @see QueryResult#getPropertyNames()
+     * {@inheritDoc}
      */
     public String[] getPropertyNames() throws RepositoryException {
         try {
@@ -88,16 +101,15 @@ class QueryResultImpl implements QueryResult {
         }
     }
 
-
     /**
-     * @see QueryResult#getNodes()
+     * {@inheritDoc}
      */
     public NodeIterator getNodes() throws RepositoryException {
         return new NodeIteratorImpl(itemMgr, uuids, scores);
     }
 
     /**
-     * @see QueryResult#getRows()
+     * {@inheritDoc}
      */
     public RowIterator getRows() throws RepositoryException {
         return new RowIteratorImpl(new NodeIteratorImpl(itemMgr, uuids, scores), selectProps, resolver);

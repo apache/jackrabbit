@@ -79,7 +79,7 @@ public class QueryManagerImpl implements QueryManager {
     }
 
     /**
-     * @see QueryManager#createQuery(java.lang.String, java.lang.String)
+     * {@inheritDoc}
      */
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
@@ -88,7 +88,7 @@ public class QueryManagerImpl implements QueryManager {
     }
 
     /**
-     * @see QueryManager#getQuery(Node)
+     * {@inheritDoc}
      */
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
@@ -97,7 +97,7 @@ public class QueryManagerImpl implements QueryManager {
     }
 
     /**
-     * @see QueryManager#getSupportedQueryLanguages()
+     * {@inheritDoc}
      */
     public String[] getSupportedQueryLanguages() {
         return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);

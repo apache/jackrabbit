@@ -69,6 +69,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
     /**
      * Creates a new <code>RelationQueryNode</code> without a type nor value
      * assigned.
+     *
      * @param parent the parent node for this query node.
      */
     public RelationQueryNode(QueryNode parent, int operation) {
@@ -145,7 +146,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
     }
 
     /**
-     * @see QueryNode#accept(org.apache.jackrabbit.core.search.QueryNodeVisitor, java.lang.Object)
+     * {@inheritDoc}
      */
     public Object accept(QueryNodeVisitor visitor, Object data) {
         return visitor.visit(this, data);
@@ -153,6 +154,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
 
     /**
      * Returns the type of this node.
+     *
      * @return the type of this node.
      */
     public int getType() {
@@ -179,6 +181,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
 
     /**
      * Sets a new property name for this relation query node.
+     *
      * @param name the new property name.
      */
     public void setProperty(QName name) {
@@ -197,6 +200,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
 
     /**
      * Sets a new value of type <code>long</code>.
+     *
      * @param value the new value.
      */
     public void setLongValue(long value) {
@@ -216,6 +220,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
 
     /**
      * Sets a new value of type <code>double</code>.
+     *
      * @param value the new value.
      */
     public void setDoubleValue(double value) {
@@ -235,6 +240,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
 
     /**
      * Sets a new value of type <code>String</code>.
+     *
      * @param value the new value.
      */
     public void setStringValue(String value) {
@@ -254,6 +260,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
 
     /**
      * Sets a new value of type <code>Date</code>.
+     *
      * @param value the new value.
      */
     public void setDateValue(Date value) {

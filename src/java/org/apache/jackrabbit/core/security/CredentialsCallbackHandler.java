@@ -47,7 +47,7 @@ public class CredentialsCallbackHandler implements CallbackHandler {
 
     //------------------------------------------------------< CallbackHandler >
     /**
-     * @see CallbackHandler#handle(Callback[])
+     * {@inheritDoc}
      */
     public void handle(Callback[] callbacks) throws IOException,
             UnsupportedCallbackException {

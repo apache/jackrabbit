@@ -77,7 +77,7 @@ class FilteredEventIterator implements EventIterator {
     }
 
     /**
-     * @see Iterator#next()
+     * {@inheritDoc}
      */
     public Object next() {
         if (next == null) {
@@ -90,14 +90,14 @@ class FilteredEventIterator implements EventIterator {
     }
 
     /**
-     * @see EventIterator#nextEvent()
+     * {@inheritDoc}
      */
     public Event nextEvent() {
         return (Event) next();
     }
 
     /**
-     * @see javax.jcr.RangeIterator#skip(long)
+     * {@inheritDoc}
      */
     public void skip(long skipNum) {
         while (skipNum-- > 0) {
@@ -115,7 +115,7 @@ class FilteredEventIterator implements EventIterator {
     }
 
     /**
-     * @see javax.jcr.RangeIterator#getPos()
+     * {@inheritDoc}
      */
     public long getPos() {
         return pos;

@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.util.TraversingItemVisitor;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
@@ -58,7 +58,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
     }
 
     /**
-     * @see TraversingItemVisitor#entering(javax.jcr.Node, int)
+     * {@inheritDoc}
      */
     protected void entering(Node node, int level)
             throws RepositoryException {
@@ -70,7 +70,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
     }
 
     /**
-     * @see TraversingItemVisitor#entering(javax.jcr.Property, int)
+     * {@inheritDoc}
      */
     protected void entering(Property property, int level)
             throws RepositoryException {

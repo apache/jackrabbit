@@ -79,7 +79,26 @@ class RAFOutputStream extends RandomAccessOutputStream {
     }
 
     /**
-     * @see java.io.OutputStream#write(int)
+     * Returns the current filepointer
+     *
+     * @return the current filepointer
+     */
+    public long getFilePointer() {
+        return bufferStart + bufferEnd;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void seek(long position) throws IOException {
+        flush();
+        raf.seek(position);
+        bufferStart = position;
+    }
+
+    //---------------------------------------------------------< OutputStream >
+    /**
+     * {@inheritDoc}
      */
     public void write(int b) throws IOException {
         one[0] = (byte) b;
@@ -87,14 +106,14 @@ class RAFOutputStream extends RandomAccessOutputStream {
     }
 
     /**
-     * @see java.io.OutputStream#write(byte[])
+     * {@inheritDoc}
      */
     public void write(byte b[]) throws IOException {
         write(b, 0, b.length);
     }
 
     /**
-     * @see java.io.OutputStream#write(byte[], int, int)
+     * {@inheritDoc}
      */
     public void write(byte b[], int off, int len) throws IOException {
         if (len > buffer.length - bufferEnd) {
@@ -107,7 +126,7 @@ class RAFOutputStream extends RandomAccessOutputStream {
     }
 
     /**
-     * @see java.io.OutputStream#flush()
+     * {@inheritDoc}
      */
     public void flush() throws IOException {
         raf.write(buffer, 0, bufferEnd);
@@ -117,31 +136,12 @@ class RAFOutputStream extends RandomAccessOutputStream {
 
     /**
      * This method also closes the underlying <code>RandomAccessFile</code>.
-     *
-     * @see java.io.OutputStream#close()
+     * <p/>
+     * {@inheritDoc}
      */
     public void close() throws IOException {
         flush();
         raf.close();
         raf = null;
     }
-
-    /**
-     * @see RandomAccessOutputStream#seek(long)
-     */
-    public void seek(long position) throws IOException {
-        flush();
-        raf.seek(position);
-        bufferStart = position;
-    }
-
-    /**
-     * Returns the current filepointer
-     *
-     * @return the current filepointer
-     */
-    public long getFilePointer() {
-        return bufferStart + bufferEnd;
-    }
-
 }

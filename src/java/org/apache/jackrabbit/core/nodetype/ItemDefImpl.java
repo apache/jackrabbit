@@ -59,7 +59,7 @@ abstract class ItemDefImpl implements ItemDef {
 
     //--------------------------------------------------------------< ItemDef >
     /**
-     * @see ItemDef#getDeclaringNodeType
+     * {@inheritDoc}
      */
     public NodeType getDeclaringNodeType() {
         try {
@@ -72,7 +72,7 @@ abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * @see ItemDef#getName
+     * {@inheritDoc}
      */
     public String getName() {
         if (itemDef.definesResidual()) {
@@ -90,28 +90,28 @@ abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * @see ItemDef#getOnParentVersion()
+     * {@inheritDoc}
      */
     public int getOnParentVersion() {
         return itemDef.getOnParentVersion();
     }
 
     /**
-     * @see ItemDef#isAutoCreate
+     * {@inheritDoc}
      */
     public boolean isAutoCreate() {
         return itemDef.isAutoCreate();
     }
 
     /**
-     * @see ItemDef#isMandatory
+     * {@inheritDoc}
      */
     public boolean isMandatory() {
         return itemDef.isMandatory();
     }
 
     /**
-     * @see ItemDef#isProtected
+     * {@inheritDoc}
      */
     public boolean isProtected() {
         return itemDef.isProtected();

@@ -38,7 +38,7 @@ public class PropertyId extends ItemId {
     }
 
     /**
-     * @see ItemId#denotesNode
+     * {@inheritDoc}
      */
     public boolean denotesNode() {
         return false;

@@ -13,18 +13,18 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.log4j.Logger;
 
-import javax.jcr.observation.ObservationManager;
+import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
-import javax.jcr.RepositoryException;
+import javax.jcr.observation.ObservationManager;
 
 /**
  * Each <code>Session</code> instance has its own <code>ObservationManager</code>
@@ -33,7 +33,9 @@ import javax.jcr.RepositoryException;
  */
 public class ObservationManagerImpl implements ObservationManager {
 
-    /** The logger instance of this class */
+    /**
+     * The logger instance of this class
+     */
     private static final Logger log = Logger.getLogger(ObservationManagerImpl.class);
 
     /**
@@ -47,7 +49,9 @@ public class ObservationManagerImpl implements ObservationManager {
      */
     private final ItemManager itemMgr;
 
-    /** The <code>ObservationManagerFactory</code> */
+    /**
+     * The <code>ObservationManagerFactory</code>
+     */
     private final ObservationManagerFactory obsMgrFactory;
 
     /**
@@ -76,7 +80,7 @@ public class ObservationManagerImpl implements ObservationManager {
     }
 
     /**
-     * @see javax.jcr.observation.ObservationManager#addEventListener
+     * {@inheritDoc}
      */
     public void addEventListener(EventListener listener,
                                  int eventTypes,
@@ -123,7 +127,7 @@ public class ObservationManagerImpl implements ObservationManager {
     }
 
     /**
-     * @see javax.jcr.observation.ObservationManager#removeEventListener(javax.jcr.observation.EventListener)
+     * {@inheritDoc}
      */
     public void removeEventListener(EventListener listener)
             throws RepositoryException {
@@ -134,7 +138,7 @@ public class ObservationManagerImpl implements ObservationManager {
     }
 
     /**
-     * @see javax.jcr.observation.ObservationManager#getRegisteredEventListeners()
+     * {@inheritDoc}
      */
     public EventListenerIterator getRegisteredEventListeners()
             throws RepositoryException {
@@ -146,6 +150,7 @@ public class ObservationManagerImpl implements ObservationManager {
     /**
      * Creates an <code>EventStateCollection</code> tied to the session
      * which is attached this <code>ObservationManager</code> instance.
+     *
      * @return a new <code>EventStateCollection</code>.
      */
     public EventStateCollection createEventStateCollection() {
