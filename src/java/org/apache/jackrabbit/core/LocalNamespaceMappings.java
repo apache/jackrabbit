@@ -25,24 +25,38 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * <code>LocalNamespaceMappings</code> ...
+ * Manager for local session namespace mappings. This class is
+ * used by the {@link SessionImpl SessionImpl} class to implement
+ * the local namespace mapping functionality required by the JCR API.
+ * <p>
+ * This class holds a reference to the underlying global and persistent
+ * namespace registry (a {@link NamespaceRegistryImpl NamespaceRegistryImpl}
+ * instance) and keeps track of local namespace mappings added by the session.
+ * <p>
+ * The namespace resolution methods required by the
+ * {@link NamespaceResolver NamespaceResolver} are implemented by first
+ * looking up the local namespace mapping and then backing to the
+ * underlying namespace registry.
  */
 class LocalNamespaceMappings implements NamespaceResolver {
 
-    // the global persistent namespace registry
+    /** The underlying global and persistent namespace registry. */
     private final NamespaceRegistryImpl nsReg;
 
-    // local prefix/namespace mappings
+    /** Prefix to URI mappings of local namespaces. */
     private final HashMap prefixToURI = new HashMap();
+
+    /** URI to prefix mappings of local namespaces. */
     private final HashMap uriToPrefix = new HashMap();
 
-    // prefixes in global namespace registry hidden by local mappings
+    /** The global namespace prefixes hidden by local namespace mappings. */
     private Set hiddenPrefixes = new HashSet();
 
     /**
-     * Constructor
+     * Creates a local namespace manager with the given underlying
+     * namespace registry.
      *
-     * @param nsReg
+     * @param nsReg namespace registry
      */
     LocalNamespaceMappings(NamespaceRegistryImpl nsReg) {
         this.nsReg = nsReg;
@@ -51,8 +65,8 @@ class LocalNamespaceMappings implements NamespaceResolver {
     /**
      * Rename a persistently registered namespace URI to the new prefix.
      *
-     * @param prefix
-     * @param uri
+     * @param prefix namespace prefix
+     * @param uri namespace URI
      * @throws NamespaceException
      * @throws RepositoryException
      */
