@@ -80,7 +80,10 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             QName name = QName.fromJCRName(versionName, session.getNamespaceResolver());
             InternalVersion v = history.getVersion(name);
-            return v == null ? null : (Version) session.getNodeByUUID(v.getId());
+            if (v == null) {
+                throw new VersionException("No version with name '" + versionName + "' exists in this version history.");
+            }
+            return (Version) session.getNodeByUUID(v.getId());
         } catch (IllegalNameException e) {
             throw new RepositoryException(e);
         } catch (UnknownPrefixException e) {
@@ -93,7 +96,10 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
         InternalVersion v = history.getVersionByLabel(label);
-        return v == null ? null : (Version) session.getNodeByUUID(v.getId());
+        if (v == null) {
+            throw new VersionException("No version with label '" + label + "' exists in this version history.");
+        }
+        return (Version) session.getNodeByUUID(v.getId());
     }
 
     /**

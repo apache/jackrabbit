@@ -65,9 +65,14 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
      */
     private NodeDefId NDEF_VERSION;
     /**
-     * node def id ofr a version history node state
+     * node def id for a version history node state
      */
     private NodeDefId NDEF_VERSION_HISTORY;
+
+    /**
+     * node def id for a version labels node state
+     */
+    private NodeDefId NDEF_VERSION_LABELS;
 
     /**
      * creates a new version item state provide
@@ -83,6 +88,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
         NDEF_UNSTRUCTURED = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_UNSTRUCTURED).unwrap());
         NDEF_VERSION = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_VERSION_HISTORY).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_VERSION).unwrap());
         NDEF_VERSION_HISTORY = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_VERSION_HISTORY).unwrap());
+        NDEF_VERSION_LABELS = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_VERSION_HISTORY).getApplicableChildNodeDef(VersionManager.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_VERSION_LABELS).unwrap());
 
         this.root = new HistoryRootNodeState(this, vMgr, parentId, rootId);
         this.root.setDefinitionId(NDEF_UNSTRUCTURED);
@@ -173,6 +179,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
                     // add version labels node state
                     String uuid = UUID.randomUUID().toString();
                     VersionLabelsNodeState vlns = new VersionLabelsNodeState(this, (InternalVersionHistory) vi, state.getUUID(), uuid);
+                    vlns.setDefinitionId(NDEF_VERSION_LABELS);
                     state.addChildNodeEntry(VersionManager.NODENAME_VERSION_LABELS, uuid);
                     nodes.put(new NodeId(uuid), vlns);
 

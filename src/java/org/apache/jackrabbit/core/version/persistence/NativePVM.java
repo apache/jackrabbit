@@ -26,9 +26,7 @@ import org.apache.commons.collections.ReferenceMap;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.version.VersionException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Iterator;
 
@@ -137,9 +135,9 @@ public class NativePVM implements PersistentVersionManager {
     private HashMap idsByInternal= new HashMap();
 
     /**
-     * list of histories for fast retrieval
+     * map of versioned uuids. key=versionedUUID, value=externalId
      */
-    private LinkedList histories = new LinkedList();
+    private HashMap versionedUUIDs = new HashMap();
 
     /**
      * the version histories. key=uuid, value=version history
@@ -200,7 +198,10 @@ public class NativePVM implements PersistentVersionManager {
                 idsByInternal.put(id.internalId, id);
             }
             if (id.type == PersistentId.TYPE_HISTORY) {
-                histories.add(id.externalId);
+                // need to retrieve the versioned uuid in order to avoid collisions
+                PropertyState ps = stateMgr.getPropertyState(new PropertyId(state.getUUID(), PROPNAME_VERSIONABLE_ID));
+                String vid = (String) ps.getValues()[0].internalValue();
+                versionedUUIDs.put(vid, id.externalId);
             }
         }
         initVirtualIds(state);
@@ -245,9 +246,10 @@ public class NativePVM implements PersistentVersionManager {
      * @param uuid
      * @return
      */
-    private InternalVersionHistoryImpl getHistoryByVersionableUUID(String uuid) {
-        // @TODO: implement
-        return null;
+    private InternalVersionHistoryImpl getHistoryByVersionableUUID(String uuid)
+            throws RepositoryException {
+        String externalId = (String) versionedUUIDs.get(uuid);
+        return externalId == null ? null : (InternalVersionHistoryImpl) getVersionHistory(externalId);
     }
 
     /**
@@ -293,7 +295,7 @@ public class NativePVM implements PersistentVersionManager {
             throw new RepositoryException(e);
         }
 
-        log.info("Created new version history " + hist.getId()+ " for " + node.safeGetJCRPath() + ". NumHistories=" + histories.size());
+        log.info("Created new version history " + hist.getId()+ " for " + node.safeGetJCRPath() + ". NumHistories=" + versionedUUIDs.size());
         return hist;
     }
 
@@ -328,7 +330,7 @@ public class NativePVM implements PersistentVersionManager {
      * @throws RepositoryException
      */
     public Iterator getVersionHistoryIds() throws RepositoryException {
-        return histories.iterator();
+        return versionedUUIDs.values().iterator();
     }
 
     /**
@@ -338,7 +340,7 @@ public class NativePVM implements PersistentVersionManager {
      * @throws RepositoryException
      */
     public int getNumVersionHistories() throws RepositoryException {
-        return histories.size();
+        return versionedUUIDs.size();
     }
 
     /**
