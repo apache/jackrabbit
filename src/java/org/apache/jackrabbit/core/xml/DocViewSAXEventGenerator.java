@@ -21,9 +21,8 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ISO9075;
-import org.apache.jackrabbit.core.util.Text;
+import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -32,9 +31,6 @@ import org.xml.sax.helpers.AttributesImpl;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -56,11 +52,13 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
      * Constructor
      *
      * @param node           the node state which should be serialized
-     * @param noRecurse      if true, only <code>node</code> and its properties will
-     *                       be serialized; otherwise the entire hierarchy starting with
-     *                       <code>node</code> will be serialized.
-     * @param skipBinary     flag governing whether binary properties are to be serialized.
-     * @param session        the session to be used for resolving namespace mappings
+     * @param noRecurse      if true, only <code>node</code> and its properties
+     *                       will be serialized; otherwise the entire hierarchy
+     *                       starting with <code>node</code> will be serialized.
+     * @param skipBinary     flag governing whether binary properties are to be
+     *                       serialized.
+     * @param session        the session to be used for resolving namespace
+     *                       mappings
      * @param contentHandler the content handler to feed the SAX events to
      */
     public DocViewSAXEventGenerator(NodeImpl node, boolean noRecurse,
@@ -145,7 +143,8 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                     attrName = propName.toJCRName(session.getNamespaceResolver());
                 } catch (NoPrefixDeclaredException npde) {
                     // should never get here...
-                    String msg = "internal error: encountered unregistered namespace";
+                    String msg =
+                            "internal error: encountered unregistered namespace";
                     log.debug(msg);
                     throw new RepositoryException(msg, npde);
                 }
@@ -164,43 +163,15 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                         // use space as delimiter for multi-valued properties
                         attrValue.append(" ");
                     }
-                    Value val = vals[i];
-                    String textVal;
-                    if (prop.getType() == PropertyType.BINARY) {
-                        // binary data, base64 encoding required
-                        InputStream in = val.getStream();
-                        StringWriter writer = new StringWriter();
-                        try {
-                            Base64.encode(in, writer);
-                            // no need to close StringWriter
-                            //writer.close();
-                        } catch (IOException ioe) {
-                            // check if the exception wraps a SAXException
-                            Throwable t = ioe.getCause();
-                            if (t != null && t instanceof SAXException) {
-                                throw (SAXException) t;
-                            } else {
-                                throw new SAXException(ioe);
-                            }
-                        } finally {
-                            try {
-                                in.close();
-                            } catch (IOException e) {
-                                // ignore
-                            }
-                        }
-                        textVal = writer.toString();
-                    } else {
-                        textVal = val.getString();
-                    }
-                    // enocde blanks in value
-                    textVal = Text.replace(textVal, " ", "_x0020_");
-                    attrValue.append(textVal);
+                    attrValue.append(ValueHelper.serialize(vals[i], true));
                 }
-                attrs.addAttribute(propName.getNamespaceURI(), propName.getLocalName(), attrName, CDATA_TYPE, attrValue.toString());
+                attrs.addAttribute(propName.getNamespaceURI(),
+                        propName.getLocalName(), attrName, CDATA_TYPE,
+                        attrValue.toString());
             }
             // start element (node)
-            contentHandler.startElement(name.getNamespaceURI(), name.getLocalName(), elemName, attrs);
+            contentHandler.startElement(name.getNamespaceURI(),
+                    name.getLocalName(), elemName, attrs);
         }
     }
 
@@ -232,7 +203,8 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
         }
 
         // end element (node)
-        contentHandler.endElement(name.getNamespaceURI(), name.getLocalName(), elemName);
+        contentHandler.endElement(name.getNamespaceURI(), name.getLocalName(),
+                elemName);
     }
 
     /**

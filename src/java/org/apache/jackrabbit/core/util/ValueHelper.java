@@ -34,6 +34,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 
 /**
  * The <code>ValueHelper</code> class provides several <code>Value</code>
@@ -52,11 +58,10 @@ public class ValueHelper {
      * @param targetType
      * @return
      * @throws ValueFormatException
-     * @throws IllegalStateException
      * @throws IllegalArgumentException
      */
     public static Value convert(String srcValue, int targetType)
-            throws ValueFormatException, IllegalStateException, IllegalArgumentException {
+            throws ValueFormatException, IllegalArgumentException {
         return convert(new StringValue(srcValue), targetType);
     }
 
@@ -69,7 +74,8 @@ public class ValueHelper {
      * @throws IllegalArgumentException
      */
     public static Value convert(Value srcValue, int targetType)
-            throws ValueFormatException, IllegalStateException, IllegalArgumentException {
+            throws ValueFormatException, IllegalStateException,
+            IllegalArgumentException {
         Value val;
         int srcType = srcValue.getType();
 
@@ -163,13 +169,15 @@ public class ValueHelper {
                             path = srcValue.getString();
                         } catch (RepositoryException re) {
                             // should never happen
-                            throw new ValueFormatException("failed to convert source value to PATH value", re);
+                            throw new ValueFormatException("failed to convert source value to PATH value",
+                                    re);
                         }
                         try {
                             // check path format
                             Path.checkFormat(path);
                         } catch (MalformedPathException mpe) {
-                            throw new ValueFormatException("source value " + path + " does not represent a valid path", mpe);
+                            throw new ValueFormatException("source value " + path
+                                    + " does not represent a valid path", mpe);
                         }
                         val = PathValue.valueOf(path);
                         break;
@@ -198,7 +206,7 @@ public class ValueHelper {
 
                     case PropertyType.BINARY:
                     case PropertyType.STRING:
-                    case PropertyType.PATH:	// path might be a name (relative, onle element long path)
+                    case PropertyType.PATH:	// path might be a name (relative path of length 1)
                         // try conversion via string
                         String name;
                         try {
@@ -206,13 +214,16 @@ public class ValueHelper {
                             name = srcValue.getString();
                         } catch (RepositoryException re) {
                             // should never happen
-                            throw new ValueFormatException("failed to convert source value to NAME value", re);
+                            throw new ValueFormatException("failed to convert source value to NAME value",
+                                    re);
                         }
                         try {
                             // check name format
                             QName.checkFormat(name);
                         } catch (IllegalNameException ine) {
-                            throw new ValueFormatException("source value " + name + " does not represent a valid name", ine);
+                            throw new ValueFormatException("source value "
+                                    + name
+                                    + " does not represent a valid name", ine);
                         }
                         val = NameValue.valueOf(name);
                         break;
@@ -248,7 +259,8 @@ public class ValueHelper {
                             uuid = srcValue.getString();
                         } catch (RepositoryException re) {
                             // should never happen
-                            throw new ValueFormatException("failed to convert source value to REFERENCE value", re);
+                            throw new ValueFormatException("failed to convert source value to REFERENCE value",
+                                    re);
                         }
                         val = ReferenceValue.valueOf(uuid);
                         break;
@@ -340,5 +352,159 @@ public class ValueHelper {
             newVal[i] = copy(srcVal[i]);
         }
         return newVal;
+    }
+
+    /**
+     * Serializes the given value to a <code>String</code>. The serialization
+     * format is the same as used by Document & System View XML, i.e.
+     * binary values will be Base64-encoded whereas for all others
+     * <code>{@link javax.jcr.Value#getString()}</code> will be used.
+     *
+     * @param value        the value to be serialized
+     * @param encodeBlanks if <code>true</code> space characters will be encoded
+     *                     as <code>"_x0020_"</code> within he output string.
+     * @return a string representation of the given value.
+     * @throws IllegalStateException if the given value is in an illegal state
+     * @throws RepositoryException   if an error occured during the serialization.
+     */
+    public static String serialize(Value value, boolean encodeBlanks)
+            throws IllegalStateException, RepositoryException {
+        StringWriter writer = new StringWriter();
+        try {
+            serialize(value, encodeBlanks, writer);
+        } catch (IOException ioe) {
+            throw new RepositoryException("failed to serialize value",
+                    ioe);
+        }
+        return writer.toString();
+    }
+
+    /**
+     * Outputs the serialized value to a <code>Writer</code>. The serialization
+     * format is the same as used by Document & System View XML, i.e.
+     * binary values will be Base64-encoded whereas for all others
+     * <code>{@link javax.jcr.Value#getString()}</code> will be used for
+     * serialization.
+     *
+     * @param value        the value to be serialized
+     * @param encodeBlanks if <code>true</code> space characters will be encoded
+     *                     as <code>"_x0020_"</code> within he output string.
+     * @param writer       writer to output the encoded data
+     * @throws IllegalStateException if the given value is in an illegal state
+     * @throws IOException           if an i/o error occured during the
+     *                               serialization
+     * @throws RepositoryException   if an error occured during the serialization.
+     */
+    public static void serialize(Value value, boolean encodeBlanks,
+                                 Writer writer)
+            throws IllegalStateException, IOException, RepositoryException {
+        if (value.getType() == PropertyType.BINARY) {
+            // binary data, base64 encoding required;
+            // the encodeBlanks flag can be ignored since base64-encoded
+            // data cannot contain space characters
+            InputStream in = value.getStream();
+            try {
+                Base64.encode(in, writer);
+                // no need to close StringWriter
+                //writer.close();
+            } finally {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        } else {
+            String textVal = value.getString();
+            if (encodeBlanks) {
+                // enocde blanks in string
+                textVal = Text.replace(textVal, " ", "_x0020_");
+            }
+            writer.write(textVal);
+        }
+    }
+
+    /**
+     * Deserializes the given string to a <code>Value</code> of the given type.
+     *
+     * @param value        string to be deserialized
+     * @param type         type of value
+     * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
+     *                     character sequences will be decoded to single space
+     *                     characters each.
+     * @return the deserialized <code>Value</code>
+     * @throws ValueFormatException if the string data is not of the required
+     *                              format
+     * @throws RepositoryException  if an error occured during the
+     *                              deserialization.
+     */
+    public static Value deserialize(String value, int type,
+                                    boolean decodeBlanks)
+            throws RepositoryException {
+        if (type == PropertyType.BINARY) {
+            // base64 encoded binary value;
+            // the encodeBlanks flag can be ignored since base64-encoded
+            // data cannot contain encoded space characters
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                Base64.decode(value, baos);
+                // no need to close ByteArrayOutputStream
+                //baos.close();
+            } catch (IOException ioe) {
+                throw new RepositoryException("failed to decode binary value",
+                        ioe);
+            }
+            return new BinaryValue(baos.toByteArray());
+        } else {
+            if (decodeBlanks) {
+                // decode encoded blanks in value
+                value = Text.replace(value, "_x0020_", " ");
+            }
+            return convert(value, type);
+        }
+    }
+
+    /**
+     * Deserializes the string data read from the given reader to a
+     * <code>Value</code> of the given type.
+     *
+     * @param reader       reader for the string data to be deserialized
+     * @param type         type of value
+     * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
+     *                     character sequences will be decoded to single space characters each.
+     * @return the deserialized <code>Value</code>
+     * @throws IOException          if an i/o error occured during the
+     *                              serialization
+     * @throws ValueFormatException if the string data is not of the required
+     *                              format
+     * @throws RepositoryException  if an error occured during the
+     *                              deserialization.
+     */
+    public static Value deserialize(Reader reader, int type,
+                                    boolean decodeBlanks)
+            throws IOException, ValueFormatException, RepositoryException {
+        if (type == PropertyType.BINARY) {
+            // base64 encoded binary value;
+            // the encodeBlanks flag can be ignored since base64-encoded
+            // data cannot contain encoded space characters
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Base64.decode(reader, baos);
+            // no need to close ByteArrayOutputStream
+            //baos.close();
+            return new BinaryValue(baos.toByteArray());
+        } else {
+            char[] chunk = new char[8192];
+            int read;
+            StringBuffer buf = new StringBuffer();
+            while ((read = reader.read(chunk)) > -1) {
+                buf.append(chunk, 0, read);
+            }
+            String value = buf.toString();
+            if (decodeBlanks) {
+                // decode encoded blanks in value
+                value = Text.replace(value, "_x0020_", " ");
+            }
+            return convert(value, type);
+        }
     }
 }
