@@ -3065,13 +3065,13 @@ public class NodeImpl extends ItemImpl implements Node {
         if (vp.isMoreRecent(v) && !isCheckedOut()) {
             // I f V' is a successor (to any degree) of V, then the merge result for
             // N is update. This case can be thought of as the case where N' is
-            // “newer” than N and therefore N should be updated to reflect N'.
+            // "newer" than N and therefore N should be updated to reflect N'.
             return srcNode;
         } else if (v.equals(vp) || v.isMoreRecent(vp)) {
             // If V' is a predecessor (to any degree) of V or if V and V' are
             // identical (i.e., are actually the same version), then the merge
             // result for N is leave. This case can be thought of as the case where
-            // N' is “older” or the “same age” as N and therefore N should be left alone.
+            // N' is "older" or the "same age" as N and therefore N should be left alone.
             return null;
         } else {
             // If V is neither a successor of, predecessor of, nor identical
@@ -3373,13 +3373,13 @@ public class NodeImpl extends ItemImpl implements Node {
         //    own OnParentVersion attributes (see 7.2.8, below, for details).
         restoreFrozenState(version.getFrozenNode(), vsel, removeExisting);
 
-        // 2. N’s jcr:baseVersion property will be changed to point to V.
+        // 2. N's jcr:baseVersion property will be changed to point to V.
         internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(version.getId())));
 
         // 4. N's jcr:predecessor property is set to null
         internalSetProperty(JCR_PREDECESSORS, new InternalValue[0], PropertyType.REFERENCE);
 
-        // 3. N’s jcr:isCheckedOut property is set to false.
+        // 3. N's jcr:isCheckedOut property is set to false.
         internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(false));
     }
 

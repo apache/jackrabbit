@@ -92,7 +92,7 @@ public class NodeTestData extends AbstractJCRTest {
         resource.setProperty(jcrMimeType, "text/plain");
         ByteArrayOutputStream data = new ByteArrayOutputStream();
         OutputStreamWriter writer = new OutputStreamWriter(data, ENCODING);
-        writer.write("Hello wörld.");
+        writer.write("Hello w\u00F6rld.");
         writer.close();
         resource.setProperty(jcrData, new ByteArrayInputStream(data.toByteArray()));
         resource.setProperty(jcrLastModified, Calendar.getInstance());

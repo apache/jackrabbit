@@ -77,7 +77,7 @@ public class CheckinTest extends AbstractVersionTest {
         Version v = versionableNode.checkin();
         Value[] vPredecessorsValue = v.getProperty(jcrPredecessors).getValues();
 
-        assertEquals("The versionable checked-out node’s jcr:predecessors property is copied to the new version on checkin.", Arrays.asList(nPredecessorsValue), Arrays.asList(vPredecessorsValue));
+        assertEquals("The versionable checked-out node's jcr:predecessors property is copied to the new version on checkin.", Arrays.asList(nPredecessorsValue), Arrays.asList(vPredecessorsValue));
     }
 
     /**
