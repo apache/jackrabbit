@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.log4j.Logger;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
+import org.apache.xerces.util.XMLChar;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -829,7 +830,7 @@ public class SessionImpl implements Session {
         }
         NodeImpl parent = (NodeImpl) item;
 
-        // verify that parent node is checked-out 
+        // verify that parent node is checked-out
         if (!parent.internalIsCheckedOut()) {
             String msg = parentAbsPath + ": cannot add a child to a checked-in node";
             log.error(msg);
@@ -878,7 +879,13 @@ public class SessionImpl implements Session {
     /**
      * @see Session#exportDocView(String, ContentHandler, boolean, boolean)
      */
-    public void exportDocView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws InvalidSerializedDataException, PathNotFoundException, SAXException, RepositoryException {
+    public void exportDocView(String absPath, ContentHandler contentHandler,
+                              boolean skipBinary, boolean noRecurse)
+            throws InvalidSerializedDataException, PathNotFoundException,
+            SAXException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         // @todo implement Session#exportDocView(String, ContentHandler, boolean, boolean)
         throw new RepositoryException("not yet implemented");
 /*
@@ -904,7 +911,6 @@ public class SessionImpl implements Session {
         new DocViewSAXEventGenerator(state, name.getName(), noRecurse, binaryAsLink,
                 stateMgr, rep.getNamespaceRegistry(),
                 session.getAccessManager(), hierMgr, contentHandler).serialize();
-    }
 */
     }
 
@@ -930,6 +936,9 @@ public class SessionImpl implements Session {
     public void exportSysView(String absPath, ContentHandler contentHandler,
                               boolean skipBinary, boolean noRecurse)
             throws PathNotFoundException, SAXException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
         // @todo implement Session#exportSysView(String, ContentHandler, boolean, boolean)
         throw new RepositoryException("not yet implemented");
 /*
@@ -1110,6 +1119,15 @@ public class SessionImpl implements Session {
                     || NamespaceRegistryImpl.NS_DEFAULT_URI.equals(uri)) {
                 throw new NamespaceException("default namespace is reserved and can not be changed");
             }
+            // special case: prefixes xml*
+            if (prefix.toLowerCase().startsWith(NamespaceRegistryImpl.NS_XML_PREFIX)) {
+                throw new NamespaceException("reserved prefix: " + prefix);
+            }
+            // check if the prefix is a valid XML prefix
+            if (!XMLChar.isValidNCName(prefix)) {
+                throw new NamespaceException("invalid prefix: " + prefix);
+            }
+
             // check if namespace exists (the following call will
             // trigger a NamespaceException if it doesn't)
             String globalPrefix = nsReg.getPrefix(uri);
@@ -1123,9 +1141,13 @@ public class SessionImpl implements Session {
             }
             if (globalURI != null) {
                 // prefix is already mapped in global namespace registry;
-                // check if it refers to a namespace that has been locally
-                // remapped, thus hiding it
+                // check if it is redundant or if it refers to a namespace
+                // that has been locally remapped, thus hiding it
                 if (!hiddenPrefixes.contains(prefix)) {
+                    if (uri.equals(globalURI) && prefix.equals(globalPrefix)) {
+                        // redundant mapping, silently ignore
+                        return;
+                    }
                     // we don't allow to hide a namespace because we can't
                     // guarantee that there are no references to it
                     // (in names of nodes/properties/node types etc.)
@@ -1136,6 +1158,10 @@ public class SessionImpl implements Session {
             // check if namespace is already locally mapped
             String oldPrefix = (String) uriToPrefix.get(uri);
             if (oldPrefix != null) {
+                if (oldPrefix.equals(prefix)) {
+                    // redundant mapping, silently ignore
+                    return;
+                }
                 // resurrect hidden global prefix
                 hiddenPrefixes.remove(nsReg.getPrefix(uri));
                 // remove old mapping

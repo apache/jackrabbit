@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.log4j.Logger;
+import org.apache.xerces.util.XMLChar;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
@@ -241,9 +242,14 @@ public class NamespaceRegistryImpl implements NamespaceRegistry, NamespaceResolv
                     + prefix + " -> " + uri + ": reserved prefix");
         }
         // special case: prefixes xml*
-        if (prefix.startsWith(NS_XML_PREFIX)) {
+        if (prefix.toLowerCase().startsWith(NS_XML_PREFIX)) {
             throw new NamespaceException("failed to register namespace "
                     + prefix + " -> " + uri + ": reserved prefix");
+        }
+        // check if the prefix is a valid XML prefix
+        if (!XMLChar.isValidNCName(prefix)) {
+            throw new NamespaceException("failed to register namespace "
+                    + prefix + " -> " + uri + ": invalid prefix");
         }
 
         String oldPrefix = (String) uriToPrefix.get(uri);
