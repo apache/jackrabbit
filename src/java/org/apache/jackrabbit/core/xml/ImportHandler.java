@@ -16,11 +16,9 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.BaseException;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -35,12 +33,19 @@ import javax.jcr.RepositoryException;
 
 /**
  * An <code>ImportHandler</code> instance can be used to import serialized
- * data in System View XML or Document View XML. Processing of the XML is handled
- * by specialized <code>ContentHandler</code>s (i.e. <code>SysViewImportHandler</code>
- * and <code>DocViewImportHandler</code>).
+ * data in System View XML or Document View XML. Processing of the XML is
+ * handled by specialized <code>ContentHandler</code>s
+ * (i.e. <code>SysViewImportHandler</code> and <code>DocViewImportHandler</code>).
  * <p/>
  * The actual task of importing though is delegated to the implementation of
  * the <code>{@link Importer}</code> interface.
+ * <p/>
+ * <b>Important Note:</b>
+ * <p/>
+ * These SAX Event Handlers expect that Namespace URI's and local names are
+ * reported in the <code>start/endElement</code> events and that
+ * <code>start/endPrefixMapping</code> events are reported
+ * (i.e. default SAX2 Namespace processing).
  */
 public class ImportHandler extends DefaultHandler {
 
@@ -213,21 +218,7 @@ public class ImportHandler extends DefaultHandler {
         if (!initialized) {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
-            String nsURI;
-            if (namespaceURI != null && !"".equals(namespaceURI)) {
-                nsURI = namespaceURI;
-            } else {
-                try {
-                    nsURI = QName.fromJCRName(qName, nsResolver).getNamespaceURI();
-                } catch (BaseException e) {
-                    // should never happen...
-                    String msg = "internal error: failed to parse/resolve element name "
-                            + qName;
-                    log.debug(msg);
-                    throw new SAXException(msg, e);
-                }
-            }
-            systemViewXML = Constants.NS_SV_URI.equals(nsURI);
+            systemViewXML = Constants.NS_SV_URI.equals(namespaceURI);
 
             if (systemViewXML) {
                 targetHandler = new SysViewImportHandler(importer, nsContext);

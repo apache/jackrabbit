@@ -17,10 +17,8 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.BaseException;
-import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.util.ISO9075;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -30,6 +28,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Stack;
+import java.io.IOException;
 
 /**
  * <code>DocViewImportHandler</code> processes Document View XML SAX events
@@ -119,18 +118,7 @@ class DocViewImportHandler extends TargetImportHandler {
         }
 
         try {
-            QName nodeName;
-            if (namespaceURI != null && !"".equals(namespaceURI)) {
-                nodeName = new QName(namespaceURI, localName);
-            } else {
-                try {
-                    nodeName = QName.fromJCRName(qName, nsContext);
-                } catch (IllegalNameException ine) {
-                    throw new SAXException("illegal node name: " + qName, ine);
-                } catch (UnknownPrefixException upe) {
-                    throw new SAXException("illegal node name: " + qName, upe);
-                }
-            }
+            QName nodeName = new QName(namespaceURI, localName);
             // decode node name
             nodeName = ISO9075.decode(nodeName);
 
@@ -141,20 +129,7 @@ class DocViewImportHandler extends TargetImportHandler {
 
             ArrayList props = new ArrayList(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
-                QName propName;
-                if (atts.getURI(i) != null && !"".equals(atts.getURI(i))) {
-                    propName = new QName(atts.getURI(i), atts.getLocalName(i));
-                } else {
-                    try {
-                        propName = QName.fromJCRName(atts.getQName(i), nsContext);
-                    } catch (IllegalNameException ine) {
-                        throw new SAXException("illegal property name: "
-                                + atts.getQName(i), ine);
-                    } catch (UnknownPrefixException upe) {
-                        throw new SAXException("illegal property name: "
-                                + atts.getQName(i), upe);
-                    }
-                }
+                QName propName = new QName(atts.getURI(i), atts.getLocalName(i));
                 // decode property name
                 propName = ISO9075.decode(propName);
 
@@ -224,6 +199,21 @@ class DocViewImportHandler extends TargetImportHandler {
         /**
          * buffer character data; will be processed
          * in endElement and startElement method
+         */
+        if (textHandler == null) {
+            textHandler = new StringBufferValue();
+        }
+        textHandler.append(ch, start, length);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void ignorableWhitespace(char ch[], int start, int length)
+            throws SAXException {
+        /**
+         * buffer data reported by the ignorableWhitespace event;
+         * will be processed in endElement and startElement method
          */
         if (textHandler == null) {
             textHandler = new StringBufferValue();

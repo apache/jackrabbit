@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.BaseException;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
@@ -117,34 +116,19 @@ class SysViewImportHandler extends TargetImportHandler {
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
-        String elemName;
-        String nsURI;
-        if (namespaceURI != null && !"".equals(namespaceURI)) {
-            nsURI = namespaceURI;
-            elemName = localName;
-        } else {
-            try {
-                nsURI = QName.fromJCRName(qName, nsContext).getNamespaceURI();
-                elemName = QName.fromJCRName(qName, nsContext).getLocalName();
-            } catch (BaseException e) {
-                // should never happen...
-                String msg = "internal error: failed to parse/resolve element name " + qName;
-                log.debug(msg);
-                throw new SAXException(msg, e);
-            }
-        }
         // check namespace
-        if (!NS_SV_URI.equals(nsURI)) {
-            throw new SAXException(new InvalidSerializedDataException("invalid namespace for element in system view xml document: " + nsURI));
+        if (!NS_SV_URI.equals(namespaceURI)) {
+            throw new SAXException(new InvalidSerializedDataException("invalid namespace for element in system view xml document: "
+                    + namespaceURI));
         }
         // check element name
-        if (SysViewSAXEventGenerator.NODE_ELEMENT.equals(elemName)) {
+        if (SysViewSAXEventGenerator.NODE_ELEMENT.equals(localName)) {
             // sv:node element
 
             // node name (value of sv:name attribute)
             String name = atts.getValue(SysViewSAXEventGenerator.PREFIXED_NAME_ATTRIBUTE);
             if (name == null) {
-                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:name attributeof element sv:node"));
+                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:name attribute of element sv:node"));
             }
 
             if (!stack.isEmpty()) {
@@ -167,7 +151,7 @@ class SysViewImportHandler extends TargetImportHandler {
                 throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, upe));
             }
             stack.push(state);
-        } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(elemName)) {
+        } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(localName)) {
             // sv:property element
 
             // reset temp fields
@@ -176,7 +160,7 @@ class SysViewImportHandler extends TargetImportHandler {
             // property name (value of sv:name attribute)
             String name = atts.getValue(SysViewSAXEventGenerator.PREFIXED_NAME_ATTRIBUTE);
             if (name == null) {
-                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:name attributeof element sv:property"));
+                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:name attribute of element sv:property"));
             }
             try {
                 currentPropName = QName.fromJCRName(name, nsContext);
@@ -188,10 +172,10 @@ class SysViewImportHandler extends TargetImportHandler {
             // property type (sv:type attribute)
             String type = atts.getValue(SysViewSAXEventGenerator.PREFIXED_TYPE_ATTRIBUTE);
             if (type == null) {
-                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:type attributeof element sv:property"));
+                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:type attribute of element sv:property"));
             }
             currentPropType = PropertyType.valueFromName(type);
-        } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(elemName)) {
+        } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(localName)) {
             // sv:value element
 
             // reset temp fields
@@ -200,15 +184,18 @@ class SysViewImportHandler extends TargetImportHandler {
                 try {
                     currentPropValue = new CLOBValue();
                 } catch (IOException ioe) {
-                    throw new SAXException("error while processing property value",
-                            ioe);
+                    String msg = "error while processing property value "
+                            + currentPropName;
+                    log.debug(msg, ioe);
+                    throw new SAXException(msg, ioe);
                 }
             } else {
                 // 'normal' value; use StringBuffer-backed value appender
                 currentPropValue = new StringBufferValue();
             }
         } else {
-            throw new SAXException(new InvalidSerializedDataException("unexpected element found in system view xml document: " + elemName));
+            throw new SAXException(new InvalidSerializedDataException("unexpected element found in system view xml document: "
+                    + localName));
         }
     }
 
@@ -231,24 +218,30 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
-    public void endElement(String namespaceURI, String localName, String qName)
+    public void ignorableWhitespace(char ch[], int start, int length)
             throws SAXException {
-        String elemName;
-        if (localName != null && !"".equals(localName)) {
-            elemName = localName;
-        } else {
+        if (currentPropValue != null) {
+            // property value
+
+            // data reported by the ignorableWhitespace event within
+            // sv:value tags is considered part of the value
             try {
-                elemName = QName.fromJCRName(qName, nsContext).getLocalName();
-            } catch (BaseException e) {
-                // should never happen...
-                String msg = "internal error: failed to parse/resolve element name " + qName;
-                log.debug(msg);
-                throw new SAXException(msg, e);
+                currentPropValue.append(ch, start, length);
+            } catch (IOException ioe) {
+                throw new SAXException("error while processing property value",
+                        ioe);
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void endElement(String namespaceURI, String localName, String qName)
+            throws SAXException {
         // check element name
         ImportState state = (ImportState) stack.peek();
-        if (SysViewSAXEventGenerator.NODE_ELEMENT.equals(elemName)) {
+        if (SysViewSAXEventGenerator.NODE_ELEMENT.equals(localName)) {
             // sv:node element
             if (!state.started) {
                 // need to start & end current node
@@ -260,7 +253,7 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             // pop current state from stack
             stack.pop();
-        } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(elemName)) {
+        } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(localName)) {
             // sv:property element
 
             // check if all system properties (jcr:primaryType, jcr:uuid etc.)
@@ -283,7 +276,8 @@ class SysViewImportHandler extends TargetImportHandler {
                     state.mixinNames = new ArrayList(currentPropValues.size());
                 }
                 for (int i = 0; i < currentPropValues.size(); i++) {
-                    AppendableValue val = (AppendableValue) currentPropValues.get(0);
+                    AppendableValue val =
+                            (AppendableValue) currentPropValues.get(0);
                     String s = null;
                     try {
                         s = val.retrieve();
@@ -314,13 +308,13 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             // reset temp fields
             currentPropValues.clear();
-        } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(elemName)) {
+        } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(localName)) {
             // sv:value element
             currentPropValues.add(currentPropValue);
             // reset temp fields
             currentPropValue = null;
         } else {
-            throw new SAXException(new InvalidSerializedDataException("invalid element in system view xml document: " + elemName));
+            throw new SAXException(new InvalidSerializedDataException("invalid element in system view xml document: " + localName));
         }
     }
 
