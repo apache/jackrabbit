@@ -28,20 +28,20 @@
     <!-- sample configuration for a repository that stores its state in a local file system -->
     <Repository name="localfs">
 	<RepositoryStore>
-	    <FileSystem class="org.apache.jackrabbit.jcr.fs.local.LocalFileSystem">
+	    <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
 		<param name="path" value="${factory.home}/repositories/localfs/repository"/>
 	    </FileSystem>
 	</RepositoryStore>
 	<!-- main workspace -->
 	<StableWorkspace name="default">
-	    <PersistenceManager class="org.apache.jackrabbit.jcr.core.state.xml.XMLPersistenceManager"/>
+	    <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager"/>
 	    <WorkspaceStore>
-		<FileSystem class="org.apache.jackrabbit.jcr.fs.local.LocalFileSystem">
+		<FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
 		    <param name="path" value="${factory.home}/repositories/localfs/workspaces/default/data"/>
 		</FileSystem>
 	    </WorkspaceStore>
 	    <BLOBStore>
-		<FileSystem class="org.apache.jackrabbit.jcr.fs.local.LocalFileSystem">
+		<FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
 		    <param name="path" value="${factory.home}/repositories/localfs/workspaces/default/blobs"/>
 		</FileSystem>
 	    </BLOBStore>
