@@ -210,7 +210,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
             throws RepositoryException, NotExecutableException {
         RowIterator rows = queryResult.getRows();
         if (getSize(rows) < 2) {
-            throw new NotExecutableException("Can not test ordering on less than 2 results");
+            fail("Workspace does not contain sufficient content to test ordering on result nodes.");
         }
         // need to re-aquire rows, {@link #getSize} may consume elements.
         rows = queryResult.getRows();
@@ -219,7 +219,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         while (rows.hasNext()) {
             String value = rows.nextRow().getValue(propName).getString();
             int cp = value.compareTo(last);
-            // if value changed evauluate if the derection is correct
+            // if value changed evaluate if the ordering is correct
             if (cp != 0) {
                 changeCnt++;
                 if (cp == 1 && descending) {
@@ -231,7 +231,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
             last = value;
         }
         if (changeCnt < 1) {
-            throw new NotExecutableException("Can not test ordering on only one value");
+            fail("Workspace does not contain distinct values for " + propName);
         }
     }
 
