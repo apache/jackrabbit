@@ -136,8 +136,18 @@ class NodeIndexer {
             try {
                 PropertyState propState = (PropertyState) stateProvider.getItemState(id);
                 InternalValue[] values = propState.getValues();
-                for (int i = 0; i < values.length; i++) {
-                    addValue(doc, values[i], propState.getName());
+                if (propState.isMultiValued()) {
+                    // multi valued
+                    if (values.length == 1) {
+                        // also index as if single value property
+                        addValue(doc, values[0], propState.getName(), false);
+                    }
+                    for (int i = 0; i < values.length; i++) {
+                        addValue(doc, values[i], propState.getName(), true);
+                    }
+                } else {
+                    // single value
+                    addValue(doc, values[0], propState.getName(), false);
                 }
             } catch (NoSuchItemStateException e) {
                 throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
@@ -154,11 +164,20 @@ class NodeIndexer {
      * @param doc   the document.
      * @param value the internal jackrabbit value.
      * @param name  the name of the property.
+     * @param multiValued if <code>true</code> the value is treated as a
+     *   multivalued.
      */
-    private void addValue(Document doc, InternalValue value, QName name) {
-        String fieldName = name.toString();
+    private void addValue(Document doc, InternalValue value, QName name, boolean multiValued) {
+        String fieldName = name.getLocalName();
         try {
-            fieldName = mappings.getPrefix(name.getNamespaceURI()) + ":" + name.getLocalName();
+            StringBuffer tmp = new StringBuffer();
+            tmp.append(mappings.getPrefix(name.getNamespaceURI()));
+            tmp.append(':');
+            if (multiValued) {
+                tmp.append(FieldNames.MVP_PREFIX);
+            }
+            tmp.append(name.getLocalName());
+            fieldName = tmp.toString();
         } catch (NamespaceException e) {
             // will never happen
         }

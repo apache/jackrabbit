@@ -299,36 +299,49 @@ void Predicate() :
   String escapeString;
 }
 {
-  identifier = Identifier() { jjtThis.setIdentifier(identifier); }
   (
     (
-      operationType = ComparisonOperation() { jjtThis.setOperationType(operationType); }
-      (Literal() | identifier = Identifier() { jjtThis.setIdentifier(identifier); } )
-    )
-  |
-    ((<NOT> { jjtThis.setNegate(true); })?
+      identifier = Identifier() { jjtThis.setIdentifier(identifier); }
       (
-        (<BETWEEN> { jjtThis.setOperationType(Constants.OPERATION_BETWEEN); } Literal() <AND> Literal())
-      |
-        (<IN> { jjtThis.setOperationType(Constants.OPERATION_IN); } <LEFT_PAREN> Literal() (<COMMA> Literal())* <RIGHT_PAREN>)
-      |
         (
-          <LIKE> { jjtThis.setOperationType(Constants.OPERATION_LIKE); } value = CharStringLiteral()
+          operationType = ComparisonOperation() { jjtThis.setOperationType(operationType); }
+          (Literal() | identifier = Identifier() { jjtThis.setIdentifier(identifier); } )
+        )
+      |
+        ((<NOT> { jjtThis.setNegate(true); })?
+          (
+            (<BETWEEN> { jjtThis.setOperationType(Constants.OPERATION_BETWEEN); } Literal() <AND> Literal())
+          |
+            (
+              <LIKE> { jjtThis.setOperationType(Constants.OPERATION_LIKE); } value = CharStringLiteral()
+              {
+                ASTLiteral s = new ASTLiteral(JJTLITERAL);
+                s.setType(Constants.TYPE_STRING);
+                s.setValue(value);
+                jjtree.pushNode(s);
+              }
+              (<ESCAPE> escapeString = CharStringLiteral() { jjtThis.setEscapeString(escapeString); })?
+            )
+          )
+        )
+      |
+        (<IS> (<NOT> { jjtThis.setNegate(true); })? <NULL>
           {
-            ASTLiteral s = new ASTLiteral(JJTLITERAL);
-            s.setType(Constants.TYPE_STRING);
-            s.setValue(value);
-            jjtree.pushNode(s);
+            jjtThis.setOperationType(jjtThis.isNegate() ? Constants.OPERATION_NOT_NULL : Constants.OPERATION_NULL);
           }
-          (<ESCAPE> escapeString = CharStringLiteral() { jjtThis.setEscapeString(escapeString); })?
         )
       )
     )
   |
-    (<IS> (<NOT> { jjtThis.setNegate(true); })? <NULL>
-      {
-        jjtThis.setOperationType(jjtThis.isNegate() ? Constants.OPERATION_NOT_NULL : Constants.OPERATION_NULL); 
-      }
+    (
+      Literal() (<NOT> { jjtThis.setNegate(true); })? <IN>
+      (
+        identifier = Identifier()
+        {
+          jjtThis.setIdentifier(identifier);
+          jjtThis.setOperationType(jjtThis.isNegate() ? Constants.OPERATION_NE_GENERAL : Constants.OPERATION_EQ_GENERAL);
+        }
+      )
     )
   )
 }
@@ -340,12 +353,12 @@ int ComparisonOperation() #void :
 }
 {
   (
-      <EQ_OPERATOR> { operationType = Constants.OPERATION_EQ; }
-    | <NE_OPERATOR> { operationType = Constants.OPERATION_NE; }
-    | <LT_OPERATOR> { operationType = Constants.OPERATION_LT; }
-    | <GT_OPERATOR> { operationType = Constants.OPERATION_GT; }
-    | <LE_OPERATOR> { operationType = Constants.OPERATION_LE; }
-    | <GE_OPERATOR> { operationType = Constants.OPERATION_GE; }
+      <EQ_OPERATOR> { operationType = Constants.OPERATION_EQ_VALUE; }
+    | <NE_OPERATOR> { operationType = Constants.OPERATION_NE_VALUE; }
+    | <LT_OPERATOR> { operationType = Constants.OPERATION_LT_VALUE; }
+    | <GT_OPERATOR> { operationType = Constants.OPERATION_GT_VALUE; }
+    | <LE_OPERATOR> { operationType = Constants.OPERATION_LE_VALUE; }
+    | <GE_OPERATOR> { operationType = Constants.OPERATION_GE_VALUE; }
   )
   {
     return operationType;

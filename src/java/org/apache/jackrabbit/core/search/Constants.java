@@ -47,58 +47,72 @@ public interface Constants {
      */
     public static int TYPE_TIMESTAMP = 5;
 
+    public static int OPERATIONS = 10;
+
     /**
      * equal operation: =
      */
-    public static int OPERATION_EQ = 10;
+    public static int OPERATION_EQ_VALUE = OPERATIONS + 1;
+
+    /**
+     * equal operation: =
+     * general comparison
+     */
+    public static int OPERATION_EQ_GENERAL = OPERATIONS + 2;
 
     /**
      * not equal operation: <>
      */
-    public static int OPERATION_NE = 11;
+    public static int OPERATION_NE_VALUE = OPERATIONS + 3;
+
+    /**
+     * not equal operation: <>
+     * general comparision
+     */
+    public static int OPERATION_NE_GENERAL = OPERATIONS + 4;
 
     /**
      * less than operation: <
      */
-    public static int OPERATION_LT = 12;
+    public static int OPERATION_LT_VALUE = OPERATIONS + 5;
 
     /**
      * greater than operation: >
      */
-    public static int OPERATION_GT = 13;
+    public static int OPERATION_GT_VALUE = OPERATIONS + 6;
 
     /**
      * greater or equal operation: >=
      */
-    public static int OPERATION_GE = 14;
+    public static int OPERATION_GE_VALUE = OPERATIONS + 7;
 
     /**
      * less than or equal operation: <=
      */
-    public static int OPERATION_LE = 15;
+    public static int OPERATION_LE_VALUE = OPERATIONS + 8;
 
     /**
      * like operation: identifier LIKE string_literal
      */
-    public static int OPERATION_LIKE = 16;
+    public static int OPERATION_LIKE = OPERATIONS + 9;
 
     /**
      * between operation: identifier [ NOT ] BETWEEN literal AND literal
      */
-    public static int OPERATION_BETWEEN = 17;
+    public static int OPERATION_BETWEEN = OPERATIONS + 10;
 
     /**
      * on operation: identifier [ NOT ] IN ( literal {, literal}* )
      */
-    public static int OPERATION_IN = 18;
+    public static int OPERATION_IN = OPERATIONS + 11;
 
     /**
      * is null operation: identifier IS NULL
      */
-    public static int OPERATION_NULL = 19;
+    public static int OPERATION_NULL = OPERATIONS + 12;
 
     /**
      * is not null operation: identifier IS NOT NULL
      */
-    public static int OPERATION_NOT_NULL = 20;
+    public static int OPERATION_NOT_NULL = OPERATIONS + 13;
 }

@@ -45,4 +45,9 @@ class FieldNames {
      * tokenized.
      */
     public static final String LABEL = "_:LABEL";
+
+    /**
+     * Prefix for all field names that hold multi valued properties.
+     */
+    public static final String MVP_PREFIX = "MVP:";
 }

@@ -32,7 +32,6 @@ import org.apache.jackrabbit.core.search.LocationStepQueryNode;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -204,7 +203,16 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         QueryNode predicateNode = null;
 
         try {
-            QName identifier = ((ASTIdentifier) node.children[0]).getName();
+            final QName[] tmp = new QName[1];
+            node.childrenAccept(new DefaultParserVisitor() {
+                public Object visit(ASTIdentifier node, Object data) {
+                    // only assign first identifier
+                    tmp[0] = (tmp[0] == null) ? node.getName() : tmp[0];
+                    return data;
+                }
+            }, data);
+            QName identifier = tmp[0];
+
             if (identifier.equals(JCR_PATH)) {
                 if (node.children[1] instanceof ASTIdentifier) {
                     // simply ignore, this is a join of a mixin node type
@@ -218,26 +226,30 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             if (type == Constants.OPERATION_BETWEEN) {
                 AndQueryNode between = new AndQueryNode(parent);
                 RelationQueryNode rel = createRelationQueryNode(between,
-                        identifier, Constants.OPERATION_GE, (ASTLiteral) node.children[1]);
+                        identifier, Constants.OPERATION_GE_VALUE, (ASTLiteral) node.children[1]);
                 between.addOperand(rel);
                 rel = createRelationQueryNode(between,
-                        identifier, Constants.OPERATION_LE, (ASTLiteral) node.children[2]);
+                        identifier, Constants.OPERATION_LE_VALUE, (ASTLiteral) node.children[2]);
                 between.addOperand(rel);
                 predicateNode = between;
-            } else if (type == Constants.OPERATION_EQ) {
+            } else if (type == Constants.OPERATION_EQ_VALUE) {
                 if (node.children[1] instanceof ASTIdentifier) {
                     // simply ignore, this is a join of a mixin node type
                 } else {
                     predicateNode = createRelationQueryNode(parent,
                             identifier, type, (ASTLiteral) node.children[1]);
                 }
-            } else if (type == Constants.OPERATION_GE
-                    || type == Constants.OPERATION_GT
-                    || type == Constants.OPERATION_LE
-                    || type == Constants.OPERATION_LT
-                    || type == Constants.OPERATION_NE) {
+            } else if (type == Constants.OPERATION_GE_VALUE
+                    || type == Constants.OPERATION_GT_VALUE
+                    || type == Constants.OPERATION_LE_VALUE
+                    || type == Constants.OPERATION_LT_VALUE
+                    || type == Constants.OPERATION_NE_VALUE) {
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, (ASTLiteral) node.children[1]);
+            } else if (type == Constants.OPERATION_EQ_GENERAL
+                    || type == Constants.OPERATION_NE_GENERAL) {
+                predicateNode = createRelationQueryNode(parent,
+                        identifier, type, (ASTLiteral) node.children[0]);
             } else if (type == Constants.OPERATION_LIKE) {
                 ASTLiteral pattern = (ASTLiteral) node.children[1];
                 if (node.getEscapeString() != null) {
@@ -259,7 +271,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 OrQueryNode in = new OrQueryNode(parent);
                 for (int i = 1; i < node.children.length; i++) {
                     RelationQueryNode rel = createRelationQueryNode(in,
-                            identifier, Constants.OPERATION_EQ, (ASTLiteral) node.children[i]);
+                            identifier, Constants.OPERATION_EQ_VALUE, (ASTLiteral) node.children[i]);
                     in.addOperand(rel);
                 }
                 predicateNode = in;

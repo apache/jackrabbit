@@ -310,44 +310,58 @@ class QueryFormat implements QueryNodeVisitor, Constants {
     public Object visit(RelationQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
-            appendName(node.getProperty(), resolver, sb);
+            if (node.getOperation() == OPERATION_EQ_VALUE) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" = ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_EQ_GENERAL) {
+                appendValue(node, sb);
+                sb.append(" IN ");
+                appendName(node.getProperty(), resolver, sb);
+            } else if (node.getOperation() == OPERATION_GE_VALUE) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" >= ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_GT_VALUE) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" > ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_LE_VALUE) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" <= ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_LIKE) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" LIKE ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_LT_VALUE) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" < ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_NE_VALUE) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" <> ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_NE_GENERAL) {
+                appendValue(node, sb);
+                sb.append(" NOT IN ");
+                appendName(node.getProperty(), resolver, sb);
+            } else if (node.getOperation() == OPERATION_NULL) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" IS NULL");
+            } else if (node.getOperation() == OPERATION_NOT_NULL) {
+                appendName(node.getProperty(), resolver, sb);
+                sb.append(" IS NOT NULL");
+            } else {
+                exceptions.add(new InvalidQueryException("Invalid operation: " + node.getOperation()));
+            }
+
+            if (node.getOperation() == OPERATION_LIKE && node.getStringValue().indexOf('\\') > -1) {
+                sb.append(" ESCAPE '\\'");
+            }
         } catch (NoPrefixDeclaredException e) {
             exceptions.add(e);
         }
-
-        if (node.getOperation() == OPERATION_EQ) {
-            sb.append(" = ");
-            appendValue(node, sb);
-        } else if (node.getOperation() == OPERATION_GE) {
-            sb.append(" >= ");
-            appendValue(node, sb);
-        } else if (node.getOperation() == OPERATION_GT) {
-            sb.append(" > ");
-            appendValue(node, sb);
-        } else if (node.getOperation() == OPERATION_LE) {
-            sb.append(" <= ");
-            appendValue(node, sb);
-        } else if (node.getOperation() == OPERATION_LIKE) {
-            sb.append(" LIKE ");
-            appendValue(node, sb);
-        } else if (node.getOperation() == OPERATION_LT) {
-            sb.append(" < ");
-            appendValue(node, sb);
-        } else if (node.getOperation() == OPERATION_NE) {
-            sb.append(" <> ");
-            appendValue(node, sb);
-        } else if (node.getOperation() == OPERATION_NULL) {
-            sb.append(" IS NULL");
-        } else if (node.getOperation() == OPERATION_NOT_NULL) {
-            sb.append(" IS NOT NULL");
-        } else {
-            exceptions.add(new InvalidQueryException("Invalid operation: " + node.getOperation()));
-        }
-
-        if (node.getOperation() == OPERATION_LIKE && node.getStringValue().indexOf('\\') > -1) {
-            sb.append(" ESCAPE '\\'");
-        }
-
         return sb;
     }
 

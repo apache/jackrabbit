@@ -357,19 +357,24 @@ public class XPathQueryBuilder implements XPathVisitor {
         }
         // get operation type
         String opType = node.getValue();
+        // todo distinguish value vs. general comparison
         int type = 0;
-        if (opType.equals(OP_EQ) || opType.equals(OP_SIGN_EQ)) {
-            type = RelationQueryNode.OPERATION_EQ;
+        if (opType.equals(OP_EQ)) {
+            type = RelationQueryNode.OPERATION_EQ_VALUE;
+        } else if (opType.equals(OP_SIGN_EQ)) {
+            type = RelationQueryNode.OPERATION_EQ_GENERAL;
         } else if (opType.equals(OP_GE) || opType.equals(OP_SIGN_GE)) {
-            type = RelationQueryNode.OPERATION_GE;
+            type = RelationQueryNode.OPERATION_GE_VALUE;
         } else if (opType.equals(OP_GT) || opType.equals(OP_SIGN_GT)) {
-            type = RelationQueryNode.OPERATION_GT;
+            type = RelationQueryNode.OPERATION_GT_VALUE;
         } else if (opType.equals(OP_LE) || opType.equals(OP_SIGN_LE)) {
-            type = RelationQueryNode.OPERATION_LE;
+            type = RelationQueryNode.OPERATION_LE_VALUE;
         } else if (opType.equals(OP_LT) || opType.equals(OP_SIGN_LT)) {
-            type = RelationQueryNode.OPERATION_LT;
-        } else if (opType.equals(OP_NE) || opType.equals(OP_SIGN_NE)) {
-            type = RelationQueryNode.OPERATION_NE;
+            type = RelationQueryNode.OPERATION_LT_VALUE;
+        } else if (opType.equals(OP_NE)) {
+            type = RelationQueryNode.OPERATION_NE_VALUE;
+        } else if (opType.equals(OP_SIGN_NE)) {
+            type = RelationQueryNode.OPERATION_NE_GENERAL;
         } else {
             exceptions.add(new InvalidQueryException("Unsupported ComparisonExpr type:" + node.getValue()));
         }

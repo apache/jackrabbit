@@ -336,4 +336,51 @@ public class SimpleQueryTest extends AbstractQueryTest {
         checkResult(result, 1);
     }
 
+    public void testGeneralComparison() throws Exception {
+        Node foo = testRootNode.addNode("foo");
+        foo.setProperty("text", new String[]{"foo", "bar"}); // mvp
+        Node bar = testRootNode.addNode("bar");
+        bar.setProperty("text", new String[]{"foo"}); // mvp with one value
+        Node bla = testRootNode.addNode("bla");
+        bla.setProperty("text", "foo"); // svp
+        Node blu = testRootNode.addNode("blu");
+        blu.setProperty("text", "bar"); // svp
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured WHERE 'foo' IN text " +
+                "and jcr:path LIKE '/" + testRoot + "/%'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        QueryResult result = q.execute();
+        checkResult(result, 3); // foo, bar, bla
+
+        String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text = 'foo']";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        result = q.execute();
+        checkResult(result, 3); // foo, bar, bla
+
+        sql = "SELECT * FROM nt:unstructured WHERE text = 'foo' " +
+                "and jcr:path LIKE '/" + testRoot + "/%'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        result = q.execute();
+        checkResult(result, 2); // bar, bla
+
+        xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text eq 'foo']";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        result = q.execute();
+        checkResult(result, 2); // bar, bla
+
+        sql = "SELECT * FROM nt:unstructured WHERE 'bar' NOT IN text " +
+                "and jcr:path LIKE '/" + testRoot + "/%'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, "sql");
+        result = q.execute();
+        checkResult(result, 2); // bar, bla
+
+        xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text != 'bar']";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH_DOCUMENT_VIEW);
+        result = q.execute();
+        checkResult(result, 2); // bar, bla
+
+    }
+
 }

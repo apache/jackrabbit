@@ -55,9 +55,8 @@ public class RelationQueryNode extends QueryNode implements Constants {
     private Date valueDate;
 
     /**
-     * The operation type of this relation. One of {@link #OPERATION_EQ},
-     * {@link #OPERATION_GE}, {@link #OPERATION_GT}, {@link #OPERATION_LE},
-     * {@link #OPERATION_LIKE}, {@link #OPERATION_LT}, {@link #OPERATION_NE}.
+     * The operation type of this relation. One of the operation values defined
+     * in {@link Constants}.
      */
     private int operation;
 

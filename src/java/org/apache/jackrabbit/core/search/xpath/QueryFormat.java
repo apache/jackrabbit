@@ -261,27 +261,33 @@ class QueryFormat implements QueryNodeVisitor, Constants {
             //int propIdx = sb.length();
             String propName = "@" + ISO9075.encode(node.getProperty()).toJCRName(resolver);
 
-            if (node.getOperation() == OPERATION_EQ) {
+            if (node.getOperation() == OPERATION_EQ_VALUE) {
+                sb.append(propName).append(" eq ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_EQ_GENERAL) {
                 sb.append(propName).append(" = ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_GE) {
-                sb.append(propName).append(" >= ");
+            } else if (node.getOperation() == OPERATION_GE_VALUE) {
+                sb.append(propName).append(" ge ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_GT) {
-                sb.append(propName).append(" > ");
+            } else if (node.getOperation() == OPERATION_GT_VALUE) {
+                sb.append(propName).append(" gt ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_LE) {
-                sb.append(propName).append(" <= ");
+            } else if (node.getOperation() == OPERATION_LE_VALUE) {
+                sb.append(propName).append(" le ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LIKE) {
                 sb.append(XPathQueryBuilder.JCRFN_LIKE.toJCRName(resolver));
                 sb.append("(").append(propName).append(", ");
                 appendValue(node, sb);
                 sb.append(")");
-            } else if (node.getOperation() == OPERATION_LT) {
-                sb.append(propName).append(" < ");
+            } else if (node.getOperation() == OPERATION_LT_VALUE) {
+                sb.append(propName).append(" lt ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_NE) {
+            } else if (node.getOperation() == OPERATION_NE_VALUE) {
+                sb.append(propName).append(" ne ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_NE_GENERAL) {
                 sb.append(propName).append(" != ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NULL) {

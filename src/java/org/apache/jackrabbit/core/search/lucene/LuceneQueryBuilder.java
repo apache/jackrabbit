@@ -34,6 +34,7 @@ import org.apache.lucene.search.RangeQuery;
 import org.apache.lucene.search.TermQuery;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
@@ -392,41 +393,66 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
         String field = "";
         String primaryTypeField = "";
+        String mvpField = "";
         try {
             field = node.getProperty().toJCRName(nsMappings);
             primaryTypeField = primaryType.toJCRName(nsMappings);
+            StringBuffer tmp = new StringBuffer();
+            tmp.append(nsMappings.getPrefix(node.getProperty().getNamespaceURI()));
+            tmp.append(':').append(FieldNames.MVP_PREFIX);
+            tmp.append(node.getProperty().getLocalName());
+            mvpField = tmp.toString();
+        } catch (NamespaceException e) {
+            // should never happen
+            exceptions.add(e);
         } catch (NoPrefixDeclaredException e) {
             // should never happen
             exceptions.add(e);
         }
 
         switch (node.getOperation()) {
-            case Constants.OPERATION_EQ:	// =
+            case Constants.OPERATION_EQ_VALUE:      // =
                 query = new TermQuery(new Term(field, stringValue));
                 break;
-            case Constants.OPERATION_GE:	// >=
+            case Constants.OPERATION_EQ_GENERAL:    // =
+                // search in single and multi valued properties
+                BooleanQuery or = new BooleanQuery();
+                or.add(new TermQuery(new Term(field, stringValue)), false, false);
+                or.add(new TermQuery(new Term(mvpField, stringValue)), false, false);
+                query = or;
+                break;
+            case Constants.OPERATION_GE_VALUE:      // >=
                 query = new RangeQuery(new Term(field, stringValue), null, true);
                 break;
-            case Constants.OPERATION_GT:	// >
+            case Constants.OPERATION_GT_VALUE:      // >
                 query = new RangeQuery(new Term(field, stringValue), null, false);
                 break;
-            case Constants.OPERATION_LE:	// <=
+            case Constants.OPERATION_LE_VALUE:      // <=
                 query = new RangeQuery(null, new Term(field, stringValue), true);
                 break;
-            case Constants.OPERATION_LIKE:	// LIKE
+            case Constants.OPERATION_LIKE:          // LIKE
                 if (stringValue.equals("%")) {
                     query = new MatchAllQuery(field);
                 } else {
                     query = new WildcardQuery(new Term(field, stringValue));
                 }
                 break;
-            case Constants.OPERATION_LT:	// <
+            case Constants.OPERATION_LT_VALUE:      // <
                 query = new RangeQuery(null, new Term(field, stringValue), false);
                 break;
-            case Constants.OPERATION_NE:	// !=
+            case Constants.OPERATION_NE_VALUE:      // !=
                 BooleanQuery notQuery = new BooleanQuery();
                 notQuery.add(new MatchAllQuery(field), false, false);
                 notQuery.add(new TermQuery(new Term(field, stringValue)), false, true);
+                query = notQuery;
+                break;
+            case Constants.OPERATION_NE_GENERAL:    // !=
+                // search in single and multi valued properties
+                notQuery = new BooleanQuery();
+                notQuery.add(new MatchAllQuery(field), false, false);
+                notQuery.add(new MatchAllQuery(mvpField), false, false);
+                notQuery.add(new TermQuery(new Term(field, stringValue)), false, true);
+                notQuery.add(new TermQuery(new Term(mvpField, stringValue)), false, true);
                 query = notQuery;
                 break;
             case Constants.OPERATION_NULL:
