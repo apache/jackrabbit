@@ -289,14 +289,14 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             InternalValue val;
             if (!content.isEmpty()) {
                 // read serialized value
-                String text = valueElement.getTextTrim();
+                String text = valueElement.getText();
                 if (type == PropertyType.BINARY) {
                     // special handling required for binary value:
                     // the value stores the path to the actual binary file in the blob store
                     try {
                         val = InternalValue.create(new FileSystemResource(blobStore, text));
                     } catch (IOException ioe) {
-                        String msg = "error while reading serialized binary valuey";
+                        String msg = "error while reading serialized binary value";
                         log.debug(msg);
                         throw new ItemStateException(msg, ioe);
                     }
@@ -637,7 +637,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                 values[i] = InternalValue.create(internalBlobFile);
                                 if (blobVal.isTempFile()) {
                                     blobVal.delete();
-                                    blobVal = null;
+                                    blobVal = null; // gc hint
                                 }
                             } else {
                                 // escape '<' and '&'
