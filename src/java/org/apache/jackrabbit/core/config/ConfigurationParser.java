@@ -40,6 +40,10 @@ import org.xml.sax.InputSource;
  *     RepositoryConfig rc = parser.parseRepositoryConfig(...);
  *     WorkspaceConfig wc = parser.parseWorkspaceConfig(...);
  * </pre>
+ * <p>
+ * Note that the configuration objects returned by this parser are not
+ * initialized. The caller needs to initialize the configuration objects
+ * before using them.
  */
 public class ConfigurationParser {
 
@@ -159,6 +163,9 @@ public class ConfigurationParser {
      * on the security application name attribute, the general workspace
      * configuration attributes, and on the file system, access manager,
      * and versioning configuration information.
+     * <p>
+     * Note that the returned repository configuration object has not been
+     * initialized.
      *
      * @param xml repository configuration document
      * @return repository configuration
@@ -190,12 +197,14 @@ public class ConfigurationParser {
         String defaultWorkspace = replaceVariables(
                 getAttribute(workspaces, DEFAULT_WORKSPACE_ATTRIBUTE));
 
+        // Workspace configuration template
+        Element template = getElement(root, WORKSPACE_ELEMENT);
+
         // Versioning configuration
         VersioningConfig vc = parseVersioningConfig(root);
 
-        return new RepositoryConfig(
-                root, this, home, appName, fsc, workspaceDirectory,
-                defaultWorkspace, amc, vc);
+        return new RepositoryConfig(home, appName, amc, fsc,
+                workspaceDirectory, defaultWorkspace, template, vc);
     }
 
     /**
@@ -231,6 +240,9 @@ public class ConfigurationParser {
      * <p>
      * The search index configuration element is optional. If it is not given,
      * then the workspace will not have search capabilities.
+     * <p>
+     * Note that the returned workspace configuration object has not been
+     * initialized.
      *
      * @param xml workspace configuration document
      * @return workspace configuration

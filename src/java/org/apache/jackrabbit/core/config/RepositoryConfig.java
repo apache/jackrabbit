@@ -34,7 +34,14 @@ import org.jdom.output.XMLOutputter;
 import org.xml.sax.InputSource;
 
 /**
- * A <code>RepositoryConfig</code> ...
+ * Repository configuration. This configuration class is used to
+ * create configured repository objects.
+ * <p>
+ * The contained configuration information are: the home directory and name
+ * of the repository, the access manager, file system, and versioning
+ * configurations, the workspace directory, the default workspace name, and
+ * the workspace configuration template. In addition the workspace
+ * configuration object keeps track of all configured workspaces.
  */
 public class RepositoryConfig {
 
@@ -42,13 +49,14 @@ public class RepositoryConfig {
     private static final String WORKSPACE_XML = "workspace.xml";
 
     /**
-     * Creates a new <code>RepositoryFactory</code> instance. The configuration
-     * is read from the specified configuration file.
+     * Parses the given repository configuration file and returns the parsed
+     * repository configuration. The given repository home directory path
+     * will be used as the ${rep.home} parser variable.
      *
-     * @param file path to the configuration file
+     * @param file repository configuration file
      * @param home repository home directory
-     * @return a new <code>RepositoryConfig</code> instance
-     * @throws ConfigurationException if an error occurs
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
      */
     public static RepositoryConfig create(String file, String home)
             throws ConfigurationException {
@@ -60,10 +68,22 @@ public class RepositoryConfig {
 
             return create(xml, home);
         } catch (FileNotFoundException e) {
-            throw new ConfigurationException("TODO", e);
+            throw new ConfigurationException(
+                    "The repository configuration file " + file
+                    + " could not be found.", e);
         }
     }
 
+    /**
+     * Parses the given repository configuration document and returns the
+     * parsed repository configuration. The given repository home directory
+     * path will be used as the ${rep.home} parser variable.
+     *
+     * @param xml repository configuration document
+     * @param home repository home directory
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     */
     public static RepositoryConfig create(InputSource xml, String home)
             throws ConfigurationException {
         Properties variables = new Properties();
@@ -77,68 +97,88 @@ public class RepositoryConfig {
         return config;
     }
 
-    private Element config;
-    private ConfigurationParser parser;
-
     /**
      * map of workspace names and workspace configurations
      */
-    private Map wspConfigs;
+    private Map workspaces;
 
     /**
-     * repository home directory
+     * Repository home directory.
      */
-    private String repHomeDir;
+    private final String home;
 
     /**
-     * virtual file system where the repository stores global state
+     * Repository name for a JAAS app-entry configuration.
      */
-    private FileSystemConfig fsc;
+    private final String name;
 
     /**
-     * the name of the JAAS configuration app-entry for this repository
+     * Repository access manager configuration;
      */
-    private String appName;
+    private final AccessManagerConfig amc;
 
     /**
-     * workspaces config root directory (i.e. folder that contains
-     * a subfolder with a workspace configuration file for every workspace
-     * in the repository)
+     * Repository file system configuration.
      */
-    private String workspaceDirectory;
+    private final FileSystemConfig fsc;
 
     /**
-     * name of default workspace
+     * Name of the default workspace.
      */
-    private String defaultWspName;
+    private final String defaultWorkspace;
 
     /**
-     * configuration for the access manager
+     * Workspace root directory. This directory contains a subdirectory for
+     * each workspace in this repository. Each workspace is configured by
+     * a workspace configuration file contained in the workspace subdirectory.
      */
-    private AccessManagerConfig amConfig;
+    private final String workspaceDirectory;
 
     /**
-     * the versioning config
+     * The workspace configuration template. Used in creating new workspace
+     * configuration files.
      */
-    private VersioningConfig vc;
+    private final Element template;
 
-    public RepositoryConfig(
-            Element config, ConfigurationParser parser,
-            String home, String name, FileSystemConfig fsc,
-            String root, String defaultWspName, AccessManagerConfig amc,
-            VersioningConfig vc) {
-        this.config = config;
-        this.parser = parser;
-        this.repHomeDir = home;
-        this.appName = name;
-        this.wspConfigs = new HashMap();
+    /**
+     * Repository versioning configuration.
+     */
+    private final VersioningConfig vc;
+
+    /**
+     * Creates a repository configuration object.
+     *
+     * @param template workspace configuration template
+     * @param home repository home directory
+     * @param name repository name for a JAAS app-entry configuration
+     * @param amc access manager configuration
+     * @param fsc file system configuration
+     * @param workspaceDirectory workspace root directory
+     * @param defaultWorkspace name of the default workspace
+     * @param vc versioning configuration
+     */
+    public RepositoryConfig(String home, String name,
+            AccessManagerConfig amc, FileSystemConfig fsc,
+            String workspaceDirectory, String defaultWorkspace,
+            Element template, VersioningConfig vc) {
+        this.workspaces = new HashMap();
+        this.home = home;
+        this.name = name;
+        this.amc = amc;
         this.fsc = fsc;
-        this.workspaceDirectory = root;
-        this.defaultWspName = defaultWspName;
-        this.amConfig = amc;
+        this.workspaceDirectory = workspaceDirectory;
+        this.defaultWorkspace = defaultWorkspace;
+        this.template = template;
         this.vc = vc;
     }
 
+    /**
+     * Initializes the repository configuration. This method first initializes
+     * the repository file system and versioning configurations and then
+     * loads and initializes the configurations for all available workspaces.
+     *
+     * @throws ConfigurationException on initialization errors
+     */
     private void init() throws ConfigurationException {
         fsc.init();
         vc.init();
@@ -157,23 +197,39 @@ public class RepositoryConfig {
         }
 
         for (int i = 0; i < files.length; i++) {
-            WorkspaceConfig config = loadWorkspaceConfig(files[i]);
-            if (config != null) {
-                config.init();
-                addWorkspaceConfig(config);
+            WorkspaceConfig wc = loadWorkspaceConfig(files[i]);
+            if (wc != null) {
+                wc.init();
+                addWorkspaceConfig(wc);
             }
         }
 
-        if (wspConfigs.isEmpty()) {
+        if (workspaces.isEmpty()) {
             // create initial default workspace
-            createWorkspaceConfig(defaultWspName);
-        } else if (!wspConfigs.containsKey(defaultWspName)) {
+            createWorkspaceConfig(defaultWorkspace);
+        } else if (!workspaces.containsKey(defaultWorkspace)) {
             throw new ConfigurationException(
                     "no configuration found for default workspace: "
-                    + defaultWspName);
+                    + defaultWorkspace);
         }
     }
 
+    /**
+     * Attempts to load a workspace configuration from the given workspace
+     * subdirectory. If the directory contains a valid workspace configuration
+     * file, then the configuration is parsed and returned as a workspace
+     * configuration object. The returned configuration object has not been
+     * initialized.
+     * <p>
+     * This method returns <code>null</code>, if the given directory does
+     * not exist or does not contain a workspace configuration file. If an
+     * invalid configuration file is found, then a
+     * {@link ConfigurationException ConfigurationException} is thrown.
+     *
+     * @param directory workspace configuration directory
+     * @return workspace configuration
+     * @throws ConfigurationException if the workspace configuration is invalid
+     */
     private WorkspaceConfig loadWorkspaceConfig(File directory)
             throws ConfigurationException {
         try {
@@ -187,18 +243,24 @@ public class RepositoryConfig {
                     directory.getPath());
             ConfigurationParser parser = new ConfigurationParser(variables);
 
-            WorkspaceConfig config = parser.parseWorkspaceConfig(xml);
-            return config;
+            return parser.parseWorkspaceConfig(xml);
         } catch (FileNotFoundException e) {
             return null;
         }
     }
 
-    private void addWorkspaceConfig(WorkspaceConfig config)
+    /**
+     * Adds the given workspace configuration to the repository.
+     *
+     * @param wc workspace configuration
+     * @throws ConfigurationException if a workspace with the same name
+     *                                already exists
+     */
+    private void addWorkspaceConfig(WorkspaceConfig wc)
             throws ConfigurationException {
-        String name = config.getName();
-        if (!wspConfigs.containsKey(name)) {
-            wspConfigs.put(name, config);
+        String name = wc.getName();
+        if (!workspaces.containsKey(name)) {
+            workspaces.put(name, wc);
         } else {
             throw new ConfigurationException(
                     "Duplicate workspace configuration: " + name);
@@ -207,98 +269,104 @@ public class RepositoryConfig {
 
     /**
      * Creates a new workspace configuration with the specified name.
+     * This method creates a workspace configuration subdirectory,
+     * copies the workspace configuration template into it, and finally
+     * adds the created workspace configuration to the repository.
+     * The initialized workspace configuration object is returned to
+     * the caller.
      *
      * @param name workspace name
-     * @return a new <code>WorkspaceConfig</code> object.
-     * @throws ConfigurationException if the specified name already exists or
-     *                             if an error occured during the creation.
+     * @return created workspace configuration
+     * @throws ConfigurationException if creating the workspace configuration
+     *                                failed
      */
     public synchronized WorkspaceConfig createWorkspaceConfig(String name)
             throws ConfigurationException {
-        // create the workspace folder (i.e. the workspace home directory)
-        File wspFolder = new File(workspaceDirectory, name);
-        if (!wspFolder.mkdir()) {
-            String msg = "Failed to create the workspace home directory: " + wspFolder.getPath();
-            throw new ConfigurationException(msg);
-        }
-        // clone the workspace definition template
-        Element wspCongigElem = (Element) config.getChild("Workspace").clone();
-        wspCongigElem.setAttribute("name", name);
+        // The workspace directory (TODO encode name?)
+        File directory = new File(workspaceDirectory, name);
 
-        // create workspace.xml file
-/*
-        DocType docType = new DocType(WORKSPACE_ELEMENT, null, WorkspaceConfig.PUBLIC_ID);
-        Document doc = new Document(wspCongigElem, docType);
-*/
-        Document doc = new Document(wspCongigElem);
-        XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-        File configFile = new File(wspFolder, WORKSPACE_XML);
-        FileOutputStream fos = null;
+        // Create the directory, fail if it exists or cannot be created
+        if (!directory.mkdir()) {
+            throw new ConfigurationException(
+                    "Failed to create configuration directory for workspace "
+                    + name + ".");
+        }
+
+        // Create the workspace.xml file from the configuration template.
         try {
-            fos = new FileOutputStream(configFile);
-            out.output(doc, fos);
-        } catch (IOException ioe) {
-            String msg = "Failed to create workspace configuration file: " + configFile.getPath();
-            throw new ConfigurationException(msg, ioe);
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    // ignore
-                }
+            Element element = (Element) template.getChild("Workspace").clone();
+            element.setAttribute("name", name);
+            Document document = new Document(element);
+            XMLOutputter outputter =
+                new XMLOutputter(Format.getPrettyFormat());
+
+            FileOutputStream fos =
+                new FileOutputStream(new File(directory, WORKSPACE_XML));
+            try {
+                outputter.output(document, fos);
+            } finally {
+                try { fos.close(); } catch (Exception e) { }
             }
+        } catch (IOException e) {
+            throw new ConfigurationException(
+                    "Failed to create a configuration file for workspace "
+                    + name + ".", e);
         }
 
-        try {
-            // create workspace config object
-            Properties newVariables = new Properties();
-            newVariables.setProperty(
-                    ConfigurationParser.WORKSPACE_HOME_VARIABLE,
-                    configFile.getParent());
-            ConfigurationParser parser = new ConfigurationParser(newVariables);
-
-            InputSource xml = new InputSource(new FileReader(configFile));
-            xml.setSystemId(configFile.toURI().toString());
-
-            return parser.parseWorkspaceConfig(xml);
-        } catch (FileNotFoundException e) {
-            throw new ConfigurationException("TODO", e);
+        // Load the created workspace configuration.
+        WorkspaceConfig wc = loadWorkspaceConfig(directory);
+        if (wc != null) {
+            wc.init();
+            addWorkspaceConfig(wc);
+            return wc;
+        } else {
+            throw new ConfigurationException(
+                    "Failed to load the created configuration for workspace "
+                    + name + ".");
         }
     }
+
     /**
-     * Returns the home directory of the repository.
+     * Returns the repository home directory.
      *
-     * @return the home directory of the repository
+     * @return repository home directory
      */
     public String getHomeDir() {
-        return repHomeDir;
+        return home;
     }
 
     /**
-     * Returns the virtual file system where the repository stores global state.
+     * Returns the repository file system implementation.
      *
-     * @return the virtual file system where the repository stores global state
+     * @return file system implementation
      */
     public FileSystem getFileSystem() {
         return fsc.getFileSystem();
     }
 
     /**
-     * Returns the name of the JAAS configuration app-entry for this repository.
+     * Returns the repository name. The repository name can be used for
+     * JAAS app-entry configuration.
      *
-     * @return the name of the JAAS configuration app-entry for this repository
+     * @return repository name
      */
     public String getAppName() {
-        return appName;
+        return name;
     }
 
     /**
-     * Returns workspaces config root directory (i.e. the folder that contains
-     * a subfolder with a workspace configuration file for every workspace
-     * in the repository).
+     * Returns the repository access manager configuration.
      *
-     * @return the workspaces config root directory
+     * @return access manager configuration
+     */
+    public AccessManagerConfig getAccessManagerConfig() {
+        return amc;
+    }
+
+    /**
+     * Returns the workspace root directory.
+     *
+     * @return workspace root directory
      */
     public String getWorkspacesConfigRootDir() {
         return workspaceDirectory;
@@ -307,48 +375,39 @@ public class RepositoryConfig {
     /**
      * Returns the name of the default workspace.
      *
-     * @return the name of the default workspace
+     * @return name of the default workspace
      */
     public String getDefaultWorkspaceName() {
-        return defaultWspName;
+        return defaultWorkspace;
     }
 
     /**
      * Returns all workspace configurations.
      *
-     * @return a collection of <code>WorkspaceConfig</code> objects.
+     * @return workspace configurations
      */
     public Collection getWorkspaceConfigs() {
-        return wspConfigs.values();
+        return workspaces.values();
     }
 
     /**
      * Returns the configuration of the specified workspace.
      *
      * @param name workspace name
-     * @return a <code>WorkspaceConfig</code> object or <code>null</code>
-     *         if no such workspace exists.
+     * @return workspace configuration, or <code>null</code> if the named
+     *         workspace does not exist
      */
     public WorkspaceConfig getWorkspaceConfig(String name) {
-        return (WorkspaceConfig) wspConfigs.get(name);
+        return (WorkspaceConfig) workspaces.get(name);
     }
 
     /**
-     * Returns the configuration for the versioning
+     * Returns the repository versioning configuration.
      *
-     * @return a <code>VersioningConfig</code> object
+     * @return versioning configuration
      */
     public VersioningConfig getVersioningConfig() {
         return vc;
-    }
-
-    /**
-     * Returns the access manager configuration
-     *
-     * @return an <code>AccessManagerConfig</code> object
-     */
-    public AccessManagerConfig getAccessManagerConfig() {
-        return amConfig;
     }
 
 }
