@@ -662,61 +662,65 @@ public final class Path {
     }
 
     //--------------------------------------------------------< inner classes >
-    public static final class PathBuilder implements Cloneable {
+    /**
+     * package private inner class used to build a path from path elements;
+     * this class does not validate the format of the path elements!
+     */
+    static final class PathBuilder implements Cloneable {
         private final LinkedList queue;
 
-        public PathBuilder() {
+        PathBuilder() {
             queue = new LinkedList();
         }
 
-        public PathBuilder(PathElement[] elements) {
+        PathBuilder(PathElement[] elements) {
             this();
             addAll(elements);
         }
 
-        public void addRoot() {
+        void addRoot() {
             queue.addFirst(ROOT_ELEMENT);
         }
 
-        public void addAll(PathElement[] elements) {
+        void addAll(PathElement[] elements) {
             for (int i = 0; i < elements.length; i++) {
                 queue.add(elements[i]);
             }
         }
 
-        public void addFirst(String nameSpaceURI, String localName) {
+        void addFirst(String nameSpaceURI, String localName) {
             queue.addFirst(new PathElement(nameSpaceURI, localName));
         }
 
-        public void addFirst(String nameSpaceURI, String localName, int index) {
+        void addFirst(String nameSpaceURI, String localName, int index) {
             queue.addFirst(new PathElement(nameSpaceURI, localName, index));
         }
 
-        public void addFirst(QName name) {
+        void addFirst(QName name) {
             queue.addFirst(new PathElement(name));
         }
 
-        public void addFirst(QName name, int index) {
+        void addFirst(QName name, int index) {
             queue.addFirst(new PathElement(name, index));
         }
 
-        public void addLast(String nameSpaceURI, String localName) {
+        void addLast(String nameSpaceURI, String localName) {
             queue.addLast(new PathElement(nameSpaceURI, localName));
         }
 
-        public void addLast(String nameSpaceURI, String localName, int index) {
+        void addLast(String nameSpaceURI, String localName, int index) {
             queue.addLast(new PathElement(nameSpaceURI, localName, index));
         }
 
-        public void addLast(QName name) {
+        void addLast(QName name) {
             queue.addLast(new PathElement(name));
         }
 
-        public void addLast(QName name, int index) {
+        void addLast(QName name, int index) {
             queue.addLast(new PathElement(name, index));
         }
 
-        public Path getPath() throws MalformedPathException {
+        Path getPath() throws MalformedPathException {
             PathElement[] elements = (PathElement[]) queue.toArray(new PathElement[queue.size()]);
             // validate path
             if (elements.length == 0) {
@@ -725,12 +729,6 @@ public final class Path {
             for (int i = 1; i < elements.length; i++) {
                 if (elements[i].denotesRoot()) {
                     throw new MalformedPathException("path contains invalid root element(s)");
-                }
-                String localName = elements[i].getName().getLocalName();
-                Matcher matcher = PATH_ELEMENT_PATTERN.matcher(localName);
-                if (!matcher.matches()) {
-                    // illegal syntax for path element
-                    throw new MalformedPathException(localName + "' is not a legal path element");
                 }
             }
             return new Path(elements);
@@ -757,6 +755,21 @@ public final class Path {
         }
 
         // PathElement override
+        public boolean denotesCurrent() {
+            return false;
+        }
+
+        // PathElement override
+        public boolean denotesParent() {
+            return false;
+        }
+
+        // PathElement override
+        public boolean denotesName() {
+            return false;
+        }
+
+        // PathElement override
         public String toJCRName(NamespaceResolver resolver) throws NoPrefixDeclaredException {
             return "";
         }
@@ -775,6 +788,26 @@ public final class Path {
         }
 
         // PathElement override
+        public boolean denotesRoot() {
+            return false;
+        }
+
+        // PathElement override
+        public boolean denotesCurrent() {
+            return true;
+        }
+
+        // PathElement override
+        public boolean denotesParent() {
+            return false;
+        }
+
+        // PathElement override
+        public boolean denotesName() {
+            return false;
+        }
+
+        // PathElement override
         public String toJCRName(NamespaceResolver resolver) throws NoPrefixDeclaredException {
             return LITERAL;
         }
@@ -790,6 +823,26 @@ public final class Path {
 
         private ParentElement() {
             super(NamespaceRegistryImpl.NS_DEFAULT_URI, LITERAL);
+        }
+
+        // PathElement override
+        public boolean denotesRoot() {
+            return false;
+        }
+
+        // PathElement override
+        public boolean denotesCurrent() {
+            return false;
+        }
+
+        // PathElement override
+        public boolean denotesParent() {
+            return true;
+        }
+
+        // PathElement override
+        public boolean denotesName() {
+            return false;
         }
 
         // PathElement override
@@ -859,8 +912,48 @@ public final class Path {
             return index;
         }
 
+        /**
+         * Returns <code>true</code> if this element denotes the <i>root</i> element,
+         * otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this element denotes the <i>root</i>
+         *         element; otherwise <code>false</code>
+         */
         public boolean denotesRoot() {
-            return false;
+            return equals(ROOT_ELEMENT);
+        }
+
+        /**
+         * Returns <code>true</code> if this element denotes the <i>parent</i>
+         * ('..') element, otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this element denotes the <i>parent</i>
+         *         element; otherwise <code>false</code>
+         */
+        public boolean denotesParent() {
+            return equals(PARENT_ELEMENT);
+        }
+
+        /**
+         * Returns <code>true</code> if this element denotes the <i>current</i>
+         * ('.') element, otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this element denotes the <i>current</i>
+         *         element; otherwise <code>false</code>
+         */
+        public boolean denotesCurrent() {
+            return equals(CURRENT_ELEMENT);
+        }
+
+        /**
+         * Returns <code>true</code> if this element represents a regular name
+         * (i.e. neither root, '.' nor '..'), otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this element represents a regular name;
+         *         otherwise <code>false</code>
+         */
+        public boolean denotesName() {
+            return !denotesRoot() && !denotesParent() && !denotesCurrent();
         }
 
         public String toJCRName(NamespaceResolver resolver) throws NoPrefixDeclaredException {
@@ -951,7 +1044,8 @@ public final class Path {
     }
 
     //-------------------------------------------------------< implementation >
-    private static PathElement[] parse(String jcrPath, PathElement[] master, NamespaceResolver resolver)
+    private static PathElement[] parse(String jcrPath, PathElement[] master,
+                                       NamespaceResolver resolver)
             throws MalformedPathException {
         // shortcut
         if (jcrPath.equals("/")) {

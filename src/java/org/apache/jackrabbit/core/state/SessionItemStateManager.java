@@ -20,6 +20,8 @@ import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.PrintStream;
 import java.util.*;
@@ -31,6 +33,7 @@ public class SessionItemStateManager implements ItemStateProvider {
 
     private static Logger log = Logger.getLogger(SessionItemStateManager.class);
 
+    private final NodeId rootNodeId;
     private final PersistentItemStateProvider persistentStateMgr;
     private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
     private final TransientItemStateManager transientStateMgr;
@@ -44,6 +47,7 @@ public class SessionItemStateManager implements ItemStateProvider {
      * @param nsResolver
      */
     public SessionItemStateManager(String rootNodeUUID, PersistentItemStateProvider persistentStateMgr, NamespaceResolver nsResolver) {
+        rootNodeId = new NodeId(rootNodeUUID);
         this.persistentStateMgr = persistentStateMgr;
         // create transient item state manager
         transientStateMgr = new TransientItemStateManager();
@@ -256,20 +260,20 @@ public class SessionItemStateManager implements ItemStateProvider {
      * @see ItemStateProvider#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
-	// first check if the specified item has been transiently removed
-	if (transientStateMgr.hasItemStateInAttic(id)) {
-	    /**
-	     * check if there's new transient state for the specified item
-	     * (e.g. if a property with name 'x' has been removed and a new
-	     * property with same name has been created);
-	     */
-	    return transientStateMgr.hasItemState(id);
-	}
+        // first check if the specified item has been transiently removed
+        if (transientStateMgr.hasItemStateInAttic(id)) {
+            /**
+             * check if there's new transient state for the specified item
+             * (e.g. if a property with name 'x' has been removed and a new
+             * property with same name has been created);
+             */
+            return transientStateMgr.hasItemState(id);
+        }
 
-	// check if there's transient state for the specified item
-	if (transientStateMgr.hasItemState(id)) {
-	    return true;
-	}
+        // check if there's transient state for the specified item
+        if (transientStateMgr.hasItemState(id)) {
+            return true;
+        }
 
         // check the virtual root ids (needed for overlay)
         for (int i = 0; i < virtualProviders.length; i++) {
@@ -277,10 +281,10 @@ public class SessionItemStateManager implements ItemStateProvider {
                 return true;
             }
         }
-	// check if there's persistent state for the specified item
-	if (persistentStateMgr.hasItemState(id)) {
-	    return true;
-	}
+        // check if there's persistent state for the specified item
+        if (persistentStateMgr.hasItemState(id)) {
+            return true;
+        }
 
         // check if there is a virtual state for the specified item
         for (int i = 0; i < virtualProviders.length; i++) {
@@ -289,7 +293,7 @@ public class SessionItemStateManager implements ItemStateProvider {
             }
         }
 
-	return false;
+        return false;
     }
 
     /**
@@ -337,8 +341,12 @@ public class SessionItemStateManager implements ItemStateProvider {
      * @param parentId the id of the common parent of the transient item state
      *                 instances to be returned.
      * @return an iterator over descendant transient item state instances
+     * @throws InvalidItemStateException if any descendant item state has been
+     *                                   deleted externally
+     * @throws RepositoryException       if another error occurs
      */
-    public Iterator getDescendantTransientItemStates(ItemId parentId) {
+    public Iterator getDescendantTransientItemStates(ItemId parentId)
+            throws InvalidItemStateException, RepositoryException {
         // @todo need a more efficient way to find descendents in cache (e.g. using hierarchical index)
         if (!transientStateMgr.hasAnyItemStates()) {
             return Collections.EMPTY_LIST.iterator();
@@ -346,17 +354,64 @@ public class SessionItemStateManager implements ItemStateProvider {
         // collection of descendant transient states:
         // the path serves as key and sort criteria
         TreeMap descendants = new TreeMap(new PathComparator());
-        try {
-            Path[] parentPaths = hierMgr.getAllPaths(parentId);
-            /**
-             * walk through list of transient states and check if
-             * they are descendants of the specified parent
-             */
+
+        // use shortcut if root was specified as parent
+        // (in which case all non-root states are descendents)
+        if (parentId.equals(rootNodeId)) {
             Iterator iter = transientStateMgr.getEntries();
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 ItemId id = state.getId();
-                Path[] paths = hierMgr.getAllPaths(id);
+                if (id.equals(rootNodeId)) {
+                    // skip root
+                    continue;
+                }
+                try {
+                    Path p = hierMgr.getPath(id);
+                    descendants.put(p, state);
+                } catch (ItemNotFoundException infe) {
+                    String msg = id + ": the item has been removed externally.";
+                    log.error(msg);
+                    throw new InvalidItemStateException(msg);
+                }
+            }
+            return descendants.values().iterator();
+        }
+
+        Path[] parentPaths = null;
+        try {
+            parentPaths = hierMgr.getAllPaths(parentId);
+        } catch (ItemNotFoundException infe) {
+            String msg = parentId + ": the item has been removed externally.";
+            log.error(msg);
+            throw new InvalidItemStateException(msg);
+        }
+
+        /**
+         * walk through list of transient states and check if
+         * they are descendants of the specified parent
+         */
+        try {
+            Iterator iter = transientStateMgr.getEntries();
+            while (iter.hasNext()) {
+                ItemState state = (ItemState) iter.next();
+                ItemId id = state.getId();
+                Path[] paths = null;
+                try {
+                    paths = hierMgr.getAllPaths(id);
+                } catch (ItemNotFoundException infe) {
+                    /**
+                     * one of the parents of the specified item has been
+                     * removed externally; as we don't know its path,
+                     * we can't determine if it is a descendant;
+                     * ItemNotFoundException should only be thrown if
+                     * a descendant is affected;
+                     * => log warning and ignore for now
+                     * todo FIXME
+                     */
+                    log.warn(id + ": inconsistent hierarchy state", infe);
+                    continue;
+                }
                 boolean isDescendant = false;
                 /**
                  * check if any of the paths to the transient state
@@ -396,7 +451,24 @@ public class SessionItemStateManager implements ItemStateProvider {
                          * is a descendant of/identical with any of the
                          * specified parentId's paths.
                          */
-                        Path[] pa = hierMgr.getAllPaths(new NodeId((String) iterUUIDs.next()));
+                        String uuid = (String) iterUUIDs.next();
+                        Path[] pa = null;
+                        try {
+                            pa = hierMgr.getAllPaths(new NodeId(uuid));
+                        } catch (ItemNotFoundException infe) {
+                            /**
+                             * one of the parents of the specified item has been
+                             * removed externally; as we don't know its path,
+                             * we can't determine if it is a descendant;
+                             * ItemNotFoundException should only be thrown if
+                             * a descendant is affected;
+                             * => log warning and ignore for now
+                             * todo FIXME
+                             */
+                            log.warn(id + ": inconsistent hierarchy state", infe);
+                            continue;
+                        }
+
                         for (int k = 0; k < pa.length; k++) {
                             Path p0 = pa[k];   // path to removed parent
                             // walk through array of the specified parentId's paths
@@ -406,11 +478,15 @@ public class SessionItemStateManager implements ItemStateProvider {
                                     // this is a descendant, add it to the list and
                                     // continue with next transient state
 
-                                    // FIXME need to create dummy path in order
-                                    // to avoid conflicts
-                                    Path.PathBuilder pb = new Path.PathBuilder(p0.getElements());
-                                    pb.addFirst(NamespaceRegistryImpl.NS_DEFAULT_URI, Integer.toString(new Random().nextInt()));
-                                    descendants.put(pb.getPath(), state);
+                                    /**
+                                     * FIXME need to create dummy path by
+                                     * appending a random integer in order to
+                                     * avoid potential conflicts
+                                     */
+                                    Path dummy = Path.create(p0,
+                                            Path.create(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, Integer.toString(new Random().nextInt())), 0),
+                                            true);
+                                    descendants.put(dummy, state);
                                     isDescendant = true;
                                     break;
                                 }
@@ -427,9 +503,9 @@ public class SessionItemStateManager implements ItemStateProvider {
                 // continue with next transient state
             }
         } catch (MalformedPathException mpe) {
-            log.warn("inconsistent hierarchy state", mpe);
-        } catch (RepositoryException re) {
-            log.warn("inconsistent hierarchy state", re);
+            String msg = "inconsistent hierarchy state";
+            log.warn(msg, mpe);
+            throw new RepositoryException(msg, mpe);
         }
 
         return descendants.values().iterator();

@@ -52,7 +52,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     // jcr:xmltext
     public static final QName NODENAME_XMLTEXT =
             new QName(NamespaceRegistryImpl.NS_JCR_URI, "xmltext");
-    // jcr:xmltext
+    // jcr:xmlcharacters
     public static final QName PROPNAME_XMLCHARACTERS =
             new QName(NamespaceRegistryImpl.NS_JCR_URI, "xmlcharacters");
 
@@ -123,7 +123,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 }
             }
         } else {
-            // regalur node
+            // regular node
 
             // element name
             String elemName;
