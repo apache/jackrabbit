@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ValueHelper;
@@ -240,6 +241,14 @@ class SysViewImportHandler extends DefaultHandler {
 			// we're ready to create the node
 			createNode(current);
 		    }
+		} else if (currentPropName.equals(VersionManager.PROPNAME_BASE_VERSION)) {
+                    // ignore so far
+		} else if (currentPropName.equals(VersionManager.PROPNAME_VERSION_HISTORY)) {
+                    // ignore so far
+		} else if (currentPropName.equals(VersionManager.PROPNAME_PREDECESSORS)) {
+                    // ignore so far
+		} else if (currentPropName.equals(VersionManager.PROPNAME_IS_CHECKED_OUT)) {
+                    // ignore so far
 		} else {
 		    // non-system property encountered; we can assume that all
 		    // required system properties have been collected by now
