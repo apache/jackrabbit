@@ -99,6 +99,23 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeCanAddMixinTest.class);
         suite.addTestSuite(NodeRemoveMixinTest.class);
 
+        suite.addTestSuite(WorkspaceCloneReferenceableTest.class);
+        suite.addTestSuite(WorkspaceCloneSameNameSibsTest.class);
+        suite.addTestSuite(WorkspaceCloneTest.class);
+        suite.addTestSuite(WorkspaceCloneVersionableTest.class);
+        suite.addTestSuite(WorkspaceCopyBetweenWorkspacesReferenceableTest.class);
+        suite.addTestSuite(WorkspaceCopyBetweenWorkspacesSameNameSibsTest.class);
+        suite.addTestSuite(WorkspaceCopyBetweenWorkspacesTest.class);
+        suite.addTestSuite(WorkspaceCopyBetweenWorkspacesVersionableTest.class);
+        suite.addTestSuite(WorkspaceCopyReferenceableTest.class);
+        suite.addTestSuite(WorkspaceCopySameNameSibsTest.class);
+        suite.addTestSuite(WorkspaceCopyTest.class);
+        suite.addTestSuite(WorkspaceCopyVersionableTest.class);
+        suite.addTestSuite(WorkspaceMoveReferenceableTest.class);
+        suite.addTestSuite(WorkspaceMoveSameNameSibsTest.class);
+        suite.addTestSuite(WorkspaceMoveTest.class);
+        suite.addTestSuite(WorkspaceMoveVersionableTest.class);
+
         return suite;
     }
 }
