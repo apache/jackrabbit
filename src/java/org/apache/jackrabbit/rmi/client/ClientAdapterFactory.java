@@ -28,6 +28,10 @@ import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -38,7 +42,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemoteQuery;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
+import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
+import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
@@ -51,6 +59,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * corresponding factory methods.
  * 
  * @author Jukka Zitting
+ * @author Philipp Koch
  */
 public class ClientAdapterFactory implements LocalAdapterFactory {
     
@@ -165,5 +174,38 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      */
     public Lock getLock(Node node, RemoteLock remote) {
         return new ClientLock(node, remote);
+    }
+
+    /**
+     * Creates and returns a {@link ClientQueryManager ClientQueryManager} instance.
+     *
+     * {@inheritDoc}
+     */
+    public QueryManager getQueryManager(
+            Session session, RemoteQueryManager remote) {
+        return new ClientQueryManager(session, remote, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientQuery ClientQuery} instance.
+     *
+     * {@inheritDoc}
+     */
+    public Query getQuery(Session session, RemoteQuery remote) {
+        return new ClientQuery(session, remote, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientQueryResult ClientQueryResult} instance.
+     *
+     * {@inheritDoc}
+     */
+    public QueryResult getQueryResult(
+            Session session, RemoteQueryResult remote) {
+        return new ClientQueryResult(session, remote, this);
+    }
+    
+    public Row getRow(RemoteRow remote) {
+        return new ClientRow(remote);
     }
 }

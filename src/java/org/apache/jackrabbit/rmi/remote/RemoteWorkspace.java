@@ -110,6 +110,13 @@ public interface RemoteWorkspace extends Remote {
         RepositoryException, RemoteException;
 
     /**
+     * @seejavax.jcr.Workspace#getQueryManager()
+     * @throws RemoteException on RMI errors
+     */
+    public RemoteQueryManager getQueryManager() throws RepositoryException,
+        RemoteException;
+
+    /**
      * @see javax.jcr.Workspace#getAccessibleWorkspaceNames()
      * @throws RemoteException on RMI errors
      */
