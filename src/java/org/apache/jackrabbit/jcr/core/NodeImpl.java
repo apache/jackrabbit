@@ -1708,48 +1708,60 @@ public class NodeImpl extends ItemImpl implements Node {
 	    throw new ConstraintViolationException(ntce.getMessage());
 	}
 
-	// modify the state of this node
-	NodeState thisState = (NodeState) getOrCreateTransientItemState();
-	// add mixin name
-	Set mixins = new HashSet(thisState.getMixinTypeNames());
-	mixins.add(ntName);
-	thisState.setMixinTypeNames(mixins);
+	// do the actual modifications implied by the new mixin;
+	// try to revert the changes in case an excpetion occurs
+	try {
+	    // modify the state of this node
+	    NodeState thisState = (NodeState) getOrCreateTransientItemState();
+	    // add mixin name
+	    Set mixins = new HashSet(thisState.getMixinTypeNames());
+	    mixins.add(ntName);
+	    thisState.setMixinTypeNames(mixins);
 
-	// set jcr:mixinTypes property
-	setMixinTypesProperty(mixins);
+	    // set jcr:mixinTypes property
+	    setMixinTypesProperty(mixins);
 
-	// add 'auto-create' properties defined in mixin type
-	PropertyDef[] pda = mixin.getAutoCreatePropertyDefs();
-	for (int i = 0; i < pda.length; i++) {
-	    PropertyDefImpl pd = (PropertyDefImpl) pda[i];
-	    // make sure that the property is not already defined by primary type
-	    // or existing mixin's
-	    NodeTypeImpl declaringNT = (NodeTypeImpl) pd.getDeclaringNodeType();
-	    if (!entExisting.includesNodeType(declaringNT.getQName())) {
-		createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
+	    // add 'auto-create' properties defined in mixin type
+	    PropertyDef[] pda = mixin.getAutoCreatePropertyDefs();
+	    for (int i = 0; i < pda.length; i++) {
+		PropertyDefImpl pd = (PropertyDefImpl) pda[i];
+		// make sure that the property is not already defined by primary type
+		// or existing mixin's
+		NodeTypeImpl declaringNT = (NodeTypeImpl) pd.getDeclaringNodeType();
+		if (!entExisting.includesNodeType(declaringNT.getQName())) {
+		    createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
+		}
 	    }
-	}
 
-	// recursively add 'auto-create' child nodes defined in mixin type
-	NodeDef[] nda = mixin.getAutoCreateNodeDefs();
-	for (int i = 0; i < nda.length; i++) {
-	    NodeDefImpl nd = (NodeDefImpl) nda[i];
-	    // make sure that the child node is not already defined by primary type
-	    // or existing mixin's
-	    NodeTypeImpl declaringNT = (NodeTypeImpl) nd.getDeclaringNodeType();
-	    if (!entExisting.includesNodeType(declaringNT.getQName())) {
-		createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+	    // recursively add 'auto-create' child nodes defined in mixin type
+	    NodeDef[] nda = mixin.getAutoCreateNodeDefs();
+	    for (int i = 0; i < nda.length; i++) {
+		NodeDefImpl nd = (NodeDefImpl) nda[i];
+		// make sure that the child node is not already defined by primary type
+		// or existing mixin's
+		NodeTypeImpl declaringNT = (NodeTypeImpl) nd.getDeclaringNodeType();
+		if (!entExisting.includesNodeType(declaringNT.getQName())) {
+		    createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+		}
 	    }
-	}
 
-	// check for special node types
-	// todo centralize version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
-	if (ntName.equals(NodeTypeRegistry.MIX_VERSIONABLE)) {
-	    VersionHistory hist = rep.getVersionManager().createVersionHistory(this);
-	    internalSetProperty(VersionImpl.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
-	    internalSetProperty(VersionImpl.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
-	    internalSetProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
-	    internalSetProperty(VersionImpl.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+	    // check for special node types
+	    // todo centralize version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
+	    if (ntName.equals(NodeTypeRegistry.MIX_VERSIONABLE)) {
+		VersionHistory hist = rep.getVersionManager().createVersionHistory(this);
+		internalSetProperty(VersionImpl.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
+		internalSetProperty(VersionImpl.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
+		internalSetProperty(VersionImpl.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
+		internalSetProperty(VersionImpl.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+	    }
+	} catch (RepositoryException re) {
+	    // try to undo the modifications by removing the mixin 
+	    try {
+		removeMixin(mixinName);
+	    } catch (RepositoryException re1) {
+		// silently ignore & fall through
+	    }
+	    throw re;
 	}
     }
 
