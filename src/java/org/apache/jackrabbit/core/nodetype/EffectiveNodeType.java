@@ -425,16 +425,30 @@ public class EffectiveNodeType implements Cloneable {
             throw new ConstraintViolationException("the property is not multi-valued");
         }
 
-        // check value constraints
         ValueConstraint[] constraints = pd.getValueConstraints();
-        if (constraints != null && constraints.length != 0) {
-            for (int i = 0; i < constraints.length; i++) {
-                if (values == null || values.length == 0) {
-                    constraints[i].check(null);
-                } else {
-                    for (int j = 0; j < values.length; j++) {
-                        constraints[i].check(values[j]);
+        if (constraints == null || constraints.length == 0) {
+            // no constraints to check
+            return;
+        }
+        if (values != null || values.length > 0) {
+            // check value constraints on every value
+            for (int i = 0; i < values.length; i++) {
+                // constraints are OR-ed together
+                boolean satisfied = false;
+                ConstraintViolationException cve = null;
+                for (int j = 0; j < constraints.length; j++) {
+                    try {
+                        constraints[j].check(values[i]);
+                        satisfied = true;
+                        break;
+                    } catch (ConstraintViolationException e) {
+                        cve = e;
+                        continue;
                     }
+                }
+                if (!satisfied) {
+                    // re-throw last exception we encountered
+                    throw cve;
                 }
             }
         }

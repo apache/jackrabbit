@@ -1055,6 +1055,11 @@ public class NodeTypeRegistry {
         }
 
         /**
+         * todo build set of node types that have dependencies on the specified
+         * node type
+         */
+
+        /**
          * todo check if this node type (or any node type that has dependencies
          * on this node type) is currently referenced by nodes in the repository.
          *

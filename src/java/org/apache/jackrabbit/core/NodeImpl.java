@@ -1163,7 +1163,8 @@ public class NodeImpl extends ItemImpl implements Node {
         Path.PathElement insertName;
         try {
             Path p = Path.create(srcName, session.getNamespaceResolver(), false);
-            if (p.getAncestorCount() > 0) {
+            // p must be a relative path of length==depth==1 (to eliminate e.g. "..")
+            if (p.isAbsolute() || p.getLength() != 1 || p.getDepth() != 1) {
                 throw new RepositoryException("invalid name: " + srcName);
             }
             insertName = p.getNameElement();
@@ -1177,7 +1178,8 @@ public class NodeImpl extends ItemImpl implements Node {
         if (destName != null) {
             try {
                 Path p = Path.create(destName, session.getNamespaceResolver(), false);
-                if (p.getAncestorCount() > 0) {
+                // p must be a relative path of length==depth==1 (to eliminate e.g. "..")
+                if (p.isAbsolute() || p.getLength() != 1 || p.getDepth() != 1) {
                     throw new RepositoryException("invalid name: " + destName);
                 }
                 beforeName = p.getNameElement();

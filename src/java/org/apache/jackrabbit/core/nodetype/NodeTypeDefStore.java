@@ -313,7 +313,7 @@ class NodeTypeDefStore {
                     if (!content.isEmpty()) {
                         String constraint = constraintElem.getTextTrim();
                         try {
-                            list1.add(ValueConstraint.create(type, constraint));
+                            list1.add(ValueConstraint.create(type, constraint, nsResolver));
                         } catch (InvalidConstraintException e) {
                             String msg = "invalid serialized node type definition [" + sntName + "]: invalid constraint: " + constraint;
                             log.error(msg, e);

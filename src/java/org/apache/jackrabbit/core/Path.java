@@ -168,10 +168,11 @@ public final class Path {
 
     /**
      * Creates a relative path based on a {@link QName} and an index.
-     * @param name single {@link QName} for this relative path.
+     *
+     * @param name  single {@link QName} for this relative path.
      * @param index index of the sinlge name element.
      * @return the relative path created from <code>name</code>.
-     * @exception IllegalArgumentException if <code>index</code> is negative.
+     * @throws IllegalArgumentException if <code>index</code> is negative.
      */
     public static Path create(QName name, int index) {
         if (index < 0) {
@@ -238,7 +239,7 @@ public final class Path {
 
     /**
      * Tests whether this path is canonical, i.e. whether it is absolute and
-     * does not contain redundant names such as "." and "..".
+     * does not contain redundant elements such as "." and "..".
      *
      * @return true if this path is canonical; false otherwise.
      * @see #isAbsolute()
@@ -247,7 +248,7 @@ public final class Path {
         if (!isAbsolute()) {
             return false;
         }
-        // check path for "." and ".." names
+        // check path for any "." and ".." elements
         for (int i = 0; i < elements.length; i++) {
             if (elements[i].equals(CURRENT_ELEMENT)
                     || elements[i].equals(PARENT_ELEMENT)) {
@@ -258,8 +259,81 @@ public final class Path {
     }
 
     /**
+     * Tests whether this path is normalized, i.e. whether it does not
+     * contain redundant elements such as "." and "..".
+     * <p/>
+     * Note that a normalized path can still contain ".." elements if they are
+     * not redundant, e.g. "../../a/b/c" would be a normalized relative path,
+     * whereas "../a/../../a/b/c" wouldn't (although they're semantically
+     * equivalent).
+     *
+     * @return true if this path is normalized; false otherwise.
+     * @see #getNormalizedPath()
+     */
+    public boolean isNormalized() {
+        if (isAbsolute()) {
+            /**
+             * a normalized absolute path has to be canonical, i.e. it
+             * cannot contain any "." and ".." elements
+             */
+            return isCanonical();
+        }
+
+        // check relative path for redundant "." and ".." elements only
+        for (int i = 0; i < elements.length; i++) {
+            if (elements[i].equals(CURRENT_ELEMENT)) {
+                // "." is always redundant
+                return false;
+            }
+            if (elements[i].equals(PARENT_ELEMENT)) {
+                /**
+                 * ".." is redundant only if there's a preceeding
+                 * non-".." element
+                 */
+                if (i > 0 && !elements[i - 1].equals(PARENT_ELEMENT)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns the normalized path representation of this path. This typically
+     * involves removing/resolving redundant elements such as "." and ".." from
+     * the path, e.g. "/a/./b/.." will be normalized to "/a", "../../a/b/c/.."
+     * will be normalized to "../../a/b", and so on.
+     *
+     * @return a normailzed path representation of this path
+     * @see #isNormalized()
+     */
+    public Path getNormalizedPath() {
+        if (isNormalized()) {
+            return this;
+        }
+
+        LinkedList queue = new LinkedList();
+        for (int i = 0; i < elements.length; i++) {
+            PathElement elem = elements[i];
+
+            if (elem.equals(CURRENT_ELEMENT)) {
+                continue;
+            } else if (elem.equals(PARENT_ELEMENT)) {
+                if (queue.size() > 0 && !queue.getLast().equals(PARENT_ELEMENT)) {
+                    queue.removeLast();
+                } else {
+                    queue.add(elem);
+                }
+            } else {
+                queue.add(elem);
+            }
+        }
+        return new Path((PathElement[]) queue.toArray(new PathElement[queue.size()]));
+    }
+
+    /**
      * Returns the canonical path representation of this path. This typically
-     * involves removing/resolving redundant names such as "." and ".." from
+     * involves removing/resolving redundant elements such as "." and ".." from
      * the path.
      *
      * @return a canonical path representation of this path
@@ -306,6 +380,10 @@ public final class Path {
      * <li>And so on to <i>degree</i> = <i>n</i>, where <i>n</i> is the depth
      * of this path, which returns the root path.
      * </ul>
+     * <p/>
+     * Note that there migth be an unexpected result if <i>this</i> path is not
+     * canonical, e.g. the ancestor of degree = 1 of the path "../.." would
+     * be ".." although this is not the parent of "../..".
      *
      * @param degree the relative degree of the requested ancestor.
      * @return the ancestor path of the specified degree.
@@ -331,33 +409,91 @@ public final class Path {
     }
 
     /**
-     * Returns the number of ancestors of this path.
+     * Returns the number of ancestors of this path. This is the equivalent
+     * of <code>{@link #getDepth()} - 1</code>.
+     * <p/>
+     * Note that the returned value might be negative if this path is not
+     * canonical, e.g. the depth of "../../a" is -1, its ancestor count is
+     * therefore -2.
      *
      * @return the number of ancestors of this path
+     * @see #getDepth()
+     * @see #getLength()
+     * @see #isCanonical()
      */
     public int getAncestorCount() {
-        return elements.length - 1;
+        return getDepth() - 1;
     }
 
     /**
-     * Determines if <i>this</i> path is an ancestor of the specified path.
+     * Returns the length of this path, i.e. the number of its elements.
+     * Note that the root element "/" counts as a separate element, e.g.
+     * the length of "/a/b/c" is 4 whereas the length of "a/b/c" is 3.
+     * <p/>
+     * Also note that the special elements "." and ".." are not treated
+     * specially, e.g. both "/a/./.." and "/a/b/c" have a length of 4
+     * but this value does not necessarily reflect the true hierarchy level as
+     * returned by <code>{@link #getDepth()}</code>.
+     *
+     * @return the length of this path
+     * @see #getDepth()
+     * @see #getAncestorCount()
+     */
+    public int getLength() {
+        return elements.length;
+    }
+
+    /**
+     * Returns the depth of this path. The depth reflects the absolute or
+     * relative hierarchy level this path is representing, depending on whether
+     * this path is an absolute or a relative path.
+     * <p/>
+     * Note that the returned value might be negative if this path is not
+     * canonical, e.g. the depth of "../../a" is -1.
+     *
+     * @return the depth this path
+     * @see #getLength()
+     * @see #getAncestorCount()
+     */
+    public int getDepth() {
+        int depth = 0;
+        for (int i = 0; i < elements.length; i++) {
+            if (elements[i].equals(PARENT_ELEMENT)) {
+                depth--;
+            } else if (!elements[i].equals(CURRENT_ELEMENT)) {
+                depth++;
+            }
+        }
+        return depth;
+    }
+
+    /**
+     * Determines if <i>this</i> path is an ancestor of the specified path,
+     * based on their (absolute or relative) hierarchy level as returned by
+     * <code>{@link #getDepth()}</code>.
      *
      * @return <code>true</code> if <code>other</code> is a descendant;
      *         otherwise <code>false</code>
-     * @throws MalformedPathException if either the specified path or this path
-     *                                is a relative path.
+     * @throws MalformedPathException if not both paths are either absolute or
+     *                                relative.
+     * @see #getDepth()
      */
     public boolean isAncestorOf(Path other) throws MalformedPathException {
-        if (equals(other)) {
-            return false;
-        }
         if (other == null) {
             throw new IllegalArgumentException("null argument");
         }
-        // make sure we're comparing canonical paths
-        Path p0 = getCanonicalPath();
-        Path p1 = other.getCanonicalPath();
-        if (p0.elements.length >= p1.elements.length) {
+        // make sure both paths are either absolute or relative
+        if (isAbsolute() != other.isAbsolute()) {
+            throw new MalformedPathException("cannot compare a relative path with an absolute path");
+        }
+        // make sure we're comparing normalized paths
+        Path p0 = getNormalizedPath();
+        Path p1 = other.getNormalizedPath();
+        if (p0.equals(p1)) {
+            return false;
+        }
+        // calculate depth of paths (might be negative)
+        if (p0.getDepth() >= p1.getDepth()) {
             return false;
         }
         for (int i = 0; i < p0.elements.length; i++) {
@@ -369,12 +505,15 @@ public final class Path {
     }
 
     /**
-     * Determines if <i>this</i> path is a descendant of the specified path.
+     * Determines if <i>this</i> path is a descendant of the specified path,
+     * based on their (absolute or relative) hierarchy level as returned by
+     * <code>{@link #getDepth()}</code>.
      *
      * @return <code>true</code> if <code>other</code> is an ancestor;
      *         otherwise <code>false</code>
-     * @throws MalformedPathException if either the specified path or this path
-     *                                is a relative path.
+     * @throws MalformedPathException if not both paths are either absolute or
+     *                                relative.
+     * @see #getDepth()
      */
     public boolean isDescendantOf(Path other) throws MalformedPathException {
         if (equals(other)) {

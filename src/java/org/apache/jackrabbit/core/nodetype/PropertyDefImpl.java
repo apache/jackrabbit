@@ -89,7 +89,7 @@ public class PropertyDefImpl extends ItemDefImpl implements PropertyDef {
         }
         String[] vca = new String[constraints.length];
         for (int i = 0; i < constraints.length; i++) {
-            vca[i] = constraints[i].getDefinition();
+            vca[i] = constraints[i].getDefinition(nsResolver);
         }
         return vca;
     }

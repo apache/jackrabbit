@@ -15,13 +15,13 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.BLOBFileValue;
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.*;
 import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.DateValue;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Calendar;
 import java.util.regex.Matcher;
@@ -42,11 +42,33 @@ public abstract class ValueConstraint {
         this.definition = definition;
     }
 
+    /**
+     * Returns the original (raw) definition of this constraint.
+     *
+     * @return the original (raw) definition of this constraint.
+     */
     public String getDefinition() {
         return definition;
     }
 
-    public static ValueConstraint create(int type, String definition) throws InvalidConstraintException {
+    /**
+     * For constraints that are not namespace prefix mapping sensitive this
+     * method returns the same result as <code>{@link #getDefinition()}</code>.
+     * <p/>
+     * Those that are namespace prefix mapping sensitive (e.g.
+     * <code>NameConstraint</code>, <code>PathConstraint</code> and
+     * <code>ReferenceConstraint</code>) use the given <code>nsResolver</code>
+     * to reflect the current mapping in the returned value.
+     *
+     * @return the definition of this constraint.
+     */
+    public String getDefinition(NamespaceResolver nsResolver) {
+        return definition;
+    }
+
+    public static ValueConstraint create(int type, String definition,
+                                         NamespaceResolver nsResolver)
+            throws InvalidConstraintException {
         if (definition == null) {
             throw new IllegalArgumentException("illegal definition (null)");
         }
@@ -68,19 +90,13 @@ public abstract class ValueConstraint {
                 return new NumericConstraint(definition);
 
             case PropertyType.NAME:
-                // @todo implement NAME value constraint
-                //return new NameConstraint(definition, nsResolver);
-                return new StringConstraint(".*");
+                return new NameConstraint(definition, nsResolver);
 
             case PropertyType.PATH:
-                // @todo implement PATH value constraint
-                //return new PathConstraint(definition, nsResolver);
-                return new StringConstraint(".*");
+                return new PathConstraint(definition, nsResolver);
 
             case PropertyType.REFERENCE:
-                // @todo implement REFERENCE value constraint
-                //return new ReferenceConstraint(definition, ntReg, nsResolver);
-                return new ReferenceConstraint(definition, null, null);
+                return new ReferenceConstraint(definition, nsResolver);
 
             default:
                 throw new IllegalArgumentException("unknown/unsupported target type for constraint: " + PropertyType.nameFromValue(type));
@@ -433,28 +449,39 @@ class DateConstraint extends ValueConstraint {
  * <code>PathConstraint</code> ...
  */
 class PathConstraint extends ValueConstraint {
-    final Pattern pattern;
+    final Path path;
+    final boolean deep;
 
-    PathConstraint(String definition) throws InvalidConstraintException {
+    PathConstraint(String definition, NamespaceResolver nsResolver)
+            throws InvalidConstraintException {
         super(definition);
 
-        // constraint format: regexp
+        // constraint format: absolute or relative path with optional trailing wildcard
+        deep = definition.endsWith("*");
+        if (deep) {
+            // trim trailing wildcard before building path
+            definition = definition.substring(0, definition.length() - 1);
+        }
         try {
-            pattern = Pattern.compile(definition);
-        } catch (PatternSyntaxException pse) {
-            String msg = "'" + definition + "' is not valid regular expression syntax";
-            log.error(msg, pse);
-            throw new InvalidConstraintException(msg, pse);
+            path = Path.create(definition, nsResolver, false);
+        } catch (MalformedPathException mpe) {
+            String msg = "invalid path expression specified as value constraint: " + definition;
+            log.error(msg, mpe);
+            throw new InvalidConstraintException(msg, mpe);
         }
     }
 
-    void check(String text) throws ConstraintViolationException {
-        if (text == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
-        }
-        Matcher matcher = pattern.matcher(text);
-        if (!matcher.matches()) {
-            throw new ConstraintViolationException("'" + text + "' does not satisfy the constraint '" + definition + "'");
+    public String getDefinition(NamespaceResolver nsResolver) {
+        try {
+            String p = path.toJCRPath(nsResolver);
+            if (deep) {
+                return (path.denotesRoot() ? p + "*" : p + "/*");
+            } else {
+                return p;
+            }
+        } catch (NoPrefixDeclaredException npde) {
+            // should never get here, return raw definition as fallback
+            return definition;
         }
     }
 
@@ -462,21 +489,34 @@ class PathConstraint extends ValueConstraint {
         if (value == null) {
             throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
         }
-        // @todo check PATH value constraint (need a NamespaceResolver)
-        /*
         switch (value.getType()) {
             case PropertyType.PATH:
-            Path p = (Path) value.internalValue();
-            check(p.toJCRPath(nsResolver));
-            return;
+                Path p = (Path) value.internalValue();
+                // normalize paths before comparing them
+                Path p0 = path.getNormalizedPath();
+                Path p1 = p.getNormalizedPath();
+                if (deep) {
+                    try {
+                        if (!p0.isAncestorOf(p1)) {
+                            throw new ConstraintViolationException(p + " does not satisfy the constraint '" + definition + "'");
+                        }
+                    } catch (MalformedPathException mpe) {
+                        // can't compare relative with absolute path
+                        throw new ConstraintViolationException(p + " does not satisfy the constraint '" + definition + "'");
+                    }
+                } else {
+                    // exact match required
+                    if (!p0.equals(p1)) {
+                        throw new ConstraintViolationException(p + " does not satisfy the constraint '" + definition + "'");
+                    }
+                }
+                return;
 
             default:
-            String msg = "PATH constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
-            log.error(msg);
-            throw new RepositoryException(msg);
+                String msg = "PATH constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                log.error(msg);
+                throw new RepositoryException(msg);
         }
-        */
-        log.warn("validation of PATH constraint is not yet implemented");
     }
 }
 
@@ -484,28 +524,33 @@ class PathConstraint extends ValueConstraint {
  * <code>NameConstraint</code> ...
  */
 class NameConstraint extends ValueConstraint {
-    final Pattern pattern;
+    final QName name;
 
-    NameConstraint(String definition) throws InvalidConstraintException {
+    NameConstraint(String definition, NamespaceResolver nsResolver)
+            throws InvalidConstraintException {
         super(definition);
 
-        // constraint format: regexp
+        // constraint format: JCR name in prefix form
         try {
-            pattern = Pattern.compile(definition);
-        } catch (PatternSyntaxException pse) {
-            String msg = "'" + definition + "' is not valid regular expression syntax";
-            log.error(msg, pse);
-            throw new InvalidConstraintException(msg, pse);
+            QName.checkFormat(definition);
+            name = QName.fromJCRName(definition, nsResolver);
+        } catch (IllegalNameException ine) {
+            String msg = "invalid name specified as value constraint: " + definition;
+            log.error(msg, ine);
+            throw new InvalidConstraintException(msg, ine);
+        } catch (UnknownPrefixException upe) {
+            String msg = "invalid name specified as value constraint: " + definition;
+            log.error(msg, upe);
+            throw new InvalidConstraintException(msg, upe);
         }
     }
 
-    void check(String text) throws ConstraintViolationException {
-        if (text == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
-        }
-        Matcher matcher = pattern.matcher(text);
-        if (!matcher.matches()) {
-            throw new ConstraintViolationException("'" + text + "' does not satisfy the constraint '" + definition + "'");
+    public String getDefinition(NamespaceResolver nsResolver) {
+        try {
+            return name.toJCRName(nsResolver);
+        } catch (NoPrefixDeclaredException npde) {
+            // should never get here, return raw definition as fallback
+            return definition;
         }
     }
 
@@ -513,21 +558,19 @@ class NameConstraint extends ValueConstraint {
         if (value == null) {
             throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
         }
-        // @todo check NAME value constraint (need a NamespaceResolver)
-        /*
         switch (value.getType()) {
             case PropertyType.NAME:
-            QName name = (QName) value.internalValue();
-            check(name.toJCRName(nsResolver);
-            return;
+                QName n = (QName) value.internalValue();
+                if (!name.equals(n)) {
+                    throw new ConstraintViolationException(n + " does not satisfy the constraint '" + definition + "'");
+                }
+                return;
 
             default:
-            String msg = "NAME constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
-            log.error(msg);
-            throw new RepositoryException(msg);
+                String msg = "NAME constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                log.error(msg);
+                throw new RepositoryException(msg);
         }
-        */
-        log.warn("validation of NAME constraint is not yet implemented");
     }
 }
 
@@ -535,62 +578,57 @@ class NameConstraint extends ValueConstraint {
  * <code>ReferenceConstraint</code> ...
  */
 class ReferenceConstraint extends ValueConstraint {
-    final QName[] ntNames;
+    final QName ntName;
 
-    ReferenceConstraint(String definition, NodeTypeRegistry ntReg, NamespaceResolver nsResolver) throws InvalidConstraintException {
+    ReferenceConstraint(String definition, NamespaceResolver nsResolver) throws InvalidConstraintException {
         super(definition);
 
-        // format: comma-separated list of node type names
-        String[] strings = definition.split(",\\s*");
-        ntNames = new QName[strings.length];
-        /*
-        for (int i = 0; i < strings.length; i++) {
-            // every node type specified must be registered
-            String s = strings[i];
-            try {
-            ntNames[i] = QName.fromJCRName(s, nsResolver);
-            } catch (UnknownPrefixException upe) {
-            String msg = "invalid node type specified as value constraint: " + s;
+        // format: node type name
+        try {
+            ntName = QName.fromJCRName(definition, nsResolver);
+        } catch (IllegalNameException ine) {
+            String msg = "invalid node type name specified as value constraint: " + definition;
+            log.error(msg, ine);
+            throw new InvalidConstraintException(msg, ine);
+        } catch (UnknownPrefixException upe) {
+            String msg = "invalid node type name specified as value constraint: " + definition;
             log.error(msg, upe);
             throw new InvalidConstraintException(msg, upe);
-            }
-            try {
-            ntReg.getEffectiveNodeType(ntNames[i]);
-            } catch (Exception e) {
-            String msg = "invalid node type specified as value constraint: " + ntNames[i];
-            log.error(msg, e);
-            throw new InvalidConstraintException(msg, e);
-            }
         }
-        */
     }
 
-    QName[] getNodeTypeNames() {
-        return ntNames;
+    public String getDefinition(NamespaceResolver nsResolver) {
+        try {
+            return ntName.toJCRName(nsResolver);
+        } catch (NoPrefixDeclaredException npde) {
+            // should never get here, return raw definition as fallback
+            return definition;
+        }
     }
 
-    void check(Node target) throws ConstraintViolationException {
-        if (target == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
-        }
+    QName getNodeTypeName() {
+        return ntName;
     }
 
     void check(InternalValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
             throw new ConstraintViolationException("null value does not satisfy the constraint '" + definition + "'");
         }
-        // @todo check REFERENCE value constraint (need a session)
+        // @todo check REFERENCE value constraint (requires a session)
         /*
         switch (value.getType()) {
             case PropertyType.REFERENCE:
-            UUID targetUUID = (UUID) value.internalValue();
-            check(session.getNodeByUUID(targetUUID.toString()));
-            return;
+                UUID targetUUID = (UUID) value.internalValue();
+                NodeImpl targetNode = (NodeImpl) session.getNodeByUUID(targetUUID.toString());
+                if (!targetNode.isNodeType(ntName)) {
+                    throw new ConstraintViolationException("the node with uuid " + targetUUID + " does not satisfy the constraint '" + definition + "'");
+                }
+                return;
 
             default:
-            String msg = "REFERENCE constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
-            log.error(msg);
-            throw new RepositoryException(msg);
+                String msg = "REFERENCE constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                log.error(msg);
+                throw new RepositoryException(msg);
         }
         */
         log.warn("validation of REFERENCE constraint is not yet implemented");
