@@ -3456,6 +3456,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void internalRestore(Version version, VersionSelector vsel, boolean removeExisting)
             throws UnsupportedRepositoryOperationException, RepositoryException {
+
         try {
             internalRestore(((VersionImpl) version).getInternalVersion(), vsel, removeExisting);
         } catch (RepositoryException e) {
@@ -3483,6 +3484,11 @@ public class NodeImpl extends ItemImpl implements Node {
     protected InternalVersion[] internalRestore(InternalVersion version, VersionSelector vsel,
                                                 boolean removeExisting)
             throws RepositoryException {
+
+        // fail if root version
+        if (version.isRootVersion()) {
+            throw new VersionException("Restore of root version not allowed.");
+        }
 
         // set jcr:isCheckedOut property to true, in order to avoid any conflicts
         internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));
