@@ -280,6 +280,7 @@
             </valueConstraints>
         </propertyDef>
         <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
+        <!-- FIXME jsr-170 defines this property as being autocreate; currently set to non-autocreate as workaround for initialization issue -->
         <propertyDef name="jcr:baseVersion" requiredType="Reference" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
