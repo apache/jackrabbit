@@ -447,7 +447,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
         // if property name is jcr:primaryType treat special
         if (Constants.JCR_PRIMARYTYPE.equals(rqn.getProperty())) {
-            if (rqn.getType() == RelationQueryNode.TYPE_STRING) {
+            if (rqn.getValueType() == RelationQueryNode.TYPE_STRING) {
                 try {
                     QName ntName = QName.fromJCRName(rqn.getStringValue(), resolver);
                     NodeTypeQueryNode ntNode = new NodeTypeQueryNode(queryNode, ntName);

@@ -55,4 +55,11 @@ public class AndQueryNode extends NAryQueryNode {
         return visitor.visit(this, data);
     }
 
+    /**
+     * Returns the type of this node.
+     * @return the type of this node.
+     */
+    public int getType() {
+        return QueryNode.TYPE_AND;
+    }
 }

@@ -304,7 +304,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String sql = "SELECT * FROM nt:unstructured WHERE mytext is null and jcr:path LIKE '/"
+        String sql = "SELECT * FROM nt:unstructured WHERE mytext is null and jcr:path LIKE '"
                 + testRoot + "/%'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
@@ -353,7 +353,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
         testRootNode.save();
 
         String sql = "SELECT * FROM nt:unstructured WHERE 'foo' IN text " +
-                "and jcr:path LIKE '/" + testRoot + "/%'";
+                "and jcr:path LIKE '" + testRoot + "/%'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 3); // foo, bar, bla
@@ -369,7 +369,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
         checkResult(result, 3); // foo, bar, bla
 
         sql = "SELECT * FROM nt:unstructured WHERE text = 'foo' " +
-                "and jcr:path LIKE '/" + testRoot + "/%'";
+                "and jcr:path LIKE '" + testRoot + "/%'";
         q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResult(result, 2); // bar, bla
@@ -385,7 +385,7 @@ public class SimpleQueryTest extends AbstractQueryTest {
         checkResult(result, 2); // bar, bla
 
         sql = "SELECT * FROM nt:unstructured WHERE 'bar' NOT IN text " +
-                "and jcr:path LIKE '/" + testRoot + "/%'";
+                "and jcr:path LIKE '" + testRoot + "/%'";
         q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResult(result, 2); // bar, bla

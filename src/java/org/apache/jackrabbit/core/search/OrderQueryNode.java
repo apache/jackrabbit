@@ -43,6 +43,14 @@ public class OrderQueryNode extends QueryNode {
     }
 
     /**
+     * Returns the type of this node.
+     * @return the type of this node.
+     */
+    public int getType() {
+        return QueryNode.TYPE_ORDER;
+    }
+
+    /**
      * Adds an order specification to this query node.
      * @param property the name of the property.
      * @param ascending if <code>true</code> values of this properties are

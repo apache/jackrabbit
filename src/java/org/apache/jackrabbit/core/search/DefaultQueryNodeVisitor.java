@@ -46,10 +46,6 @@ public class DefaultQueryNodeVisitor implements QueryNodeVisitor {
         return data;
     }
 
-    public Object visit(RangeQueryNode node, Object data) {
-        return data;
-    }
-
     public Object visit(TextsearchQueryNode node, Object data) {
         return data;
     }

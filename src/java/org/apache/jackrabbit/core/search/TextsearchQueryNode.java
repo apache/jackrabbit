@@ -46,6 +46,14 @@ public class TextsearchQueryNode extends QueryNode {
     }
 
     /**
+     * Returns the type of this node.
+     * @return the type of this node.
+     */
+    public int getType() {
+        return QueryNode.TYPE_TEXTSEARCH;
+    }
+
+    /**
      * Returns the textsearch statement.
      *
      * @return the textsearch statement.

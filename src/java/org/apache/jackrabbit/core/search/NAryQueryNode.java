@@ -102,6 +102,18 @@ public abstract class NAryQueryNode extends QueryNode {
     }
 
     /**
+     * Returns the number of operands.
+     * @return the number of operands.
+     */
+    public int getNumOperands() {
+        if (operands == null) {
+            return 0;
+        } else {
+            return operands.size();
+        }
+    }
+
+    /**
      * Helper class to accept a <code>visitor</code> for all operands
      * of this <code>NAryQueryNode</code>.
      *

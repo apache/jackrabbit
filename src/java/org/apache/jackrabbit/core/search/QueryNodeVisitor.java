@@ -33,8 +33,6 @@ public interface QueryNodeVisitor {
 
     public Object visit(NodeTypeQueryNode node, Object data);
 
-    public Object visit(RangeQueryNode node, Object data);
-
     public Object visit(TextsearchQueryNode node, Object data);
 
     public Object visit(PathQueryNode node, Object data);

@@ -40,6 +40,11 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.util.ISO8601;
 import java.util.Date;
 import java.util.Calendar;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Arrays;
 import java.text.SimpleDateFormat;
 
 /**
@@ -67,6 +72,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /** Query node to gather the constraints defined in the WHERE clause */
     private final AndQueryNode constraintNode = new AndQueryNode(null);
+
+    /** List of PathQueryNode constraints that need to be merged */
+    private final List pathConstraints = new ArrayList();
 
     /**
      * Creates a new <code>JCRSQLQueryBuilder</code>.
@@ -139,15 +147,50 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
         // use //* if no path has been set
         PathQueryNode pathNode = root.getLocationNode();
-        if (pathNode.getPathSteps().length == 0) {
-            pathNode.setAbsolute(true);
+        pathNode.setAbsolute(true);
+        if (pathConstraints.size() == 0) {
             pathNode.addPathStep(new LocationStepQueryNode(pathNode, new QName("", ""), false));
             pathNode.addPathStep(new LocationStepQueryNode(pathNode, null, true));
+        } else {
+            try {
+                while (pathConstraints.size() > 1) {
+                    // merge path nodes
+                    MergingPathQueryNode path = null;
+                    for (Iterator it = pathConstraints.iterator(); it.hasNext();) {
+                        path = (MergingPathQueryNode) it.next();
+                        if (path.needsMerge()) {
+                            break;
+                        } else {
+                            path = null;
+                        }
+                    }
+                    if (path == null) {
+                        throw new IllegalArgumentException("Invalid combination of jcr:path clauses");
+                    } else {
+                        pathConstraints.remove(path);
+                        MergingPathQueryNode[] paths = (MergingPathQueryNode[]) pathConstraints.toArray(new MergingPathQueryNode[pathConstraints.size()]);
+                        paths = path.doMerge(paths);
+                        pathConstraints.clear();
+                        pathConstraints.addAll(Arrays.asList(paths));
+                    }
+                }
+            } catch (NoSuchElementException e) {
+                throw new IllegalArgumentException("Invalid combination of jcr:path clauses");
+            }
+            MergingPathQueryNode path = (MergingPathQueryNode) pathConstraints.get(0);
+            LocationStepQueryNode[] steps = path.getPathSteps();
+            for (int i = 0; i < steps.length; i++) {
+                LocationStepQueryNode step = new LocationStepQueryNode(pathNode, steps[i].getNameTest(), steps[i].getIncludeDescendants());
+                step.setIndex(steps[i].getIndex());
+                pathNode.addPathStep(step);
+            }
         }
 
-        // attach constraint to last path step
-        LocationStepQueryNode[] steps = pathNode.getPathSteps();
-        steps[steps.length - 1].addPredicate(constraintNode);
+        if (constraintNode.getNumOperands() > 0) {
+            // attach constraint to last path step
+            LocationStepQueryNode[] steps = pathNode.getPathSteps();
+            steps[steps.length - 1].addPredicate(constraintNode);
+        }
 
         return root;
     }
@@ -206,7 +249,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 if (node.children[1] instanceof ASTIdentifier) {
                     // simply ignore, this is a join of a mixin node type
                 } else {
-                    createPathQuery(((ASTLiteral) node.children[1]).getValue());
+                    createPathQuery(((ASTLiteral) node.children[1]).getValue(), parent.getType());
                 }
                 // done
                 return data;
@@ -292,7 +335,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         // pass to operands
         node.childrenAccept(this, orQuery);
 
-        parent.addOperand(orQuery);
+        if (orQuery.getNumOperands() > 0) {
+            parent.addOperand(orQuery);
+        }
         return parent;
     }
 
@@ -432,9 +477,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /**
      * Creates <code>LocationStepQueryNode</code>s from a <code>path</code>.
+     * @param path the path pattern
+     * @param operation the type of the parent node
      */
-    private void createPathQuery(String path) {
-        PathQueryNode pathNode = root.getLocationNode();
+    private void createPathQuery(String path, int operation) {
+        MergingPathQueryNode pathNode = new MergingPathQueryNode(operation);
         pathNode.setAbsolute(true);
 
         String[] names = path.split("/");
@@ -445,8 +492,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                     // root
                     pathNode.addPathStep(new LocationStepQueryNode(pathNode, new QName("", ""), false));
                 } else {
-                    // descendant '//'
-                    // FIXME this is not possible
+                    // descendant '//' -> invalid path
+                    // todo throw or ignore?
+                    // we currently do not throw and add location step for an
+                    // empty name (which is basically the root node)
+                    pathNode.addPathStep(new LocationStepQueryNode(pathNode, new QName("", ""), false));
                 }
             } else {
                 int idx = names[i].indexOf('[');
@@ -486,7 +536,6 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                         throw new IllegalArgumentException("Unknown prefix: " + name);
                     }
                 }
-                // @todo how to specify descendant-or-self?
                 // if name test is % this means also search descendants
                 boolean descendant = name == null;
                 LocationStepQueryNode step = new LocationStepQueryNode(pathNode, qName, descendant);
@@ -496,6 +545,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 pathNode.addPathStep(step);
             }
         }
+        pathConstraints.add(pathNode);
     }
 
     /**
@@ -540,4 +590,205 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         return translated.toString();
     }
 
+    /**
+     * Extends the <code>PathQueryNode</code> with merging capability. A
+     * <code>PathQueryNode</code> <code>n1</code> can be merged with another
+     * node <code>n2</code> in the following case:
+     * <p/>
+     * <code>n1</code> contains a location step at position <code>X</code> with
+     * a name test that matches any node and has the descending flag set. Where
+     * <code>X</code> &lt; number of location steps.
+     * <code>n2</code> contains no location step to match any node name and
+     * the sequence of name tests is the same as the sequence of name tests
+     * of <code>n1</code>.
+     * The merged node then contains a location step at position <code>X</code>
+     * with the name test of the location step at position <code>X+1</code> and
+     * the descending flag set.
+     * <p/>
+     * The following path patterns:<br/>
+     * <code>/foo/%/bar</code> OR <code>/foo/bar</code><br/>
+     * are merged into:<br/>
+     * <code>/foo//bar</code>.
+     * <p/>
+     * The path patterns:<br/>
+     * <code>/foo/%</code> AND NOT <code>/foo/%/%</code><br/>
+     * are merged into:<br/>
+     * <code>/foo/*</code>
+     */
+    private static class MergingPathQueryNode extends PathQueryNode {
+
+        /** The operation type of the parent node */
+        private int operation;
+
+        /**
+         * Creates a new <code>MergingPathQueryNode</code> with the operation
+         * tpye of a parent node. <code>operation</code> must be one of:
+         * {@link org.apache.jackrabbit.core.search.QueryNode#TYPE_OR},
+         * {@link org.apache.jackrabbit.core.search.QueryNode#TYPE_AND} or
+         * {@link org.apache.jackrabbit.core.search.QueryNode#TYPE_NOT}.
+         * @param operation the operation type of the parent node.
+         */
+        MergingPathQueryNode(int operation) {
+            super(null);
+            if (operation != QueryNode.TYPE_OR && operation != QueryNode.TYPE_AND && operation != QueryNode.TYPE_NOT) {
+                throw new IllegalArgumentException("operation");
+            }
+            this.operation = operation;
+        }
+
+        /**
+         * Merges this node with a node from <code>nodes</code>. If a merge
+         * is not possible an NoSuchElementException is thrown.
+         * @param nodes the nodes to try to merge with.
+         * @return the merged array containing a merged version of this node.
+         */
+        MergingPathQueryNode[] doMerge(MergingPathQueryNode[] nodes) {
+            if (operation == QueryNode.TYPE_OR) {
+                return doOrMerge(nodes);
+            } else {
+                return doAndMerge(nodes);
+            }
+        }
+
+        /**
+         * Merges two nodes into a node which selects any child nodes of a
+         * given node.
+         * <p/>
+         * Example:<br/>
+         * The path patterns:<br/>
+         * <code>/foo/%</code> AND NOT <code>/foo/%/%</code><br/>
+         * are merged into:<br/>
+         * <code>/foo/*</code>
+         *
+         * @param nodes the nodes to merge with.
+         * @return the merged nodes.
+         */
+        private MergingPathQueryNode[] doAndMerge(MergingPathQueryNode[] nodes) {
+            if (operation == QueryNode.TYPE_AND) {
+                // check if there is an node with operation OP_AND_NOT
+                MergingPathQueryNode n = null;
+                for (int i = 0; i < nodes.length; i++) {
+                    if (nodes[i].operation == QueryNode.TYPE_NOT) {
+                        n = nodes[i];
+                        nodes[i] = this;
+                    }
+                }
+                if (n == null) {
+                    throw new NoSuchElementException("Merging not possible with any node");
+                } else {
+                    return n.doAndMerge(nodes);
+                }
+            }
+            // check if this node is valid as an operand
+            if (operands.size() < 3) {
+                throw new NoSuchElementException("Merging not possible");
+            }
+            int size = operands.size();
+            LocationStepQueryNode n1 = (LocationStepQueryNode) operands.get(size - 1);
+            LocationStepQueryNode n2 = (LocationStepQueryNode) operands.get(size - 2);
+            if (n1.getNameTest() != null || n2.getNameTest() != null
+                    || !n1.getIncludeDescendants() || !n2.getIncludeDescendants()) {
+                throw new NoSuchElementException("Merging not possible");
+            }
+            // find a node to merge with
+            MergingPathQueryNode matchedNode = null;
+            for (int i = 0; i < nodes.length; i++) {
+                if (nodes[i].operands.size() == operands.size() - 1) {
+                    boolean match = true;
+                    for (int j = 0; j < operands.size() - 1 && match; j++) {
+                        LocationStepQueryNode step = (LocationStepQueryNode) operands.get(j);
+                        LocationStepQueryNode other = (LocationStepQueryNode) nodes[i].operands.get(j);
+                        match &= (step.getNameTest() == null) ? other.getNameTest() == null : step.getNameTest().equals(other.getNameTest());
+                    }
+                    if (match) {
+                        matchedNode = nodes[i];
+                        break;
+                    }
+                }
+            }
+            if (matchedNode == null) {
+                throw new NoSuchElementException("Merging not possible with any node");
+            }
+            // change descendants flag to only match child nodes
+            // that's the result of the merge.
+            ((LocationStepQueryNode) matchedNode.operands.get(matchedNode.operands.size() - 1)).setIncludeDescendants(false);
+            return nodes;
+        }
+
+        /**
+         * Merges two nodes into one node selecting a node on the
+         * descendant-or-self axis.
+         * <p/>
+         * Example:<br/>
+         * The following path patterns:<br/>
+         * <code>/foo/%/bar</code> OR <code>/foo/bar</code><br/>
+         * are merged into:<br/>
+         * <code>/foo//bar</code>.
+         *
+         * @param nodes the node to merge.
+         * @return the merged nodes.
+         */
+        private MergingPathQueryNode[] doOrMerge(MergingPathQueryNode[] nodes) {
+            // compact this
+            MergingPathQueryNode compacted = new MergingPathQueryNode(QueryNode.TYPE_OR);
+            for (Iterator it = operands.iterator(); it.hasNext();) {
+                LocationStepQueryNode step = (LocationStepQueryNode) it.next();
+                if (step.getIncludeDescendants() && step.getNameTest() == null) {
+                    // check if has next
+                    if (it.hasNext()) {
+                        LocationStepQueryNode next = (LocationStepQueryNode) it.next();
+                        next.setIncludeDescendants(true);
+                        compacted.addPathStep(next);
+                    } else {
+                        compacted.addPathStep(step);
+                    }
+                } else {
+                    compacted.addPathStep(step);
+                }
+            }
+
+            MergingPathQueryNode matchedNode = null;
+            for (int i = 0; i < nodes.length; i++) {
+                // loop over the steps and compare the names
+                if (nodes[i].operands.size() == compacted.operands.size()) {
+                    boolean match = true;
+                    Iterator compactedSteps = compacted.operands.iterator();
+                    Iterator otherSteps = nodes[i].operands.iterator();
+                    while (match && compactedSteps.hasNext()) {
+                        LocationStepQueryNode n1 = (LocationStepQueryNode) compactedSteps.next();
+                        LocationStepQueryNode n2 = (LocationStepQueryNode) otherSteps.next();
+                        match &= (n1.getNameTest() == null) ? n2.getNameTest() == null : n1.getNameTest().equals(n2.getNameTest());
+                    }
+                    if (match) {
+                        matchedNode = nodes[i];
+                        break;
+                    }
+                }
+            }
+            if (matchedNode == null) {
+                throw new NoSuchElementException("Merging not possible with any node.");
+            }
+            // construct new list
+            List mergedList = new ArrayList(Arrays.asList(nodes));
+            mergedList.remove(matchedNode);
+            mergedList.add(compacted);
+            return (MergingPathQueryNode[]) mergedList.toArray(new MergingPathQueryNode[mergedList.size()]);
+        }
+
+        /**
+         * Returns <code>true</code> if this node needs merging; <code>false</code>
+         * otherwise.
+         * @return <code>true</code> if this node needs merging; <code>false</code>
+         * otherwise.
+         */
+        boolean needsMerge() {
+            for (Iterator it = operands.iterator(); it.hasNext();) {
+                LocationStepQueryNode step = (LocationStepQueryNode) it.next();
+                if (step.getIncludeDescendants() && step.getNameTest() == null) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 }

@@ -247,10 +247,6 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         }
     }
 
-    public Object visit(RangeQueryNode node, Object data) {
-        return null;
-    }
-
     public Object visit(TextsearchQueryNode node, Object data) {
         try {
             org.apache.lucene.queryParser.QueryParser parser
@@ -401,7 +397,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     public Object visit(RelationQueryNode node, Object data) {
         Query query;
         String stringValue = null;
-        switch (node.getType()) {
+        switch (node.getValueType()) {
             case 0:
                 // not set: either IS NULL or IS NOT NULL
                 break;
@@ -419,7 +415,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 break;
             default:
                 throw new IllegalArgumentException("Unknown relation type: "
-                        + node.getType());
+                        + node.getValueType());
         }
 
         String field = "";

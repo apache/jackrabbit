@@ -23,6 +23,39 @@ package org.apache.jackrabbit.core.search;
  */
 public abstract class QueryNode {
 
+    /** Type value for {@link QueryRootNode} */
+    public static final int TYPE_ROOT = 1;
+
+    /** Type value for {@link RelationQueryNode} */
+    public static final int TYPE_RELATION = 2;
+
+    /** Type value for {@link OrderQueryNode} */
+    public static final int TYPE_ORDER = 3;
+
+    /** Type value for {@link TextsearchQueryNode} */
+    public static final int TYPE_TEXTSEARCH = 4;
+
+    /** Type value for {@link ExactQueryNode} */
+    public static final int TYPE_EXACT = 5;
+
+    /** Type value for {@link NodeTypeQueryNode} */
+    public static final int TYPE_NODETYPE = 6;
+
+    /** Type value for {@link AndQueryNode} */
+    public static final int TYPE_AND = 7;
+
+    /** Type value for {@link OrQueryNode} */
+    public static final int TYPE_OR = 8;
+
+    /** Type value for {@link NotQueryNode} */
+    public static final int TYPE_NOT = 9;
+
+    /** Type value for {@link LocationStepQueryNode} */
+    public static final int TYPE_LOCATION = 10;
+
+    /** Type value for {@link PathQueryNode} */
+    public static final int TYPE_PATH = 11;
+
     /**
      * References the parent of this <code>QueryNode</code>. If this is the root
      * of a query tree, then <code>parent</code> is <code>null</code>.
@@ -60,5 +93,11 @@ public abstract class QueryNode {
      * @return the return value of the <code>visitor.visit()</code> call.
      */
     public abstract Object accept(QueryNodeVisitor visitor, Object data);
+
+    /**
+     * Returns the type of this query node.
+     * @return the type of this query node.
+     */
+    public abstract int getType();
 
 }

@@ -58,9 +58,28 @@ public class SQLPathTest extends AbstractQueryTest {
     }
 
     public void testDescendantSelfTestRoot() throws RepositoryException {
+        String sql = getStatement(testRoot + "/%/node1");
+        sql += " OR jcr:path = '" + testRoot + "/node1'";
+        executeSQLQuery(sql, new Node[]{n1});
+    }
+
+    public void testChildAxisRoot() throws RepositoryException {
+        String sql = getStatement("/%");
+        sql += " AND NOT jcr:path = '/%/%'";
+        Node[] nodes = toArray(superuser.getRootNode().getNodes());
+        executeSQLQuery(sql, nodes);
+    }
+
+    public void testChildAxisTestRoot() throws RepositoryException {
         String sql = getStatement(testRoot + "/%");
-        sql += " OR jcr:path = '" + testRoot + "'";
-        executeSQLQuery(sql, new Node[]{testRootNode, n1, n11, n12, n2, n21, n22});
+        sql += " AND NOT jcr:path = '" + testRoot + "/%/%'";
+        executeSQLQuery(sql, new Node[]{n1, n2});
+    }
+
+    public void testChildAxisLeaf() throws RepositoryException {
+        String sql = getStatement(testRoot + "/node1/node11/%");
+        sql += " AND NOT jcr:path = '" + testRoot + "/node1/node11/%/%'";
+        executeSQLQuery(sql, new Node[0]);
     }
 
     //-----------------------------< internal >---------------------------------

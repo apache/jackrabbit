@@ -193,10 +193,6 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         return sb;
     }
 
-    public Object visit(RangeQueryNode node, Object data) {
-        return data;
-    }
-
     public Object visit(TextsearchQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
@@ -338,19 +334,19 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
      */
     private void appendValue(RelationQueryNode node, StringBuffer b)
             throws NoPrefixDeclaredException {
-        if (node.getType() == TYPE_LONG) {
+        if (node.getValueType() == TYPE_LONG) {
             b.append(node.getLongValue());
-        } else if (node.getType() == TYPE_DOUBLE) {
+        } else if (node.getValueType() == TYPE_DOUBLE) {
             b.append(node.getDoubleValue());
-        } else if (node.getType() == TYPE_STRING) {
+        } else if (node.getValueType() == TYPE_STRING) {
             b.append("'").append(node.getStringValue().replaceAll("'", "''")).append("'");
-        } else if (node.getType() == TYPE_DATE || node.getType() == TYPE_TIMESTAMP) {
+        } else if (node.getValueType() == TYPE_DATE || node.getValueType() == TYPE_TIMESTAMP) {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             cal.setTime(node.getDateValue());
             b.append(XPathQueryBuilder.XS_DATETIME.toJCRName(resolver));
             b.append("('").append(ISO8601.format(cal)).append("')");
         } else {
-            exceptions.add(new InvalidQueryException("Invalid type: " + node.getType()));
+            exceptions.add(new InvalidQueryException("Invalid type: " + node.getValueType()));
         }
     }
 }

@@ -152,11 +152,19 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
     }
 
     /**
+     * Returns the type of this node.
+     * @return the type of this node.
+     */
+    public int getType() {
+        return QueryNode.TYPE_RELATION;
+    }
+
+    /**
      * Returns the type of the value.
      *
      * @return the type of the value.
      */
-    public int getType() {
+    public int getValueType() {
         return type;
     }
 

@@ -45,6 +45,14 @@ public class PathQueryNode extends NAryQueryNode {
     }
 
     /**
+     * Returns the type of this node.
+     * @return the type of this node.
+     */
+    public int getType() {
+        return QueryNode.TYPE_PATH;
+    }
+
+    /**
      * Adds a path step to this <code>PathQueryNode</code>.
      * @param step the step to add.
      */

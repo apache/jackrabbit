@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.search.AndQueryNode;
 import org.apache.jackrabbit.core.search.NotQueryNode;
 import org.apache.jackrabbit.core.search.ExactQueryNode;
 import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
-import org.apache.jackrabbit.core.search.RangeQueryNode;
 import org.apache.jackrabbit.core.search.TextsearchQueryNode;
 import org.apache.jackrabbit.core.search.PathQueryNode;
 import org.apache.jackrabbit.core.search.LocationStepQueryNode;
@@ -250,10 +249,6 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         return data;
     }
 
-    public Object visit(RangeQueryNode node, Object data) {
-        return data;
-    }
-
     public Object visit(TextsearchQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         // escape quote
@@ -265,17 +260,67 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     public Object visit(PathQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
-            sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
-            sb.append(" LIKE '");
-            LocationStepQueryNode[] steps = node.getPathSteps();
-            for (int i = 0; i < steps.length; i++) {
-                if (steps[i].getNameTest() == null
-                        || steps[i].getNameTest().getLocalName().length() > 0) {
-                    sb.append('/');
+            if (containsDescendantOrSelf(node)) {
+                sb.append("(");
+                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(" LIKE '");
+                LocationStepQueryNode[] steps = node.getPathSteps();
+                for (int i = 0; i < steps.length; i++) {
+                    if (steps[i].getNameTest() == null
+                            || steps[i].getNameTest().getLocalName().length() > 0) {
+                        sb.append('/');
+                    }
+                    if (steps[i].getIncludeDescendants()) {
+                        sb.append("%/");
+                    }
+                    steps[i].accept(this, sb);
                 }
-                steps[i].accept(this, sb);
+                sb.append('\'');
+                sb.append(" OR ");
+                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(" LIKE '");
+                for (int i = 0; i < steps.length; i++) {
+                    if (steps[i].getNameTest() == null
+                            || steps[i].getNameTest().getLocalName().length() > 0) {
+                        sb.append('/');
+                    }
+                    if (steps[i].getNameTest() != null) {
+                        steps[i].accept(this, sb);
+                    }
+                }
+                sb.append("')");
+            } else if (containsAllChildrenMatch(node)) {
+                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(" LIKE '");
+                StringBuffer path = new StringBuffer();
+                LocationStepQueryNode[] steps = node.getPathSteps();
+                for (int i = 0; i < steps.length; i++) {
+                    if (steps[i].getNameTest() == null
+                            || steps[i].getNameTest().getLocalName().length() > 0) {
+                        path.append('/');
+                    }
+                    steps[i].accept(this, path);
+                }
+                sb.append(path);
+                sb.append('\'');
+                sb.append(" AND NOT ");
+                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(" LIKE '");
+                sb.append(path).append("/%").append('\'');
+            } else {
+                // just do a best effort
+                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(" LIKE '");
+                LocationStepQueryNode[] steps = node.getPathSteps();
+                for (int i = 0; i < steps.length; i++) {
+                    if (steps[i].getNameTest() == null
+                            || steps[i].getNameTest().getLocalName().length() > 0) {
+                        sb.append('/');
+                    }
+                    steps[i].accept(this, sb);
+                }
+                sb.append('\'');
             }
-            sb.append('\'');
         } catch (NoPrefixDeclaredException e) {
             exceptions.add(e);
         }
@@ -417,19 +462,60 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     }
 
     private void appendValue(RelationQueryNode node, StringBuffer b) {
-        if (node.getType() == TYPE_LONG) {
+        if (node.getValueType() == TYPE_LONG) {
             b.append(node.getLongValue());
-        } else if (node.getType() == TYPE_DOUBLE) {
+        } else if (node.getValueType() == TYPE_DOUBLE) {
             b.append(node.getDoubleValue());
-        } else if (node.getType() == TYPE_STRING) {
+        } else if (node.getValueType() == TYPE_STRING) {
             b.append("'").append(node.getStringValue().replaceAll("'", "''")).append("'");
-        } else if (node.getType() == TYPE_DATE || node.getType() == TYPE_TIMESTAMP) {
+        } else if (node.getValueType() == TYPE_DATE || node.getValueType() == TYPE_TIMESTAMP) {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             cal.setTime(node.getDateValue());
             b.append("TIMESTAMP '").append(ISO8601.format(cal)).append("'");
         } else {
-            exceptions.add(new InvalidQueryException("Invalid type: " + node.getType()));
+            exceptions.add(new InvalidQueryException("Invalid type: " + node.getValueType()));
         }
 
+    }
+
+    /**
+     * Returns <code>true</code> if <code>path</code> contains exactly one
+     * step with a descendant-or-self axis and an explicit name test; returns
+     * <code>false</code> otherwise.
+     * @param path the path node.
+     * @return <code>true</code> if <code>path</code> contains exactly one
+     * step with a descendant-or-self axis.
+     */
+    private static boolean containsDescendantOrSelf(PathQueryNode path) {
+        LocationStepQueryNode[] steps = path.getPathSteps();
+        int count = 0;
+        for (int i = 0; i < steps.length; i++) {
+            if (steps[i].getNameTest() != null && steps[i].getIncludeDescendants()) {
+                count++;
+            }
+        }
+        return count == 1;
+    }
+
+    /**
+     * Returns <code>true</code> if <code>path</code> contains exactly one
+     * location step which matches all node names. That is, matches any children
+     * of a given node. That location step must be the last one in the sequence
+     * of location steps.
+     * @param path the path node.
+     * @return <code>true</code> if the last step matches any node name.
+     */
+    private static boolean containsAllChildrenMatch(PathQueryNode path) {
+        LocationStepQueryNode[] steps = path.getPathSteps();
+        int count = 0;
+        for (int i = 0; i < steps.length; i++) {
+            if (steps[i].getNameTest() == null && !steps[i].getIncludeDescendants()) {
+                if (i == steps.length - 1 && count == 0) {
+                    return true;
+                }
+                count++;
+            }
+        }
+        return false;
     }
 }

@@ -58,6 +58,14 @@ public class ExactQueryNode extends QueryNode {
     }
 
     /**
+     * Returns the type of this node.
+     * @return the type of this node.
+     */
+    public int getType() {
+        return QueryNode.TYPE_EXACT;
+    }
+
+    /**
      * Returns the name of the property to match.
      *
      * @return the name of the property to match.
