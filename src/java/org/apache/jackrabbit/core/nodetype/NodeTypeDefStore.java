@@ -46,13 +46,13 @@ class NodeTypeDefStore {
     private static final String ROOT_ELEMENT = "nodeTypes";
     private static final String NODETYPE_ELEMENT = "nodeType";
     private static final String NAME_ATTRIBUTE = "name";
-    private static final String MIXIN_ATTRIBUTE = "mixin";
+    private static final String ISMIXIN_ATTRIBUTE = "isMixin";
     private static final String ORDERABLECHILDNODES_ATTRIBUTE = "orderableChildNodes";
     private static final String PRIMARYITEMNAME_ATTRIBUTE = "primaryItemName";
     private static final String SUPERTYPES_ELEMENT = "supertypes";
     private static final String SUPERTYPE_ELEMENT = "supertype";
     private static final String PROPERTYDEF_ELEMENT = "propertyDef";
-    private static final String TYPE_ATTRIBUTE = "type";
+    private static final String REQUIREDTYPE_ATTRIBUTE = "requiredType";
     private static final String VALUECONSTRAINTS_ELEMENT = "valueConstraints";
     private static final String VALUECONSTRAINT_ELEMENT = "valueConstraint";
     private static final String DEFAULTVALUES_ELEMENT = "defaultValues";
@@ -256,8 +256,8 @@ class NodeTypeDefStore {
             }
         }
 
-        // mixin
-        String mixin = ntElem.getAttributeValue(MIXIN_ATTRIBUTE);
+        // isMixin
+        String mixin = ntElem.getAttributeValue(ISMIXIN_ATTRIBUTE);
         if (mixin != null && mixin.length() > 0) {
             ntDef.setMixin(Boolean.valueOf(mixin).booleanValue());
         }
@@ -301,8 +301,8 @@ class NodeTypeDefStore {
             } else {
                 pd.setName(ChildItemDef.ANY_NAME);
             }
-            // type
-            String typeName = elem.getAttributeValue(TYPE_ATTRIBUTE);
+            // requiredType
+            String typeName = elem.getAttributeValue(REQUIREDTYPE_ATTRIBUTE);
             int type = PropertyType.UNDEFINED;
             if (typeName != null && typeName.length() > 0) {
                 try {
@@ -516,8 +516,8 @@ class NodeTypeDefStore {
                 }
             }
 
-            // mixin
-            ntElem.setAttribute(MIXIN_ATTRIBUTE, Boolean.toString(ntd.isMixin()));
+            // isMixin
+            ntElem.setAttribute(ISMIXIN_ATTRIBUTE, Boolean.toString(ntd.isMixin()));
 
             // orderableChildNodes
             ntElem.setAttribute(ORDERABLECHILDNODES_ATTRIBUTE, Boolean.toString(ntd.hasOrderableChildNodes()));
@@ -536,8 +536,8 @@ class NodeTypeDefStore {
                 // name
                 String name = pd.definesResidual() ? WILDCARD : pd.getName().toJCRName(nsResolver);
                 elem.setAttribute(NAME_ATTRIBUTE, name);
-                // type
-                elem.setAttribute(TYPE_ATTRIBUTE, PropertyType.nameFromValue(pd.getRequiredType()));
+                // requiredType
+                elem.setAttribute(REQUIREDTYPE_ATTRIBUTE, PropertyType.nameFromValue(pd.getRequiredType()));
                 // valueConstraints
                 ValueConstraint[] vca = pd.getValueConstraints();
                 if (vca != null && vca.length != 0) {
