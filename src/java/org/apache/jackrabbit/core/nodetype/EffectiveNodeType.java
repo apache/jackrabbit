@@ -521,13 +521,22 @@ public class EffectiveNodeType implements Cloneable {
                     ChildNodeDef nd = (ChildNodeDef) def;
                     // node definition with that name exists
                     if (nodeTypeName != null) {
-                        // check node type constraints
-                        checkRequiredPrimaryType(nodeTypeName, nd.getRequiredPrimaryTypes());
+                        try {
+                            // check node type constraints
+                            checkRequiredPrimaryType(nodeTypeName, nd.getRequiredPrimaryTypes());
+                        } catch (ConstraintViolationException cve) {
+                            // ignore and try next
+                            continue;
+                        }
+                        // found node definition
                         return nd;
                     } else {
                         if (nd.getDefaultPrimaryType() == null) {
-                            // no default node type defined
-                            throw new ConstraintViolationException("node type for " + name + " can not be determined");
+                            // no default node type defined, try next
+                            continue;
+                        } else {
+                            // found node definition with default node type
+                            return nd;
                         }
                     }
                 }
@@ -547,6 +556,7 @@ public class EffectiveNodeType implements Cloneable {
                     // ignore and try next
                     continue;
                 }
+                // found residual node definition
                 return nd;
             } else {
                 // since no node type has been specified for the new node,

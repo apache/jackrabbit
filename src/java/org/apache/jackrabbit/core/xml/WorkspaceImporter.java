@@ -42,6 +42,7 @@ public class WorkspaceImporter implements Importer {
 
     private static Logger log = Logger.getLogger(WorkspaceImporter.class);
 
+    private final NodeState importTarget;
     private final WorkspaceImpl wsp;
     private final HierarchyManager hierMgr;
     private final UpdatableItemStateManager stateMgr;
@@ -60,9 +61,10 @@ public class WorkspaceImporter implements Importer {
      */
     private final ArrayList references;
 
-    public WorkspaceImporter(NodeState importTargetState,
+    public WorkspaceImporter(NodeState importTarget,
                              WorkspaceImpl wsp,
                              int uuidBehavior) {
+        this.importTarget = importTarget;
         this.wsp = wsp;
 
         hierMgr = wsp.getHierarchyManager();
@@ -76,7 +78,7 @@ public class WorkspaceImporter implements Importer {
         references = new ArrayList();
 
         parents = new Stack();
-        parents.push(importTargetState);
+        parents.push(importTarget);
     }
 
     protected NodeState createNode(NodeState parent,
@@ -217,8 +219,8 @@ public class WorkspaceImporter implements Importer {
             throw new RepositoryException(msg, ise);
 */
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 aborted = true;
                 stateMgr.cancel();
             }
@@ -314,8 +316,8 @@ public class WorkspaceImporter implements Importer {
             stateMgr.store(node);
             succeeded = true;
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 aborted = true;
                 stateMgr.cancel();
             }
@@ -373,15 +375,13 @@ public class WorkspaceImporter implements Importer {
                 }
             }
 */
-
-            // finally pop the last item from the stack, the import target node
-            NodeState importTarget = (NodeState) parents.pop();
-            // we're done with it, store its state
+            // finally store the state of the import target
+            // (the parent of the imported subtree)
             stateMgr.store(importTarget);
             succeeded = true;
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 aborted = true;
                 stateMgr.cancel();
             }

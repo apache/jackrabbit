@@ -523,7 +523,7 @@ public class NodeImpl extends ItemImpl implements Node {
         removeChildProperty(qName);
     }
 
-    public void removeChildProperty(QName propName) throws RepositoryException {
+    protected void removeChildProperty(QName propName) throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
 
@@ -1179,6 +1179,10 @@ public class NodeImpl extends ItemImpl implements Node {
      * Note that no type conversion is being performed, i.e. it's the caller's
      * responsibility to make sure that the type of the given value is compatible
      * with the specified property's definition.
+     * <p/>
+     * <b>Important:</b> This method is public in order to make it accessible
+     * from internal code located sub packages, i.e. it should never be called
+     * from an application directly.
      *
      * @param name
      * @param value
@@ -1220,6 +1224,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * Note that no type conversion is being performed, i.e. it's the caller's
      * responsibility to make sure that the type of the given values is compatible
      * with the specified property's definition.
+     * <p/>
+     * <b>Important:</b> This method is for internal use only and should never
+     * be called from an application directly.
      *
      * @param name
      * @param values

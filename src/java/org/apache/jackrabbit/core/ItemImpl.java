@@ -869,6 +869,80 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     }
 
     /**
+     * Same as <code>{@link Item#remove()}</code> except for the
+     * <code>noChecks</code> parameter.
+     *
+     * @param noChecks
+     * @throws VersionException
+     * @throws LockException
+     * @throws RepositoryException
+     */
+    protected void internalRemove(boolean noChecks)
+            throws VersionException, LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        Path.PathElement thisName = getPrimaryPath().getNameElement();
+
+        // check if protected
+        if (isNode()) {
+            NodeImpl node = (NodeImpl) this;
+            // check if this is the root node
+            if (node.getDepth() == 0) {
+                String msg = safeGetJCRPath() + ": cannot remove root node";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+
+            NodeDef def = node.getDefinition();
+            // check protected flag
+            if (!noChecks && def.isProtected()) {
+                String msg = safeGetJCRPath() + ": cannot remove a protected node";
+                log.debug(msg);
+                throw new ConstraintViolationException(msg);
+            }
+        } else {
+            PropertyImpl prop = (PropertyImpl) this;
+            PropertyDef def = prop.getDefinition();
+            // check protected flag
+            if (!noChecks && def.isProtected()) {
+                String msg = safeGetJCRPath() + ": cannot remove a protected property";
+                log.debug(msg);
+                throw new ConstraintViolationException(msg);
+            }
+        }
+
+        NodeImpl parentNode = (NodeImpl) getParent();
+
+        // verify that parent node is checked-out
+        if (!noChecks && !parentNode.internalIsCheckedOut()) {
+            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
+        // check protected flag of parent node
+        if (!noChecks && parentNode.getDefinition().isProtected()) {
+            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a protected node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
+        // check lock status
+        if (!noChecks) {
+            parentNode.checkLock();
+        }
+
+        // delegate the removal of the child item to the parent node
+        if (isNode()) {
+            parentNode.removeChildNode(thisName.getName(), thisName.getIndex());
+        } else {
+            parentNode.removeChildProperty(thisName.getName());
+        }
+    }
+
+    /**
      * Same as <code>{@link Item#getName()}</code> except that
      * this method returns a <code>QName</code> instead of a
      * <code>String</code>.
@@ -1037,74 +1111,6 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      */
     public void remove() throws VersionException, LockException, RepositoryException {
         internalRemove(false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected void internalRemove(boolean noChecks)
-            throws VersionException, LockException, RepositoryException {
-
-        // check state of this instance
-        sanityCheck();
-
-        Path.PathElement thisName = getPrimaryPath().getNameElement();
-
-        // check if protected
-        if (isNode()) {
-            NodeImpl node = (NodeImpl) this;
-            // check if this is the root node
-            if (node.getDepth() == 0) {
-                String msg = safeGetJCRPath() + ": cannot remove root node";
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
-
-            NodeDef def = node.getDefinition();
-            // check protected flag
-            if (!noChecks && def.isProtected()) {
-                String msg = safeGetJCRPath() + ": cannot remove a protected node";
-                log.debug(msg);
-                throw new ConstraintViolationException(msg);
-            }
-        } else {
-            PropertyImpl prop = (PropertyImpl) this;
-            PropertyDef def = prop.getDefinition();
-            // check protected flag
-            if (!noChecks && def.isProtected()) {
-                String msg = safeGetJCRPath() + ": cannot remove a protected property";
-                log.debug(msg);
-                throw new ConstraintViolationException(msg);
-            }
-        }
-
-        NodeImpl parentNode = (NodeImpl) getParent();
-
-        // verify that parent node is checked-out
-        if (!noChecks && !parentNode.internalIsCheckedOut()) {
-            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag of parent node
-        if (!noChecks && parentNode.getDefinition().isProtected()) {
-            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
-        if (!noChecks) {
-            parentNode.checkLock();
-        }
-
-        // delegate the removal of the child item to the parent node
-        if (isNode()) {
-            parentNode.removeChildNode(thisName.getName(), thisName.getIndex());
-        } else {
-            parentNode.removeChildProperty(thisName.getName());
-        }
     }
 
     /**
