@@ -101,7 +101,9 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
         // split pattern
         StringTokenizer st = new StringTokenizer(pattern, OR, false);
         while (st.hasMoreTokens()) {
-            if (internalMatches(name, st.nextToken(), 0, 0)) {
+            // remove leading & trailing whitespace from token
+            String token = st.nextToken().trim();
+            if (internalMatches(name, token, 0, 0)) {
                 return true;
             }
         }

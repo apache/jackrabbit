@@ -36,7 +36,7 @@ public class NodeTestData extends AbstractJCRTest {
     private static final String TEST_DATA_PATH = "testdata/node";
 
     /** The encoding for the test resource */
-    private static final String ENCODING = "ISO-8859-1";
+    private static final String ENCODING = "UTF-8";
 
     /** Resolved QName for nt:resource */
     private String ntResource;
