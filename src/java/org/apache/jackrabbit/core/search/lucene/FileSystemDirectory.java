@@ -102,9 +102,9 @@ class FileSystemDirectory extends Directory {
         if (create) {
             try {
                 // erase if existing
-                String[] files = fs.list("/");
+                String[] files = fs.listFiles("/");
                 for (int i = 0; i < files.length; i++) {
-                    log.error("deleting " + files[i]);
+                    log.debug("deleting " + files[i]);
                     fs.deleteFile(files[i]);
                 }
             } catch (FileSystemException e) {
@@ -119,7 +119,7 @@ class FileSystemDirectory extends Directory {
     public String[] list() throws IOException {
         log.debug("list");
         try {
-            return fs.list("/");
+            return fs.listFiles("/");
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
         }
