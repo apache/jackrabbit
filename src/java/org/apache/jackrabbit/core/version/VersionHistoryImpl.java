@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.ItemStateException;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -28,6 +31,7 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import java.util.List;
 
 /**
  * This Class implements a version history that extends a node.
@@ -260,5 +264,15 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         if (!version.getParent().isSame(this)) {
             throw new VersionException("Specified version not contained in this history.");
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * In addition to the normal behaviour, this method also filters out the
+     * references that do not exist in this workspace.
+     */
+    public PropertyIterator getReferences() throws RepositoryException {
+        return getReferences(true);
     }
 }

@@ -141,8 +141,32 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
      */
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
+        try {
+            InternalVersionItem vi = vMgr.getItem(id.getUUID());
+            if (vi != null) {
+                // todo: add caching
+                NodeReferences ref = new NodeReferences(id);
+                ref.addAllReferences(vMgr.getItemReferences(vi));
+                // check for versionstorage internal references
+                if (vi instanceof InternalVersion) {
+                    InternalVersion v = (InternalVersion) vi;
+                    InternalVersion[] suc = v.getSuccessors();
+                    for (int i=0; i<suc.length; i++) {
+                        InternalVersion s = suc[i];
+                        ref.addReference(new PropertyId(s.getId(), JCR_PREDECESSORS));
+                    }
+                    InternalVersion[] pred = v.getPredecessors();
+                    for (int i=0; i<pred.length; i++) {
+                        InternalVersion p = pred[i];
+                        ref.addReference(new PropertyId(p.getId(), JCR_SUCCESSORS));
+                    }
+                }
 
-        //@todo return node references
+                return ref;
+            }
+        } catch (RepositoryException e) {
+            // ignore
+        }
         throw new NoSuchItemStateException(id.getUUID());
     }
 
@@ -436,6 +460,22 @@ public class VersionItemStateProvider implements VirtualItemStateProvider, Const
             String msg = "internal error: failed to build effective node type for node " + parent.getUUID();
             throw new RepositoryException(msg, ntce);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean setNodeReferences(NodeReferences refs) {
+        try {
+            InternalVersionItem vi = vMgr.getItem(refs.getUUID());
+            if (vi != null) {
+                vMgr.setItemReferences(vi, refs.getReferences());
+                return true;
+            }
+        } catch (RepositoryException e) {
+            // ignore
+        }
+        return false;
     }
 
     /**

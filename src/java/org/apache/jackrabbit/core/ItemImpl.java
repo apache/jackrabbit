@@ -1197,11 +1197,12 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
                     // initialize version histories for new nodes (might generate new transient state)
                     if (initVersionHistories(dirty.iterator())) {
-                        /**
-                         * re-build the list of transient states because the previous call
-                         * generated new transient state
-                         */
+                        // re-build the list of transient states because the previous call
+                        // generated new transient state
                         dirty = getTransientStates();
+
+                        // and aswell the references
+                        dirtyRefs= checkReferences(dirty.iterator(), removed.iterator());
                     }
 
                     // process 'new' or 'modified' transient states

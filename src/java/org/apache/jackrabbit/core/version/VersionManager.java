@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 
@@ -25,6 +24,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * This interface defines the version manager. It gives access to the underlaying
@@ -115,6 +115,7 @@ public interface VersionManager {
 
     /**
      * checks, if the node with the given id exists
+     * todo: move probably to VersionManagerImpl
      *
      * @param id
      * @return
@@ -123,12 +124,32 @@ public interface VersionManager {
 
     /**
      * Returns the version item with the given id
+     * todo: move probably to VersionManagerImpl
      *
      * @param id
      * @return
      * @throws RepositoryException
      */
     public InternalVersionItem getItem(String id) throws RepositoryException;
+
+    /**
+     * Returns the references that exist to this version item
+     * todo: move probably to VersionManagerImpl
+     *
+     * @param item
+     * @return a collection of property ids
+     */
+    public List getItemReferences(InternalVersionItem item);
+
+    /**
+     * Informs this version manager that the references to one of its
+     * items has changed.
+     * todo: move probably to VersionManagerImpl
+     *
+     * @param item the version item that is referenced
+     * @param references the collection of PropertyIds that references the item
+     */
+    public void setItemReferences(InternalVersionItem item, List references);
 
     /**
      * Close this version manager. After having closed a persistence

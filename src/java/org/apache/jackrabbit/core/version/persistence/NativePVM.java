@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version.persistence;
 
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -30,9 +29,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This Class implements the persistent part of the versioning. the
@@ -551,6 +548,36 @@ public class NativePVM implements PersistentVersionManager, Constants {
      */
     public UpdatableItemStateManager getItemStateMgr() {
         return stateMgr;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public List getItemReferences(InternalVersionItem item) {
+        try {
+            PersistentId id = getIdByExternal(item.getId());
+            NodeReferences refs = pMgr.load(new NodeReferencesId(id.internalId));
+            return refs.getReferences();
+        } catch (ItemStateException e) {
+            // ignore
+        }
+        return Collections.EMPTY_LIST;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setItemReferences(InternalVersionItem item, List references) {
+        try {
+            ChangeLog log = new ChangeLog();
+            PersistentId id = getIdByExternal(item.getId());
+            NodeReferences refs = new NodeReferences(new NodeReferencesId(id.internalId));
+            refs.addAllReferences(references);
+            log.modified(refs);
+            pMgr.store(log);
+        } catch (ItemStateException e) {
+            log.error("Error while storing", e);
+        }
     }
 
     /**

@@ -24,6 +24,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * This interface defines the access to the persistence layer of the
@@ -147,6 +148,23 @@ public interface PersistentVersionManager {
      * @return item state manager
      */
     public UpdatableItemStateManager getItemStateMgr();
+
+    /**
+     * Returns the references that exist to this version item
+     *
+     * @param item
+     * @return a collection of property ids
+     */
+    public List getItemReferences(InternalVersionItem item);
+
+    /**
+     * Informs this version manager that the references to one of its
+     * items has changed.
+     *
+     * @param item the version item that is referenced
+     * @param references the collection of PropertyIds that references the item
+     */
+    public void setItemReferences(InternalVersionItem item, List references);
 
     /**
      * Close this persistence version manager. After having closed a persistence

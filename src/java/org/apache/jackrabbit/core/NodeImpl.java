@@ -2419,12 +2419,26 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#getReferences()
      */
     public PropertyIterator getReferences() throws RepositoryException {
+        return getReferences(false);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * In addition to the normal behaviour, this method also filters out the
+     * references that do not exist in this workspace if <code>skipExistent</code>
+     * is set to <code>true</code>.
+     *
+     * @param skipInexistent if set to <code>true</code> inexistent items are skipped
+     */
+    protected PropertyIterator getReferences(boolean skipInexistent)
+            throws RepositoryException {
         try {
             NodeReferencesId targetId = new NodeReferencesId(((NodeId) id).getUUID());
             NodeReferences refs = stateMgr.getNodeReferences(targetId);
             // refs.getReferences returns a list of PropertyId's
             List idList = refs.getReferences();
-            return new LazyItemIterator(itemMgr, idList);
+            return new LazyItemIterator(itemMgr, idList, skipInexistent);
         } catch (ItemStateException e) {
             String msg = "Unable to retrieve node references for: " + id;
             log.debug(msg);

@@ -34,6 +34,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.io.PrintStream;
 import java.util.Iterator;
+import java.util.ArrayList;
 
 /**
  * Shared <code>ItemStateManager</code>. Caches objects returned from a
@@ -390,6 +391,10 @@ public class SharedItemStateManager extends ItemStateCache
     public synchronized void store(ChangeLog local, ObservationManagerImpl obsMgr) throws ItemStateException {
         ChangeLog shared = new ChangeLog();
 
+        // set of virtual node references
+        // todo: remember by provider
+        ArrayList virtualRefs = new ArrayList();
+
         /**
          * Validate modified references. Target node of references may
          * have been deleted in the meantime.
@@ -398,18 +403,28 @@ public class SharedItemStateManager extends ItemStateCache
         while (iter.hasNext()) {
             NodeReferences refs = (NodeReferences) iter.next();
             NodeId id = new NodeId(refs.getUUID());
-
-            if (refs.hasReferences()) {
-                try {
-                    if (local.get(id) == null && !hasItemState(id)) {
-                        throw new NoSuchItemStateException();
-                    }
-                } catch (NoSuchItemStateException e) {
-                    String msg = "Target node " + id + " of REFERENCE property does not exist";
-                    throw new ItemStateException(msg);
+            // if targetid is in virtual provider, transfer to its modified set
+            for (int i=0; i<virtualProviders.length; i++) {
+                VirtualItemStateProvider provider = virtualProviders[i];
+                if (provider.hasItemState(id)) {
+                    virtualRefs.add(refs);
+                    refs = null;
+                    break;
                 }
             }
-            shared.modified(refs);
+            if (refs != null) {
+                if (refs.hasReferences()) {
+                    try {
+                        if (local.get(id) == null && !hasItemState(id)) {
+                            throw new NoSuchItemStateException();
+                        }
+                    } catch (NoSuchItemStateException e) {
+                        String msg = "Target node " + id + " of REFERENCE property does not exist";
+                        throw new ItemStateException(msg);
+                    }
+                }
+                shared.modified(refs);
+            }
         }
 
         /**
@@ -452,6 +467,18 @@ public class SharedItemStateManager extends ItemStateCache
 
         /* Let the shared item listeners know about the change */
         shared.persisted();
+
+        /* notify virtual providers about node references */
+        iter = virtualRefs.iterator();
+        while (iter.hasNext()) {
+            NodeReferences refs = (NodeReferences) iter.next();
+            // if targetid is in virtual provider, transfer to its modified set
+            for (int i=0; i<virtualProviders.length; i++) {
+                if (virtualProviders[i].setNodeReferences(refs)) {
+                    break;
+                }
+            }
+        }
 
         /* dispatch the events */
         if (events != null) {

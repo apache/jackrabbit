@@ -20,10 +20,7 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateListener;
+import org.apache.jackrabbit.core.state.*;
 
 import javax.jcr.RepositoryException;
 
@@ -114,4 +111,12 @@ public interface VirtualItemStateProvider extends ItemStateManager, ItemStateLis
                                             String uuid, QName nodeTypeName)
             throws RepositoryException;
 
+    /**
+     * Informs this provider that the node references to one of its states has
+     * changed.
+     *
+     * @param refs
+     * @return <code>true</code> if the reference target is one of its items.
+     */
+    public boolean setNodeReferences(NodeReferences refs);
 }

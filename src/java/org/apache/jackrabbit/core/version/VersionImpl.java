@@ -18,13 +18,18 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.ItemStateException;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.PropertyIterator;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * This Class implements a Version that extends the node interface
@@ -127,4 +132,13 @@ public class VersionImpl extends NodeImpl implements Version {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * In addition to the normal behaviour, this method also filters out the
+     * references that do not exist in this workspace.
+     */
+    public PropertyIterator getReferences() throws RepositoryException {
+        return getReferences(true);
+    }
 }

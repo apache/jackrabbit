@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * This Class implements a VersionManager. It more or less acts as proxy
@@ -228,5 +229,17 @@ public class VersionManagerImpl implements VersionManager {
         return (Version) node.getSession().getNodeByUUID(version.getId());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public List getItemReferences(InternalVersionItem item) {
+        return vMgr.getItemReferences(item);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    public void setItemReferences(InternalVersionItem item, List references) {
+        vMgr.setItemReferences(item, references);
+    }
 }
