@@ -23,6 +23,8 @@ import javax.jcr.Session;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Arrays;
 
 /**
  * Tests if the required repository descriptors are available.
@@ -59,6 +61,16 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
     }
 
     /**
+     * Releases the session aquired in {@link #setUp}.
+     */
+    protected void tearDown() throws Exception {
+        if (session != null) {
+            session.logout();
+        }
+        super.tearDown();
+    }
+
+    /**
      * Tests that the required repository descriptors are available.
      */
     public void testRequiredDescriptors() {
@@ -66,6 +78,19 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
             String descriptor = session.getRepository().getDescriptor((String) it.next());
             assertNotNull("Not all required descriptors are available.",
                     descriptor);
+        }
+    }
+
+    /**
+     * Tests if {@link Repository#getDescriptorKeys()} returns all required
+     * descriptors keys.
+     */
+    public void testGetDescriptorKeys() {
+        List keys = Arrays.asList(session.getRepository().getDescriptorKeys());
+        for (Iterator it = requiredDescriptorKeys.iterator(); it.hasNext();) {
+            String key = (String) it.next();
+            assertTrue(key + " is missing from the required descriptor keys.",
+                    keys.contains(key));
         }
     }
 
