@@ -27,7 +27,7 @@
 <section name="General Architecture Overview">
 
 <p>
-The general architecture of Jackrabbit can be view in three Layers.
+The general architecture of Jackrabbit can be described in three Layers:
 A Content Application Layer, an API Layer and a Content Repository 
 Implementation Layer.<br />
 <img src="../images/arch/overview.png"/>
@@ -36,17 +36,41 @@ Implementation Layer.<br />
 <section name="Content Applications">
 
 <p>
-Content Applications interact through the jsr-170 API with the Content Repository Implementation.
-There are numerous applications that are available for jsr-170 repositories, some of them are very generic (like a WebDAV or a subversion server) other applications can be very specific and make use of the content repository as a store for the information that is used by the applications.
-Applications can use a jsr-170 content repository as a replacement for anything like property-files, XML-configuration, certain portions of relational database functionality to straight file system or blob-management. Using a content repository let's an application deal with an arbitrary large hierarchical space in a scalable manner and profiting automatically from the repository services such as versioning, query, transactions or namespaces which make a content repository the ideal data store for many applications.
+Content Applications interact through the JSR-170 API with the Content Repository Implementation.
+There are numerous applications that are available for JSR-170 repositories, some of them are very 
+generic (like a WebDAV server) other applications can be very specific and make 
+use of the content repository as a store for the information that is used by 
+the applications.
+Java Applications can use a JSR-170 content repository as a replacement 
+for anything from property-files, XML-configuration, certain portions of 
+relational database functionality to straight file system or 
+blob-management. Using a content repository allows an application 
+to deal with an arbitrarily large hierarchical space in a 
+scalable manner automatically profiting from the repository services such as 
+versioning, query, transactions or namespaces which make a content 
+repository an ideal data store for many applications.
 </p>
 <p>
-A "generic content application" (an application that has no particular functional focus but just allows for generic introspection and manipulation of the repository) uses the capabilities of the node types, access control and other facilities to display a user interface or a network protocol to the end user, seemingly independent from the content that is stored in the repository. Examples of such generic applications are "The Content Explorer", "WebDAV Server" or a "Subversion Server". (Or generic Portal, CMS or DMS applications).
+A "Generic Content Application" (an application that has no particular 
+functional focus but just allows for generic introspection and manipulation 
+of the repository) uses the capabilities of the node types, access control 
+and other facilities to display a user interface or a network protocol 
+to the end user, seemingly independent from the content that is stored 
+in the repository. Examples of such generic applications are 
+"The Content Explorer", "WebDAV Server" or a "Subversion Server". (Or 
+generic Portal, CMS or DMS applications).
 </p>
 <p>
-A "specialized content application" operates under the assumption that there are certain node types that it operates on, and that it is familiar at least partially with the data model exposed by defined node types. Mostly these node types are defined by the application itself and ship with the application.
-These applications use a content repository as their persistence layer as a natural evolution from the use of an RDBMS or a file system.
-Examples of "specialized content applications" include any application imaginable, from a "DVD Collection Management", to a "Message Board", to "Workflow and BPM" but also complete next generation "Enterprise Resource Planning Systems".
+A "Specialized Content Application" operates under the assumption that there 
+are certain node types that it operates on, and that it is familiar at least 
+partially with the data model exposed by defined node types. Mostly these node 
+types are defined by the application itself and ship with the application.
+These applications use a content repository as their persistence layer as a 
+natural evolution from the use of an RDBMS or a file system.
+Examples of "Specialized Content Applications" have a very wide range from 
+a "DVD Collection Management", to a "Message Board", to "Workflow and BPM" 
+but also possibly complete next generation "Enterprise Resource Planning 
+Systems".
 </p>
 </section>
 
@@ -55,12 +79,12 @@ Examples of "specialized content applications" include any application imaginabl
 <p>
 The Content Repository API Layer is split into two major sections.
 <ul>
-<li>The Content Repository API defined by jsr-170</li>
-<li>A number features of a content repository, that have been removed from the jsr-170 specification since they are difficult to implement on existing non-java-based content repositories and administrational Repository tasks that have also been deliberately excluded from jsr-170</li>
+<li>The Content Repository API defined by JSR-170</li>
+<li>A number features of a content repository, that have been removed from the JSR-170 specification since they are difficult to implement on existing non-java-based content repositories and administrational Repository tasks that have also been deliberately excluded from JSR-170</li>
 </ul>
 </p>
 <p>
-There are only very few (mostly administrational) applications which make use of the non-jsr-170 APIs provided by Jackrabbit.
+There are only very few (mostly administrational) applications which make use of the non-JSR-170 APIs provided by Jackrabbit.
 </p>
 <p>
 The boxes in the architecture chart do not symbolize package names or class names directly but mostly semantically grouped blocks of functionality.

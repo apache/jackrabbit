@@ -26,7 +26,7 @@
 
 <section name="Jackrabbit Example Deployment Models">
 <p>
-Jsr-170 explicitly allows for numerous different deployment models, meaning 
+JSR-170 explicitly allows for numerous different deployment models, meaning 
 that it is entirely up to the repository implementation to suggest certain 
 models.
 </p>
@@ -45,7 +45,7 @@ application itself.
 </p>
 <p>
 Jackrabbit is built for this lightweight model and allows obviously 
-through the abstraction provided by jsr-170 to move at any point in 
+through the abstraction provided by JSR-170 to move at any point in 
 time to a different deployment model in case this should be desirable 
 for the context that the application runs in.
 </p>
@@ -134,13 +134,13 @@ This deployment model assumes that there is a network layer between the
 content repository server and the respective content repository client.
 </p>
 <p>
-While the applications communicate through the jsr-170 API with the content 
+While the applications communicate through the JSR-170 API with the content 
 repository client. The content repository client then communicates through 
 any form of transport protocol with the stand-alone content repository server.
 </p>
 <p>
 The transport protocol between the client and the server is subject to 
-implementation and not mandated by jsr-170. Popular choices might include RMI 
+implementation and not mandated by JSR-170. Popular choices might include RMI 
 over JRMP or IIOP or WebDAV and its extensions.
 </p>
 </section>
