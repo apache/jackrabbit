@@ -31,7 +31,6 @@ import org.apache.jackrabbit.core.search.PathQueryNode;
 import org.apache.jackrabbit.core.search.LocationStepQueryNode;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -57,11 +56,6 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      */
     private static final String DATE_PATTERN = "yyyy-MM-dd";
 
-    /**
-     * QName for jcr:path
-     */
-    static final QName JCR_PATH = new QName(NamespaceRegistryImpl.NS_JCR_URI, "path");
-
     /** The root node of the sql query syntax tree */
     private final ASTQuery stmt;
 
@@ -73,10 +67,6 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /** Query node to gather the constraints defined in the WHERE clause */
     private final AndQueryNode constraintNode = new AndQueryNode(null);
-
-    public JCRSQLQueryBuilder() {
-        stmt = null;
-    }
 
     /**
      * Creates a new <code>JCRSQLQueryBuilder</code>.
@@ -212,7 +202,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }, data);
             QName identifier = tmp[0];
 
-            if (identifier.equals(JCR_PATH)) {
+            if (identifier.equals(Constants.JCR_PATH)) {
                 if (node.children[1] instanceof ASTIdentifier) {
                     // simply ignore, this is a join of a mixin node type
                 } else {

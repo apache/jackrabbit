@@ -16,11 +16,34 @@
  */
 package org.apache.jackrabbit.core.search;
 
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+
 /**
  * This interface defines constants for data types and operation types
  * used in queries.
  */
 public interface Constants {
+
+    /**
+     * QName for jcr:score
+     */
+    public static final QName JCR_SCORE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "score");
+
+    /**
+     * QName for jcr:path
+     */
+    public static final QName JCR_PATH = new QName(NamespaceRegistryImpl.NS_JCR_URI, "path");
+
+    /**
+     * QName for jcr:statement
+     */
+    public static final QName JCR_STATEMENT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "statement");
+
+    /**
+     * QName for jcr:language
+     */
+    public static final QName JCR_LANGUAGE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "language");
 
     /**
      * long data type

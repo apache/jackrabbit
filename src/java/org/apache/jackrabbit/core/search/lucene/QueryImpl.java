@@ -25,64 +25,56 @@ import org.apache.jackrabbit.core.search.OrderQueryNode;
 import org.apache.jackrabbit.core.search.LocationStepQueryNode;
 import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
 import org.apache.jackrabbit.core.search.DefaultQueryNodeVisitor;
+import org.apache.jackrabbit.core.search.ExecutableQuery;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.AccessManagerImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.AccessManager;
-import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
+import org.apache.log4j.Logger;
 
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
-import javax.jcr.*;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
+import javax.jcr.RepositoryException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.io.IOException;
 
 /**
+ * Implements the {@link ExecutableQuery} interface.
  */
-class QueryImpl implements javax.jcr.query.Query {
+class QueryImpl implements ExecutableQuery {
 
-    /**
-     * jcr:statement
-     */
-    private static final QName PROP_STATEMENT =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "statement");
+    /** The logger instance for this class */
+    private static final Logger log = Logger.getLogger(QueryImpl.class);
 
-    /**
-     * jcr:language
-     */
-    private static final QName PROP_LANGUAGE =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "language");
-
+    /** The root node of the query tree */
     private final QueryRootNode root;
 
+    /** The session of the user executing this query */
     private final SessionImpl session;
 
+    /** The item manager of the user executing this query */
     private final ItemManager itemMgr;
 
+    /** The actual search index */
     private final SearchIndex index;
 
-    private final String statement;
-
-    private final String language;
-
-    private Path path;
-
+    /**
+     * Creates a new query instance from a query string.
+     * @param session the session of the user executing this query.
+     * @param itemMgr the item manager of the session executing this query.
+     * @param index the search index.
+     * @param statement the query statement.
+     * @param language the syntax of the query statement.
+     * @throws InvalidQueryException if the query statement is invalid according
+     * to the specified <code>language</code>.
+     */
     public QueryImpl(SessionImpl session,
                      ItemManager itemMgr,
                      SearchIndex index,
@@ -91,56 +83,17 @@ class QueryImpl implements javax.jcr.query.Query {
         this.session = session;
         this.itemMgr = itemMgr;
         this.index = index;
-        this.statement = statement;
-        this.language = language;
-
         // parse query according to language
         // build query tree
         this.root = QueryParser.parse(statement, language, session.getNamespaceResolver());
     }
 
-    public QueryImpl(SessionImpl session,
-                     ItemManager itemMgr,
-                     SearchIndex index,
-                     String absPath)
-            throws ItemNotFoundException, InvalidQueryException, RepositoryException {
-
-        this.session = session;
-        this.itemMgr = itemMgr;
-        this.index = index;
-
-        try {
-            Node query = null;
-            String relPath = absPath.substring(1);
-            if (session.getRootNode().hasNode(relPath)) {
-                query = session.getRootNode().getNode(relPath);
-                // assert query has mix:referenceable
-                query.getUUID();
-                NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
-                NodeType ntQuery = ntMgr.getNodeType(NodeTypeRegistry.NT_QUERY.toJCRName(session.getNamespaceResolver()));
-                if (!query.getPrimaryNodeType().equals(ntQuery)) {
-                    throw new InvalidQueryException("node is not of type nt:query");
-                }
-            } else {
-                throw new ItemNotFoundException(absPath);
-            }
-
-            path = Path.create(absPath, session.getNamespaceResolver(), true);
-
-            statement = query.getProperty(PROP_STATEMENT.toJCRName(session.getNamespaceResolver())).getString();
-            language = query.getProperty(PROP_LANGUAGE.toJCRName(session.getNamespaceResolver())).getString();
-
-            // parse query according to language
-            // build query tree and pass to QueryImpl
-            QueryRootNode root = QueryParser.parse(statement, language, session.getNamespaceResolver());
-            this.root = root;
-        } catch (NoPrefixDeclaredException e) {
-            throw new InvalidQueryException(e.getMessage(), e);
-        } catch (MalformedPathException e) {
-            throw new ItemNotFoundException(absPath, e);
-        }
-    }
-
+    /**
+     * Executes this query and returns a <code>{@link QueryResult}</code>.
+     *
+     * @return a <code>QueryResult</code>
+     * @throws RepositoryException if an error occurs
+     */
     public QueryResult execute() throws RepositoryException {
         // build lucene query
         Query query = LuceneQueryBuilder.createQuery(root,
@@ -163,21 +116,27 @@ class QueryImpl implements javax.jcr.query.Query {
 
 
         List uuids;
+        List scores;
         AccessManagerImpl accessMgr = session.getAccessManager();
 
         // execute it
         try {
             Hits result = index.executeQuery(query, orderProperties, ascSpecs);
             uuids = new ArrayList(result.length());
+            scores = new ArrayList(result.length());
+
             for (int i = 0; i < result.length(); i++) {
                 String uuid = result.doc(i).get(FieldNames.UUID);
                 // check access
                 if (accessMgr.isGranted(new NodeId(uuid), AccessManager.READ)) {
                     uuids.add(uuid);
+                    scores.add(new Float(result.score(i)));
                 }
             }
         } catch (IOException e) {
+            log.error("Exception while executing query: ", e);
             uuids = Collections.EMPTY_LIST;
+            scores = Collections.EMPTY_LIST;
         }
 
         // get select properties
@@ -209,65 +168,8 @@ class QueryImpl implements javax.jcr.query.Query {
         // return QueryResult
         return new QueryResultImpl(itemMgr,
                 (String[]) uuids.toArray(new String[uuids.size()]),
+                (Float[]) scores.toArray(new Float[scores.size()]),
                 selectProps,
                 session.getNamespaceResolver());
     }
-
-    public String getStatement() {
-        return statement;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public String getPersistentQueryPath() throws ItemNotFoundException {
-        if (path == null) {
-            throw new ItemNotFoundException("not a persistent query");
-        }
-        try {
-            return path.toJCRPath(session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException e) {
-            // should not happen actually
-            throw new ItemNotFoundException(path.toString());
-        }
-    }
-
-    public void save(String absPath)
-            throws ItemExistsException,
-            PathNotFoundException,
-            VersionException,
-            ConstraintViolationException,
-            LockException,
-            UnsupportedRepositoryOperationException,
-            RepositoryException {
-        try {
-            NamespaceResolver resolver = session.getNamespaceResolver();
-            Path p = Path.create(absPath, resolver, true);
-            if (!p.isAbsolute()) {
-                throw new RepositoryException(absPath + " is not absolut");
-            }
-            if (!session.getRootNode().hasNode(p.getAncestor(1).toJCRPath(resolver).substring(1))) {
-                throw new PathNotFoundException(p.getAncestor(1).toJCRPath(resolver));
-            }
-            String relPath = p.toJCRPath(resolver).substring(1);
-            if (session.getRootNode().hasNode(relPath)) {
-                throw new ItemExistsException(p.toJCRPath(resolver));
-            }
-            Node queryNode = session.getRootNode().addNode(relPath,
-                    NodeTypeRegistry.NT_QUERY.toJCRName(resolver));
-            // set properties
-            queryNode.setProperty(PROP_LANGUAGE.toJCRName(resolver), language);
-            queryNode.setProperty(PROP_STATEMENT.toJCRName(resolver), statement);
-            // add mixin referenceable
-            queryNode.addMixin(NodeTypeRegistry.MIX_REFERENCEABLE.toJCRName(resolver));
-            // FIXME do anything else?
-            queryNode.getParent().save();
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e.getMessage(), e);
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException(e.getMessage(), e);
-        }
-    }
-
 }

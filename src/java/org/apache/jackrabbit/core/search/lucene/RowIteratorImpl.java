@@ -22,12 +22,15 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.search.Constants;
 
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathValue;
+import javax.jcr.LongValue;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
@@ -70,7 +73,7 @@ class RowIteratorImpl implements RowIterator {
      *   <code>Row</code>s.
     */
     public Row nextRow() {
-        return new RowImpl(nodes.nextNodeImpl());
+        return new RowImpl(nodes.getScore(), nodes.nextNodeImpl());
     }
 
     /**
@@ -143,6 +146,9 @@ class RowIteratorImpl implements RowIterator {
      */
     class RowImpl implements Row {
 
+        /** The score for this result row */
+        private final float score;
+
         /** The underlying <code>Node</code> of this result row. */
         private final NodeImpl node;
 
@@ -154,9 +160,11 @@ class RowIteratorImpl implements RowIterator {
 
         /**
          * Creates a new <code>RowImpl</code> instance based on <code>node</code>.
+         * @param score the score value for this result row
          * @param node the underlying <code>Node</code> for this <code>Row</code>.
          */
-        RowImpl(NodeImpl node) {
+        RowImpl(float score, NodeImpl node) {
+            this.score = score;
             this.node = node;
         }
 
@@ -182,8 +190,14 @@ class RowIteratorImpl implements RowIterator {
                             tmp[i] = null;
                         }
                     } else {
-                        // property not set
-                        tmp[i] = null;
+                        // property not set or jcr:path / jcr:score
+                        if (Constants.JCR_PATH.equals(properties[i])) {
+                            tmp[i] = PathValue.valueOf(node.getPath());
+                        } else if (Constants.JCR_SCORE.equals(properties[i])) {
+                            tmp[i] = new LongValue((int) (score * 1000f));
+                        } else {
+                            tmp[i] = null;
+                        }
                     }
                 }
                 values = tmp;
@@ -218,7 +232,14 @@ class RowIteratorImpl implements RowIterator {
                 if (node.hasProperty(prop)) {
                     return node.getProperty(prop).getValue();
                 } else {
-                    return null;
+                    // either jcr:score / jcr:path or not set
+                    if (Constants.JCR_PATH.equals(prop)) {
+                        return PathValue.valueOf(node.getPath());
+                    } else if (Constants.JCR_SCORE.equals(prop)) {
+                        return new LongValue((int) (score * 1000f));
+                    } else {
+                        return null;
+                    }
                 }
             } catch (IllegalNameException e) {
                 throw new RepositoryException(e.getMessage(), e);

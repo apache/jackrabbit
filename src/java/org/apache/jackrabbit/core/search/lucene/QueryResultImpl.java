@@ -32,21 +32,39 @@ import javax.jcr.query.RowIterator;
  */
 class QueryResultImpl implements QueryResult {
 
+    /** The logger instance for this class */
     private static final Logger log = Logger.getLogger(QueryResultImpl.class);
 
+    /** The item manager of the session executing the query */
     private final ItemManager itemMgr;
 
+    /** The UUIDs of the result nodes */
     private final String[] uuids;
 
+    /** The scores of the result nodes */
+    private final Float[] scores;
+
+    /** The select properties */
     private final QName[] selectProps;
 
+    /** The namespace resolver of the session executing the query */
     private final NamespaceResolver resolver;
 
+    /**
+     * Creates a new query result.
+     * @param itemMgr the item manager of the session executing the query.
+     * @param uuids the UUIDs of the result nodes.
+     * @param scores the score values of the result nodes.
+     * @param selectProps the select properties of the query.
+     * @param resolver the namespace resolver of the session executing the query.
+     */
     public QueryResultImpl(ItemManager itemMgr,
                            String[] uuids,
+                           Float[] scores,
                            QName[] selectProps,
                            NamespaceResolver resolver) {
         this.uuids = uuids;
+        this.scores = scores;
         this.itemMgr = itemMgr;
         this.selectProps = selectProps;
         this.resolver = resolver;
@@ -75,13 +93,13 @@ class QueryResultImpl implements QueryResult {
      * @see QueryResult#getNodes()
      */
     public NodeIterator getNodes() throws RepositoryException {
-        return new NodeIteratorImpl(itemMgr, uuids);
+        return new NodeIteratorImpl(itemMgr, uuids, scores);
     }
 
     /**
      * @see QueryResult#getRows()
      */
     public RowIterator getRows() throws RepositoryException {
-        return new RowIteratorImpl(new NodeIteratorImpl(itemMgr, uuids), selectProps, resolver);
+        return new RowIteratorImpl(new NodeIteratorImpl(itemMgr, uuids, scores), selectProps, resolver);
     }
 }

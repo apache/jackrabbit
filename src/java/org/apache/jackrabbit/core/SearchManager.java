@@ -23,14 +23,15 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.search.QueryHandler;
+import org.apache.jackrabbit.core.search.QueryImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.log4j.Logger;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
+import javax.jcr.Node;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.InvalidQueryException;
@@ -43,7 +44,7 @@ import java.util.Set;
 /**
  * Acts as a global entry point to execute queries and index nodes.
  *
- * @todo The SearchManager currently uses the system session to obtain an
+ * todo The SearchManager currently uses the system session to obtain an
  * ItemStateManager from where it reads persistent ItemStates. This is kind
  * of nasty, because the system session it is possible to change content through
  * the system session as well.
@@ -203,7 +204,7 @@ public class SearchManager implements SynchronousEventListener {
                              String statement,
                              String language)
             throws InvalidQueryException, RepositoryException {
-        return handler.createQuery(session, itemMgr, statement, language);
+        return new QueryImpl(session, itemMgr, handler, statement, language);
     }
 
     /**
@@ -212,18 +213,17 @@ public class SearchManager implements SynchronousEventListener {
      * @param session the session of the user executing the query.
      * @param itemMgr the item manager of the user executing the query. Needed
      *                to return <code>Node</code> instances in the result set.
-     * @param absPath absolute path to a node of type nt:query.
+     * @param node a node of type nt:query.
      * @return a <code>Query</code> instance to execute.
      * @throws InvalidQueryException if <code>absPath</code> is not a valid
      *                               persisted query (that is, a node of type nt:query)
-     * @throws ItemNotFoundException if there is no node at <code>absPath</code>.
      * @throws RepositoryException   if any other error occurs.
      */
     public Query createQuery(SessionImpl session,
                              ItemManager itemMgr,
-                             String absPath)
-            throws InvalidQueryException, ItemNotFoundException, RepositoryException {
-        return handler.createQuery(session, itemMgr, absPath);
+                             Node node)
+            throws InvalidQueryException, RepositoryException {
+        return new QueryImpl(session, itemMgr, handler, node);
     }
 
     //---------------< EventListener interface >--------------------------------

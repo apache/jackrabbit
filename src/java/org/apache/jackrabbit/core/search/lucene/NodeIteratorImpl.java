@@ -38,6 +38,9 @@ class NodeIteratorImpl implements NodeIterator {
     /** The UUIDs of the nodes in the result set */
     private final String[] uuids;
 
+    /** The score values for the nodes in the result set */
+    private final Float[] scores;
+
     /** ItemManager to turn UUIDs into Node instances */
     private final ItemManager itemMgr;
 
@@ -49,11 +52,14 @@ class NodeIteratorImpl implements NodeIterator {
      * @param itemMgr the <code>ItemManager</code> to turn UUIDs into
      *   <code>Node</code> instances.
      * @param uuids the UUIDs of the result nodes.
+     * @param scores the corresponding score values for each result node.
      */
     NodeIteratorImpl(ItemManager itemMgr,
-                     String[] uuids) {
+                     String[] uuids,
+                     Float[] scores) {
         this.itemMgr = itemMgr;
         this.uuids = uuids;
+        this.scores = scores;
     }
 
     /**
@@ -128,9 +134,22 @@ class NodeIteratorImpl implements NodeIterator {
     }
 
     /**
+     * Returns the score of the node returned by {@link #nextNode()}. In other
+     * words, this method returns the score value of the next <code>Node</code>.
+     * @return the score of the node returned by {@link #nextNode()}.
+     * @throws NoSuchElementException if there is no next node.
+     */
+    float getScore() {
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
+        return scores[pos].floatValue();
+    }
+
+    /**
      * Returns the next <code>Node</code> in the result set.
      * @return the next <code>Node</code> in the result set.
-     * @throws java.util.NoSuchElementException if iteration has no more
+     * @throws NoSuchElementException if iteration has no more
      *   <code>Node</code>s.
      */
     NodeImpl nextNodeImpl() {

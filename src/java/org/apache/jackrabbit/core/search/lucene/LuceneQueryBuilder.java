@@ -134,18 +134,6 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     public Object visit(QueryRootNode node, Object data) {
         BooleanQuery root = new BooleanQuery();
 
-        QName[] props = node.getSelectProperties();
-        for (int i = 0; i < props.length; i++) {
-            try {
-                String prop = props[i].toJCRName(nsMappings);
-                // @todo really search nodes that have non null values?
-                root.add(new MatchAllQuery(prop), true, false);
-            } catch (NoPrefixDeclaredException e) {
-                // should never happen actually. prefixes are dynamically created
-                exceptions.add(e);
-            }
-        }
-
         Query wrapped = root;
         if (node.getLocationNode() != null) {
             wrapped = (Query) node.getLocationNode().accept(this, root);

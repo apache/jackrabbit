@@ -93,7 +93,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
 
-        return searchMgr.createQuery(session, itemMgr, node.getPath());
+        return searchMgr.createQuery(session, itemMgr, node);
     }
 
     /**

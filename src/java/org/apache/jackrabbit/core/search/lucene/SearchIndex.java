@@ -20,6 +20,8 @@ import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.search.AbstractQueryHandler;
+import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.search.ExecutableQuery;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
@@ -37,7 +39,6 @@ import org.apache.lucene.search.Sort;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 import java.io.IOException;
 
 /**
@@ -163,32 +164,12 @@ public class SearchIndex extends AbstractQueryHandler {
      * @throws InvalidQueryException if statement is invalid or language is unsupported.
      * @return A <code>Query</code> object.
      */
-    public javax.jcr.query.Query createQuery(SessionImpl session,
+    public ExecutableQuery createExecutableQuery(SessionImpl session,
                                              ItemManager itemMgr,
                                              String statement,
                                              String language)
             throws InvalidQueryException {
         return new QueryImpl(session, itemMgr, this, statement, language);
-    }
-
-    /**
-     * Retrieves an existing persistent query. If <code>node</code>
-     * is not a valid persisted query (that is, a node of type
-     * <code>nt:query</code>), an <code>InvalidQueryException</code>
-     * is thrown.
-     *
-     * @param absPath path to a persisted query (that is, a node of type
-     *   <code>nt:query</code>).
-     * @throws InvalidQueryException If <code>absPath</code> is not a valid persisted query
-     *   (that is, a node of type <code>nt:query</code>).
-     * @throws RepositoryException if another error occurs
-     * @return a <code>Query</code> object.
-     */
-    public javax.jcr.query.Query createQuery(SessionImpl session,
-                                             ItemManager itemMgr,
-                                             String absPath)
-            throws ItemNotFoundException, RepositoryException {
-        return new QueryImpl(session, itemMgr, this, absPath);
     }
 
     /**
@@ -214,19 +195,22 @@ public class SearchIndex extends AbstractQueryHandler {
         try {
             readWriteLock.readLock().acquire();
         } catch (InterruptedException e) {
-            // FIXME: ??? do logging, simply return?
-            return null;
+            throw new IOException("Unable to obtain read lock on search index.");
         }
 
         SortField[] sortFields = new SortField[orderProps.length];
         for (int i = 0; i < orderProps.length; i++) {
             String prop = null;
-            try {
-                prop = orderProps[i].toJCRName(nsMappings);
-            } catch (NoPrefixDeclaredException e) {
-                // will never happen
+            if (Constants.JCR_SCORE.equals(orderProps[i])) {
+                sortFields[i] = new SortField(null, SortField.SCORE, !orderSpecs[i]);
+            } else {
+                try {
+                    prop = orderProps[i].toJCRName(nsMappings);
+                } catch (NoPrefixDeclaredException e) {
+                    // will never happen
+                }
+                sortFields[i] = new SortField(prop, SortField.STRING, !orderSpecs[i]);
             }
-            sortFields[i] = new SortField(prop, SortField.STRING, !orderSpecs[i]);
         }
 
         Hits hits = null;

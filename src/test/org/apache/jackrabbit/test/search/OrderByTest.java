@@ -157,6 +157,32 @@ public class OrderByTest extends AbstractQueryTest {
         checkResultOrder(result, new String[]{"node1", "node2", "node3"});
     }
 
+    public void testOrderByScore() throws RepositoryException {
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+
+        n1.setProperty("text", "aaa");
+        n1.setProperty("value", 3);
+        n2.setProperty("text", "bbb");
+        n2.setProperty("value", 2);
+        n3.setProperty("text", "ccc");
+        n3.setProperty("value", 2);
+
+        testRootNode.save();
+
+        String sql = "SELECT value, jcr:score FROM nt:unstructured WHERE " +
+                "jcr:path LIKE '/" + testRoot + "/%' ORDER BY jcr:score, value";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        QueryResult result = q.execute();
+        checkResult(result, 3);
+
+        String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by @jcr:score, @value";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, 3);
+    }
+
     //------------------< internal >--------------------------------------------
 
     private void populate(String[] values) throws RepositoryException {

@@ -25,7 +25,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import java.io.IOException;
 
 /**
@@ -83,25 +83,8 @@ public interface QueryHandler {
      * @throws InvalidQueryException if statement is invalid or language is unsupported.
      * @return A <code>Query</code> object.
      */
-    public Query createQuery(SessionImpl session,
+    public ExecutableQuery createExecutableQuery(SessionImpl session,
                              ItemManager itemMgr,
                              String statement,
                              String language) throws InvalidQueryException;
-    
-    /**
-     * Retrieves an existing persistent query. If <code>node</code>
-     * is not a valid persisted query (that is, a node of type
-     * <code>nt:query</code>), an <code>InvalidQueryException</code>
-     * is thrown.
-     *
-     * @param absPath path to a persisted query (that is, a node of type
-     *   <code>nt:query</code>).
-     * @throws InvalidQueryException If <code>absPath</code> is not a valid persisted query
-     *   (that is, a node of type <code>nt:query</code>).
-     * @throws RepositoryException if another error occurs
-     * @return a <code>Query</code> object.
-     */
-    public Query createQuery(SessionImpl session,
-                             ItemManager itemMgr,
-                             String absPath) throws ItemNotFoundException, RepositoryException;
 }
