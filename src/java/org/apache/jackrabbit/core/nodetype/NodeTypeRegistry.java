@@ -1295,14 +1295,14 @@ public class NodeTypeRegistry {
         NodeTypeDef ntdOld = (NodeTypeDef) registeredNTDefs.get(name);
         NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
         if (!diff.isModified()) {
-	    // the definition has been modified, there's nothing to do here...
-	    return getEffectiveNodeType(name);
+            // the definition has been modified, there's nothing to do here...
+            return getEffectiveNodeType(name);
         }
         if (diff.isTrivial()) {
             /**
              * the change is trivial and has no effect on current content
              * (e.g. that would be the case when non-mandatory properties had
-	     * been added);
+             * been added);
              * re-register node type definition and update caches &
              * notify listeners on re-registration
              */

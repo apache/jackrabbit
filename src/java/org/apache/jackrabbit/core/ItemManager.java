@@ -16,13 +16,11 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
-import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.log4j.Logger;
 
@@ -152,7 +150,7 @@ public class ItemManager implements ItemLifeCycleListener {
     private NodeDef getDefinition(NodeState state)
             throws RepositoryException {
         NodeDefId defId = state.getDefinitionId();
-        NodeDef def = session.getNodeTypeManager().getNodeDef(defId);
+        NodeDefImpl def = session.getNodeTypeManager().getNodeDef(defId);
         if (def == null) {
             log.warn("node at " + safeGetJCRPath(state.getId()) + " has invalid definitionId (" + defId + ")");
 
@@ -162,6 +160,7 @@ public class ItemManager implements ItemLifeCycleListener {
             NodeState parentState = (NodeState) parent.getItemState();
             NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) parentState.getChildNodeEntries(state.getUUID()).get(0);
             def = parent.getApplicableChildNodeDef(cne.getName(), state.getNodeTypeName());
+            state.setDefinitionId(new NodeDefId(def.unwrap()));
         }
         return def;
     }
@@ -169,7 +168,7 @@ public class ItemManager implements ItemLifeCycleListener {
     private PropertyDef getDefinition(PropertyState state)
             throws RepositoryException {
         PropDefId defId = state.getDefinitionId();
-        PropertyDef def = session.getNodeTypeManager().getPropDef(defId);
+        PropertyDefImpl def = session.getNodeTypeManager().getPropDef(defId);
         if (def == null) {
             log.warn("property at " + safeGetJCRPath(state.getId()) + " has invalid definitionId (" + defId + ")");
 
@@ -177,6 +176,7 @@ public class ItemManager implements ItemLifeCycleListener {
             NodeId parentId = new NodeId(state.getParentUUID());
             NodeImpl parent = (NodeImpl) getItem(parentId);
             def = parent.getApplicablePropertyDef(state.getName(), state.getType(), state.isMultiValued());
+            state.setDefinitionId(new PropDefId(def.unwrap()));
         }
         return def;
     }
