@@ -50,9 +50,49 @@
            Nightly source and binary drops</a> are also available.
          </p>
 -->
+      </section>
+      
+      <section name="Source code">
          <p>
             Access to the source tree to see the latest and greatest code is possible
-            through <a href="cvs-usage.html">anonymous SVN access</a>.
+            through <!-- a href="cvs-usage.html" -->anonymous SVN access<!-- /a --> at
+            <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>.
+            The source tree can also be browsed using ViewCVS at
+            <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/">http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/</a>.
+         </p>
+         <p>
+            The latest Jackrabbit sources can be downloaded using the following
+            command (or it's equivalent in your Subversion client):
+         </p>
+         <source>svn co http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk jackrabbit</source>
+         <p>
+            You need at least version 1.0.2 of the
+            <a href="http://maven.apache.org/">Apache Maven</a> tool to build
+            the Jackrabbit sources. Maven will automatically download all
+            Jackrabbit dependencies and compile the Jackrabbit sources when
+            you run the following command:
+         </p>
+         <source>maven jar</source>
+         <p>
+            For other build options, please see the
+            <a href="http://maven.apache.org/start/use.html">Maven documentation</a>.
+         </p>
+         <p>
+            Note that Jackrabbit depends on a couple of libraries
+            (most notably the draft version of the JSR 170 API) that are not
+            available from the standard Maven repositories. You can get these
+            dependencies either by adding http://www.day.com/maven to the list
+            of remote Maven repositories, or by downloading them manually
+            according to instructions given by the Maven run.
+         </p>
+         <p>
+            <strong>NOTE:</strong>
+            JDK 1.5 users need to download the <code>xalan.jar</code> file
+            that contains the Xalan Interpretive processor from
+            <a href="http://xml.apache.org/xalan-j/">Xalan-Java</a> and place
+            it in <code>$MAVEN_HOME/lib/endorsed</code> to build the
+            Jackrabbit sources. The reason for this workaround is explained in
+            <a href="http://issues.apache.org/jira/browse/JCR-46">JCR-46</a>.
          </p>
       </section>
 
