@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head><title>Jackrabbit - Core operations: Startup, Initialize and Configuration</title><style type="text/css" media="all">
+          @import url("../../style/maven-base.css");
+          
+			    @import url("../../style/maven-theme.css");@import url("../../style/project.css");</style><link rel="stylesheet" href="../../style/print.css" type="text/css" media="print"></link><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"></meta><meta name="author" content="Jackrabbit Documentation team"></meta><meta name="email" content="jackrabbit-dev@incubator.apache.org"></meta></head><body class="composite"><div id="banner"><a href="http://incubator.apache.org/projects/jackrabbit.html" id="organizationLogo"><img alt="The Apache Software Foundation" src="http://incubator.apache.org/images/apache-incubator-logo.png"></img></a><a href="http://incubator.apache.org/projects/jackrabbit.html" id="projectLogo"><img alt="Jackrabbit" src="../../images/jackrabbitlogo.gif"></img></a><div class="clear"><hr></hr></div></div><div id="breadcrumbs"><div class="xright"></div><div class="clear"><hr></hr></div></div><div id="leftColumn"><div id="navcolumn"><div id="menuApache_Jackrabbit"><h5>Apache Jackrabbit</h5><ul><li class="none"><a href="../../index.html">Overview</a></li><li class="expanded"><a href="../../arch/index.html">Architecture Doc</a><ul><li class="none"><a href="../../arch/overview.html">Overview</a></li><li class="none"><a href="../../arch/deploy.html">Deployment Options</a></li><li class="expanded"><a href="../../arch/operate/index.html">Core Operations</a><ul><li class="none"><strong><a href="../../arch/operate/startup.html">Start-up, Initialize</a></strong></li></ul></li></ul></li><li class="none"><a href="../../apidocs/index.html" class="newWindow" title="New Window" target="_blank">API Documentation</a></li><li class="none"><a href="../../layout.html">Layout</a></li><li class="none"><a href="../../downloads.html">Downloads</a></li></ul></div><div id="menuProject_Documentation"><h5>Project Documentation</h5><ul><li class="none"><a href="../../index.html">About Jackrabbit</a></li><li class="collapsed"><a href="../../project-info.html">Project Info</a></li><li class="collapsed"><a href="../../maven-reports.html">Project Reports</a></li><li class="none"><a href="http://incubator.apache.org/projects/jackrabbit.html" class="externalLink" title="External Link">Development Process</a></li></ul></div><a href="http://maven.apache.org/" title="Built by Maven" id="poweredBy"><img alt="Built by Maven" src="../../images/logos/maven-feather.png"></img></a></div></div><div id="bodyColumn"><div class="contentBox"><div class="section"><a name="Core_Content_Repository_Operations:_Startup__Initialize_and_Configuration"></a><h2>Core Content Repository Operations: Startup, Initialize and Configuration</h2><p>
+The lifecycle of any Jackrabbit Content Repository starts with a call to one of 
+the <code>RepositoryFactory.create()</code> methods passing optionally the source 
+of a repository configuration file (which by convention is called <code>config.xml</code>) 
+and the RepositoryFactoryHome, which points to a directory from which the 
+Repository will continue reading further information for start-up and in 
+many cases will store the actual data that is persisted in the repository and 
+its workspaces.
+</p><p>
+Not supplying the <code>RepositoryFactoryHome</code> will default to the 
+users home dir from the System property <code>user.dir</code>.
+</p><p>
+Not supplying the configuration file parameter will default to the value of 
+<code>Repository.factory.config</code> System Property and if that is not set 
+it will default to the <code>config.xml</code> in the 
+<code>RepositoryFactoryHome</code>.
+</p><p>
+Calling the <code>create()</code> method will instantiate the 
+<code>RepositoryFactory</code> singleton that will then, through the 
+<code>getRepository(String name)</code> method, serve as the factory for 
+Repository instances.
+</p><p>
+As per the <code>config.xml</code> a repository are started up with the 
+respectively configured <code>RepositoryStore</code>, the <code>RepositoryStore</code> 
+defines where the repository stores information that is visible for the entire 
+Repository which includes things like the uuid of the root node, repository 
+properties, the namespace registry, node type definitions or the version 
+backing store in a file structure as follows.
+</p><p>
+
+    <div class="source"><pre>
+./meta:
+rep.properties
+rootUUID
+
+./namespaces:
+ns_reg.properties
+
+./nodetypes:
+custom_nodetypes.xml
+
+./versions:
+</pre></div>
+  
+</p><p>
+The RepositoryStore normally points to a regular (i.e. local) file system but is abstracted through an abstract FileSystem that can be configured to point to a different FileSystem implementation, in case the above information should be stored in a different data container.
+</p><p>
+... to be continued ...
+</p></div></div></div><div class="clear"><hr></hr></div><div id="footer"><div class="xright">© 2004, The Apache Software Foundation- Last published: 27 September 2004</div><div class="clear"><hr></hr></div></div></body></html>
