@@ -253,8 +253,7 @@ public class XASessionImpl extends SessionImpl
         try {
             wsp.getItemStateManager().commit(tx);
         } catch (TransactionException e) {
-            log.error("Unable to commit transaction.", e);
-            throw new XAException(XAException.XA_RBOTHER);
+            throw new ExtendedXAException(XAException.XA_RBOTHER, e);
         }
     }
 
@@ -365,5 +364,28 @@ public class XASessionImpl extends SessionImpl
      */
     private static boolean stringsEqual(String s1, String s2) {
         return s1 == null ? s2 == null : s1.equals(s2);
+    }
+
+    /**
+     * Internal XAException derived class that allows passing a base exception
+     * in its constructor.
+     */
+    static class ExtendedXAException extends XAException {
+
+        /**
+         * Create an XAException with a given error code and a root cause.
+         * @param errcode The error code identifying the exception.
+         * @param cause The cause (which is saved for later retrieval by the
+         *              {@link #getCause()} method).  (A <tt>null</tt> value is
+         *              permitted, and indicates that the cause is nonexistent
+         *              or unknown.)
+         */
+        public ExtendedXAException(int errcode, Throwable cause) {
+            super(errcode);
+
+            if (cause != null) {
+                initCause(cause);
+            }
+        }
     }
 }
