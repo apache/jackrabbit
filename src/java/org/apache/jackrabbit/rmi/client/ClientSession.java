@@ -126,7 +126,7 @@ public class ClientSession extends ClientObject implements Session {
     /** {@inheritDoc} */
     public Workspace getWorkspace() {
         try {
-            return factory.getWorkspace(this, remote.getWorkspace());
+            return getFactory().getWorkspace(this, remote.getWorkspace());
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }
@@ -137,7 +137,7 @@ public class ClientSession extends ClientObject implements Session {
             LoginException, RepositoryException {
         try {
             RemoteSession session = remote.impersonate(credentials);
-            return factory.getSession(repository, session);
+            return getFactory().getSession(repository, session);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -146,7 +146,7 @@ public class ClientSession extends ClientObject implements Session {
     /** {@inheritDoc} */
     public Node getRootNode() throws RepositoryException {
         try {
-            return factory.getNode(this, remote.getRootNode());
+            return getFactory().getNode(this, remote.getRootNode());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -156,7 +156,7 @@ public class ClientSession extends ClientObject implements Session {
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException,
             RepositoryException {
         try {
-            return factory.getNode(this, remote.getNodeByUUID(uuid));
+            return getFactory().getNode(this, remote.getNodeByUUID(uuid));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

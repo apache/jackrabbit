@@ -59,7 +59,7 @@ public class ClientNodeTypeManager extends ClientObject
     public NodeType getNodeType(String name) throws NoSuchNodeTypeException,
             RepositoryException {
         try {
-            return factory.getNodeType(remote.getNodeType(name));
+            return getFactory().getNodeType(remote.getNodeType(name));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

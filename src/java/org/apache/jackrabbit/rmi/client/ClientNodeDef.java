@@ -61,7 +61,7 @@ public class ClientNodeDef extends ClientItemDef implements NodeDef {
     /** {@inheritDoc} */
     public NodeType getDefaultPrimaryType() {
         try {
-            return factory.getNodeType(remote.getDefaultPrimaryType());
+            return getFactory().getNodeType(remote.getDefaultPrimaryType());
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }

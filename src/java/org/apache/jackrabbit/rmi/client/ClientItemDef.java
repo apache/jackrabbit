@@ -56,7 +56,7 @@ public class ClientItemDef extends ClientObject implements ItemDef {
     /** {@inheritDoc} */
     public NodeType getDeclaringNodeType() {
         try {
-            return factory.getNodeType(remote.getDeclaringNodeType());
+            return getFactory().getNodeType(remote.getDeclaringNodeType());
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }

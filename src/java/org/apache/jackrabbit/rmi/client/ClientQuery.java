@@ -67,7 +67,7 @@ public class ClientQuery extends ClientObject implements Query {
     /** {@inheritDoc} */
     public QueryResult execute() throws RepositoryException {
         try {
-            return factory.getQueryResult(session, remote.execute());
+            return getFactory().getQueryResult(session, remote.execute());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
