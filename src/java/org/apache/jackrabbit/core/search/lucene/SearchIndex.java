@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -361,7 +362,12 @@ public class SearchIndex extends AbstractQueryHandler {
         ItemStateManager isMgr = getItemStateProvider();
         for (Iterator it = children.iterator(); it.hasNext();) {
             NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
-            createIndex((NodeState) isMgr.getItemState(new NodeId(child.getUUID())));
+            NodeState childState = (NodeState) isMgr.getItemState(new NodeId(child.getUUID()));
+            // only traverse if node is not a virtual node state
+            if (!(childState instanceof VirtualNodeState)
+                    && !(childState.getOverlayedState() instanceof VirtualNodeState)) {
+                createIndex(childState);
+            }
         }
     }
 
