@@ -95,6 +95,12 @@ public class JCRTest {
             &lt;/FileSystem&gt;
         &lt;/SearchIndex&gt;
     &lt;/Workspace&gt;
+    &lt;Versioning rootPath="${rep.home}/versions"&gt;
+        &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
+            &lt;param name="path" value="${rep.home}/versions"/&gt;
+        &lt;/FileSystem&gt;
+        &lt;PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" /&gt;
+    &lt;/Versioning&gt;
 &lt;/Repository&gt;   
     </source>
    </p>
@@ -127,14 +133,14 @@ workspaces/
     Make sure that all of the <a href="dependencies.html">dependencies</a> 
     are added to your classpath, as well as the Jackrabbit
     repository implementation (named something like 
-    <code>jackrabbit-x.xx-xxx.jar</code>) that has been built by Maven
+    <code>jackrabbit-x.xx-xxx-dev.jar</code>) that has been built by Maven
     into the <code>target</code> directory of your checkout.
    </p>
    <p>
     Now you should be ready to compile the above <code>JCRTest</code>
     class and run it, which should produce the following output:
     <source>
-nt:unstructured
+rep:root
     </source>
    </p>
   </section>
@@ -190,9 +196,10 @@ public class JCRTest {
   }
 }
     </source>
-    which should produce the following output when started for the first time:
+    which should produce the following output (possibly surrounded by log
+    messages, depending on settings) when started for the first time:
     <source>
-nt:unstructured
+rep:root
 creating testnode
 Hello, World.   
     </source>
@@ -313,7 +320,17 @@ public class JCRTest {
     PropertyIterator pit=n.getProperties();
     while (pit.hasNext()) {
       Property p=pit.nextProperty();
-      System.out.println(p.getPath()+"="+p.getString());
+      System.out.print(p.getPath() + "=");
+      if (p.getDefinition().isMultiple()) {
+        Value[] values = p.getValues();
+        for (int i = 0; i &lt; values.length; i++) {
+          if (i &gt; 0) System.out.println(",");
+          System.out.println(values[i].getString());
+        }
+      } else {
+        System.out.print(p.getString());
+      }
+      System.out.println();
     }
     NodeIterator nit=n.getNodes();
     while (nit.hasNext()) {
@@ -325,14 +342,14 @@ public class JCRTest {
     </source>
     Which should output something along the lines of:
     <source>
-nt:unstructured
-importing xml
+rep:root
 /
-/jcr:primaryType=nt:unstructured
+/jcr:primaryType=rep:root
 /jcr:system
-/jcr:system/jcr:primaryType=nt:unstructured
+/jcr:system/jcr:primaryType=rep:system
 /jcr:system/jcr:versionStorage
-/jcr:system/jcr:versionStorage/jcr:primaryType=nt:unstructured
+/jcr:system/jcr:versionStorage/jcr:primaryType=rep:versionStorage
+/jcr:system/jcr:versionStorage/jcr:mixinTypes=
 /testnode
 /testnode/jcr:primaryType=nt:unstructured
 /testnode/testprop=Hello, World.
