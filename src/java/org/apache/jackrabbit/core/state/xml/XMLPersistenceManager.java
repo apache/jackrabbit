@@ -1066,7 +1066,6 @@ public class XMLPersistenceManager implements PersistenceManager {
 		    PropertyId propId = (PropertyId) iter.next();
 		    writer.write(propId.toString());
 		    writer.newLine();
-
 		}
 	    } finally {
 		writer.close();
