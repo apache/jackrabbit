@@ -71,7 +71,7 @@
     it is used to create the initial workspace if there's no workspace yet
     and for creating additional workspaces through the api
 -->
-<!ELEMENT Workspace (FileSystem,PersistenceManager,SearchIndex)>
+<!ELEMENT Workspace (FileSystem,PersistenceManager,SearchIndex?)>
 <!ATTLIST Workspace
     name CDATA #REQUIRED>
 
