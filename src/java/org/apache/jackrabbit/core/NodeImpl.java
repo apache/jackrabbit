@@ -227,12 +227,14 @@ public class NodeImpl extends ItemImpl implements Node {
                 propState.setValues(genValues);
             } else if (def.getDefaultValues() != null) {
                 Value[] vals = def.getDefaultValues();
-                int length = (def.isMultiple() ? vals.length : 1);
-                InternalValue[] defVals = new InternalValue[length];
-                for (int i = 0; i < length; i++) {
-                    defVals[i] = InternalValue.create(vals[i], session.getNamespaceResolver());
+                if (vals.length>0) {
+                    int length = (def.isMultiple() ? vals.length : 1);
+                    InternalValue[] defVals = new InternalValue[length];
+                    for (int i = 0; i < length; i++) {
+                        defVals[i] = InternalValue.create(vals[i], session.getNamespaceResolver());
+                    }
+                    propState.setValues(defVals);
                 }
-                propState.setValues(defVals);
             }
         } catch (ItemStateException ise) {
             String msg = "failed to add property " + name + " to " + safeGetJCRPath();
