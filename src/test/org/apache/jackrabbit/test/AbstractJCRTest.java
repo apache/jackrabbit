@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test;
 
+import junit.framework.TestResult;
+
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.NodeIterator;
@@ -241,6 +243,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected Node testRootNode;
 
     protected void setUp() throws Exception {
+        super.setUp();
         testRoot = getProperty(RepositoryStub.PROP_TESTROOT);
         if (testRoot == null) {
             fail("Property '" + RepositoryStub.PROP_TESTROOT + "' is not defined.");
@@ -383,9 +386,44 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 superuser.logout();
             }
         }
+        super.tearDown();
     }
 
-    public String getProperty(String name) throws RepositoryException {
+    /**
+     * Runs the test cases of this test class and reports the results to
+     * <code>testResult</code>. In contrast to the default implementation of
+     * <code>TestCase.run()</code> this method will suppress tests errors with
+     * a {@link NotExecutableException}. That is, test cases that throw this
+     * exception will still result as successful.
+     * @param testResult the test result.
+     */
+    public void run(TestResult testResult) {
+        super.run(new JCRTestResult(testResult));
+    }
+
+    /**
+     * Returns the value of the configuration property with <code>propName</code>.
+     * The sequence how configuration properties are read is the follwoing:
+     * <ol>
+     * <li><code>javax.jcr.tck.&lt;testClassName>.&lt;testCaseName>.&lt;propName></code></li>
+     * <li><code>javax.jcr.tck.&lt;testClassName>.&lt;propName></code></li>
+     * <li><code>javax.jcr.tck.&lt;packageName>.&lt;propName></code></li>
+     * <li><code>javax.jcr.tck.&lt;propName></code></li>
+     * </ol>
+     * Where:
+     * <ul>
+     * <li><code>&lt;testClassName></code> is the name of the test class without package prefix.</li>
+     * <li><code>&lt;testMethodName></code> is the name of the test method</li>
+     * <li><code>&lt;packageName></code> is the name of the package of the test class.
+     * Example: packageName for <code>org.apache.jackrabbit.test.api.BooleanPropertyTest</code>: <code>api</code></li>
+     * </ul>
+     * @param propName the propName of the configration property.
+     * @return the value of the property or <code>null</code> if the property
+     *  does not exist.
+     * @throws RepositoryException if an error occurs while reading from
+     *  the configuration.
+     */
+    public String getProperty(String propName) throws RepositoryException {
         String testCaseName = getName();
         String testClassName = getClass().getName();
         String testPackName = "";
@@ -397,27 +435,27 @@ public abstract class AbstractJCRTest extends JUnitTest {
 
         // 1) test case specific property first
         String value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
-                + testClassName + "." + testCaseName + "." + name);
+                + testClassName + "." + testCaseName + "." + propName);
         if (value != null) {
             return value;
         }
 
         // 2) check test class property
         value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
-                + testClassName + "." + name);
+                + testClassName + "." + propName);
         if (value != null) {
             return value;
         }
 
         // 3) check package property
         value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
-                + testPackName + "." + name);
+                + testPackName + "." + propName);
         if (value != null) {
             return value;
         }
 
         // finally try global property
-        return helper.getProperty(RepositoryStub.PROP_PREFIX + "." + name);
+        return helper.getProperty(RepositoryStub.PROP_PREFIX + "." + propName);
     }
 
     /**
