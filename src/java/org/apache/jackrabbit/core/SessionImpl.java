@@ -73,11 +73,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.security.AccessControlException;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -178,10 +176,14 @@ public class SessionImpl implements Session, Constants {
      * @param rep
      * @param loginContext
      * @param wspConfig
+     * @throws AccessDeniedException if the subject of the given login context
+     *                               is not granted access to the specified
+     *                               workspace
+     * @throws RepositoryException   if another error occurs
      */
     protected SessionImpl(RepositoryImpl rep, LoginContext loginContext,
                           WorkspaceConfig wspConfig)
-            throws RepositoryException {
+            throws AccessDeniedException, RepositoryException {
         this(rep, loginContext.getSubject(), wspConfig);
         this.loginContext = loginContext;
     }
@@ -192,10 +194,13 @@ public class SessionImpl implements Session, Constants {
      * @param rep
      * @param subject
      * @param wspConfig
+     * @throws AccessDeniedException if the given subject is not granted access
+     *                               to the specified workspace
+     * @throws RepositoryException   if another error occurs
      */
     protected SessionImpl(RepositoryImpl rep, Subject subject,
                           WorkspaceConfig wspConfig)
-            throws RepositoryException {
+            throws AccessDeniedException, RepositoryException {
         alive = true;
         this.rep = rep;
         Set principals = subject.getPrincipals();
@@ -245,11 +250,13 @@ public class SessionImpl implements Session, Constants {
      * Create the access manager.
      *
      * @return access manager
-     * @throws RepositoryException if an error occurs
+     * @throws AccessDeniedException if the current subject is not granted access
+     *                               to the current workspace
+     * @throws RepositoryException   if the access manager cannot be instantiated
      */
     protected AccessManager createAccessManager(Subject subject,
                                                 HierarchyManager hierMgr)
-            throws RepositoryException {
+            throws AccessDeniedException, RepositoryException {
         AccessManagerConfig amConfig = rep.getConfig().getAccessManagerConfig();
         String className = amConfig.getClassName();
         Map params = amConfig.getParameters();
@@ -270,10 +277,15 @@ public class SessionImpl implements Session, Constants {
             AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
                     rep.getConfig().getFileSystem(),
                     subject,
-                    hierMgr);
+                    hierMgr,
+                    wsp.getName());
             accessMgr.init(ctx);
             return accessMgr;
+        } catch (AccessDeniedException ade) {
+            // re-throw
+            throw ade;
         } catch (Exception e) {
+            // wrap in RepositoryException
             String msg = "failed to instantiate AccessManager implementation: " + className;
             log.error(msg, e);
             throw new RepositoryException(msg, e);

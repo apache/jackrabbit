@@ -68,6 +68,7 @@ import javax.jcr.version.VersionException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -648,8 +649,8 @@ public class WorkspaceImpl implements Workspace, Constants {
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
         }
@@ -730,10 +731,15 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         // @todo re-implement Workspace#clone (respect new removeExisting flag, etc)
 
+        // check authorization for specified workspace
+        if (!session.getAccessManager().canAccess(srcWorkspace)) {
+            throw new AccessDeniedException("not authorized to access " + srcWorkspace);
+        }
+
         // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
 
-        // aquire session on other workspace (throws NoSuchWorkspaceException)
+        // acquire session on other workspace (throws NoSuchWorkspaceException)
         // @todo FIXME need to get session with same credentials as current
         SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
         WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
@@ -775,12 +781,18 @@ public class WorkspaceImpl implements Workspace, Constants {
             return;
         }
 
+        // check authorization for specified workspace
+        if (!session.getAccessManager().canAccess(srcWorkspace)) {
+            throw new AccessDeniedException("not authorized to access " + srcWorkspace);
+        }
+
         // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
 
-        // aquire session on other workspace (throws NoSuchWorkspaceException)
+        // acquire session on other workspace (throws NoSuchWorkspaceException)
         // @todo FIXME need to get session with same credentials as current
         SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
+
         WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
         // do cross-workspace copy
@@ -902,8 +914,8 @@ public class WorkspaceImpl implements Workspace, Constants {
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         } finally {
-            // update operation failed, cancel all modifications
             if (!succeeded) {
+                // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
         }
@@ -980,8 +992,16 @@ public class WorkspaceImpl implements Workspace, Constants {
         // check state of this instance
         sanityCheck();
 
-        // @todo filter workspaces according to access rights
-        return session.getWorkspaceNames();
+        // filter workspaces according to access rights
+        ArrayList list = new ArrayList();
+        String names[] = session.getWorkspaceNames();
+        for (int i = 0; i < names.length; i++) {
+            if (session.getAccessManager().canAccess(names[i])) {
+                list.add(names[i]);
+            }
+        }
+
+        return (String[]) list.toArray(new String[list.size()]);
     }
 
     /**
@@ -1013,12 +1033,10 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         // check locked-status
         getLockManager().checkLock(parentPath, session);
-/*
+
         Importer importer = new WorkspaceImporter(parentState, this, uuidBehavior);
         return new ImportHandler(importer, session.getNamespaceResolver(),
                 rep.getNamespaceRegistry());
-*/
-        throw new RepositoryException("not yet implemented");
     }
 
     /**

@@ -49,6 +49,11 @@ public class AMContext {
      * hierarchy manager for resolving ItemId-to-Path mapping
      */
     private final HierarchyManager hierMgr;
+    
+    /**
+     * name of the workspace
+     */
+    private final String workspaceName;
 
     /**
      * Creates a new <code>AMContext</code>.
@@ -57,15 +62,18 @@ public class AMContext {
      * @param fs      the virtual jackrabbit filesystem
      * @param subject subject whose access rights should be reflected
      * @param hierMgr hierarchy manager
+     * @param hierMgr workspace name
      */
     public AMContext(File homeDir,
                      FileSystem fs,
                      Subject subject,
-                     HierarchyManager hierMgr) {
+                     HierarchyManager hierMgr,
+                     String workspaceName) {
         this.physicalHomeDir = homeDir;
         this.fs = fs;
         this.subject = subject;
         this.hierMgr = hierMgr;
+        this.workspaceName = workspaceName;
     }
 
 
@@ -103,5 +111,14 @@ public class AMContext {
      */
     public HierarchyManager getHierarchyManager() {
         return hierMgr;
+    }
+
+    /**
+     * Returns the name of the workspace.
+     *
+     * @return the name of the workspace
+     */
+    public String getWorkspaceName() {
+        return workspaceName;
     }
 }

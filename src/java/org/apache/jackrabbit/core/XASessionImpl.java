@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.state.TransactionException;
 import org.apache.jackrabbit.core.state.TransactionListener;
 import org.apache.log4j.Logger;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
@@ -64,11 +65,14 @@ public class XASessionImpl extends SessionImpl
      * @param rep          repository
      * @param loginContext login context containing authenticated subject
      * @param wspConfig    workspace configuration
-     * @throws RepositoryException if an error occurs
+     * @throws AccessDeniedException if the subject of the given login context
+     *                               is not granted access to the specified
+     *                               workspace
+     * @throws RepositoryException   if another error occurs
      */
     protected XASessionImpl(RepositoryImpl rep, LoginContext loginContext,
                             WorkspaceConfig wspConfig)
-            throws RepositoryException {
+            throws AccessDeniedException, RepositoryException {
 
         super(rep, loginContext, wspConfig);
     }
@@ -79,11 +83,13 @@ public class XASessionImpl extends SessionImpl
      * @param rep       repository
      * @param subject   authenticated subject
      * @param wspConfig workspace configuration
-     * @throws RepositoryException if an error occurs
+     * @throws AccessDeniedException if the given subject is not granted access
+     *                               to the specified workspace
+     * @throws RepositoryException   if another error occurs
      */
     protected XASessionImpl(RepositoryImpl rep, Subject subject,
                             WorkspaceConfig wspConfig)
-            throws RepositoryException {
+            throws AccessDeniedException, RepositoryException {
 
         super(rep, subject, wspConfig);
     }

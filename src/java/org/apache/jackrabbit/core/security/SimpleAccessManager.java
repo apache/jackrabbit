@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.security.auth.Subject;
 
@@ -60,7 +61,8 @@ public class SimpleAccessManager implements AccessManager {
     /**
      * {@inheritDoc}
      */
-    public void init(AMContext context) throws Exception {
+    public void init(AMContext context)
+            throws AccessDeniedException, Exception {
         if (initialized) {
             throw new IllegalStateException("already initialized");
         }
@@ -70,6 +72,7 @@ public class SimpleAccessManager implements AccessManager {
         anonymous = !subject.getPrincipals(AnonymousPrincipal.class).isEmpty();
         system = !subject.getPrincipals(SystemPrincipal.class).isEmpty();
 
+        // @todo check permission to access given workspace based on principals
         initialized = true;
     }
 
@@ -128,6 +131,15 @@ public class SimpleAccessManager implements AccessManager {
         }
 
         // @todo check permission based on principals
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean canAccess(String workspaceName)
+            throws NoSuchWorkspaceException, RepositoryException {
+        // @todo check permission to access given workspace based on principals
         return true;
     }
 }

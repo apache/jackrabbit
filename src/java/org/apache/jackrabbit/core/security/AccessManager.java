@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.ItemId;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -42,12 +43,16 @@ public interface AccessManager {
     public static final int REMOVE = 4;
 
     /**
-     * Initialize this access manager.
+     * Initialize this access manager. An <code>AccessDeniedException</code> will
+     * be thrown if the subject of the given <code>context</code> is not
+     * granted access to the specified workspace.
      *
      * @param context access manager context
-     * @throws Exception if an error occurs
+     * @throws AccessDeniedException if the subject is not granted access
+     *                               to the specified workspace.
+     * @throws Exception             if another error occurs
      */
-    public void init(AMContext context) throws Exception;
+    public void init(AMContext context) throws AccessDeniedException, Exception;
 
     /**
      * Close this access manager. After having closed an access manager,
@@ -90,8 +95,22 @@ public interface AccessManager {
      *                    </ul>
      * @return <code>true</code> if permission is granted; otherwise <code>false</code>
      * @throws ItemNotFoundException if the target item does not exist
-     * @throws RepositoryException   it an error occurs
+     * @throws RepositoryException   if another error occurs
      */
     public boolean isGranted(ItemId id, int permissions)
             throws ItemNotFoundException, RepositoryException;
+
+    /**
+     * Determines whether the subject of the current context is granted access
+     * to the given workspace.
+     *
+     * @param workspaceName name of workspace
+     * @return <code>true</code> if the subject of the current context is
+     *         granted access to the given workspace; otherwise <code>false</code>.
+     * @throws NoSuchWorkspaceException if a workspace with the given name
+     *                                  does not exist.
+     * @throws RepositoryException      if another error occurs
+     */
+    public boolean canAccess(String workspaceName)
+            throws NoSuchWorkspaceException, RepositoryException;
 }

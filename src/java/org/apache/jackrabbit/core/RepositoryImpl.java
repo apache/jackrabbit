@@ -26,6 +26,8 @@ import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
@@ -39,10 +41,9 @@ import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.version.persistence.NativePVM;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.log4j.Logger;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.NamespaceRegistry;
@@ -53,21 +54,21 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.security.AccessControlContext;
+import java.security.AccessController;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.security.AccessControlContext;
-import java.security.AccessController;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -479,10 +480,11 @@ public class RepositoryImpl implements Repository, SessionListener,
     /**
      * Returns the {@link LockManager} for the workspace with name
      * <code>workspaceName</code>
+     *
      * @param workspaceName workspace name
      * @return <code>LockManager</code> for the workspace
      * @throws NoSuchWorkspaceException if such a workspace does not exist
-     * @throws RepositoryException if some other error occurs
+     * @throws RepositoryException      if some other error occurs
      */
     LockManager getLockManager(String workspaceName) throws
             NoSuchWorkspaceException, RepositoryException {
@@ -707,14 +709,20 @@ public class RepositoryImpl implements Repository, SessionListener,
         if (credentials == null) {
             // null credentials, obtain the identity of the already-authenticated
             // user from access control context
-            AccessControlContext acc  = AccessController.getContext();
+            AccessControlContext acc = AccessController.getContext();
             Subject subject;
             try {
                 subject = Subject.getSubject(acc);
             } catch (SecurityException se) {
                 throw new LoginException(se.getMessage());
             }
-            Session ses = new XASessionImpl(this, subject, wspInfo.getConfig());
+            Session ses;
+            try {
+                ses = new XASessionImpl(this, subject, wspInfo.getConfig());
+            } catch (AccessDeniedException ade) {
+                // authenticated subject is not authorized for the specified workspace
+                throw new LoginException(ade.getMessage());
+            }
             activeSessions.put(ses, ses);
             return ses;
         }
@@ -729,9 +737,13 @@ public class RepositoryImpl implements Repository, SessionListener,
             throw new LoginException(le.getMessage());
         }
 
-        // @todo check access rights for given workspace
-
-        Session ses = new XASessionImpl(this, lc, wspInfo.getConfig());
+        Session ses;
+        try {
+            ses = new XASessionImpl(this, lc, wspInfo.getConfig());
+        } catch (AccessDeniedException ade) {
+            // authenticated subject is not authorized for the specified workspace
+            throw new LoginException(ade.getMessage());
+        }
         activeSessions.put(ses, ses);
         return ses;
     }

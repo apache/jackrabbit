@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.security.auth.Subject;
 import java.util.Collections;
@@ -69,14 +70,17 @@ class SystemSession extends SessionImpl {
     }
 
     /**
+     * {@inheritDoc}
+     * <p/>
      * Overridden in order to create custom access manager
      *
-     * @return access manager
-     * @throws RepositoryException
+     * @return access manager for system session
+     * @throws AccessDeniedException is never thrown
+     * @throws RepositoryException   is never thrown
      */
     protected AccessManager createAccessManager(Subject subject,
                                                 HierarchyManager hierMgr)
-            throws RepositoryException {
+            throws AccessDeniedException, RepositoryException {
         /**
          * use own AccessManager implementation rather than relying on
          * configurable AccessManager to handle SystemPrincipal privileges
@@ -95,6 +99,28 @@ class SystemSession extends SessionImpl {
         //----------------------------------------------------< AccessManager >
         /**
          * {@inheritDoc}
+         *
+         * @throws AccessDeniedException is never thrown
+         * @throws Exception             is never thrown
+         */
+        public void init(AMContext context)
+                throws AccessDeniedException, Exception {
+            // nop
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void close() throws Exception {
+            // nop
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         * @throws AccessDeniedException is never thrown
+         * @throws ItemNotFoundException is never thrown
+         * @throws RepositoryException   is never thrown
          */
         public void checkPermission(ItemId id, int permissions)
                 throws AccessDeniedException, ItemNotFoundException,
@@ -104,6 +130,10 @@ class SystemSession extends SessionImpl {
 
         /**
          * {@inheritDoc}
+         *
+         * @return always <code>true</code>
+         * @throws ItemNotFoundException is never thrown
+         * @throws RepositoryException   is never thrown
          */
         public boolean isGranted(ItemId id, int permissions)
                 throws ItemNotFoundException, RepositoryException {
@@ -113,16 +143,14 @@ class SystemSession extends SessionImpl {
 
         /**
          * {@inheritDoc}
+         *
+         * @return always <code>true</code>
+         * @throws NoSuchWorkspaceException is never thrown
+         * @throws RepositoryException      is never thrown
          */
-        public void init(AMContext context) throws Exception {
-            // nop
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void close() throws Exception {
-            // nop
+        public boolean canAccess(String workspaceName)
+                throws NoSuchWorkspaceException, RepositoryException {
+            return true;
         }
     }
 }
