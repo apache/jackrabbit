@@ -62,6 +62,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RepositoryDescriptorTest.class);
         suite.addTestSuite(SessionReadMethodsTest.class);
         suite.addTestSuite(WorkspaceReadMethodsTest.class);
+        suite.addTestSuite(ReferenceableRootNodesTest.class);
 
         suite.addTestSuite(ExportSysViewTest.class);
 
