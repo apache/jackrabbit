@@ -196,7 +196,17 @@
       <timezone>+2</timezone>
     </developer>
   </developers>
-  <contributors/>
+  <contributors>
+    <contributor>
+      <name>Dominique Pfister</name>
+      <email/>
+      <organization/>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+2</timezone>
+    </contributor>
+  </contributors>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
