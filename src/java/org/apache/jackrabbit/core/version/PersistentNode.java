@@ -217,7 +217,10 @@ public class PersistentNode {
         PropertyId propId = new PropertyId(nodeState.getUUID(), name);
         if (stateMgr.hasItemState(propId)) {
             try {
-                return (PersistentPropertyState) stateMgr.getItemState(propId);
+                PersistentPropertyState propState = (PersistentPropertyState) stateMgr.getItemState(propId);
+                // someone calling this method will always alter the property state, so set status to modified
+                propState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                return propState;
             } catch (ItemStateException e) {
                 throw new RepositoryException("Unable to create property: " + e.toString());
             }
@@ -230,6 +233,7 @@ public class PersistentNode {
 
                 // need to store nodestate
                 nodeState.addPropertyEntry(name);
+                nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 return propState;
             } catch (ItemStateException e) {
                 throw new RepositoryException("Unable to store property: " + e.toString());
@@ -320,6 +324,7 @@ public class PersistentNode {
      */
     protected boolean removeNode(QName name, int index) throws RepositoryException {
         if (nodeState.removeChildNodeEntry(name, index)) {
+            nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
             return true;
         } else {
             return false;
@@ -423,6 +428,7 @@ public class PersistentNode {
         PersistentNode node = new PersistentNode(stateMgr, ntMgr, state);
         // add new child node entry
         nodeState.addChildNodeEntry(name, state.getUUID());
+        nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
 
         // add 'auto-create' properties defined in node type
         PropertyDef[] pda = nodeType.getAutoCreatePropertyDefs();
@@ -484,24 +490,24 @@ public class PersistentNode {
      * @throws ItemStateException
      */
     private void store(PersistentNodeState state) throws ItemStateException {
-        // first store all transient properties
-        List props = state.getPropertyEntries();
-        for (int i = 0; i < props.size(); i++) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
-            PersistentPropertyState pstate = (PersistentPropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
-            if (pstate.isTransient()) {
-                pstate.store();
-            }
-        }
-        // now store all child node entries
-        List nodes = state.getChildNodeEntries();
-        for (int i = 0; i < nodes.size(); i++) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
-            PersistentNodeState nstate = (PersistentNodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
-            store(nstate);
-        }
-        // and store itself
         if (state.isTransient()) {
+            // first store all transient properties
+            List props = state.getPropertyEntries();
+            for (int i = 0; i < props.size(); i++) {
+                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
+                PersistentPropertyState pstate = (PersistentPropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
+                if (pstate.isTransient()) {
+                    pstate.store();
+                }
+            }
+            // now store all child node entries
+            List nodes = state.getChildNodeEntries();
+            for (int i = 0; i < nodes.size(); i++) {
+                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
+                PersistentNodeState nstate = (PersistentNodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+                store(nstate);
+            }
+            // and store itself
             state.store();
         }
     }
@@ -528,24 +534,24 @@ public class PersistentNode {
      * @throws ItemStateException
      */
     private void reload(PersistentNodeState state) throws ItemStateException {
-        // first discard all all transient properties
-        List props = state.getPropertyEntries();
-        for (int i = 0; i < props.size(); i++) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
-            PersistentPropertyState pstate = (PersistentPropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
-            if (pstate.isTransient()) {
-                pstate.discard();
-            }
-        }
-        // now reload all child node entries
-        List nodes = state.getChildNodeEntries();
-        for (int i = 0; i < nodes.size(); i++) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
-            PersistentNodeState nstate = (PersistentNodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
-            reload(nstate);
-        }
-        // and reload itself
         if (state.isTransient()) {
+            // first discard all all transient properties
+            List props = state.getPropertyEntries();
+            for (int i = 0; i < props.size(); i++) {
+                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
+                PersistentPropertyState pstate = (PersistentPropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
+                if (pstate.isTransient()) {
+                    pstate.discard();
+                }
+            }
+            // now reload all child node entries
+            List nodes = state.getChildNodeEntries();
+            for (int i = 0; i < nodes.size(); i++) {
+                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
+                PersistentNodeState nstate = (PersistentNodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+                reload(nstate);
+            }
+            // and reload itself
             state.discard();
         }
     }
