@@ -35,6 +35,9 @@ public class NodeTestData extends AbstractJCRTest {
     /** Path pointing to the test root */
     private static final String TEST_DATA_PATH = "testdata/node";
 
+    /** The encoding for the test resource */
+    private static final String ENCODING = "ISO-8859-1";
+
     /** Resolved QName for nt:resource */
     private String ntResource;
 
@@ -66,7 +69,7 @@ public class NodeTestData extends AbstractJCRTest {
      * Creates two nodes under {@link #TEST_DATA_PATH}: one of type
      * nt:resource and a second node referencing the first.
      */
-    public void testFillInSearchData() throws RepositoryException, IOException {
+    public void testFillInTestData() throws RepositoryException, IOException {
         if (superuser.getRootNode().hasNode(TEST_DATA_PATH)) {
             // delete previous data
             superuser.getRootNode().getNode(TEST_DATA_PATH).remove();
@@ -85,11 +88,11 @@ public class NodeTestData extends AbstractJCRTest {
         }
 
         Node resource = dataRoot.addNode("myResource", ntResource);
-        resource.setProperty(jcrEncoding, "ISO-8859-1");
+        resource.setProperty(jcrEncoding, ENCODING);
         resource.setProperty(jcrMimeType, "text/plain");
         ByteArrayOutputStream data = new ByteArrayOutputStream();
-        OutputStreamWriter writer = new OutputStreamWriter(data, "ISO-8859-1");
-        writer.write("Hello world.");
+        OutputStreamWriter writer = new OutputStreamWriter(data, ENCODING);
+        writer.write("Hello wörld.");
         writer.close();
         resource.setProperty(jcrData, new ByteArrayInputStream(data.toByteArray()));
         resource.setProperty(jcrLastModified, Calendar.getInstance());

@@ -39,6 +39,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(QueryTestData.class);
         suite.addTestSuite(NodeTestData.class);
+        suite.addTestSuite(PropertyTestData.class);
 
         return suite;
     }

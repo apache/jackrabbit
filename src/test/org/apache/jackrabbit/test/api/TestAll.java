@@ -47,6 +47,17 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeReadMethodsTest.class);
         suite.addTestSuite(PropertyTypeTest.class);
 
+        suite.addTestSuite(BinaryPropertyTest.class);
+        suite.addTestSuite(BooleanPropertyTest.class);
+        suite.addTestSuite(DatePropertyTest.class);
+        suite.addTestSuite(DoublePropertyTest.class);
+        suite.addTestSuite(LongPropertyTest.class);
+        suite.addTestSuite(NamePropertyTest.class);
+        suite.addTestSuite(PathPropertyTest.class);
+        suite.addTestSuite(ReferencePropertyTest.class);
+        suite.addTestSuite(StringPropertyTest.class);
+        suite.addTestSuite(UndefinedPropertyTest.class);
+
         return suite;
     }
 }
