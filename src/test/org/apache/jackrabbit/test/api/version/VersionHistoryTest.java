@@ -671,6 +671,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
         try {
             vHistory.removeMixin(mixReferenceable);
             fail("VersionHistory does not have mixins: VersionHistory.removeMixin(String) did not throw a NoSuchNodeTypeException.");
+        } catch (ConstraintViolationException success) {
         } catch (NoSuchNodeTypeException success) {
         }
     }

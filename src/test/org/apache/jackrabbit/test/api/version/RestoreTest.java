@@ -75,13 +75,27 @@ public class RestoreTest extends AbstractVersionTest {
     }
 
     /**
+     * Test if restoring the root version fails.
+     *
+     * @throws RepositoryException
+     */
+    public void testRestoreRootVersionFail() throws RepositoryException {
+        try {
+            versionableNode.restore(rootVersion, true);
+            fail("Restore of jcr:rootVersion must throw VersionException.");
+        } catch (VersionException e) {
+            // success
+        }
+    }
+
+    /**
      * Test if restoring a node works on checked-in node.
      *
      * @throws RepositoryException
      */
     public void testRestoreOnCheckedInNode() throws RepositoryException {
         versionableNode.checkin();
-        versionableNode.restore(rootVersion, true);
+        versionableNode.restore(version, true);
     }
 
     /**
@@ -90,7 +104,7 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testRestoreOnCheckedOutNode() throws RepositoryException {
-        versionableNode.restore(rootVersion, true);
+        versionableNode.restore(version, true);
     }
 
     /**
@@ -99,7 +113,7 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testRestoreSetsIsCheckedOutToFalse() throws RepositoryException {
-        versionableNode.restore(rootVersion, true);
+        versionableNode.restore(version, true);
 
         assertFalse("Restoring a node sets the jcr:isCheckedOut property to false", versionableNode.isCheckedOut());
     }
@@ -110,10 +124,9 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws javax.jcr.RepositoryException
      */
     public void testRestoreSetsBaseVersion() throws RepositoryException {
-        versionableNode.restore(rootVersion, true);
+        versionableNode.restore(version, true);
         Version baseV = versionableNode.getBaseVersion();
-
-        assertEquals("Restoring a node must set node's base version in order to point to the restored version.", baseV, rootVersion);
+        assertTrue("Restoring a node must set node's base version in order to point to the restored version.", version.isSame(baseV));
     }
 
     /**
@@ -125,7 +138,7 @@ public class RestoreTest extends AbstractVersionTest {
         // modify node without calling save()
         try {
             versionableNode.setProperty(propertyName1, propertyValue);
-            versionableNode.restore(rootVersion, true);
+            versionableNode.restore(version, true);
 
             fail("InvalidItemStateException must be thrown on attempt to restore a node having any unsaved changes pending.");
         } catch (InvalidItemStateException e) {
@@ -156,7 +169,7 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testRestoreInvalidVersion2() throws RepositoryException {
-        String invalidName = null;
+        String invalidName;
         do {
             invalidName = createRandomString(3);
             for (VersionIterator it = versionableNode.getVersionHistory().getAllVersions(); it.hasNext();) {
@@ -198,17 +211,14 @@ public class RestoreTest extends AbstractVersionTest {
      * @see Node#restore(javax.jcr.version.Version, String, boolean)
      */
     public void testRestoreNonVersionableNode2() throws RepositoryException {
-        /*
-        todo: fix test. since 'foo' does not exist, and removeExisting is true,
-        the 'rootVersion' will be restored at location 'foo'.
+        // the 'version' will be restored at location 'foo'.
 
         try {
-            nonVersionableNode.restore(rootVersion, "foo", true);
+            nonVersionableNode.getParent().restore(version, nonVersionableNode.getName(), true);
             fail("Node.restore(Version, String, boolean) on a non versionable node must throw UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException e) {
             //success
         }
-        */
     }
 
     /**
@@ -219,7 +229,7 @@ public class RestoreTest extends AbstractVersionTest {
      */
     public void testRestoreNonVersionableNode3() throws RepositoryException {
         try {
-            nonVersionableNode.restore(rootVersion, true);
+            nonVersionableNode.restore(version, true);
             fail("Node.restore(Version, boolean) on a non versionable node must throw UnsupportedRepositoryOperationException");
         } catch (UnsupportedRepositoryOperationException e) {
             //success

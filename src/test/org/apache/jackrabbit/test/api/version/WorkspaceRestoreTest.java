@@ -177,19 +177,14 @@ public class WorkspaceRestoreTest extends RestoreTest {
      * Test if the removeExisting-flag removes an existing node in case of uuid conflict.
      */
     public void testWorkspaceRestoreWithRemoveExisting() throws NotExecutableException, RepositoryException {
-        // assert proper child node definition
-        NodeDef d = wVersionableChildNode.getDefinition();
-        if (d.getOnParentVersion() != OnParentVersionAction.COPY && d.getOnParentVersion() != OnParentVersionAction.VERSION) {
-            fail("Childnode must have OPV COPY or VERSION in order to be able to test Node.restore with uuid conflict");
-        }
-
         // create version for parentNode of childNode
+        superuser.getWorkspace().clone(workspaceName, wVersionableChildNode.getPath(), wVersionableChildNode.getPath(), false);
         Version parentV = versionableNode.checkin();
 
         // move child node in order to produce the uuid conflict
         String newChildPath = wVersionableNode2.getPath() + "/" + wVersionableChildNode.getName();
         wSuperuser.move(wVersionableChildNode.getPath(), newChildPath);
-        wTestRoot.save();
+        wSuperuser.save();
 
         // restore the parent with removeExisting == true >> moved child node
         // must be removed.
