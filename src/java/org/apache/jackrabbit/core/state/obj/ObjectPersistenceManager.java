@@ -15,10 +15,7 @@
  */
 package org.apache.jackrabbit.core.state.obj;
 
-import org.apache.jackrabbit.core.BLOBFileValue;
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.fs.*;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -720,6 +717,53 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
             }
         } catch (FileSystemException fse) {
             String msg = "failed to delete references: " + uuid;
+            log.error(msg, fse);
+            throw new ItemStateException(msg, fse);
+        }
+    }
+
+    /**
+     * @see PersistenceManager#exists(org.apache.jackrabbit.core.ItemId id)
+     */
+    public boolean exists(ItemId id) throws ItemStateException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
+        try {
+            if (id.denotesNode()) {
+                NodeId nodeId = (NodeId) id;
+                String nodeFilePath = buildNodeFilePath(nodeId.getUUID());
+                FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
+                return nodeFile.exists();
+            } else {
+                PropertyId propId = (PropertyId) id;
+                String propFilePath = buildPropFilePath(propId.getParentUUID(), propId.getName());
+                FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
+                return propFile.exists();
+            }
+        } catch (FileSystemException fse) {
+            String msg = "failed to check existence of item state: " + id;
+            log.error(msg, fse);
+            throw new ItemStateException(msg, fse);
+        }
+    }
+
+    /**
+     * @see PersistenceManager#referencesExist(NodeId targetId)
+     */
+    public boolean referencesExist(NodeId targetId) throws ItemStateException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
+        try {
+            String uuid = targetId.getUUID();
+            String refsFilePath = buildNodeReferencesFilePath(uuid);
+            FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
+            return refsFile.exists();
+        } catch (FileSystemException fse) {
+            String msg = "failed to check existence of references: " + targetId;
             log.error(msg, fse);
             throw new ItemStateException(msg, fse);
         }

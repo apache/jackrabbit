@@ -15,6 +15,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 
 /**
@@ -92,4 +94,27 @@ public interface PersistenceManager {
      * @throws ItemStateException
      */
     public void destroy(NodeReferences refs) throws ItemStateException;
+
+    /**
+     * Determines if there's <code>PersistentItemState</code> data for
+     * the given item.
+     *
+     * @param id
+     * @return
+     * @throws ItemStateException
+     * @see #load(PersistentNodeState)
+     * @see #load(PersistentPropertyState)
+     */
+    public boolean exists(ItemId id) throws ItemStateException;
+
+    /**
+     * Determines if there's <code>NodeReferences</code> data for
+     * the given target id.
+     *
+     * @param targetId
+     * @return
+     * @throws ItemStateException
+     * @see #load(NodeReferences)
+     */
+    public boolean referencesExist(NodeId targetId) throws ItemStateException;
 }

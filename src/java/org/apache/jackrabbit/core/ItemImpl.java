@@ -768,15 +768,17 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * Initializes the version history of all new nodes of node type
      * <code>mix:versionable</code>.
      * <p/>
-     * Called by {@link #validateTransientItems(Iterator)}.
+     * Called by {@link #save()}.
      *
      * @param iter
+     * @return true if this call generated new transient state; otherwise false
      * @throws RepositoryException
      */
-    private void initVersionHistories(Iterator iter) throws RepositoryException {
+    private boolean initVersionHistories(Iterator iter) throws RepositoryException {
         // todo consolidate version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
         // walk through list of transient items and
         // search for new versionable nodes
+        boolean createdTransientState = false;
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
             if (itemState.isNode() && itemState.getStatus() == ItemState.STATUS_NEW) {
@@ -787,9 +789,11 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     node.internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
                     node.internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
                     node.internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+                    createdTransientState = true;
                 }
             }
         }
+        return createdTransientState;
     }
 
     /**
@@ -1026,7 +1030,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         try {
             /**
              * turn on temporary path caching for better performance
-             * (assuming that the paths won't change during the save() call)
+             * (assuming that the paths won't change during this save() call)
              */
             itemStateMgr.enablePathCaching(true);
 
@@ -1135,11 +1139,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     itemStateMgr.disposeTransientItemStateInAttic(transientState);
                 }
 
-                // initialize version histories for new nodes (might create new transient state)
-                initVersionHistories(dirty.iterator());
-
-                // re-build the list of transient states (might have changed by now)
-                dirty = getTransientStates();
+                // initialize version histories for new nodes (might generate new transient state)
+                if (initVersionHistories(dirty.iterator())) {
+                    /**
+                     * re-build the list of transient states because the previous call
+                     * generated new transient state
+                     */
+                    dirty = getTransientStates();
+                }
 
                 // persist 'new' or 'modified' transient states
                 persistTransientItems(dirty.iterator());

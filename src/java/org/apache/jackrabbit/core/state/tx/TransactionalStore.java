@@ -33,6 +33,13 @@ public interface TransactionalStore {
             throws NoSuchItemStateException, ItemStateException;
 
     /**
+     * Determines if an item with the specified id exists in this store.
+     * @param id item id
+     * @return true if an item exists; false otherwise
+     */
+    public boolean exists(ItemId id);
+
+    /**
      * Begin an update operation. Subsequent save operations are passed to
      * the update object returned.
      *

@@ -130,15 +130,10 @@ public class TransactionalItemStateManager extends ItemStateCache
      * @see PersistentItemStateProvider#hasItemState
      */
     public boolean hasItemState(ItemId id) {
-        // try shortcut first
         if (isCached(id)) {
             return true;
-        }
-        try {
-            getItemState(id);
-            return true;
-        } catch (ItemStateException e) {
-            return false;
+        } else {
+            return store.exists(id);
         }
     }
 

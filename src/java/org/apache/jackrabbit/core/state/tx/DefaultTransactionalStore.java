@@ -51,6 +51,14 @@ public class DefaultTransactionalStore implements TransactionalStore {
     }
 
     /**
+     * @see TransactionalStore#exists
+     */
+    public boolean exists(ItemId id) {
+
+        return provider.hasItemState(id);
+    }
+
+    /**
      * @see TransactionalStore#beginUpdate
      */
     public TransactionalStore.Update beginUpdate() {

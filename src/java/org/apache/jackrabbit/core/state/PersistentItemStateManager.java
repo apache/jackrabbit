@@ -232,9 +232,12 @@ public class PersistentItemStateManager extends ItemStateCache
      * @see ItemStateProvider#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
-        try {
-            getItemState(id);
+        if (isCached(id)) {
             return true;
+        }
+        
+        try {
+            return persistMgr.exists(id);
         } catch (ItemStateException ise) {
             return false;
         }
