@@ -31,8 +31,8 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.*;
 
 /**
@@ -44,43 +44,43 @@ public class NodeTypeRegistry {
     // some well known node type names
     // nt:unstructured
     public static final QName NT_UNSTRUCTURED =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "unstructured");
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "unstructured");
     // nt:base
     public static final QName NT_BASE =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "base");
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "base");
     // nt:hierarchyNode
     public static final QName NT_HIERARCHYNODE =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "hierarchyNode");
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "hierarchyNode");
     // nt:mimeResource
     public static final QName NT_MIME_RESOURCE =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "mimeResource");
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "mimeResource");
     // nt:query
     public static final QName NT_QUERY =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "query");
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "query");
     // mix:referenceable
     public static final QName MIX_REFERENCEABLE =
-            new QName(NamespaceRegistryImpl.NS_MIX_URI, "referenceable");
+	    new QName(NamespaceRegistryImpl.NS_MIX_URI, "referenceable");
     // mix:lockable
     public static final QName MIX_LOCKABLE =
-            new QName(NamespaceRegistryImpl.NS_MIX_URI, "lockable");
+	    new QName(NamespaceRegistryImpl.NS_MIX_URI, "lockable");
     // mix:versionable
     public static final QName MIX_VERSIONABLE =
-            new QName(NamespaceRegistryImpl.NS_MIX_URI, "versionable");
+	    new QName(NamespaceRegistryImpl.NS_MIX_URI, "versionable");
     // nt:versionHistory
     public static final QName NT_VERSION_HISTORY =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "versionHistory");
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "versionHistory");
     // nt:version
     public static final QName NT_VERSION =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "version");
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "version");
     // nt:frozenVersionableChild
     public static final QName NT_FROZEN_VERSIONABLE_CHILD =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "frozenVersionableChild");
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "frozenVersionableChild");
     // jcr:primaryType
     public static final QName JCR_PRIMARY_TYPE =
-            new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
+	    new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
 
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
-            "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";
+	    "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";
 
     private static final String CUSTOM_NODETYPES_RESOURCE_NAME = "custom_nodetypes.xml";
 
@@ -119,7 +119,7 @@ public class NodeTypeRegistry {
      * Listeners (soft references)
      */
     private final Map listeners =
-            Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+	    Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     /**
      * Create a new <code>NodeTypeRegistry</codes>
@@ -130,9 +130,9 @@ public class NodeTypeRegistry {
      * @throws RepositoryException
      */
     public static NodeTypeRegistry create(NamespaceRegistryImpl nsReg, FileSystem ntStore)
-            throws RepositoryException {
-        NodeTypeRegistry ntMgr = new NodeTypeRegistry(nsReg, ntStore);
-        return ntMgr;
+	    throws RepositoryException {
+	NodeTypeRegistry ntMgr = new NodeTypeRegistry(nsReg, ntStore);
+	return ntMgr;
     }
 
     /**
@@ -143,105 +143,105 @@ public class NodeTypeRegistry {
      * @throws RepositoryException
      */
     private NodeTypeRegistry(NamespaceRegistryImpl nsReg, FileSystem ntStore)
-            throws RepositoryException {
-        this.nsReg = nsReg;
-        this.ntStore = ntStore;
-        customNodeTypesResource = new FileSystemResource(this.ntStore, CUSTOM_NODETYPES_RESOURCE_NAME);
-        try {
-            // make sure path to resource exists
-            if (!customNodeTypesResource.exists()) {
-                customNodeTypesResource.makeParentDirs();
-            }
-        } catch (FileSystemException fse) {
-            String error = "internal error: invalid resource: " + customNodeTypesResource.getPath();
-            log.error(error, fse);
-            throw new RepositoryException(error, fse);
-        }
+	    throws RepositoryException {
+	this.nsReg = nsReg;
+	this.ntStore = ntStore;
+	customNodeTypesResource = new FileSystemResource(this.ntStore, CUSTOM_NODETYPES_RESOURCE_NAME);
+	try {
+	    // make sure path to resource exists
+	    if (!customNodeTypesResource.exists()) {
+		customNodeTypesResource.makeParentDirs();
+	    }
+	} catch (FileSystemException fse) {
+	    String error = "internal error: invalid resource: " + customNodeTypesResource.getPath();
+	    log.error(error, fse);
+	    throw new RepositoryException(error, fse);
+	}
 
-        entCache = new EffectiveNodeTypeCache();
-        registeredNTDefs = new HashMap();
-        propDefs = new HashMap();
-        nodeDefs = new HashMap();
+	entCache = new EffectiveNodeTypeCache();
+	registeredNTDefs = new HashMap();
+	propDefs = new HashMap();
+	nodeDefs = new HashMap();
 
-        // setup definition of root node
-        rootNodeDef = createRootNodeDef();
-        nodeDefs.put(new NodeDefId(rootNodeDef), rootNodeDef);
+	// setup definition of root node
+	rootNodeDef = createRootNodeDef();
+	nodeDefs.put(new NodeDefId(rootNodeDef), rootNodeDef);
 
-        // load and register pre-defined (i.e. built-in) node types
-        builtInNTDefs = new NodeTypeDefStore();
-        InputStream in = null;
-        try {
-            in = getClass().getClassLoader().getResourceAsStream(BUILTIN_NODETYPES_RESOURCE_PATH);
-            builtInNTDefs.load(in);
-            internalRegister(builtInNTDefs.all());
-        } catch (IOException ioe) {
-            String error = "internal error: failed to read built-in node type definitions stored in " + BUILTIN_NODETYPES_RESOURCE_PATH;
-            log.error(error, ioe);
-            throw new RepositoryException(error, ioe);
-        } catch (InvalidNodeTypeDefException intde) {
-            String error = "internal error: invalid built-in node type definition stored in " + BUILTIN_NODETYPES_RESOURCE_PATH;
-            log.error(error, intde);
-            throw new RepositoryException(error, intde);
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
-        }
+	// load and register pre-defined (i.e. built-in) node types
+	builtInNTDefs = new NodeTypeDefStore();
+	InputStream in = null;
+	try {
+	    in = getClass().getClassLoader().getResourceAsStream(BUILTIN_NODETYPES_RESOURCE_PATH);
+	    builtInNTDefs.load(in);
+	    internalRegister(builtInNTDefs.all());
+	} catch (IOException ioe) {
+	    String error = "internal error: failed to read built-in node type definitions stored in " + BUILTIN_NODETYPES_RESOURCE_PATH;
+	    log.error(error, ioe);
+	    throw new RepositoryException(error, ioe);
+	} catch (InvalidNodeTypeDefException intde) {
+	    String error = "internal error: invalid built-in node type definition stored in " + BUILTIN_NODETYPES_RESOURCE_PATH;
+	    log.error(error, intde);
+	    throw new RepositoryException(error, intde);
+	} finally {
+	    if (in != null) {
+		try {
+		    in.close();
+		} catch (IOException ioe) {
+		    // ignore
+		}
+	    }
+	}
 
-        // load and register custom node types
-        customNTDefs = new NodeTypeDefStore();
-        in = null;
-        try {
-            if (customNodeTypesResource.exists()) {
-                in = customNodeTypesResource.getInputStream();
-            }
-        } catch (FileSystemException fse) {
-            String error = "internal error: failed to access custom node type definitions stored in " + customNodeTypesResource.getPath();
-            log.error(error, fse);
-            throw new RepositoryException(error, fse);
-        }
-        if (in == null) {
-            log.info("no custom node type definitions found");
-        } else {
-            try {
-                customNTDefs.load(in);
-                internalRegister(customNTDefs.all());
-            } catch (IOException ioe) {
-                String error = "internal error: failed to read custom node type definitions stored in " + customNodeTypesResource.getPath();
-                log.error(error, ioe);
-                throw new RepositoryException(error, ioe);
-            } catch (InvalidNodeTypeDefException intde) {
-                String error = "internal error: invalid custom node type definition stored in " + customNodeTypesResource.getPath();
-                log.error(error, intde);
-                throw new RepositoryException(error, intde);
-            } finally {
-                try {
-                    in.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
-        }
+	// load and register custom node types
+	customNTDefs = new NodeTypeDefStore();
+	in = null;
+	try {
+	    if (customNodeTypesResource.exists()) {
+		in = customNodeTypesResource.getInputStream();
+	    }
+	} catch (FileSystemException fse) {
+	    String error = "internal error: failed to access custom node type definitions stored in " + customNodeTypesResource.getPath();
+	    log.error(error, fse);
+	    throw new RepositoryException(error, fse);
+	}
+	if (in == null) {
+	    log.info("no custom node type definitions found");
+	} else {
+	    try {
+		customNTDefs.load(in);
+		internalRegister(customNTDefs.all());
+	    } catch (IOException ioe) {
+		String error = "internal error: failed to read custom node type definitions stored in " + customNodeTypesResource.getPath();
+		log.error(error, ioe);
+		throw new RepositoryException(error, ioe);
+	    } catch (InvalidNodeTypeDefException intde) {
+		String error = "internal error: invalid custom node type definition stored in " + customNodeTypesResource.getPath();
+		log.error(error, intde);
+		throw new RepositoryException(error, intde);
+	    } finally {
+		try {
+		    in.close();
+		} catch (IOException ioe) {
+		    // ignore
+		}
+	    }
+	}
     }
 
     private static ChildNodeDef createRootNodeDef() {
-        ChildNodeDef def = new ChildNodeDef();
+	ChildNodeDef def = new ChildNodeDef();
 
-        // FIXME need a fake declaring node type
-        def.setDeclaringNodeType(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, ""));
-        def.setRequiredPrimaryTypes(new QName[]{NT_BASE});
-        def.setDefaultPrimaryType(NT_UNSTRUCTURED);
-        def.setMandatory(true);
-        def.setProtected(false);
-        def.setOnParentVersion(OnParentVersionAction.VERSION);
-        def.setPrimaryItem(false);
-        def.setAllowSameNameSibs(false);
-        def.setAutoCreate(true);
-        return def;
+	// FIXME need a fake declaring node type
+	def.setDeclaringNodeType(new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, ""));
+	def.setRequiredPrimaryTypes(new QName[]{NT_BASE});
+	def.setDefaultPrimaryType(NT_UNSTRUCTURED);
+	def.setMandatory(true);
+	def.setProtected(false);
+	def.setOnParentVersion(OnParentVersionAction.VERSION);
+	def.setPrimaryItem(false);
+	def.setAllowSameNameSibs(false);
+	def.setAutoCreate(true);
+	return def;
     }
 
     /**
@@ -258,81 +258,81 @@ public class NodeTypeRegistry {
      * @see #registerNodeType
      */
     private synchronized void internalRegister(Collection ntDefs)
-            throws InvalidNodeTypeDefException, RepositoryException {
-        ArrayList list = new ArrayList(ntDefs);
+	    throws InvalidNodeTypeDefException, RepositoryException {
+	ArrayList list = new ArrayList(ntDefs);
 
-        // iterate over definitions until there are no more definitions with
-        // unresolved (i.e. unregistered) dependencies or an error occurs;
+	// iterate over definitions until there are no more definitions with
+	// unresolved (i.e. unregistered) dependencies or an error occurs;
 
-        int count = -1;  // number of registered nt's per iteration
-        while (list.size() > 0 && count != 0) {
-            count = 0;
-            Iterator iterator = list.iterator();
-            while (iterator.hasNext()) {
-                NodeTypeDef ntd = (NodeTypeDef) iterator.next();
-                // check if definition has unresolved dependencies
-                if (registeredNTDefs.keySet().containsAll(ntd.getDependencies())) {
-                    // try to register it
-                    internalRegister(ntd);
-                    // remove it from list
-                    iterator.remove();
-                    // increase count
-                    count++;
-                }
-            }
-        }
-        if (list.size() > 0) {
-            StringBuffer msg = new StringBuffer();
-            msg.append("the following node types could not be registered because of unresolvable dependencies: ");
-            Iterator iterator = list.iterator();
-            while (iterator.hasNext()) {
-                msg.append(((NodeTypeDef) iterator.next()).getName());
-                msg.append(" ");
-            }
-            log.error(msg.toString());
-            throw new InvalidNodeTypeDefException(msg.toString());
-        }
+	int count = -1;  // number of registered nt's per iteration
+	while (list.size() > 0 && count != 0) {
+	    count = 0;
+	    Iterator iterator = list.iterator();
+	    while (iterator.hasNext()) {
+		NodeTypeDef ntd = (NodeTypeDef) iterator.next();
+		// check if definition has unresolved dependencies
+		if (registeredNTDefs.keySet().containsAll(ntd.getDependencies())) {
+		    // try to register it
+		    internalRegister(ntd);
+		    // remove it from list
+		    iterator.remove();
+		    // increase count
+		    count++;
+		}
+	    }
+	}
+	if (list.size() > 0) {
+	    StringBuffer msg = new StringBuffer();
+	    msg.append("the following node types could not be registered because of unresolvable dependencies: ");
+	    Iterator iterator = list.iterator();
+	    while (iterator.hasNext()) {
+		msg.append(((NodeTypeDef) iterator.next()).getName());
+		msg.append(" ");
+	    }
+	    log.error(msg.toString());
+	    throw new InvalidNodeTypeDefException(msg.toString());
+	}
     }
 
     private EffectiveNodeType internalRegister(NodeTypeDef ntd)
-            throws InvalidNodeTypeDefException, RepositoryException {
-        QName name = ntd.getName();
-        if (name != null && registeredNTDefs.containsKey(name)) {
-            String msg = name + " already exists";
-            log.error(msg);
-            throw new InvalidNodeTypeDefException(msg);
-        }
+	    throws InvalidNodeTypeDefException, RepositoryException {
+	QName name = ntd.getName();
+	if (name != null && registeredNTDefs.containsKey(name)) {
+	    String msg = name + " already exists";
+	    log.error(msg);
+	    throw new InvalidNodeTypeDefException(msg);
+	}
 
-        EffectiveNodeType ent = validateNodeTypeDef(ntd);
+	EffectiveNodeType ent = validateNodeTypeDef(ntd);
 
-        // store new effective node type instance
-        entCache.put(ent);
+	// store new effective node type instance
+	entCache.put(ent);
 
-        // register clone of node type definition
-        try {
-            ntd = (NodeTypeDef) ntd.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
-        registeredNTDefs.put(name, ntd);
+	// register clone of node type definition
+	try {
+	    ntd = (NodeTypeDef) ntd.clone();
+	} catch (CloneNotSupportedException e) {
+	    // should never get here
+	    log.fatal("internal error", e);
+	    throw new InternalError(e.getMessage());
+	}
+	registeredNTDefs.put(name, ntd);
 
-        // store poperty & child node definitions of new node type by id
-        PropDef[] pda = ntd.getPropertyDefs();
-        for (int i = 0; i < pda.length; i++) {
-            PropDef def = pda[i];
-            PropDefId id = new PropDefId(def);
-            propDefs.put(id, def);
-        }
-        ChildNodeDef[] nda = ntd.getChildNodeDefs();
-        for (int i = 0; i < nda.length; i++) {
-            ChildNodeDef def = nda[i];
-            NodeDefId id = new NodeDefId(def);
-            nodeDefs.put(id, def);
-        }
+	// store poperty & child node definitions of new node type by id
+	PropDef[] pda = ntd.getPropertyDefs();
+	for (int i = 0; i < pda.length; i++) {
+	    PropDef def = pda[i];
+	    PropDefId id = new PropDefId(def);
+	    propDefs.put(id, def);
+	}
+	ChildNodeDef[] nda = ntd.getChildNodeDefs();
+	for (int i = 0; i < nda.length; i++) {
+	    ChildNodeDef def = nda[i];
+	    NodeDefId id = new NodeDefId(def);
+	    nodeDefs.put(id, def);
+	}
 
-        return ent;
+	return ent;
     }
 
     /**
@@ -342,9 +342,9 @@ public class NodeTypeRegistry {
      *                 of node types
      */
     void addListener(NodeTypeRegistryListener listener) {
-        if (!listeners.containsKey(listener)) {
-            listeners.put(listener, listener);
-        }
+	if (!listeners.containsKey(listener)) {
+	    listeners.put(listener, listener);
+	}
     }
 
     /**
@@ -353,415 +353,415 @@ public class NodeTypeRegistry {
      * @param listener an existing listener
      */
     void removeListener(NodeTypeRegistryListener listener) {
-        listeners.remove(listener);
+	listeners.remove(listener);
     }
 
     /**
      * Notify the listeners that a node type <code>ntName</code> has been registered.
      */
     private void notifyRegistered(QName ntName) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (NodeTypeRegistryListener) iter.next();
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].nodeTypeRegistered(ntName);
-            }
-        }
+	// copy listeners to array to avoid ConcurrentModificationException
+	NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
+	Iterator iter = listeners.values().iterator();
+	int cnt = 0;
+	while (iter.hasNext()) {
+	    la[cnt++] = (NodeTypeRegistryListener) iter.next();
+	}
+	for (int i = 0; i < la.length; i++) {
+	    if (la[i] != null) {
+		la[i].nodeTypeRegistered(ntName);
+	    }
+	}
     }
 
     /**
      * Notify the listeners that a node type <code>ntName</code> has been unregistered.
      */
     private void notifyUnregistered(QName ntName) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (NodeTypeRegistryListener) iter.next();
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].nodeTypeUnregistered(ntName);
-            }
-        }
+	// copy listeners to array to avoid ConcurrentModificationException
+	NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
+	Iterator iter = listeners.values().iterator();
+	int cnt = 0;
+	while (iter.hasNext()) {
+	    la[cnt++] = (NodeTypeRegistryListener) iter.next();
+	}
+	for (int i = 0; i < la.length; i++) {
+	    if (la[i] != null) {
+		la[i].nodeTypeUnregistered(ntName);
+	    }
+	}
     }
 
     private EffectiveNodeType validateNodeTypeDef(NodeTypeDef ntd)
-            throws InvalidNodeTypeDefException, RepositoryException {
+	    throws InvalidNodeTypeDefException, RepositoryException {
 
-        /**
-         * the effective (i.e. merged and resolved) node type resulting from
-         * the specified node type definition;
-         * the effective node type will finally be created after the definition
-         * has been verified and checked for conflicts etc.; in some cases it
-         * will be created already at an earlier stage during the validation
-         * of child node definitions
-         */
-        EffectiveNodeType ent = null;
+	/**
+	 * the effective (i.e. merged and resolved) node type resulting from
+	 * the specified node type definition;
+	 * the effective node type will finally be created after the definition
+	 * has been verified and checked for conflicts etc.; in some cases it
+	 * will be created already at an earlier stage during the validation
+	 * of child node definitions
+	 */
+	EffectiveNodeType ent = null;
 
-        QName name = ntd.getName();
-        if (name == null) {
-            String msg = "no name specified";
-            log.error(msg);
-            throw new InvalidNodeTypeDefException(msg);
-        }
+	QName name = ntd.getName();
+	if (name == null) {
+	    String msg = "no name specified";
+	    log.error(msg);
+	    throw new InvalidNodeTypeDefException(msg);
+	}
 
-        if (registeredNTDefs.containsKey(name)) {
-            String msg = name + " already exists";
-            log.error(msg);
-            throw new InvalidNodeTypeDefException(msg);
-        }
+	if (registeredNTDefs.containsKey(name)) {
+	    String msg = name + " already exists";
+	    log.error(msg);
+	    throw new InvalidNodeTypeDefException(msg);
+	}
 
-        // validate supertypes
-        QName[] supertypes = ntd.getSupertypes();
-        if (supertypes != null && supertypes.length > 0) {
-            for (int i = 0; i < supertypes.length; i++) {
-                /**
-                 * simple check for infinite recursion
-                 * (won't trap recursion on a deeper inheritance level)
-                 */
-                if (name.equals(supertypes[i])) {
-                    String msg = "invalid supertype: " + supertypes[i] + " (infinite recursion))";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-                if (!registeredNTDefs.containsKey(supertypes[i])) {
-                    String msg = "invalid supertype: " + supertypes[i];
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-            }
+	// validate supertypes
+	QName[] supertypes = ntd.getSupertypes();
+	if (supertypes != null && supertypes.length > 0) {
+	    for (int i = 0; i < supertypes.length; i++) {
+		/**
+		 * simple check for infinite recursion
+		 * (won't trap recursion on a deeper inheritance level)
+		 */
+		if (name.equals(supertypes[i])) {
+		    String msg = "invalid supertype: " + supertypes[i] + " (infinite recursion))";
+		    log.error(msg);
+		    throw new InvalidNodeTypeDefException(msg);
+		}
+		if (!registeredNTDefs.containsKey(supertypes[i])) {
+		    String msg = "invalid supertype: " + supertypes[i];
+		    log.error(msg);
+		    throw new InvalidNodeTypeDefException(msg);
+		}
+	    }
 
-            /**
-             * check for circularity in inheritance chain
-             * ('a' extends 'b' extends 'a')
-             */
-            Stack inheritanceChain = new Stack();
-            inheritanceChain.push(name);
-            checkForCircularInheritance(supertypes, inheritanceChain);
-        }
+	    /**
+	     * check for circularity in inheritance chain
+	     * ('a' extends 'b' extends 'a')
+	     */
+	    Stack inheritanceChain = new Stack();
+	    inheritanceChain.push(name);
+	    checkForCircularInheritance(supertypes, inheritanceChain);
+	}
 
-        /**
-         * note that infinite recursion through inheritance is automatically
-         * being checked by the following call to getEffectiveNodeType()
-         * as it's impossible to register an node type definition which
-         * references a supertype that isn't registered yet...
-         */
+	/**
+	 * note that infinite recursion through inheritance is automatically
+	 * being checked by the following call to getEffectiveNodeType()
+	 * as it's impossible to register an node type definition which
+	 * references a supertype that isn't registered yet...
+	 */
 
-        /**
-         * build effective (i.e. merged and resolved) node type from supertypes
-         * and check for conflicts
-         */
-        if (supertypes != null && supertypes.length > 0) {
-            try {
-                EffectiveNodeType est = buildEffectiveNodeType(supertypes);
-                // make sure that all primary types except nt:base extend from nt:base
-                if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName()) &&
-                        !est.includesNodeType(NT_BASE)) {
-                    String msg = "all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-            } catch (NodeTypeConflictException ntce) {
-                String msg = "failed to validate supertypes";
-                log.error(msg, ntce);
-                throw new InvalidNodeTypeDefException(msg, ntce);
-            } catch (NoSuchNodeTypeException nsnte) {
-                String msg = "failed to validate supertypes";
-                log.error(msg, nsnte);
-                throw new InvalidNodeTypeDefException(msg, nsnte);
-            }
-        } else {
-            // no supertypes specified: has to be either a mixin type or nt:base
-            if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName())) {
-                String msg = "all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
-                log.error(msg);
-                throw new InvalidNodeTypeDefException(msg);
-            }
-        }
+	/**
+	 * build effective (i.e. merged and resolved) node type from supertypes
+	 * and check for conflicts
+	 */
+	if (supertypes != null && supertypes.length > 0) {
+	    try {
+		EffectiveNodeType est = buildEffectiveNodeType(supertypes);
+		// make sure that all primary types except nt:base extend from nt:base
+		if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName()) &&
+			!est.includesNodeType(NT_BASE)) {
+		    String msg = "all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
+		    log.error(msg);
+		    throw new InvalidNodeTypeDefException(msg);
+		}
+	    } catch (NodeTypeConflictException ntce) {
+		String msg = "failed to validate supertypes";
+		log.error(msg, ntce);
+		throw new InvalidNodeTypeDefException(msg, ntce);
+	    } catch (NoSuchNodeTypeException nsnte) {
+		String msg = "failed to validate supertypes";
+		log.error(msg, nsnte);
+		throw new InvalidNodeTypeDefException(msg, nsnte);
+	    }
+	} else {
+	    // no supertypes specified: has to be either a mixin type or nt:base
+	    if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName())) {
+		String msg = "all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
+		log.error(msg);
+		throw new InvalidNodeTypeDefException(msg);
+	    }
+	}
 
-        ChildItemDef primaryItem = null;
+	ChildItemDef primaryItem = null;
 
-        // validate property definitions
-        PropDef[] pda = ntd.getPropertyDefs();
-        for (int i = 0; i < pda.length; i++) {
-            PropDef pd = pda[i];
-            // check primary item flag
-            if (pd.isPrimaryItem()) {
-                if (pd.definesResidual()) {
-                    String msg = "primary item must specify a name";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-                if (primaryItem != null) {
-                    String msg = "more than one primary item specified";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                } else {
-                    primaryItem = pd;
-                }
-            }
-            // check that auto-created properties specify a name
-            if (pd.definesResidual() && pd.isAutoCreate()) {
-                String msg = "auto-created properties must specify a name";
-                log.error(msg);
-                throw new InvalidNodeTypeDefException(msg);
-            }
-            /**
-             * check default values:
-             * make sure type of value is consistent with required property type
-             */
-            InternalValue[] defVals = pd.getDefaultValues();
-            if (defVals != null && defVals.length != 0) {
-                int reqType = pd.getRequiredType();
-                for (int j = 0; j < defVals.length; j++) {
-                    if (reqType == PropertyType.UNDEFINED) {
-                        reqType = defVals[j].getType();
-                    } else {
-                        if (defVals[j].getType() != reqType) {
-                            String msg = "type of default value(s) is not consistent with required property type";
-                            log.error(msg);
-                            throw new InvalidNodeTypeDefException(msg);
-                        }
-                    }
-                }
-            }
-            /**
-             * todo check that auto-created properties have have at least either default values or system generated values
-             */
-            // check that default values satisfy value constraints
-            ValueConstraint[] constraints = pd.getValueConstraints();
-            if (constraints != null && constraints.length > 0) {
-                if (defVals != null && defVals.length > 0) {
-                    // check value constraints on every value
-                    for (int j = 0; j < defVals.length; j++) {
-                        // constraints are OR-ed together
-                        boolean satisfied = false;
-                        ConstraintViolationException cve = null;
-                        for (int k = 0; k < constraints.length; k++) {
-                            try {
-                                constraints[k].check(defVals[j]);
-                                // at least one constraint is satisfied
-                                satisfied = true;
-                                break;
-                            } catch (ConstraintViolationException e) {
-                                cve = e;
-                                continue;
-                            }
-                        }
-                        if (!satisfied) {
-                            // report last exception we encountered
-                            String msg = "default value of property "
-                                    + (pd.definesResidual() ? "*" : pd.getName().toString())
-                                    + " does not satisfy value constraint";
-                            log.error(msg, cve);
-                            throw new InvalidNodeTypeDefException(msg, cve);
-                        }
-                    }
-                }
+	// validate property definitions
+	PropDef[] pda = ntd.getPropertyDefs();
+	for (int i = 0; i < pda.length; i++) {
+	    PropDef pd = pda[i];
+	    // check primary item flag
+	    if (pd.isPrimaryItem()) {
+		if (pd.definesResidual()) {
+		    String msg = "primary item must specify a name";
+		    log.error(msg);
+		    throw new InvalidNodeTypeDefException(msg);
+		}
+		if (primaryItem != null) {
+		    String msg = "more than one primary item specified";
+		    log.error(msg);
+		    throw new InvalidNodeTypeDefException(msg);
+		} else {
+		    primaryItem = pd;
+		}
+	    }
+	    // check that auto-created properties specify a name
+	    if (pd.definesResidual() && pd.isAutoCreate()) {
+		String msg = "auto-created properties must specify a name";
+		log.error(msg);
+		throw new InvalidNodeTypeDefException(msg);
+	    }
+	    /**
+	     * check default values:
+	     * make sure type of value is consistent with required property type
+	     */
+	    InternalValue[] defVals = pd.getDefaultValues();
+	    if (defVals != null && defVals.length != 0) {
+		int reqType = pd.getRequiredType();
+		for (int j = 0; j < defVals.length; j++) {
+		    if (reqType == PropertyType.UNDEFINED) {
+			reqType = defVals[j].getType();
+		    } else {
+			if (defVals[j].getType() != reqType) {
+			    String msg = "type of default value(s) is not consistent with required property type";
+			    log.error(msg);
+			    throw new InvalidNodeTypeDefException(msg);
+			}
+		    }
+		}
+	    }
+	    /**
+	     * todo check that auto-created properties have have at least either default values or system generated values
+	     */
+	    // check that default values satisfy value constraints
+	    ValueConstraint[] constraints = pd.getValueConstraints();
+	    if (constraints != null && constraints.length > 0) {
+		if (defVals != null && defVals.length > 0) {
+		    // check value constraints on every value
+		    for (int j = 0; j < defVals.length; j++) {
+			// constraints are OR-ed together
+			boolean satisfied = false;
+			ConstraintViolationException cve = null;
+			for (int k = 0; k < constraints.length; k++) {
+			    try {
+				constraints[k].check(defVals[j]);
+				// at least one constraint is satisfied
+				satisfied = true;
+				break;
+			    } catch (ConstraintViolationException e) {
+				cve = e;
+				continue;
+			    }
+			}
+			if (!satisfied) {
+			    // report last exception we encountered
+			    String msg = "default value of property "
+				    + (pd.definesResidual() ? "*" : pd.getName().toString())
+				    + " does not satisfy value constraint";
+			    log.error(msg, cve);
+			    throw new InvalidNodeTypeDefException(msg, cve);
+			}
+		    }
+		}
 
-                /**
-                 * ReferenceConstraint:
-                 * the specified node type must be registered, with one notable
-                 * exception: the node type just being registered
-                 */
-                if (pd.getRequiredType() == PropertyType.REFERENCE) {
-                    for (int j = 0; j < constraints.length; j++) {
-                        ReferenceConstraint rc = (ReferenceConstraint) constraints[j];
-                        QName ntName = rc.getNodeTypeName();
-                        if (!name.equals(ntName) && !registeredNTDefs.containsKey(ntName)) {
-                            String msg = "invalid REFERENCE value constraint '"
-                                    + ntName + "' (unknown node type) in property definition "
-                                    + (pd.definesResidual() ? "*" : pd.getName().toString());
-                            log.error(msg);
-                            throw new InvalidNodeTypeDefException(msg);
-                        }
-                    }
-                }
-            }
-        }
+		/**
+		 * ReferenceConstraint:
+		 * the specified node type must be registered, with one notable
+		 * exception: the node type just being registered
+		 */
+		if (pd.getRequiredType() == PropertyType.REFERENCE) {
+		    for (int j = 0; j < constraints.length; j++) {
+			ReferenceConstraint rc = (ReferenceConstraint) constraints[j];
+			QName ntName = rc.getNodeTypeName();
+			if (!name.equals(ntName) && !registeredNTDefs.containsKey(ntName)) {
+			    String msg = "invalid REFERENCE value constraint '"
+				    + ntName + "' (unknown node type) in property definition "
+				    + (pd.definesResidual() ? "*" : pd.getName().toString());
+			    log.error(msg);
+			    throw new InvalidNodeTypeDefException(msg);
+			}
+		    }
+		}
+	    }
+	}
 
-        // validate child-node definitions
-        ChildNodeDef[] cnda = ntd.getChildNodeDefs();
-        for (int i = 0; i < cnda.length; i++) {
-            ChildNodeDef cnd = cnda[i];
-            // check primary item flag
-            if (cnd.isPrimaryItem()) {
-                if (cnd.definesResidual()) {
-                    String msg = "primary item must specify a name";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-                if (primaryItem != null) {
-                    String msg = "more than one primary item specified";
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                } else {
-                    primaryItem = cnd;
-                }
-            }
-            // check that auto-created child-nodes specify a name
-            if (cnd.definesResidual() && cnd.isAutoCreate()) {
-                String msg = "auto-created child-nodes must specify a name";
-                log.error(msg);
-                throw new InvalidNodeTypeDefException(msg);
-            }
-            // check default primary type
-            QName dpt = cnd.getDefaultPrimaryType();
-            boolean referenceToSelf = false;
-            EffectiveNodeType defaultENT = null;
-            if (dpt != null) {
-                // check if this node type specifies itself as default primary type
-                if (name.equals(dpt)) {
-                    referenceToSelf = true;
-                }
-                /**
-                 * the default primary type must be registered, with one notable
-                 * exception: the node type just being registered
-                 */
-                if (!name.equals(dpt) && !registeredNTDefs.containsKey(dpt)) {
-                    String msg = "invalid default primary type '" + dpt
-                            + "' in childnode definition " + cnd.getName();
-                    log.error(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-                /**
-                 * build effective (i.e. merged and resolved) node type from
-                 * default primary type and check for conflicts
-                 */
-                try {
-                    if (!referenceToSelf) {
-                        defaultENT = getEffectiveNodeType(dpt);
-                    } else {
-                        /**
-                         * the default primary type is identical with the node
-                         * type just being registered; we have to instantiate it
-                         * 'manually'
-                         */
-                        ent = EffectiveNodeType.create(this, ntd);
-                        defaultENT = ent;
-                    }
-                    if (cnd.isAutoCreate()) {
-                        /**
-                         * check for circularity through default primary types
-                         * of auto-created child nodes (node type 'a' defines
-                         * auto-created child node with default primary type 'a')
-                         */
-                        Stack definingNTs = new Stack();
-                        definingNTs.push(name);
-                        checkForCircularNodeAutoCreation(defaultENT, definingNTs);
-                    }
-                } catch (NodeTypeConflictException ntce) {
-                    String msg = "failed to validate default primary type";
-                    log.error(msg, ntce);
-                    throw new InvalidNodeTypeDefException(msg, ntce);
-                } catch (NoSuchNodeTypeException nsnte) {
-                    String msg = "failed to validate default primary type";
-                    log.error(msg, nsnte);
-                    throw new InvalidNodeTypeDefException(msg, nsnte);
-                }
-            }
+	// validate child-node definitions
+	ChildNodeDef[] cnda = ntd.getChildNodeDefs();
+	for (int i = 0; i < cnda.length; i++) {
+	    ChildNodeDef cnd = cnda[i];
+	    // check primary item flag
+	    if (cnd.isPrimaryItem()) {
+		if (cnd.definesResidual()) {
+		    String msg = "primary item must specify a name";
+		    log.error(msg);
+		    throw new InvalidNodeTypeDefException(msg);
+		}
+		if (primaryItem != null) {
+		    String msg = "more than one primary item specified";
+		    log.error(msg);
+		    throw new InvalidNodeTypeDefException(msg);
+		} else {
+		    primaryItem = cnd;
+		}
+	    }
+	    // check that auto-created child-nodes specify a name
+	    if (cnd.definesResidual() && cnd.isAutoCreate()) {
+		String msg = "auto-created child-nodes must specify a name";
+		log.error(msg);
+		throw new InvalidNodeTypeDefException(msg);
+	    }
+	    // check default primary type
+	    QName dpt = cnd.getDefaultPrimaryType();
+	    boolean referenceToSelf = false;
+	    EffectiveNodeType defaultENT = null;
+	    if (dpt != null) {
+		// check if this node type specifies itself as default primary type
+		if (name.equals(dpt)) {
+		    referenceToSelf = true;
+		}
+		/**
+		 * the default primary type must be registered, with one notable
+		 * exception: the node type just being registered
+		 */
+		if (!name.equals(dpt) && !registeredNTDefs.containsKey(dpt)) {
+		    String msg = "invalid default primary type '" + dpt
+			    + "' in childnode definition " + cnd.getName();
+		    log.error(msg);
+		    throw new InvalidNodeTypeDefException(msg);
+		}
+		/**
+		 * build effective (i.e. merged and resolved) node type from
+		 * default primary type and check for conflicts
+		 */
+		try {
+		    if (!referenceToSelf) {
+			defaultENT = getEffectiveNodeType(dpt);
+		    } else {
+			/**
+			 * the default primary type is identical with the node
+			 * type just being registered; we have to instantiate it
+			 * 'manually'
+			 */
+			ent = EffectiveNodeType.create(this, ntd);
+			defaultENT = ent;
+		    }
+		    if (cnd.isAutoCreate()) {
+			/**
+			 * check for circularity through default primary types
+			 * of auto-created child nodes (node type 'a' defines
+			 * auto-created child node with default primary type 'a')
+			 */
+			Stack definingNTs = new Stack();
+			definingNTs.push(name);
+			checkForCircularNodeAutoCreation(defaultENT, definingNTs);
+		    }
+		} catch (NodeTypeConflictException ntce) {
+		    String msg = "failed to validate default primary type";
+		    log.error(msg, ntce);
+		    throw new InvalidNodeTypeDefException(msg, ntce);
+		} catch (NoSuchNodeTypeException nsnte) {
+		    String msg = "failed to validate default primary type";
+		    log.error(msg, nsnte);
+		    throw new InvalidNodeTypeDefException(msg, nsnte);
+		}
+	    }
 
-            // check required primary types
-            QName[] reqTypes = cnd.getRequiredPrimaryTypes();
-            if (reqTypes != null && reqTypes.length > 0) {
-                for (int n = 0; n < reqTypes.length; n++) {
-                    QName rpt = reqTypes[n];
-                    referenceToSelf = false;
-                    /**
-                     * check if this node type specifies itself as required
-                     * primary type
-                     */
-                    if (name.equals(rpt)) {
-                        referenceToSelf = true;
-                    }
-                    /**
-                     * the required primary type must be registered, with one
-                     * notable exception: the node type just being registered
-                     */
-                    if (!name.equals(rpt) && !registeredNTDefs.containsKey(rpt)) {
-                        String msg = "invalid required primary type: " + rpt;
-                        log.error(msg);
-                        throw new InvalidNodeTypeDefException(msg);
-                    }
-                    /**
-                     * check if default primary type satisfies the required
-                     * primary type constraint
-                     */
-                    if (defaultENT != null && !defaultENT.includesNodeType(rpt)) {
-                        String msg = "default primary type does not satisfy required primary type constraint " + rpt;
-                        log.error(msg);
-                        throw new InvalidNodeTypeDefException(msg);
-                    }
-                    /**
-                     * build effective (i.e. merged and resolved) node type from
-                     * required primary type constraint and check for conflicts
-                     */
-                    try {
-                        if (!referenceToSelf) {
-                            getEffectiveNodeType(rpt);
-                        } else {
-                            /**
-                             * the required primary type is identical with the
-                             * node type just being registered; we have to
-                             * instantiate it 'manually'
-                             */
-                            if (ent == null) {
-                                ent = EffectiveNodeType.create(this, ntd);
-                            }
-                        }
-                    } catch (NodeTypeConflictException ntce) {
-                        String msg = "failed to validate required primary type constraint";
-                        log.error(msg, ntce);
-                        throw new InvalidNodeTypeDefException(msg, ntce);
-                    } catch (NoSuchNodeTypeException nsnte) {
-                        String msg = "failed to validate required primary type constraint";
-                        log.error(msg, nsnte);
-                        throw new InvalidNodeTypeDefException(msg, nsnte);
-                    }
-                }
-            }
-        }
+	    // check required primary types
+	    QName[] reqTypes = cnd.getRequiredPrimaryTypes();
+	    if (reqTypes != null && reqTypes.length > 0) {
+		for (int n = 0; n < reqTypes.length; n++) {
+		    QName rpt = reqTypes[n];
+		    referenceToSelf = false;
+		    /**
+		     * check if this node type specifies itself as required
+		     * primary type
+		     */
+		    if (name.equals(rpt)) {
+			referenceToSelf = true;
+		    }
+		    /**
+		     * the required primary type must be registered, with one
+		     * notable exception: the node type just being registered
+		     */
+		    if (!name.equals(rpt) && !registeredNTDefs.containsKey(rpt)) {
+			String msg = "invalid required primary type: " + rpt;
+			log.error(msg);
+			throw new InvalidNodeTypeDefException(msg);
+		    }
+		    /**
+		     * check if default primary type satisfies the required
+		     * primary type constraint
+		     */
+		    if (defaultENT != null && !defaultENT.includesNodeType(rpt)) {
+			String msg = "default primary type does not satisfy required primary type constraint " + rpt;
+			log.error(msg);
+			throw new InvalidNodeTypeDefException(msg);
+		    }
+		    /**
+		     * build effective (i.e. merged and resolved) node type from
+		     * required primary type constraint and check for conflicts
+		     */
+		    try {
+			if (!referenceToSelf) {
+			    getEffectiveNodeType(rpt);
+			} else {
+			    /**
+			     * the required primary type is identical with the
+			     * node type just being registered; we have to
+			     * instantiate it 'manually'
+			     */
+			    if (ent == null) {
+				ent = EffectiveNodeType.create(this, ntd);
+			    }
+			}
+		    } catch (NodeTypeConflictException ntce) {
+			String msg = "failed to validate required primary type constraint";
+			log.error(msg, ntce);
+			throw new InvalidNodeTypeDefException(msg, ntce);
+		    } catch (NoSuchNodeTypeException nsnte) {
+			String msg = "failed to validate required primary type constraint";
+			log.error(msg, nsnte);
+			throw new InvalidNodeTypeDefException(msg, nsnte);
+		    }
+		}
+	    }
+	}
 
-        /**
-         * now build effective (i.e. merged and resolved) node type from
-         * this node type definition; this will potentially detect more
-         * conflicts or problems
-         */
-        if (ent == null) {
-            try {
-                ent = EffectiveNodeType.create(this, ntd);
-            } catch (NodeTypeConflictException ntce) {
-                String msg = "failed to resolve node type definition";
-                log.error(msg, ntce);
-                throw new InvalidNodeTypeDefException(msg, ntce);
-            } catch (NoSuchNodeTypeException nsnte) {
-                String msg = "failed to resolve node type definition";
-                log.error(msg, nsnte);
-                throw new InvalidNodeTypeDefException(msg, nsnte);
-            }
-        }
-        return ent;
+	/**
+	 * now build effective (i.e. merged and resolved) node type from
+	 * this node type definition; this will potentially detect more
+	 * conflicts or problems
+	 */
+	if (ent == null) {
+	    try {
+		ent = EffectiveNodeType.create(this, ntd);
+	    } catch (NodeTypeConflictException ntce) {
+		String msg = "failed to resolve node type definition";
+		log.error(msg, ntce);
+		throw new InvalidNodeTypeDefException(msg, ntce);
+	    } catch (NoSuchNodeTypeException nsnte) {
+		String msg = "failed to resolve node type definition";
+		log.error(msg, nsnte);
+		throw new InvalidNodeTypeDefException(msg, nsnte);
+	    }
+	}
+	return ent;
     }
 
     /**
      * @return
      */
     synchronized QName[] getRegisteredNodeTypes() {
-        return (QName[]) registeredNTDefs.keySet().toArray(new QName[registeredNTDefs.size()]);
+	return (QName[]) registeredNTDefs.keySet().toArray(new QName[registeredNTDefs.size()]);
     }
 
     /**
      * @return
      */
     public ChildNodeDef getRootNodeDef() {
-        return rootNodeDef;
+	return rootNodeDef;
     }
 
     /**
@@ -769,13 +769,13 @@ public class NodeTypeRegistry {
      * @return
      */
     public synchronized EffectiveNodeType getEffectiveNodeType(QName ntName)
-            throws NoSuchNodeTypeException {
-        WeightedKey key = new WeightedKey(new QName[]{ntName});
-        if (entCache.contains(key)) {
-            return entCache.get(key);
-        } else {
-            throw new NoSuchNodeTypeException(ntName.toString());
-        }
+	    throws NoSuchNodeTypeException {
+	WeightedKey key = new WeightedKey(new QName[]{ntName});
+	if (entCache.contains(key)) {
+	    return entCache.get(key);
+	} else {
+	    throw new NoSuchNodeTypeException(ntName.toString());
+	}
     }
 
     /**
@@ -783,164 +783,164 @@ public class NodeTypeRegistry {
      * @return
      */
     public synchronized EffectiveNodeType buildEffectiveNodeType(QName[] ntNames)
-            throws NodeTypeConflictException, NoSuchNodeTypeException {
-        // 1. make sure every single node type is registered
-        for (int i = 0; i < ntNames.length; i++) {
-            if (!registeredNTDefs.containsKey(ntNames[i])) {
-                throw new NoSuchNodeTypeException(ntNames[i].toString());
-            }
-        }
+	    throws NodeTypeConflictException, NoSuchNodeTypeException {
+	// 1. make sure every single node type is registered
+	for (int i = 0; i < ntNames.length; i++) {
+	    if (!registeredNTDefs.containsKey(ntNames[i])) {
+		throw new NoSuchNodeTypeException(ntNames[i].toString());
+	    }
+	}
 
-        WeightedKey key = new WeightedKey(ntNames);
+	WeightedKey key = new WeightedKey(ntNames);
 
-        // 2. check if aggregate has already been build
-        if (entCache.contains(key)) {
-            return entCache.get(key);
-        }
+	// 2. check if aggregate has already been build
+	if (entCache.contains(key)) {
+	    return entCache.get(key);
+	}
 
-        // 3. build aggregate
-        EffectiveNodeType result = null;
+	// 3. build aggregate
+	EffectiveNodeType result = null;
 
-        // build list of 'best' existing sub-aggregates
-        ArrayList tmpResults = new ArrayList();
-        while (key.size() > 0) {
-            // check if we've already built this aggregate
-            if (entCache.contains(key)) {
-                tmpResults.add(entCache.get(key));
-                // subtract the result from the temporary key
-                // (which is 'empty' now)
-                key = key.subtract(key);
-                break;
-            }
-            // walk list of existing aggregates sorted by 'weight' of
-            // aggregate (i.e. the cost of building it)
-            boolean foundSubResult = false;
-            Iterator iter = entCache.keys();
-            while (iter.hasNext()) {
-                WeightedKey k = (WeightedKey) iter.next();
-                // check if the existing aggregate is a 'subset' of the one
-                // we're looking for
-                if (key.contains(k)) {
-                    tmpResults.add(entCache.get(k));
-                    // subtract the result from the temporary key
-                    key = key.subtract(k);
-                    foundSubResult = true;
-                    break;
-                }
-            }
-            if (!foundSubResult) {
-                // no matching sub-aggregates found:
-                // build aggregate of remaining node types through iteration
-                QName[] remainder = key.toArray();
-                for (int i = 0; i < remainder.length; i++) {
-                    EffectiveNodeType ent = null;
-                    ent = EffectiveNodeType.create(this, remainder[i]);
-                    // store new effective node type
-                    entCache.put(ent);
-                    if (result == null) {
-                        result = ent;
-                    } else {
-                        result = result.merge(ent);
-                        // store intermediate result (sub-aggregate)
-                        entCache.put(result);
-                    }
-                }
-                // add aggregate of remaining node types to result list
-                tmpResults.add(result);
-                break;
-            }
-        }
-        // merge the sub-aggregates into new effective node type
-        for (int i = 0; i < tmpResults.size(); i++) {
-            if (result == null) {
-                result = (EffectiveNodeType) tmpResults.get(i);
-            } else {
-                result = result.merge((EffectiveNodeType) tmpResults.get(i));
-                // store intermediate result
-                entCache.put(result);
-            }
-        }
-        // we're done
-        return result;
+	// build list of 'best' existing sub-aggregates
+	ArrayList tmpResults = new ArrayList();
+	while (key.size() > 0) {
+	    // check if we've already built this aggregate
+	    if (entCache.contains(key)) {
+		tmpResults.add(entCache.get(key));
+		// subtract the result from the temporary key
+		// (which is 'empty' now)
+		key = key.subtract(key);
+		break;
+	    }
+	    // walk list of existing aggregates sorted by 'weight' of
+	    // aggregate (i.e. the cost of building it)
+	    boolean foundSubResult = false;
+	    Iterator iter = entCache.keys();
+	    while (iter.hasNext()) {
+		WeightedKey k = (WeightedKey) iter.next();
+		// check if the existing aggregate is a 'subset' of the one
+		// we're looking for
+		if (key.contains(k)) {
+		    tmpResults.add(entCache.get(k));
+		    // subtract the result from the temporary key
+		    key = key.subtract(k);
+		    foundSubResult = true;
+		    break;
+		}
+	    }
+	    if (!foundSubResult) {
+		// no matching sub-aggregates found:
+		// build aggregate of remaining node types through iteration
+		QName[] remainder = key.toArray();
+		for (int i = 0; i < remainder.length; i++) {
+		    EffectiveNodeType ent = null;
+		    ent = EffectiveNodeType.create(this, remainder[i]);
+		    // store new effective node type
+		    entCache.put(ent);
+		    if (result == null) {
+			result = ent;
+		    } else {
+			result = result.merge(ent);
+			// store intermediate result (sub-aggregate)
+			entCache.put(result);
+		    }
+		}
+		// add aggregate of remaining node types to result list
+		tmpResults.add(result);
+		break;
+	    }
+	}
+	// merge the sub-aggregates into new effective node type
+	for (int i = 0; i < tmpResults.size(); i++) {
+	    if (result == null) {
+		result = (EffectiveNodeType) tmpResults.get(i);
+	    } else {
+		result = result.merge((EffectiveNodeType) tmpResults.get(i));
+		// store intermediate result
+		entCache.put(result);
+	    }
+	}
+	// we're done
+	return result;
     }
 
     void checkForCircularInheritance(QName[] supertypes, Stack inheritanceChain)
-            throws InvalidNodeTypeDefException, RepositoryException {
-        for (int i = 0; i < supertypes.length; i++) {
-            QName nt = supertypes[i];
-            int pos = inheritanceChain.lastIndexOf(nt);
-            if (pos >= 0) {
-                StringBuffer buf = new StringBuffer();
-                for (int j = 0; j < inheritanceChain.size(); j++) {
-                    if (j == pos) {
-                        buf.append("--> ");
-                    }
-                    buf.append(inheritanceChain.get(j));
-                    buf.append(" extends ");
-                }
-                buf.append("--> ");
-                buf.append(nt);
-                throw new InvalidNodeTypeDefException("circular inheritance detected: " + buf.toString());
-            }
+	    throws InvalidNodeTypeDefException, RepositoryException {
+	for (int i = 0; i < supertypes.length; i++) {
+	    QName nt = supertypes[i];
+	    int pos = inheritanceChain.lastIndexOf(nt);
+	    if (pos >= 0) {
+		StringBuffer buf = new StringBuffer();
+		for (int j = 0; j < inheritanceChain.size(); j++) {
+		    if (j == pos) {
+			buf.append("--> ");
+		    }
+		    buf.append(inheritanceChain.get(j));
+		    buf.append(" extends ");
+		}
+		buf.append("--> ");
+		buf.append(nt);
+		throw new InvalidNodeTypeDefException("circular inheritance detected: " + buf.toString());
+	    }
 
-            try {
-                QName[] sta = getNodeTypeDef(nt).getSupertypes();
-                if (sta != null && sta.length > 0) {
-                    // check recursively
-                    inheritanceChain.push(nt);
-                    checkForCircularInheritance(sta, inheritanceChain);
-                    inheritanceChain.pop();
-                }
-            } catch (NoSuchNodeTypeException nsnte) {
-                String msg = "unknown supertype: " + nt;
-                log.error(msg, nsnte);
-                throw new InvalidNodeTypeDefException(msg, nsnte);
-            }
-        }
+	    try {
+		QName[] sta = getNodeTypeDef(nt).getSupertypes();
+		if (sta != null && sta.length > 0) {
+		    // check recursively
+		    inheritanceChain.push(nt);
+		    checkForCircularInheritance(sta, inheritanceChain);
+		    inheritanceChain.pop();
+		}
+	    } catch (NoSuchNodeTypeException nsnte) {
+		String msg = "unknown supertype: " + nt;
+		log.error(msg, nsnte);
+		throw new InvalidNodeTypeDefException(msg, nsnte);
+	    }
+	}
     }
 
     void checkForCircularNodeAutoCreation(EffectiveNodeType childNodeENT, Stack definingParentNTs)
-            throws InvalidNodeTypeDefException {
-        // check for circularity through default node types of auto-created child nodes
-        // (node type 'a' defines auto-created child node with default node type 'a')
-        QName[] childNodeNTs = childNodeENT.getAllNodeTypes();
-        for (int i = 0; i < childNodeNTs.length; i++) {
-            QName nt = childNodeNTs[i];
-            int pos = definingParentNTs.lastIndexOf(nt);
-            if (pos >= 0) {
-                StringBuffer buf = new StringBuffer();
-                for (int j = 0; j < definingParentNTs.size(); j++) {
-                    if (j == pos) {
-                        buf.append("--> ");
-                    }
-                    buf.append("node type ");
-                    buf.append(definingParentNTs.get(j));
-                    buf.append(" defines auto-created child node with default ");
-                }
-                buf.append("--> ");
-                buf.append("node type ");
-                buf.append(nt);
-                throw new InvalidNodeTypeDefException("circular node auto-creation detected: " + buf.toString());
-            }
-        }
+	    throws InvalidNodeTypeDefException {
+	// check for circularity through default node types of auto-created child nodes
+	// (node type 'a' defines auto-created child node with default node type 'a')
+	QName[] childNodeNTs = childNodeENT.getAllNodeTypes();
+	for (int i = 0; i < childNodeNTs.length; i++) {
+	    QName nt = childNodeNTs[i];
+	    int pos = definingParentNTs.lastIndexOf(nt);
+	    if (pos >= 0) {
+		StringBuffer buf = new StringBuffer();
+		for (int j = 0; j < definingParentNTs.size(); j++) {
+		    if (j == pos) {
+			buf.append("--> ");
+		    }
+		    buf.append("node type ");
+		    buf.append(definingParentNTs.get(j));
+		    buf.append(" defines auto-created child node with default ");
+		}
+		buf.append("--> ");
+		buf.append("node type ");
+		buf.append(nt);
+		throw new InvalidNodeTypeDefException("circular node auto-creation detected: " + buf.toString());
+	    }
+	}
 
-        ChildNodeDef[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
-        for (int i = 0; i < nodeDefs.length; i++) {
-            QName dnt = nodeDefs[i].getDefaultPrimaryType();
-            QName definingNT = nodeDefs[i].getDeclaringNodeType();
-            try {
-                if (dnt != null) {
-                    // check recursively
-                    definingParentNTs.push(definingNT);
-                    checkForCircularNodeAutoCreation(getEffectiveNodeType(dnt), definingParentNTs);
-                    definingParentNTs.pop();
-                }
-            } catch (NoSuchNodeTypeException nsnte) {
-                String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
-                log.error(msg, nsnte);
-                throw new InvalidNodeTypeDefException(msg, nsnte);
-            }
-        }
+	ChildNodeDef[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
+	for (int i = 0; i < nodeDefs.length; i++) {
+	    QName dnt = nodeDefs[i].getDefaultPrimaryType();
+	    QName definingNT = nodeDefs[i].getDeclaringNodeType();
+	    try {
+		if (dnt != null) {
+		    // check recursively
+		    definingParentNTs.push(definingNT);
+		    checkForCircularNodeAutoCreation(getEffectiveNodeType(dnt), definingParentNTs);
+		    definingParentNTs.pop();
+		}
+	    } catch (NoSuchNodeTypeException nsnte) {
+		String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
+		log.error(msg, nsnte);
+		throw new InvalidNodeTypeDefException(msg, nsnte);
+	    }
+	}
     }
 
     /**
@@ -980,37 +980,37 @@ public class NodeTypeRegistry {
      * @throws RepositoryException
      */
     public synchronized EffectiveNodeType registerNodeType(NodeTypeDef ntd)
-            throws InvalidNodeTypeDefException, RepositoryException {
-        // validate and register new node type definition
-        EffectiveNodeType ent = internalRegister(ntd);
-        // persist new node type definition
-        customNTDefs.add(ntd);
-        OutputStream out = null;
-        try {
-            out = customNodeTypesResource.getOutputStream();
-            customNTDefs.store(out, nsReg);
-        } catch (IOException ioe) {
-            String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-            log.error(error, ioe);
-            throw new RepositoryException(error, ioe);
-        } catch (FileSystemException fse) {
-            String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-            log.error(error, fse);
-            throw new RepositoryException(error, fse);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
-        }
+	    throws InvalidNodeTypeDefException, RepositoryException {
+	// validate and register new node type definition
+	EffectiveNodeType ent = internalRegister(ntd);
+	// persist new node type definition
+	customNTDefs.add(ntd);
+	OutputStream out = null;
+	try {
+	    out = customNodeTypesResource.getOutputStream();
+	    customNTDefs.store(out, nsReg);
+	} catch (IOException ioe) {
+	    String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
+	    log.error(error, ioe);
+	    throw new RepositoryException(error, ioe);
+	} catch (FileSystemException fse) {
+	    String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
+	    log.error(error, fse);
+	    throw new RepositoryException(error, fse);
+	} finally {
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException ioe) {
+		    // ignore
+		}
+	    }
+	}
 
-        // notify listeners
-        notifyRegistered(ntd.getName());
+	// notify listeners
+	notifyRegistered(ntd.getName());
 
-        return ent;
+	return ent;
     }
 
     /**
@@ -1029,74 +1029,74 @@ public class NodeTypeRegistry {
      * @throws RepositoryException
      */
     public synchronized void registerNodeTypes(Collection ntDefs)
-            throws InvalidNodeTypeDefException, RepositoryException {
-        // exceptions that might be thrown by internalRegister(Collection)
-        RepositoryException re = null;
-        InvalidNodeTypeDefException intde = null;
+	    throws InvalidNodeTypeDefException, RepositoryException {
+	// exceptions that might be thrown by internalRegister(Collection)
+	RepositoryException re = null;
+	InvalidNodeTypeDefException intde = null;
 
-        // store names of currently registered node types before proceeding
-        HashSet oldNTNames = new HashSet(registeredNTDefs.keySet());
+	// store names of currently registered node types before proceeding
+	HashSet oldNTNames = new HashSet(registeredNTDefs.keySet());
 
-        try {
-            // validate and register new node type definitions
-            internalRegister(ntDefs);
-        } catch (RepositoryException e) {
-            // store exception so it can be re-thrown later on
-            re = e;
-        } catch (InvalidNodeTypeDefException e) {
-            // store exception so it can be re-thrown later on
-            intde = e;
-        }
+	try {
+	    // validate and register new node type definitions
+	    internalRegister(ntDefs);
+	} catch (RepositoryException e) {
+	    // store exception so it can be re-thrown later on
+	    re = e;
+	} catch (InvalidNodeTypeDefException e) {
+	    // store exception so it can be re-thrown later on
+	    intde = e;
+	}
 
-        /**
-         * build set of names of actually registered new node types
-         * (potentially a subset of those specified in ntDefs if an exception
-         * had been thrown)
-         */
-        HashSet newNTNames = new HashSet(registeredNTDefs.keySet());
-        newNTNames.removeAll(oldNTNames);
+	/**
+	 * build set of names of actually registered new node types
+	 * (potentially a subset of those specified in ntDefs if an exception
+	 * had been thrown)
+	 */
+	HashSet newNTNames = new HashSet(registeredNTDefs.keySet());
+	newNTNames.removeAll(oldNTNames);
 
-        if (newNTNames.size() > 0) {
-            // persist new node type definitions
-            for (Iterator iter = newNTNames.iterator(); iter.hasNext(); ) {
-                QName ntName = (QName) iter.next();
-                customNTDefs.add((NodeTypeDef) registeredNTDefs.get(ntName));
-            }
-            OutputStream out = null;
-            try {
-                out = customNodeTypesResource.getOutputStream();
-                customNTDefs.store(out, nsReg);
-            } catch (IOException ioe) {
-                String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-                log.error(error, ioe);
-                throw new RepositoryException(error, ioe);
-            } catch (FileSystemException fse) {
-                String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-                log.error(error, fse);
-                throw new RepositoryException(error, fse);
-            } finally {
-                if (out != null) {
-                    try {
-                        out.close();
-                    } catch (IOException ioe) {
-                        // ignore
-                    }
-                }
-            }
+	if (newNTNames.size() > 0) {
+	    // persist new node type definitions
+	    for (Iterator iter = newNTNames.iterator(); iter.hasNext();) {
+		QName ntName = (QName) iter.next();
+		customNTDefs.add((NodeTypeDef) registeredNTDefs.get(ntName));
+	    }
+	    OutputStream out = null;
+	    try {
+		out = customNodeTypesResource.getOutputStream();
+		customNTDefs.store(out, nsReg);
+	    } catch (IOException ioe) {
+		String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
+		log.error(error, ioe);
+		throw new RepositoryException(error, ioe);
+	    } catch (FileSystemException fse) {
+		String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
+		log.error(error, fse);
+		throw new RepositoryException(error, fse);
+	    } finally {
+		if (out != null) {
+		    try {
+			out.close();
+		    } catch (IOException ioe) {
+			// ignore
+		    }
+		}
+	    }
 
-            // notify listeners
-            for (Iterator iter = newNTNames.iterator(); iter.hasNext(); ) {
-                QName ntName = (QName) iter.next();
-                notifyRegistered(ntName);
-            }
-        }
+	    // notify listeners
+	    for (Iterator iter = newNTNames.iterator(); iter.hasNext();) {
+		QName ntName = (QName) iter.next();
+		notifyRegistered(ntName);
+	    }
+	}
 
-        // re-throw exception as necessary
-        if (re != null) {
-            throw re;
-        } else if (intde != null) {
-            throw intde;
-        }
+	// re-throw exception as necessary
+	if (re != null) {
+	    throw re;
+	} else if (intde != null) {
+	    throw intde;
+	}
     }
 
     /**
@@ -1105,88 +1105,80 @@ public class NodeTypeRegistry {
      * @throws RepositoryException
      */
     public synchronized void unregisterNodeType(QName name)
-            throws NoSuchNodeTypeException, RepositoryException {
-        if (!registeredNTDefs.containsKey(name)) {
-            throw new NoSuchNodeTypeException(name.toString());
-        }
-        if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString() + ": can't unregister built-in node type.");
-        }
+	    throws NoSuchNodeTypeException, RepositoryException {
+	if (!registeredNTDefs.containsKey(name)) {
+	    throw new NoSuchNodeTypeException(name.toString());
+	}
+	if (builtInNTDefs.contains(name)) {
+	    throw new RepositoryException(name.toString() + ": can't unregister built-in node type.");
+	}
 
-        /**
-         * collect names of node types that have dependencies on the given
-         * node type
-         */
-        HashSet dependentNTs = new HashSet();
-        // only custom node types can have dependencies on a custom node type
-        Iterator iter = customNTDefs.all().iterator();
-        while (iter.hasNext()) {
-            NodeTypeDef ntd = (NodeTypeDef) iter.next();
-            if (ntd.getDependencies().contains(name)) {
-                dependentNTs.add(ntd.getName());
-            }
-        }
+	/**
+	 * collect names of node types that have dependencies on the given
+	 * node type
+	 */
+	Set dependentNTs = getDependentNodeTypes(name);
 
-        /**
-         * todo
-         * check if the given node type (or any node type that has dependencies
-         * on this node type) is currently referenced by nodes in the repository.
-         *
-         * this is absolutely necessary in order to guarantee integrity of
-         * repository content.
-         *
-         * throw exception until this is can be done (using search)
-         */
-        boolean isReferenced = true;
-        if (isReferenced) {
-            throw new RepositoryException("not yet implemented");
-        }
+	/**
+	 * todo
+	 * check if the given node type (or any node type that has dependencies
+	 * on this node type) is currently referenced by nodes in the repository.
+	 *
+	 * this is absolutely necessary in order to guarantee integrity of
+	 * repository content.
+	 *
+	 * throw exception until this is can be done (using search)
+	 */
+	boolean isReferenced = true;
+	if (isReferenced) {
+	    throw new RepositoryException("not yet implemented");
+	}
 
-        NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
-        registeredNTDefs.remove(name);
-        // remove effective node type from aggregates cache
-        entCache.remove(new QName[]{name});
+	NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
+	registeredNTDefs.remove(name);
+	// remove effective node type from aggregates cache
+	entCache.remove(new QName[]{name});
 
-        // remove poperty & child node definitions
-        PropDef[] pda = ntd.getPropertyDefs();
-        for (int i = 0; i < pda.length; i++) {
-            PropDefId id = new PropDefId(pda[i]);
-            propDefs.remove(id);
-        }
-        ChildNodeDef[] nda = ntd.getChildNodeDefs();
-        for (int i = 0; i < nda.length; i++) {
-            NodeDefId id = new NodeDefId(nda[i]);
-            nodeDefs.remove(id);
-        }
+	// remove poperty & child node definitions
+	PropDef[] pda = ntd.getPropertyDefs();
+	for (int i = 0; i < pda.length; i++) {
+	    PropDefId id = new PropDefId(pda[i]);
+	    propDefs.remove(id);
+	}
+	ChildNodeDef[] nda = ntd.getChildNodeDefs();
+	for (int i = 0; i < nda.length; i++) {
+	    NodeDefId id = new NodeDefId(nda[i]);
+	    nodeDefs.remove(id);
+	}
 
-        // persist removal of node type definition
-        customNTDefs.remove(name);
-        OutputStream out = null;
-        try {
-            out = customNodeTypesResource.getOutputStream();
-            customNTDefs.store(out, nsReg);
-        } catch (IOException ioe) {
-            String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-            log.error(error, ioe);
-            throw new RepositoryException(error, ioe);
-        } catch (FileSystemException fse) {
-            String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-            log.error(error, fse);
-            throw new RepositoryException(error, fse);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
-        }
+	// persist removal of node type definition
+	customNTDefs.remove(name);
+	OutputStream out = null;
+	try {
+	    out = customNodeTypesResource.getOutputStream();
+	    customNTDefs.store(out, nsReg);
+	} catch (IOException ioe) {
+	    String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
+	    log.error(error, ioe);
+	    throw new RepositoryException(error, ioe);
+	} catch (FileSystemException fse) {
+	    String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
+	    log.error(error, fse);
+	    throw new RepositoryException(error, fse);
+	} finally {
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException ioe) {
+		    // ignore
+		}
+	    }
+	}
 
-        // @todo remove also any node types & aggregates which have dependencies on this node type
+	// @todo remove also any node types & aggregates which have dependencies on this node type
 
-        // notify listeners
-        notifyUnregistered(name);
+	// notify listeners
+	notifyUnregistered(name);
     }
 
     /**
@@ -1197,33 +1189,62 @@ public class NodeTypeRegistry {
      * @throws RepositoryException
      */
     public synchronized EffectiveNodeType reregisterNodeType(NodeTypeDef ntd)
-            throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
-            RepositoryException {
-        QName name = ntd.getName();
-        if (!registeredNTDefs.containsKey(name)) {
-            throw new NoSuchNodeTypeException(name.toString());
-        }
-        if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString() + ": can't reregister built-in node type.");
-        }
+	    throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
+	    RepositoryException {
+	QName name = ntd.getName();
+	if (!registeredNTDefs.containsKey(name)) {
+	    throw new NoSuchNodeTypeException(name.toString());
+	}
+	if (builtInNTDefs.contains(name)) {
+	    throw new RepositoryException(name.toString() + ": can't reregister built-in node type.");
+	}
 
-        /**
-         * todo
-         * - check if this node type (or any node type that has dependencies
-         *   on this node type) is currently referenced by any nodes;
-         *   this is absolutely necessary in order to guarantee integrity of
-         *   repository content
-         * - validate new node type definition
-         * - build diff of old & new node type definition
-         * - check if applying changes to affected nodes would violate existing node type constraints
-         * - re-register node type definition and update caches
-         * - notify listeners on re-registration
-         * - apply and persist changes to affected nodes
-         * - what else?
-         */
-        //unregisterNodeType(name);
-        //return registerNodeType(ntd);
-        throw new RepositoryException("not yet implemented");
+	/**
+	 * todo
+	 * - check if this node type (or any node type that has dependencies
+	 *   on this node type) is currently referenced by any nodes;
+	 *   this is absolutely necessary in order to guarantee integrity of
+	 *   repository content
+	 * - validate new node type definition
+	 * - build diff of old & new node type definition
+	 * - check if applying changes to affected nodes would violate existing node type constraints
+	 * - re-register node type definition and update caches
+	 * - notify listeners on re-registration
+	 * - apply and persist changes to affected nodes
+	 * - what else?
+	 */
+	//unregisterNodeType(name);
+	//return registerNodeType(ntd);
+	throw new RepositoryException("not yet implemented");
+    }
+
+    /**
+     * Returns the names of those registered node types that have
+     * dependencies on the given node type.
+     *
+     * @param nodeTypeName
+     * @return a set of node type <code>QName</code>s
+     * @throws NoSuchNodeTypeException
+     */
+    public synchronized Set getDependentNodeTypes(QName nodeTypeName)
+	    throws NoSuchNodeTypeException {
+	if (!registeredNTDefs.containsKey(nodeTypeName)) {
+	    throw new NoSuchNodeTypeException(nodeTypeName.toString());
+	}
+
+	/**
+	 * collect names of those node types that have dependencies on the given
+	 * node type
+	 */
+	HashSet names = new HashSet();
+	Iterator iter = registeredNTDefs.keySet().iterator();
+	while (iter.hasNext()) {
+	    NodeTypeDef ntd = (NodeTypeDef) iter.next();
+	    if (ntd.getDependencies().contains(nodeTypeName)) {
+		names.add(ntd.getName());
+	    }
+	}
+	return names;
     }
 
     /**
@@ -1232,18 +1253,18 @@ public class NodeTypeRegistry {
      * @throws NoSuchNodeTypeException
      */
     public synchronized NodeTypeDef getNodeTypeDef(QName nodeTypeName) throws NoSuchNodeTypeException {
-        if (!registeredNTDefs.containsKey(nodeTypeName)) {
-            throw new NoSuchNodeTypeException(nodeTypeName.toString());
-        }
-        NodeTypeDef def = (NodeTypeDef) registeredNTDefs.get(nodeTypeName);
-        // return clone to make sure nobody messes around with the 'real' definition
-        try {
-            return (NodeTypeDef) def.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+	if (!registeredNTDefs.containsKey(nodeTypeName)) {
+	    throw new NoSuchNodeTypeException(nodeTypeName.toString());
+	}
+	NodeTypeDef def = (NodeTypeDef) registeredNTDefs.get(nodeTypeName);
+	// return clone to make sure nobody messes around with the 'real' definition
+	try {
+	    return (NodeTypeDef) def.clone();
+	} catch (CloneNotSupportedException e) {
+	    // should never get here
+	    log.fatal("internal error", e);
+	    throw new InternalError(e.getMessage());
+	}
     }
 
     /**
@@ -1251,7 +1272,7 @@ public class NodeTypeRegistry {
      * @return
      */
     public synchronized boolean isRegistered(QName nodeTypeName) {
-        return registeredNTDefs.containsKey(nodeTypeName);
+	return registeredNTDefs.containsKey(nodeTypeName);
     }
 
     /**
@@ -1259,18 +1280,18 @@ public class NodeTypeRegistry {
      * @return
      */
     public ChildNodeDef getNodeDef(NodeDefId id) {
-        ChildNodeDef def = (ChildNodeDef) nodeDefs.get(id);
-        if (def == null) {
-            return null;
-        }
-        // return clone to make sure nobody messes around with the 'real' definition
-        try {
-            return (ChildNodeDef) def.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+	ChildNodeDef def = (ChildNodeDef) nodeDefs.get(id);
+	if (def == null) {
+	    return null;
+	}
+	// return clone to make sure nobody messes around with the 'real' definition
+	try {
+	    return (ChildNodeDef) def.clone();
+	} catch (CloneNotSupportedException e) {
+	    // should never get here
+	    log.fatal("internal error", e);
+	    throw new InternalError(e.getMessage());
+	}
     }
 
     /**
@@ -1278,18 +1299,18 @@ public class NodeTypeRegistry {
      * @return
      */
     public PropDef getPropDef(PropDefId id) {
-        PropDef def = (PropDef) propDefs.get(id);
-        if (def == null) {
-            return null;
-        }
-        // return clone to make sure nobody messes around with the 'real' definition
-        try {
-            return (PropDef) def.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+	PropDef def = (PropDef) propDefs.get(id);
+	if (def == null) {
+	    return null;
+	}
+	// return clone to make sure nobody messes around with the 'real' definition
+	try {
+	    return (PropDef) def.clone();
+	} catch (CloneNotSupportedException e) {
+	    // should never get here
+	    log.fatal("internal error", e);
+	    throw new InternalError(e.getMessage());
+	}
     }
 
     //----------------------------------------------------------< diagnostics >
@@ -1300,87 +1321,87 @@ public class NodeTypeRegistry {
      * @throws RepositoryException
      */
     void dump(PrintStream ps) throws RepositoryException {
-        ps.println("NodeTypeManager (" + this + ")");
-        ps.println();
-        ps.println("Registered NodeTypes:");
-        ps.println();
-        Iterator iter = registeredNTDefs.values().iterator();
-        while (iter.hasNext()) {
-            NodeTypeDef ntd = (NodeTypeDef) iter.next();
-            ps.println(ntd.getName());
-            QName[] supertypes = ntd.getSupertypes();
-            ps.println("\tSupertypes");
-            for (int i = 0; i < supertypes.length; i++) {
-                ps.println("\t\t" + supertypes[i]);
-            }
-            ps.println("\tMixin\t" + ntd.isMixin());
-            ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
-            PropDef[] pd = ntd.getPropertyDefs();
-            for (int i = 0; i < pd.length; i++) {
-                ps.print("\tPropertyDef");
-                ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + new PropDefId(pd[i]));
-                ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
-                String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
-                ps.println("\t\tRequiredType\t" + type);
-                ValueConstraint[] vca = pd[i].getValueConstraints();
-                StringBuffer constraints = new StringBuffer();
-                if (vca == null) {
-                    constraints.append("<null>");
-                } else {
-                    for (int n = 0; n < vca.length; n++) {
-                        if (constraints.length() > 0) {
-                            constraints.append(", ");
-                        }
-                        constraints.append(vca[n].getDefinition());
-                    }
-                }
-                ps.println("\t\tValueConstraints\t" + constraints.toString());
-                InternalValue[] defVals = pd[i].getDefaultValues();
-                StringBuffer defaultValues = new StringBuffer();
-                if (defVals == null) {
-                    defaultValues.append("<null>");
-                } else {
-                    for (int n = 0; n < defVals.length; n++) {
-                        if (defaultValues.length() > 0) {
-                            defaultValues.append(", ");
-                        }
-                        defaultValues.append(defVals[n].toString());
-                    }
-                }
-                ps.println("\t\tDefaultValue\t" + defaultValues.toString());
-                ps.println("\t\tAutoCreate\t" + pd[i].isAutoCreate());
-                ps.println("\t\tMandatory\t" + pd[i].isMandatory());
-                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd[i].getOnParentVersion()));
-                ps.println("\t\tProtected\t" + pd[i].isProtected());
-                ps.println("\t\tPrimaryItem\t" + pd[i].isPrimaryItem());
-                ps.println("\t\tMultiple\t" + pd[i].isMultiple());
-            }
-            ChildNodeDef[] nd = ntd.getChildNodeDefs();
-            for (int i = 0; i < nd.length; i++) {
-                ps.print("\tNodeDef");
-                ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + new NodeDefId(nd[i]));
-                ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
-                QName[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
-                if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
-                    for (int n = 0; n < reqPrimaryTypes.length; n++) {
-                        ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
-                    }
-                }
-                QName defPrimaryType = nd[i].getDefaultPrimaryType();
-                if (defPrimaryType != null) {
-                    ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
-                }
-                ps.println("\n\t\tAutoCreate\t" + nd[i].isAutoCreate());
-                ps.println("\t\tMandatory\t" + nd[i].isMandatory());
-                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(nd[i].getOnParentVersion()));
-                ps.println("\t\tProtected\t" + nd[i].isProtected());
-                ps.println("\t\tPrimaryItem\t" + nd[i].isPrimaryItem());
-                ps.println("\t\tAllowSameNameSibs\t" + nd[i].allowSameNameSibs());
-            }
-        }
-        ps.println();
+	ps.println("NodeTypeManager (" + this + ")");
+	ps.println();
+	ps.println("Registered NodeTypes:");
+	ps.println();
+	Iterator iter = registeredNTDefs.values().iterator();
+	while (iter.hasNext()) {
+	    NodeTypeDef ntd = (NodeTypeDef) iter.next();
+	    ps.println(ntd.getName());
+	    QName[] supertypes = ntd.getSupertypes();
+	    ps.println("\tSupertypes");
+	    for (int i = 0; i < supertypes.length; i++) {
+		ps.println("\t\t" + supertypes[i]);
+	    }
+	    ps.println("\tMixin\t" + ntd.isMixin());
+	    ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
+	    PropDef[] pd = ntd.getPropertyDefs();
+	    for (int i = 0; i < pd.length; i++) {
+		ps.print("\tPropertyDef");
+		ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + new PropDefId(pd[i]));
+		ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
+		String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
+		ps.println("\t\tRequiredType\t" + type);
+		ValueConstraint[] vca = pd[i].getValueConstraints();
+		StringBuffer constraints = new StringBuffer();
+		if (vca == null) {
+		    constraints.append("<null>");
+		} else {
+		    for (int n = 0; n < vca.length; n++) {
+			if (constraints.length() > 0) {
+			    constraints.append(", ");
+			}
+			constraints.append(vca[n].getDefinition());
+		    }
+		}
+		ps.println("\t\tValueConstraints\t" + constraints.toString());
+		InternalValue[] defVals = pd[i].getDefaultValues();
+		StringBuffer defaultValues = new StringBuffer();
+		if (defVals == null) {
+		    defaultValues.append("<null>");
+		} else {
+		    for (int n = 0; n < defVals.length; n++) {
+			if (defaultValues.length() > 0) {
+			    defaultValues.append(", ");
+			}
+			defaultValues.append(defVals[n].toString());
+		    }
+		}
+		ps.println("\t\tDefaultValue\t" + defaultValues.toString());
+		ps.println("\t\tAutoCreate\t" + pd[i].isAutoCreate());
+		ps.println("\t\tMandatory\t" + pd[i].isMandatory());
+		ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd[i].getOnParentVersion()));
+		ps.println("\t\tProtected\t" + pd[i].isProtected());
+		ps.println("\t\tPrimaryItem\t" + pd[i].isPrimaryItem());
+		ps.println("\t\tMultiple\t" + pd[i].isMultiple());
+	    }
+	    ChildNodeDef[] nd = ntd.getChildNodeDefs();
+	    for (int i = 0; i < nd.length; i++) {
+		ps.print("\tNodeDef");
+		ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + new NodeDefId(nd[i]));
+		ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
+		QName[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
+		if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
+		    for (int n = 0; n < reqPrimaryTypes.length; n++) {
+			ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
+		    }
+		}
+		QName defPrimaryType = nd[i].getDefaultPrimaryType();
+		if (defPrimaryType != null) {
+		    ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
+		}
+		ps.println("\n\t\tAutoCreate\t" + nd[i].isAutoCreate());
+		ps.println("\t\tMandatory\t" + nd[i].isMandatory());
+		ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(nd[i].getOnParentVersion()));
+		ps.println("\t\tProtected\t" + nd[i].isProtected());
+		ps.println("\t\tPrimaryItem\t" + nd[i].isPrimaryItem());
+		ps.println("\t\tAllowSameNameSibs\t" + nd[i].allowSameNameSibs());
+	    }
+	}
+	ps.println();
 
-        entCache.dump(ps);
+	entCache.dump(ps);
     }
 
     //--------------------------------------------------------< inner classes >
@@ -1412,237 +1433,237 @@ public class NodeTypeRegistry {
      * approximation).
      */
     static class WeightedKey implements Comparable {
-        /**
-         * set of node type names, sorted in ascending order
-         */
-        private final TreeSet set;
-        private final int weight;
+	/**
+	 * set of node type names, sorted in ascending order
+	 */
+	private final TreeSet set;
+	private final int weight;
 
-        /**
-         * @param ntNames
-         */
-        WeightedKey(QName[] ntNames) {
-            this(ntNames, ntNames.length);
-        }
+	/**
+	 * @param ntNames
+	 */
+	WeightedKey(QName[] ntNames) {
+	    this(ntNames, ntNames.length);
+	}
 
-        /**
-         * @param ntNames
-         * @param weight
-         */
-        WeightedKey(QName[] ntNames, int weight) {
-            this.weight = weight;
+	/**
+	 * @param ntNames
+	 * @param weight
+	 */
+	WeightedKey(QName[] ntNames, int weight) {
+	    this.weight = weight;
 
-            set = new TreeSet();
-            for (int i = 0; i < ntNames.length; i++) {
-                // add name to this sorted set
-                set.add(ntNames[i]);
-            }
-        }
+	    set = new TreeSet();
+	    for (int i = 0; i < ntNames.length; i++) {
+		// add name to this sorted set
+		set.add(ntNames[i]);
+	    }
+	}
 
-        /**
-         * @param ntNames
-         */
-        WeightedKey(Collection ntNames) {
-            this(ntNames, ntNames.size());
-        }
+	/**
+	 * @param ntNames
+	 */
+	WeightedKey(Collection ntNames) {
+	    this(ntNames, ntNames.size());
+	}
 
-        /**
-         * @param ntNames
-         * @param weight
-         */
-        WeightedKey(Collection ntNames, int weight) {
-            this.weight = weight;
-            set = new TreeSet(ntNames);
-        }
+	/**
+	 * @param ntNames
+	 * @param weight
+	 */
+	WeightedKey(Collection ntNames, int weight) {
+	    this.weight = weight;
+	    set = new TreeSet(ntNames);
+	}
 
-        /**
-         * The key is the string representation of this sorted set
-         * (e.g. the key for a set containing entries "c", "b" and "a" would
-         * be "[a, b, c]").
-         *
-         * @return string representation of this sorted set
-         * @see AbstractCollection#toString
-         */
-        String getKey() {
-            return set.toString();
-        }
+	/**
+	 * The key is the string representation of this sorted set
+	 * (e.g. the key for a set containing entries "c", "b" and "a" would
+	 * be "[a, b, c]").
+	 *
+	 * @return string representation of this sorted set
+	 * @see AbstractCollection#toString
+	 */
+	String getKey() {
+	    return set.toString();
+	}
 
-        /**
-         * @return
-         */
-        int getWeight() {
-            return weight;
-        }
+	/**
+	 * @return
+	 */
+	int getWeight() {
+	    return weight;
+	}
 
-        int size() {
-            return set.size();
-        }
+	int size() {
+	    return set.size();
+	}
 
-        Iterator iterator() {
-            return Collections.unmodifiableSortedSet(set).iterator();
-        }
+	Iterator iterator() {
+	    return Collections.unmodifiableSortedSet(set).iterator();
+	}
 
-        Set getSet() {
-            return Collections.unmodifiableSortedSet(set);
-        }
+	Set getSet() {
+	    return Collections.unmodifiableSortedSet(set);
+	}
 
-        QName[] toArray() {
-            return (QName[]) set.toArray(new QName[set.size()]);
-        }
+	QName[] toArray() {
+	    return (QName[]) set.toArray(new QName[set.size()]);
+	}
 
-        boolean contains(WeightedKey otherKey) {
-            return set.containsAll(otherKey.getSet());
-        }
+	boolean contains(WeightedKey otherKey) {
+	    return set.containsAll(otherKey.getSet());
+	}
 
-        WeightedKey subtract(WeightedKey otherKey) {
-            Set tmp = (Set) set.clone();
-            tmp.removeAll(otherKey.getSet());
-            return new WeightedKey(tmp);
+	WeightedKey subtract(WeightedKey otherKey) {
+	    Set tmp = (Set) set.clone();
+	    tmp.removeAll(otherKey.getSet());
+	    return new WeightedKey(tmp);
 
-        }
+	}
 
-        /**
-         * The resulting sort-order is: 1. descending weight, 2. ascending key
-         * (i.e. string representation of this sorted set).
-         *
-         * @param o
-         * @return
-         */
-        public int compareTo(Object o) {
-            WeightedKey other = (WeightedKey) o;
-            if (getWeight() > other.getWeight()) {
-                return -1;
-            } else if (getWeight() < other.getWeight()) {
-                return 1;
-            }
-            return getKey().compareTo(other.getKey());
-        }
+	/**
+	 * The resulting sort-order is: 1. descending weight, 2. ascending key
+	 * (i.e. string representation of this sorted set).
+	 *
+	 * @param o
+	 * @return
+	 */
+	public int compareTo(Object o) {
+	    WeightedKey other = (WeightedKey) o;
+	    if (getWeight() > other.getWeight()) {
+		return -1;
+	    } else if (getWeight() < other.getWeight()) {
+		return 1;
+	    }
+	    return getKey().compareTo(other.getKey());
+	}
 
-        public int hashCode() {
-            int h = 17;
-            // ignore weight
-            Iterator i = set.iterator();
-            while (i.hasNext()) {
-                Object obj = i.next();
-                h = 37 * h + (obj != null ? obj.hashCode() : 0);
-            }
-            return h;
-        }
+	public int hashCode() {
+	    int h = 17;
+	    // ignore weight
+	    Iterator i = set.iterator();
+	    while (i.hasNext()) {
+		Object obj = i.next();
+		h = 37 * h + (obj != null ? obj.hashCode() : 0);
+	    }
+	    return h;
+	}
 
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof WeightedKey) {
-                WeightedKey other = (WeightedKey) obj;
-                // ignore weight
-                return set.equals(other.set);
-            }
-            return false;
-        }
+	public boolean equals(Object obj) {
+	    if (this == obj) {
+		return true;
+	    }
+	    if (obj instanceof WeightedKey) {
+		WeightedKey other = (WeightedKey) obj;
+		// ignore weight
+		return set.equals(other.set);
+	    }
+	    return false;
+	}
 
-        public String toString() {
-            return set.toString() + " (" + weight + ")";
-        }
+	public String toString() {
+	    return set.toString() + " (" + weight + ")";
+	}
     }
 
     /**
      * <code>EfectiveNodeTypeCache</code> ...
      */
     private class EffectiveNodeTypeCache {
-        // ordered set of keys
-        final TreeSet sortedKeys;
-        // cache of pre-build aggregations of node types
-        final HashMap aggregates;
+	// ordered set of keys
+	final TreeSet sortedKeys;
+	// cache of pre-build aggregations of node types
+	final HashMap aggregates;
 
-        EffectiveNodeTypeCache() {
-            sortedKeys = new TreeSet();
-            aggregates = new HashMap();
-        }
+	EffectiveNodeTypeCache() {
+	    sortedKeys = new TreeSet();
+	    aggregates = new HashMap();
+	}
 
-        void put(EffectiveNodeType ent) {
-            // we define the weight as the total number of included node types
-            // (through aggregation and inheritance)
-            int weight = ent.getAllNodeTypes().length;
-            // the effective node type is identified by the list of merged
-            // (i.e. aggregated) node types
-            WeightedKey k = new WeightedKey(ent.getMergedNodeTypes(), weight);
-            aggregates.put(k, ent);
-            sortedKeys.add(k);
-        }
+	void put(EffectiveNodeType ent) {
+	    // we define the weight as the total number of included node types
+	    // (through aggregation and inheritance)
+	    int weight = ent.getAllNodeTypes().length;
+	    // the effective node type is identified by the list of merged
+	    // (i.e. aggregated) node types
+	    WeightedKey k = new WeightedKey(ent.getMergedNodeTypes(), weight);
+	    aggregates.put(k, ent);
+	    sortedKeys.add(k);
+	}
 
-        boolean contains(QName[] ntNames) {
-            return aggregates.containsKey(new WeightedKey(ntNames));
-        }
+	boolean contains(QName[] ntNames) {
+	    return aggregates.containsKey(new WeightedKey(ntNames));
+	}
 
-        boolean contains(WeightedKey key) {
-            return aggregates.containsKey(key);
-        }
+	boolean contains(WeightedKey key) {
+	    return aggregates.containsKey(key);
+	}
 
-        EffectiveNodeType get(QName[] ntNames) {
-            return (EffectiveNodeType) aggregates.get(new WeightedKey(ntNames));
-        }
+	EffectiveNodeType get(QName[] ntNames) {
+	    return (EffectiveNodeType) aggregates.get(new WeightedKey(ntNames));
+	}
 
-        EffectiveNodeType get(WeightedKey key) {
-            return (EffectiveNodeType) aggregates.get(key);
-        }
+	EffectiveNodeType get(WeightedKey key) {
+	    return (EffectiveNodeType) aggregates.get(key);
+	}
 
-        EffectiveNodeType remove(QName[] ntNames) {
-            return remove(new WeightedKey(ntNames));
-        }
+	EffectiveNodeType remove(QName[] ntNames) {
+	    return remove(new WeightedKey(ntNames));
+	}
 
-        EffectiveNodeType remove(WeightedKey key) {
-            EffectiveNodeType removed = (EffectiveNodeType) aggregates.remove(key);
-            if (removed != null) {
-                // remove index entry
+	EffectiveNodeType remove(WeightedKey key) {
+	    EffectiveNodeType removed = (EffectiveNodeType) aggregates.remove(key);
+	    if (removed != null) {
+		// remove index entry
 
-                // FIXME: can't simply call TreeSet.remove(key) because the entry
-                // in sortedKeys might have a different weight and would thus
-                // not be found
-                Iterator iter = sortedKeys.iterator();
-                while (iter.hasNext()) {
-                    WeightedKey k = (WeightedKey) iter.next();
-                    // WeightedKey.equals(Object) ignores the weight
-                    if (key.equals(k)) {
-                        sortedKeys.remove(k);
-                        break;
-                    }
-                }
-            }
-            return removed;
-        }
+		// FIXME: can't simply call TreeSet.remove(key) because the entry
+		// in sortedKeys might have a different weight and would thus
+		// not be found
+		Iterator iter = sortedKeys.iterator();
+		while (iter.hasNext()) {
+		    WeightedKey k = (WeightedKey) iter.next();
+		    // WeightedKey.equals(Object) ignores the weight
+		    if (key.equals(k)) {
+			sortedKeys.remove(k);
+			break;
+		    }
+		}
+	    }
+	    return removed;
+	}
 
-        /**
-         * Returns an iterator over the keys. The order of the returned keys is:
-         * <ul>
-         * <li>1. descending weight</li>
-         * <li>2. ascending key (i.e. unique identifier of aggregate)</li>
-         * </ul>
-         *
-         * @see NodeTypeRegistry.WeightedKey#compareTo
-         */
-        Iterator keys() {
-            return sortedKeys.iterator();
-        }
+	/**
+	 * Returns an iterator over the keys. The order of the returned keys is:
+	 * <ul>
+	 * <li>1. descending weight</li>
+	 * <li>2. ascending key (i.e. unique identifier of aggregate)</li>
+	 * </ul>
+	 *
+	 * @see NodeTypeRegistry.WeightedKey#compareTo
+	 */
+	Iterator keys() {
+	    return sortedKeys.iterator();
+	}
 
-        //------------------------------------------------------< diagnostics >
-        /**
-         * Dumps the state of this <code>EffectiveNodeTypeCache</code> instance.
-         *
-         * @param ps
-         * @throws RepositoryException
-         */
-        void dump(PrintStream ps) throws RepositoryException {
-            ps.println("EffectiveNodeTypeCache (" + this + ")");
-            ps.println();
-            ps.println("EffectiveNodeTypes in cache:");
-            ps.println();
-            Iterator iter = sortedKeys.iterator();
-            while (iter.hasNext()) {
-                WeightedKey k = (WeightedKey) iter.next();
-                //EffectiveNodeType ent = (EffectiveNodeType) aggregates.get(k);
-                ps.println(k);
-            }
-        }
+	//------------------------------------------------------< diagnostics >
+	/**
+	 * Dumps the state of this <code>EffectiveNodeTypeCache</code> instance.
+	 *
+	 * @param ps
+	 * @throws RepositoryException
+	 */
+	void dump(PrintStream ps) throws RepositoryException {
+	    ps.println("EffectiveNodeTypeCache (" + this + ")");
+	    ps.println();
+	    ps.println("EffectiveNodeTypes in cache:");
+	    ps.println();
+	    Iterator iter = sortedKeys.iterator();
+	    while (iter.hasNext()) {
+		WeightedKey k = (WeightedKey) iter.next();
+		//EffectiveNodeType ent = (EffectiveNodeType) aggregates.get(k);
+		ps.println(k);
+	    }
+	}
     }
 }
