@@ -55,7 +55,7 @@ public class SQLTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String sql = "SELECT * FROM nt:unstructured WHERE contains('fox') AND NOT contains('bla')";
+        String sql = "SELECT foo.mytext, bla.foo FROM nt:unstructured WHERE contains('fox') AND NOT contains('bla')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);

@@ -201,6 +201,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         } else if (node.getOperation() == QueryConstants.OPERATION_NULL) {
             buffer.append("IS NULL");
         }
+        buffer.append(" Prop=" + node.getProperty());
         if (node.getValueType() == QueryConstants.TYPE_DATE) {
             buffer.append(" Type=DATE Value=").append(node.getDateValue());
         } else if (node.getValueType() == QueryConstants.TYPE_DOUBLE) {

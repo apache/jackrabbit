@@ -270,7 +270,7 @@ void SelectList() :
 {}
 {
     (<ASTERISK>)
-  | (Identifier() (<COMMA> Identifier())*)
+  | (Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )? (<COMMA> Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )? )*)
 }
 
 void TableExpression() #void :
