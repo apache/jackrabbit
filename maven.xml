@@ -45,5 +45,12 @@
            <ant:fileset dir="${maven.javadoc.destdir}" includes="**/*.html"/>
       </ant:replaceregexp>
    </goal>
+   
+   <!-- Additionally cleans the test data created -->
+   <postGoal name="clean">
+      <ant:delete dir="applications/test/repository"/>
+      <ant:delete dir="applications/test/tx"/>
+      <ant:delete dir="applications/test/workspaces"/>
+   </postGoal>
 
 </project>
