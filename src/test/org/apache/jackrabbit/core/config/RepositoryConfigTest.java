@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,15 +42,15 @@ public class RepositoryConfigTest extends TestCase {
 
         assertEquals("foo", config.getHomeDir());
         assertEquals("default", config.getDefaultWorkspaceName());
-        assertEquals("foo/workspace", config.getWorkspacesConfigRootDir());
+        assertEquals("foo/workspaces", config.getWorkspacesConfigRootDir());
         assertEquals("Jackrabbit", config.getAppName());
-        
+
         AccessManagerConfig amc = config.getAccessManagerConfig();
         assertEquals(
                 "org.apache.jackrabbit.core.security.SimpleAccessManager",
                 amc.getClassName());
         assertTrue(amc.getParameters().isEmpty());
-        
+
         VersioningConfig vc = config.getVersioningConfig();
         assertEquals(new File("foo/version"), vc.getHomeDir());
         assertEquals(
