@@ -146,7 +146,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(propertyName1);
         tmp.append(" FROM ").append(testNodeType);
         tmp.append(" WHERE CONTAINS(");
-        tmp.append("'''quick brown'' AND -cat')");
+        tmp.append("'''quick brown'' -cat')");
         return new Statement(tmp.toString(), Query.SQL);
     }
 
