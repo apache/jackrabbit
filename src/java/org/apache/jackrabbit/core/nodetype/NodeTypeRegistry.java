@@ -363,6 +363,64 @@ public class NodeTypeRegistry {
         return ent;
     }
 
+    private void internalUnregister(QName name)
+            throws NoSuchNodeTypeException, RepositoryException {
+        if (!registeredNTDefs.containsKey(name)) {
+            throw new NoSuchNodeTypeException(name.toString());
+        }
+        if (builtInNTDefs.contains(name)) {
+            throw new RepositoryException(name.toString() + ": can't unregister built-in node type.");
+        }
+
+        NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
+        registeredNTDefs.remove(name);
+        // remove all affected effective node types from aggregates cache
+        Iterator iter = entCache.keys();
+        while (iter.hasNext()) {
+            WeightedKey k = (WeightedKey) iter.next();
+            EffectiveNodeType ent = (EffectiveNodeType) entCache.get(k);
+            if (ent.includesNodeType(name)) {
+                entCache.remove(k);
+            }
+        }
+
+        // remove poperty & child node definitions
+        PropDef[] pda = ntd.getPropertyDefs();
+        for (int i = 0; i < pda.length; i++) {
+            PropDefId id = new PropDefId(pda[i]);
+            propDefs.remove(id);
+        }
+        ChildNodeDef[] nda = ntd.getChildNodeDefs();
+        for (int i = 0; i < nda.length; i++) {
+            NodeDefId id = new NodeDefId(nda[i]);
+            nodeDefs.remove(id);
+        }
+    }
+
+    private void persistCustomNTDefs() throws RepositoryException {
+        OutputStream out = null;
+        try {
+            out = customNodeTypesResource.getOutputStream();
+            customNTDefs.store(out, nsReg);
+        } catch (IOException ioe) {
+            String error = "internal error: failed to persist custom node type definitions to " + customNodeTypesResource.getPath();
+            log.error(error, ioe);
+            throw new RepositoryException(error, ioe);
+        } catch (FileSystemException fse) {
+            String error = "internal error: failed to persist custom node type definitions to " + customNodeTypesResource.getPath();
+            log.error(error, fse);
+            throw new RepositoryException(error, fse);
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
+        }
+    }
+
     /**
      * Add a <code>NodeTypeRegistryListener</code>
      *
@@ -398,6 +456,24 @@ public class NodeTypeRegistry {
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].nodeTypeRegistered(ntName);
+            }
+        }
+    }
+
+    /**
+     * Notify the listeners that a node type <code>ntName</code> has been re-registered.
+     */
+    private void notifyReRegistered(QName ntName) {
+        // copy listeners to array to avoid ConcurrentModificationException
+        NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
+        Iterator iter = listeners.values().iterator();
+        int cnt = 0;
+        while (iter.hasNext()) {
+            la[cnt++] = (NodeTypeRegistryListener) iter.next();
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].nodeTypeReRegistered(ntName);
             }
         }
     }
@@ -1052,29 +1128,10 @@ public class NodeTypeRegistry {
             throws InvalidNodeTypeDefException, RepositoryException {
         // validate and register new node type definition
         EffectiveNodeType ent = internalRegister(ntd);
+
         // persist new node type definition
         customNTDefs.add(ntd);
-        OutputStream out = null;
-        try {
-            out = customNodeTypesResource.getOutputStream();
-            customNTDefs.store(out, nsReg);
-        } catch (IOException ioe) {
-            String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-            log.error(error, ioe);
-            throw new RepositoryException(error, ioe);
-        } catch (FileSystemException fse) {
-            String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-            log.error(error, fse);
-            throw new RepositoryException(error, fse);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
-        }
+        persistCustomNTDefs();
 
         // notify listeners
         notifyRegistered(ntd.getName());
@@ -1131,27 +1188,7 @@ public class NodeTypeRegistry {
                 QName ntName = (QName) iter.next();
                 customNTDefs.add((NodeTypeDef) registeredNTDefs.get(ntName));
             }
-            OutputStream out = null;
-            try {
-                out = customNodeTypesResource.getOutputStream();
-                customNTDefs.store(out, nsReg);
-            } catch (IOException ioe) {
-                String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-                log.error(error, ioe);
-                throw new RepositoryException(error, ioe);
-            } catch (FileSystemException fse) {
-                String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-                log.error(error, fse);
-                throw new RepositoryException(error, fse);
-            } finally {
-                if (out != null) {
-                    try {
-                        out.close();
-                    } catch (IOException ioe) {
-                        // ignore
-                    }
-                }
-            }
+            persistCustomNTDefs();
 
             // notify listeners
             for (Iterator iter = newNTNames.iterator(); iter.hasNext();) {
@@ -1217,48 +1254,11 @@ public class NodeTypeRegistry {
             throw new RepositoryException("not yet implemented");
         }
 
-        NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
-        registeredNTDefs.remove(name);
-        // remove effective node type from aggregates cache
-        entCache.remove(new QName[]{name});
-
-        // remove poperty & child node definitions
-        PropDef[] pda = ntd.getPropertyDefs();
-        for (int i = 0; i < pda.length; i++) {
-            PropDefId id = new PropDefId(pda[i]);
-            propDefs.remove(id);
-        }
-        ChildNodeDef[] nda = ntd.getChildNodeDefs();
-        for (int i = 0; i < nda.length; i++) {
-            NodeDefId id = new NodeDefId(nda[i]);
-            nodeDefs.remove(id);
-        }
+        internalUnregister(name);
 
         // persist removal of node type definition
         customNTDefs.remove(name);
-        OutputStream out = null;
-        try {
-            out = customNodeTypesResource.getOutputStream();
-            customNTDefs.store(out, nsReg);
-        } catch (IOException ioe) {
-            String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-            log.error(error, ioe);
-            throw new RepositoryException(error, ioe);
-        } catch (FileSystemException fse) {
-            String error = "internal error: failed to write custom node type definition to " + customNodeTypesResource.getPath();
-            log.error(error, fse);
-            throw new RepositoryException(error, fse);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
-        }
-
-        // @todo remove also any node types & aggregates which have dependencies on this node type
+        persistCustomNTDefs();
 
         // notify listeners
         notifyUnregistered(name);
@@ -1274,59 +1274,90 @@ public class NodeTypeRegistry {
     public synchronized EffectiveNodeType reregisterNodeType(NodeTypeDef ntd)
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
-	QName name = ntd.getName();
-	if (!registeredNTDefs.containsKey(name)) {
-	    throw new NoSuchNodeTypeException(name.toString());
-	}
-	if (builtInNTDefs.contains(name)) {
-	    throw new RepositoryException(name.toString() + ": can't reregister built-in node type.");
-	}
+        QName name = ntd.getName();
+        if (!registeredNTDefs.containsKey(name)) {
+            throw new NoSuchNodeTypeException(name.toString());
+        }
+        if (builtInNTDefs.contains(name)) {
+            throw new RepositoryException(name.toString() + ": can't reregister built-in node type.");
+        }
 
-	/**
-	 * validate new node type definition
-	 */
-	validateNodeTypeDef(ntd);
+        /**
+         * validate new node type definition
+         */
+        validateNodeTypeDef(ntd);
 
-	/**
-	 * build diff of current and new definition and determine type of change
-	 */
-	NodeTypeDef ntdOld = (NodeTypeDef) registeredNTDefs.get(name);
-	NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
-	if (diff.isTrivial()) {
-	    /**
-	     * the change is trivial and has no effect on current content
-	     * (e.g. that would be the case when non-mandatory properties were
-	     * added)
-	     * todo re-register node type definition and update caches & notify listeners on re-registration
-	     */
-            //return entNew;
-	}
+        /**
+         * build diff of current and new definition and determine type of change
+         */
+        NodeTypeDef ntdOld = (NodeTypeDef) registeredNTDefs.get(name);
+        NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
+        if (diff.isTrivial()) {
+            /**
+             * the change is trivial and has no effect on current content
+             * (e.g. that would be the case when non-mandatory properties were
+             * added);
+             * re-register node type definition and update caches &
+             * notify listeners on re-registration
+             */
+            internalUnregister(name);
+            // remove old node type definition from store
+            customNTDefs.remove(name);
 
-	/**
-	 * collect names of node types that have dependencies on the given
-	 * node type
-	 */
-	Set dependentNTs = getDependentNodeTypes(name);
+            EffectiveNodeType entNew = internalRegister(ntd);
 
-	/**
-	 * non-trivial change of node type definition
-	 * todo
-	 * 1. apply deep locks on root nodes in every workspace or alternatively
-	 *    put repository in 'exclusive' or 'single-user' mode
-	 * 2. check if the given node type (or any node type that has
-	 *    dependencies on this node type) is currently referenced by nodes
-	 *    in the repository.
-	 * 3. check if applying changes to affected nodes would violate
-	 *    existing node type constraints
-	 * 4. re-register node type definition and update caches
-	 * 5. notify listeners on re-registration
-	 * 7. apply and persist changes to affected nodes (e.g. update
-	 *    definition id's, etc.)
-	 * 7. what else?
-	 */
-	//unregisterNodeType(name);
-	//return registerNodeType(ntd);
-	throw new RepositoryException("not yet implemented");
+            // add new node type definition to store
+            customNTDefs.add(ntd);
+            // persist node type definitions
+            persistCustomNTDefs();
+
+            // notify listeners
+            notifyReRegistered(name);
+            return entNew;
+        }
+
+        /**
+         * collect names of node types that have dependencies on the given
+         * node type
+         */
+        Set dependentNTs = getDependentNodeTypes(name);
+
+        /**
+         * non-trivial change of node type definition
+         * todo
+         * 1. apply deep locks on root nodes in every workspace or alternatively
+         *    put repository in 'exclusive' or 'single-user' mode
+         * 2. check if the given node type (or any node type that has
+         *    dependencies on this node type) is currently referenced by nodes
+         *    in the repository.
+         * 3. check if applying changes to affected nodes would violate
+         *    existing node type constraints
+         * 4. apply and persist changes to affected nodes (e.g. update
+         *    definition id's, etc.)
+         *
+         * the above checks/actions are absolutely necessary in order to
+         * guarantee integrity of repository content.
+         *
+         * throw exception while this is not implemented properly yet
+         */
+        boolean conflictingContent = true;
+        if (conflictingContent) {
+            throw new RepositoryException("not yet implemented");
+        }
+
+        // unregister old node type definition
+        internalUnregister(name);
+        // register new definition
+        EffectiveNodeType entNew = internalRegister(ntd);
+
+        // persist modified node type definitions
+        customNTDefs.remove(name);
+        customNTDefs.add(ntd);
+        persistCustomNTDefs();
+
+        // notify listeners
+        notifyReRegistered(name);
+        return entNew;
     }
 
     /**

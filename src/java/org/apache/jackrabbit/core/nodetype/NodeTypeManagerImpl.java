@@ -129,6 +129,14 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     }
 
     /**
+     * @see NodeTypeRegistryListener#nodeTypeReRegistered(QName)
+     */
+    public void nodeTypeReRegistered(QName ntName) {
+        // flush cache
+        ntCache.remove(ntName);
+    }
+
+    /**
      * @see NodeTypeRegistryListener#nodeTypeUnregistered(QName)
      */
     public void nodeTypeUnregistered(QName ntName) {
