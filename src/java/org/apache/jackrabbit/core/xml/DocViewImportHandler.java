@@ -143,11 +143,6 @@ class DocViewImportHandler extends DefaultHandler implements Constants {
 
             ArrayList props = new ArrayList(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
-                if (atts.getQName(i).startsWith("xml:")) {
-                    // skipping xml:space, xml:lang, etc.
-                    log.debug("skipping reserved/system attribute " + atts.getQName(i));
-                    continue;
-                }
                 QName propName;
                 if (atts.getURI(i) != null && !"".equals(atts.getURI(i))) {
                     propName = new QName(atts.getURI(i), atts.getLocalName(i));

@@ -426,8 +426,6 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             throw new AccessDeniedException("cannot read item " + parentId);
         }
 
-        ArrayList childIds = new ArrayList();
-
         ItemState state;
         try {
             state = itemStateProvider.getItemState(parentId);
@@ -447,6 +445,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             throw new RepositoryException(msg);
         }
         NodeState nodeState = (NodeState) state;
+        ArrayList childIds = new ArrayList();
         Iterator iter = nodeState.getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {

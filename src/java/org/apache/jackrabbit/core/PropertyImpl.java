@@ -124,6 +124,53 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
+     * Determines the length of the given value.
+     * @param value value whose length should be determined
+     * @return the length of the given value
+     * @throws RepositoryException if an error occurs
+     * @see javax.jcr.Property#getLength()
+     * @see javax.jcr.Property#getLengths()
+     */
+    protected long getLength(InternalValue value) throws RepositoryException {
+       switch (value.getType()) {
+            case PropertyType.STRING:
+            case PropertyType.LONG:
+            case PropertyType.DOUBLE:
+                return value.toString().length();
+
+            case PropertyType.NAME:
+                QName name = (QName) value.internalValue();
+                try {
+                    return name.toJCRName(session.getNamespaceResolver()).length();
+                } catch (NoPrefixDeclaredException npde) {
+                    // should never happen...
+                    String msg = safeGetJCRPath()
+                            + ": the value represents an invalid name";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, npde);
+                }
+
+            case PropertyType.PATH:
+                Path path = (Path) value.internalValue();
+                try {
+                    return path.toJCRPath(session.getNamespaceResolver()).length();
+                } catch (NoPrefixDeclaredException npde) {
+                    // should never happen...
+                    String msg = safeGetJCRPath()
+                            + ": the value represents an invalid path";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, npde);
+                }
+
+            case PropertyType.BINARY:
+                BLOBFileValue blob = (BLOBFileValue) value.internalValue();
+                return blob.getLength();
+        }
+
+        return -1;
+    }
+
+    /**
      * @param values
      * @param type
      * @throws ConstraintViolationException
@@ -1051,42 +1098,11 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         InternalValue[] values = ((PropertyState) state).getValues();
         if (values.length == 0) {
-            return 0;
+            // should never be the case, but being a little paranoid can't hurt...
+            log.warn(safeGetJCRPath() + ": single-valued property with no value");
+            return -1;
         }
-        InternalValue value = values[0];
-        switch (value.getType()) {
-            case PropertyType.STRING:
-            case PropertyType.LONG:
-            case PropertyType.DOUBLE:
-                return value.toString().length();
-
-            case PropertyType.NAME:
-                QName name = (QName) value.internalValue();
-                try {
-                    return name.toJCRName(session.getNamespaceResolver()).length();
-                } catch (NoPrefixDeclaredException npde) {
-                    // should never happen...
-                    String msg = safeGetJCRPath() + ": the value represents an invalid name";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, npde);
-                }
-
-            case PropertyType.PATH:
-                Path path = (Path) value.internalValue();
-                try {
-                    return path.toJCRPath(session.getNamespaceResolver()).length();
-                } catch (NoPrefixDeclaredException npde) {
-                    // should never happen...
-                    String msg = safeGetJCRPath() + ": the value represents an invalid path";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, npde);
-                }
-
-            case PropertyType.BINARY:
-                BLOBFileValue blob = (BLOBFileValue) value.internalValue();
-                return blob.getLength();
-        }
-        return -1;
+        return getLength(values[0]);
     }
 
     /**
@@ -1104,45 +1120,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue[] values = ((PropertyState) state).getValues();
         long[] lengths = new long[values.length];
         for (int i = 0; i < values.length; i++) {
-            long length = -1;
-            InternalValue value = values[i];
-            switch (value.getType()) {
-                case PropertyType.STRING:
-                case PropertyType.LONG:
-                case PropertyType.DOUBLE:
-                    length = value.toString().length();
-                    break;
-
-                case PropertyType.NAME:
-                    QName name = (QName) value.internalValue();
-                    try {
-                        length = name.toJCRName(session.getNamespaceResolver()).length();
-                    } catch (NoPrefixDeclaredException npde) {
-                        // should never happen...
-                        String msg = safeGetJCRPath() + ": the value represents an invalid name";
-                        log.debug(msg);
-                        throw new RepositoryException(msg, npde);
-                    }
-                    break;
-
-                case PropertyType.PATH:
-                    Path path = (Path) value.internalValue();
-                    try {
-                        length = path.toJCRPath(session.getNamespaceResolver()).length();
-                    } catch (NoPrefixDeclaredException npde) {
-                        // should never happen...
-                        String msg = safeGetJCRPath() + ": the value represents an invalid path";
-                        log.debug(msg);
-                        throw new RepositoryException(msg, npde);
-                    }
-                    break;
-
-                case PropertyType.BINARY:
-                    BLOBFileValue blob = (BLOBFileValue) value.internalValue();
-                    length = blob.getLength();
-                    break;
-            }
-            lengths[i] = length;
+            lengths[i] = getLength(values[i]);
         }
         return lengths;
     }

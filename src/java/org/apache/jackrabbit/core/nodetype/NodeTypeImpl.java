@@ -28,7 +28,6 @@ import org.apache.log4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDef;
@@ -62,7 +61,8 @@ public class NodeTypeImpl implements NodeType {
      * @param ntMgr      the node type manager associated with this node type
      * @param nsResolver namespace resolver
      */
-    NodeTypeImpl(EffectiveNodeType ent, NodeTypeDef ntd, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+    NodeTypeImpl(EffectiveNodeType ent, NodeTypeDef ntd,
+                 NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.nsResolver = nsResolver;
