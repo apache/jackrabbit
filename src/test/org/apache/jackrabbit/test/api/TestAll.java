@@ -42,6 +42,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RootNodeTest.class);
         suite.addTestSuite(NamespaceRegistryTest.class);
         suite.addTestSuite(ReferencesTest.class);
+        suite.addTestSuite(ItemDefTest.class);
+        suite.addTestSuite(ItemReadMethodsTest.class);
+        suite.addTestSuite(NodeReadMethodsTest.class);
+        suite.addTestSuite(PropertyTypeTest.class);
 
         return suite;
     }

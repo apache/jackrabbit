@@ -38,6 +38,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("Setup data for tests");
 
         suite.addTestSuite(QueryTestData.class);
+        suite.addTestSuite(NodeTestData.class);
 
         return suite;
     }

@@ -233,10 +233,14 @@ public abstract class AbstractJCRTest extends JUnitTest {
         }
 
         if (isReadOnly) {
-            if (!superuser.getRootNode().hasNode(testPath)) {
+            if (testPath.length() == 0) {
+                // test root is the root node
+                testRootNode = superuser.getRootNode();
+            } else if (!superuser.getRootNode().hasNode(testPath)) {
                 fail("Workspace does not contain test data at: " + testRoot);
+            } else {
+                testRootNode = superuser.getRootNode().getNode(testPath);
             }
-            testRootNode = superuser.getRootNode().getNode(testPath);
         } else {
             Node root = superuser.getRootNode();
             if (root.hasNode(testPath)) {
