@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
-import javax.jcr.nodetype.PropertyDef;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -33,6 +29,11 @@ import javax.jcr.LongValue;
 import javax.jcr.NameValue;
 import javax.jcr.PathValue;
 import javax.jcr.StringValue;
+import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.util.ISO8601;
 import java.util.Calendar;
 import java.util.regex.Pattern;
@@ -43,6 +44,68 @@ import java.text.ParseException;
  * Utility class to locate item definitions in the NodeTyeManager.
  */
 class NodeTypeUtil {
+
+    public static NodeDef locateChildNodeDef(Session session,
+                                             boolean regardDefaultPrimaryType,
+                                             boolean defaultPrimaryType,
+                                             boolean residual)
+        throws RepositoryException {
+
+        NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
+        NodeTypeIterator types = manager.getAllNodeTypes();
+
+        boolean overjump = false;
+
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            NodeDef nodeDefs[] = type.getDeclaredChildNodeDefs();
+
+            for (int i = 0; i < nodeDefs.length; i++) {
+                NodeDef nodeDef = nodeDefs[i];
+
+                if (nodeDef.getRequiredPrimaryTypes().length > 1) {
+                    // behaviour of implementations that support multiple multiple inheritance
+                    // of primary node types is not specified
+                    continue;
+                }
+
+                if (regardDefaultPrimaryType) {
+
+                    if (defaultPrimaryType && nodeDef.getDefaultPrimaryType() == null) {
+                        continue;
+                    }
+
+                    if (!defaultPrimaryType && nodeDef.getDefaultPrimaryType() != null) {
+                        continue;
+                    }
+                }
+
+                if (residual && !nodeDef.getName().equals("*")) {
+                    continue;
+                }
+
+                if (!residual && i == 0) {
+                    // if another child node def is a residual definition
+                    // overjump the current node type
+                    NodeDef nodeDefsAll[] = type.getChildNodeDefs();
+                    for (int j = 0; j < nodeDefsAll.length; j++) {
+                        if (nodeDefsAll[j].getName().equals("*")) {
+                            overjump = true;
+                            break;
+                        }
+                    }
+                    if (overjump) {
+                        // break the loop of the current child not defs
+                        overjump = false;
+                        break;
+                    }
+                }
+
+                return nodeDef;
+            }
+        }
+        return null;
+    }
 
     /**
      * Locate a property def parsing all node types
@@ -130,48 +193,78 @@ class NodeTypeUtil {
     }
 
     /**
+     * Returns a name that is not defined by the nodeType's child node def
+     */
+    public static String getUndefinedChildNodeName(NodeType nodeType) {
+
+        NodeDef nodeDefs[] = nodeType.getChildNodeDefs();
+        StringBuffer s = new StringBuffer("X");
+
+        for (int i = 0; i < nodeDefs.length; i++) {
+            s.append(nodeDefs[i].getName());
+        }
+        String undefinedName = s.toString();
+        undefinedName = undefinedName.replaceAll("\\*", "");
+        undefinedName = undefinedName.replaceAll(":", "");
+        return undefinedName;
+    }
+
+    /**
+     * Returns a node type that is nor legalType nor a sub type of of
+     */
+    public static String getIllegalChildNodeType(NodeTypeManager manager,
+                                                 String legalType)
+            throws RepositoryException {
+
+        NodeTypeIterator types = manager.getAllNodeTypes();
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            NodeType superTypes[] = type.getSupertypes();
+            boolean isSubType = false;
+            for (int i = 0; i < superTypes.length; i++) {
+                String name = superTypes[i].getName();
+                if (name.equals(legalType)) {
+                    isSubType = true;
+                    break;
+                }
+            }
+            if (!isSubType) {
+                return type.getName();
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns any value of the requested type
      */
     public static Value getValueOfType(int type) throws ValueFormatException {
         switch (type) {
             case (PropertyType.BINARY):
-                {
-                    // note: If binary is not UTF-8 behavior is implementation-specific
-                    return new BinaryValue("abc");
-                }
+                // note: If binary is not UTF-8 behavior is implementation-specific
+               return new BinaryValue("abc");
             case (PropertyType.BOOLEAN):
-                {
-                    return new BooleanValue(true);
-                }
+                return new BooleanValue(true);
             case (PropertyType.DATE):
-                {
-                    return new DateValue(Calendar.getInstance());
-                }
+                return new DateValue(Calendar.getInstance());
             case (PropertyType.DOUBLE):
-                {
-                    return new DoubleValue(1.0);
-                }
+                return new DoubleValue(1.0);
             case (PropertyType.LONG):
-                {
-                    return new LongValue(1);
-                }
+                return new LongValue(1);
             case (PropertyType.NAME):
-                {
-                    return NameValue.valueOf("abc");
-                }
+                return NameValue.valueOf("abc");
             case (PropertyType.PATH):
-                {
-                    return PathValue.valueOf("/abc");
-                }
+                return PathValue.valueOf("/abc");
             default:
-                {
-                    // STRING and UNDEFINED
-                    // note: REFERENCE is not testable since its format is implementation-specific
-                    return new StringValue("abc");
-                }
+                // STRING and UNDEFINED
+                // note: REFERENCE is not testable since its format is implementation-specific
+                return new StringValue("abc");
         }
     }
 
+    /**
+     * Returns a value out of the value constraints
+     */
     public static Value getValueOutOfContstraint(PropertyDef propDef)
             throws ValueFormatException, RepositoryException, ParseException {
 

@@ -183,6 +183,22 @@
     </propertyDef>
   </nodeType>
 
+  <!-- Defines a nodetype for testing NodeType.canAddChildNode() -->
+  <nodeType name="test:canAddChildNode" mixin="false" orderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <childNodeDef name="testChildWithDefaultType" defaultPrimaryType="nt:base" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>nt:base</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDef>
+    <childNodeDef name="testChildWithoutDefaultType" defaultPrimaryType="" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>nt:base</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDef>
+  </nodeType>
 
 </nodeTypes>
 
