@@ -243,8 +243,12 @@ public class NodeTypeFormat extends CommonFormat {
      * Writes the primary item name of the node type definition.
      */
     private void writePrimaryItemName() {
-        String value = toJCRName(def.getPrimaryItemName());
-        setAttribute(PRIMARYITEMNAME_ATTRIBUTE, value);
+        QName name = def.getPrimaryItemName();
+        if (name == null) {
+            setAttribute(PRIMARYITEMNAME_ATTRIBUTE, "");
+        } else {
+            setAttribute(PRIMARYITEMNAME_ATTRIBUTE, toJCRName(name));
+        }
     }
 
     /**
