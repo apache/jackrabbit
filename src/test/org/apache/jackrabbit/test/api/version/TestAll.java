@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("javax.jcr.version tests");
 
+        suite.addTestSuite(VersionTest.class);
         suite.addTestSuite(VersionHistoryTest.class);
         suite.addTestSuite(VersionLabelTest.class);
         suite.addTestSuite(CheckoutTest.class);
