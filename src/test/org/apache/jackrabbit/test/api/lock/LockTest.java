@@ -18,47 +18,42 @@ package org.apache.jackrabbit.test.api.lock;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.Node;
-import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
 
 /**
- * <code>LockTest</code> contains the test cases for the methods
- * inside ...
+ * <code>LockTest</code> contains the test cases for the lock support in
+ * the JCR specification.
+ * <p/>
+ * Configuration requirements:<br/>
+ * The node at {@link #testRoot} must allow child nodes of type
+ * {@link #testNodeType} with name {@link #nodeName1}. The {@link #testNodeType}
+ * must allow child nodes of the same node type. If {@link #testNodeType} is not
+ * mix:referenceable and mix:lockable the two mixin types are added to the node
+ * instance created with {@link #testNodeType}.
  *
  * @test
- * @sources XATest.java
- * @executeClass org.apache.jackrabbit.test.api.xa.XATest
- * @keywords level2
+ * @sources LockTest.java
+ * @executeClass org.apache.jackrabbit.test.api.lock.LockTest
+ * @keywords locking
  */
 public class LockTest extends AbstractJCRTest {
 
     /**
-     * @see junit.framework#runTest
-     *
-     * Make sure that tested repository supports locking
-     */
-    protected void runTest() throws Throwable {
-        Repository rep = helper.getRepository();
-        if (rep.getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) != null) {
-            super.runTest();
-        }
-    }
-
-    /**
      * Test session scope: other session may not access nodes that are
      * locked.
-     * @throws Exception
      */
     public void testSessionScope() throws Exception {
         // create new node and lock it
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addMixin(mixReferenceable);
-        n.addMixin(mixLockable);
+        if (!n.isNodeType(mixReferenceable)) {
+            n.addMixin(mixReferenceable);
+        }
+        if (!n.isNodeType(mixLockable)) {
+            n.addMixin(mixLockable);
+        }
         testRootNode.save();
 
         // remember uuid
