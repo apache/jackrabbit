@@ -1256,49 +1256,59 @@ public class NodeTypeRegistry {
     public synchronized EffectiveNodeType reregisterNodeType(NodeTypeDef ntd)
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
-        QName name = ntd.getName();
-        if (!registeredNTDefs.containsKey(name)) {
-            throw new NoSuchNodeTypeException(name.toString());
-        }
-        if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString() + ": can't reregister built-in node type.");
-        }
+	QName name = ntd.getName();
+	if (!registeredNTDefs.containsKey(name)) {
+	    throw new NoSuchNodeTypeException(name.toString());
+	}
+	if (builtInNTDefs.contains(name)) {
+	    throw new RepositoryException(name.toString() + ": can't reregister built-in node type.");
+	}
 
-        /**
-         * validate new node type definition
-         */
-        EffectiveNodeType ent = validateNodeTypeDef(ntd);
+	/**
+	 * validate new node type definition
+	 */
+	validateNodeTypeDef(ntd);
 
-        /**
-         * collect names of node types that have dependencies on the given
-         * node type
-         */
-        Set dependentNTs = getDependentNodeTypes(name);
+	/**
+	 * build diff of current and new definition and determine type of change
+	 */
+	NodeTypeDef ntdOld = (NodeTypeDef) registeredNTDefs.get(name);
+	NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
+	if (diff.isTrivial()) {
+	    /**
+	     * the change is trivial and has no effect on current content
+	     * (e.g. that would be the case when non-mandatory properties were
+	     * added)
+	     * todo re-register node type definition and update caches & notify listeners on re-registration
+	     */
+            //return entNew;
+	}
 
-        /**
-         * todo
-         * 1. determine type of change and build diff of current and new
-         *    definition
-         * 2. if the change is trivial and has no effect on current content
-         *    (e.g. when a property defintion has been changed from
-         *    single-valued to multi-valued): continue with step 7, otherwise
-         *    continue with next step
-         * 3. apply deep locks on root nodes in every workspace or alternatively
-         *    put repository in 'exclusive' or 'single-user' mode
-         * 4. check if the given node type (or any node type that has
-         *    dependencies on this node type) is currently referenced by nodes
-         *    in the repository.
-         * 5. check if applying changes to affected nodes would violate
-         *    existing node type constraints
-         * 6. re-register node type definition and update caches
-         * 7. notify listeners on re-registration
-         * 8. apply and persist changes to affected nodes (e.g. update
-         *    definition id's, etc.)
-         * 9. what else?
-         */
-        //unregisterNodeType(name);
-        //return registerNodeType(ntd);
-        throw new RepositoryException("not yet implemented");
+	/**
+	 * collect names of node types that have dependencies on the given
+	 * node type
+	 */
+	Set dependentNTs = getDependentNodeTypes(name);
+
+	/**
+	 * non-trivial change of node type definition
+	 * todo
+	 * 1. apply deep locks on root nodes in every workspace or alternatively
+	 *    put repository in 'exclusive' or 'single-user' mode
+	 * 2. check if the given node type (or any node type that has
+	 *    dependencies on this node type) is currently referenced by nodes
+	 *    in the repository.
+	 * 3. check if applying changes to affected nodes would violate
+	 *    existing node type constraints
+	 * 4. re-register node type definition and update caches
+	 * 5. notify listeners on re-registration
+	 * 7. apply and persist changes to affected nodes (e.g. update
+	 *    definition id's, etc.)
+	 * 7. what else?
+	 */
+	//unregisterNodeType(name);
+	//return registerNodeType(ntd);
+	throw new RepositoryException("not yet implemented");
     }
 
     /**
