@@ -185,4 +185,45 @@ public class VirtualNodeState extends NodeState {
         setMixinTypeNames(set);
         setPropertyValues(ItemImpl.PROPNAME_MIXINTYPES, PropertyType.NAME, values);
     }
+
+    /**
+     * Creates a new VirtualChildNodeEntry
+     * @param nodeName
+     * @param uuid
+     * @param index
+     * @return
+     */
+    protected VirtualChildNodeEntry createChildNodeEntry(QName nodeName, String uuid, int index) {
+        return new VirtualChildNodeEntry(nodeName, uuid, index);
+    }
+
+    /**
+     * Creates a new VirtualPropertyEntry
+     * @param name
+     * @return
+     */
+    protected VirtualPropertyEntry createPropertyEntry(QName name) {
+        return new VirtualPropertyEntry(name);
+    }
+
+    /**
+     * Overload NodeState.ChildNodeEntry in order to create own ones.
+     */
+    public class VirtualChildNodeEntry extends NodeState.ChildNodeEntry {
+
+        protected VirtualChildNodeEntry(QName nodeName, String uuid, int index) {
+            super(nodeName, uuid, index);
+        }
+
+    }
+
+    /**
+     * Overload NodeState.PropertyEntry in order to create own ones.
+     */
+    public class VirtualPropertyEntry extends NodeState.PropertyEntry {
+
+        protected VirtualPropertyEntry(QName propName) {
+            super(propName);
+        }
+    }
 }

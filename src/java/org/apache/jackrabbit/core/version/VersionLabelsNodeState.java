@@ -80,7 +80,7 @@ public class VersionLabelsNodeState extends VirtualNodeState {
             return super.getPropertyEntry(propName);
         }
         if (hasPropertyEntry(propName)) {
-            return new NodeState.PropertyEntry(propName);
+            return createPropertyEntry(propName);
         }
         return null;
     }
@@ -91,7 +91,7 @@ public class VersionLabelsNodeState extends VirtualNodeState {
         while (iter.hasNext()) {
             InternalVersion v = (InternalVersion) iter.next();
             if (v.getLabels().length>0) {
-                list.add(new PropertyEntry(v.getName()));
+                list.add(createPropertyEntry(v.getName()));
             }
         }
         return list;
@@ -141,4 +141,5 @@ public class VersionLabelsNodeState extends VirtualNodeState {
         }
         throw new NoSuchItemStateException(name.toString());
     }
+
 }

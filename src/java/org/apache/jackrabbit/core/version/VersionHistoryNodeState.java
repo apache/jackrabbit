@@ -80,7 +80,7 @@ public class VersionHistoryNodeState extends VirtualNodeState {
             if (index <= 1) {
                 InternalVersion v = vh.getVersion(nodeName);
                 if (v!=null) {
-                    return new ChildNodeEntry(nodeName, v.getId(), 1);
+                    return createChildNodeEntry(nodeName, v.getId(), 1);
                 }
             }
         } catch (RepositoryException e) {
@@ -97,7 +97,7 @@ public class VersionHistoryNodeState extends VirtualNodeState {
         Iterator iter = vh.getVersions();
         while (iter.hasNext()) {
             InternalVersion v = (InternalVersion) iter.next();
-            list.add(new ChildNodeEntry(v.getName(), v.getId(), 1));
+            list.add(createChildNodeEntry(v.getName(), v.getId(), 1));
         }
         return list;
     }
@@ -109,7 +109,7 @@ public class VersionHistoryNodeState extends VirtualNodeState {
         List list = new ArrayList(super.getChildNodeEntries(uuid));
         InternalVersion v = vh.getVersion(uuid);
         if (v!=null) {
-            list.add(new ChildNodeEntry(v.getName(), uuid, 1));
+            list.add(createChildNodeEntry(v.getName(), uuid, 1));
         }
         return list;
     }
@@ -122,7 +122,7 @@ public class VersionHistoryNodeState extends VirtualNodeState {
         try {
             InternalVersion v = vh.getVersion(nodeName);
             if (v!=null) {
-                list.add(new ChildNodeEntry(nodeName, v.getId(), 1));
+                list.add(createChildNodeEntry(nodeName, v.getId(), 1));
             }
         } catch (RepositoryException e) {
             // ignore

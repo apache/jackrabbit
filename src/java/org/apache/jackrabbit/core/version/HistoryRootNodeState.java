@@ -84,7 +84,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
         try {
             if (index <= 1) {
                 InternalVersionHistory hist = vm.getVersionHistory(nodeName.getLocalName());
-                return new ChildNodeEntry(nodeName, hist.getId(), 1);
+                return createChildNodeEntry(nodeName, hist.getId(), 1);
             }
         } catch (RepositoryException e) {
             // ignore
@@ -103,7 +103,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
                 while (iter.hasNext()) {
                     String id = (String) iter.next();
                     QName name = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, id);
-                    list.add(new ChildNodeEntry(name, id, 1));
+                    list.add(createChildNodeEntry(name, id, 1));
                 }
                 return list;
             } catch (RepositoryException e) {
