@@ -292,7 +292,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     public boolean isMoreRecent(InternalVersion v) {
         for (int i = 0; i < predecessors.size(); i++) {
             InternalVersion pred = (InternalVersion) predecessors.get(i);
-            if (pred.equals(this) || pred.isMoreRecent(v)) {
+            if (pred.equals(v) || pred.isMoreRecent(v)) {
                 return true;
             }
         }

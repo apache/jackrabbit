@@ -668,6 +668,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         // 2. check access rights & node type constraints
 
+        /*
         try {
             // check read access right on source node
             if (!session.getAccessManager().isGranted(srcState.getId(), AccessManager.READ)) {
@@ -678,6 +679,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             log.debug(msg);
             throw new RepositoryException(msg, infe);
         }
+        */
         // check node type constraints
         checkAddNode(destParentPath, destName.getName(), srcState.getNodeTypeName());
 

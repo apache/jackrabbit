@@ -61,7 +61,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
-import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
@@ -2683,13 +2682,6 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new InvalidItemStateException(msg);
         }
 
-        // check if not merge failed
-        if (hasProperty(JCR_MERGEFAILED) && getProperty(JCR_MERGEFAILED).getValues().length > 0) {
-            String msg = "Unable to checkin node. Node has unresolved merge operation. " + safeGetJCRPath();
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
         // check lock status
         checkLock();
 
@@ -2740,56 +2732,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public void update(String srcWorkspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             LockException, InvalidItemStateException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to checkin node. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // check lock status
-        checkLock();
-
-        SessionImpl srcSession = null;
-        try {
-            // create session on other workspace for current subject
-            // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            srcSession = rep.createSession(session.getSubject(), srcWorkspaceName);
-
-            NodeImpl srcNode = getCorrespondingNode(srcSession);
-            if (srcNode == null) {
-                /*
-                 * If this node does not have a corresponding node in the workspace
-                 * <code>srcWorkspaceName</code>, then the <code>update</code> method
-                 * has no effect (it does not traverse down the subtree).
-                */
-                return;
-            }
-
-            /*
-             * If this node does have a corresponding node in the workspace <code>srcWorkspaceName</code>,
-             * then this method traverses down the subtree rooted at this node and
-             * replaces the state of each node in the subtree rooted at this node with that
-             * of its corresponding node in the specified source workspace.
-             */
-            boolean removeExisting = false;
-            boolean replaceExisting = true;
-            try {
-                internalUpdate(srcNode, removeExisting, replaceExisting);
-            } catch (RepositoryException e) {
-                session.refresh(false);
-                throw e;
-            }
-            session.save();
-        } finally {
-            if (srcSession != null) {
-                // we don't need the other session anymore, logout
-                srcSession.logout();
-            }
-        }
+        internalMerge(srcWorkspaceName, true, false);
     }
 
     /**
@@ -2799,107 +2742,13 @@ public class NodeImpl extends ItemImpl implements Node {
             throws UnsupportedRepositoryOperationException,
             NoSuchWorkspaceException, AccessDeniedException, VersionException,
             LockException, InvalidItemStateException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to merge. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // if same workspace, ignore
-        if (srcWorkspace.equals(session.getWorkspace().getName())) {
-            return;
-        }
-
-        // check lock status
-        checkLock();
-
-        SessionImpl srcSession = null;
-        try {
-            // create session on other workspace for current subject
-            // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
-
-            NodeImpl srcNode = doMergeTest(srcSession, bestEffort);
-            if (srcNode != null) {
-                // remove properties
-                PropertyIterator pi = getProperties();
-                while (pi.hasNext()) {
-                    Property p = pi.nextProperty();
-                    if (!srcNode.hasProperty(p.getName())) {
-                        p.setValue((Value) null);
-                    }
-                }
-                // copy properties
-                pi = srcNode.getProperties();
-                while (pi.hasNext()) {
-                    PropertyImpl p = (PropertyImpl) pi.nextProperty();
-                    internalCopyPropertyFrom(p);
-                }
-
-                // remove subnodes
-                NodeIterator ni = getNodes();
-                while (ni.hasNext()) {
-                    // if the subnode does not exist in the src, and this is update,
-                    // so delete here as well?
-                    Node n = ni.nextNode();
-                    if (!srcNode.hasNode(n.getName())) {
-                        // todo: how does this work for same name siblings?
-                        n.remove();
-                    }
-                }
-                // 'clone' nodes that do not exist
-                ni = srcNode.getNodes();
-                while (ni.hasNext()) {
-                    Node n = ni.nextNode();
-                    if (!hasNode(n.getName())) {
-                        // todo: probably need some internal stuff
-                        // todo: how does this work for same name siblings?
-                        // todo: since clone is a ws operation, 'save' does not work later
-                        session.getWorkspace().clone(srcWorkspace, n.getPath(), getPath() + "/" + n.getName(), true);
-                    } else {
-                        // do recursive merge
-                        n.merge(srcWorkspace, bestEffort);
-                    }
-                }
-            } else {
-                // do not change this node, but recuse merge
-                NodeIterator ni = srcNode.getNodes();
-                while (ni.hasNext()) {
-                    ni.nextNode().merge(srcWorkspace, bestEffort);
-                }
-            }
-
-            save();
-        } finally {
-            if (srcSession != null) {
-                // we don't need the other session anymore, logout
-                srcSession.logout();
-            }
-        }
+        internalMerge(srcWorkspace, false, bestEffort);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void cancelMerge(Version version)
             throws VersionException, InvalidItemStateException,
             UnsupportedRepositoryOperationException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check for pending changes
-        if (hasPendingChanges()) {
-            String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // @todo implement Node#cancelMerge(Version)
-        throw new UnsupportedRepositoryOperationException("not yet implemented");
+        internalFinishMerge(version, true);
     }
 
     /**
@@ -2908,18 +2757,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public void doneMerge(Version version) throws VersionException,
             InvalidItemStateException, UnsupportedRepositoryOperationException,
             RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check for pending changes
-        if (hasPendingChanges()) {
-            String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // @todo implement Node#doneMerge(Version)
-        throw new UnsupportedRepositoryOperationException("not yet implemented");
+        internalFinishMerge(version, false);
     }
 
     /**
@@ -3184,7 +3022,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      * @throws AccessDeniedException
      */
-    private NodeImpl doMergeTest(SessionImpl srcSession, boolean bestEffort)
+    private NodeImpl doMergeTest(SessionImpl srcSession, boolean update, boolean bestEffort)
             throws RepositoryException, AccessDeniedException {
 
         // If N does not have a corresponding node then the merge result for N is leave.
@@ -3194,7 +3032,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // if not versionable, update
-        if (!isNodeType(MIX_VERSIONABLE)) {
+        if (!isNodeType(MIX_VERSIONABLE) || update) {
             return srcNode;
         }
         // if source node is not versionable, leave
@@ -3222,17 +3060,106 @@ public class NodeImpl extends ItemImpl implements Node {
             // thus determining the result of a merge is non-trivial.
             if (bestEffort) {
                 // add 'offending' version to jcr:mergeFailed property
-                List values = hasProperty(JCR_MERGEFAILED)
-                        ? Arrays.asList(getProperty(JCR_MERGEFAILED).getValues())
-                        : new ArrayList();
-                values.add(new ReferenceValue(srcNode.getBaseVersion()));
-                setProperty(JCR_MERGEFAILED, (Value[]) values.toArray(new Value[values.size()]));
+                Set set = internalGetMergeFailed();
+                set.add(srcNode.getBaseVersion().getUUID());
+                internalSetMergeFailed(set);
                 return null;
             } else {
                 String msg = "Unable to merge nodes. Violating versions. " + safeGetJCRPath();
                 log.debug(msg);
                 throw new MergeException(msg);
             }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    private void internalFinishMerge(Version version, boolean cancel)
+            throws VersionException, InvalidItemStateException,
+            UnsupportedRepositoryOperationException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // check for pending changes
+        if (hasPendingChanges()) {
+            String msg = "Unable to finish merge. Node has pending changes: " + safeGetJCRPath();
+            log.debug(msg);
+            throw new InvalidItemStateException(msg);
+        }
+
+        // check versionable
+        checkVersionable();
+
+        // check lock
+        checkLock();
+
+        // check if checked out
+        if (!internalIsCheckedOut()) {
+            String msg = "Unable to finish merge. Node is checked-in: " + safeGetJCRPath();
+            log.error(msg);
+            throw new VersionException(msg);
+        }
+
+        // check if version is in mergeFailed list
+        Set failed = internalGetMergeFailed();
+        if (!failed.remove(version.getUUID())) {
+            String msg = "Unable to finish merge. Specified version is not in jcr:mergeFailed property: " + safeGetJCRPath();
+            log.error(msg);
+            throw new VersionException(msg);
+        }
+
+        // remove version from mergeFailed list
+        internalSetMergeFailed(failed);
+
+        if (!cancel) {
+            // add version to jcr:predecessors list
+            Value[] vals = getProperty(JCR_PREDECESSORS).getValues();
+            InternalValue[] v = new InternalValue[vals.length + 1];
+            for (int i=0; i<vals.length; i++) {
+                v[i] = InternalValue.create(UUID.fromString(vals[i].getString()));
+            }
+            v[vals.length] = InternalValue.create(UUID.fromString(version.getUUID()));
+            internalSetProperty(JCR_PREDECESSORS, v);
+        }
+
+        // save
+        save();
+    }
+
+    /**
+     *
+     * @return
+     * @throws RepositoryException
+     */
+    private Set internalGetMergeFailed() throws RepositoryException {
+        HashSet set = new HashSet();
+        if (hasProperty(JCR_MERGEFAILED)) {
+            Value[] vals = getProperty(JCR_MERGEFAILED).getValues();
+            for (int i=0; i<vals.length; i++) {
+                set.add(vals[i].getString());
+            }
+        }
+        return set;
+    }
+
+    /**
+     *
+     * @param set
+     * @throws RepositoryException
+     */
+    private void internalSetMergeFailed(Set set) throws RepositoryException {
+        if (set.isEmpty()) {
+            internalSetProperty(JCR_MERGEFAILED, (InternalValue[]) null);
+        } else {
+            InternalValue[] vals = new InternalValue[set.size()];
+            Iterator iter = set.iterator();
+            int i=0;
+            while (iter.hasNext()) {
+                String uuid = (String) iter.next();
+                vals[i++] = InternalValue.create(UUID.fromString(uuid));
+            }
+            internalSetProperty(JCR_MERGEFAILED, vals);
         }
     }
 
@@ -3363,28 +3290,83 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * updates this node with the state given by <code>srcNode</code>
-     *
-     * @param srcNode
+     * {@inheritDoc}
+     */
+    private void internalMerge(String srcWorkspaceName,
+                                boolean update, boolean bestEffort)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            LockException, InvalidItemStateException, RepositoryException {
+
+        // might be added in future releases
+        boolean removeExisting = true;
+        boolean replaceExisting = false;
+
+        // check state of this instance
+        sanityCheck();
+
+        // check for pending changes
+        if (session.hasPendingChanges()) {
+            String msg = "Unable to " + (update ? "update" : "merge") + " node. Session has pending changes.";
+            log.debug(msg);
+            throw new InvalidItemStateException(msg);
+        }
+
+        // if same workspace, ignore
+        if (srcWorkspaceName.equals(session.getWorkspace().getName())) {
+            return;
+        }
+
+        SessionImpl srcSession = null;
+        try {
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), srcWorkspaceName);
+
+            try {
+                internalMerge(srcSession, update, bestEffort, removeExisting, replaceExisting);
+            } catch (RepositoryException e) {
+                try {
+                    session.refresh(false);
+                } catch (RepositoryException e1) {
+                    // ignore
+                }
+                throw e;
+            }
+            session.save();
+        } finally {
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
+            }
+        }
+    }
+
+    /**
+     * Merges/Updates this node with its corresponding ones
+     * @param srcSession
+     * @param update
+     * @param bestEffort
      * @param removeExisting
      * @param replaceExisting
+     * @throws LockException
      * @throws RepositoryException
      */
-    private void internalUpdate(NodeImpl srcNode, boolean removeExisting, boolean replaceExisting)
+    private void internalMerge(SessionImpl srcSession, boolean update, boolean bestEffort, boolean removeExisting, boolean replaceExisting)
             throws LockException, RepositoryException {
+
+        NodeImpl srcNode = doMergeTest(srcSession, update, bestEffort);
+        if (srcNode == null) {
+            // leave, iterate over children
+            NodeIterator iter = getNodes();
+            while (iter.hasNext()) {
+                NodeImpl n = (NodeImpl) iter.nextNode();
+                n.internalMerge(srcSession, update,  bestEffort, removeExisting, replaceExisting);
+            }
+            return;
+        }
 
         // check lock status
         checkLock();
-
-        /*
-         * The "state" of the node in this context means the set of properties and
-         * child nodes it has. In other words, when a node is updated, its set of
-         * properties and child nodes is replaced by that of its corresponding node in the
-         * source workspace. One repercussion of this is that if a node further down the
-         * subtree does not have a corresponding node, then that node is removed (thus
-         * aligning the state of its parent with <i>its</i> correspondee in the other
-         * workspace).
-         */
 
         // update the properties
         PropertyIterator iter = getProperties();
@@ -3409,47 +3391,34 @@ public class NodeImpl extends ItemImpl implements Node {
                 internalSetProperty(p.getQName(), p.internalGetValue());
             }
         }
+        // todo: add/remove mixins ?
 
-        // update the nodes. remove all dst nodes first
+        // update the nodes. remove non existing ones
         NodeIterator niter = getNodes();
         while (niter.hasNext()) {
-            ((NodeImpl) niter.nextNode()).internalRemove(true);
+            NodeImpl n = (NodeImpl) niter.nextNode();
+            // todo: does not work properly for samename siblings
+            if (!srcNode.hasNode(n.getQName())) {
+                n.internalRemove(true);
+            }
         }
-        // add src ones
+
+        // add source ones
         niter = srcNode.getNodes();
         while (niter.hasNext()) {
             NodeImpl child = (NodeImpl) niter.nextNode();
             NodeImpl dstNode = null;
             String uuid = child.internalGetUUID();
-            if (child.isNodeType(MIX_REFERENCEABLE)) {
+            if (hasNode(child.getQName())) {
+                // todo: does not work properly for samename siblings
+                dstNode = getNode(child.getQName());
+            } else if (child.isNodeType(MIX_REFERENCEABLE)) {
                 // if child is referenceable, check if correspondance exist in this workspace
                 try {
                     dstNode = (NodeImpl) session.getNodeByUUID(uuid);
                     if (removeExisting) {
-                        // get applicable definition of target node at new location
-                        NodeTypeImpl nt = (NodeTypeImpl) dstNode.getPrimaryNodeType();
-                        NodeDefImpl newTargetDef;
-                        try {
-                            newTargetDef = ((NodeImpl) getParent()).getApplicableChildNodeDef(child.getQName(), nt.getQName());
-                        } catch (RepositoryException re) {
-                            String msg = dstNode.safeGetJCRPath() + ": no definition found in parent node's node type for new node";
-                            log.debug(msg);
-                            throw new ConstraintViolationException(msg, re);
-                        }
-
-                        // check lock status of current parent
-                        ((NodeImpl) dstNode.getParent()).checkLock();
-
-                        // add target to new parent and remove from old one
-                        createChildNodeLink(child.getQName(), uuid);
-                        ((NodeImpl) dstNode.getParent()).removeChildNode(child.getQName(), child.getIndex() == 0 ? 1 : child.getIndex());
-                        // change definition of target if necessary
-                        NodeDefImpl oldTargetDef = (NodeDefImpl) dstNode.getDefinition();
-                        NodeDefId oldTargetDefId = new NodeDefId(oldTargetDef.unwrap());
-                        NodeDefId newTargetDefId = new NodeDefId(newTargetDef.unwrap());
-                        if (!oldTargetDefId.equals(newTargetDefId)) {
-                            dstNode.onRedefine(newTargetDefId);
-                        }
+                        dstNode.internalRemove(false);
+                        dstNode = null;
                     } else if (replaceExisting) {
                         // node exists outside of this update tree, so continue there
                     } else {
@@ -3459,7 +3428,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     // does not exist
                 }
             } else {
-                // if child is not referenceable, adjust state
+                // if child is not referenceable, clear uuid
                 uuid = null;
             }
             if (dstNode == null) {
@@ -3469,8 +3438,10 @@ public class NodeImpl extends ItemImpl implements Node {
                 for (int i = 0; i < mixins.length; i++) {
                     dstNode.addMixin(mixins[i].getName());
                 }
+                dstNode.internalMerge(srcSession, true, bestEffort, removeExisting, replaceExisting);
+            } else {
+                dstNode.internalMerge(srcSession, update, bestEffort, removeExisting, replaceExisting);
             }
-            dstNode.internalUpdate(child, removeExisting, replaceExisting);
         }
     }
 
@@ -3529,6 +3500,9 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // 4. N's jcr:predecessor property is set to null
         internalSetProperty(JCR_PREDECESSORS, new InternalValue[0], PropertyType.REFERENCE);
+
+        // also clear mergeFailed
+        internalSetProperty(JCR_MERGEFAILED, (InternalValue[]) null);
 
         // 3. N's jcr:isCheckedOut property is set to false.
         internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(false));
