@@ -235,27 +235,27 @@ public class SearchIndex extends AbstractQueryHandler {
             throw new IOException("Unable to obtain read lock on search index.");
         }
 
-        SortField[] sortFields = new SortField[orderProps.length];
-        for (int i = 0; i < orderProps.length; i++) {
-            String prop = null;
-            if (QueryConstants.JCR_SCORE.equals(orderProps[i])) {
-                // order on jcr:score does not use the natural order as
-                // implemented in lucene. score ascending in lucene means that
-                // higher scores are first. JCR specs that lower score values
-                // are first.
-                sortFields[i] = new SortField(null, SortField.SCORE, orderSpecs[i]);
-            } else {
-                try {
-                    prop = orderProps[i].toJCRName(nsMappings);
-                } catch (NoPrefixDeclaredException e) {
-                    // will never happen
-                }
-                sortFields[i] = new SortField(prop, SortField.STRING, !orderSpecs[i]);
-            }
-        }
-
         Hits hits = null;
         try {
+            SortField[] sortFields = new SortField[orderProps.length];
+            for (int i = 0; i < orderProps.length; i++) {
+                String prop = null;
+                if (QueryConstants.JCR_SCORE.equals(orderProps[i])) {
+                    // order on jcr:score does not use the natural order as
+                    // implemented in lucene. score ascending in lucene means that
+                    // higher scores are first. JCR specs that lower score values
+                    // are first.
+                    sortFields[i] = new SortField(null, SortField.SCORE, orderSpecs[i]);
+                } else {
+                    try {
+                        prop = orderProps[i].toJCRName(nsMappings);
+                    } catch (NoPrefixDeclaredException e) {
+                        // will never happen
+                    }
+                    sortFields[i] = new SortField(prop, SortField.STRING, !orderSpecs[i]);
+                }
+            }
+
             if (sortFields.length > 0) {
                 hits = persistentIndex.getIndexSearcher().search(query,
                         new Sort(sortFields));
