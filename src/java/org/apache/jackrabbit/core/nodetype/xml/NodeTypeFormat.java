@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.jackrabbit.core.NamespaceResolver;
@@ -125,16 +123,13 @@ class NodeTypeFormat extends CommonFormat {
      *                                    definition element is invalid
      */
     private void readSupertypes() throws InvalidNodeTypeDefException {
-        Collection types =
+        String[] types =
             getGrandChildContents(SUPERTYPES_ELEMENT, SUPERTYPE_ELEMENT);
         if (types != null) {
             Vector vector = new Vector();
-
-            Iterator iterator = types.iterator();
-            while (iterator.hasNext()) {
-                vector.add(fromJCRName((String) iterator.next()));
+            for (int i = 0; i < types.length; i++) {
+                vector.add(fromJCRName(types[i]));
             }
-
             def.setSupertypes((QName[]) vector.toArray(new QName[0]));
         }
     }
@@ -232,12 +227,11 @@ class NodeTypeFormat extends CommonFormat {
     private void readPropertyDefinitions() throws InvalidNodeTypeDefException {
         Vector vector = new Vector();
 
-        Iterator iterator = getChildElements(PROPERTYDEF_ELEMENT);
-        while (iterator.hasNext()) {
+        Element[] elements = getChildElements(PROPERTYDEF_ELEMENT);
+        for (int i = 0; i < elements.length; i++) {
             PropDef property = new PropDef();
-            Element element = (Element) iterator.next();
-            PropDefFormat format =
-                new PropDefFormat(getNamespaceResolver(), element, property);
+            PropDefFormat format = new PropDefFormat(
+                    getNamespaceResolver(), elements[i], property);
             format.read(def.getName());
             vector.add(property);
         }
@@ -272,12 +266,11 @@ class NodeTypeFormat extends CommonFormat {
     private void readChildNodeDefinitions() throws InvalidNodeTypeDefException {
         Vector vector = new Vector();
 
-        Iterator iterator = getChildElements(CHILDNODEDEF_ELEMENT);
-        while (iterator.hasNext()) {
+        Element[] elements = getChildElements(CHILDNODEDEF_ELEMENT);
+        for (int i = 0; i < elements.length; i++) {
             ChildNodeDef node = new ChildNodeDef();
-            Element element = (Element) iterator.next();
             NodeDefFormat format =
-                new NodeDefFormat(getNamespaceResolver(), element, node);
+                new NodeDefFormat(getNamespaceResolver(), elements[i], node);
             format.read(def.getName());
             vector.add(node);
         }

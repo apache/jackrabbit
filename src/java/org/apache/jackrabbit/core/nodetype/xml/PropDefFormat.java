@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
 import javax.jcr.PropertyType;
@@ -124,21 +122,19 @@ class PropDefFormat extends ItemDefFormat {
      *                                      definition element is invalid
      */
     private void readValueConstraints() throws InvalidNodeTypeDefException {
-        Collection constraints = getGrandChildContents(
+        String[] constraints = getGrandChildContents(
                 VALUECONSTRAINTS_ELEMENT, VALUECONSTRAINT_ELEMENT);
         if (constraints != null) {
             Vector vector = new Vector();
 
             int type = def.getRequiredType();
-            Iterator iterator = constraints.iterator();
-            while (iterator.hasNext()) {
-                String constraint = (String) iterator.next();
+            for (int i = 0; i < constraints.length; i++) {
                 try {
                     vector.add(ValueConstraint.create(
-                            type, constraint, getNamespaceResolver()));
+                            type, constraints[i], getNamespaceResolver()));
                 } catch (InvalidConstraintException e) {
                     throw new InvalidNodeTypeDefException(
-                            "Invalid value constraint " + constraint, e);
+                            "Invalid value constraint " + constraints[i], e);
                 }
             }
 
@@ -166,7 +162,7 @@ class PropDefFormat extends ItemDefFormat {
      * Reads and sets the default values of the property definition.
      */
     private void readDefaultValues() {
-        Collection defaults = getGrandChildContents(
+        String[] defaults = getGrandChildContents(
                 DEFAULTVALUES_ELEMENT, DEFAULTVALUE_ELEMENT);
         if (defaults != null) {
             Vector vector = new Vector();
@@ -175,10 +171,8 @@ class PropDefFormat extends ItemDefFormat {
             if (type == PropertyType.UNDEFINED) {
                 type = PropertyType.STRING;
             }
-            Iterator iterator = defaults.iterator();
-            while (iterator.hasNext()) {
-                String value = (String) iterator.next();
-                vector.add(InternalValue.valueOf(value, type));
+            for (int i = 0; i < defaults.length; i++) {
+                vector.add(InternalValue.valueOf(defaults[i], type));
             }
 
             def.setDefaultValues(

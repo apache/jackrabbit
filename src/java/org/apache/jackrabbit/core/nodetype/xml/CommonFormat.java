@@ -157,7 +157,7 @@ class CommonFormat {
      * @param childName child element name
      * @return child element iterator
      */
-    protected Iterator getChildElements(String childName) {
+    protected Element[] getChildElements(String childName) {
         Vector children = new Vector();
 
         NodeList nodes = element.getChildNodes();
@@ -169,7 +169,7 @@ class CommonFormat {
             }
         }
 
-        return children.iterator();
+        return (Element[]) children.toArray(new Element[0]);
     }
 
     /**
@@ -181,7 +181,7 @@ class CommonFormat {
      * @param grandChildName grand child element name
      * @return grand child contents, or <code>null</code>
      */
-    protected Collection getGrandChildContents(
+    protected String[] getGrandChildContents(
             String childName, String grandChildName) {
         NodeList children = element.getChildNodes();
         for (int i = 0; i < children.getLength(); i++ ) {
@@ -199,7 +199,7 @@ class CommonFormat {
                     }
                 }
 
-                return contents;
+                return (String[]) contents.toArray(new String[0]);
             }
         }
 

@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.jackrabbit.core.NamespaceResolver;
@@ -94,17 +92,13 @@ class NodeDefFormat extends ItemDefFormat {
      *                                    definition element is invalid
      */
     private void readRequiredPrimaryTypes() throws InvalidNodeTypeDefException {
-        Collection types = getGrandChildContents(
+        String[] types = getGrandChildContents(
                 REQUIREDPRIMARYTYPES_ELEMENT, REQUIREDPRIMARYTYPE_ELEMENT);
         if (types != null) {
             Vector vector = new Vector();
-
-            Iterator iterator = types.iterator();
-            while (iterator.hasNext()) {
-                String type = (String) iterator.next();
-                vector.add(fromJCRName(type));
+            for (int i = 0; i < types.length; i++) {
+                vector.add(fromJCRName(types[i]));
             }
-
             def.setRequiredPrimaryTypes((QName[]) vector.toArray(new QName[0]));
         } else {
             /* Default to nt:base?
