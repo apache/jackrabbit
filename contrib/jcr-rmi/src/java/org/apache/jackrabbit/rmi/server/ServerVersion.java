@@ -35,7 +35,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
  * @see org.apache.jackrabbit.rmi.remote.RemoteVersion
  */
 public class ServerVersion extends ServerNode implements RemoteVersion {
-    
+
     /** The adapted local version. */
     private Version version;
 

@@ -180,7 +180,7 @@ public class ServerObject extends UnicastRemoteObject {
      * corresponding node, version, or version history remote reference using
      * the remote adapter factory.
      *
-     * @param item local node, property, or item
+     * @param node local version, versionhistory, or normal node
      * @return remote node, property, or item reference
      * @throws RemoteException on RMI errors
      */

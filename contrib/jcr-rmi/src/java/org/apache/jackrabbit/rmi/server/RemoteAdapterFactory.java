@@ -175,9 +175,9 @@ public interface RemoteAdapterFactory {
      * @return remote version history adapter
      * @throws RemoteException on RMI errors
      */
-    RemoteVersionHistory getRemoteVersionHistory(VersionHistory versionHistory) 
+    RemoteVersionHistory getRemoteVersionHistory(VersionHistory versionHistory)
             throws RemoteException;
-    
+
     /**
      * Returns a remote adapter for the given local node type.
      *

@@ -18,9 +18,7 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
@@ -30,7 +28,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 /**
  * Remote adapter for the JCR {@link javax.jcr.version.VersionHistory VersionHistory}
  * interface. This class makes a local version history available as an RMI
- * service using the 
+ * service using the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteVersionHistory RemoteVersionHistory}
  * interface.
  *
@@ -78,7 +76,7 @@ public class ServerVersionHistory extends ServerNode
     }
 
     /** {@inheritDoc} */
-    public RemoteVersion[] getAllVersions() 
+    public RemoteVersion[] getAllVersions()
             throws RepositoryException, RemoteException {
         try {
             return getRemoteVersionArray(versionHistory.getAllVersions());

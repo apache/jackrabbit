@@ -26,8 +26,6 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
-import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
 /**
@@ -58,6 +56,7 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
         this.remote = remote;
     }
 
+    /** {@inheritDoc} */
     public Version getRootVersion() throws RepositoryException {
         try {
             return getFactory().getVersion(getSession(), remote.getRootVersion());

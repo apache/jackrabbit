@@ -454,7 +454,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public RemoteVersion getBaseVersion()
             throws RepositoryException, RemoteException {
@@ -464,7 +464,7 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public boolean isLocked() throws RepositoryException, RemoteException {
         try {
@@ -515,31 +515,31 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     //---------- Implementation helper -----------------------------------------
-    
+
     /**
      * Returns the {@link Version} instance for the given UUID.
-     * 
+     *
      * @param versionUUID The UUID of the version.
-     * 
+     *
      * @return The version node.
-     * 
+     *
      * @throws RepositoryException if an error occurrs accessing the version
      *      node or if the UUID does not denote a version.
      */
     protected Version getVersionByUUID(String versionUUID)
             throws RepositoryException {
-        
+
         // get the version node by its UUID from the version history's session
         Session session = node.getSession();
         Node versionNode = session.getNodeByUUID(versionUUID);
-        
+
         // check whether the node is a session, which it should be according
         // to the spec (methods returning nodes should automatically return
         // the correct type).
         if (versionNode instanceof Version) {
             return (Version) versionNode;
         }
-        
+
         // otherwise fail
         throw new RepositoryException("Cannot find version " + versionUUID);
     }

@@ -35,7 +35,6 @@ import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.StringValue;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.NodeDef;

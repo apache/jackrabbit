@@ -21,9 +21,9 @@ import java.rmi.RemoteException;
 import javax.jcr.RepositoryException;
 
 /**
- * Remote version of the JCR 
+ * Remote version of the JC
  * {@link javax.jcr.version.VersionHistory VersionHistory} interface. Used by
- * the 
+ * the
  * {@link org.apache.jackrabbit.rmi.server.ServerVersionHistory ServerVersionHistory}
  * and
  * {@link org.apache.jackrabbit.rmi.client.ClientVersionHistory ClientVersionHistory}
@@ -54,8 +54,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if an error occurs.
      * @throws RemoteException on RMI errors
      */
-//    public String getVersionableUUID() 
-//            throws RepositoryException, RemoteException;
+//    String getVersionableUUID() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -66,8 +65,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if an error occurs.
      * @throws RemoteException on RMI errors
      */
-    public RemoteVersion getRootVersion() 
-            throws RepositoryException, RemoteException;
+    RemoteVersion getRootVersion() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -78,7 +76,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if an error occurs.
      * @throws RemoteException on RMI errors
      */
-    public RemoteVersion[] getAllVersions() 
+    RemoteVersion[] getAllVersions()
             throws RepositoryException, RemoteException;
 
     /**
@@ -91,7 +89,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if an error occurs.
      * @throws RemoteException on RMI errors
      */
-    public RemoteVersion getVersion(String versionName)
+    RemoteVersion getVersion(String versionName)
             throws RepositoryException, RemoteException;
 
     /**
@@ -104,12 +102,13 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if an error occurs.
      * @throws RemoteException on RMI errors
      */
-    public RemoteVersion getVersionByLabel(String label)
+    RemoteVersion getVersionByLabel(String label)
             throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
-     * {@link javax.jcr.version.VersionHistory#addVersionLabel(String, String, boolean) VersionHistory.addVersionLabel(String, String, boolean)}
+     * {@link javax.jcr.version.VersionHistory#addVersionLabel(String, String, boolean)
+     * VersionHistory.addVersionLabel(String, String, boolean)}
      * method.
      *
      * @param versionName the name of the version to which the label is to be added.
@@ -121,7 +120,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if another error occurs.
      * @throws RemoteException on RMI errors
      */
-    public void addVersionLabel(String versionName, String label, boolean moveLabel)
+    void addVersionLabel(String versionName, String label, boolean moveLabel)
             throws RepositoryException, RemoteException;
 
     /**
@@ -133,7 +132,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if another error occurs.
      * @throws RemoteException on RMI errors
      */
-    public void removeVersionLabel(String label)
+    void removeVersionLabel(String label)
             throws RepositoryException, RemoteException;
 
     /**
@@ -145,7 +144,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @return a <code>boolean</code>
      * @throws RemoteException on RMI errors
      */
-    public boolean hasVersionLabel(String label) throws RemoteException;
+    boolean hasVersionLabel(String label) throws RemoteException;
 
     /**
      * Remote version of the
@@ -158,7 +157,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if another error occurs.
      * @throws RemoteException on RMI errors
      */
-    public boolean hasVersionLabel(String versionUUID, String label)
+    boolean hasVersionLabel(String versionUUID, String label)
             throws RepositoryException, RemoteException;
 
     /**
@@ -169,7 +168,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @return a <code>String</code> array containing all the labels of the version history
      * @throws RemoteException on RMI errors
      */
-    public String[] getVersionLabels() throws RemoteException;
+    String[] getVersionLabels() throws RemoteException;
 
     /**
      * Remote version of the
@@ -181,7 +180,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if another error occurs.
      * @throws RemoteException on RMI errors
      */
-    public String[] getVersionLabels(String versionUUID)
+    String[] getVersionLabels(String versionUUID)
             throws RepositoryException, RemoteException;
 
     /**
@@ -193,6 +192,6 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RepositoryException if another error occurs.
      * @throws RemoteException on RMI errors
      */
-    public void removeVersion(String versionName)
+    void removeVersion(String versionName)
             throws RepositoryException, RemoteException;
 }

@@ -153,7 +153,7 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
     public Version getVersion(Session session, RemoteVersion remote) {
         return new ClientVersion(session, remote, this);
     }
-    
+
     /**
      * Creates and returns a {@link ClientVersionHistory ClientVersionHistory}
      * instance.

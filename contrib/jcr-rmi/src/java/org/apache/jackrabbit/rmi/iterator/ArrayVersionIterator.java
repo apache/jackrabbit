@@ -32,7 +32,7 @@ public class ArrayVersionIterator extends ArrayIterator implements VersionIterat
     /**
      * Creates an iterator for the given array of nodes.
      *
-     * @param nodes the nodes to iterate
+     * @param versions the versions to iterate
      */
     public ArrayVersionIterator(Version[] versions) {
         super(versions);
