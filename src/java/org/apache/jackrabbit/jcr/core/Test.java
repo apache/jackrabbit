@@ -34,12 +34,22 @@ public class Test {
     private static final String LOG_CONFIG_FILE_NAME = "log4j.properties";
 
     public static void main(String[] args) throws Exception {
-	String factoryHomeDir = System.getProperty("user.dir");
-	//String factoryHomeDir = new File("../src/conf").getCanonicalPath();
+	// location of config.xml & log4j.properties
+	String configDir = System.getProperty("config.dir");
+	if (configDir == null) {
+	    // fallback to cwd
+	    configDir = System.getProperty("user.dir");
+	}
+	PropertyConfigurator.configure(configDir + "/" + LOG_CONFIG_FILE_NAME);
+	String configFile = configDir + "/" + RepositoryFactory.DEFAULT_CONFIG_FILE;
 
-	PropertyConfigurator.configure(factoryHomeDir + "/" + LOG_CONFIG_FILE_NAME);
+	// repository factory home dir
+	String factoryHomeDir = System.getProperty("repository.factory.home");
+	if (factoryHomeDir == null) {
+	    // fallback to cwd
+	    factoryHomeDir = System.getProperty("user.dir");
+	}
 
-	String configFile = factoryHomeDir + "/" + RepositoryFactory.DEFAULT_CONFIG_FILE;
 	RepositoryFactory rf = RepositoryFactory.create(configFile, factoryHomeDir);
 	Repository r = rf.getRepository("localfs");
 	Session session = r.login(new SimpleCredentials("anonymous", "".toCharArray()), null);
@@ -185,8 +195,7 @@ public class Test {
 	    root.save();
 	}
 */
-	String date1 = "2003-07-28T06:18:57.848+01:00";
-	root.setProperty("date", new DateValue(new StringValue(date1).getDate()));
+	root.setProperty("date", DateValue.valueOf("2003-07-28T06:18:57.848+01:00"));
 	Property p = root.getProperty("date");
 	Value val = p.getValue();
 	Calendar d = val.getDate();

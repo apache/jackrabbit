@@ -178,7 +178,14 @@ public class SessionItemStateManager implements ItemStateProvider {
 	    throws NoSuchItemStateException, ItemStateException {
 	// first check if the specified item has been transiently removed
 	if (transientStateMgr.hasItemStateInAttic(id)) {
-	    throw new NoSuchItemStateException(id.toString());
+	    /**
+	     * check if there's new transient state for the specified item
+	     * (e.g. if a property with name 'x' has been removed and a new
+	     * property with same name has been created);
+	     * this will throw a NoSuchItemStateException if there's no new
+	     * transient state
+	     */
+	    return transientStateMgr.getItemState(id);
 	}
 	try {
 	    // check if there's transient state for the specified item
