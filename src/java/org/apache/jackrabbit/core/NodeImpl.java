@@ -1018,35 +1018,17 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new NoSuchNodeTypeException();
         }
 
-        if (MIX_REFERENCEABLE.equals(mixinName)) {
-            /**
-             * mix:referenceable needs special handling because it has
-             * special semantics:
-             * it can only be removed if there no more references to this node
-             */
-            PropertyIterator iter = getReferences();
-            if (iter.hasNext()) {
-                throw new ConstraintViolationException(mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
-            }
-        }
-
-        // modify the state of this node
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        // remove mixin name
-        Set mixins = new HashSet(thisState.getMixinTypeNames());
-        mixins.remove(mixinName);
-        thisState.setMixinTypeNames(mixins);
-
-        // set jcr:mixinTypes property
-        setMixinTypesProperty(mixins);
-
-        // build effective node type of remaining mixin's & primary type
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+
+        // build effective node type of remaining mixin's & primary type
+        Set remainingMixins = new HashSet(((NodeState) state).getMixinTypeNames());
+        // remove name of target mixin
+        remainingMixins.remove(mixinName);
         EffectiveNodeType entRemaining;
         try {
             // remaining mixin's
-            HashSet set = new HashSet(mixins);
+            HashSet set = new HashSet(remainingMixins);
             // primary type
             set.add(nodeType.getQName());
             // build effective node type representing primary type including remaining mixin's
@@ -1055,7 +1037,29 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ConstraintViolationException(ntce.getMessage());
         }
 
-        NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType(mixinName);
+        /**
+         * mix:referenceable needs special handling because it has
+         * special semantics:
+         * it can only be removed if there no more references to this node
+         */
+        NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
+        if ((MIX_REFERENCEABLE.equals(mixinName) ||
+                mixin.isDerivedFrom(MIX_REFERENCEABLE)) &&
+                !entRemaining.includesNodeType(MIX_REFERENCEABLE)) {
+            // removing this mixin would effectively remove mix:referenceable:
+            // make sure no references exist
+            PropertyIterator iter = getReferences();
+            if (iter.hasNext()) {
+                throw new ConstraintViolationException(mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
+            }
+        }
+
+        // modify the state of this node
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        thisState.setMixinTypeNames(remainingMixins);
+
+        // set jcr:mixinTypes property
+        setMixinTypesProperty(remainingMixins);
 
         // shortcut
         if (mixin.getChildNodeDefs().length == 0
