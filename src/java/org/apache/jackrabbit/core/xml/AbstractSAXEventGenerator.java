@@ -81,26 +81,43 @@ abstract class AbstractSAXEventGenerator implements Constants {
      *                             to the content handler
      */
     public void serialize() throws RepositoryException, SAXException {
+        // start document and declare namespaces
         contentHandler.startDocument();
-        // namespace declarations
-        documentPrefixMappings();
-        // start serializing node and sub tree
+        startNamespaceDeclarations();
+
+        // serialize node and subtree
         process(startNode, 0);
 
+        // clear namespace declarations and end document 
+        endNamespaceDeclarations();
         contentHandler.endDocument();
     }
 
     /**
-     * @throws javax.jcr.RepositoryException
-     * @throws org.xml.sax.SAXException
+     * @throws RepositoryException
+     * @throws SAXException
      */
-    protected void documentPrefixMappings() throws RepositoryException, SAXException {
-        // namespace declarations
+    protected void startNamespaceDeclarations()
+            throws RepositoryException, SAXException {
+        // start namespace declarations
         String[] prefixes = session.getNamespacePrefixes();
         for (int i = 0; i < prefixes.length; i++) {
             String prefix = prefixes[i];
             String uri = session.getNamespaceURI(prefix);
             contentHandler.startPrefixMapping(prefix, uri);
+        }
+    }
+
+    /**
+     * @throws RepositoryException
+     * @throws SAXException
+     */
+    protected void endNamespaceDeclarations()
+            throws RepositoryException, SAXException {
+        // end namespace declarations
+        String[] prefixes = session.getNamespacePrefixes();
+        for (int i = 0; i < prefixes.length; i++) {
+            contentHandler.endPrefixMapping(prefixes[i]);
         }
     }
 
