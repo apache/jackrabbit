@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.SimpleAccessManager;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.log4j.Logger;
 
@@ -72,18 +72,24 @@ class SystemSession extends SessionImpl {
      * Overridden in order to create custom access manager
      *
      * @return access manager
+     * @throws RepositoryException
      */
     protected AccessManager createAccessManager(Subject subject,
-                                                HierarchyManager hierMgr) {
-        //return new SystemAccessManager(subject, hierMgr);
-        return super.createAccessManager(subject, hierMgr);
+                                                HierarchyManager hierMgr)
+            throws RepositoryException {
+        /**
+         * use own AccessManager implementation rather than relying on
+         * configurable AccessManager to handle SystemPrincipal privileges
+         * correctly
+         */
+        return new SystemAccessManager();
+        //return super.createAccessManager(subject, hierMgr);
     }
 
     //--------------------------------------------------------< inner classes >
-    private class SystemAccessManager extends SimpleAccessManager {
+    private class SystemAccessManager implements AccessManager {
 
-        SystemAccessManager(Subject subject, HierarchyManager hierMgr) {
-            super(subject, hierMgr);
+        SystemAccessManager() {
         }
 
         //----------------------------------------------------< AccessManager >
@@ -103,6 +109,20 @@ class SystemSession extends SessionImpl {
                 throws ItemNotFoundException, RepositoryException {
             // allow everything
             return true;
+        }
+
+        /**
+         * @see AccessManager#init(AMContext)
+         */
+        public void init(AMContext context) throws Exception {
+            // nop
+        }
+
+        /**
+         * @see AccessManager#close()
+         */
+        public void close() throws Exception {
+            // nop
         }
     }
 }

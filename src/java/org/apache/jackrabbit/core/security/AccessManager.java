@@ -19,8 +19,8 @@ package org.apache.jackrabbit.core.security;
 import org.apache.jackrabbit.core.ItemId;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
 
 /**
  * The <code>AccessManager</code> can be queried to determines whether permission
@@ -28,26 +28,50 @@ import javax.jcr.ItemNotFoundException;
  */
 public interface AccessManager {
 
-    /** READ permission constant */
+    /**
+     * READ permission constant
+     */
     public static final int READ = 1;
-    /** WRITE permission constant */
+    /**
+     * WRITE permission constant
+     */
     public static final int WRITE = 2;
+    /**
+     * REMOVE permission constant
+     */
+    public static final int REMOVE = 4;
+
+    /**
+     * Initialize this access manager.
+     *
+     * @param context access manager context
+     * @throws Exception if an error occurs
+     */
+    public void init(AMContext context) throws Exception;
+
+    /**
+     * Close this access manager. After having closed an access manager,
+     * further operations on this object are treated as illegal and throw
+     *
+     * @throws Exception if an error occurs
+     */
+    public void close() throws Exception;
 
     /**
      * Determines whether the specified <code>permissions</code> are granted
      * on the item with the specified <code>id</code> (i.e. the <i>target</i> item).
      *
-     * @param id the id of the target item
+     * @param id          the id of the target item
      * @param permissions A combination of one or more of the following constants
-     * encoded as a bitmask value:
-     * <ul>
-     * <li><code>READ</code></li>
-     * <li><code>WRITE</code></li>
-     * </ul>
-     *
+     *                    encoded as a bitmask value:
+     *                    <ul>
+     *                    <li><code>READ</code></li>
+     *                    <li><code>WRITE</code></li>
+     *                    <li><code>REMOVE</code></li>
+     *                    </ul>
      * @throws AccessDeniedException if permission is denied
      * @throws ItemNotFoundException if the target item does not exist
-     * @throws RepositoryException it an error occurs
+     * @throws RepositoryException   it an error occurs
      */
     public void checkPermission(ItemId id, int permissions)
             throws AccessDeniedException, ItemNotFoundException, RepositoryException;
@@ -56,11 +80,17 @@ public interface AccessManager {
      * Determines whether the specified <code>permissions</code> are granted
      * on the item with the specified <code>id</code> (i.e. the <i>target</i> item).
      *
-     * @param id the id of the target item
+     * @param id          the id of the target item
      * @param permissions A combination of one or more of the following constants
+     *                    encoded as a bitmask value:
+     *                    <ul>
+     *                    <li><code>READ</code></li>
+     *                    <li><code>WRITE</code></li>
+     *                    <li><code>REMOVE</code></li>
+     *                    </ul>
      * @return <code>true</code> if permission is granted; otherwise <code>false</code>
      * @throws ItemNotFoundException if the target item does not exist
-     * @throws RepositoryException it an error occurs
+     * @throws RepositoryException   it an error occurs
      */
     public boolean isGranted(ItemId id, int permissions)
             throws ItemNotFoundException, RepositoryException;

@@ -25,7 +25,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TreeSet;
 
 /**
  * An <code>EffectiveNodeType</code> represents one or more
@@ -40,7 +44,7 @@ public class EffectiveNodeType implements Cloneable {
     // node type registry
     private final NodeTypeRegistry ntReg;
 
-    // list of exlicitly aggregated {i.e. merged) node types
+    // list of explicitly aggregated {i.e. merged) node types
     private final TreeSet mergedNodeTypes;
     // list of implicitly aggregated {through inheritance) node types
     private final TreeSet inheritedNodeTypes;

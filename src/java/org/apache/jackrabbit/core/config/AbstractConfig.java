@@ -132,7 +132,7 @@ abstract class AbstractConfig implements EntityResolver {
         return s;
     }
 
-    //------------------------------------------------------< EntityResolver >
+    //-------------------------------------------------------< EntityResolver >
     /**
      * @see EntityResolver#resolveEntity(String, String)
      */

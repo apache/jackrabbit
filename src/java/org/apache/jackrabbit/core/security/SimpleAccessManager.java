@@ -35,42 +35,72 @@ public class SimpleAccessManager implements AccessManager {
     /**
      * Subject whose access rights this AccessManager should reflect
      */
-    protected final Subject subject;
+    protected Subject subject;
 
     /**
      * hierarchy manager used for ACL-based access control model
      */
-    protected final HierarchyManager hierMgr;
+    protected HierarchyManager hierMgr;
 
-    protected final boolean system;
-    protected final boolean anonymous;
+    private boolean initialized;
+
+    protected boolean system;
+    protected boolean anonymous;
 
     /**
-     * Constructor
-     *
-     * @param subject
-     * @param hierMgr
+     * Empty constructor
      */
-    public SimpleAccessManager(Subject subject, HierarchyManager hierMgr) {
-        this.subject = subject;
-        this.hierMgr = hierMgr;
-        anonymous = !subject.getPrincipals(AnonymousPrincipal.class).isEmpty();
-        system = !subject.getPrincipals(SystemPrincipal.class).isEmpty();
+    public SimpleAccessManager() {
+        initialized = false;
+        anonymous = false;
+        system = false;
     }
 
     //--------------------------------------------------------< AccessManager >
+    /**
+     * @see AccessManager#init(AMContext)
+     */
+    public void init(AMContext context) throws Exception {
+        if (initialized) {
+            throw new IllegalStateException("already initialized");
+        }
+
+        subject = context.getSubject();
+        hierMgr = context.getHierarchyManager();
+        anonymous = !subject.getPrincipals(AnonymousPrincipal.class).isEmpty();
+        system = !subject.getPrincipals(SystemPrincipal.class).isEmpty();
+
+        initialized = true;
+    }
+
+    /**
+     * @see AccessManager#close
+     */
+    public synchronized void close() throws Exception {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
+        initialized = false;
+    }
+
     /**
      * @see AccessManager#checkPermission(ItemId, int)
      */
     public void checkPermission(ItemId id, int permissions)
             throws AccessDeniedException, ItemNotFoundException,
             RepositoryException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
         if (system) {
             // system has always all permissions
             return;
         } else if (anonymous) {
-            // anonymous is always denied WRITE premission
-            if ((permissions & WRITE) == WRITE) {
+            // anonymous is always denied WRITE & REMOVE premissions
+            if ((permissions & WRITE) == WRITE ||
+                    (permissions & REMOVE) == REMOVE) {
                 throw new AccessDeniedException();
             }
         }
@@ -82,12 +112,17 @@ public class SimpleAccessManager implements AccessManager {
      */
     public boolean isGranted(ItemId id, int permissions)
             throws ItemNotFoundException, RepositoryException {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
+
         if (system) {
             // system has always all permissions
             return true;
         } else if (anonymous) {
-            // anonymous is always denied WRITE premission
-            if ((permissions & WRITE) == WRITE) {
+            // anonymous is always denied WRITE & REMOVE premissions
+            if ((permissions & WRITE) == WRITE ||
+                    (permissions & REMOVE) == REMOVE) {
                 return false;
             }
         }

@@ -49,6 +49,10 @@ public class RepositoryConfig extends AbstractConfig {
      */
     public static final String PUBLIC_ID = "-//The Apache Software Foundation//DTD Repository//EN";
 
+    private static final String SECURITY_ELEMENT = "Security";
+    private static final String APP_NAME_ATTRIB = "appName";
+    private static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
+
     private static final String WORKSPACES_ELEMENT = "Workspaces";
     private static final String ROOT_PATH_ATTRIB = "rootPath";
     private static final String DEFAULT_WORKSPACE_ATTRIB = "defaultWorkspace";
@@ -84,6 +88,11 @@ public class RepositoryConfig extends AbstractConfig {
     private FileSystem repFS;
 
     /**
+     * the name of the JAAS configuration app-entry for this repository 
+     */
+    private String appName;
+
+    /**
      * workspaces config root directory (i.e. folder that contains
      * a subfolder with a workspace configuration file for every workspace
      * in the repository)
@@ -94,6 +103,11 @@ public class RepositoryConfig extends AbstractConfig {
      * name of default workspace
      */
     private String defaultWspName;
+
+    /**
+     * configuration for the access manager
+     */
+    private AccessManagerConfig amConfig;
 
     /**
      * the versioning config
@@ -129,6 +143,12 @@ public class RepositoryConfig extends AbstractConfig {
         // file system
         Element fsConfig = config.getRootElement().getChild(FILE_SYSTEM_ELEMENT);
         repFS = createFileSystem(fsConfig, vars);
+
+        // security & access manager config
+        Element secEleme = config.getRootElement().getChild(SECURITY_ELEMENT);
+        appName = secEleme.getAttributeValue(APP_NAME_ATTRIB);
+        Element amElem = secEleme.getChild(ACCESS_MANAGER_ELEMENT);
+        amConfig = new AccessManagerConfig(amElem, vars);
 
         // workspaces
         Element wspsElem = config.getRootElement().getChild(WORKSPACES_ELEMENT);
@@ -231,6 +251,15 @@ public class RepositoryConfig extends AbstractConfig {
     }
 
     /**
+     * Returns the name of the JAAS configuration app-entry for this repository.
+     *
+     * @return the name of the JAAS configuration app-entry for this repository
+     */
+    public String getAppName() {
+        return appName;
+    }
+
+    /**
      * Returns workspaces config root directory (i.e. the folder that contains
      * a subfolder with a workspace configuration file for every workspace
      * in the repository).
@@ -272,19 +301,29 @@ public class RepositoryConfig extends AbstractConfig {
 
     /**
      * Returns the configuration for the versioning
-     * @return
+     *
+     * @return a <code>VersioningConfig</code> object
      */
     public VersioningConfig getVersioningConfig() {
         return vConfig;
     }
 
     /**
+     * Returns the access manager configuration
+     *
+     * @return an <code>AccessManagerConfig</code> object
+     */
+    public AccessManagerConfig getAccessManagerConfig() {
+        return amConfig;
+    }
+
+    /**
      * Creates a new workspace configuration with the specified name.
      *
      * @param name workspace name
+     * @return a new <code>WorkspaceConfig</code> object.
      * @throws RepositoryException if the specified name already exists or
      *                             if an error occured during the creation.
-     * @return a new <code>WorkspaceConfig</code> object.
      */
     public synchronized WorkspaceConfig createWorkspaceConfig(String name) throws RepositoryException {
         if (wspConfigs.containsKey(name)) {
@@ -335,7 +374,7 @@ public class RepositoryConfig extends AbstractConfig {
         return wspConfig;
     }
 
-    //------------------------------------------------------< EntityResolver >
+    //-------------------------------------------------------< EntityResolver >
     /**
      * @see org.xml.sax.EntityResolver#resolveEntity(String, String)
      */

@@ -83,9 +83,6 @@ public class RepositoryImpl implements Repository, SessionListener,
     private static final String PROPERTIES_RESOURCE = "rep.properties";
     private final Properties repProps;
 
-    // name of jaas config entry
-    public static final String JAAS_CONFIG_APPNAME = "Jackrabbit";
-
     // names of well known repository properties
     public static final String STATS_NODE_COUNT_PROPERTY = "jcr.repository.stats.nodes.count";
     public static final String STATS_PROP_COUNT_PROPERTY = "jcr.repository.stats.properties.count";
@@ -641,8 +638,9 @@ public class RepositoryImpl implements Repository, SessionListener,
             persistMgr.init(ctx);
             return persistMgr;
         } catch (Exception e) {
-            log.error("Cannot instantiate implementing class " + className, e);
-            throw new RepositoryException("Cannot instantiate implementing class " + className, e);
+            String msg = "Cannot instantiate implementing class " + className;
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
         }
     }
 
@@ -670,7 +668,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                 new CredentialsCallbackHandler(credentials);
         LoginContext lc;
         try {
-            lc = new LoginContext(JAAS_CONFIG_APPNAME, cbHandler);
+            lc = new LoginContext(repConfig.getAppName(), cbHandler);
             lc.login();
         } catch (javax.security.auth.login.LoginException le) {
             throw new LoginException(le.getMessage());
@@ -849,7 +847,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         synchronized PersistenceManager getPersistenceManager(PersistenceManagerConfig pmConfig)
                 throws RepositoryException {
             if (persistMgr == null) {
-                persistMgr = RepositoryImpl.createPersistenceManager(new File(config.getHomeDir()),
+                persistMgr = createPersistenceManager(new File(config.getHomeDir()),
                         config.getFileSystem(),
                         pmConfig,
                         rootNodeUUID,

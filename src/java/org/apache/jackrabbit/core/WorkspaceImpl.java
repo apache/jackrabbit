@@ -451,7 +451,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             if (!accessMgr.isGranted(targetState.getId(), AccessManager.READ)) {
                 throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
             }
-            if (!accessMgr.isGranted(parentState.getId(), AccessManager.WRITE)) {
+            if (!accessMgr.isGranted(targetState.getId(), AccessManager.REMOVE)) {
                 throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + ": not allowed to remove node");
             }
         } catch (ItemNotFoundException infe) {

@@ -16,15 +16,17 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.commons.collections.BeanMap;
 import org.apache.commons.collections.ReferenceMap;
+import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.SimpleAccessManager;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
@@ -64,6 +66,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -244,10 +247,39 @@ public class SessionImpl implements Session, Constants {
      * Create the access manager.
      *
      * @return access manager
+     * @throws RepositoryException if an error occurs
      */
     protected AccessManager createAccessManager(Subject subject,
-                                                HierarchyManager hierMgr) {
-        return new SimpleAccessManager(subject, hierMgr);
+                                                HierarchyManager hierMgr)
+            throws RepositoryException {
+        AccessManagerConfig amConfig = rep.getConfig().getAccessManagerConfig();
+        String className = amConfig.getClassName();
+        Map params = amConfig.getParameters();
+        try {
+            Class c = Class.forName(className);
+            AccessManager accessMgr = (AccessManager) c.newInstance();
+            /**
+             * set the properties of the access manager object
+             * from the param map
+             */
+            BeanMap bm = new BeanMap(accessMgr);
+            Iterator iter = params.keySet().iterator();
+            while (iter.hasNext()) {
+                Object name = iter.next();
+                Object value = params.get(name);
+                bm.put(name, value);
+            }
+            AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
+                    rep.getConfig().getFileSystem(),
+                    subject,
+                    hierMgr);
+            accessMgr.init(ctx);
+            return accessMgr;
+        } catch (Exception e) {
+            String msg = "failed to instantiate AccessManager implementation: " + className;
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
@@ -426,9 +458,9 @@ public class SessionImpl implements Session, Constants {
         try {
             sanityCheck();
         } catch (RepositoryException re) {
-            String msg = "failed to check READ permission on " + absPath;
+            String msg = "failed to check permissions on " + absPath;
             log.warn(msg, re);
-            throw new AccessControlException(READ_ACTION);
+            throw new AccessControlException(actions);
         }
 
         // build the set of actions to be checked
@@ -495,20 +527,17 @@ public class SessionImpl implements Session, Constants {
 
         /**
          * "remove" action:
-         * requires WRITE permission on parent item
+         * requires REMOVE permission on target item
          */
         if (set.contains(REMOVE_ACTION)) {
             try {
                 if (targetPath == null) {
                     targetPath = Path.create(absPath, getNamespaceResolver(), true);
                 }
-                if (parentPath == null) {
-                    parentPath = targetPath.getAncestor(1);
+                if (targetId == null) {
+                    targetId = hierMgr.resolvePath(targetPath);
                 }
-                if (parentId == null) {
-                    parentId = hierMgr.resolvePath(parentPath);
-                }
-                accessMgr.checkPermission(parentId, AccessManager.WRITE);
+                accessMgr.checkPermission(targetId, AccessManager.REMOVE);
             } catch (PathNotFoundException pnfe) {
                 // parent does not exist, throw exception
                 throw new AccessControlException(REMOVE_ACTION);
@@ -517,7 +546,7 @@ public class SessionImpl implements Session, Constants {
                 log.warn(msg, mpe);
                 throw new AccessControlException(REMOVE_ACTION);
             } catch (RepositoryException re) {
-                String msg = "failed to check WRITE permission on parent of " + absPath;
+                String msg = "failed to check REMOVE permission on " + absPath;
                 log.warn(msg, re);
                 throw new AccessControlException(REMOVE_ACTION);
             }
@@ -1012,6 +1041,13 @@ public class SessionImpl implements Session, Constants {
             }
             loginContext = null;
         }
+
+        try {
+            accessMgr.close();
+        } catch (Exception e) {
+            log.warn("error while closing AccessManager", e);
+        }
+
         // finally notify listeners that session has been closed
         notifyLoggedOut();
     }

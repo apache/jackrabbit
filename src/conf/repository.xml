@@ -14,6 +14,9 @@
             used by the repository to persist global state such as
             registered namespaces, custom node types, etc..
 
+            a Security element that specifies the name of the app-entry
+            in the JAAS config and the access manager
+
             a Workspaces element that specifies to the location of
             workspaces root directory and the name of default workspace
 
@@ -25,16 +28,35 @@
             a SearchIndex element that is used for configuring per workspace
             Indexing-related settings
 
-            a Versioning element that is used for configuring 
+            a Versioning element that is used for configuring
             versioning-related settings
     -->
-    <!ELEMENT Repository (FileSystem,Workspaces,Workspace)>
+    <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning)>
 
     <!--
         a virtual file system
     -->
     <!ELEMENT FileSystem (param*)>
     <!ATTLIST FileSystem
+      class CDATA #REQUIRED>
+
+    <!--
+        the Security element specifies the name (appName attribute)
+        of the JAAS configuration app-entry for this repository. 
+
+        it also specifies the access manager to be used (AccessManager element).
+    -->
+    <!ELEMENT Security (AccessManager)>
+    <!ATTLIST Security
+      appName CDATA #REQUIRED>
+
+    <!--
+        the AccessManager element configures the access manager to be used by
+        this repository instance; the class attribute specifies the FQN of the
+        class implementing the AccessManager interface
+    -->
+    <!ELEMENT AccessManager (param*)>
+    <!ATTLIST AccessManager
       class CDATA #REQUIRED>
 
     <!--
@@ -70,7 +92,7 @@
     <!--
         the PersistenceManager element configures the persistence manager
         to be used for the workspace; the class attribute specifies the
-        FQN of the class implementing PersistenceManager interface
+        FQN of the class implementing the PersistenceManager interface
     -->
     <!ELEMENT PersistenceManager (param*)>
     <!ATTLIST PersistenceManager
@@ -103,6 +125,20 @@
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
         <param name="path" value="${rep.home}/repository"/>
     </FileSystem>
+
+    <!--
+        security configuration
+    -->
+    <Security appName="Jackrabbit">
+        <!--
+            access manager:
+            class: FQN of class implementing the AccessManager interface
+        -->
+        <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager">
+            <!-- <param name="config" value="${rep.home}/access.xml"/> -->
+        </AccessManager>
+    </Security>
+
     <!--
         location of workspaces root directory and name of default workspace
     -->
@@ -114,7 +150,7 @@
     <Workspace name="${wsp.name}">
         <!--
             virtual file system of the workspace:
-            class: FQN of class implementing FileSystem interface
+            class: FQN of class implementing the FileSystem interface
         -->
         <FileSystem class="com.day.jackrabbit.fs.cq.CQFileSystem">
             <param name="path" value="${wsp.home}/wspStore.dat"/>
@@ -129,7 +165,7 @@
         -->
         <!--
             persistence manager of the workspace:
-            class: FQN of class implementing PersistenceManager interface
+            class: FQN of class implementing the PersistenceManager interface
         -->
         <!--
         <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager"/>
