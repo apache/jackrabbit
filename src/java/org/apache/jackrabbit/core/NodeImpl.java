@@ -2699,7 +2699,7 @@ public class NodeImpl extends ItemImpl implements Node {
         prop.save();
         prop = internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
         prop.save();
-        prop = internalSetProperty(JCR_PREDECESSORS, new InternalValue[0]);
+        prop = internalSetProperty(JCR_PREDECESSORS, new InternalValue[0], PropertyType.REFERENCE);
         prop.save();
         return v;
     }
