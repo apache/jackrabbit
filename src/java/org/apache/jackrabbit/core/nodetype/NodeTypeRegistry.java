@@ -396,12 +396,14 @@ public class NodeTypeRegistry {
     private EffectiveNodeType validateNodeTypeDef(NodeTypeDef ntd)
             throws InvalidNodeTypeDefException, RepositoryException {
 
-        // the effective (i.e. merged and resolved) node type resulting from
-        // the specified node type definition;
-        // the effective node type will finally be created after the definition
-        // has been verified and checked for conflicts etc.; in some cases it
-        // will be created already at an earlier stage during the validation
-        // of child node definitions
+        /**
+         * the effective (i.e. merged and resolved) node type resulting from
+         * the specified node type definition;
+         * the effective node type will finally be created after the definition
+         * has been verified and checked for conflicts etc.; in some cases it
+         * will be created already at an earlier stage during the validation
+         * of child node definitions
+         */
         EffectiveNodeType ent = null;
 
         QName name = ntd.getName();
@@ -419,18 +421,20 @@ public class NodeTypeRegistry {
 
         // validate supertypes
         QName[] supertypes = ntd.getSupertypes();
-        for (int i = 0; i < supertypes.length; i++) {
-            // simple check for infinite recursion
-            // (won't trap recursion on a deeper inheritance level)
-            if (name.equals(supertypes[i])) {
-                String reason = "invalid supertype: " + supertypes[i] + " (infinite recursion))";
-                log.error(reason);
-                throw new InvalidNodeTypeDefException(reason);
-            }
-            if (!registeredNTDefs.containsKey(supertypes[i])) {
-                String reason = "invalid supertype: " + supertypes[i];
-                log.error(reason);
-                throw new InvalidNodeTypeDefException(reason);
+        if (supertypes != null) {
+            for (int i = 0; i < supertypes.length; i++) {
+                // simple check for infinite recursion
+                // (won't trap recursion on a deeper inheritance level)
+                if (name.equals(supertypes[i])) {
+                    String reason = "invalid supertype: " + supertypes[i] + " (infinite recursion))";
+                    log.error(reason);
+                    throw new InvalidNodeTypeDefException(reason);
+                }
+                if (!registeredNTDefs.containsKey(supertypes[i])) {
+                    String reason = "invalid supertype: " + supertypes[i];
+                    log.error(reason);
+                    throw new InvalidNodeTypeDefException(reason);
+                }
             }
         }
 
@@ -439,16 +443,25 @@ public class NodeTypeRegistry {
         inheritanceChain.push(name);
         checkForCircularInheritance(supertypes, inheritanceChain);
 
-        // note that infinite recursion through inheritance is automatically being checked
-        // by the following call to getEffectiveNodeType
-        // as it's impossible to register an node type definition which references a
-        // supertype that isn't registered yet...
+        /**
+         * note that infinite recursion through inheritance is automatically being checked
+         * by the following call to getEffectiveNodeType
+         * as it's impossible to register an node type definition which references a
+         * supertype that isn't registered yet...
+         */
 
         // build effective (i.e. merged and resolved) node type from supertypes
         // and check for conflicts
-        if (supertypes.length > 0) {
+        if (supertypes != null && supertypes.length > 0) {
             try {
-                buildEffectiveNodeType(supertypes);
+                EffectiveNodeType est = buildEffectiveNodeType(supertypes);
+                // make sure that all primary types except nt:base extend from nt:base
+                if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName()) &&
+                        !est.includesNodeType(NT_BASE)) {
+                    String reason = "all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
+                    log.error(reason);
+                    throw new InvalidNodeTypeDefException(reason);
+                }
             } catch (NodeTypeConflictException ntce) {
                 String reason = "failed to validate supertypes";
                 log.error(reason, ntce);
@@ -457,6 +470,13 @@ public class NodeTypeRegistry {
                 String reason = "failed to validate supertypes";
                 log.error(reason, nsnte);
                 throw new InvalidNodeTypeDefException(reason, nsnte);
+            }
+        } else {
+            // no supertypes specified: has to be either a mixin type or nt:base
+            if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName())) {
+                String reason = "all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
+                log.error(reason);
+                throw new InvalidNodeTypeDefException(reason);
             }
         }
 
@@ -630,9 +650,11 @@ public class NodeTypeRegistry {
             }
         }
 
-        // now build effective (i.e. merged and resolved) node type from
-        // this node type definition; this will potentially detect more
-        // conflicts or problems
+        /**
+         * now build effective (i.e. merged and resolved) node type from
+         * this node type definition; this will potentially detect more
+         * conflicts or problems
+         */
         if (ent == null) {
             try {
                 ent = EffectiveNodeType.create(this, ntd);
