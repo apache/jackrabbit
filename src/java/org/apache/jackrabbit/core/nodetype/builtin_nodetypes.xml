@@ -281,7 +281,7 @@
         <supertypes>
             <supertype>nt:unstructured</supertype>
         </supertypes>
-        <childNodeDef name="jcr:system" defaultPrimaryType="rep:system" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" sameNameSibs="false">
+        <childNodeDef name="jcr:system" defaultPrimaryType="rep:system" autoCreate="false" mandatory="true" onParentVersion="IGNORE" protected="false" primaryItem="false" sameNameSibs="false">
             <requiredPrimaryTypes>
                 <requiredPrimaryType>rep:system</requiredPrimaryType>
             </requiredPrimaryTypes>
@@ -289,9 +289,14 @@
     </nodeType>
     <nodeType name="rep:system" mixin="false" orderableChildNodes="true">
         <supertypes>
-            <supertype>nt:unstructured</supertype>
+            <supertype>nt:base</supertype>
         </supertypes>
-        <childNodeDef name="jcr:versionStorage" defaultPrimaryType="nt:unstructured" autoCreate="true" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" sameNameSibs="false">
+        <childNodeDef name="jcr:versionStorage" defaultPrimaryType="nt:unstructured" autoCreate="true" mandatory="true" onParentVersion="IGNORE" protected="false" primaryItem="false" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:base</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
+        <childNodeDef name="*" defaultPrimaryType="nt:unstructured" autoCreate="false" mandatory="false" onParentVersion="IGNORE" protected="false" primaryItem="false" sameNameSibs="true">
             <requiredPrimaryTypes>
                 <requiredPrimaryType>nt:base</requiredPrimaryType>
             </requiredPrimaryTypes>

@@ -586,7 +586,8 @@ class PersistentNode {
     protected void copyFrom(PropertyImpl prop) throws RepositoryException {
         if (prop.getDefinition().isMultiple()) {
             InternalValue[] values = prop.internalGetValues();
-            setPropertyValues(prop.getQName(), values[0].getType(), values);
+            int type = values.length>0 ? values[0].getType() : prop.getDefinition().getRequiredType();
+            setPropertyValues(prop.getQName(), type, values);
         } else {
             setPropertyValue(prop.getQName(), prop.internalGetValue());
         }
