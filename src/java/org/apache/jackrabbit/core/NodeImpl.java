@@ -171,6 +171,7 @@ public class NodeImpl extends ItemImpl implements Node {
         } catch (PathNotFoundException pnfe) {
             // fall through
         }
+
         // property does not exist yet...
         QName qName;
         try {
@@ -204,6 +205,12 @@ public class NodeImpl extends ItemImpl implements Node {
             String msg = "there's already a child node with name " + name;
             log.error(msg);
             throw new RepositoryException(msg);
+        }
+        // check if versioning allows write
+        if (!safeIsCheckedOut()) {
+            String msg = "Cannot set the value of a property of a checked-in node " + safeGetJCRPath();
+            log.error(msg);
+            throw new VersionException(msg);
         }
 
         String parentUUID = ((NodeState) state).getUUID();

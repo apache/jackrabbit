@@ -368,8 +368,14 @@ public class PropertyImpl extends ItemImpl implements Property {
         }
 
         PropertyState state = (PropertyState) getItemState();
-        InternalValue val = state.getValues()[0];
-        return val.toJCRValue(session.getNamespaceResolver());
+        try {
+            InternalValue val = state.getValues()[0];
+            return val.toJCRValue(session.getNamespaceResolver());
+        } catch (RepositoryException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RepositoryException("Unable to get value of " + safeGetJCRPath() + ":" + e);
+        }
     }
 
     /**
@@ -888,7 +894,9 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check if versioning allows write
         if (!((NodeImpl) getParent()).safeIsCheckedOut()) {
-            throw new VersionException("Cannot alter the value of a property of a checked-in node " + safeGetJCRPath());
+            String msg = "Cannot alter the value of a property of a checked-in node " + safeGetJCRPath();
+            log.error(msg);
+            throw new VersionException(msg);
         }
 
         // check protected flag
