@@ -166,6 +166,18 @@ public class NativePVM implements PersistentVersionManager {
     }
 
     /**
+     * Close this persistence version manager. After having closed a persistence
+     * manager, further operations on this object are treated as illegal
+     * and throw
+     * @throws Exception if an error occurs
+     */
+    public void close() throws Exception {
+        // @todo check proper shutdown sequence
+        this.stateMgr.persistMgr.close();
+        this.stateMgr = null;
+    }
+
+    /**
      * initializes the internal item ids
      * @param parent
      * @throws RepositoryException

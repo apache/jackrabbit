@@ -18,13 +18,11 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
@@ -42,6 +40,11 @@ public class VersionManagerImpl implements VersionManager {
      * the default logger
      */
     private static Logger log = Logger.getLogger(VersionManager.class);
+    /**
+     * The root node UUID for the version storage
+     */
+    private final String VERSION_STORAGE_NODE_UUID;
+
     /**
      * The version manager of the internal versions
      */
@@ -61,8 +64,9 @@ public class VersionManagerImpl implements VersionManager {
      *
      * @param vMgr
      */
-    public VersionManagerImpl(PersistentVersionManager vMgr) {
+    public VersionManagerImpl(PersistentVersionManager vMgr, String rootUUID) {
         this.vMgr = vMgr;
+        this.VERSION_STORAGE_NODE_UUID = rootUUID;
     }
 
     /**
@@ -77,22 +81,8 @@ public class VersionManagerImpl implements VersionManager {
             try {
                 // init the definition id mgr
                 ntMgr = session.getNodeTypeManager();
-                ntMgr.getNodeType(NodeTypeRegistry.NT_BASE).getApplicablePropertyDef(ItemImpl.PROPNAME_PRIMARYTYPE, PropertyType.NAME, false).unwrap();
-                // check, if workspace of session has history root
-                NodeImpl systemRoot = ((RepositoryImpl) session.getRepository()).getSystemRootNode(session);
-                if (!systemRoot.hasNode(VersionManager.NODENAME_HISTORY_ROOT)) {
-                    // if not exist, create
-                    //systemRoot.addNode(VersionManager.NODENAME_HISTORY_ROOT, NodeTypeRegistry.NT_UNSTRUCTURED);
-                    //systemRoot.save();
-
-                    // maybe we will create a virtual for every workspace. currently,
-                    // all workspaces share the same
-                    throw new IllegalArgumentException("Workspace has no version storage");
-                }
-                String rootId = systemRoot.getNode(VersionManager.NODENAME_HISTORY_ROOT).internalGetUUID();
-
-                NodeState virtRootState = (NodeState) base.getItemState(new NodeId(rootId));
-                virtProvider = new VersionItemStateProvider(this, ntMgr, rootId, virtRootState.getParentUUID());
+                NodeState virtRootState = (NodeState) base.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID));
+                virtProvider = new VersionItemStateProvider(this, ntMgr, VERSION_STORAGE_NODE_UUID, virtRootState.getParentUUID());
             } catch (Exception e) {
                 // todo: better error handling
                 log.error("Error while initializing virtual items.", e);
@@ -100,6 +90,15 @@ public class VersionManagerImpl implements VersionManager {
             }
         }
         return virtProvider;
+    }
+
+    /**
+     * Close this version manager. After having closed a persistence
+     * manager, further operations on this object are treated as illegal
+     * and throw
+     * @throws Exception if an error occurs
+     */
+    public void close() throws Exception {
     }
 
     /**

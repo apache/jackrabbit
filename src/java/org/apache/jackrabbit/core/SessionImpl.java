@@ -20,7 +20,6 @@ import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
@@ -169,13 +168,11 @@ public class SessionImpl implements Session {
         accessMgr = createAccessManager(credentials, hierMgr);
         versionMgr = rep.getVersionManager();
 
-        // add virtual item managers only for normal sessions
-        if (!(this instanceof SystemSession)) {
-            try {
-                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
-            } catch (Exception e) {
-                log.error("Unable to add vmgr: " + e.toString(), e);
-            }
+        // add virtual item managers
+        try {
+            itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
+        } catch (Exception e) {
+            throw new RepositoryException("Uanbel to add virtual item state manager.", e);
         }
     }
 
@@ -201,13 +198,11 @@ public class SessionImpl implements Session {
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         versionMgr = rep.getVersionManager();
 
-        // add virtual item managers only for normal sessions
-        if (!(this instanceof SystemSession)) {
-            try {
-                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
-            } catch (Exception e) {
-                log.error("Unable to add vmgr: " + e.toString(), e);
-            }
+        // add virtual item managers
+        try {
+            itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(this, itemStateMgr));
+        } catch (Exception e) {
+            throw new RepositoryException("Uanbel to add virtual item state manager.", e);
         }
     }
 

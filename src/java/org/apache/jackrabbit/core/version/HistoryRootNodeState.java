@@ -59,7 +59,7 @@ public class HistoryRootNodeState extends VirtualNodeState {
                                    VersionManager vm,
                                    String parentUUID,
                                    String uuid) throws RepositoryException {
-        super(stateMgr, parentUUID, uuid, NodeTypeRegistry.NT_UNSTRUCTURED, new QName[0]);
+        super(stateMgr, parentUUID, uuid, NodeTypeRegistry.REP_VERSION_STORAGE, new QName[0]);
         this.vm = vm;
     }
 

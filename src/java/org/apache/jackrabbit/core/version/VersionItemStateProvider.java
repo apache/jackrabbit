@@ -57,10 +57,6 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
      */
     private Map nodes = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
     /**
-     * node def id for a unstructured node state
-     */
-    private NodeDefId NDEF_UNSTRUCTURED;
-    /**
      * node def id for a version node state
      */
     private NodeDefId NDEF_VERSION;
@@ -68,6 +64,10 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
      * node def id for a version history node state
      */
     private NodeDefId NDEF_VERSION_HISTORY;
+    /**
+     * node def id for a version history root node state
+     */
+    private NodeDefId NDEF_VERSION_HISTORY_ROOT;
 
     /**
      * node def id for a version labels node state
@@ -85,13 +85,13 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     public VersionItemStateProvider(VersionManager vMgr, NodeTypeManagerImpl ntMgr, String rootId, String parentId) throws RepositoryException {
         this.vMgr = vMgr;
         this.ntMgr = ntMgr;
-        NDEF_UNSTRUCTURED = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_UNSTRUCTURED).unwrap());
         NDEF_VERSION = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_VERSION_HISTORY).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_VERSION).unwrap());
         NDEF_VERSION_HISTORY = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED).getApplicableChildNodeDef(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_VERSION_HISTORY).unwrap());
+        NDEF_VERSION_HISTORY_ROOT = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.REP_SYSTEM).getApplicableChildNodeDef(VersionManager.NODENAME_HISTORY_ROOT, NodeTypeRegistry.REP_VERSION_STORAGE).unwrap());
         NDEF_VERSION_LABELS = new NodeDefId(getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_VERSION_HISTORY).getApplicableChildNodeDef(VersionManager.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_VERSION_LABELS).unwrap());
 
         this.root = new HistoryRootNodeState(this, vMgr, parentId, rootId);
-        this.root.setDefinitionId(NDEF_UNSTRUCTURED);
+        this.root.setDefinitionId(NDEF_VERSION_HISTORY_ROOT);
     }
 
     //-----------------------------------------------------< ItemStateManager >

@@ -142,16 +142,16 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             return transientStateMgr.getItemState(id);
         }
 
-        // check if there's transient state for the specified item
-        if (transientStateMgr.hasItemState(id)) {
-            return transientStateMgr.getItemState(id);
-        }
-
         // check the virtual root ids (needed for overlay)
         for (int i = 0; i < virtualProviders.length; i++) {
             if (virtualProviders[i].isVirtualRoot(id)) {
                 return virtualProviders[i].getItemState(id);
             }
+        }
+
+        // check if there's transient state for the specified item
+        if (transientStateMgr.hasItemState(id)) {
+            return transientStateMgr.getItemState(id);
         }
 
         // check if there's persistent state for the specified item
@@ -183,16 +183,16 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             return transientStateMgr.hasItemState(id);
         }
 
-        // check if there's transient state for the specified item
-        if (transientStateMgr.hasItemState(id)) {
-            return true;
-        }
-
         // check the virtual root ids (needed for overlay)
         for (int i = 0; i < virtualProviders.length; i++) {
             if (virtualProviders[i].isVirtualRoot(id)) {
                 return true;
             }
+        }
+
+        // check if there's transient state for the specified item
+        if (transientStateMgr.hasItemState(id)) {
+            return true;
         }
 
         // check if there's persistent state for the specified item

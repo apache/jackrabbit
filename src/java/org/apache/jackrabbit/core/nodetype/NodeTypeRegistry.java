@@ -49,6 +49,9 @@ public class NodeTypeRegistry {
     // rep:system
     public static final QName REP_SYSTEM =
             new QName(NamespaceRegistryImpl.NS_REP_URI, "system");
+    // rep:versionStorage
+    public static final QName REP_VERSION_STORAGE=
+            new QName(NamespaceRegistryImpl.NS_REP_URI, "versionStorage");
     // nt:unstructured
     public static final QName NT_UNSTRUCTURED =
             new QName(NamespaceRegistryImpl.NS_NT_URI, "unstructured");

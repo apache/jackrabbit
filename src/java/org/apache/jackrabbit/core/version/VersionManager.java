@@ -194,4 +194,11 @@ public interface VersionManager {
      */
     public InternalVersionItem getItem(String id) throws RepositoryException;
 
+    /**
+     * Close this version manager. After having closed a persistence
+     * manager, further operations on this object are treated as illegal
+     * and throw
+     * @throws Exception if an error occurs
+     */
+    public void close() throws Exception;
 }

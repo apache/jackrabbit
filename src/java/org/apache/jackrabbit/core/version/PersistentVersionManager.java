@@ -147,4 +147,12 @@ public interface PersistentVersionManager {
      * @return item state manager
      */
     public UpdatableItemStateManager getItemStateMgr();
+
+    /**
+     * Close this persistence version manager. After having closed a persistence
+     * manager, further operations on this object are treated as illegal
+     * and throw
+     * @throws Exception if an error occurs
+     */
+    public void close() throws Exception;
 }

@@ -252,13 +252,6 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
 
         ntReg = NodeTypeRegistry.create(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
-        // initialize workspaces
-        iter = wspInfos.keySet().iterator();
-        while (iter.hasNext()) {
-            String wspName = (String) iter.next();
-            initWorkspace(wspName);
-        }
-
         // init version manager
         VersioningConfig vConfig = repConfig.getVersioningConfig();
         PersistenceManager pm = createPersistenceManager(
@@ -269,7 +262,14 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             nsReg,
             ntReg);
         pvMgr = new NativePVM(pm, getNodeTypeRegistry());
-        vMgr = new VersionManagerImpl(pvMgr);
+        vMgr = new VersionManagerImpl(pvMgr, VERSION_STORAGE_NODE_UUID);
+
+        // initialize workspaces
+        iter = wspInfos.keySet().iterator();
+        while (iter.hasNext()) {
+            String wspName = (String) iter.next();
+            initWorkspace(wspName);
+        }
 
         // finally register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -315,9 +315,10 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
             NodeTypeImpl nt = sysSession.getNodeTypeManager().getNodeType(NodeTypeRegistry.REP_SYSTEM);
             NodeImpl sysRoot = rootNode.internalAddChildNode(SYSTEM_ROOT_NAME, nt, SYSTEM_ROOT_NODE_UUID);
             // add version storage
-            nt = sysSession.getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_UNSTRUCTURED);
+            nt = sysSession.getNodeTypeManager().getNodeType(NodeTypeRegistry.REP_VERSION_STORAGE);
             sysRoot.internalAddChildNode(VersionManager.NODENAME_HISTORY_ROOT, nt, VERSION_STORAGE_NODE_UUID);
             rootNode.save();
+
         }
 
         // register the repository as event listener for keeping repository statistics
@@ -513,6 +514,16 @@ public class RepositoryImpl implements Repository, SessionListener, EventListene
         /**
          * todo further cleanup tasks, free resources, etc.
          */
+        try {
+            pvMgr.close();
+        } catch (Exception e) {
+            log.error("Error while closing Persistent Version Manager.", e);
+        }
+        try {
+            vMgr.close();
+        } catch (Exception e) {
+            log.error("Error while closing Version Manager.", e);
+        }
 
         // persist repository properties
         try {
