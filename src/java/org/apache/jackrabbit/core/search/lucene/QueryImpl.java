@@ -112,8 +112,9 @@ class QueryImpl implements javax.jcr.query.Query {
 
         try {
             Node query = null;
-            if (session.getRootNode().hasNode(absPath)) {
-                query = session.getRootNode().getNode(absPath);
+            String relPath = absPath.substring(1);
+            if (session.getRootNode().hasNode(relPath)) {
+                query = session.getRootNode().getNode(relPath);
                 // assert query has mix:referenceable
                 query.getUUID();
                 NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
@@ -247,13 +248,14 @@ class QueryImpl implements javax.jcr.query.Query {
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not absolut");
             }
-            if (!session.getRootNode().hasNode(p.getAncestor(1).toJCRPath(resolver))) {
+            if (!session.getRootNode().hasNode(p.getAncestor(1).toJCRPath(resolver).substring(1))) {
                 throw new PathNotFoundException(p.getAncestor(1).toJCRPath(resolver));
             }
-            if (session.getRootNode().hasNode(p.toJCRPath(resolver))) {
+            String relPath = p.toJCRPath(resolver).substring(1);
+            if (session.getRootNode().hasNode(relPath)) {
                 throw new ItemExistsException(p.toJCRPath(resolver));
             }
-            Node queryNode = session.getRootNode().addNode(p.toJCRPath(resolver),
+            Node queryNode = session.getRootNode().addNode(relPath,
                     NodeTypeRegistry.NT_QUERY.toJCRName(resolver));
             // set properties
             queryNode.setProperty(PROP_LANGUAGE.toJCRName(resolver), language);
@@ -261,14 +263,12 @@ class QueryImpl implements javax.jcr.query.Query {
             // add mixin referenceable
             queryNode.addMixin(NodeTypeRegistry.MIX_REFERENCEABLE.toJCRName(resolver));
             // FIXME do anything else?
-            queryNode.save();
-
+            queryNode.getParent().save();
         } catch (MalformedPathException e) {
             throw new RepositoryException(e.getMessage(), e);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
-        session.getRootNode().getNode(absPath);
     }
 
 }
