@@ -152,25 +152,35 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String getProperty(String name) throws RepositoryException {
         String testCaseName = getName();
         String testClassName = getClass().getName();
+        String testPackName = "";
         int idx;
         if ((idx = testClassName.lastIndexOf('.')) > -1) {
+            testPackName = testClassName.substring(testClassName.lastIndexOf('.', idx - 1) + 1, idx);
             testClassName = testClassName.substring(idx + 1);
         }
 
-        // check test case specific property first
+        // 1) test case specific property first
         String value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
                 + testClassName + "." + testCaseName + "." + name);
         if (value != null) {
             return value;
         }
 
-        // then check test class property
+        // 2) check test class property
         value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
                 + testClassName + "." + name);
         if (value != null) {
             return value;
         }
 
+        // 3) check package property
+        value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
+                + testPackName + "." + name);
+        if (value != null) {
+            return value;
+        }
+
+        // finally try global property
         return helper.getProperty(RepositoryStub.PROP_PREFIX + "." + name);
     }
 
