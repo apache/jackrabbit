@@ -20,7 +20,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
 
 /**
  * Remote version of the JCR {@link javax.jcr.lock.Lock} interface.
@@ -45,31 +44,30 @@ public interface RemoteLock extends Remote {
      * @see javax.jcr.lock.Lock#getLockOwner()
      * @throws RemoteException on RMI exceptions
      */
-    public String getLockOwner() throws RemoteException;
+    String getLockOwner() throws RemoteException;
 
     /**
      * @see javax.jcr.lock.Lock#isDeep()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean isDeep() throws RemoteException;
+    boolean isDeep() throws RemoteException;
 
     /**
      * @see javax.jcr.lock.Lock#getLockToken()
      * @throws RemoteException on RMI exceptions
      */
-    public String getLockToken() throws RemoteException;
+    String getLockToken() throws RemoteException;
 
     /**
      * @see javax.jcr.lock.Lock#isLive()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean isLive() throws RemoteException;
+    boolean isLive() throws RemoteException;
 
     /**
      * @see javax.jcr.lock.Lock#refresh()
      * @throws RemoteException on RMI exceptions
      */
-    public void refresh() throws LockException, RepositoryException,
-        RemoteException;
+    void refresh() throws RepositoryException, RemoteException;
 
 }

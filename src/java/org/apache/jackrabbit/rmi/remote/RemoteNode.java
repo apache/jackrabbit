@@ -18,21 +18,8 @@ package org.apache.jackrabbit.rmi.remote;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.MergeException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.version.VersionException;
 
 
 /**
@@ -71,283 +58,253 @@ public interface RemoteNode extends RemoteItem {
      * @see javax.jcr.Node#addNode(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNode addNode(String path) throws ItemExistsException,
-        PathNotFoundException, ConstraintViolationException,
-        RepositoryException, RemoteException;
+    RemoteNode addNode(String path) throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#addNode(java.lang.String, java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNode addNode(String path, String type) throws
-        ItemExistsException, PathNotFoundException, NoSuchNodeTypeException,
-        ConstraintViolationException, RepositoryException, RemoteException;
+    RemoteNode addNode(String path, String type)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getProperty(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteProperty getProperty(String path) throws PathNotFoundException,
-        RepositoryException, RemoteException;
+    RemoteProperty getProperty(String path)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getProperties()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteProperty[] getProperties() throws RepositoryException,
-        RemoteException;
+    RemoteProperty[] getProperties()
+            throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Node#getProperties(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteProperty[] getProperties(String pattern) throws
-        RepositoryException, RemoteException;
+    RemoteProperty[] getProperties(String pattern)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getPrimaryItem()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteItem getPrimaryItem() throws ItemNotFoundException,
-        RepositoryException, RemoteException;
+    RemoteItem getPrimaryItem() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getUUID()
      * @throws RemoteException on RMI exceptions
      */
-    public String getUUID() throws UnsupportedRepositoryOperationException,
-        RepositoryException, RemoteException;
+    String getUUID() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getReferences()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteProperty[] getReferences() throws RepositoryException,
-        RemoteException;
+    RemoteProperty[] getReferences()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getNodes()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNode[] getNodes() throws RepositoryException, RemoteException;
+    RemoteNode[] getNodes() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getNodes(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNode[] getNodes(String pattern) throws RepositoryException,
-        RemoteException;
+    RemoteNode[] getNodes(String pattern)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#hasNode(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public boolean hasNode(String path) throws RepositoryException,
-        RemoteException;
+    boolean hasNode(String path) throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Node#hasProperty(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public boolean hasProperty(String path) throws RepositoryException,
-        RemoteException;
+    boolean hasProperty(String path)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#hasNodes()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean hasNodes() throws RepositoryException, RemoteException;
+    boolean hasNodes() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#hasProperties()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean hasProperties() throws RepositoryException, RemoteException;
+    boolean hasProperties() throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Node#getPrimaryNodeType()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNodeType getPrimaryNodeType()
-        throws RepositoryException, RemoteException;
+    RemoteNodeType getPrimaryNodeType()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getMixinNodeTypes()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNodeType[] getMixinNodeTypes()
-        throws RepositoryException, RemoteException;
+    RemoteNodeType[] getMixinNodeTypes()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#isNodeType(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public boolean isNodeType(String type)
-        throws RepositoryException, RemoteException;
+    boolean isNodeType(String type) throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getNode(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNode getNode(String path) throws PathNotFoundException,
-        RepositoryException, RemoteException;
+    RemoteNode getNode(String path) throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Node#orderBefore(java.lang.String, java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public void orderBefore(String src, String dst) throws
-        UnsupportedRepositoryOperationException,
-        ConstraintViolationException, ItemNotFoundException,
-        RepositoryException, RemoteException;
+    void orderBefore(String src, String dst)
+            throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Node#setProperty(java.lang.String, javax.jcr.Value)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteProperty setProperty(String name, Value value) throws
-        ValueFormatException, RepositoryException, RemoteException;
+    RemoteProperty setProperty(String name, Value value)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#setProperty(java.lang.String, javax.jcr.Value[])
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteProperty setProperty(String name, Value[] value) throws
-        ValueFormatException, RepositoryException, RemoteException;
+    RemoteProperty setProperty(String name, Value[] value)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#addMixin(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public void addMixin(String name) throws NoSuchNodeTypeException,
-        ConstraintViolationException, RepositoryException, RemoteException;
+    void addMixin(String name) throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#removeMixin(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public void removeMixin(String name) throws NoSuchNodeTypeException,
-        ConstraintViolationException, RepositoryException, RemoteException;
+    void removeMixin(String name) throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#canAddMixin(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public boolean canAddMixin(String name) throws RepositoryException,
-        RemoteException;
+    boolean canAddMixin(String name)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getDefinition()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNodeDef getDefinition() throws RepositoryException,
-        RemoteException;
+    RemoteNodeDef getDefinition() throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Node#checkout()
      * @throws RemoteException on RMI exceptions
      */
-    public void checkout() throws UnsupportedRepositoryOperationException,
-        RepositoryException, RemoteException;
+    void checkout() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#update(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public void update(String workspace) throws NoSuchWorkspaceException,
-        AccessDeniedException, RepositoryException, RemoteException;
+    void update(String workspace) throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#merge(java.lang.String, boolean)
      * @throws RemoteException on RMI exceptions
      */
-    public void merge(String workspace, boolean bestEffort) throws
-        UnsupportedRepositoryOperationException, NoSuchWorkspaceException,
-        AccessDeniedException, MergeException, RepositoryException,
-        RemoteException;
+    void merge(String workspace, boolean bestEffort)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getCorrespondingNodePath(java.lang.String)
      * @throws RemoteException on RMI exceptions
      */
-    public String getCorrespondingNodePath(String workspace) throws
-        ItemNotFoundException, NoSuchWorkspaceException, AccessDeniedException,
-        RepositoryException, RemoteException;
+    String getCorrespondingNodePath(String workspace)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#getIndex()
      * @throws RemoteException on RMI exceptions
      */
-    public int getIndex() throws RepositoryException, RemoteException;
+    int getIndex() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#restore(java.lang.String, boolean)
      * @throws RemoteException on RMI exceptions
      */
-    public void restore(String version, boolean removeExisting) throws
-        VersionException, ItemExistsException,
-        UnsupportedRepositoryOperationException, LockException,
-        InvalidItemStateException, RepositoryException, RemoteException;
+    void restore(String version, boolean removeExisting)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#restoreByLabel(java.lang.String, boolean)
      * @throws RemoteException on RMI exceptions
      */
-    public void restoreByLabel(String label, boolean removeExisting) throws
-        VersionException, ItemExistsException,
-        UnsupportedRepositoryOperationException, LockException,
-        InvalidItemStateException, RepositoryException, RemoteException;
+    void restoreByLabel(String label, boolean removeExisting)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#unlock()
      * @throws RemoteException on RMI exceptions
      */
-    public void unlock() throws UnsupportedRepositoryOperationException,
-        LockException, AccessDeniedException, RepositoryException,
-        RemoteException;
+    void unlock() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#holdsLock()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean holdsLock() throws RepositoryException, RemoteException;
+    boolean holdsLock() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#isLocked()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean isLocked() throws RepositoryException, RemoteException;
+    boolean isLocked() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#isCheckedOut()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean isCheckedOut() throws
-        UnsupportedRepositoryOperationException, RepositoryException,
-        RemoteException;
+    boolean isCheckedOut() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#setProperty(java.lang.String, javax.jcr.Value[], int)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteProperty setProperty(String name, Value[] values, int type)
-        throws ValueFormatException, VersionException, LockException,
-        RepositoryException, RemoteException;
+    RemoteProperty setProperty(String name, Value[] values, int type)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Node#lock(boolean, boolean)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteLock lock(boolean isDeep, boolean isSessionScoped) throws
-        UnsupportedRepositoryOperationException, LockException,
-        AccessDeniedException, RepositoryException, RemoteException;
+    RemoteLock lock(boolean isDeep, boolean isSessionScoped)
+            throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Node#getLock()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteLock getLock() throws UnsupportedRepositoryOperationException,
-        LockException, AccessDeniedException, RepositoryException,
-        RemoteException;
+    RemoteLock getLock() throws RepositoryException, RemoteException;
 
 }

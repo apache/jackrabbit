@@ -40,23 +40,23 @@ import java.rmi.RemoteException;
  * @see org.apache.jackrabbit.rmi.server.ServerNodeDef
  */
 public interface RemoteNodeDef extends RemoteItemDef {
-    
+
     /**
      * @see javax.jcr.nodetype.NodeDef#getRequiredPrimaryTypes()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType[] getRequiredPrimaryTypes() throws RemoteException;
+    RemoteNodeType[] getRequiredPrimaryTypes() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeDef#getDefaultPrimaryType()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType getDefaultPrimaryType() throws RemoteException;
+    RemoteNodeType getDefaultPrimaryType() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeDef#allowSameNameSibs()
      * @throws RemoteException on RMI errors
      */
-    public boolean allowSameNameSibs() throws RemoteException;
+    boolean allowSameNameSibs() throws RemoteException;
 
 }

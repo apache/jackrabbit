@@ -19,7 +19,6 @@ package org.apache.jackrabbit.rmi.remote;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
@@ -37,21 +36,21 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.server.ServerRow
  */
 public interface RemoteRow extends Remote {
+
     /**
      * @see javax.jcr.query.Row#getValues()
      *
      * @return a <code>Value</code> array.
      * @throws RepositoryException if an error occurs
      */
-    public Value[] getValues() throws RepositoryException, RemoteException;
+    Value[] getValues() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.query.Row#getValue(String) 
+     * @see javax.jcr.query.Row#getValue(String)
      *
      * @return a <code>Value</code>
-     * @throws ItemNotFoundException if <code>propertyName</code> s not among the
-     * column names of the query result table
      * @throws RepositoryException if anopther error occurs.
      */
-    public Value getValue(String propertyName) throws ItemNotFoundException, RepositoryException, RemoteException;
+    Value getValue(String propertyName)
+            throws RepositoryException, RemoteException;
 }

@@ -20,8 +20,6 @@ import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-
 
 /**
  * Remote version of the JCR {@link javax.jcr.Property Property} interface.
@@ -54,60 +52,54 @@ import javax.jcr.ValueFormatException;
  * @see org.apache.jackrabbit.rmi.server.ServerProperty
  */
 public interface RemoteProperty extends RemoteItem {
-    
+
     /**
      * @see javax.jcr.Property#getValue()
      * @throws RemoteException on RMI exceptions
      */
-    public Value getValue()
-        throws ValueFormatException, RepositoryException, RemoteException;
+    Value getValue() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Property#getValues()
      * @throws RemoteException on RMI exceptions
      */
-    public Value[] getValues()
-        throws ValueFormatException, RepositoryException, RemoteException;
+    Value[] getValues() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Property#setValue(javax.jcr.Value)
      * @throws RemoteException on RMI exceptions
      */
-    public void setValue(Value value)
-        throws ValueFormatException, RepositoryException, RemoteException;
+    void setValue(Value value) throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Property#setValue(javax.jcr.Value[])
      * @throws RemoteException on RMI exceptions
      */
-    public void setValue(Value[] values)
-        throws ValueFormatException, RepositoryException, RemoteException;
+    void setValue(Value[] values) throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Property#getLength()
      * @throws RemoteException on RMI exceptions
      */
-    public long getLength()
-        throws ValueFormatException, RepositoryException, RemoteException;
+    long getLength() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Property#getLengths()
      * @throws RemoteException on RMI exceptions
      */
-    public long[] getLengths()
-        throws ValueFormatException, RepositoryException, RemoteException;
+    long[] getLengths() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Property#getDefinition()
      * @throws RemoteException on RMI exceptions
      */
-    public RemotePropertyDef getDefinition() throws RepositoryException,
-        RemoteException;
+    RemotePropertyDef getDefinition()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Property#getType()
      * @throws RemoteException on RMI exceptions
      */
-    public int getType() throws RepositoryException, RemoteException;
+    int getType() throws RepositoryException, RemoteException;
 
 }

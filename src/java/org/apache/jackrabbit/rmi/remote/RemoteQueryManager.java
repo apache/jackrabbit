@@ -20,8 +20,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.Query;
 
 /**
  * Remote version of the JCR {@link javax.jcr.query.QueryManager QueryManager} interface.
@@ -41,24 +39,21 @@ public interface RemoteQueryManager extends Remote {
     /**
      * @see javax.jcr.query.QueryManager#createQuery
      *
-     * @throws InvalidQueryException if statement is invalid or language is unsupported.
      * @throws RepositoryException if another error occurs
      * @return A <code>Query</code> object.
      */
-    public RemoteQuery createQuery(String statement, String language)
-        throws InvalidQueryException, RepositoryException, RemoteException;
+    RemoteQuery createQuery(String statement, String language)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.query.QueryManager#getQuery
      *
      * @param absPath node path of a persisted query (that is, a node of type <code>nt:query</code>).
-     * @throws InvalidQueryException If <code>node</code> is not a valid persisted query
-     * (that is, a node of type <code>nt:query</code>).
      * @throws RepositoryException if another error occurs
      * @return a <code>Query</code> object.
      */
-    public RemoteQuery getQuery(String absPath)
-        throws InvalidQueryException, RepositoryException, RemoteException;
+    RemoteQuery getQuery(String absPath)
+            throws RepositoryException, RemoteException;
 
     /**
      * * @see javax.jcr.query.QueryManager#getSupportedQueryLanguages
@@ -66,6 +61,6 @@ public interface RemoteQueryManager extends Remote {
      * See {@link Query}.
      * @return An string array.
      */
-    public String[] getSupportedQueryLanguages() throws RemoteException;
+    String[] getSupportedQueryLanguages() throws RemoteException;
 
 }

@@ -20,8 +20,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -36,10 +34,9 @@ import javax.jcr.RepositoryException;
  * to a corresponding Repository method. The remote object will simply
  * forward the method call to the underlying Repository instance.
  * {@link javax.jcr.Session Session} objects are returned as remote references
- * to the {@link org.apache.jackrabbit.rmi.remote.RemoteSession RemoteSession}
- * interface. Simple return values and possible exceptions are simply copied
- * over the network to the client. RMI errors are signalled with
- * RemoteExceptions.
+ * to the {@link RemoteSession RemoteSession} interface. Simple return
+ * values and possible exceptions are copied over the network to the client.
+ * RMI errors are signalled with RemoteExceptions.
  *
  * @author Jukka Zitting
  * @see javax.jcr.Repository
@@ -47,46 +44,54 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.server.ServerRepository
  */
 public interface RemoteRepository extends Remote {
-    
+
     /**
+     * @return descriptor value
+     * @throws RemoteException on RMI errors
      * @see javax.jcr.Repository#getDescriptor(java.lang.String)
-     * @throws RemoteException on RMI errors
      */
-    public String getDescriptor(String name) throws RemoteException;
-    
+    String getDescriptor(String name) throws RemoteException;
+
     /**
+     * @return descriptor keys
+     * @throws RemoteException on RMI errors
      * @see javax.jcr.Repository#getDescriptorKeys()
-     * @throws RemoteException on RMI errors
      */
-    public String[] getDescriptorKeys() throws RemoteException;
-    
+    String[] getDescriptorKeys() throws RemoteException;
+
     /**
+     * @return remote session
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      * @see javax.jcr.Repository#login()
-     * @throws RemoteException on RMI errors
      */
-    public RemoteSession login() throws LoginException,
-        NoSuchWorkspaceException, RepositoryException, RemoteException;
-    
+    RemoteSession login() throws RepositoryException, RemoteException;
+
     /**
+     * @return remote session
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      * @see javax.jcr.Repository#login(java.lang.String)
-     * @throws RemoteException on RMI errors
      */
-    public RemoteSession login(String workspace) throws LoginException,
-        NoSuchWorkspaceException, RepositoryException, RemoteException;
+    RemoteSession login(String workspace)
+            throws RepositoryException, RemoteException;
 
     /**
+     * @return remote session
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
      * @see javax.jcr.Repository#login(javax.jcr.Credentials)
-     * @throws RemoteException on RMI errors
      */
-    public RemoteSession login(Credentials credentials) throws LoginException,
-        NoSuchWorkspaceException, RepositoryException, RemoteException;
+    RemoteSession login(Credentials credentials)
+            throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.Repository#login(javax.jcr.Credentials, java.lang.String)
+     * @return remote session
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
+     * @see javax.jcr.Repository#login(javax.jcr.Credentials, java.lang.String)
      */
-    public RemoteSession login(Credentials credentials, String workspace)
-        throws LoginException, NoSuchWorkspaceException, RepositoryException,
-        RemoteException;
-        
+    RemoteSession login(Credentials credentials, String workspace)
+            throws RepositoryException, RemoteException;
+
 }
