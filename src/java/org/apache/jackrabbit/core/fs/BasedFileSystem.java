@@ -169,6 +169,13 @@ public class BasedFileSystem implements FileSystem {
     }
 
     /**
+     * @see FileSystem#touch
+     */
+    public void touch(String filePath) throws FileSystemException {
+	fsBase.touch(buildBasePath(filePath));
+    }
+
+    /**
      * @see FileSystem#list
      */
     public String[] list(String folderPath) throws FileSystemException {

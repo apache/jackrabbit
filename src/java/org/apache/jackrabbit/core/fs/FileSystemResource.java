@@ -167,6 +167,13 @@ public class FileSystemResource {
     }
 
     /**
+     * @see FileSystem#touch
+     */
+    public void touch() throws FileSystemException {
+	fs.touch(path);
+    }
+
+    /**
      * @see FileSystem#move
      */
     public void move(String destPath) throws FileSystemException {

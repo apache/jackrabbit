@@ -260,6 +260,14 @@ public class LocalFileSystem implements FileSystem {
     }
 
     /**
+     * @see FileSystem#touch(String)
+     */
+    public void touch(String filePath) throws FileSystemException {
+	File f = new File(root, osPath(filePath));
+	f.setLastModified(System.currentTimeMillis());
+    }
+
+    /**
      * @see FileSystem#list(String)
      */
     public String[] list(String folderPath) throws FileSystemException {

@@ -148,6 +148,14 @@ public interface FileSystem {
     public long lastModified(String path) throws FileSystemException;
 
     /**
+     * Set the modified time of an existing file to now.
+     *
+     * @param filePath the path of the file.
+     * @throws FileSystemException if the path does not denote an existing file.
+     */
+    public void touch(String filePath) throws FileSystemException;
+
+    /**
      * Returns an array of strings naming the files and folders
      * in the folder denoted by this path.
      *
