@@ -24,7 +24,6 @@ import org.apache.jackrabbit.core.version.*;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
-import javax.jcr.access.AccessDeniedException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.*;
@@ -1033,92 +1032,6 @@ public class NodeImpl extends ItemImpl implements Node {
 
     //-----------------------------------------------------------------< Node >
     /**
-     * @see Node#remove(String)
-     */
-    public synchronized void remove(String relPath)
-            throws PathNotFoundException, RepositoryException {
-        // check state of this instance
-        checkItemState();
-
-        Path targetPath;
-        Path.PathElement targetName;
-        Path parentPath;
-        try {
-            targetPath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
-            targetName = targetPath.getNameElement();
-            parentPath = targetPath.getAncestor(1);
-        } catch (MalformedPathException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
-            log.error(msg, e);
-            throw new RepositoryException(msg, e);
-        }
-
-        // check if the specified item exists and if it is protected
-        ItemImpl targetItem;
-        try {
-            targetItem = itemMgr.getItem(targetPath);
-            if (targetItem.isNode()) {
-                NodeImpl node = (NodeImpl) targetItem;
-                NodeDef def = node.getDefinition();
-                // check protected flag
-                if (def.isProtected()) {
-                    String msg = targetItem.safeGetJCRPath() + ": cannot remove a protected node";
-                    log.error(msg);
-                    throw new ConstraintViolationException(msg);
-                }
-            } else {
-                PropertyImpl prop = (PropertyImpl) targetItem;
-                PropertyDef def = prop.getDefinition();
-                // check protected flag
-                if (def.isProtected()) {
-                    String msg = targetItem.safeGetJCRPath() + ": cannot remove a protected property";
-                    log.error(msg);
-                    throw new ConstraintViolationException(msg);
-                }
-            }
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(relPath);
-        }
-
-        NodeImpl parentNode;
-        try {
-            ItemImpl parent = itemMgr.getItem(parentPath);
-            if (!parent.isNode()) {
-                // should never get here
-                String msg = "cannot remove an item from a property " + parent.safeGetJCRPath();
-                log.error(msg);
-                throw new RepositoryException(msg);
-            }
-            parentNode = (NodeImpl) parent;
-        } catch (AccessDeniedException ade) {
-            // should never get here because we already checked
-            // the existence of the child...
-            throw new PathNotFoundException(relPath);
-        }
-
-        // check if versioning allows write
-        if (!parentNode.safeIsCheckedOut()) {
-            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
-            log.error(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag of parent node
-        if (parentNode.getDefinition().isProtected()) {
-            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a protected node";
-            log.error(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // delegate the removal of the child item to the parent node
-        if (targetItem.isNode()) {
-            parentNode.removeChildNode(targetName.getName(), targetName.getIndex());
-        } else {
-            parentNode.removeChildProperty(targetName.getName());
-        }
-    }
-
-    /**
      * @see Node#addNode(String)
      */
     public synchronized Node addNode(String relPath)
@@ -2083,7 +1996,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#checkin()
      */
     public Version checkin()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+            throws VersionException, UnsupportedRepositoryOperationException,
+            RepositoryException {
 
         if (!isCheckedOut()) {
             String msg = "Unable to checkin node. Is not checked-out. " + safeGetJCRPath();
@@ -2316,11 +2230,11 @@ public class NodeImpl extends ItemImpl implements Node {
             NodeIterator ni = getNodes();
             while (ni.hasNext()) {
                 // if the subnode does not exist in the src, and this is update,
-                // so delete here aswell?
+                // so delete here as well?
                 Node n = ni.nextNode();
                 if (!srcNode.hasNode(n.getName())) {
                     // todo: how does this work for same name siblings?
-                    remove(n.getName());
+                    n.remove();
                 }
             }
             // 'clone' nodes that do not exist
@@ -2734,7 +2648,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 // if frozen node exist, replace
                 // todo: make work for same name siblings
                 if (hasNode(f.getName())) {
-                    getNode(f.getName()).remove(".");
+                    getNode(f.getName()).remove();
                 }
                 NodeImpl n = addNode(f.getName(), f);
                 n.restoreFrozenState(f, vsel);

@@ -69,32 +69,18 @@ public final class EventImpl implements Event {
     /**
      * @see Event#getType()
      */
-    public long getType() {
+    public int getType() {
         return eventState.getType();
     }
 
     /**
-     * @see Event#getNodePath()
+     * @see Event#getPath()
      */
-    public String getNodePath() throws RepositoryException {
+    public String getPath() throws RepositoryException {
         try {
             return eventState.getParentPath().toJCRPath(session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException e) {
             String msg = "internal error: encountered unregistered namespace in path";
-            log.error(msg, e);
-            throw new RepositoryException(msg, e);
-        }
-    }
-
-    /**
-     * @see Event#getChildName()
-     */
-    public String getChildName() throws RepositoryException {
-        try {
-            return eventState.getChildItemQName().toJCRName(session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException e) {
-            // should never get here...
-            String msg = "internal error: encountered unregistered namespace in name";
             log.error(msg, e);
             throw new RepositoryException(msg, e);
         }
@@ -137,18 +123,12 @@ public final class EventImpl implements Event {
             StringBuffer sb = new StringBuffer();
             sb.append("Event: Path: ");
             try {
-                sb.append(getNodePath());
+                sb.append(getPath());
             } catch (RepositoryException e) {
                 log.error("Exception retrieving path: " + e);
                 sb.append("[Error retrieving path]");
             }
             sb.append(", ").append(EventState.valueOf(getType())).append(": ");
-            try {
-                sb.append(getChildName());
-            } catch (RepositoryException e) {
-                log.error("Exception retrieving child item name: " + e);
-                sb.append("[Error retrieving child item name]");
-            }
             sb.append(", UserId: ").append(getUserId());
             stringValue = sb.toString();
         }

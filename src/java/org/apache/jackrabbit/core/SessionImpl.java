@@ -30,12 +30,12 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.*;
-import javax.jcr.access.AccessDeniedException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.security.AccessControlException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,6 +46,14 @@ import java.util.Set;
 public class SessionImpl implements Session {
 
     private static Logger log = Logger.getLogger(SessionImpl.class);
+
+    /**
+     * prededfined action constants in checkPermission
+     */
+    public static final String READ_ACTION = "read";
+    public static final String REMOVE_ACTION = "remove";
+    public static final String ADD_NODE_ACTION = "add_node";
+    public static final String SET_PROPERTY_ACTION = "set_property";
 
     /**
      * the repository that issued this session
@@ -192,7 +200,7 @@ public class SessionImpl implements Session {
      */
     protected AccessManagerImpl createAccessManager(Credentials credentials,
                                                     HierarchyManager hierMgr) {
-        return new AccessManagerImpl(credentials, hierMgr, getNamespaceResolver());
+        return new AccessManagerImpl(credentials, hierMgr);
     }
 
     /**
@@ -200,7 +208,7 @@ public class SessionImpl implements Session {
      *
      * @return the <code>AccessManager</code> associated with this session
      */
-    protected AccessManagerImpl getAccessManager() {
+    public AccessManagerImpl getAccessManager() {
         return accessMgr;
     }
 
@@ -274,6 +282,147 @@ public class SessionImpl implements Session {
 
     //--------------------------------------------------------------< Session >
     /**
+     * @see Session#checkPermission(String, String)
+     */
+    public void checkPermission(String absPath, String actions)
+            throws AccessControlException {
+        // build the set of actions to be checked
+        String[] strings = actions.split(",");
+        HashSet set = new HashSet();
+        for (int i = 0; i < strings.length; i++) {
+            set.add(strings[i]);
+        }
+
+        Path targetPath = null;
+        ItemId targetId = null;
+
+        /**
+         * "read" action:
+         * requires READ permission on target item
+         */
+        if (set.contains(READ_ACTION)) {
+            try {
+                targetPath = Path.create(absPath, getNamespaceResolver(), true);
+                targetId = hierMgr.resolvePath(targetPath);
+                accessMgr.checkPermission(targetId, AccessManager.READ);
+            } catch (PathNotFoundException pnfe) {
+                // target does not exist, throw exception
+                throw new AccessControlException(READ_ACTION);
+            } catch (MalformedPathException mpe) {
+                String msg = "invalid path: " + absPath;
+                log.warn(msg, mpe);
+                throw new AccessControlException(READ_ACTION);
+            } catch (RepositoryException re) {
+                String msg = "failed to check READ permission on " + absPath;
+                log.warn(msg, re);
+                throw new AccessControlException(READ_ACTION);
+            }
+        }
+
+        Path parentPath = null;
+        ItemId parentId = null;
+
+        /**
+         * "add_node" action:
+         * requires WRITE permission on parent item
+         */
+        if (set.contains(ADD_NODE_ACTION)) {
+            try {
+                if (targetPath == null) {
+                    targetPath = Path.create(absPath, getNamespaceResolver(), true);
+                }
+                parentPath = targetPath.getAncestor(1);
+                parentId = hierMgr.resolvePath(parentPath);
+                accessMgr.checkPermission(parentId, AccessManager.WRITE);
+            } catch (PathNotFoundException pnfe) {
+                // parent does not exist, throw exception
+                throw new AccessControlException(ADD_NODE_ACTION);
+            } catch (MalformedPathException mpe) {
+                String msg = "invalid path: " + absPath;
+                log.warn(msg, mpe);
+                throw new AccessControlException(ADD_NODE_ACTION);
+            } catch (RepositoryException re) {
+                String msg = "failed to check WRITE permission on parent of " + absPath;
+                log.warn(msg, re);
+                throw new AccessControlException(ADD_NODE_ACTION);
+            }
+        }
+
+        /**
+         * "remove" action:
+         * requires WRITE permission on parent item
+         */
+        if (set.contains(REMOVE_ACTION)) {
+            try {
+                if (targetPath == null) {
+                    targetPath = Path.create(absPath, getNamespaceResolver(), true);
+                }
+                if (parentPath == null) {
+                    parentPath = targetPath.getAncestor(1);
+                }
+                if (parentId == null) {
+                    parentId = hierMgr.resolvePath(parentPath);
+                }
+                accessMgr.checkPermission(parentId, AccessManager.WRITE);
+            } catch (PathNotFoundException pnfe) {
+                // parent does not exist, throw exception
+                throw new AccessControlException(REMOVE_ACTION);
+            } catch (MalformedPathException mpe) {
+                String msg = "invalid path: " + absPath;
+                log.warn(msg, mpe);
+                throw new AccessControlException(REMOVE_ACTION);
+            } catch (RepositoryException re) {
+                String msg = "failed to check WRITE permission on parent of " + absPath;
+                log.warn(msg, re);
+                throw new AccessControlException(REMOVE_ACTION);
+            }
+        }
+
+        /**
+         * "set_property" action:
+         * requires WRITE permission on parent item if property is going to be
+         * added or WRITE permission on target item if property is going to be
+         * modified
+         */
+        if (set.contains(SET_PROPERTY_ACTION)) {
+            try {
+                if (targetPath == null) {
+                    targetPath = Path.create(absPath, getNamespaceResolver(), true);
+                }
+                if (targetId == null) {
+                    try {
+                        targetId = hierMgr.resolvePath(targetPath);
+                        // property does already exist,
+                        // check WRITE permission on target
+                        accessMgr.checkPermission(targetId, AccessManager.WRITE);
+                    } catch (PathNotFoundException pnfe) {
+                        // property does not exist yet,
+                        // check WRITE permission on parent
+                        if (parentPath == null) {
+                            parentPath = targetPath.getAncestor(1);
+                        }
+                        if (parentId == null) {
+                            parentId = hierMgr.resolvePath(parentPath);
+                        }
+                        accessMgr.checkPermission(parentId, AccessManager.WRITE);
+                    }
+                }
+            } catch (PathNotFoundException pnfe) {
+                // parent does not exist, throw exception
+                throw new AccessControlException(SET_PROPERTY_ACTION);
+            } catch (MalformedPathException mpe) {
+                String msg = "invalid path: " + absPath;
+                log.warn(msg, mpe);
+                throw new AccessControlException(SET_PROPERTY_ACTION);
+            } catch (RepositoryException re) {
+                String msg = "failed to check WRITE permission on parent of " + absPath;
+                log.warn(msg, re);
+                throw new AccessControlException(SET_PROPERTY_ACTION);
+            }
+        }
+    }
+
+    /**
      * @see Session#getWorkspace()
      */
     public Workspace getWorkspace() {
@@ -294,7 +443,7 @@ public class SessionImpl implements Session {
         // a 'superuser' to impersonate another user without needing
         // to know its password.
         try {
-            return rep.login(otherCredentials, null);
+            return rep.login(otherCredentials, getWorkspace().getName());
         } catch (NoSuchWorkspaceException nswe) {
             // should never get here...
             String msg = "impersonate failed";
@@ -360,7 +509,9 @@ public class SessionImpl implements Session {
     /**
      * @see Session#save
      */
-    public void save() throws AccessDeniedException, LockException, ConstraintViolationException, InvalidItemStateException, RepositoryException {
+    public void save() throws AccessDeniedException, LockException,
+            ConstraintViolationException, InvalidItemStateException,
+            RepositoryException {
         getItemManager().getRootNode().save();
     }
 

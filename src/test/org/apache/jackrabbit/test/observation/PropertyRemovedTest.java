@@ -17,23 +17,23 @@ package org.apache.jackrabbit.test.observation;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Property;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.EventType;
 
 /**
- * Test cases for {@link javax.jcr.observation.EventType#PROPERTY_REMOVED
+ * Test cases for {@link javax.jcr.observation.Event#PROPERTY_REMOVED
  * PROPERTY_REMOVED} events.
  */
 public class PropertyRemovedTest extends AbstractObservationTest {
 
     public void testSinglePropertyRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.PROPERTY_REMOVED);
+        addEventListener(result, Event.PROPERTY_REMOVED);
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
-        foo.setProperty("prop1", new String[]{"foo"});
+        Property prop1 = foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();
-        foo.remove("prop1");
+        prop1.remove();
         testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -42,13 +42,13 @@ public class PropertyRemovedTest extends AbstractObservationTest {
 
     public void testMultiPropertyRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.PROPERTY_REMOVED);
+        addEventListener(result, Event.PROPERTY_REMOVED);
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
-        foo.setProperty("prop1", new String[]{"foo"});
-        foo.setProperty("prop2", new String[]{"bar"});
+        Property prop1 = foo.setProperty("prop1", new String[]{"foo"});
+        Property prop2 = foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();
-        foo.remove("prop1");
-        foo.remove("prop2");
+        prop1.remove();
+        prop2.remove();
         testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);

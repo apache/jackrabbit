@@ -28,13 +28,12 @@ import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
-import javax.jcr.access.AccessDeniedException;
-import javax.jcr.access.Permission;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.util.*;
 
@@ -449,13 +448,13 @@ public abstract class ItemImpl implements Item, ItemStateListener {
          * - if it is 'new', check that its node type satisfies the
          *   'required node type' constraint specified in its definition
          * - if new child nodes have been added to the node in question,
-         *   check the ADD_NODE permission
+         *   check the WRITE permission
          * - if child items have been removed from the node in question,
-         *   check the REMOVE_ITEM permission
+         *   check the WRITE permission
          * - check if 'mandatory' child items exist
          *
          * for every transient property:
-         * - check the SET_PROPERTY permission
+         * - check the WRITE permission
          * - check if the property value satisfies the value constraints specified
          *   in the property's definition
          *
@@ -496,8 +495,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
                 // check child removals
                 if (!nodeState.getRemovedChildNodeEntries().isEmpty() || !nodeState.getRemovedPropertyEntries().isEmpty()) {
-                    // check REMOVE_ITEM permission
-                    if (!accessMgr.isGranted(id, Permission.REMOVE_ITEM)) {
+                    // check WRITE permission
+                    if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
                         String msg = node.safeGetJCRPath() + ": not allowed to remove a child item";
                         log.error(msg);
                         throw new AccessDeniedException(msg);
@@ -515,8 +514,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     Node childNode = (Node) itemMgr.getItem(new NodeId(entry.getUUID()));
                     NodeDef childDef = childNode.getDefinition();
                     if (!childDef.isAutoCreate()) {
-                        // check ADD_NODE permission
-                        if (!accessMgr.isGranted(id, Permission.ADD_NODE)) {
+                        // check WRITE permission
+                        if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
                             String msg = node.safeGetJCRPath() + ": not allowed to add node " + childNode.getName();
                             log.error(msg);
                             throw new AccessDeniedException(msg);
@@ -552,11 +551,19 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 PropertyDefImpl def = (PropertyDefImpl) prop.getDefinition();
 
                 if (!def.isAutoCreate()) {
-                    // check SET_PROPERTY permission
-                    if (!accessMgr.isGranted(nodeId, Permission.SET_PROPERTY)) {
+                    // check WRITE permission on property
+                    if (!accessMgr.isGranted(propId, AccessManager.WRITE)) {
                         String msg = itemMgr.safeGetJCRPath(nodeId) + ": not allowed to set property " + prop.getName();
                         log.error(msg);
                         throw new AccessDeniedException(msg);
+                    }
+                    if (propState.getOverlayedState() == null) {
+                        // property has been added, check WRITE permission on parent
+                        if (!accessMgr.isGranted(nodeId, AccessManager.WRITE)) {
+                            String msg = itemMgr.safeGetJCRPath(nodeId) + ": not allowed to set property " + prop.getName();
+                            log.error(msg);
+                            throw new AccessDeniedException(msg);
+                        }
                     }
                 }
 
@@ -565,7 +572,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 // as those are set by the implementation only, i.e. they
                 // cannot be set by the user through the api)
                 if (!def.isProtected()) {
-                    if (def.getValueConstraint() != null) {
+                    if (def.getValueConstraints() != null) {
                         InternalValue[] values = propState.getValues();
                         try {
                             NodeTypeImpl.checkSetPropertyValueConstraints(def, values);
@@ -586,7 +593,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
     private void checkReferences(Iterator iterDirty, Iterator iterRemoved,
                                  ReferenceManager refMgr)
-            throws ConstraintViolationException, RepositoryException {
+            throws ReferentialIntegrityException, RepositoryException {
         // map of target (node) id's and modified NodeReferences objects
         HashMap dirtyNodeRefs = new HashMap();
 
@@ -628,7 +635,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             String msg = itemMgr.safeGetJCRPath(propState.getId())
                                     + ": target node of REFERENCE property does not exist";
                             log.warn(msg);
-                            throw new ConstraintViolationException(msg);
+                            throw new ReferentialIntegrityException(msg);
                         }
                         // target is a new (unsaved) node; make sure that it is
                         // within the scope of the current save operation
@@ -640,7 +647,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                     String msg = itemMgr.safeGetJCRPath(propState.getId())
                                             + ": target node of REFERENCE property is a new node and must therefore either be saved first or be within the scope of the current save operation.";
                                     log.warn(msg);
-                                    throw new ConstraintViolationException(msg);
+                                    throw new ReferentialIntegrityException(msg);
                                 }
                             } catch (MalformedPathException mpe) {
                                 // should never get here...
@@ -715,7 +722,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 String msg = nodeState.getId()
                         + ": the node cannot be removed because it is being referenced.";
                 log.warn(msg);
-                throw new ConstraintViolationException(msg);
+                throw new ReferentialIntegrityException(msg);
             }
         }
 
@@ -953,12 +960,66 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     }
 
     /**
+     * @see Item#remove
+     */
+    public void remove() throws RepositoryException {
+        // check state of this instance
+        checkItemState();
+
+        Path.PathElement thisName = getPrimaryPath().getNameElement();
+
+        // check if protected
+        if (isNode()) {
+            NodeImpl node = (NodeImpl) this;
+            NodeDef def = node.getDefinition();
+            // check protected flag
+            if (def.isProtected()) {
+                String msg = safeGetJCRPath() + ": cannot remove a protected node";
+                log.error(msg);
+                throw new ConstraintViolationException(msg);
+            }
+        } else {
+            PropertyImpl prop = (PropertyImpl) this;
+            PropertyDef def = prop.getDefinition();
+            // check protected flag
+            if (def.isProtected()) {
+                String msg = safeGetJCRPath() + ": cannot remove a protected property";
+                log.error(msg);
+                throw new ConstraintViolationException(msg);
+            }
+        }
+
+        NodeImpl parentNode = (NodeImpl) getParent();
+
+        // check if versioning allows write
+        if (!parentNode.safeIsCheckedOut()) {
+            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
+            log.error(msg);
+            throw new VersionException(msg);
+        }
+
+        // check protected flag of parent node
+        if (parentNode.getDefinition().isProtected()) {
+            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a protected node";
+            log.error(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
+        // delegate the removal of the child item to the parent node
+        if (isNode()) {
+            parentNode.removeChildNode(thisName.getName(), thisName.getIndex());
+        } else {
+            parentNode.removeChildProperty(thisName.getName());
+        }
+    }
+
+    /**
      * @see Item#save
      */
     public synchronized void save()
             throws AccessDeniedException, LockException,
             ConstraintViolationException, InvalidItemStateException,
-            RepositoryException {
+            ReferentialIntegrityException, RepositoryException {
         // check state of this instance
         checkItemState();
 
@@ -1241,40 +1302,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      */
     public Session getSession() throws RepositoryException {
         return session;
-    }
-
-    /**
-     * @see Item#isGranted
-     */
-    public boolean isGranted(long permissions)
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        checkItemState();
-
-        try {
-            // check state of this instance
-            checkItemState();
-
-            Permission[] perms = session.getAccessManager().getSupportedPermissions();
-            // check each permission separately
-            AccessManagerImpl accessMgr = session.getAccessManager();
-            for (int i = 0; i < perms.length; i++) {
-                Permission perm = perms[i];
-                if ((permissions & perm.getValue()) == perm.getValue()) {
-                    if (!accessMgr.isGranted(id, perm.getValue())) {
-                        return false;
-                    }
-                }
-                permissions &= ~perm.getValue();
-            }
-            if (permissions > 0) {
-                log.warn("unsupported/unknown permissions: " + permissions);
-            }
-            return true;
-        } catch (PathNotFoundException pnfe) {
-            String msg = "failed to check permissions on " + safeGetJCRPath();
-            log.error(msg, pnfe);
-            throw new RepositoryException(msg, pnfe);
-        }
     }
 
     /**

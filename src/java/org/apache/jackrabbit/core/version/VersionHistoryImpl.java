@@ -24,6 +24,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.jcr.version.VersionException;
 
 /**
  * This Class implements a version history that extends a node.
@@ -87,16 +88,28 @@ public class VersionHistoryImpl extends NodeWrapper implements VersionHistory {
     }
 
     /**
-     * @see VersionHistory#addVersionLabel(Version, String, boolean)
+     * @see VersionHistory#addVersionLabel(String, String)
      */
-    public void addVersionLabel(Version version, String label, boolean move) throws RepositoryException {
-        history.addVersionLabel(((VersionImpl) version).version, label, move);
+    public void addVersionLabel(String versionName, String label) throws VersionException, RepositoryException {
+        InternalVersion v;
+        try {
+            QName name = QName.fromJCRName(versionName, ((SessionImpl) unwrap().getSession()).getNamespaceResolver());
+            v = history.getVersion(name);
+        } catch (IllegalNameException e) {
+            throw new RepositoryException(e);
+        } catch (UnknownPrefixException e) {
+            throw new RepositoryException(e);
+        }
+        if (v == null) {
+            throw new VersionException("specified version does not exist");
+        }
+        history.addVersionLabel(v, label, false);
     }
 
     /**
      * @see VersionHistory#removeVersionLabel(String)
      */
-    public void removeVersionLabel(String label) throws RepositoryException {
+    public void removeVersionLabel(String label) throws VersionException, RepositoryException {
         history.removeVersionLabel(label);
     }
 

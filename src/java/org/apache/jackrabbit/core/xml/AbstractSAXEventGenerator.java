@@ -25,7 +25,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.access.Permission;
 import java.util.Iterator;
 
 /**
@@ -171,7 +170,7 @@ abstract class AbstractSAXEventGenerator {
             }
             PropertyId propId = new PropertyId(nodeState.getUUID(), pe.getName());
             // check read access
-            if (accessMgr.isGranted(propId, Permission.READ_ITEM)) {
+            if (accessMgr.isGranted(propId, AccessManager.READ)) {
                 // serialize property
                 process(pe, nodeState.getUUID(), level + 1);
             }
@@ -187,7 +186,7 @@ abstract class AbstractSAXEventGenerator {
                 NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
                 NodeId childId = new NodeId(cne.getUUID());
                 // check read access
-                if (accessMgr.isGranted(childId, Permission.READ_ITEM)) {
+                if (accessMgr.isGranted(childId, AccessManager.READ)) {
                     NodeState childState;
                     try {
                         childState = (NodeState) stateProvider.getItemState(childId);

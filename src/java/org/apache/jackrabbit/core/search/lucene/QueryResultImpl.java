@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
 
 /**
@@ -43,12 +44,18 @@ public class QueryResultImpl implements QueryResult {
         this.selectProps = selectProps;
     }
 
-    public PropertyIterator getProperties() {
+    /**
+     * @see QueryResult#getProperties()  
+     */
+    public PropertyIterator getProperties() throws RepositoryException {
         return new PropertyIteratorImpl(selectProps,
                 new NodeIteratorImpl(itemMgr, uuids));
     }
 
-    public NodeIterator getNodes() {
+    /**
+     * @see QueryResult#getNodes()
+     */
+    public NodeIterator getNodes() throws RepositoryException {
         return new NodeIteratorImpl(itemMgr, uuids);
     }
 }

@@ -21,8 +21,6 @@ import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
-import javax.jcr.access.AccessDeniedException;
-import javax.jcr.access.Permission;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.PropertyDef;
 import java.io.PrintStream;
@@ -207,7 +205,7 @@ public class ItemManager implements ItemLifeCycleListener {
     public synchronized ItemImpl getItem(ItemId id)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check privileges
-        if (!session.getAccessManager().isGranted(id, Permission.READ_ITEM)) {
+        if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
             // clear cache
             if (isCached(id)) {
                 evictItem(id);
@@ -239,7 +237,7 @@ public class ItemManager implements ItemLifeCycleListener {
     synchronized NodeIterator getChildNodes(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check privileges
-        if (!session.getAccessManager().isGranted(parentId, Permission.READ_ITEM)) {
+        if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
             // clear cache
             ItemImpl item = retrieveItem(parentId);
             if (item != null) {
@@ -295,7 +293,7 @@ public class ItemManager implements ItemLifeCycleListener {
     synchronized PropertyIterator getChildProperties(NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check privileges
-        if (!session.getAccessManager().isGranted(parentId, Permission.READ_ITEM)) {
+        if (!session.getAccessManager().isGranted(parentId, AccessManager.READ)) {
             ItemImpl item = retrieveItem(parentId);
             if (item != null) {
                 evictItem(parentId);

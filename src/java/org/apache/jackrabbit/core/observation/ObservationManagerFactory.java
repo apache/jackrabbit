@@ -268,7 +268,7 @@ public final class ObservationManagerFactory implements Runnable {
          * @see ObservationManager#addEventListener
          */
         public void addEventListener(EventListener listener,
-                                     long eventTypes,
+                                     int eventTypes,
                                      String absPath,
                                      boolean isDeep,
                                      String[] uuid,

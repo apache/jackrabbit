@@ -29,9 +29,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import javax.jcr.*;
-import javax.jcr.access.AccessDeniedException;
-import javax.jcr.access.AccessManager;
-import javax.jcr.access.Permission;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.observation.EventListener;
@@ -274,10 +271,10 @@ public class WorkspaceImpl implements Workspace {
         Path.PathElement nodeName = nodePath.getNameElement();
         try {
             // check access rights
-            if (!accessMgr.isGranted(parentState.getId(), Permission.READ_ITEM)) {
+            if (!accessMgr.isGranted(parentState.getId(), AccessManager.READ)) {
                 throw new PathNotFoundException(hierMgr.safeGetJCRPath(parentPath));
             }
-            if (!accessMgr.isGranted(parentState.getId(), Permission.ADD_NODE)) {
+            if (!accessMgr.isGranted(parentState.getId(), AccessManager.WRITE)) {
                 throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + ": not allowed to add child node");
             }
         } catch (ItemNotFoundException infe) {
@@ -352,11 +349,11 @@ public class WorkspaceImpl implements Workspace {
 
         try {
             // check access rights
-            if (!accessMgr.isGranted(targetState.getId(), Permission.READ_ITEM)) {
+            if (!accessMgr.isGranted(targetState.getId(), AccessManager.READ)) {
                 throw new PathNotFoundException(hierMgr.safeGetJCRPath(nodePath));
             }
-            if (!accessMgr.isGranted(parentState.getId(), Permission.REMOVE_ITEM)) {
-                throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + ": not allowed to remove child node");
+            if (!accessMgr.isGranted(parentState.getId(), AccessManager.WRITE)) {
+                throw new AccessDeniedException(hierMgr.safeGetJCRPath(parentPath) + ": not allowed to remove node");
             }
         } catch (ItemNotFoundException infe) {
             String msg = "internal error: failed to check access rights for " + hierMgr.safeGetJCRPath(nodePath);
@@ -577,7 +574,7 @@ public class WorkspaceImpl implements Workspace {
 
         try {
             // check read access right on source node
-            if (!accessMgr.isGranted(srcState.getId(), Permission.READ_ITEM)) {
+            if (!accessMgr.isGranted(srcState.getId(), AccessManager.READ)) {
                 throw new PathNotFoundException(srcAbsPath);
             }
         } catch (ItemNotFoundException infe) {
@@ -706,6 +703,25 @@ public class WorkspaceImpl implements Workspace {
             PathNotFoundException, ItemExistsException, RepositoryException {
         // do intra-workspace copy
         internalCopy(srcAbsPath, persistentStateMgr, hierMgr,
+                destAbsPath, persistentStateMgr, hierMgr,
+                session.getAccessManager(), session.getNamespaceResolver(),
+                rep.getNodeTypeRegistry(), false);
+    }
+
+    /**
+     * @see Workspace#copy(String, String, String)
+     */
+    public void copy(String srcWorkspace, String srcAbsPath, String destAbsPath)
+            throws NoSuchWorkspaceException, ConstraintViolationException,
+            AccessDeniedException, PathNotFoundException, ItemExistsException,
+            RepositoryException {
+        // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
+        // to 'this' workspace at destAbsPath
+        PersistentItemStateProvider srcStateMgr = rep.getWorkspaceStateManager(srcWorkspace);
+        // FIXME need to setup a hierarchy manager for source workspace
+        HierarchyManagerImpl srcHierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(), srcStateMgr, session.getNamespaceResolver());
+        // do cross-workspace copy
+        internalCopy(srcAbsPath, srcStateMgr, srcHierMgr,
                 destAbsPath, persistentStateMgr, hierMgr,
                 session.getAccessManager(), session.getNamespaceResolver(),
                 rep.getNodeTypeRegistry(), false);
@@ -853,13 +869,6 @@ public class WorkspaceImpl implements Workspace {
     }
 
     /**
-     * @see Workspace#getAccessManager
-     */
-    public AccessManager getAccessManager() throws UnsupportedRepositoryOperationException, RepositoryException {
-        return session.getAccessManager();
-    }
-
-    /**
      * @see Workspace#getObservationManager
      */
     public synchronized ObservationManager getObservationManager()
@@ -929,7 +938,7 @@ public class WorkspaceImpl implements Workspace {
         }
 
         // check read access
-        if (!session.getAccessManager().isGranted(state.getId(), Permission.READ_ITEM)) {
+        if (!session.getAccessManager().isGranted(state.getId(), AccessManager.READ)) {
             throw new PathNotFoundException(absPath);
         }
 
@@ -972,7 +981,7 @@ public class WorkspaceImpl implements Workspace {
         }
 
         // check read access
-        if (!session.getAccessManager().isGranted(state.getId(), Permission.READ_ITEM)) {
+        if (!session.getAccessManager().isGranted(state.getId(), AccessManager.READ)) {
             throw new PathNotFoundException(absPath);
         }
 

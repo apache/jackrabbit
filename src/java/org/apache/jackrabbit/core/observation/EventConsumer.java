@@ -15,18 +15,14 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.*;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.access.Permission;
+import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventType;
 import java.util.*;
 
 /**
@@ -132,8 +128,8 @@ class EventConsumer {
         Set denied = null;
         while (it.hasNext()) {
             EventState state = (EventState) it.next();
-            if (state.getType() == EventType.CHILD_NODE_REMOVED
-                    || state.getType() == EventType.PROPERTY_REMOVED) {
+            if (state.getType() == Event.NODE_REMOVED
+                    || state.getType() == Event.PROPERTY_REMOVED) {
 
                 if (session.equals(state.getSession())) {
                     // if we created the event, we can be sure that
@@ -141,23 +137,20 @@ class EventConsumer {
                     continue;
                 }
 
-                try {
-                    // FIXME is there a better way to check access right
-                    // without transforming path
-                    Path p = Path.create(state.getParentPath(), state.getChildItemQName(), false);
-                    if (!session.getWorkspace().getAccessManager().isGranted(p.toJCRPath(session.getNamespaceResolver()),
-                            Permission.READ_ITEM)) {
-                        if (denied == null) {
-                            denied = new HashSet();
-                        }
-                        denied.add(state);
+                // check read permission
+                ItemId targetId;
+                if (state.getChildUUID() == null) {
+                    // target is a property
+                    targetId = new PropertyId(state.getParentUUID(), state.getChildItemQName());
+                } else {
+                    // target is a node
+                    targetId = new NodeId(state.getChildUUID());
+                }
+                if (!session.getAccessManager().isGranted(targetId, AccessManager.READ)) {
+                    if (denied == null) {
+                        denied = new HashSet();
                     }
-                } catch (MalformedPathException e) {
-                    // should actually never happen
-                    log.error("internal error: malformed path exception", e);
-                } catch (NoPrefixDeclaredException e) {
-                    // should actually never happen
-                    log.error("internal error: no prefix declared", e);
+                    denied.add(state);
                 }
             }
         }
@@ -177,26 +170,22 @@ class EventConsumer {
         // check permissions
         for (Iterator it = events.iterator(); it.hasNext();) {
             EventState state = (EventState) it.next();
-            if (state.getType() == EventType.CHILD_NODE_ADDED
-                    || state.getType() == EventType.PROPERTY_ADDED
-                    || state.getType() == EventType.PROPERTY_CHANGED) {
-                try {
-                    // FIXME is there a better way to check access right
-                    // without transforming path
-                    Path p = Path.create(state.getParentPath(), state.getChildItemQName(), false);
-                    if (!session.getWorkspace().getAccessManager().isGranted(p.toJCRPath(session.getNamespaceResolver()),
-                            Permission.READ_ITEM)) {
-                        if (denied == null) {
-                            denied = new HashSet();
-                        }
-                        denied.add(state);
+            if (state.getType() == Event.NODE_ADDED
+                    || state.getType() == Event.PROPERTY_ADDED
+                    || state.getType() == Event.PROPERTY_CHANGED) {
+                ItemId targetId;
+                if (state.getChildUUID() == null) {
+                    // target is a property
+                    targetId = new PropertyId(state.getParentUUID(), state.getChildItemQName());
+                } else {
+                    // target is a node
+                    targetId = new NodeId(state.getChildUUID());
+                }
+                if (!session.getAccessManager().isGranted(targetId, AccessManager.READ)) {
+                    if (denied == null) {
+                        denied = new HashSet();
                     }
-                } catch (MalformedPathException e) {
-                    // should actually never happen
-                    log.error("internal error: malformed path exception", e);
-                } catch (NoPrefixDeclaredException e) {
-                    // should actually never happen
-                    log.error("internal error: no prefix declared", e);
+                    denied.add(state);
                 }
             }
         }

@@ -18,17 +18,16 @@ package org.apache.jackrabbit.test.observation;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.EventType;
 
 /**
- * Test cases for {@link javax.jcr.observation.EventType#CHILD_NODE_ADDED
+ * Test cases for {@link javax.jcr.observation.Event.NODE_ADDED
  * CHILD_NODE_ADDED} events.
  */
 public class NodeAddedTest extends AbstractObservationTest {
 
     public void testSingleNodeAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.CHILD_NODE_ADDED);
+        addEventListener(result, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
         removeEventListener(result);
@@ -38,7 +37,7 @@ public class NodeAddedTest extends AbstractObservationTest {
 
     public void testMultipleNodeAdded1() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.CHILD_NODE_ADDED);
+        addEventListener(result, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
@@ -49,7 +48,7 @@ public class NodeAddedTest extends AbstractObservationTest {
 
     public void testMultipleNodeAdded2() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.CHILD_NODE_ADDED);
+        addEventListener(result, Event.NODE_ADDED);
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         n1.addNode(nodeName2, testNodeType);
         testRootNode.save();
@@ -60,10 +59,10 @@ public class NodeAddedTest extends AbstractObservationTest {
 
     public void testTransientNodeAddedRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.CHILD_NODE_ADDED);
+        addEventListener(result, Event.NODE_ADDED);
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addNode(nodeName2, testNodeType);
-        n1.remove(nodeName2);
+        Node n2 = n1.addNode(nodeName2, testNodeType);
+        n2.remove();
         testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);

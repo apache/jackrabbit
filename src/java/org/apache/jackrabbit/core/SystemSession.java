@@ -18,8 +18,9 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.log4j.Logger;
 
-import javax.jcr.PathNotFoundException;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 
 /**
  * A <code>SystemTicket</code> ...
@@ -40,22 +41,33 @@ class SystemSession extends SessionImpl {
             throws RepositoryException {
         super(rep, SYSTEM_USER_ID, wspConfig);
 
-        accessMgr = new SystemAccessManqager();
+        accessMgr = new SystemAccessManqager(hierMgr);
     }
 
     //--------------------------------------------------------< inner classes >
     private class SystemAccessManqager extends AccessManagerImpl {
 
-        SystemAccessManqager() {
-            super(null, getHierarchyManager(), getNamespaceResolver());
+        SystemAccessManqager(HierarchyManager hierMgr) {
+            super(null, hierMgr);
+        }
+
+        //----------------------------------------------------< AccessManager >
+        /**
+         * @see AccessManager#checkPermission(ItemId, int)
+         */
+        public void checkPermission(ItemId id, int permissions)
+                throws AccessDeniedException, ItemNotFoundException,
+                RepositoryException {
+            // allow everything
         }
 
         /**
-         * @see AbstractAccessManager#getPermissions(String)
+         * @see AccessManager#isGranted(ItemId, int)
          */
-        public long getPermissions(String absPath)
-                throws PathNotFoundException, RepositoryException {
-            return PermissionImpl.ALL_VALUES;
+        public boolean isGranted(ItemId id, int permissions)
+                throws ItemNotFoundException, RepositoryException {
+            // allow everything
+            return true;
         }
     }
 }

@@ -34,7 +34,6 @@ import javax.jcr.*;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventType;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -311,8 +310,8 @@ public class RepositoryImpl implements Repository, EventListener {
             String wspName = ((WorkspaceConfig) iter.next()).getName();
             Session s = getSystemSession(wspName);
             s.getWorkspace().getObservationManager().addEventListener(this,
-                    EventType.CHILD_NODE_ADDED | EventType.CHILD_NODE_REMOVED
-                    | EventType.PROPERTY_ADDED | EventType.PROPERTY_REMOVED,
+                    Event.NODE_ADDED | Event.NODE_REMOVED
+                    | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED,
                     "/", true, null, null, false);
 
             // register SearchManager as EventListener
@@ -320,9 +319,9 @@ public class RepositoryImpl implements Repository, EventListener {
 
             if (searchMgr != null) {
                 s.getWorkspace().getObservationManager().addEventListener(searchMgr,
-                        EventType.CHILD_NODE_ADDED | EventType.CHILD_NODE_REMOVED |
-                        EventType.PROPERTY_ADDED | EventType.PROPERTY_REMOVED |
-                        EventType.PROPERTY_CHANGED,
+                        Event.NODE_ADDED | Event.NODE_REMOVED |
+                        Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED |
+                        Event.PROPERTY_CHANGED,
                         "/", true, null, null, false);
             }
         }
@@ -684,7 +683,7 @@ public class RepositoryImpl implements Repository, EventListener {
         }
         if (credentials == null) {
             // anonymous login
-            return new SessionImpl(this, ANONYMOUS_CREDENTIALS, wspConfig);
+            return new XASessionImpl(this, ANONYMOUS_CREDENTIALS, wspConfig, txMgr);
         } else if (credentials instanceof SimpleCredentials) {
             // username/password credentials
             // @todo implement authentication/authorization
@@ -694,6 +693,14 @@ public class RepositoryImpl implements Repository, EventListener {
             log.error(msg);
             throw new RepositoryException(msg);
         }
+    }
+
+    /**
+     * @see Repository#login(String)
+     */
+    public Session login(String workspaceName)
+            throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        return login(null, workspaceName);
     }
 
     //--------------------------------------------------------< EventListener >
@@ -710,19 +717,19 @@ public class RepositoryImpl implements Repository, EventListener {
         while (events.hasNext()) {
             Event event = events.nextEvent();
             long type = event.getType();
-            if ((type & EventType.CHILD_NODE_ADDED) == EventType.CHILD_NODE_ADDED) {
+            if ((type & Event.NODE_ADDED) == Event.NODE_ADDED) {
                 nodesCount++;
                 repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
             }
-            if ((type & EventType.CHILD_NODE_REMOVED) == EventType.CHILD_NODE_REMOVED) {
+            if ((type & Event.NODE_REMOVED) == Event.NODE_REMOVED) {
                 nodesCount--;
                 repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
             }
-            if ((type & EventType.PROPERTY_ADDED) == EventType.PROPERTY_ADDED) {
+            if ((type & Event.PROPERTY_ADDED) == Event.PROPERTY_ADDED) {
                 propsCount++;
                 repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
             }
-            if ((type & EventType.PROPERTY_REMOVED) == EventType.PROPERTY_REMOVED) {
+            if ((type & Event.PROPERTY_REMOVED) == Event.PROPERTY_REMOVED) {
                 propsCount--;
                 repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
             }

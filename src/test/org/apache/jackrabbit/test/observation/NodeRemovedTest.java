@@ -18,20 +18,19 @@ package org.apache.jackrabbit.test.observation;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.EventType;
 
 /**
- * Test cases for {@link javax.jcr.observation.EventType#CHILD_NODE_REMOVED
+ * Test cases for {@link javax.jcr.observation.Event#NODE_REMOVED
  * CHILD_NODE_REMOVED} events.
  */
 public class NodeRemovedTest extends AbstractObservationTest {
 
     public void testSingleNodeRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.CHILD_NODE_REMOVED);
-        testRootNode.addNode("foo", NT_UNSTRUCTURED);
+        addEventListener(result, Event.NODE_REMOVED);
+        Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         testRootNode.save();
-        testRootNode.remove("foo");
+        foo.remove();
         testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -40,11 +39,11 @@ public class NodeRemovedTest extends AbstractObservationTest {
 
     public void testMultiNodesRemoved() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.CHILD_NODE_REMOVED);
+        addEventListener(result, Event.NODE_REMOVED);
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.addNode("bar", NT_UNSTRUCTURED);
         testRootNode.save();
-        testRootNode.remove("foo");
+        foo.remove();
         testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -53,12 +52,12 @@ public class NodeRemovedTest extends AbstractObservationTest {
 
     public void testMultiNodesRemovedWithRemaining() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.CHILD_NODE_REMOVED);
+        addEventListener(result, Event.NODE_REMOVED);
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         testRootNode.addNode("foobar", NT_UNSTRUCTURED);
         foo.addNode("bar", NT_UNSTRUCTURED);
         testRootNode.save();
-        testRootNode.remove("foo");
+        foo.remove();
         testRootNode.save();
         removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);

@@ -295,6 +295,27 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
+     * @see NodeType#isNodeType(String)
+     */
+    public boolean isNodeType(String nodeTypeName) {
+        QName ntName;
+        try {
+            ntName = QName.fromJCRName(nodeTypeName, nsResolver);
+        } catch (IllegalNameException ine) {
+            log.warn("invalid node type name: " + nodeTypeName, ine);
+            return false;
+        } catch (UnknownPrefixException upe) {
+            log.warn("invalid node type name: " + nodeTypeName, upe);
+            return false;
+        }
+        if (getQName().equals(ntName) || isDerivedFrom(ntName)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * @see NodeType#hasOrderableChildNodes
      */
     public boolean hasOrderableChildNodes() {

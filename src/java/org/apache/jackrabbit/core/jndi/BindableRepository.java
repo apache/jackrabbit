@@ -85,16 +85,24 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     /**
      * @see Repository#getProperty(String)
      */
-    public String getProperty(String s) {
-        return delegatee.getProperty(s);
+    public String getProperty(String key) {
+        return delegatee.getProperty(key);
     }
 
     /**
      * @see Repository#login(Credentials, String)
      */
-    public Session login(Credentials credentials, String s)
+    public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return delegatee.login(credentials, s);
+        return delegatee.login(credentials, workspaceName);
+    }
+
+    /**
+     * @see Repository#login(String)
+     */
+    public Session login(String workspaceName)
+            throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        return delegatee.login(workspaceName);
     }
 
     //--------------------------------------------------------< Referenceable >

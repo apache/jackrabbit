@@ -24,7 +24,6 @@ import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
-import javax.jcr.access.AccessDeniedException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDef;
 import javax.jcr.version.VersionException;
@@ -338,7 +337,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#getValues()
      */
-    public Value[] getValues() throws RepositoryException {
+    public Value[] getValues() throws ValueFormatException, RepositoryException {
         // check state of this instance
         checkItemState();
 
@@ -359,7 +358,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#getValue()
      */
-    public Value getValue() throws RepositoryException {
+    public Value getValue() throws ValueFormatException, RepositoryException {
         // check state of this instance
         checkItemState();
 
@@ -515,18 +514,6 @@ public class PropertyImpl extends ItemImpl implements Property {
         } else {
             throw new ValueFormatException("property must be of type REFERENCE");
         }
-    }
-
-    /**
-     * @see Property#hasValue()
-     */
-    public boolean hasValue() {
-        // check state of this instance
-        //checkItemState();
-
-        PropertyState state = (PropertyState) getItemState();
-        InternalValue[] values = state.getValues();
-        return values.length > 0;
     }
 
     /**
@@ -992,9 +979,14 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * @see Property#getLength
      */
-    public long getLength() {
+    public long getLength() throws ValueFormatException, RepositoryException {
         // check state of this instance
-        //checkItemState();
+        checkItemState();
+
+        // check multi-value flag
+        if (definition.isMultiple()) {
+            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued");
+        }
 
         InternalValue[] values = ((PropertyState) state).getValues();
         if (values.length == 0) {
@@ -1013,8 +1005,9 @@ public class PropertyImpl extends ItemImpl implements Property {
                     return name.toJCRName(session.getNamespaceResolver()).length();
                 } catch (NoPrefixDeclaredException npde) {
                     // should never happen...
-                    log.warn(safeGetJCRPath() + ": the value represents an invalid name", npde);
-                    return -1;
+                    String msg = safeGetJCRPath() + ": the value represents an invalid name";
+                    log.error(msg, npde);
+                    throw new RepositoryException(msg, npde);
                 }
 
             case PropertyType.PATH:
@@ -1023,8 +1016,9 @@ public class PropertyImpl extends ItemImpl implements Property {
                     return path.toJCRPath(session.getNamespaceResolver()).length();
                 } catch (NoPrefixDeclaredException npde) {
                     // should never happen...
-                    log.warn(safeGetJCRPath() + ": the value represents an invalid path", npde);
-                    return -1;
+                    String msg = safeGetJCRPath() + ": the value represents an invalid path";
+                    log.error(msg, npde);
+                    throw new RepositoryException(msg, npde);
                 }
 
             case PropertyType.BINARY:
@@ -1032,6 +1026,60 @@ public class PropertyImpl extends ItemImpl implements Property {
                 return blob.getLength();
         }
         return -1;
+    }
+
+    /**
+     * @see Property#getLengths
+     */
+    public long[] getLengths() throws ValueFormatException, RepositoryException {
+        // check state of this instance
+        checkItemState();
+
+        // check multi-value flag
+        if (!definition.isMultiple()) {
+            throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
+        }
+
+        InternalValue[] values = ((PropertyState) state).getValues();
+        long[] lengths = new long[values.length];
+        for (int i = 0; i < values.length; i++) {
+            long length = -1;
+            InternalValue value = values[i];
+            switch (value.getType()) {
+                case PropertyType.STRING:
+                case PropertyType.LONG:
+                case PropertyType.DOUBLE:
+                    length = value.toString().length();
+
+                case PropertyType.NAME:
+                    QName name = (QName) value.internalValue();
+                    try {
+                        length = name.toJCRName(session.getNamespaceResolver()).length();
+                    } catch (NoPrefixDeclaredException npde) {
+                        // should never happen...
+                        String msg = safeGetJCRPath() + ": the value represents an invalid name";
+                        log.error(msg, npde);
+                        throw new RepositoryException(msg, npde);
+                    }
+
+                case PropertyType.PATH:
+                    Path path = (Path) value.internalValue();
+                    try {
+                        length = path.toJCRPath(session.getNamespaceResolver()).length();
+                    } catch (NoPrefixDeclaredException npde) {
+                        // should never happen...
+                        String msg = safeGetJCRPath() + ": the value represents an invalid path";
+                        log.error(msg, npde);
+                        throw new RepositoryException(msg, npde);
+                    }
+
+                case PropertyType.BINARY:
+                    BLOBFileValue blob = (BLOBFileValue) value.internalValue();
+                    length = blob.getLength();
+            }
+            lengths[i] = length;
+        }
+        return lengths;
     }
 
     /**

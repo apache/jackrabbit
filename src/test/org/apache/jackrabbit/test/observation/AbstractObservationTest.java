@@ -20,7 +20,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventType;
 import javax.jcr.observation.ObservationManager;
 import java.util.HashSet;
 import java.util.Set;
@@ -54,7 +53,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void addEventListener(EventListener listener) throws RepositoryException {
         addEventListener(listener,
-                EventType.CHILD_NODE_ADDED | EventType.CHILD_NODE_REMOVED | EventType.PROPERTY_ADDED | EventType.PROPERTY_CHANGED | EventType.PROPERTY_REMOVED);
+                Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
     }
 
     /**
@@ -62,10 +61,10 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      * type(s).
      *
      * @param listener  the <code>EventListener</code>.
-     * @param eventType the {@link javax.jcr.observation.EventType}s
+     * @param eventType the event types
      * @throws RepositoryException if registration fails.
      */
-    protected void addEventListener(EventListener listener, long eventType)
+    protected void addEventListener(EventListener listener, int eventType)
             throws RepositoryException {
         if (obsMgr != null) {
             obsMgr.addEventListener(listener,
@@ -108,7 +107,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkNodeAdded(Event[] events, String[] relPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, EventType.CHILD_NODE_ADDED);
+        checkNodes(events, relPaths, Event.NODE_ADDED);
     }
 
     /**
@@ -123,7 +122,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkNodeRemoved(Event[] events, String[] relPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, EventType.CHILD_NODE_REMOVED);
+        checkNodes(events, relPaths, Event.NODE_REMOVED);
     }
 
     /**
@@ -138,7 +137,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkPropertyAdded(Event[] events, String[] relPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, EventType.PROPERTY_ADDED);
+        checkNodes(events, relPaths, Event.PROPERTY_ADDED);
     }
 
     /**
@@ -153,7 +152,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkPropertyChanged(Event[] events, String[] relPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, EventType.PROPERTY_CHANGED);
+        checkNodes(events, relPaths, Event.PROPERTY_CHANGED);
     }
 
     /**
@@ -168,7 +167,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkPropertyRemoved(Event[] events, String[] relPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, EventType.PROPERTY_REMOVED);
+        checkNodes(events, relPaths, Event.PROPERTY_REMOVED);
     }
 
     /**
@@ -187,8 +186,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
         Set paths = new HashSet();
         for (int i = 0; i < events.length; i++) {
             assertEquals("Wrong event type", eventType, events[i].getType());
-            String path = events[i].getNodePath()
-                    + "/" + events[i].getChildName();
+            String path = events[i].getPath();
             paths.add(path);
         }
         for (int i = 0; i < relPaths.length; i++) {

@@ -108,7 +108,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
             // clean test root
             testRootNode = root.getNode(testPath);
             for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
-                testRootNode.remove(children.nextNode().getName());
+                children.nextNode().remove();
             }
         } else {
             // create nodes to testPath
@@ -131,7 +131,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 // clean test root
                 testRootNode = root.getNode(testPath);
                 for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
-                    testRootNode.remove(children.nextNode().getName());
+                    children.nextNode().remove();
                 }
                 root.save();
             }

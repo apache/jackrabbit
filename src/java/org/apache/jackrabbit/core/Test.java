@@ -146,7 +146,7 @@ public class Test {
         //root.setProperty("blob", new FileInputStream(new File("d:/temp/jckrabbit.zip")));
 
         if (root.hasProperty("blah")) {
-            root.remove("blah");
+            root.getProperty("blah").remove();
         }
         root.setProperty("blah", 1);
         root.setProperty("blah", 1.4);
@@ -223,11 +223,11 @@ public class Test {
             System.out.println(prop.getPath() + " is a reference to " + target.getPath());
         }
 /*
-	misc.remove(".");
+	misc.remove();
 	try {
 	    root.save();
 	} catch (ConstraintViolationException cve) {
-	    root.remove("ref");
+	    root.getProperty("ref").remove();
 	    root.save();
 	}
 */
@@ -246,7 +246,7 @@ public class Test {
         importNode(new File("d:/dev/jsr170/jackrabbit/src/java"), imported);
 
         if (root.hasNode("foo")) {
-            root.remove("foo");
+            root.getNode("foo").remove();
         }
 
         Node n = root.addNode("foo", "nt:folder");
@@ -268,7 +268,7 @@ public class Test {
         System.out.println();
         dumpTree(root, System.out);
 
-        n3.remove("prop1");
+        prop1.remove();
 
         System.out.println();
         dumpTree(root, System.out);

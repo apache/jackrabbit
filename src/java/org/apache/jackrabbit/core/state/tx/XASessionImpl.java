@@ -396,7 +396,7 @@ public class XASessionImpl extends SessionImpl
      *      Has to be overridden to provide the access manager based on items
      *      contained in the current transaction
      */
-    protected AccessManagerImpl getAccessManager() {
+    public AccessManagerImpl getAccessManager() {
         if (tx != null) {
             return (AccessManagerImpl) tx.getAttribute(ATTRIBUTE_ACCESS_MANAGER);
         }

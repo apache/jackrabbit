@@ -18,10 +18,9 @@ package org.apache.jackrabbit.test.observation;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.EventType;
 
 /**
- * Test cases for {@link javax.jcr.observation.EventType#PROPERTY_CHANGED
+ * Test cases for {@link javax.jcr.observation.Event#PROPERTY_CHANGED
  * PROPERTY_CHANGED} events.
  */
 public class PropertyChangedTest extends AbstractObservationTest {
@@ -31,7 +30,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("bar", new String[]{"foo"});
         testRootNode.save();
-        addEventListener(result, EventType.PROPERTY_CHANGED);
+        addEventListener(result, Event.PROPERTY_CHANGED);
         foo.getProperty("bar").setValue(new String[]{"foobar"});
         testRootNode.save();
         removeEventListener(result);
@@ -45,7 +44,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
         foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();
-        addEventListener(result, EventType.PROPERTY_CHANGED);
+        addEventListener(result, Event.PROPERTY_CHANGED);
         foo.getProperty("prop1").setValue(new String[]{"foobar"});
         foo.getProperty("prop2").setValue(new String[]{"foobar"});
         testRootNode.save();
@@ -59,7 +58,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("bar", new String[]{"foo"});
         testRootNode.save();
-        addEventListener(result, EventType.PROPERTY_CHANGED);
+        addEventListener(result, Event.PROPERTY_CHANGED);
         foo.getProperty("bar").setValue(new String[]{"foobar"});
         foo.setProperty("foo", new String[]{"bar"});    // will not fire prop changed event
         testRootNode.save();
@@ -74,7 +73,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
         foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
         testRootNode.save();
-        addEventListener(result, EventType.PROPERTY_CHANGED);
+        addEventListener(result, Event.PROPERTY_CHANGED);
         foo.getProperty("prop1").setValue(new String[]{"foobar"});
         foo.getProperty("prop2").setValue(new String[]{"foobar"});
         foo.setProperty("prop3", new String[]{"foo"}); // will not fire prop changed event

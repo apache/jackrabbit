@@ -34,9 +34,8 @@ import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.access.Permission;
 import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventType;
+import javax.jcr.observation.Event;
 import java.io.IOException;
 import java.util.*;
 
@@ -128,7 +127,7 @@ public class SearchManager implements SynchronousEventListener {
             for (int i = 0; i < result.length(); i++) {
                 String uuid = result.doc(i).get(FieldNames.UUID);
                 // check access
-                if (accessMgr.isGranted(new NodeId(uuid), Permission.READ_ITEM)) {
+                if (accessMgr.isGranted(new NodeId(uuid), AccessManager.READ)) {
                     uuids.add(uuid);
                 }
             }
@@ -157,24 +156,24 @@ public class SearchManager implements SynchronousEventListener {
             try {
                 EventImpl e = (EventImpl) events.nextEvent();
                 long type = e.getType();
-                if (type == EventType.CHILD_NODE_ADDED) {
+                if (type == Event.NODE_ADDED) {
 
-                    Path path = Path.create(e.getNodePath() + ((e.getNodePath().length() > 1) ? "/" : "") + e.getChildName(),
+                    Path path = Path.create(e.getPath(),
                             session.getNamespaceResolver(),
                             true);
                     pendingNodes.add(path);
-                } else if (type == EventType.CHILD_NODE_REMOVED) {
+                } else if (type == Event.NODE_REMOVED) {
 
-                    Path path = Path.create(e.getNodePath() + ((e.getNodePath().length() > 1) ? "/" : "") + e.getChildName(),
+                    Path path = Path.create(e.getPath(),
                             session.getNamespaceResolver(),
                             true);
                     deleteNode(path, e.getChildUUID());
 
-                } else if (type == EventType.PROPERTY_ADDED
-                        || type == EventType.PROPERTY_CHANGED
-                        || type == EventType.PROPERTY_REMOVED) {
+                } else if (type == Event.PROPERTY_ADDED
+                        || type == Event.PROPERTY_CHANGED
+                        || type == Event.PROPERTY_REMOVED) {
 
-                    Path path = Path.create(e.getNodePath(),
+                    Path path = Path.create(e.getPath(),
                             session.getNamespaceResolver(),
                             true);
                     if (!modified.contains(e.getParentUUID())) {

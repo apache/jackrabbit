@@ -17,72 +17,47 @@ package org.apache.jackrabbit.core;
 
 import org.apache.log4j.Logger;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.access.AccessManager;
+import javax.jcr.ItemNotFoundException;
 
 /**
  * <code>AccessManagerImpl</code> ...
  */
-public class AccessManagerImpl extends AbstractAccessManager {
+public class AccessManagerImpl implements AccessManager {
 
     private static Logger log = Logger.getLogger(AccessManagerImpl.class);
 
+    /** hierarchy manager used for ACL-based access control model */
     protected final HierarchyManager hierMgr;
-    protected final NamespaceResolver nsResolver;
 
     /**
      * Package private constructor
      *
      * @param credentials
      * @param hierMgr
-     * @param nsReg
      */
-    AccessManagerImpl(Credentials credentials, HierarchyManager hierMgr, NamespaceResolver nsReg) {
+    AccessManagerImpl(Credentials credentials, HierarchyManager hierMgr) {
         this.hierMgr = hierMgr;
-        this.nsResolver = nsReg;
-    }
-
-    /**
-     * Copy constructor
-     */
-    AccessManagerImpl(AccessManagerImpl other) {
-        this.hierMgr = other.hierMgr;
-        this.nsResolver = other.nsResolver;
-    }
-
-    /**
-     * @param id
-     * @param permissions
-     * @return
-     */
-    public boolean isGranted(ItemId id, long permissions) throws ItemNotFoundException, RepositoryException {
-        return (getPermissions(id) & permissions) == permissions;
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    public long getPermissions(ItemId id) throws ItemNotFoundException, RepositoryException {
-        // @todo implement resource-based access control
-
-        return PermissionImpl.ALL_VALUES;
     }
 
     //--------------------------------------------------------< AccessManager >
     /**
-     * @see AccessManager#getPermissions(String)
+     * @see AccessManager#checkPermission(ItemId, int)
      */
-    public long getPermissions(String absPath) throws PathNotFoundException, RepositoryException {
-        try {
-            return getPermissions(hierMgr.resolvePath(Path.create(absPath, nsResolver, true)));
-        } catch (MalformedPathException mpe) {
-            String msg = "failed to check permissions for " + absPath;
-            log.warn(msg, mpe);
-            throw new RepositoryException(msg, mpe);
-        }
+    public void checkPermission(ItemId id, int permissions)
+            throws AccessDeniedException, ItemNotFoundException,
+            RepositoryException {
+        // @todo implement access control
+    }
+
+    /**
+     * @see AccessManager#isGranted(ItemId, int)
+     */
+    public boolean isGranted(ItemId id, int permissions)
+            throws ItemNotFoundException, RepositoryException {
+        // @todo implement access control
+        return true;
     }
 }

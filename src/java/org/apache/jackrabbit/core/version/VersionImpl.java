@@ -61,12 +61,11 @@ public class VersionImpl extends NodeWrapper implements Version {
         return version.internalGetLabels();
     }
 
-    public void addVersionLabel(String label) throws RepositoryException {
-        version.getVersionHistory().addVersionLabel(version, label, false);
-    }
-
-    public void removeVersionLabel(String label) throws RepositoryException {
-        version.getVersionHistory().removeVersionLabel(label);
+    /**
+     * @see Version#hasVersionLabel
+     */
+    public boolean hasVersionLabel(String label) {
+        return version.internalHasLabel(label);
     }
 
     /**
@@ -112,7 +111,7 @@ public class VersionImpl extends NodeWrapper implements Version {
     }
 
     /**
-     * Returns the forzen node of this version
+     * Returns the frozen node of this version
      *
      * @return
      * @throws RepositoryException

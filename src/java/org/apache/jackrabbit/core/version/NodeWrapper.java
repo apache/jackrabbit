@@ -19,7 +19,6 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.*;
-import javax.jcr.access.AccessDeniedException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -149,13 +148,6 @@ public class NodeWrapper implements Node {
      */
     public Property setProperty(String name, Node value) throws ValueFormatException, RepositoryException {
         return delegatee.setProperty(name, value);
-    }
-
-    /**
-     * @see Node#remove(String)
-     */
-    public void remove(String relPath) throws PathNotFoundException, RepositoryException {
-        delegatee.remove(relPath);
     }
 
     /**
@@ -510,7 +502,7 @@ public class NodeWrapper implements Node {
     }
 
     /**
-     * @see javax.jcr.Node#save()
+     * @see Node#save()
      */
     public void save() throws AccessDeniedException, LockException, ConstraintViolationException, InvalidItemStateException, RepositoryException {
         delegatee.save();
@@ -524,9 +516,9 @@ public class NodeWrapper implements Node {
     }
 
     /**
-     * @see Node#isGranted(long)
+     * @see Node#remove()
      */
-    public boolean isGranted(long permissions) throws UnsupportedRepositoryOperationException, RepositoryException {
-        return delegatee.isGranted(permissions);
+    public void remove() throws RepositoryException {
+        delegatee.remove();
     }
 }

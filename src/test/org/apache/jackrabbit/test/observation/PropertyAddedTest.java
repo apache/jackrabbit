@@ -18,17 +18,16 @@ package org.apache.jackrabbit.test.observation;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.EventType;
 
 /**
- * Test cases for {@link javax.jcr.observation.EventType#PROPERTY_ADDED
+ * Test cases for {@link javax.jcr.observation.Event#PROPERTY_ADDED
  * PROPERTY_ADDED} events.
  */
 public class PropertyAddedTest extends AbstractObservationTest {
 
     public void testSinglePropertyAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.PROPERTY_ADDED);
+        addEventListener(result, Event.PROPERTY_ADDED);
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("prop1", new String[]{"foo"});
         testRootNode.save();
@@ -40,7 +39,7 @@ public class PropertyAddedTest extends AbstractObservationTest {
 
     public void testMultiPropertyAdded() throws RepositoryException {
         EventResult result = new EventResult(log);
-        addEventListener(result, EventType.PROPERTY_ADDED);
+        addEventListener(result, Event.PROPERTY_ADDED);
         Node foo = testRootNode.addNode("foo", NT_UNSTRUCTURED);
         foo.setProperty("prop1", new String[]{"foo"});
         foo.setProperty("prop2", new String[]{"bar"});
