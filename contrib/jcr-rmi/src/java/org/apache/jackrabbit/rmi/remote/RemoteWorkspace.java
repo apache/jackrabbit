@@ -20,14 +20,7 @@ import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidSerializedDataException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
  * Remote version of the JCR {@link javax.jcr.Workspace Workspace} interface.
@@ -42,7 +35,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
  * will simply forward the method call to the underlying Workspace instance.
  * Complex return values like namespace registries and other objects are
  * returned as remote references to the corresponding remote interface. Simple
- * return values and possible exceptions are simply copied over the network
+ * return values and possible exceptions are copied over the network
  * to the client. RMI errors are signalled with RemoteExceptions.
  *
  * @author Jukka Zitting
@@ -56,80 +49,69 @@ public interface RemoteWorkspace extends Remote {
      * @see javax.jcr.Workspace#getName()
      * @throws RemoteException on RMI errors
      */
-    public String getName() throws RemoteException;
+    String getName() throws RemoteException;
 
     /**
      * @see javax.jcr.Workspace#copy(java.lang.String,java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void copy(String from, String to) throws
-        ConstraintViolationException, AccessDeniedException,
-        PathNotFoundException, ItemExistsException, RepositoryException,
-        RemoteException;
+    void copy(String from, String to)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Workspace#copy(java.lang.String,java.lang.String,java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void copy(String from, String to, String workspace) throws
-        NoSuchWorkspaceException, ConstraintViolationException,
-        AccessDeniedException, PathNotFoundException, ItemExistsException,
-        RepositoryException, RemoteException;
+    void copy(String from, String to, String workspace)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Workspace#clone(java.lang.String, java.lang.String, java.lang.String, boolean)
      * @throws RemoteException on RMI errors
      */
-    public void clone(String from, String to, String workspace,
-        boolean removeExisting) throws NoSuchWorkspaceException,
-        ConstraintViolationException, AccessDeniedException,
-        PathNotFoundException, ItemExistsException, RepositoryException,
-        RemoteException;
+    void clone(String from, String to, String workspace, boolean removeExisting)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Workspace#move(java.lang.String, java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void move(String from, String to) throws
-        ConstraintViolationException, AccessDeniedException,
-        PathNotFoundException, ItemExistsException, RepositoryException,
-        RemoteException;
+    void move(String from, String to)
+            throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Workspace#getNodeTypeManager()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeTypeManager getNodeTypeManager() throws
-        RepositoryException, RemoteException;
+    RemoteNodeTypeManager getNodeTypeManager()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Workspace#getNamespaceRegistry()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNamespaceRegistry getNamespaceRegistry() throws
-        RepositoryException, RemoteException;
+    RemoteNamespaceRegistry getNamespaceRegistry()
+            throws RepositoryException, RemoteException;
 
     /**
      * @seejavax.jcr.Workspace#getQueryManager()
      * @throws RemoteException on RMI errors
      */
-    public RemoteQueryManager getQueryManager() throws RepositoryException,
-        RemoteException;
+    RemoteQueryManager getQueryManager()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Workspace#getAccessibleWorkspaceNames()
      * @throws RemoteException on RMI errors
      */
-    public String[] getAccessibleWorkspaceNames() throws RepositoryException,
-        RemoteException;
+    String[] getAccessibleWorkspaceNames()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Workspace#importXML(java.lang.String, byte[], int)
      * @throws RemoteException on RMI errors
      */
-    public void importXML(String path, byte[] xml, int uuidBehaviour)
-        throws IOException, PathNotFoundException, ItemExistsException,
-        ConstraintViolationException, InvalidSerializedDataException,
-        LockException, RepositoryException, RemoteException;
+    void importXML(String path, byte[] xml, int uuidBehaviour)
+            throws IOException, RepositoryException, RemoteException;
 
 }

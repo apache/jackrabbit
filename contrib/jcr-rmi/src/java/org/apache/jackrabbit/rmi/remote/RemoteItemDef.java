@@ -21,7 +21,7 @@ import java.rmi.RemoteException;
 
 /**
  * Remote version of the JCR {@link javax.jcr.nodetype.ItemDef ItemDef}
- * interface. Used by the 
+ * interface. Used by the
  * {@link org.apache.jackrabbit.rmi.server.ServerItemDef ServerItemDef} and
  * {@link org.apache.jackrabbit.rmi.client.ClientItemDef ClientItemDef}
  * adapter base classes to provide transparent RMI access to remote item
@@ -31,7 +31,7 @@ import java.rmi.RemoteException;
  * to a corresponding ItemDef method. The remote object will simply forward
  * the method call to the underlying ItemDef instance. Argument and return
  * values, as well as possible exceptions, are copied over the network.
- * Compex {@link javax.jcr.nodetype.NodeType NodeType} return values 
+ * Compex {@link javax.jcr.nodetype.NodeType NodeType} return values
  * are returned as remote references to the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeType RemoteNodeType}
  * interface. RMI errors are signalled with RemoteExceptions.
@@ -42,41 +42,41 @@ import java.rmi.RemoteException;
  * @see org.apache.jackrabbit.rmi.server.ServerItemDef
  */
 public interface RemoteItemDef extends Remote {
-    
+
     /**
      * @see javax.jcr.nodetype.ItemDef#getDeclaringNodeType()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType getDeclaringNodeType() throws RemoteException;
+    RemoteNodeType getDeclaringNodeType() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.ItemDef#getName()
      * @throws RemoteException on RMI errors
      */
-    public String getName() throws RemoteException;
+    String getName() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.ItemDef#isAutoCreate()
      * @throws RemoteException on RMI errors
      */
-    public boolean isAutoCreate() throws RemoteException;
+    boolean isAutoCreate() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.ItemDef#isMandatory()
      * @throws RemoteException on RMI errors
      */
-    public boolean isMandatory() throws RemoteException;
+    boolean isMandatory() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.ItemDef#getOnParentVersion()
      * @throws RemoteException on RMI errors
      */
-    public int getOnParentVersion() throws RemoteException;
+    int getOnParentVersion() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.ItemDef#isProtected()
      * @throws RemoteException on RMI errors
      */
-    public boolean isProtected() throws RemoteException;
+    boolean isProtected() throws RemoteException;
 
 }

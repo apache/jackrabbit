@@ -19,14 +19,7 @@ package org.apache.jackrabbit.rmi.remote;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.VersionException;
 
 /**
  * Remote version of the JCR {@link javax.jcr.query.Query Query} interface.
@@ -49,49 +42,36 @@ public interface RemoteQuery extends Remote {
      * @return a <code>QueryResult</code>
      * @throws javax.jcr.RepositoryException if an error occurs
      */
-    public RemoteQueryResult execute()
-        throws RepositoryException, RemoteException;
+    RemoteQueryResult execute() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.query.Query#getStatement()
      *
      * @return the query statement.
      */
-    public String getStatement() throws RemoteException;
+    String getStatement() throws RemoteException;
 
     /**
      * @see javax.jcr.query.Query#getLanguage()
      *
      * @return the query language.
      */
-    public String getLanguage() throws RemoteException;
+    String getLanguage() throws RemoteException;
 
     /**
      * @see javax.jcr.query.Query#getPersistentQueryPath()
      *
      * @return path of the node representing this query.
-     * @throws ItemNotFoundException if this query is not a persistent query.
      * @throws RepositoryException if another error occurs.
      */
-    public String getPersistentQueryPath()
-        throws ItemNotFoundException, RepositoryException, RemoteException;
+    String getPersistentQueryPath() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.query.Query#save(String)
      *
      * @param absPath path at which to persist this query.
-     * @throws ItemExistsException If an item already exists at the indicated position
-     * @throws PathNotFoundException If the path cannot be found
-     * @throws VersionException if the parent node of absPath is versionable and checked-in (and therefore read-only).
-     * @throws ConstraintViolationException If creating the node would violate a
-     * node type (or other implementation specific) constraint.
-     * @throws LockException if a lock prevents the save.
-     * @throws UnsupportedRepositoryOperationException in a level 1 implementation.
      * @throws RepositoryException If another error occurs.
      */
-    public void save(String absPath) throws ItemExistsException,
-        PathNotFoundException, VersionException, ConstraintViolationException,
-        LockException, UnsupportedRepositoryOperationException,
-        RepositoryException, RemoteException;
-    
+    void save(String absPath) throws RepositoryException, RemoteException;
+
 }

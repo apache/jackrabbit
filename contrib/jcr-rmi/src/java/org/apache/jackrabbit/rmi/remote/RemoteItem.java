@@ -19,13 +19,7 @@ package org.apache.jackrabbit.rmi.remote;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
  * Remote version of the JCR {@link javax.jcr.Item Item} interface.
@@ -52,66 +46,62 @@ public interface RemoteItem extends Remote {
      * @see javax.jcr.Item#getPath()
      * @throws RemoteException on RMI exceptions
      */
-    public String getPath() throws RepositoryException, RemoteException;
+    String getPath() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Item#getName()
      * @throws RemoteException on RMI exceptions
      */
-    public String getName() throws RepositoryException, RemoteException;
+    String getName() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Item#getAncestor(int)
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteItem getAncestor(int level) throws ItemNotFoundException,
-        AccessDeniedException, RepositoryException, RemoteException;
+    RemoteItem getAncestor(int level)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Item#getParent()
      * @throws RemoteException on RMI exceptions
      */
-    public RemoteNode getParent() throws ItemNotFoundException,
-        AccessDeniedException, RepositoryException, RemoteException;
+    RemoteNode getParent() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Item#getDepth()
      * @throws RemoteException on RMI exceptions
      */
-    public int getDepth() throws RepositoryException, RemoteException;
+    int getDepth() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Item#isNew()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean isNew() throws RemoteException;
+    boolean isNew() throws RemoteException;
 
     /**
      * @see javax.jcr.Item#isModified()
      * @throws RemoteException on RMI exceptions
      */
-    public boolean isModified() throws RemoteException;
+    boolean isModified() throws RemoteException;
 
     /**
      * @see javax.jcr.Item#save()
      * @throws RemoteException on RMI exceptions
      */
-    public void save() throws AccessDeniedException, LockException,
-            ConstraintViolationException, InvalidItemStateException,
-            ReferentialIntegrityException, RepositoryException,
-            RemoteException;
+    void save() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Item#refresh(boolean)
      * @throws RemoteException on RMI exceptions
      */
-    public void refresh(boolean keepChanges) throws InvalidItemStateException,
-            RepositoryException, RemoteException;
+    void refresh(boolean keepChanges)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Item#remove()
      * @throws RemoteException on RMI exceptions
      */
-    public void remove() throws RepositoryException, RemoteException;
+    void remove() throws RepositoryException, RemoteException;
 
 }

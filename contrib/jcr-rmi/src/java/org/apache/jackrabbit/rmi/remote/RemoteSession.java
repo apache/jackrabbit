@@ -21,18 +21,8 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.security.AccessControlException;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.InvalidSerializedDataException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.LoginException;
-import javax.jcr.NamespaceException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
  * Remote version of the JCR {@link javax.jcr.Session Session} interface.
@@ -61,107 +51,102 @@ public interface RemoteSession extends Remote {
      * @see javax.jcr.Session#getUserId()
      * @throws RemoteException on RMI errors
      */
-    public String getUserId() throws RemoteException;
+    String getUserId() throws RemoteException;
 
     /**
      * Returns the named attribute. Note that only serializable
      * attribute values can be transmitted over the network and that
      * the client should have (or be able to fetch) the object class
      * to access the returned value. Failures to meet these conditions
-     * are signalled with RemoteExceptions. 
-     * 
+     * are signalled with RemoteExceptions.
+     *
      * @see javax.jcr.Session#getAttribute(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public Object getAttribute(String name) throws RemoteException;
+    Object getAttribute(String name) throws RemoteException;
 
     /**
      * @see javax.jcr.Session#getAttributeNames()
      * @throws RemoteException on RMI errors
      */
-    public String[] getAttributeNames() throws RemoteException;
+    String[] getAttributeNames() throws RemoteException;
 
     /**
      * @see javax.jcr.Session#getWorkspace()
      * @throws RemoteException on RMI errors
      */
-    public RemoteWorkspace getWorkspace() throws RemoteException;
+    RemoteWorkspace getWorkspace() throws RemoteException;
 
     /**
      * @see javax.jcr.Session#impersonate(javax.jcr.Credentials)
      * @throws RemoteException on RMI errors
      */
-    public RemoteSession impersonate(Credentials credentials) throws
-        LoginException, RepositoryException, RemoteException;
+    RemoteSession impersonate(Credentials credentials)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Session#getNodeByUUID(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public RemoteNode getNodeByUUID(String uuid) throws ItemNotFoundException,
-        RepositoryException, RemoteException;
+    RemoteNode getNodeByUUID(String uuid)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Session#getItem(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public RemoteItem getItem(String path) throws PathNotFoundException,
-        RepositoryException, RemoteException;
+    RemoteItem getItem(String path) throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#itemExists(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public boolean itemExists(String path) throws RemoteException;
+    boolean itemExists(String path) throws RemoteException;
 
     /**
      * @see javax.jcr.Session#move(java.lang.String, java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void move(String from, String to) throws ItemExistsException,
-        PathNotFoundException, ConstraintViolationException,
-        RepositoryException, RemoteException;
+    void move(String from, String to)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Session#save()
      * @throws RemoteException on RMI errors
      */
-    public void save() throws AccessDeniedException, LockException,
-        ConstraintViolationException, InvalidItemStateException,
-        RepositoryException, RemoteException;
+    void save() throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#refresh(boolean)
      * @throws RemoteException on RMI errors
      */
-    public void refresh(boolean keepChanges) throws RepositoryException,
-        RemoteException;
+    void refresh(boolean keepChanges)
+            throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#logout()
      * @throws RemoteException on RMI errors
      */
-    public void logout() throws RemoteException;
+    void logout() throws RemoteException;
 
     /**
      * @see javax.jcr.Session#getRootNode()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNode getRootNode() throws RepositoryException, RemoteException;
+    RemoteNode getRootNode() throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#hasPendingChanges()
      * @throws RemoteException on RMI errors
      */
-    public boolean hasPendingChanges() throws RepositoryException,
-        RemoteException;
+    boolean hasPendingChanges() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.Session#checkPermission(java.lang.String, java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void checkPermission(String path, String actions) throws
-        AccessControlException, RemoteException;
+    void checkPermission(String path, String actions)
+            throws AccessControlException, RemoteException;
 
     /**
      * Imports the system or document view XML data into a subtree of
@@ -174,56 +159,53 @@ public interface RemoteSession extends Remote {
      * @see javax.jcr.Session#importXML(java.lang.String, java.io.InputStream)
      * @throws RemoteException on RMI errors
      */
-    public void importXML(String path, byte[] xml) throws IOException,
-        PathNotFoundException, ItemExistsException,
-        ConstraintViolationException, InvalidSerializedDataException,
-        RepositoryException, RemoteException;
+    void importXML(String path, byte[] xml)
+            throws IOException, RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#setNamespacePrefix(java.lang.String, java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void setNamespacePrefix(String prefix, String uri) throws
-        NamespaceException, RepositoryException, RemoteException;
+    void setNamespacePrefix(String prefix, String uri)
+            throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#getNamespacePrefixes()
      * @throws RemoteException on RMI errors
      */
-    public String[] getNamespacePrefixes() throws RepositoryException,
-        RemoteException;
+    String[] getNamespacePrefixes() throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#getNamespaceURI(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public String getNamespaceURI(String prefix) throws NamespaceException,
-        RepositoryException, RemoteException;
+    String getNamespaceURI(String prefix)
+            throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#getNamespacePrefix(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public String getNamespacePrefix(String uri) throws NamespaceException,
-        RepositoryException, RemoteException;
+    String getNamespacePrefix(String uri)
+            throws RepositoryException, RemoteException;
     
     /**
      * @see javax.jcr.Session#addLockToken(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void addLockToken(String name) throws RemoteException;
+    void addLockToken(String name) throws RemoteException;
     
     /**
      * @see javax.jcr.Session#getLockTokens()
      * @throws RemoteException on RMI errors
      */
-    public String[] getLockTokens() throws RemoteException;
+    String[] getLockTokens() throws RemoteException;
     
     /**
      * @see javax.jcr.Session#removeLockToken(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void removeLockToken(String name) throws RemoteException;
+    void removeLockToken(String name) throws RemoteException;
 
     /**
      * Exports the identified repository subtree as a system view XML
@@ -232,15 +214,13 @@ public interface RemoteSession extends Remote {
      * large exports. The remote server uses a
      * {@link java.io.ByteArrayOutputStream ByteArrayOutputStream} to capture
      * the XML data written by the normal exportSysView method.
-     * 
+     *
      * @see javax.jcr.Workspace#exportSysView(java.lang.String, java.io.OutputStream, boolean, boolean)
      * @throws RemoteException on RMI errors
      */
-    public byte[] exportSysView(
-        String path, boolean binaryAsLink, boolean noRecurse)
-        throws PathNotFoundException, IOException,
-        RepositoryException, RemoteException;
-    
+    byte[] exportSysView(String path, boolean binaryAsLink, boolean noRecurse)
+            throws IOException, RepositoryException, RemoteException;
+
     /**
      * Exports the identified repository subtree as a document view XML
      * stream. Note that the entire XML stream is transferred as a
@@ -248,13 +228,11 @@ public interface RemoteSession extends Remote {
      * large exports. The remote server uses a
      * {@link java.io.ByteArrayOutputStream ByteArrayOutputStream} to capture
      * the XML data written by the normal exportDocView method.
-     * 
+     *
      * @see javax.jcr.Workspace#exportDocView(java.lang.String, java.io.OutputStream, boolean, boolean)
      * @throws RemoteException on RMI errors
      */
-    public byte[] exportDocView(
-        String path, boolean binaryAsLink, boolean noRecurse)
-        throws InvalidSerializedDataException, PathNotFoundException,
-        IOException, RepositoryException, RemoteException;
+    byte[] exportDocView(String path, boolean binaryAsLink, boolean noRecurse)
+        throws IOException, RepositoryException, RemoteException;
 
 }

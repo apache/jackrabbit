@@ -51,24 +51,24 @@ public interface RemotePropertyDef extends RemoteItemDef {
      * @see javax.jcr.nodetype.PropertyDef#getRequiredType()
      * @throws RemoteException on RMI errors
      */
-    public int getRequiredType() throws RemoteException;
+    int getRequiredType() throws RemoteException;
 
     /**
      * @throws RemoteException on RMI errors
      * @see javax.jcr.nodetype.PropertyDef#getValueConstraints()
      */
-    public String[] getValueConstraints() throws RemoteException;
+    String[] getValueConstraints() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.PropertyDef#getDefaultValues()
      * @throws RemoteException on RMI errors
      */
-    public Value[] getDefaultValues() throws RemoteException;
+    Value[] getDefaultValues() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.PropertyDef#isMultiple()
      * @throws RemoteException on RMI errors
      */
-    public boolean isMultiple() throws RemoteException;
+    boolean isMultiple() throws RemoteException;
 
 }

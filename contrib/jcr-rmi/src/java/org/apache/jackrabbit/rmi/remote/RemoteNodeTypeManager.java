@@ -20,7 +20,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 /**
  * Remote version of the JCR
@@ -52,28 +51,28 @@ public interface RemoteNodeTypeManager extends Remote {
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType getNodeType(String name)
-        throws NoSuchNodeTypeException, RepositoryException, RemoteException;
+    RemoteNodeType getNodeType(String name)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeTypeManager#getAllNodeTypes()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType[] getAllNodeTypes()
-        throws RepositoryException, RemoteException;
+    RemoteNodeType[] getAllNodeTypes()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType[] getPrimaryNodeTypes()
-        throws RepositoryException, RemoteException;
+    RemoteNodeType[] getPrimaryNodeTypes()
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeTypeManager#getMixinNodeTypes()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType[] getMixinNodeTypes()
-        throws RepositoryException, RemoteException;
+    RemoteNodeType[] getMixinNodeTypes()
+            throws RepositoryException, RemoteException;
 
 }

@@ -19,7 +19,6 @@ package org.apache.jackrabbit.rmi.remote;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -48,40 +47,38 @@ public interface RemoteNamespaceRegistry extends Remote {
      * @see javax.jcr.NamespaceRegistry#registerNamespace(java.lang.String,java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void registerNamespace(String prefix, String uri)
-            throws NamespaceException, RepositoryException, RemoteException;
+    void registerNamespace(String prefix, String uri)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.NamespaceRegistry#unregisterNamespace(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public void unregisterNamespace(String prefix)
-        throws NamespaceException, RepositoryException, RemoteException;
+    void unregisterNamespace(String prefix)
+            throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      * @throws RemoteException on RMI errors
      */
-    public String[] getPrefixes() throws RepositoryException, RemoteException;
+    String[] getPrefixes() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURIs()
      * @throws RemoteException on RMI errors
      */
-    public String[] getURIs() throws RepositoryException, RemoteException;
+    String[] getURIs() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURI(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public String getURI(String prefix)
-        throws NamespaceException, RepositoryException, RemoteException;
+    String getURI(String prefix) throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefix(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public String getPrefix(String uri)
-        throws NamespaceException, RepositoryException, RemoteException;
+    String getPrefix(String uri) throws RepositoryException, RemoteException;
 
 }

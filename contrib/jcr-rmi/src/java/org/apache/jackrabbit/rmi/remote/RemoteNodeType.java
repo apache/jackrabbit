@@ -47,96 +47,96 @@ public interface RemoteNodeType extends Remote {
      * @see javax.jcr.nodetype.NodeType#getName()
      * @throws RemoteException on RMI errors
      */
-    public String getName() throws RemoteException;
+    String getName() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#isMixin()
      * @throws RemoteException on RMI errors
      */
-    public boolean isMixin() throws RemoteException;
+    boolean isMixin() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#hasOrderableChildNodes()
      * @throws RemoteException on RMI errors
      */
-    public boolean hasOrderableChildNodes() throws RemoteException;
+    boolean hasOrderableChildNodes() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#getSupertypes()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType[] getSupertypes() throws RemoteException;
+    RemoteNodeType[] getSupertypes() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#getDeclaredSupertypes()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeType[] getDeclaredSupertypes() throws RemoteException;
+    RemoteNodeType[] getDeclaredSupertypes() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#isNodeType(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public boolean isNodeType(String type) throws RemoteException;
+    boolean isNodeType(String type) throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#getPropertyDefs()
      * @throws RemoteException on RMI errors
      */
-    public RemotePropertyDef[] getPropertyDefs() throws RemoteException;
+    RemotePropertyDef[] getPropertyDefs() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#getDeclaredPropertyDefs()
      * @throws RemoteException on RMI errors
      */
-    public RemotePropertyDef[] getDeclaredPropertyDefs() throws RemoteException;
+    RemotePropertyDef[] getDeclaredPropertyDefs() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#getChildNodeDefs()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeDef[] getChildNodeDefs() throws RemoteException;
+    RemoteNodeDef[] getChildNodeDefs() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#getDeclaredChildNodeDefs()
      * @throws RemoteException on RMI errors
      */
-    public RemoteNodeDef[] getDeclaredChildNodeDefs() throws RemoteException;
+    RemoteNodeDef[] getDeclaredChildNodeDefs() throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#canSetProperty(java.lang.String, javax.jcr.Value)
      * @throws RemoteException on RMI errors
      */
-    public boolean canSetProperty(String name, Value value) throws RemoteException;
+    boolean canSetProperty(String name, Value value) throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#canSetProperty(java.lang.String, javax.jcr.Value[])
      * @throws RemoteException on RMI errors
      */
-    public boolean canSetProperty(String name, Value[] values) throws RemoteException;
+    boolean canSetProperty(String name, Value[] values) throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#canAddChildNode(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public boolean canAddChildNode(String name) throws RemoteException;
+    boolean canAddChildNode(String name) throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#canAddChildNode(java.lang.String, java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public boolean canAddChildNode(String name, String type) throws RemoteException;
+    boolean canAddChildNode(String name, String type) throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#canRemoveItem(java.lang.String)
      * @throws RemoteException on RMI errors
      */
-    public boolean canRemoveItem(String name) throws RemoteException;
+    boolean canRemoveItem(String name) throws RemoteException;
 
     /**
      * @see javax.jcr.nodetype.NodeType#getPrimaryItemName()
      * @throws RemoteException on RMI errors
      */
-    public String getPrimaryItemName() throws RemoteException;
+    String getPrimaryItemName() throws RemoteException;
 
 }
