@@ -1,0 +1,62 @@
+<body>
+Contains the core classes that provide the implementation of the JCR API.
+<p>
+<i>Implementation notes:</i><p>
+The following classes implement the 'core' JCR interfaces <code>Item</code>,
+<code>Property</code>, <code>Node</code>, <code>Session</code>,
+<code>Workspace</code> and <code>Repository</code>:
+<ul><code>
+<li>ItemImpl
+<li>PropertyImpl
+<li>NodeImpl
+<li>SessionImpl
+<li>WorkspaceImpl
+<li>RepositoryImpl
+</code></ul>
+A <code>SessionImpl</code> instance is created upon successfully login to the
+<code>Repository</code> (see <code>Repository#login(Credentials, String)</code>).
+<p/>
+A <code>Session</code> is always tied to the <code>Workspace</code>
+specified in the <code>Repository#login(Credentials, String)</code> call. A
+workspace represents a persistent tree of repository items (i.e. <code>Node</code>s
+and <code>Property</code>s). The items in a workspace are 'visible' to all
+sessions accessing it (subject to their access rights, of course).
+A <code>WorkspaceImpl</code> instance represents a specifc workspace as
+seen by the session that accesses it.
+<p/>
+Every repository item is uniquely identified by its <code>ItemId</code>. The id
+of a node (<code>NodeId</code>) consists of the node's uuid. The id of a property
+(<code>PropertyId</code>) consists of the parent node's uuid and the qualified
+name of the property.
+<p/>
+Every <code>SessionImpl</code> instance has its own <code>ItemManager</code>.
+The per-session instance of <code>ItemManager</code> acts as item factory (i.e.
+it creates <code>NodeImpl</code> and <code>PropertyImpl</code> instances) and
+provides item access by item id and item caching.
+<p/>
+The data (or state) of an item is represented by the following classes in the
+subpackage <code>state</code>:
+<ul><code>
+<li>ItemState
+<li>PropertyState
+<li>NodeState
+</code></ul>
+There's one <code>PersistentItemStateManager</code> for every workspace.
+It provides item state caching and it guarantees that there's only one
+(persistent) item state instance for any distinct item id in that workspace.
+<p/>
+Every session has its own <code>SessionItemStateManager</code> that consists
+of the session's <code>TransientItemStateManager</code> and the workspace's
+<code>PersistentItemStateManager</code>.
+<p/>
+Each item (i.e. <code>NodeImpl</code> and <code>PropertyImpl</code>) instance
+is holding an <code>ItemState</code> instance. When e.g. a session is modifying
+a property by changing the property's value, a new transient item state
+is created by the session's <code>TransientItemStateManager</code>. This
+transient state is actually wrapping the (old) persistent state (<i>copy on write</i>).
+The <code>PropertyImpl</code>'s state is then replaced by the new transient state.
+<p/>
+Transient (i.e. unsaved) modifications are 'session-local',  i.e. they are not
+visible to other sessions. When the modifications are saved they become instantly
+visible to all sessions accessing the same workspace.
+</body>
