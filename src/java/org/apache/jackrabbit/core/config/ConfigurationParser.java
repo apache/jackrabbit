@@ -163,7 +163,7 @@ public class ConfigurationParser {
             Map wspConfigs = new HashMap();
             File wspRoot = new File(wspConfigRootDir);
             if (!wspRoot.exists()) {
-                wspRoot.mkdir();
+                wspRoot.mkdirs();
             }
             File[] files = wspRoot.listFiles();
             if (files == null) {
