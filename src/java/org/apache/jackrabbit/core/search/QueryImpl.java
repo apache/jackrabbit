@@ -187,6 +187,7 @@ public class QueryImpl implements Query {
             queryNode.setProperty(QueryConstants.JCR_STATEMENT.toJCRName(resolver), statement);
             // todo this should be changed in the spec some time!
             queryNode.getParent().save();
+            node = queryNode;
         } catch (MalformedPathException e) {
             throw new RepositoryException(e.getMessage(), e);
         } catch (NoPrefixDeclaredException e) {
