@@ -235,6 +235,15 @@
       </roles>
       <timezone>+1</timezone>
     </contributor>
+    <contributor>
+      <name>Edgar Poce</name>
+      <email>edgarpoce@gmail.com</email>
+      <organization/>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone/>
+    </contributor>
   </contributors>
   <licenses>
     <license>
