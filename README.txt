@@ -35,6 +35,9 @@ by the ASF.  The incubation status is recorded at
 
    http://incubator.apache.org/projects/jackrabbit.html
 
+Mailing Lists
+-------------
+
 To get involved with the Jackrabbit project, start by having a
 look at our website (link at top of page) and join our mailing
 lists by sending an empty message to
@@ -42,6 +45,14 @@ lists by sending an empty message to
    jackrabbit-dev-subscribe     :at: incubator.apache.org
 and
    jackrabbit-commits-subscribe :at: incubator.apache.org
+
+and the dev mailing list archives can be found at
+
+   http://incubator.apache.org/mail/jackrabbit-dev/
+
+
+Downloading
+-----------
 
 The Jackrabbit source code is available via Subversion at
 
@@ -80,6 +91,7 @@ who                     what
 Roy Fielding            incubation
 Stefan Guggisberg       core, data model, persistence, nodetypes, misc.
 David Nuescheler        architecture, api
+Dominique Pfister       transactions
 Peeter Piegaze          api
 Tim Reilly              mavenize
 Marcel Reutegger        observation, query
