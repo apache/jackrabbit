@@ -215,6 +215,30 @@ public class InternalValue {
     }
 
     /**
+     * @param values
+     * @return
+     */
+    public static InternalValue[] create(QName[] values) {
+        InternalValue[] ret = new InternalValue[values.length];
+        for (int i=0; i<values.length; i++) {
+            ret[i] = new InternalValue(values[i]);
+        }
+        return ret;
+    }
+
+    /**
+     * @param values
+     * @return
+     */
+    public static InternalValue[] create(String[] values) {
+        InternalValue[] ret = new InternalValue[values.length];
+        for (int i=0; i<values.length; i++) {
+            ret[i] = new InternalValue(values[i]);
+        }
+        return ret;
+    }
+
+    /**
      * @param value
      * @return
      */

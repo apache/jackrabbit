@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PersistentItemStateProvider;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -105,6 +106,11 @@ public class SessionImpl implements Session {
     protected final TransientNamespaceMappings nsMappings;
 
     /**
+     * The version manager for this session
+     */
+    protected final VersionManager versionMgr;
+
+    /**
      * Protected constructor.
      *
      * @param rep
@@ -145,6 +151,16 @@ public class SessionImpl implements Session {
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(credentials, hierMgr);
+        versionMgr = rep.getPersistentVersionManager()==null?null:rep.getPersistentVersionManager().getVersionManager();
+
+        // add virtual item managers only for normal sessions
+        if (!(this instanceof SystemSession)) {
+            try {
+                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(itemStateMgr));
+            } catch (Exception e) {
+                log.error("Unable to add vmgr: " + e.toString(), e);
+            }
+        }
     }
 
     /**
@@ -169,6 +185,16 @@ public class SessionImpl implements Session {
         itemStateMgr = new SessionItemStateManager(rep.getRootNodeUUID(), wsp.getPersistentStateManager(), getNamespaceResolver());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
+        versionMgr = rep.getPersistentVersionManager()==null?null:rep.getPersistentVersionManager().getVersionManager();
+
+        // add virtual item managers only for normal sessions
+        if (!(this instanceof SystemSession)) {
+            try {
+                itemStateMgr.addVirtualItemStateProvider(versionMgr.getVirtualItemStateProvider(itemStateMgr));
+            } catch (Exception e) {
+                log.error("Unable to add vmgr: " + e.toString(), e);
+            }
+        }
     }
 
     /**

@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -57,7 +56,7 @@ public class InternalVersionHistory {
 
     /**
      * the hashmap of all versions
-     * key = UUID (String)
+     * key = versionId (String)
      * value = version
      */
     private HashMap versionCache = new HashMap();
@@ -73,9 +72,20 @@ public class InternalVersionHistory {
     private PersistentNode labelNode;
 
     /**
+     * the id of this history
+     */
+    private String historyId;
+
+    /**
+     * the version manager
+     */
+    private final PersistentVersionManager vMgr;
+
+    /**
      * Creates a new VersionHistory object for the given node state.
      */
-    InternalVersionHistory(PersistentNode node) throws RepositoryException {
+    InternalVersionHistory(PersistentVersionManager vMgr, PersistentNode node) throws RepositoryException {
+        this.vMgr = vMgr;
         this.node = node;
         init();
     }
@@ -89,17 +99,20 @@ public class InternalVersionHistory {
         versionCache.clear();
         labelCache.clear();
 
+        // get id
+        historyId = (String) node.getPropertyValue(PersistentVersionManager.PROPNAME_HISTORY_ID).internalValue();
+
         // get entries
         PersistentNode[] children = node.getChildNodes();
         for (int i = 0; i < children.length; i++) {
             PersistentNode child = children[i];
-            if (child.getName().equals(VersionManager.NODENAME_VERSION_LABELS)) {
+            if (child.getName().equals(PersistentVersionManager.NODENAME_VERSION_LABELS)) {
                 labelNode = child;
                 continue;
             }
             InternalVersion v = new InternalVersion(this, child);
-            versionCache.put(child.getUUID(), v);
-            if (child.getName().equals(VersionManager.NODENAME_ROOTVERSION)) {
+            versionCache.put(v.getId(), v);
+            if (v.isRootVersion()) {
                 rootVersion = v;
             }
         }
@@ -115,8 +128,8 @@ public class InternalVersionHistory {
         PersistentNode labels[] = labelNode.getChildNodes();
         for (int i = 0; i < labels.length; i++) {
             PersistentNode lNode = labels[i];
-            String name = (String) lNode.getPropertyValue(VersionManager.PROPNAME_NAME).internalValue();
-            String ref = ((UUID) lNode.getPropertyValue(VersionManager.PROPNAME_VERSION).internalValue()).toString();
+            String name = (String) lNode.getPropertyValue(PersistentVersionManager.PROPNAME_NAME).internalValue();
+            String ref = (String) lNode.getPropertyValue(PersistentVersionManager.PROPNAME_VERSION).internalValue();
             InternalVersion v = getVersion(ref);
             labelCache.put(name, v);
             v.internalAddLabel(name);
@@ -124,12 +137,20 @@ public class InternalVersionHistory {
     }
 
     /**
-     * Returns the uuid of this version history
+     * returns the version manager
+     * @return
+     */
+    public PersistentVersionManager getVersionManager() {
+        return vMgr;
+    }
+
+    /**
+     * Returns the id of this version history
      *
      * @return
      */
-    public String getUUID() {
-        return node.getUUID();
+    public String getId() {
+        return historyId;
     }
 
     /**
@@ -222,7 +243,7 @@ public class InternalVersionHistory {
         v.internalDetach();
 
         // and remove from history
-        versionCache.remove(v.getUUID());
+        versionCache.remove(v.getId());
         store();
 
     }
@@ -234,14 +255,15 @@ public class InternalVersionHistory {
      * @param label
      * @throws RepositoryException
      */
-    public void addVersionLabel(InternalVersion version, String label, boolean move) throws RepositoryException {
+    public void addVersionLabel(InternalVersion version, String label, boolean move)
+            throws VersionException, RepositoryException {
         InternalVersion prev = (InternalVersion) labelCache.get(label);
         if (version.equals(prev)) {
             // ignore
             return;
         } else if (prev != null && !move) {
             // already defined elsewhere, throw
-            throw new RepositoryException("Version label " + label + " already defined for version " + prev);
+            throw new VersionException("Version label " + label + " already defined for version " + prev.getName());
         } else if (prev != null) {
             // if already defined, but move, remove old label first
             removeVersionLabel(label);
@@ -250,10 +272,12 @@ public class InternalVersionHistory {
         version.internalAddLabel(label);
         QName name = new QName("", Text.md5(label));
         PersistentNode lNode = labelNode.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
-        lNode.setPropertyValue(VersionManager.PROPNAME_NAME, InternalValue.create(label));
-        lNode.setPropertyValue(VersionManager.PROPNAME_VERSION, InternalValue.create(new UUID(version.getUUID())));
-        lNode.store();
+        lNode.setPropertyValue(PersistentVersionManager.PROPNAME_NAME, InternalValue.create(label));
+        lNode.setPropertyValue(PersistentVersionManager.PROPNAME_VERSION, InternalValue.create(version.getId()));
+        labelNode.store();
 
+        // inform manager
+        vMgr.onVersionModified(version);
     }
 
     /**
@@ -271,6 +295,9 @@ public class InternalVersionHistory {
         QName name = new QName("", Text.md5(label));
         labelNode.removeNode(name);
         labelNode.store();
+
+        // inform manager
+        vMgr.onVersionModified(v);
     }
 
     /**
@@ -289,25 +316,24 @@ public class InternalVersionHistory {
         Value[] preds = src.getProperty(VersionManager.PROPNAME_PREDECESSORS).getValues();
         InternalValue[] predecessors = new InternalValue[preds.length];
         for (int i = 0; i < preds.length; i++) {
-            String uuid = preds[i].getString();
+            String predId = preds[i].getString();
             // check if version exist
-            if (!versionCache.containsKey(uuid)) {
+            if (!versionCache.containsKey(predId)) {
                 throw new RepositoryException("invalid predecessor in source node");
             }
-            predecessors[i] = InternalValue.create(new UUID(uuid));
+            predecessors[i] = InternalValue.create(predId);
         }
 
         PersistentNode vNode = node.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
-        vNode.setPropertyValue(ItemImpl.PROPNAME_UUID, InternalValue.create(vNode.getUUID()));
-        vNode.setMixinNodeTypes(new QName[]{NodeTypeRegistry.MIX_REFERENCEABLE});
+        String versionId = UUID.randomUUID().toString();
+        vNode.setPropertyValue(PersistentVersionManager.PROPNAME_VERSION_ID, InternalValue.create(versionId));
 
         // initialize 'created' and 'predecessors'
         vNode.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, predecessors);
-
+        vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, predecessors);
 
         // checkin source node
-        InternalFrozenNode.checkin(vNode, VersionManager.NODENAME_FROZEN, src);
+        InternalFrozenNode.checkin(vNode, PersistentVersionManager.NODENAME_FROZEN, src, false);
 
         // and store
         store();
@@ -317,7 +343,7 @@ public class InternalVersionHistory {
         version.resolvePredecessors();
 
         // update cache
-        versionCache.put(version.getUUID(), version);
+        versionCache.put(version.getId(), version);
 
         return version;
     }
@@ -343,6 +369,14 @@ public class InternalVersionHistory {
     }
 
     /**
+     * Returns an iterator over all versions (not ordered yet)
+     * @return
+     */
+    protected Iterator getVersions() {
+        return versionCache.values().iterator();
+    }
+
+    /**
      * Creates a new <code>InternalVersionHistory</code> below the given parent
      * node and with the given name.
      *
@@ -351,28 +385,30 @@ public class InternalVersionHistory {
      * @return
      * @throws RepositoryException
      */
-    protected static InternalVersionHistory create(PersistentNode parent, QName name)
+    protected static InternalVersionHistory create(PersistentVersionManager vMgr, PersistentNode parent, String historyId, QName name, NodeImpl src)
             throws RepositoryException {
 
         // create history node
         PersistentNode pNode = parent.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
-        pNode.setPropertyValue(ItemImpl.PROPNAME_UUID, InternalValue.create(pNode.getUUID()));
-        pNode.setMixinNodeTypes(new QName[]{NodeTypeRegistry.MIX_REFERENCEABLE});
+        pNode.setPropertyValue(PersistentVersionManager.PROPNAME_HISTORY_ID, InternalValue.create(historyId));
 
         // create label node
-        pNode.addNode(VersionManager.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_UNSTRUCTURED);
+        pNode.addNode(PersistentVersionManager.NODENAME_VERSION_LABELS, NodeTypeRegistry.NT_UNSTRUCTURED);
 
         // create root version
+        String versionId = UUID.randomUUID().toString();
         PersistentNode vNode = pNode.addNode(VersionManager.NODENAME_ROOTVERSION, NodeTypeRegistry.NT_UNSTRUCTURED);
-        vNode.setPropertyValue(ItemImpl.PROPNAME_UUID, InternalValue.create(vNode.getUUID()));
-        vNode.setMixinNodeTypes(new QName[]{NodeTypeRegistry.MIX_REFERENCEABLE});
+        vNode.setPropertyValue(PersistentVersionManager.PROPNAME_VERSION_ID, InternalValue.create(versionId));
 
         // initialize 'created' and 'predecessors'
         vNode.setPropertyValue(VersionManager.PROPNAME_CREATED, InternalValue.create(Calendar.getInstance()));
         vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
 
+        // add also an empty frozen node to the root version
+        InternalFrozenNode.checkin(vNode, PersistentVersionManager.NODENAME_FROZEN, src, true);
+
         parent.store();
-        return new InternalVersionHistory(pNode);
+        return new InternalVersionHistory(vMgr, pNode);
     }
 }
 

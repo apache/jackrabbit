@@ -314,7 +314,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      *
      * @return the primary path to this <code>Item</code>
      */
-    protected Path getPrimaryPath() throws RepositoryException {
+    public Path getPrimaryPath() throws RepositoryException {
         return session.getHierarchyManager().getPath(id);
     }
 
@@ -782,7 +782,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             if (itemState.isNode() && itemState.getStatus() == ItemState.STATUS_NEW) {
                 NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
                 if (node.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
-                    VersionHistory hist = rep.getVersionManager().createVersionHistory(node);
+                    VersionHistory hist = session.versionMgr.createVersionHistory(node);
                     node.internalSetProperty(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
                     node.internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
                     node.internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));

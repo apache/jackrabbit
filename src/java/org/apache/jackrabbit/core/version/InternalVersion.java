@@ -30,7 +30,7 @@ import java.util.HashSet;
 /**
  * This Class implements the Version representation of the node.
  */
-public final class InternalVersion {
+public final class InternalVersion extends InternalFreeze {
 
     /**
      * the list/cache of predecessors (values == InternalVersion)
@@ -68,6 +68,16 @@ public final class InternalVersion {
     private InternalFrozenNode frozen;
 
     /**
+     * the id of this version
+     */
+    private String versionId;
+
+    /**
+     * specifies if this is the root version
+     */
+    private final boolean isRoot;
+
+    /**
      * Creates a new internal version with the given version history and
      * persistance node
      *
@@ -76,11 +86,19 @@ public final class InternalVersion {
      * @throws RepositoryException
      */
     InternalVersion(InternalVersionHistory vh, PersistentNode node) throws RepositoryException {
+        super(null);
         this.versionHistory = vh;
         this.node = node;
+
+        // check name
+        isRoot = node.getName().equals(VersionManager.NODENAME_ROOTVERSION);
+
+        // get id
+        versionId = (String) node.getPropertyValue(PersistentVersionManager.PROPNAME_VERSION_ID).internalValue();
+
         // get frozen node
-        PersistentNode pNode = node.getNode(VersionManager.NODENAME_FROZEN, 1);
-        frozen = pNode == null ? null : new InternalFrozenNode(pNode);
+        PersistentNode pNode = node.getNode(PersistentVersionManager.NODENAME_FROZEN, 1);
+        frozen = pNode == null ? null : new InternalFrozenNode(this, pNode);
 
         // init internal values
         InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_CREATED);
@@ -94,8 +112,8 @@ public final class InternalVersion {
      *
      * @return
      */
-    public String getUUID() {
-        return node.getUUID();
+    public String getId() {
+        return versionId;
     }
 
     /**
@@ -105,6 +123,14 @@ public final class InternalVersion {
      */
     public QName getName() {
         return node.getName();
+    }
+
+    /**
+     * returns the version manager
+     * @return
+     */
+    public PersistentVersionManager getVersionManager() {
+        return versionHistory.getVersionManager();
     }
 
     /**
@@ -169,9 +195,9 @@ public final class InternalVersion {
     private void storePredecessors() throws RepositoryException {
         InternalValue[] values = new InternalValue[predecessors.size()];
         for (int i = 0; i < values.length; i++) {
-            values[i] = InternalValue.create(new UUID(((InternalVersion) predecessors.get(i)).getUUID()));
+            values[i] = InternalValue.create(new UUID(((InternalVersion) predecessors.get(i)).getId()));
         }
-        node.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, values);
+        node.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, values);
     }
 
     /**
@@ -289,4 +315,12 @@ public final class InternalVersion {
         return labelCache == null ? new String[0] : (String[]) labelCache.toArray(new String[labelCache.size()]);
     }
 
+    /**
+     * checks if this is the root version.
+     * @return <code>true</code> if this version is the root version;
+     *         <code>false</code> otherwise.
+     */
+    public boolean isRootVersion() {
+        return isRoot;
+    }
 }

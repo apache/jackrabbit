@@ -19,6 +19,7 @@ import org.apache.jackrabbit.core.nodetype.*;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.ChildrenCollector;
 import org.apache.jackrabbit.core.util.IteratorHelper;
+import org.apache.jackrabbit.core.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.*;
 import org.apache.log4j.Logger;
@@ -27,7 +28,6 @@ import javax.jcr.*;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.*;
-import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
@@ -482,16 +482,16 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check for name collisions
         try {
-            ItemImpl item = itemMgr.getItem(nodePath);
+            Item item = itemMgr.getItem(nodePath);
             if (!item.isNode()) {
                 // there's already a property with that name
-                throw new ItemExistsException(item.safeGetJCRPath());
+                throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
             } else {
                 // there's already a node with that name
                 // check same-name sibling setting of both new and existing node
                 if (!def.allowSameNameSibs()
                         || !((NodeImpl) item).getDefinition().allowSameNameSibs()) {
-                    throw new ItemExistsException(item.safeGetJCRPath());
+                    throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
                 }
             }
         } catch (PathNotFoundException pnfe) {
@@ -1655,7 +1655,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (!entExisting.includesNodeType(NodeTypeRegistry.MIX_VERSIONABLE) &&
                     entNew.includesNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
                 // node has become 'versionable', initialize version history
-                VersionHistory hist = rep.getVersionManager().createVersionHistory(this);
+                VersionHistory hist = session.versionMgr.createVersionHistory(this);
                 internalSetProperty(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
                 internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
                 internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
@@ -2010,7 +2010,7 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new IllegalStateException(msg);
         }
-        Version v = rep.getVersionManager().checkin(this);
+        Version v = session.versionMgr.checkin(this);
         Property prop = internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(false));
         prop.save();
         prop = internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(v.getUUID())));
@@ -2563,7 +2563,7 @@ public class NodeImpl extends ItemImpl implements Node {
         restoreFrozenState(version.getFrozenNode(), vsel);
 
         // 2. N’s jcr:baseVersion property will be changed to point to V.
-        internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(version.getUUID())));
+        internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(version.getId())));
 
         // 3. N’s jcr:isCheckedOut property is set to false.
         internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(false));
@@ -2632,11 +2632,10 @@ public class NodeImpl extends ItemImpl implements Node {
                     internalSetProperty(props[i].getName(), prop.getValues()[0]);
                     continue;
                 } catch (RepositoryException e) {
-// ignore and try multiple below
+                    // ignore and try multiple below
                 }
             }
             internalSetProperty(props[i].getName(), prop.getValues());
-
         }
 
         // restore the frozen nodes
@@ -2658,7 +2657,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     // do nothing
                 } else {
                     // get desired version from version selector
-                    VersionHistory history = ((InternalFrozenVersionHistory) child).getVersionHistory(session);
+                    VersionHistory history = (VersionHistory) session.getNodeByUUID(((InternalFrozenVersionHistory) child).getVersionHistoryId());
                     InternalVersion v = ((VersionImpl) vsel.select(history)).getInternalVersion();
                     NodeImpl node = addNode(child.getName(), v.getFrozenNode());
                     node.internalRestore(v, vsel);
@@ -2673,7 +2672,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public VersionHistory getVersionHistory()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         checkVersionable();
-        return rep.getVersionManager().getVersionHistory(this);
+        return session.versionMgr.getVersionHistory(this);
     }
 
     /**
@@ -2682,7 +2681,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Version getBaseVersion()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         checkVersionable();
-        return rep.getVersionManager().getBaseVersion(this);
+        return session.versionMgr.getBaseVersion(this);
     }
 
     /**
@@ -2772,151 +2771,5 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean isLocked() throws RepositoryException {
         // @todo implement locking support
         return false;
-    }
-}
-
-/**
- * <code>ChildrenCollectorFilter</code> is a utility class
- * which can be used to 'collect' child items of a
- * node whose names match a certain pattern. It implements the
- * <code>ItemVisitor</code> interface.
- */
-class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
-    static final char WILDCARD_CHAR = '*';
-    static final String OR = "|";
-
-    private final Collection children;
-    private final boolean collectNodes;
-    private final boolean collectProperties;
-    private final String namePattern;
-
-    /**
-     * Constructs a <code>ChildrenCollectorFilter</code>
-     *
-     * @param namePattern       the pattern which should be applied to the names
-     *                          of the children
-     * @param children          where the matching children should be added
-     * @param collectNodes      true, if child nodes should be collected; otherwise false
-     * @param collectProperties true, if child properties should be collected; otherwise false
-     * @param maxLevel          umber of hierarchy levels to traverse
-     *                          (e.g. 1 for direct children only, 2 for children and their children, and so on)
-     */
-    ChildrenCollectorFilter(String namePattern, Collection children, boolean collectNodes, boolean collectProperties, int maxLevel) {
-        super(false, maxLevel);
-        this.namePattern = namePattern;
-        this.children = children;
-        this.collectNodes = collectNodes;
-        this.collectProperties = collectProperties;
-    }
-
-    /**
-     * @see TraversingItemVisitor#entering(Node, int)
-     */
-    protected void entering(Node node, int level)
-            throws RepositoryException {
-        if (level > 0 && collectNodes) {
-            if (matches(node.getName(), namePattern)) {
-                children.add(node);
-            }
-        }
-    }
-
-    /**
-     * @see TraversingItemVisitor#entering(Property, int)
-     */
-    protected void entering(Property property, int level)
-            throws RepositoryException {
-        if (level > 0 && collectProperties) {
-            if (matches(property.getName(), namePattern)) {
-                children.add(property);
-            }
-        }
-    }
-
-    /**
-     * Applies the name pattern against the specified name.
-     * <p/>
-     * The pattern may be a full name or a partial name with one or more
-     * wildcard characters ("*"), or a disjunction (using the "|" character
-     * to represent logical <i>OR</i>) of these. For example,
-     * <p/>
-     * <code>"jcr:*|foo:bar"</code>
-     * <p/>
-     * would match
-     * <p/>
-     * <code>"foo:bar"</code>, but also <code>"jcr:whatever"</code>.
-     *
-     * @param name the name to test the pattern with
-     * @return true if the specified name matches the pattern
-     */
-    static boolean matches(String name, String pattern) {
-        // split pattern
-        StringTokenizer st = new StringTokenizer(pattern, OR, false);
-        while (st.hasMoreTokens()) {
-            if (internalMatches(name, st.nextToken(), 0, 0)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Internal helper used to recursively match the pattern
-     *
-     * @param s       The string to be tested
-     * @param pattern The pattern
-     * @param sOff    offset within <code>s</code>
-     * @param pOff    offset within <code>pattern</code>.
-     * @return true if <code>s</code> matched pattern, else false.
-     */
-    private static boolean internalMatches(String s, String pattern, int sOff, int pOff) {
-        int pLen = pattern.length();
-        int sLen = s.length();
-
-        for (; ;) {
-            if (pOff >= pLen) {
-                if (sOff >= sLen) {
-                    return true;
-                } else if (s.charAt(sOff) == '[') {
-                    // check for subscript notation (e.g. "whatever[1]")
-
-                    // the entire pattern matched up to the subscript:
-                    // -> ignore the subscript
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-            if (sOff >= sLen && pattern.charAt(pOff) != WILDCARD_CHAR) {
-                return false;
-            }
-
-            // check for a '*' as the next pattern char;
-            // this is handled by a recursive call for
-            // each postfix of the name.
-            if (pattern.charAt(pOff) == WILDCARD_CHAR) {
-                if (++pOff >= pLen) {
-                    return true;
-                }
-
-                for (; ;) {
-                    if (internalMatches(s, pattern, sOff, pOff)) {
-                        return true;
-                    }
-                    if (sOff >= sLen) {
-                        return false;
-                    }
-                    sOff++;
-                }
-            }
-
-            if (pOff < pLen && sOff < sLen) {
-                if (pattern.charAt(pOff) != s.charAt(sOff)) {
-                    return false;
-                }
-            }
-            pOff++;
-            sOff++;
-        }
     }
 }

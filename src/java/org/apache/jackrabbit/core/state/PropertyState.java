@@ -58,7 +58,7 @@ public class PropertyState extends ItemState {
      * @param parentUUID    the uuid of the parent node
      * @param initialStatus the initial status of the property state object
      */
-    PropertyState(QName name, String parentUUID, int initialStatus) {
+    protected PropertyState(QName name, String parentUUID, int initialStatus) {
         super(parentUUID, new PropertyId(parentUUID, name), initialStatus);
         this.name = name;
         type = PropertyType.UNDEFINED;

@@ -1,10 +1,21 @@
 <body>
-The version storage is currently implement using the normal storage of the
-repository. For performance and scalability reasons, it will be probably
-stored externally later.<br>
-A lot of the versioning functionality is handled in the NodeImpl or VersionImpl
-itself, since it operates on internal properties and node of that nodes. This
-also might move to another class, eg. the VersionManager later.<br>
+The versioning framework in jackrabbit consists of 3 layers. A persistence layer,
+an application layer and an presentation layer.<p>
+The persistence layer uses a 'normal' workspace as storage. The storage can later
+be exchanged by a more scaleable one. The application layer operates on the
+persistent one and provides the internal view of the version storage. It is
+manifested through the <code>InternalVersion</code> and
+<code>InternalVersionHistory</code> objects. The
+<code>PersistentVersionManager</code> is responsible for those 2 layers.<p>
+The internal versions are also mapped to the content and exposed through the
+API (i.e. the <code>Version</code> extends <code>Node</code> and can be inspected
+with normal Node methods). Furthermore the version store is also exposed below
+<code>/jcr:system/jcr:versionStorage</code>. The exact structure of it is not
+defined yet, so applications should not relay on it and rather use
+<code>Node.getVersionHistory()</code> to access a particular version history or
+use the search mechanisms to find the respective versions.<p>
+The presentation layer is managed by the <code>VersionManager</code>. it is
+responsible for mapping the version storage to the content.
 <p>
 Open issues:
 <ul>

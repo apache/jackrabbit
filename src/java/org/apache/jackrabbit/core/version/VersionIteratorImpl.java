@@ -75,7 +75,7 @@ public class VersionIteratorImpl implements VersionIterator {
         push(ret.getSuccessors());
 
         try {
-            return new VersionImpl(session, ret);
+            return (Version) session.getNodeByUUID(ret.getId());
         } catch (RepositoryException e) {
             throw new NoSuchElementException("Unable to provide element: " + e.toString());
         }

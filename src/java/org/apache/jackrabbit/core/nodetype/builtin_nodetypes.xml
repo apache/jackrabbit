@@ -139,7 +139,7 @@
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
         <propertyDef name="jcr:type" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
         <propertyDef name="jcr:valueConstraints" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
         <propertyDef name="jcr:defaultValues" type="undefined" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true"/>
@@ -154,7 +154,7 @@
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:name" type="Name" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" primaryItem="false" multiple="false"/>
         <propertyDef name="jcr:requiredPrimaryTypes" type="String" autoCreate="true" mandatory="true" onParentVersion="COPY" protected="false" primaryItem="false" multiple="true">
             <defaultValues>
                 <defaultValue>nt:base</defaultValue>
@@ -199,28 +199,16 @@
             </valueConstraints>
         </propertyDef>
     </nodeType>
-    <nodeType name="nt:frozen" mixin="false" orderableChildNodes="false">
-        <supertypes>
-            <supertype>nt:base</supertype>
-        </supertypes>
-        <propertyDef name="jcr:frozenPrimaryType" type="Name" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-        <propertyDef name="jcr:frozenMixinTypes" type="Name" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
-        <propertyDef name="jcr:frozenUUID" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-        <propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
-        <propertyDef name="*" type="undefined" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
-        <childNodeDef name="*" defaultPrimaryType="nt:frozen" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="true">
-            <requiredPrimaryTypes>
-                <requiredPrimaryType>nt:base</requiredPrimaryType>
-            </requiredPrimaryTypes>
-        </childNodeDef>
-    </nodeType>
     <nodeType name="nt:version" mixin="false" orderableChildNodes="false">
         <supertypes>
-            <supertype>nt:frozen</supertype>
+            <supertype>nt:base</supertype>
             <supertype>mix:referenceable</supertype>
         </supertypes>
         <propertyDef name="jcr:versionLabels" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
         <propertyDef name="jcr:created" type="Date" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:frozenPrimaryType" type="Name" autoCreate="false" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:frozenMixinTypes" type="Name" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true"/>
+        <propertyDef name="jcr:frozenUUID" type="String" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="false"/>
         <propertyDef name="jcr:predecessors" type="Reference" autoCreate="true" mandatory="true" onParentVersion="ABORT" protected="true" primaryItem="false" multiple="true">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
@@ -231,6 +219,11 @@
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>
         </propertyDef>
+        <childNodeDef name="jcr:frozen" defaultPrimaryType="nt:base" autoCreate="false" mandatory="false" onParentVersion="ABORT" protected="true" primaryItem="false" sameNameSibs="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>nt:base</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDef>
     </nodeType>
     <nodeType name="nt:query" mixin="false" orderableChildNodes="false">
         <supertypes>

@@ -18,16 +18,14 @@ package org.apache.jackrabbit.core;
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.util.IteratorHelper;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.PropertyDef;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * There's one <code>ItemManager</code> instance per <code>Session</code>
@@ -156,6 +154,7 @@ public class ItemManager implements ItemLifeCycleListener {
     }
 
     /**
+     * Checks if the item with the given id exists
      * @param id
      * @return
      */
@@ -335,6 +334,8 @@ public class ItemManager implements ItemLifeCycleListener {
             }
         }
 
+        // not need to add virtual properties
+
         return new IteratorHelper(Collections.unmodifiableList(children));
     }
 
@@ -368,8 +369,17 @@ public class ItemManager implements ItemLifeCycleListener {
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
-        // create node object
-        return new NodeImpl(this, session, id, state, def, listeners);
+
+        // check spezial nodes
+        if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION)) {
+            return session.versionMgr.createVersionInstance(session, state, def, this, listeners);
+        } else if (state.getNodeTypeName().equals(NodeTypeRegistry.NT_VERSION_HISTORY)) {
+            return session.versionMgr.createVersionHistoryInstance(session, state, def, this, listeners);
+        } else {
+            // create node object
+            return new NodeImpl(this, session, id, state, def, listeners);
+        }
+
     }
 
     NodeImpl createNodeInstance(NodeState state) throws RepositoryException {

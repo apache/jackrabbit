@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -30,6 +31,7 @@ public class SessionItemStateManager implements ItemStateProvider {
     private static Logger log = Logger.getLogger(SessionItemStateManager.class);
 
     private final PersistentItemStateProvider persistentStateMgr;
+    private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
     private final TransientItemStateManager transientStateMgr;
     private final HierarchyManager hierMgr;
 
@@ -46,6 +48,17 @@ public class SessionItemStateManager implements ItemStateProvider {
         transientStateMgr = new TransientItemStateManager();
         // create hierarchy manager that uses both transient and persistent state
         hierMgr = new HierarchyManagerImpl(rootNodeUUID, this, nsResolver);
+    }
+
+    /**
+     * Adds a new virtual item state provider
+     * @param prov
+     */
+    public synchronized void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
+        VirtualItemStateProvider[] provs = new VirtualItemStateProvider[virtualProviders.length+1];
+        System.arraycopy(virtualProviders, 0, provs, 0, virtualProviders.length);
+        provs[virtualProviders.length] = prov;
+        virtualProviders = provs;
     }
 
     private synchronized void collectDescendantItemStates(ItemId id, List descendents) {
@@ -172,6 +185,13 @@ public class SessionItemStateManager implements ItemStateProvider {
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
+        // check if there is a virtual state for the specified item
+        for (int i=0; i<virtualProviders.length; i++) {
+            if (virtualProviders[i].hasItemState(id)) {
+                return virtualProviders[i].getItemState(id);
+            }
+        }
+
         // first check if the specified item has been transiently removed
         if (transientStateMgr.hasItemStateInAttic(id)) {
             /**
@@ -183,25 +203,42 @@ public class SessionItemStateManager implements ItemStateProvider {
              */
             return transientStateMgr.getItemState(id);
         }
-        try {
-            // check if there's transient state for the specified item
+
+        // check if there's transient state for the specified item
+        if (transientStateMgr.hasItemState(id)) {
             return transientStateMgr.getItemState(id);
-        } catch (NoSuchItemStateException nsise) {
-            // check if there's persistent state for the specified item
+        }
+
+        // check if there's persistent state for the specified item
+        if (persistentStateMgr.hasItemState(id)) {
             return persistentStateMgr.getItemState(id);
         }
+
+        throw new NoSuchItemStateException(id.toString());
     }
 
     /**
      * @see ItemStateProvider#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
-        try {
-            getItemState(id);
-            return true;
-        } catch (ItemStateException ise) {
-            return false;
+        return transientStateMgr.hasItemStateInAttic(id)
+                || transientStateMgr.hasItemState(id)
+                || persistentStateMgr.hasItemState(id)
+                || hasVirtualItemState(id);
+    }
+
+    /**
+     * Checks if there is a virtual item state
+     * @param id
+     * @return
+     */
+    private boolean hasVirtualItemState(ItemId id) {
+        for (int i=0; i<virtualProviders.length; i++) {
+            if (virtualProviders[i].hasItemState(id)) {
+                return true;
+            }
         }
+        return false;
     }
 
     /**
@@ -216,12 +253,7 @@ public class SessionItemStateManager implements ItemStateProvider {
      * @see ItemStateProvider#hasItemStateInAttic(ItemId)
      */
     public boolean hasItemStateInAttic(ItemId id) {
-        try {
-            getItemStateInAttic(id);
-            return true;
-        } catch (ItemStateException ise) {
-            return false;
-        }
+        return transientStateMgr.hasItemStateInAttic(id);
     }
 
     //< more methods for listing and retrieving transient ItemState instances >

@@ -28,15 +28,21 @@ public class PersistentProperty {
     /**
      * the underlaying persistent state
      */
-    private PropertyState state;
+    private final PropertyState state;
+
+    /**
+     * flag if this is a multivalued propertery
+     */
+    private final boolean isMultiple;
 
     /**
      * Creates a new persistent property
      *
      * @param state
      */
-    public PersistentProperty(PropertyState state) {
+    public PersistentProperty(PropertyState state, boolean isMultiple) {
         this.state = state;
+        this.isMultiple = isMultiple;
     }
 
     /**
@@ -66,4 +72,11 @@ public class PersistentProperty {
         return state.getType();
     }
 
+    /**
+     * returns <code>true</code> if this is a multivalue propererty
+     * @return
+     */
+    public boolean isMultiple() {
+        return isMultiple;
+    }
 }

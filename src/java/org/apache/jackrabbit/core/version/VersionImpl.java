@@ -15,19 +15,20 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.state.NodeState;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.nodetype.NodeDef;
 import javax.jcr.version.Version;
 import java.util.Calendar;
 
 /**
  * This Class implements a Version that extends the node interface
  */
-public class VersionImpl extends NodeWrapper implements Version {
+public class VersionImpl extends NodeImpl implements Version {
 
     /**
      * the internal version
@@ -35,15 +36,21 @@ public class VersionImpl extends NodeWrapper implements Version {
     protected final InternalVersion version;
 
     /**
-     * Creates a new version implementation
-     *
+     * creates a new version node
+     * @param itemMgr
      * @param session
+     * @param id
+     * @param state
+     * @param definition
+     * @param listeners
      * @param version
      * @throws RepositoryException
      */
-    protected VersionImpl(Session session, InternalVersion version)
+    protected VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
+                       NodeState state, NodeDef definition,
+                       ItemLifeCycleListener[] listeners, InternalVersion version)
             throws RepositoryException {
-        super((NodeImpl) session.getNodeByUUID(version.getUUID()));
+        super(itemMgr, session, id, state, definition, listeners);
         this.version = version;
     }
 
@@ -76,7 +83,7 @@ public class VersionImpl extends NodeWrapper implements Version {
         InternalVersion[] suc = version.getSuccessors();
         Version[] ret = new Version[suc.length];
         for (int i = 0; i < suc.length; i++) {
-            ret[i] = new VersionImpl(unwrap().getSession(), suc[i]);
+            ret[i] = (Version) session.getNodeByUUID(suc[i].getId());
         }
         return ret;
     }
@@ -89,7 +96,7 @@ public class VersionImpl extends NodeWrapper implements Version {
         InternalVersion[] pred = version.getPredecessors();
         Version[] ret = new Version[pred.length];
         for (int i = 0; i < pred.length; i++) {
-            ret[i] = new VersionImpl(unwrap().getSession(), pred[i]);
+            ret[i] = (Version) session.getNodeByUUID(pred[i].getId());
         }
         return ret;
     }
@@ -98,7 +105,7 @@ public class VersionImpl extends NodeWrapper implements Version {
      * @see javax.jcr.Node#getUUID()
      */
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
-        return version.getUUID();
+        return version.getId();
     }
 
     /**
@@ -126,9 +133,10 @@ public class VersionImpl extends NodeWrapper implements Version {
     public boolean isSame(Item otherItem) {
         if (otherItem instanceof VersionImpl) {
             // since all versions live in the same workspace, we can compare the uuids
-            return ((VersionImpl) otherItem).version.getUUID().equals(version.getUUID());
+            return ((VersionImpl) otherItem).version.getId().equals(version.getId());
         } else {
             return false;
         }
     }
+
 }

@@ -59,7 +59,7 @@ public class NodeState extends ItemState {
      * @param overlayedState the backing node state being overlayed
      * @param initialStatus  the initial status of the node state object
      */
-    NodeState(NodeState overlayedState, int initialStatus) {
+    protected NodeState(NodeState overlayedState, int initialStatus) {
         super(overlayedState, initialStatus);
 
         copy(overlayedState);
@@ -73,7 +73,7 @@ public class NodeState extends ItemState {
      * @param parentUUID    the UUID of the parent node
      * @param initialStatus the initial status of the node state object
      */
-    NodeState(String uuid, QName nodeTypeName, String parentUUID, int initialStatus) {
+    protected NodeState(String uuid, QName nodeTypeName, String parentUUID, int initialStatus) {
         super(parentUUID, new NodeId(uuid), initialStatus);
         if (parentUUID != null) {
             parentUUIDs.add(parentUUID);

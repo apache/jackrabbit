@@ -23,10 +23,33 @@ import org.apache.jackrabbit.core.QName;
  */
 public abstract class InternalFreeze {
 
+    /** the parent 'freeze' */
+    private final InternalFreeze parent;
+
+    /**
+     * Creates a new 'Freeze'
+     * @param parent
+     */
+    protected InternalFreeze(InternalFreeze parent) {
+        this.parent = parent;
+    }
+
     /**
      * Returns the name of the frozen node
      *
      * @return
      */
     public abstract QName getName();
+
+    /**
+     * returns the version manager
+     * @return
+     */
+    public PersistentVersionManager getVersionManager() {
+        return parent==null ? null : parent.getVersionManager();
+    }
+
+    public InternalFreeze getParent() {
+        return parent;
+    }
 }

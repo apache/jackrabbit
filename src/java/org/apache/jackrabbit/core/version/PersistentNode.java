@@ -111,7 +111,8 @@ public class PersistentNode {
             for (int i = 0; i < list.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) list.get(i);
                 PropertyId propId = new PropertyId(nodeState.getUUID(), entry.getName());
-                props[i] = new PersistentProperty((PropertyState) stateMgr.getItemState(propId));
+                PropertyState pState = (PropertyState) stateMgr.getItemState(propId);
+                props[i] = new PersistentProperty(pState, ntMgr.getPropDef(pState.getDefinitionId()).isMultiple());
             }
             return props;
         } catch (ItemStateException e) {
@@ -171,7 +172,7 @@ public class PersistentNode {
      */
     protected void setPropertyValue(QName name, InternalValue value)
             throws RepositoryException {
-        setPropertyValues(name, value.getType(), new InternalValue[]{value});
+        setPropertyValues(name, value.getType(), new InternalValue[]{value}, false);
     }
 
     /**
@@ -184,7 +185,20 @@ public class PersistentNode {
      */
     protected void setPropertyValues(QName name, int type, InternalValue[] values)
             throws RepositoryException {
-        PersistentPropertyState prop = getOrCreatePropertyState(name, type, true);
+        setPropertyValues(name, type, values, true);
+    }
+
+    /**
+     * Sets the property values
+     *
+     * @param name
+     * @param type
+     * @param values
+     * @throws RepositoryException
+     */
+    protected void setPropertyValues(QName name, int type, InternalValue[] values, boolean multiple)
+            throws RepositoryException {
+        PersistentPropertyState prop = getOrCreatePropertyState(name, type, multiple);
         prop.setValues(values);
     }
 

@@ -1,0 +1,46 @@
+/*
+ * Copyright 2004 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.virtual;
+
+import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.QName;
+
+/**
+ * This Class implements a virtual node state
+ *
+ * @author tripod
+ * @version $Revision:$, $Date:$
+ */
+public class VirtualNodeState extends NodeState {
+
+    /**
+     *
+     * @param uuid
+     * @param nodeTypeName
+     * @param parentUUID
+     */
+    protected VirtualNodeState(String uuid, QName nodeTypeName, String parentUUID) {
+        super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING_VIRTUAL);
+    }
+
+    /**
+     *
+     * @param overlayedState
+     */
+    protected VirtualNodeState(NodeState overlayedState) {
+        super(overlayedState, ItemState.STATUS_EXISTING_VIRTUAL);
+    }
+}

@@ -27,7 +27,7 @@ import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.state.tx.TransactionManager;
 import org.apache.jackrabbit.core.state.tx.XASessionImpl;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.*;
@@ -79,7 +79,7 @@ public class RepositoryImpl implements Repository, EventListener {
 
     private final NamespaceRegistryImpl nsReg;
     private final NodeTypeRegistry ntReg;
-    private final VersionManager vMgr;
+    private final PersistentVersionManager vMgr;
     private final TransactionManager txMgr;
 
     // configuration of the repository
@@ -295,7 +295,7 @@ public class RepositoryImpl implements Repository, EventListener {
             log.error(msg, npde);
             throw new RepositoryException(msg, npde);
         }
-        vMgr = new VersionManager(verSession);
+        vMgr = new PersistentVersionManager(verSession);
 
         // load repository properties
         repProps = new Properties();
@@ -375,7 +375,7 @@ public class RepositoryImpl implements Repository, EventListener {
         return ntReg;
     }
 
-    VersionManager getVersionManager() {
+    PersistentVersionManager getPersistentVersionManager() {
         // check state
         if (disposed) {
             throw new IllegalStateException("repository instance has been shut down");

@@ -16,11 +16,8 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.version.VersionHistory;
 
 /**
  * This Class represents a frozen versionable child node, that was created
@@ -38,7 +35,8 @@ public class InternalFrozenVersionHistory extends InternalFreeze {
      *
      * @param node
      */
-    protected InternalFrozenVersionHistory(PersistentNode node) {
+    protected InternalFrozenVersionHistory(InternalFreeze parent, PersistentNode node) {
+        super(parent);
         this.node = node;
     }
 
@@ -54,16 +52,31 @@ public class InternalFrozenVersionHistory extends InternalFreeze {
     /**
      * Returns the version history that was versioned with this node.
      *
-     * @param session
      * @return
      * @throws RepositoryException
      */
-    public VersionHistory getVersionHistory(Session session)
+    public String getVersionHistoryId()
             throws RepositoryException {
-        String historyId = ((UUID) node.getPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY).internalValue()).toString();
-        PersistentNode hNode = node.getNodeByUUID(historyId);
-        return new VersionHistoryImpl(session, new InternalVersionHistory(hNode));
+        return (String) node.getPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY).internalValue();
     }
 
+    /**
+     * Returns the version history that was versioned with this node.
+     *
+     * @return
+     * @throws RepositoryException
+     */
+    public InternalVersionHistory getVersionHistory()
+            throws RepositoryException {
+        return getVersionManager().getVersionHistory(getVersionHistoryId());
+    }
 
+    public String getBaseVersionId() throws RepositoryException {
+        return (String) node.getPropertyValue(VersionManager.PROPNAME_BASE_VERSION).internalValue();
+    }
+
+    public InternalVersion getBaseVesion()
+            throws RepositoryException {
+        return getVersionManager().getVersion(getVersionHistoryId(), getBaseVersionId());
+    }
 }

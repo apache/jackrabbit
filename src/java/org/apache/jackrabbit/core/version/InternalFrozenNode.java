@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
@@ -73,7 +72,8 @@ public class InternalFrozenNode extends InternalFreeze {
      * @param node
      * @throws RepositoryException
      */
-    protected InternalFrozenNode(PersistentNode node) throws RepositoryException {
+    protected InternalFrozenNode(InternalFreeze parent, PersistentNode node) throws RepositoryException {
+        super(parent);
         this.node = node;
 
         // init the frozen properties
@@ -120,9 +120,9 @@ public class InternalFrozenNode extends InternalFreeze {
         frozenChildNodes = new InternalFreeze[childNodes.length];
         for (int i = 0; i < childNodes.length; i++) {
             if (childNodes[i].hasProperty(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE)) {
-                frozenChildNodes[i] = new InternalFrozenNode(childNodes[i]);
+                frozenChildNodes[i] = new InternalFrozenNode(this, childNodes[i]);
             } else if (childNodes[i].hasProperty(VersionManager.PROPNAME_VERSION_HISTORY)) {
-                frozenChildNodes[i] = new InternalFrozenVersionHistory(childNodes[i]);
+                frozenChildNodes[i] = new InternalFrozenVersionHistory(this, childNodes[i]);
             } else {
                 // unkown ?
             }
@@ -206,7 +206,7 @@ public class InternalFrozenNode extends InternalFreeze {
      * @return
      * @throws RepositoryException
      */
-    protected static InternalFrozenNode checkin(PersistentNode parent, QName name, NodeImpl src)
+    protected static PersistentNode checkin(PersistentNode parent, QName name, NodeImpl src, boolean initOnly)
             throws RepositoryException {
 
         // create new node
@@ -229,61 +229,63 @@ public class InternalFrozenNode extends InternalFreeze {
             node.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, ivalues);
         }
 
-        // add the properties
-        PropertyIterator piter = src.getProperties();
-        while (piter.hasNext()) {
-            PropertyImpl prop = (PropertyImpl) piter.nextProperty();
-// ignore some properties that not have a OPV=Ignore yet
-            if (prop.getQName().equals(VersionManager.PROPNAME_VERSION_HISTORY)) {
-                continue;
+        if (!initOnly) {
+            // add the properties
+            PropertyIterator piter = src.getProperties();
+            while (piter.hasNext()) {
+                PropertyImpl prop = (PropertyImpl) piter.nextProperty();
+    // ignore some properties that not have a OPV=Ignore yet
+                if (prop.getQName().equals(VersionManager.PROPNAME_VERSION_HISTORY)) {
+                    continue;
+                }
+                if (prop.getQName().equals(VersionManager.PROPNAME_PREDECESSORS)) {
+                    continue;
+                }
+                switch (prop.getDefinition().getOnParentVersion()) {
+                    case OnParentVersionAction.ABORT:
+                        parent.reload();
+                        throw new RepositoryException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
+                    case OnParentVersionAction.COMPUTE:
+                    case OnParentVersionAction.IGNORE:
+                    case OnParentVersionAction.INITIALIZE:
+                        break;
+                    case OnParentVersionAction.VERSION:
+                    case OnParentVersionAction.COPY:
+                        node.copyFrom(prop);
+                        break;
+                }
             }
-            if (prop.getQName().equals(VersionManager.PROPNAME_PREDECESSORS)) {
-                continue;
-            }
-            switch (prop.getDefinition().getOnParentVersion()) {
-                case OnParentVersionAction.ABORT:
-                    parent.reload();
-                    throw new RepositoryException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
-                case OnParentVersionAction.COMPUTE:
-                case OnParentVersionAction.IGNORE:
-                case OnParentVersionAction.INITIALIZE:
-                    break;
-                case OnParentVersionAction.VERSION:
-                case OnParentVersionAction.COPY:
-                    node.copyFrom(prop);
-                    break;
-            }
-        }
 
-        // add the frozen children and vistories
-        NodeIterator niter = src.getNodes();
-        while (niter.hasNext()) {
-            NodeImpl child = (NodeImpl) niter.nextNode();
-            switch (child.getDefinition().getOnParentVersion()) {
-                case OnParentVersionAction.ABORT:
-                    throw new RepositoryException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
-                case OnParentVersionAction.COMPUTE:
-                case OnParentVersionAction.IGNORE:
-                case OnParentVersionAction.INITIALIZE:
-                    break;
-                case OnParentVersionAction.VERSION:
-                    if (child.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
-// create frozen versionable child
-                        PersistentNode newChild = node.addNode(child.getQName(), NodeTypeRegistry.NT_UNSTRUCTURED);
-                        newChild.setPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY,
-                                InternalValue.create(new UUID(child.getVersionHistory().getUUID())));
-                        newChild.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION,
-                                InternalValue.create(new UUID(child.getBaseVersion().getUUID())));
-                    }
-                    // else ignore
-                    break;
-                case OnParentVersionAction.COPY:
-                    checkin(node, child.getQName(), child);
-                    break;
+            // add the frozen children and vistories
+            NodeIterator niter = src.getNodes();
+            while (niter.hasNext()) {
+                NodeImpl child = (NodeImpl) niter.nextNode();
+                switch (child.getDefinition().getOnParentVersion()) {
+                    case OnParentVersionAction.ABORT:
+                        throw new RepositoryException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
+                    case OnParentVersionAction.COMPUTE:
+                    case OnParentVersionAction.IGNORE:
+                    case OnParentVersionAction.INITIALIZE:
+                        break;
+                    case OnParentVersionAction.VERSION:
+                        if (child.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
+                            // create frozen versionable child
+                            PersistentNode newChild = node.addNode(child.getQName(), NodeTypeRegistry.NT_UNSTRUCTURED);
+                            newChild.setPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY,
+                                    InternalValue.create(child.getVersionHistory().getUUID()));
+                            newChild.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION,
+                                    InternalValue.create(child.getBaseVersion().getUUID()));
+                        }
+                        // else ignore
+                        break;
+                    case OnParentVersionAction.COPY:
+                        checkin(node, child.getQName(), child, false);
+                        break;
+                }
             }
         }
         parent.store();
-        return new InternalFrozenNode(node);
+        return node;
     }
 
 }
