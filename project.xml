@@ -225,6 +225,15 @@
       </roles>
       <timezone>+1</timezone>
     </contributor>
+    <contributor>
+      <name>Jukka Zitting</name>
+      <email/>
+      <organization/>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
   </contributors>
   <licenses>
     <license>
