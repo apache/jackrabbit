@@ -207,7 +207,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         LockInfo info = (LockInfo) child.get();
         if (info != null) {
             if (child.hasPath(path)) {
-                throw new LockException("Node already locked: " + path);
+                throw new LockException("Node already locked: " + node.safeGetJCRPath());
             } else if (info.deep) {
                 throw new LockException("Parent node has deep lock.");
             }
@@ -239,12 +239,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         PathMap.Child child = lockMap.map(path, false);
         LockInfo info = (LockInfo) child.get();
         if (info == null) {
-            throw new LockException("Node not locked: " + path);
+            throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
         if (child.hasPath(path) || info.deep) {
             return new LockImpl(info, node);
         } else {
-            throw new LockException("Node not locked: " + path);
+            throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
     }
 
@@ -258,17 +258,17 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         PathMap.Child child = lockMap.map(path, true);
         if (child == null) {
-            throw new LockException("Node not locked: " + path);
+            throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
 
         LockInfo info = (LockInfo) child.get();
         if (info == null) {
-            throw new LockException("Node not locked: " + path);
+            throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
         if (!node.getSession().equals(info.getLockHolder())) {
-            throw new LockException("Node not locked by session: " + path);
+            throw new LockException("Node not locked by session: " + node.safeGetJCRPath());
         }
-        child.remove();
+        child.set(null);
 
         info.setLive(false);
         info.setLockHolder(null);

@@ -272,6 +272,10 @@ public class PathMap {
          */
         public void set(Object obj) {
             this.obj = obj;
+
+            if (obj == null && childrenCount == 0) {
+                remove();
+            }
         }
 
         /**

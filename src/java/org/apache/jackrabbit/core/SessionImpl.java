@@ -170,7 +170,7 @@ public class SessionImpl implements Session, Constants {
     /**
      * Lock tokens
      */
-    protected final List lockTokens = new ArrayList();
+    protected final Set lockTokens = new HashSet();
 
     /**
      * Protected constructor.
@@ -1131,9 +1131,7 @@ public class SessionImpl implements Session, Constants {
      */
     public void addLockToken(String lt, boolean notify) {
         synchronized (lockTokens) {
-            lockTokens.add(lt);
-
-            if (notify) {
+            if (lockTokens.add(lt) && notify) {
                 try {
                     wsp.getLockManager().lockTokenAdded(this, lt);
                 } catch (RepositoryException e) {
@@ -1168,9 +1166,7 @@ public class SessionImpl implements Session, Constants {
      */
     public void removeLockToken(String lt, boolean notify) {
         synchronized (lockTokens) {
-            lockTokens.remove(lt);
-
-            if (notify) {
+            if (lockTokens.remove(lt) && notify) {
                 try {
                     wsp.getLockManager().lockTokenRemoved(this, lt);
                 } catch (RepositoryException e) {

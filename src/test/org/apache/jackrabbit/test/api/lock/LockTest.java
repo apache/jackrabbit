@@ -96,5 +96,57 @@ public class LockTest extends AbstractJCRTest {
         // assertion: isLive must return false
         assertFalse("Lock must be dead", lock.isLive());
     }
+
+    /**
+     * Test parent/child lock
+     */
+    public void testParentChildLock() throws Exception {
+        // create new nodes
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixReferenceable);
+        n1.addMixin(mixLockable);
+        Node n2 = n1.addNode(nodeName2, testNodeType);
+        n2.addMixin(mixReferenceable);
+        n2.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock parent node
+        n1.lock(false, true);
+
+        // lock child node
+        n2.lock(false, true);
+
+        // unlock parent node
+        n1.unlock();
+
+        // child node must still hold lock
+        assertTrue("child node must still hold lock", n2.holdsLock());
+    }
+
+    /**
+     * Test parent/child lock
+     */
+    public void testParentChildDeepLock() throws Exception {
+        // create new nodes
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixReferenceable);
+        n1.addMixin(mixLockable);
+        Node n2 = n1.addNode(nodeName2, testNodeType);
+        n2.addMixin(mixReferenceable);
+        n2.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock child node
+        n2.lock(false, true);
+
+        // lock parent node
+        n1.lock(true, false);
+
+        // unlock child node
+        n2.unlock();
+
+        // parent node must still hold lock
+        assertTrue("parent node must still hold lock", n1.holdsLock());
+    }
 }
 
