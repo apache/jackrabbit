@@ -351,7 +351,6 @@ public final class RepositoryFactory {
         String searchIndexPath = null;
         if (stableWspConfig.getChild(SEARCH_INDEX_ELEMENT) != null) {
             searchIndexPath = stableWspConfig.getChild(SEARCH_INDEX_ELEMENT).getAttributeValue(PATH_ATTRIB);
-            searchIndexPath = searchIndexPath.replaceAll("\\$\\{factory\\.home\\}", factoryHomeDir.replace('\\', '/'));
         }
 
         return new StableWorkspaceDef(name, wspStore, blobStore,

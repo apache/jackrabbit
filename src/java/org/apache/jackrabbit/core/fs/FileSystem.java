@@ -65,7 +65,7 @@ public interface FileSystem {
 
     /**
      * Returns an output stream for writing bytes to the file denoted by this path.
-     * The file will be created if doesn't exist. If the file exists, its contents
+     * The file will be created if it doesn't exist. If the file exists, its contents
      * will be overwritten.
      *
      * @param filePath the path of the file.
@@ -73,6 +73,22 @@ public interface FileSystem {
      * @throws FileSystemException
      */
     public OutputStream getOutputStream(String filePath) throws FileSystemException;
+
+    /**
+     * Returns an output stream for writing bytes to the file denoted by this path.
+     * The file will be created if it doesn't exist. The current position of the
+     * file pointer is set to <code>0</code>. See also
+     * {@link RandomAccessOutputStream#seek(long)};
+     *
+     * @param filePath the path of the file.
+     * @return an random access output stream for writing bytes to the file.
+     * @throws FileSystemException if the file could not be created or if the
+     *   output stream cannot be obtained.
+     * @exception UnsupportedOperationException if the implementation does
+     *   not support file access through a {@link RandomAccessOutputStream}.
+     */
+    public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
+            throws FileSystemException;
 
     /**
      * Creates the folder named by this path, including any necessary but

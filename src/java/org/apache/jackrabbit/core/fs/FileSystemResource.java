@@ -150,6 +150,14 @@ public class FileSystemResource {
     }
 
     /**
+     * @see FileSystem#getRandomAccessOutputStream
+     */
+    public RandomAccessOutputStream getRandomAccessOutputStream()
+            throws FileSystemException {
+        return fs.getRandomAccessOutputStream(path);
+    }
+
+    /**
      * @see FileSystem#lastModified
      */
     public long lastModified() throws FileSystemException {

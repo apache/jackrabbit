@@ -427,7 +427,8 @@ public class RepositoryImpl implements Repository, EventListener {
                 }
                 ItemStateProvider stateProvider = getWorkspaceStateManager(workspaceName);
                 SystemSession s = getSystemSession(workspaceName);
-                searchMgr = new SearchManager(stateProvider, s.hierMgr, s, wspDef.getSearchIndexPath());
+                searchMgr = new SearchManager(stateProvider, s.hierMgr, s,
+                        wspDef.getWorkspaceStore(), wspDef.getSearchIndexPath());
             } catch (IOException e) {
                 throw new RepositoryException("Exception opening search index.", e);
             }
@@ -488,17 +489,6 @@ public class RepositoryImpl implements Repository, EventListener {
             log.error("failed to persist repository properties", e);
         }
 
-        /**
-         * todo free resources, shutdown workspaces, close sessions,
-         * shutdown item state mgr's, persistence mgr's, etc.
-         */
-        try {
-            // close master file system (this will also invalidate sub file systems)
-            repStore.close();
-        } catch (FileSystemException e) {
-            log.error("Error while closing filesystem", e);
-        }
-
         // stop / dispose all ObservationManagers
         for (Iterator it = wspObsMgrFactory.values().iterator(); it.hasNext();) {
             ObservationManagerFactory obsMgr = (ObservationManagerFactory) it.next();
@@ -509,6 +499,17 @@ public class RepositoryImpl implements Repository, EventListener {
         for (Iterator it = wspSearchMgrs.values().iterator(); it.hasNext();) {
             SearchManager searchMgr = (SearchManager) it.next();
             searchMgr.close();
+        }
+
+        /**
+         * todo free resources, shutdown workspaces, close sessions,
+         * shutdown item state mgr's, persistence mgr's, etc.
+         */
+        try {
+            // close master file system (this will also invalidate sub file systems)
+            repStore.close();
+        } catch (FileSystemException e) {
+            log.error("Error while closing filesystem", e);
         }
     }
 

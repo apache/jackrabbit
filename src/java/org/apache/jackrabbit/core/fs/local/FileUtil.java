@@ -96,6 +96,8 @@ public final class FileUtil {
                 delete(children[i]);
             }
         }
-        f.delete();
+        if (!f.delete()) {
+            throw new IOException("Unable to delete " + f.getPath());
+        }
     }
 }

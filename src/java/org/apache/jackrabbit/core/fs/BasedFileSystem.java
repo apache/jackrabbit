@@ -131,6 +131,14 @@ public class BasedFileSystem implements FileSystem {
     }
 
     /**
+     * @see FileSystem#getRandomAccessOutputStream
+     */
+    public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
+            throws FileSystemException {
+        return fsBase.getRandomAccessOutputStream(buildBasePath(filePath));
+    }
+
+    /**
      * @see FileSystem#hasChildren
      */
     public boolean hasChildren(String path) throws FileSystemException {

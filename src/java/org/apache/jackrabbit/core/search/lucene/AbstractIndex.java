@@ -26,7 +26,7 @@ import org.apache.lucene.store.Directory;
 import java.io.IOException;
 
 /**
- *
+ * Implements common functionality for a lucene index.
  */
 abstract class AbstractIndex {
 

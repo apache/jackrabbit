@@ -18,24 +18,25 @@ package org.apache.jackrabbit.core.search.lucene;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
+import org.apache.jackrabbit.core.fs.FileSystem;
 
 import java.io.IOException;
 
 /**
+ * Implements a lucene index which is based on a
+ * {@link org.apache.jackrabbit.core.fs.FileSystem}.
  */
 public class PersistentIndex extends AbstractIndex {
 
-    private String location;
+    private final FileSystem fs;
 
-    PersistentIndex(String location, Analyzer analyzer) throws IOException {
-        super(analyzer,
-                IndexReader.indexExists(location)
-                ? FSDirectory.getDirectory(location, false)
-                : FSDirectory.getDirectory(location, true));
+    PersistentIndex(FileSystem fs,
+                    boolean create,
+                    Analyzer analyzer)
+            throws IOException {
 
-        this.location = location;
-
+        super(analyzer, FileSystemDirectory.getDirectory(fs, create));
+        this.fs = fs;
     }
 
     void mergeIndex(AbstractIndex index) throws IOException {
@@ -45,6 +46,6 @@ public class PersistentIndex extends AbstractIndex {
     }
 
     Directory getDirectory() throws IOException {
-        return FSDirectory.getDirectory(location, false);
+        return FileSystemDirectory.getDirectory(fs, false);
     }
 }

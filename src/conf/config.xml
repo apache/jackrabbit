@@ -48,7 +48,7 @@
 		    <param name="path" value="${factory.home}/repositories/localfs/workspaces/default/blobs"/>
 		</FileSystem>
 	    </BLOBStore>
-	    <SearchIndex path="${factory.home}/repositories/localfs/workspaces/default/index"/>
+	    <SearchIndex path="/index"/>
 	</StableWorkspace>
     </Repository>
 </Repositories>

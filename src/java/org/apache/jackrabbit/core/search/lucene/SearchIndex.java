@@ -22,6 +22,9 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.BasedFileSystem;
 
 import java.io.IOException;
 
@@ -48,12 +51,23 @@ public class SearchIndex {
 
     private final FIFOReadWriteLock readWriteLock = new FIFOReadWriteLock();
 
-    public SearchIndex(String location, Analyzer analyzer) throws IOException {
+    public SearchIndex(FileSystem fs, String location, Analyzer analyzer)
+            throws IOException {
         //volatileIndex = new VolatileIndex(analyzer);
-        persistentIndex = new PersistentIndex(location, analyzer);
-        persistentIndex.setUseCompoundFile(true);
-        this.location = location;
-        this.analyzer = analyzer;
+        boolean create;
+        try {
+            if (!fs.exists(location)) {
+                fs.createFolder(location);
+            }
+            FileSystem indexFS = new BasedFileSystem(fs, location);
+            create = !indexFS.exists("segments");
+            persistentIndex = new PersistentIndex(indexFS, create, analyzer);
+            persistentIndex.setUseCompoundFile(true);
+            this.location = location;
+            this.analyzer = analyzer;
+        } catch (FileSystemException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
     public void addDocument(Document doc) throws IOException {

@@ -17,9 +17,18 @@ package org.apache.jackrabbit.core.fs.local;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.FileFilter;
+import java.io.RandomAccessFile;
 
 /**
  * A <code>LocalFileSystem</code> ...
@@ -138,14 +147,12 @@ public class LocalFileSystem implements FileSystem {
         File f = new File(root, osPath(filePath));
         if (!f.isFile()) {
             String msg = f.getPath() + " does not denote an existing file";
-            log.error(msg);
             throw new FileSystemException(msg);
         }
         try {
             FileUtil.delete(f);
         } catch (IOException ioe) {
             String msg = "failed to delete " + f.getPath();
-            log.error(msg, ioe);
             throw new FileSystemException(msg, ioe);
         }
     }
@@ -202,6 +209,21 @@ public class LocalFileSystem implements FileSystem {
             String msg = "failed to get output stream for " + f.getPath();
             log.error(msg, fnfe);
             throw new FileSystemException(msg, fnfe);
+        }
+    }
+
+    /**
+     * @see FileSystem#getRandomAccessOutputStream(String)
+     */
+    public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
+            throws FileSystemException {
+        File f = new File(root, osPath(filePath));
+        try {
+            return new RAFOutputStream(new RandomAccessFile(f, "rw"));
+        } catch (IOException e) {
+            String msg = "failed to get output stream for " + f.getPath();
+            log.error(msg, e);
+            throw new FileSystemException(msg, e);
         }
     }
 

@@ -24,6 +24,8 @@ import org.apache.jackrabbit.core.search.lucene.*;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateProvider;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -35,9 +37,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.access.Permission;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventType;
-import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
@@ -59,12 +65,15 @@ public class SearchManager implements SynchronousEventListener {
     public SearchManager(ItemStateProvider stateProvider,
                          HierarchyManager hmgr,
                          SessionImpl session,
+                         FileSystem fs,
                          String indexPath) throws IOException {
         this.stateProvider = stateProvider;
         this.hmgr = hmgr;
         this.session = session;
-        index = new SearchIndex(indexPath, new StandardAnalyzer());
-        nsMappings = new NamespaceMappings(new File(indexPath, "ns_mappings.properties"));
+        index = new SearchIndex(fs, indexPath, new StandardAnalyzer());
+        String mapFileName = indexPath + FileSystem.SEPARATOR + "ns_mappings.properties";
+        FileSystemResource mapFile = new FileSystemResource(fs, mapFileName);
+        nsMappings = new NamespaceMappings(mapFile);
     }
 
     public void addNode(NodeState node, Path path) throws IOException {
@@ -142,10 +151,13 @@ public class SearchManager implements SynchronousEventListener {
 
     public void onEvent(EventIterator events) {
         Set modified = new HashSet();
+        log.debug("onEvent: indexing started");
+        long time = System.currentTimeMillis();
 
-        // FIXME optimize operations on index.
-        // only one cycle of document removes and document adds
+        // remember nodes we have to index at the end.
+        Set pendingNodes = new HashSet();
 
+        // delete removed and modified nodes from index
         while (events.hasNext()) {
             try {
                 EventImpl e = (EventImpl) events.nextEvent();
@@ -155,13 +167,7 @@ public class SearchManager implements SynchronousEventListener {
                     Path path = Path.create(e.getNodePath() + ((e.getNodePath().length() > 1) ? "/" : "") + e.getChildName(),
                             session.getNamespaceResolver(),
                             true);
-
-                    path = getIndexlessPath(path);
-
-                    ItemId id = new NodeId(e.getChildUUID());
-                    addNode((NodeState) stateProvider.getItemState(id), path);
-
-
+                    pendingNodes.add(path);
                 } else if (type == EventType.CHILD_NODE_REMOVED) {
 
                     Path path = Path.create(e.getNodePath() + ((e.getNodePath().length() > 1) ? "/" : "") + e.getChildName(),
@@ -176,11 +182,15 @@ public class SearchManager implements SynchronousEventListener {
                     Path path = Path.create(e.getNodePath(),
                             session.getNamespaceResolver(),
                             true);
-                    modified.add(path);
+                    if (!modified.contains(e.getParentUUID())) {
+                        deleteNode(path, e.getParentUUID());
+                        modified.add(e.getParentUUID());
+                        pendingNodes.add(path);
+                    } else {
+                        // already deleted
+                    }
                 }
             } catch (MalformedPathException e) {
-                log.error("error indexing node.", e);
-            } catch (ItemStateException e) {
                 log.error("error indexing node.", e);
             } catch (RepositoryException e) {
                 log.error("error indexing node.", e);
@@ -189,12 +199,12 @@ public class SearchManager implements SynchronousEventListener {
             }
         }
 
-        for (Iterator it = modified.iterator(); it.hasNext();) {
+        for (Iterator it = pendingNodes.iterator(); it.hasNext();) {
             try {
                 Path path = (Path) it.next();
                 ItemId id = hmgr.resolvePath(path);
                 path = getIndexlessPath(path);
-                updateNode((NodeState) stateProvider.getItemState(id), path);
+                addNode((NodeState) stateProvider.getItemState(id), path);
             } catch (ItemStateException e) {
                 log.error("error indexing node.", e);
             } catch (RepositoryException e) {
@@ -202,6 +212,11 @@ public class SearchManager implements SynchronousEventListener {
             } catch (IOException e) {
                 log.error("error indexing node.", e);
             }
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("onEvent: indexing finished in "
+                    + String.valueOf(System.currentTimeMillis() - time) 
+                    + " ms.");
         }
     }
 

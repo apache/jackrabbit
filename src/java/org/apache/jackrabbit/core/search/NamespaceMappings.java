@@ -19,14 +19,19 @@ import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.log4j.Logger;
 
 import javax.jcr.NamespaceException;
-import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
 
 /**
  * The class <code>NamespaceMappings</code> implements a {@link
@@ -48,7 +53,7 @@ public class NamespaceMappings implements NamespaceResolver {
     /**
      * Location of the file that persists the uri / prefix mappings
      */
-    private final File storage;
+    private final FileSystemResource storage;
 
     /**
      * Map of uris indexed by prefixes
@@ -73,7 +78,7 @@ public class NamespaceMappings implements NamespaceResolver {
      * @throws IOException if an error occurs while reading initial namespace
      *                     mappings from <code>file</code>.
      */
-    public NamespaceMappings(File file) throws IOException {
+    public NamespaceMappings(FileSystemResource file) throws IOException {
         storage = file;
         load();
     }
@@ -151,27 +156,31 @@ public class NamespaceMappings implements NamespaceResolver {
      * @throws IOException if an error occurs while reading from the file.
      */
     private void load() throws IOException {
-        if (storage.exists()) {
-            InputStream in = new FileInputStream(storage);
-            try {
-                Properties props = new Properties();
-                log.debug("loading namespace mappings...");
-                props.load(in);
+        try {
+            if (storage.exists()) {
+                InputStream in = storage.getInputStream();
+                try {
+                    Properties props = new Properties();
+                    log.debug("loading namespace mappings...");
+                    props.load(in);
 
-                // read mappings from properties
-                Iterator iter = props.keySet().iterator();
-                while (iter.hasNext()) {
-                    String prefix = (String) iter.next();
-                    String uri = props.getProperty(prefix);
-                    log.debug(prefix + " -> " + uri);
-                    prefixToURI.put(prefix, uri);
-                    uriToPrefix.put(uri, prefix);
+                    // read mappings from properties
+                    Iterator iter = props.keySet().iterator();
+                    while (iter.hasNext()) {
+                        String prefix = (String) iter.next();
+                        String uri = props.getProperty(prefix);
+                        log.debug(prefix + " -> " + uri);
+                        prefixToURI.put(prefix, uri);
+                        uriToPrefix.put(uri, prefix);
+                    }
+                    prefixCount = props.size();
+                    log.debug("namespace mappings loaded.");
+                } finally {
+                    in.close();
                 }
-                prefixCount = props.size();
-                log.debug("namespace mappings loaded.");
-            } finally {
-                in.close();
             }
+        } catch (FileSystemException e) {
+            throw new IOException(e.getMessage());
         }
     }
 
@@ -191,11 +200,13 @@ public class NamespaceMappings implements NamespaceResolver {
             props.setProperty(prefix, uri);
         }
 
-        storage.getParentFile().mkdirs();
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(storage));
-
+        OutputStream out = null;
         try {
+            storage.makeParentDirs();
+            out = new BufferedOutputStream(storage.getOutputStream());
             props.store(out, null);
+        } catch (FileSystemException e) {
+            throw new IOException(e.getMessage());
         } finally {
             // make sure stream is closed
             out.close();
