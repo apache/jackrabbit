@@ -95,6 +95,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(PropertyItemIsModifiedTest.class);
         suite.addTestSuite(PropertyItemIsNewTest.class);
 
+        suite.addTestSuite(NodeAddMixinTest.class);
+        suite.addTestSuite(NodeCanAddMixinTest.class);
+        suite.addTestSuite(NodeRemoveMixinTest.class);
+
         return suite;
     }
 }
