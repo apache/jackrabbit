@@ -364,10 +364,21 @@ public class NodeImpl extends ItemImpl implements Node {
         return genValues;
     }
 
+    /**
+     *
+     * @param name
+     * @param type
+     * @param multiValued
+     * @param status
+     * @return
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     * @throws RepositoryException if another error occurs
+     */ 
     protected PropertyImpl getOrCreateProperty(String name, int type,
                                                boolean multiValued,
                                                BitSet status)
-            throws RepositoryException {
+            throws ConstraintViolationException, RepositoryException {
         QName qName;
         try {
             qName = QName.fromJCRName(name, session.getNamespaceResolver());
@@ -379,10 +390,21 @@ public class NodeImpl extends ItemImpl implements Node {
         return getOrCreateProperty(qName, type, multiValued, status);
     }
 
+    /**
+     *
+     * @param name
+     * @param type
+     * @param multiValued
+     * @param status
+     * @return
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     * @throws RepositoryException if another error occurs
+     */
     protected synchronized PropertyImpl getOrCreateProperty(QName name, int type,
                                                             boolean multiValued,
                                                             BitSet status)
-            throws RepositoryException {
+            throws ConstraintViolationException, RepositoryException {
         status.clear();
 
         NodeState thisState = (NodeState) state;
@@ -814,11 +836,12 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param nodeName
      * @param nodeTypeName
      * @return
-     * @throws RepositoryException if no applicable child node definition
-     *                             could be found
+     * @throws ConstraintViolationException if no applicable child node definition
+     *                                      could be found
+     * @throws RepositoryException if another error occurs
      */
     protected NodeDefImpl getApplicableChildNodeDef(QName nodeName, QName nodeTypeName)
-            throws RepositoryException {
+            throws ConstraintViolationException, RepositoryException {
         ChildNodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(nodeName, nodeTypeName);
         return session.getNodeTypeManager().getNodeDef(new NodeDefId(cnd));
     }
@@ -831,12 +854,14 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param type
      * @param multiValued
      * @return
-     * @throws RepositoryException if no applicable property definition
-     *                             could be found
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     * @throws RepositoryException if another error occurs
      */
     protected PropertyDefImpl getApplicablePropertyDef(QName propertyName,
-                                                       int type, boolean multiValued)
-            throws RepositoryException {
+                                                       int type,
+                                                       boolean multiValued)
+            throws ConstraintViolationException, RepositoryException {
         PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(propertyName, type, multiValued);
         return session.getNodeTypeManager().getPropDef(new PropDefId(pd));
     }

@@ -520,9 +520,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     }
                 }
                 if (entries.isEmpty()) {
-                    String msg = "failed to build path of " + nodeId + ": " + parent.getUUID() + " has no child entry for " + uuid;
+                    String msg = "failed to build path of " + nodeId
+                            + ": " + parent.getUUID()
+                            + " has no child entry for " + uuid;
                     log.debug(msg);
-                    throw new RepositoryException(msg);
+                    throw new ItemNotFoundException(msg);
                 }
                 n = entries.size() - 1;
                 while (n-- > 0) {

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
-import org.apache.log4j.Logger;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
@@ -36,8 +35,6 @@ import java.util.Map;
  * narrow scope) where the underlying hierarchy is not expected to change.
  */
 public class CachingHierarchyManager implements HierarchyManager {
-
-    private static Logger log = Logger.getLogger(CachingHierarchyManager.class);
 
     private final HierarchyManager delegatee;
 
@@ -77,14 +74,16 @@ public class CachingHierarchyManager implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public NodeId[] listParents(ItemId id) throws ItemNotFoundException, RepositoryException {
+    public NodeId[] listParents(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
         return delegatee.listParents(id);
     }
 
     /**
      * {@inheritDoc}
      */
-    public ItemId[] listChildren(NodeId id) throws ItemNotFoundException, RepositoryException {
+    public ItemId[] listChildren(NodeId id)
+            throws ItemNotFoundException, RepositoryException {
         return delegatee.listChildren(id);
     }
 
@@ -114,14 +113,16 @@ public class CachingHierarchyManager implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized Path getPath(ItemId id) throws ItemNotFoundException, RepositoryException {
+    public synchronized Path getPath(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
         return getAllPaths(id, false)[0];
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName getName(ItemId itemId) throws ItemNotFoundException, RepositoryException {
+    public QName getName(ItemId itemId)
+            throws ItemNotFoundException, RepositoryException {
         if (itemId.denotesNode()) {
             return getPath(itemId).getNameElement().getName();
         } else {
@@ -133,7 +134,8 @@ public class CachingHierarchyManager implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException {
+    public synchronized Path[] getAllPaths(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
         return getAllPaths(id, false);
     }
 

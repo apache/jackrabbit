@@ -1206,7 +1206,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                                 String msg = itemMgr.safeGetJCRPath(id)
                                         + " needs to be saved also.";
                                 log.debug(msg);
-                                throw new RepositoryException(msg);
+                                throw new ConstraintViolationException(msg);
                             }
                         }
                     }
