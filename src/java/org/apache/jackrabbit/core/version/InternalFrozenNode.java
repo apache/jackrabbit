@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
@@ -27,6 +28,8 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.OnParentVersionAction;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The InternalFrozenNode class presents the frozen node that was generated
@@ -35,6 +38,8 @@ import java.util.List;
  * references of the original node.
  */
 public class InternalFrozenNode extends InternalFreeze {
+
+    private static final boolean FREEZEMODE_CLONE = true;
 
     /**
      * the underlaying persistance node
@@ -67,6 +72,11 @@ public class InternalFrozenNode extends InternalFreeze {
     private QName[] frozenMixinTypes = null;
 
     /**
+     * uuid of this node
+     */
+    private String uuid;
+
+    /**
      * Creates a new frozen node based on the given persistance node.
      *
      * @param node
@@ -79,31 +89,53 @@ public class InternalFrozenNode extends InternalFreeze {
         // init the frozen properties
         PersistentProperty[] props = node.getProperties();
         List propList = new ArrayList();
+
         for (int i = 0; i < props.length; i++) {
             PersistentProperty prop = props[i];
-            if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_UUID)) {
-                // special property
-                frozenUUID = node.getPropertyValue(VersionManager.PROPNAME_FROZEN_UUID).internalValue().toString();
-            } else if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE)) {
-                // special property
-                frozenPrimaryType = (QName) node.getPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE).internalValue();
-            } else if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES)) {
-                // special property
-                InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES);
-                if (values == null) {
-                    frozenMixinTypes = new QName[0];
-                } else {
-                    frozenMixinTypes = new QName[values.length];
-                    for (int j = 0; j < values.length; j++) {
-                        frozenMixinTypes[j] = (QName) values[j].internalValue();
+            if (FREEZEMODE_CLONE) {
+                if (prop.getName().equals(ItemImpl.PROPNAME_PRIMARYTYPE)) {
+                    frozenPrimaryType = (QName) node.getPropertyValue(prop.getName()).internalValue();
+                } else if (prop.getName().equals(ItemImpl.PROPNAME_UUID)) {
+                    frozenUUID = node.getPropertyValue(prop.getName()).toString();
+                } else if (prop.getName().equals(ItemImpl.PROPNAME_MIXINTYPES)) {
+                    InternalValue[] values = node.getPropertyValues(prop.getName());
+                    if (values == null) {
+                        frozenMixinTypes = new QName[0];
+                    } else {
+                        frozenMixinTypes = new QName[values.length];
+                        for (int j = 0; j < values.length; j++) {
+                            frozenMixinTypes[j] = (QName) values[j].internalValue();
+                        }
                     }
+                } else {
+                    propList.add(prop);
                 }
-            } else if (prop.getName().equals(ItemImpl.PROPNAME_PRIMARYTYPE)) {
-                // ignore
-            } else if (prop.getName().equals(ItemImpl.PROPNAME_UUID)) {
-                // ignore
+
             } else {
-                propList.add(prop);
+                if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_UUID)) {
+                    // special property
+                    frozenUUID = node.getPropertyValue(VersionManager.PROPNAME_FROZEN_UUID).internalValue().toString();
+                } else if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE)) {
+                    // special property
+                    frozenPrimaryType = (QName) node.getPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE).internalValue();
+                } else if (prop.getName().equals(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES)) {
+                    // special property
+                    InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES);
+                    if (values == null) {
+                        frozenMixinTypes = new QName[0];
+                    } else {
+                        frozenMixinTypes = new QName[values.length];
+                        for (int j = 0; j < values.length; j++) {
+                            frozenMixinTypes[j] = (QName) values[j].internalValue();
+                        }
+                    }
+                } else if (prop.getName().equals(ItemImpl.PROPNAME_PRIMARYTYPE)) {
+                    // ignore
+                } else if (prop.getName().equals(ItemImpl.PROPNAME_UUID)) {
+                    // ignore
+                } else {
+                    propList.add(prop);
+                }
             }
         }
         frozenProperties = (PersistentProperty[]) propList.toArray(new PersistentProperty[propList.size()]);
@@ -128,6 +160,10 @@ public class InternalFrozenNode extends InternalFreeze {
             }
         }
 
+    }
+
+    public String getInternalUUID() {
+        return node.getUUID();
     }
 
     /**
@@ -209,24 +245,39 @@ public class InternalFrozenNode extends InternalFreeze {
     protected static PersistentNode checkin(PersistentNode parent, QName name, NodeImpl src, boolean initOnly, boolean forceCopy)
             throws RepositoryException {
 
-        // create new node
-        PersistentNode node = parent.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
-
-        // initialize the internal properties
-        if (src.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
-            node.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(src.getUUID()));
-        }
-
-        node.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE,
-                InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
-
-        if (src.hasProperty(NodeImpl.PROPNAME_MIXINTYPES)) {
+        PersistentNode node;
+        if (FREEZEMODE_CLONE) {
+            // identiycopy
+            // create new node
             NodeType[] mixins = src.getMixinNodeTypes();
-            InternalValue[] ivalues = new InternalValue[mixins.length];
+            QName[] mixinNames = new QName[mixins.length];
             for (int i = 0; i < mixins.length; i++) {
-                ivalues[i] = InternalValue.create(((NodeTypeImpl) mixins[i]).getQName());
+                mixinNames[i]=((NodeTypeImpl) mixins[i]).getQName();
             }
-            node.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, ivalues);
+            node = parent.addNode(name, ((NodeTypeImpl) src.getPrimaryNodeType()).getQName());
+            node.setMixinNodeTypes(mixinNames);
+
+        } else {
+            // emulated
+            // create new node
+            node = parent.addNode(name, NodeTypeRegistry.NT_UNSTRUCTURED);
+
+            // initialize the internal properties
+            if (src.isNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
+                node.setPropertyValue(VersionManager.PROPNAME_FROZEN_UUID, InternalValue.create(src.getUUID()));
+            }
+
+            node.setPropertyValue(VersionManager.PROPNAME_FROZEN_PRIMARY_TYPE,
+                    InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
+
+            if (src.hasProperty(NodeImpl.PROPNAME_MIXINTYPES)) {
+                NodeType[] mixins = src.getMixinNodeTypes();
+                InternalValue[] ivalues = new InternalValue[mixins.length];
+                for (int i = 0; i < mixins.length; i++) {
+                    ivalues[i] = InternalValue.create(((NodeTypeImpl) mixins[i]).getQName());
+                }
+                node.setPropertyValues(VersionManager.PROPNAME_FROZEN_MIXIN_TYPES, PropertyType.NAME, ivalues);
+            }
         }
 
         if (!initOnly) {
@@ -250,6 +301,7 @@ public class InternalFrozenNode extends InternalFreeze {
                 }
             }
 
+
             // add the frozen children and vistories
             NodeIterator niter = src.getNodes();
             while (niter.hasNext()) {
@@ -265,14 +317,14 @@ public class InternalFrozenNode extends InternalFreeze {
                     case OnParentVersionAction.VERSION:
                         if (child.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
                             // create frozen versionable child
-                            PersistentNode newChild = node.addNode(child.getQName(), NodeTypeRegistry.NT_UNSTRUCTURED);
+                            PersistentNode newChild = node.addNode(child.getQName(), NodeTypeRegistry.NT_FROZEN_VERSIONABLE_CHILD);
                             newChild.setPropertyValue(VersionManager.PROPNAME_VERSION_HISTORY,
-                                    InternalValue.create(child.getVersionHistory().getUUID()));
+                                    InternalValue.create(UUID.fromString(child.getVersionHistory().getUUID())));
                             newChild.setPropertyValue(VersionManager.PROPNAME_BASE_VERSION,
-                                    InternalValue.create(child.getBaseVersion().getUUID()));
+                                    InternalValue.create(UUID.fromString(child.getBaseVersion().getUUID())));
+                            break;
                         }
-                        // else ignore
-                        break;
+                        // else copy
                     case OnParentVersionAction.COPY:
                         checkin(node, child.getQName(), child, false, true);
                         break;

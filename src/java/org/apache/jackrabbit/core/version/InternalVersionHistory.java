@@ -191,6 +191,15 @@ public class InternalVersionHistory {
     }
 
     /**
+     * Checks if the version for the given uuid exists
+     * @param uuid
+     * @return
+     */
+    public boolean hasVersion(String uuid) {
+        return versionCache.containsKey(uuid);
+    }
+
+    /**
      * Returns the version with the given uuid or <code>null</code> if the
      * respective version does not exist.
      *
@@ -374,6 +383,14 @@ public class InternalVersionHistory {
      */
     protected Iterator getVersions() {
         return versionCache.values().iterator();
+    }
+
+    /**
+     * Returns the number of versions
+     * @return
+     */
+    protected int getNumVersions() {
+        return versionCache.size();
     }
 
     /**

@@ -109,7 +109,7 @@ public class NodeState extends ItemState {
      * @return always true
      * @see ItemState#isNode
      */
-    public boolean isNode() {
+    public final boolean isNode() {
         return true;
     }
 
@@ -800,7 +800,7 @@ public class NodeState extends ItemState {
         private int index; // 1-based index for same-name siblings
         private String uuid;
 
-        private ChildNodeEntry(QName nodeName, String uuid, int index) {
+        public ChildNodeEntry(QName nodeName, String uuid, int index) {
             super(nodeName);
 
             if (uuid == null) {

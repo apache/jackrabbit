@@ -85,7 +85,7 @@
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <propertyDef name="jcr:created" type="Date" autoCreate="true" mandatory="true" onParentVersion="INITIALIZE" protected="true" primaryItem="false" multiple="false"/>
+        <propertyDef name="jcr:created" type="Date" autoCreate="true" mandatory="true" onParentVersion="COPY" protected="true" primaryItem="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:file" mixin="false" orderableChildNodes="false">
         <supertypes>

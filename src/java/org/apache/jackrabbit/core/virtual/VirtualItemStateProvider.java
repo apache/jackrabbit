@@ -16,9 +16,25 @@
 package org.apache.jackrabbit.core.virtual;
 
 import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.QName;
 
 /**
  * This Interface defines a virtual item state provider.
  */
 public interface VirtualItemStateProvider extends ItemStateProvider {
+    /**
+     * Returns a predefined node definition id. 
+     * @param nodename
+     * @return
+     */
+    public NodeDefId getNodeDefId(QName nodename);
+
+    /**
+     * Returns a predefined property definition id
+     * @param propname
+     * @return
+     */
+    public PropDefId getPropDefId(QName propname);
 }

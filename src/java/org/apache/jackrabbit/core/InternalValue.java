@@ -239,6 +239,18 @@ public class InternalValue {
     }
 
     /**
+     * @param values
+     * @return
+     */
+    public static InternalValue[] create(Calendar[] values) {
+        InternalValue[] ret = new InternalValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = new InternalValue(values[i]);
+        }
+        return ret;
+    }
+
+    /**
      * @param value
      * @return
      */

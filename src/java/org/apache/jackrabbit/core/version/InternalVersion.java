@@ -63,11 +63,6 @@ public final class InternalVersion extends InternalFreeze {
     private HashSet labelCache = null;
 
     /**
-     * the internal frozen node that was versioned with this version
-     */
-    private InternalFrozenNode frozen;
-
-    /**
      * the id of this version
      */
     private String versionId;
@@ -83,9 +78,8 @@ public final class InternalVersion extends InternalFreeze {
      *
      * @param vh
      * @param node
-     * @throws RepositoryException
      */
-    InternalVersion(InternalVersionHistory vh, PersistentNode node) throws RepositoryException {
+    InternalVersion(InternalVersionHistory vh, PersistentNode node) {
         super(null);
         this.versionHistory = vh;
         this.node = node;
@@ -95,10 +89,6 @@ public final class InternalVersion extends InternalFreeze {
 
         // get id
         versionId = (String) node.getPropertyValue(PersistentVersionManager.PROPNAME_VERSION_ID).internalValue();
-
-        // get frozen node
-        PersistentNode pNode = node.getNode(PersistentVersionManager.NODENAME_FROZEN, 1);
-        frozen = pNode == null ? null : new InternalFrozenNode(this, pNode);
 
         // init internal values
         InternalValue[] values = node.getPropertyValues(VersionManager.PROPNAME_CREATED);
@@ -139,7 +129,14 @@ public final class InternalVersion extends InternalFreeze {
      * @return
      */
     public InternalFrozenNode getFrozenNode() {
-        return frozen;
+        // get frozen node
+        try {
+            PersistentNode pNode = node.getNode(PersistentVersionManager.NODENAME_FROZEN, 1);
+            return pNode == null ? null : new InternalFrozenNode(this, pNode);
+        } catch (RepositoryException e) {
+            // ignore
+        }
+        return null;
     }
 
     /**

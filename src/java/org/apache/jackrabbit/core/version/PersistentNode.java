@@ -385,11 +385,20 @@ public class PersistentNode {
         NodeTypeImpl nodeType = ntMgr.getNodeType(nodeTypeName);
         NodeDefImpl def;
         try {
-            def = getApplicableChildNodeDef(nodeName, nodeType == null ? null : nodeType.getQName());
+            def = getApplicableChildNodeDef(name, nodeType == null ? null : nodeType.getQName());
         } catch (RepositoryException re) {
-            String msg = "no definition found in parent node's node type for new node";
-            throw new ConstraintViolationException(msg, re);
+            // hack, use nt:unstructured as parent
+            try {
+                NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+                EffectiveNodeType ent = ntReg.buildEffectiveNodeType(new QName[]{NodeTypeRegistry.NT_UNSTRUCTURED});
+                ChildNodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
+                def = ntMgr.getNodeDef(new NodeDefId(cnd));
+            } catch (NodeTypeConflictException e) {
+                String msg = "no definition found in parent node's node type for new node";
+                throw new ConstraintViolationException(msg, re);
+            }
         }
+
         if (nodeType == null) {
             // use default node type
             nodeType = (NodeTypeImpl) def.getDefaultPrimaryType();
