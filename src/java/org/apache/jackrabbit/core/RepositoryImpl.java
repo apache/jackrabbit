@@ -259,7 +259,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                 nsReg,
                 ntReg);
         pvMgr = new NativePVM(pm, getNodeTypeRegistry());
-        vMgr = new VersionManagerImpl(pvMgr, ntReg, VERSION_STORAGE_NODE_UUID);
+        vMgr = new VersionManagerImpl(pvMgr, ntReg, VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
 
         // initialize workspaces
         iter = wspInfos.keySet().iterator();

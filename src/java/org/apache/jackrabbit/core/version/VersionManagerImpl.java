@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
@@ -41,10 +40,16 @@ public class VersionManagerImpl implements VersionManager {
      * the default logger
      */
     private static Logger log = Logger.getLogger(VersionManager.class);
+
     /**
      * The root node UUID for the version storage
      */
     private final String VERSION_STORAGE_NODE_UUID;
+
+    /**
+     * The root parent node UUID for the version storage
+     */
+    private final String VERSION_STORAGE_PARENT_NODE_UUID;
 
     /**
      * The version manager of the internal versions
@@ -65,10 +70,12 @@ public class VersionManagerImpl implements VersionManager {
      *
      * @param vMgr
      */
-    public VersionManagerImpl(PersistentVersionManager vMgr, NodeTypeRegistry ntReg, String rootUUID) {
+    public VersionManagerImpl(PersistentVersionManager vMgr, NodeTypeRegistry ntReg,
+                              String rootUUID, String rootParentUUID) {
         this.vMgr = vMgr;
         this.ntReg = ntReg;
         this.VERSION_STORAGE_NODE_UUID = rootUUID;
+        this.VERSION_STORAGE_PARENT_NODE_UUID = rootParentUUID;
     }
 
     /**
@@ -82,8 +89,7 @@ public class VersionManagerImpl implements VersionManager {
         if (virtProvider == null) {
             try {
                 // init the definition id mgr
-                NodeState virtRootState = (NodeState) base.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID));
-                virtProvider = new VersionItemStateProvider(this, ntReg, VERSION_STORAGE_NODE_UUID, virtRootState.getParentUUID());
+                virtProvider = new VersionItemStateProvider(this, ntReg, VERSION_STORAGE_NODE_UUID, VERSION_STORAGE_PARENT_NODE_UUID);
             } catch (Exception e) {
                 // todo: better error handling
                 log.error("Error while initializing virtual items.", e);
