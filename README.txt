@@ -83,6 +83,11 @@ before running one of the maven commands listed at
 
 to build the Jackrabbit project and/or documentation.
 
+NOTE: JDK 1.5 users need to download xalan.jar and place it in
+$MAVEN_HOME/lib/endorsed to build the Jackrabbit sources. The
+reason for this workaround is explained in
+
+   http://issues.apache.org/jira/browse/JCR-46
 
 Credits
 =======
