@@ -22,6 +22,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
 
@@ -221,6 +222,44 @@ public class LockTest extends AbstractJCRTest {
 
         assertFalse("Shallow lock must not lock the child nodes of a node.",
                 n2.isLocked());
+    }
+
+    /**
+     * Test if it is possible to lock and unlock a checked-in node.
+     */
+    public void testCheckedIn()
+            throws NotExecutableException, RepositoryException {
+
+        Session session = testRootNode.getSession();
+
+        if (session.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+            throw new NotExecutableException("Versioning is not supported.");
+        }
+
+        // create a node that is lockable and versionable
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        node.addMixin(mixLockable);
+        // try to make it versionable if it is not
+        if (!node.isNodeType(mixVersionable)) {
+            if (node.canAddMixin(mixVersionable)) {
+                node.addMixin(mixVersionable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is " +
+                        "not versionable and does not allow to add " +
+                        "mix:versionable");
+            }
+        }
+        testRootNode.save();
+
+        node.checkin();
+
+        node.lock(false, false);
+        assertTrue("Locking of a checked-in node failed.",
+                node.isLocked());
+
+        node.unlock();
+        assertFalse("Unlocking of a checked-in node failed.",
+                node.isLocked());
     }
 
     /**
