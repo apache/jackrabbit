@@ -156,8 +156,8 @@ public class PersistentVersionManager {
         QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid);
         if (historyRoot.hasNode(historyNodeName)) {
             historyRoot.removeNode(historyNodeName);
+            historyRoot.store();
         }
-        historyRoot.store();
 
         // create new history node in the persistent state
         InternalVersionHistory hist = InternalVersionHistory.create(this, historyRoot, uuid, historyNodeName, node);

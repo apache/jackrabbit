@@ -206,7 +206,7 @@ public class InternalFrozenNode extends InternalFreeze {
      * @return
      * @throws RepositoryException
      */
-    protected static PersistentNode checkin(PersistentNode parent, QName name, NodeImpl src, boolean initOnly)
+    protected static PersistentNode checkin(PersistentNode parent, QName name, NodeImpl src, boolean initOnly, boolean forceCopy)
             throws RepositoryException {
 
         // create new node
@@ -234,14 +234,8 @@ public class InternalFrozenNode extends InternalFreeze {
             PropertyIterator piter = src.getProperties();
             while (piter.hasNext()) {
                 PropertyImpl prop = (PropertyImpl) piter.nextProperty();
-    // ignore some properties that not have a OPV=Ignore yet
-                if (prop.getQName().equals(VersionManager.PROPNAME_VERSION_HISTORY)) {
-                    continue;
-                }
-                if (prop.getQName().equals(VersionManager.PROPNAME_PREDECESSORS)) {
-                    continue;
-                }
-                switch (prop.getDefinition().getOnParentVersion()) {
+                int opv = forceCopy ? OnParentVersionAction.COPY : prop.getDefinition().getOnParentVersion();
+                switch (opv) {
                     case OnParentVersionAction.ABORT:
                         parent.reload();
                         throw new RepositoryException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
@@ -260,7 +254,8 @@ public class InternalFrozenNode extends InternalFreeze {
             NodeIterator niter = src.getNodes();
             while (niter.hasNext()) {
                 NodeImpl child = (NodeImpl) niter.nextNode();
-                switch (child.getDefinition().getOnParentVersion()) {
+                int opv = forceCopy ? OnParentVersionAction.COPY : child.getDefinition().getOnParentVersion();
+                switch (opv) {
                     case OnParentVersionAction.ABORT:
                         throw new RepositoryException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
                     case OnParentVersionAction.COMPUTE:
@@ -279,7 +274,7 @@ public class InternalFrozenNode extends InternalFreeze {
                         // else ignore
                         break;
                     case OnParentVersionAction.COPY:
-                        checkin(node, child.getQName(), child, false);
+                        checkin(node, child.getQName(), child, false, true);
                         break;
                 }
             }

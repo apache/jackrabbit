@@ -71,9 +71,6 @@ public class NodeTypeRegistry {
     // nt:version
     public static final QName NT_VERSION =
             new QName(NamespaceRegistryImpl.NS_NT_URI, "version");
-    // nt:frozen
-    public static final QName NT_FROZEN =
-            new QName(NamespaceRegistryImpl.NS_NT_URI, "frozen");
     // nt:frozenVersionableChild
     public static final QName NT_FROZEN_VERSIONABLE_CHILD =
             new QName(NamespaceRegistryImpl.NS_NT_URI, "frozenVersionableChild");
@@ -1022,8 +1019,8 @@ public class NodeTypeRegistry {
          * - apply and persist changes to affected nodes
          * - what else?
          */
-        /*unregisterNodeType(name);
-        return registerNodeType(ntd);*/
+        //unregisterNodeType(name);
+        //return registerNodeType(ntd);
         throw new RepositoryException("not yet implemented");
     }
 

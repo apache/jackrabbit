@@ -333,7 +333,7 @@ public class InternalVersionHistory {
         vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.STRING, predecessors);
 
         // checkin source node
-        InternalFrozenNode.checkin(vNode, PersistentVersionManager.NODENAME_FROZEN, src, false);
+        InternalFrozenNode.checkin(vNode, PersistentVersionManager.NODENAME_FROZEN, src, false, false);
 
         // and store
         store();
@@ -405,7 +405,7 @@ public class InternalVersionHistory {
         vNode.setPropertyValues(VersionManager.PROPNAME_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
 
         // add also an empty frozen node to the root version
-        InternalFrozenNode.checkin(vNode, PersistentVersionManager.NODENAME_FROZEN, src, true);
+        InternalFrozenNode.checkin(vNode, PersistentVersionManager.NODENAME_FROZEN, src, true, false);
 
         parent.store();
         return new InternalVersionHistory(vMgr, pNode);

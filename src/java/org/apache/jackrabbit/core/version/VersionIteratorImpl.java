@@ -19,32 +19,26 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionIterator;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * This Class implements a VersionIterator that iterates over a version
- * graph following the successor nodes.
+ * graph following the successor nodes. When this iterator is created, it gathers
+ * the id's of the versions and returns them when iterating. please note, that
+ * a version can be deleted while traversing this iterator and the 'nextVesion'
+ * would produce a  ConcurrentModificationException.
  */
 public class VersionIteratorImpl implements VersionIterator {
+
+    /**
+     * the id's of the versions to return
+     */
+    private LinkedList versions = new LinkedList();
 
     /**
      * the current position
      */
     private int pos = 0;
-
-    /**
-     * the traversal stack
-     */
-    private Stack successors = new Stack();
-
-    /**
-     * the set of versions already returned. due to the topology of the version
-     * graph it is possible to reach a version via different paths.
-     */
-    private Set visited = new HashSet();
 
     /**
      * the session for wrapping the versions
@@ -59,25 +53,24 @@ public class VersionIteratorImpl implements VersionIterator {
      */
     public VersionIteratorImpl(Session session, InternalVersion rootVersion) {
         this.session = session;
-        successors.push(rootVersion);
+
+        addVersion(rootVersion);
     }
 
     /**
      * @see VersionIterator#nextVersion()
      */
     public Version nextVersion() {
-        if (successors.isEmpty()) {
+        if (versions.isEmpty()) {
             throw new NoSuchElementException();
         }
-        InternalVersion ret = (InternalVersion) successors.pop();
-        visited.add(ret);
+        String id = (String) versions.removeFirst();
         pos++;
-        push(ret.getSuccessors());
 
         try {
-            return (Version) session.getNodeByUUID(ret.getId());
+            return (Version) session.getNodeByUUID(id);
         } catch (RepositoryException e) {
-            throw new NoSuchElementException("Unable to provide element: " + e.toString());
+            throw new ConcurrentModificationException("Unable to provide element: " + e.toString());
         }
     }
 
@@ -95,7 +88,7 @@ public class VersionIteratorImpl implements VersionIterator {
      * @see VersionIterator#getSize()
      */
     public long getSize() {
-        return -1;
+        return versions.size();
     }
 
     /**
@@ -117,7 +110,7 @@ public class VersionIteratorImpl implements VersionIterator {
      * @see VersionIterator#hasNext()
      */
     public boolean hasNext() {
-        return !successors.isEmpty();
+        return !versions.isEmpty();
     }
 
     /**
@@ -128,14 +121,17 @@ public class VersionIteratorImpl implements VersionIterator {
     }
 
     /**
-     * Pushes the versions on the stack
-     *
-     * @param versions
+     * Adds the version 'v' to the list of versions to return and then calls
+     * it self recursively with all the verions prodecessors.
+     * @param v
      */
-    private void push(InternalVersion[] versions) {
-        for (int i = 0; i < versions.length; i++) {
-            if (!visited.contains(versions[i])) {
-                successors.push(versions[i]);
+    private synchronized void addVersion(InternalVersion v) {
+        String id = v.getId();
+        if (!versions.contains(id)) {
+            versions.add(id);
+            InternalVersion[] vs = v.getSuccessors();
+            for (int i=0; i<vs.length; i++) {
+                addVersion(vs[i]);
             }
         }
     }

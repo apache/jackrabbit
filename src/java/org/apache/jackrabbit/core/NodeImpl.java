@@ -1597,7 +1597,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // build effective node type of mixin's & primary type in order to detect conflicts
         NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
-        EffectiveNodeType entExisting, entNew;
+        EffectiveNodeType entExisting;
         try {
             // existing mixin's
             HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
@@ -1611,7 +1611,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // add new mixin
             set.add(ntName);
             // try to build new effective node type (will throw in case of conflicts)
-            entNew = ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            ntReg.buildEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             throw new ConstraintViolationException(ntce.getMessage());
         }
@@ -1651,18 +1651,6 @@ public class NodeImpl extends ItemImpl implements Node {
                 if (!entExisting.includesNodeType(declaringNT.getQName())) {
                     createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
                 }
-            }
-
-            // check for special node types
-            // todo consolidate version history creation code (currently in NodeImpl.addMixin & ItemImpl.initVersionHistories
-            if (!entExisting.includesNodeType(NodeTypeRegistry.MIX_VERSIONABLE) &&
-                    entNew.includesNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
-                // node has become 'versionable', initialize version history
-                VersionHistory hist = session.versionMgr.createVersionHistory(this);
-                internalSetProperty(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
-                internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
-                internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
-                internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
             }
         } catch (RepositoryException re) {
             // try to undo the modifications by removing the mixin

@@ -795,15 +795,17 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         boolean createdTransientState = false;
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
-            if (itemState.isNode() && itemState.getStatus() == ItemState.STATUS_NEW) {
+            if (itemState.isNode()) {
                 NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
                 if (node.isNodeType(NodeTypeRegistry.MIX_VERSIONABLE)) {
-                    VersionHistory hist = session.versionMgr.createVersionHistory(node);
-                    node.internalSetProperty(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
-                    node.internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
-                    node.internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
-                    node.internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
-                    createdTransientState = true;
+                    if (!node.hasProperty(VersionManager.PROPNAME_VERSION_HISTORY)) {
+                        VersionHistory hist = session.versionMgr.createVersionHistory(node);
+                        node.internalSetProperty(VersionManager.PROPNAME_VERSION_HISTORY, InternalValue.create(new UUID(hist.getUUID())));
+                        node.internalSetProperty(VersionManager.PROPNAME_BASE_VERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
+                        node.internalSetProperty(VersionManager.PROPNAME_IS_CHECKED_OUT, InternalValue.create(true));
+                        node.internalSetProperty(VersionManager.PROPNAME_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+                        createdTransientState = true;
+                    }
                 }
             }
         }

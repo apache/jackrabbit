@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -150,8 +151,16 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
         try {
             def = getApplicableChildNodeDef(parent, name, nodeType == null ? null : nodeType.getQName());
         } catch (RepositoryException re) {
-            String msg = "no definition found in parent node's node type for new node";
-            throw new ConstraintViolationException(msg, re);
+            // hack, use nt:unstructured as parent
+            try {
+                NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+                EffectiveNodeType ent = ntReg.buildEffectiveNodeType(new QName[]{NodeTypeRegistry.NT_UNSTRUCTURED});
+                ChildNodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
+                def = ntMgr.getNodeDef(new NodeDefId(cnd));
+            } catch (NodeTypeConflictException e) {
+                String msg = "no definition found in parent node's node type for new node";
+                throw new ConstraintViolationException(msg, re);
+            }
         }
         if (nodeType == null) {
             // use default node type
@@ -163,6 +172,7 @@ public class DefaultItemStateProvider implements VirtualItemStateProvider {
         setPropertyValue(ns, ItemImpl.PROPNAME_PRIMARYTYPE, InternalValue.create(nodeType.getQName()));
         if (mixins != null) {
             ns.setMixinTypeNames(new HashSet(Arrays.asList(mixins)));
+            setPropertyValues(ns, ItemImpl.PROPNAME_MIXINTYPES, PropertyType.NAME, InternalValue.create(mixins));
         }
         if (getEffectiveNodeType(ns).includesNodeType(NodeTypeRegistry.MIX_REFERENCEABLE)) {
             setPropertyValue(ns, ItemImpl.PROPNAME_UUID, InternalValue.create(ns.getUUID()));
