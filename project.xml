@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <!--
-   Copyright 2003-2004 The Apache Software Foundation
+   Copyright 2004 The Apache Software Foundation
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-  
+
 <project>
   <pomVersion>3</pomVersion>
   <name>Jackrabbit</name>
@@ -26,13 +26,13 @@
     <url>http://incubator.apache.org/projects/jackrabbit.html</url>
     <logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
   </organization>
-  <inceptionYear>2003</inceptionYear>
-  	<package>org.apache.jackrabbit.*</package>
+  <inceptionYear>2004</inceptionYear>
+  <package>org.apache.jackrabbit.*</package>
   <shortDescription>Implementation of the Content Repository for Java</shortDescription>
   <description>
     The Jackrabbit Project has been formed to develop an open source implementation of the Content Repository
-    for Java Technology API (JCR), being specified within the Java Community Process as 
-    <a href="http://www.jcp.org/en/jsr/detail?id=170">JSR-170</a>. <a href="http://www.day.com/">Day Software</a>, 
+    for Java Technology API (JCR), being specified within the Java Community Process as
+    <a href="http://www.jcp.org/en/jsr/detail?id=170">JSR-170</a>. <a href="http://www.day.com/">Day Software</a>,
     the JSR-170 specification lead, has licensed an initial implementation of the JCR reference implementation 
     for use as seed code for this project.  JCR specifies an API for application developers (and application 
     frameworks) to use for interaction with modern content repositories -- content management systems that provide 
@@ -51,36 +51,36 @@
   </repository>
 
   <versions></versions>
-  
+
   <licenses>
-	<license>
-    	<name>The Apache Software License, Version 2.0</name>
-    	<url>/LICENSE.txt</url>
-    	<distribution>repo</distribution>
-	</license>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>/LICENSE.txt</url>
+      <distribution>repo</distribution>
+    </license>
   </licenses>
-  
+
   <!-- TODO: What are the list addresses here -->
 <!--
   <mailingLists>
-      <mailingList>
-        <name>Jackrabbit Users List</name>
-        <subscribe>user-subscribe@jackrabbit.apache.org</subscribe>
-        <unsubscribe>user-unsubscribe@jackrabbit.apache.org</unsubscribe>
-        <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=user@jackrabbit.apache.org</archive>
-      </mailingList>
-      <mailingList>
-          <name>Jackrabbit Developer List</name>
-          <subscribe>dev-subscribe@jackrabbit.apache.org</subscribe>
-          <unsubscribe>dev-unsubscribe@jackrabbit.apache.org</unsubscribe>
-          <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=dev@jackrabbit.apache.org</archive>
-      </mailingList>
-      <mailingList>
-          <name>Jackrabbit Source Control List</name>
-          <subscribe>scm-subscribe@jackrabbit.apache.org</subscribe>
-          <unsubscribe>scm-unsubscribe@jackrabbit.apache.org</unsubscribe>
-          <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=scm@jackrabbit.apache.org</archive>
-      </mailingList>
+    <mailingList>
+      <name>Jackrabbit Users List</name>
+      <subscribe>user-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>user-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=user@jackrabbit.apache.org</archive>
+    </mailingList>
+    <mailingList>
+      <name>Jackrabbit Developer List</name>
+      <subscribe>dev-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=dev@jackrabbit.apache.org</archive>
+    </mailingList>
+    <mailingList>
+      <name>Jackrabbit Source Control List</name>
+      <subscribe>scm-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>scm-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <archive>http://nagoya.apache.org/eyebrowse/SummarizeList?listName=scm@jackrabbit.apache.org</archive>
+    </mailingList>
   </mailingLists>
 -->
 
@@ -217,11 +217,7 @@
     </dependency>
     <dependency>
       <id>commons-collections</id>
-      <version>3.1</version>
-    </dependency>
-    <dependency>
-      <id>crimson</id>
-      <version>1.1.3</version>
+      <version>2.1</version>
     </dependency>
     <dependency>
       <id>jdom</id>
@@ -233,32 +229,23 @@
       <version>1.0-M1</version>
     </dependency>
     <dependency>
-      <id>commons-httpclient</id>
-      <version>2.0</version>
+      <groupId>jcr-api</groupId>
+      <artifactId>jcr</artifactId>
+      <version>0.14beta</version>
     </dependency>
     <dependency>
-    	<groupId>slide</groupId>
-    	<artifactId>webdav</artifactId>
-    	<version>1.0.16</version>
+      <id>log4j</id>
+      <version>1.2.8</version>
     </dependency>
     <dependency>
-    	<groupId>jcr-api</groupId>
-    	<artifactId>jcr</artifactId>
-    	<version>0.14beta</version>
-    </dependency>
-    <dependency>
-    	<id>log4j</id>
-    	<version>1.2.8</version>
-    </dependency>
-    <dependency>
-    	<groupId>xerces</groupId>
-    	<artifactId>xercesImpl</artifactId>
-    	<version>2.6.2</version>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.6.2</version>
     </dependency>
   </dependencies>
 
   <build>
-  	<sourceDirectory>src/java</sourceDirectory>
+    <sourceDirectory>src/java</sourceDirectory>
     <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
     <unitTest>
       <includes>
@@ -266,9 +253,15 @@
       </includes>
     </unitTest>
 
-	<!-- J A R  R E S O U R C E S -->
+    <!-- J A R  R E S O U R C E S -->
     <!-- Resources that are packaged up inside the JAR file -->
-   <resources>
+    <resources>
+     <resource>
+       <directory>src/java</directory>
+       <includes>
+         <include>**/*.xml</include>
+       </includes>
+     </resource>
    </resources>
   </build>
 
