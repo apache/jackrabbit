@@ -55,7 +55,7 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
         super.setUp();
         session = helper.getReadOnlySession();
 
-        prop = PropertyUtil.searchProp(session, session.getRootNode(), getPropertyType());
+        prop = PropertyUtil.searchProp(session, session.getRootNode().getNode(testPath), getPropertyType());
         if (prop == null) {
             String msg = "Workspace does not contain a node with a " +
                     PropertyType.nameFromValue(getPropertyType()) + " property.";

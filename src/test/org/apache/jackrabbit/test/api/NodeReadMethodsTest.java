@@ -54,12 +54,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     private Session session;
 
     /**
-     * The root node of the default workspace
-     */
-    private Node rootNode;
-
-    /**
-     * The first child node of the rootNode
+     * The first child node of the testRootNode
      */
     private Node childNode;
 
@@ -71,9 +66,9 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         super.setUp();
 
         session = helper.getReadOnlySession();
-        rootNode = session.getRootNode();
 
-        NodeIterator nodes = rootNode.getNodes();
+        testRootNode = session.getRootNode().getNode(testPath);
+        NodeIterator nodes = testRootNode.getNodes();
         try {
             childNode = nodes.nextNode();
         } catch (NoSuchElementException e) {
@@ -102,8 +97,8 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             throw new NotExecutableException("Workspace does not have sufficient content to run this test.");
         }
 
-        String path = "/" + childNode.getName();
-        if (getSize(rootNode.getNodes(childNode.getName())) > 1) {
+        String path = testRoot + "/" + childNode.getName();
+        if (getSize(testRootNode.getNodes(childNode.getName())) > 1) {
             // is a same-name-sibling, append index
             path += "[" + childNode.getIndex() + "]";
         }
@@ -120,7 +115,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testGetName() throws RepositoryException {
         assertEquals("getName() of root must be an empty string",
                 "",
-                rootNode.getName());
+                session.getRootNode().getName());
 
         // build name from path
         String path = childNode.getPath();
@@ -138,9 +133,9 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      * <code>Item</code>, returns this <code>Node</code> itself.
      */
     public void testGetAncestorOfNodeDepth() throws RepositoryException {
-        Node nodeAtDepth = (Node) rootNode.getAncestor(rootNode.getDepth());
+        Node nodeAtDepth = (Node) testRootNode.getAncestor(testRootNode.getDepth());
         assertTrue("The ancestor of depth = n, where n is the depth of this " +
-                "Node must be the item itself.", rootNode.isSame(nodeAtDepth));
+                "Node must be the item itself.", testRootNode.isSame(nodeAtDepth));
     }
 
     /**
@@ -149,8 +144,8 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetAncestorOfGreaterDepth() throws RepositoryException {
         try {
-            int greaterDepth = rootNode.getDepth() + 1;
-            rootNode.getAncestor(greaterDepth);
+            int greaterDepth = testRootNode.getDepth() + 1;
+            testRootNode.getAncestor(greaterDepth);
             fail("Getting ancestor of depth n, where n is greater than depth of" +
                     "this Node must throw an ItemNotFoundException");
         } catch (ItemNotFoundException e) {
@@ -164,7 +159,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetAncestorOfNegativeDepth() throws RepositoryException {
         try {
-            rootNode.getAncestor(-1);
+            testRootNode.getAncestor(-1);
             fail("Getting ancestor of depth < 0 must throw an ItemNotFoundException.");
         } catch (ItemNotFoundException e) {
             // success
@@ -182,7 +177,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         assertTrue("getParent() of a child node return the parent node.",
-                rootNode.isSame(childNode.getParent()));
+                testRootNode.isSame(childNode.getParent()));
     }
 
     /**
@@ -190,7 +185,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetParentOfRoot() throws RepositoryException {
         try {
-            rootNode.getParent();
+            session.getRootNode().getParent();
             fail("getParent() of root must throw an ItemNotFoundException.");
         } catch (ItemNotFoundException e) {
             // success
@@ -201,10 +196,10 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      * Tests if depth of root is 0 and depth of a sub node of root is 1
      */
     public void testGetDepth() throws RepositoryException {
-        assertEquals("getDepth() of root must be 0", 0, rootNode.getDepth());
-        if (childNode != null) {
+        assertEquals("getDepth() of root must be 0", 0, session.getRootNode().getDepth());
+        for (NodeIterator it = session.getRootNode().getNodes(); it.hasNext();) {
             assertEquals("getDepth() of child node of root must be 1", 1,
-                    childNode.getDepth());
+                    it.nextNode().getDepth());
         }
     }
 
@@ -214,7 +209,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testGetSession() throws RepositoryException {
         assertSame("getSession must return the Session through which " +
                 "the Node was acquired.",
-                rootNode.getSession(),
+                testRootNode.getSession(),
                 session);
     }
 
@@ -223,7 +218,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      */
     public void testIsNode() {
         assertTrue("isNode() must return true.",
-                rootNode.isNode());
+                testRootNode.isNode());
     }
 
     /**
@@ -232,17 +227,17 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      */
     public void testIsSame() throws RepositoryException {
         // access same node through different session
-        Item otherRootNode = helper.getReadOnlySession().getRootNode();
+        Item otherTestNode = helper.getReadOnlySession().getRootNode().getNode(testPath);
         assertTrue("isSame(Item item) must return true for the same " +
                 "item retrieved through different sessions.",
-                rootNode.isSame(otherRootNode));
+                testRootNode.isSame(otherTestNode));
     }
 
     /**
      *
      */
     public void testAccept() throws RepositoryException {
-        final Node n = rootNode;
+        final Node n = testRootNode;
 
         ItemVisitor itemVisitor = new ItemVisitor() {
             public void visit(Property property) {
@@ -268,7 +263,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         StringBuffer notExistingPath = new StringBuffer("X");
-        NodeIterator nodes = rootNode.getNodes();
+        NodeIterator nodes = testRootNode.getNodes();
         while (nodes.hasNext()) {
             // build a path that for sure is not existing
             // (":" of namespace prefix will be replaced later on)
@@ -276,7 +271,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         try {
-            rootNode.getNode(notExistingPath.toString().replaceAll(":", ""));
+            testRootNode.getNode(notExistingPath.toString().replaceAll(":", ""));
             fail("getNode(String relPath) must throw a PathNotFoundException" +
                     "if no node exists at relPath");
         } catch (PathNotFoundException e) {
@@ -284,10 +279,10 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         try {
-            NodeIterator nodes2 = rootNode.getNodes();
+            NodeIterator nodes2 = testRootNode.getNodes();
             Node node = nodes2.nextNode();
             assertTrue("Node from Iterator is not the same as the Node from getNode()",
-                    rootNode.getNode(node.getName()).isSame(node));
+                    testRootNode.getNode(node.getName()).isSame(node));
         } catch (NoSuchElementException e) {
             throw new NotExecutableException("Workspace does not have sufficient content for this test. " +
                     "Root node must have at least one child node.");
@@ -298,7 +293,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      * Test if all returned items are of type node.
      */
     public void testGetNodes() throws RepositoryException {
-        NodeIterator nodes = rootNode.getNodes();
+        NodeIterator nodes = testRootNode.getNodes();
         while (nodes.hasNext()) {
             Item item = (Item) nodes.next();
             assertTrue("Item is not a node", item.isNode());
@@ -314,7 +309,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // get root node and build an ArrayList of its sub nodes
-        Node node = rootNode;
+        Node node = testRootNode;
         if (!node.hasNodes()) {
             throw new NotExecutableException("Workspace does not have sufficient content for this test. " +
                     "Root node must have at least one child node.");
@@ -436,7 +431,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testGetProperty()
             throws NotExecutableException, RepositoryException {
         StringBuffer notExistingPath = new StringBuffer("X");
-        PropertyIterator properties = rootNode.getProperties();
+        PropertyIterator properties = testRootNode.getProperties();
         while (properties.hasNext()) {
             // build a path that for sure is not existing
             // (":" of namespace prefix will be replaced later on)
@@ -444,7 +439,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         try {
-            rootNode.getProperty(notExistingPath.toString().replaceAll(":", ""));
+            testRootNode.getProperty(notExistingPath.toString().replaceAll(":", ""));
             fail("getProperty(String relPath) must throw a " +
                     "PathNotFoundException if no node exists at relPath");
         } catch (PathNotFoundException e) {
@@ -452,10 +447,10 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         try {
-            PropertyIterator properties2 = rootNode.getProperties();
+            PropertyIterator properties2 = testRootNode.getProperties();
             Property property = properties2.nextProperty();
             assertTrue("Property returned by getProperties() is not the same as returned by getProperty(String).",
-                    rootNode.getProperty(property.getName()).isSame(property));
+                    testRootNode.getProperty(property.getName()).isSame(property));
         } catch (NoSuchElementException e) {
             fail("Root node must always have at least one property: jcr:primaryType");
         }
@@ -465,7 +460,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      * Test if all returned items are of type node.
      */
     public void testGetProperties() throws RepositoryException {
-        PropertyIterator properties = rootNode.getProperties();
+        PropertyIterator properties = testRootNode.getProperties();
         while (properties.hasNext()) {
             Item item = (Item) properties.next();
             assertFalse("Item is not a property", item.isNode());
@@ -481,7 +476,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // get root node and build an ArrayList of its sub nodes
-        Node node = rootNode;
+        Node node = testRootNode;
         if (!node.hasProperties()) {
             fail("Root node must always have at least one property: jcr:primaryType");
         }
@@ -606,7 +601,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testGetPrimaryItem()
             throws NotExecutableException, RepositoryException {
 
-        Node node = locateNodeWithPrimaryItem(rootNode);
+        Node node = locateNodeWithPrimaryItem(testRootNode);
 
         if (node == null) {
             throw new NotExecutableException("Workspace does not contain a node with primary item defined");
@@ -635,7 +630,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testGetPrimaryItemItemNotFoundException()
             throws NotExecutableException, RepositoryException {
 
-        Node node = locateNodeWithoutPrimaryItem(rootNode);
+        Node node = locateNodeWithoutPrimaryItem(testRootNode);
 
         if (node == null) {
             throw new NotExecutableException("Workspace does not contain a node with primary item defined");
@@ -653,16 +648,16 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     /**
      * Test if getIndex() returns the correct index. Therefor a node with same
      * name sibling is located recursively in the entire repository. If no such
-     * node is found, the test checks if the rootNode returns 1
+     * node is found, the test checks if the testRootNode returns 1
      */
     public void testGetIndex()
             throws RepositoryException {
 
-        Node node = locateNodeWithSameNameSiblings(rootNode);
+        Node node = locateNodeWithSameNameSiblings(testRootNode);
 
         if (node == null) {
             assertEquals("getIndex() of a node without same name siblings " +
-                    "must return 1", rootNode.getIndex(), 1);
+                    "must return 1", testRootNode.getIndex(), 1);
         } else {
             NodeIterator nodes = node.getParent().getNodes(node.getName());
             int i = 1;
@@ -678,7 +673,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testGetReferences()
             throws NotExecutableException, RepositoryException {
 
-        Node node = locateNodeWithReference(rootNode);
+        Node node = locateNodeWithReference(testRootNode);
 
         if (node == null) {
             throw new NotExecutableException("Workspace does not contain a node with a reference property set");
@@ -687,12 +682,13 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         PropertyIterator properties = node.getProperties();
         while (properties.hasNext()) {
             Property p = properties.nextProperty();
-            if (p.getType() == PropertyType.REFERENCE) {
+            if (p.getType() == PropertyType.REFERENCE && !p.getDefinition().isMultiple()) {
                 Node referencedNode = p.getNode();
                 PropertyIterator refs = referencedNode.getReferences();
                 boolean referenceFound = false;
                 while (refs.hasNext()) {
-                    if (refs.nextProperty() == p) {
+                    Property ref = refs.nextProperty();
+                    if (ref.isSame(p)) {
                         referenceFound = true;
                     }
                 }
@@ -714,7 +710,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // find a node of type mix:referenceable
-        Node node = locateReferenceableNode(rootNode);
+        Node node = locateReferenceableNode(testRootNode);
 
         if (node == null) {
             throw new NotExecutableException("Workspace does not contain a referencable node");
@@ -738,7 +734,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // find a node NOT of type mix:referenceable
-        Node node = locateNonReferenceableNode(rootNode);
+        Node node = locateNonReferenceableNode(testRootNode);
 
         if (node == null) {
             throw new NotExecutableException("Workspace does not contain a non referenceable node");
@@ -759,7 +755,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testHasNode()
             throws NotExecutableException, RepositoryException {
 
-        Node node = rootNode;
+        Node node = testRootNode;
 
         NodeIterator nodes = node.getNodes();
         StringBuffer notExistingNodeName = new StringBuffer();
@@ -785,7 +781,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      * Tested node: root
      */
     public void testHasNodes() throws RepositoryException {
-        Node node = rootNode;
+        Node node = testRootNode;
         NodeIterator nodes = node.getNodes();
 
         int i = 0;
@@ -812,7 +808,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testHasProperty()
             throws NotExecutableException, RepositoryException {
 
-        Node node = rootNode;
+        Node node = testRootNode;
 
         PropertyIterator properties = node.getProperties();
         StringBuffer notExistingPropertyName = new StringBuffer();
@@ -839,7 +835,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testHasProperties() throws RepositoryException {
-        Node node = rootNode;
+        Node node = testRootNode;
         PropertyIterator properties = node.getProperties();
 
         int i = 0;
@@ -910,7 +906,8 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
 
     /**
      * Returns the first descendant of <code>node</code> which has a property of
-     * type {@link javax.jcr.PropertyType#REFERENCE} set.
+     * type {@link javax.jcr.PropertyType#REFERENCE} set and is <b>not</b>
+     * multivalued.
      *
      * @param node <code>Node</code> to start traversal.
      * @return first node with a property of PropertType.REFERENCE
@@ -921,7 +918,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         PropertyIterator properties = node.getProperties();
         while (properties.hasNext()) {
             Property p = properties.nextProperty();
-            if (p.getType() == PropertyType.REFERENCE) {
+            if (p.getType() == PropertyType.REFERENCE && !p.getDefinition().isMultiple()) {
                 return node;
             }
         }

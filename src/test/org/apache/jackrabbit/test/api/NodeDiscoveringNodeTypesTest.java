@@ -28,10 +28,8 @@ import javax.jcr.nodetype.NodeType;
 import java.util.NoSuchElementException;
 
 /**
- * <code>NodeDiscoveringNodeTypesTest</code>...
- * <p/>
  * All test cases in this class rely on content in the repository. That is the
- * root node of the default workspace must at least contain one child node,
+ * default workspace must at least contain one child node under {@link #testRoot}
  * otherwise a {@link NotExecutableException} is thrown.
  *
  * @test
@@ -47,11 +45,6 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
     private Session session;
 
     /**
-     * The root node of the default workspace
-     */
-    private Node rootNode;
-
-    /**
      * A child node of the root node in the default workspace.
      */
     private Node childNode;
@@ -64,8 +57,8 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
         super.setUp();
 
         session = helper.getReadOnlySession();
-        rootNode = session.getRootNode();
-        NodeIterator nodes = rootNode.getNodes();
+        testRootNode = session.getRootNode().getNode(testPath);
+        NodeIterator nodes = testRootNode.getNodes();
         try {
             childNode = nodes.nextNode();
         } catch (NoSuchElementException e) {
@@ -120,7 +113,7 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
                     "Root node must have at least one child node.");
         }
 
-        Node node = locateNodeWithMixinNodeTypes(rootNode);
+        Node node = locateNodeWithMixinNodeTypes(testRootNode);
 
         if (node == null) {
             throw new NotExecutableException("Workspace does not contain a node with mixin node types defined");
@@ -165,14 +158,14 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
         String nodeTypeName;
 
         // test with primary node's name
-        nodeTypeName = rootNode.getPrimaryNodeType().getName();
+        nodeTypeName = testRootNode.getPrimaryNodeType().getName();
         assertTrue("isNodeType(String nodeTypeName) must return true if " +
                 "nodeTypeName is the name of the primary node type",
-                rootNode.isNodeType(nodeTypeName));
+                testRootNode.isNodeType(nodeTypeName));
 
         // test with mixin node's name
         // (if such a node is available)
-        Node nodeWithMixin = locateNodeWithMixinNodeTypes(rootNode);
+        Node nodeWithMixin = locateNodeWithMixinNodeTypes(testRootNode);
         if (nodeWithMixin != null) {
             NodeType types[] = nodeWithMixin.getMixinNodeTypes();
             nodeTypeName = types[0].getName();
@@ -185,7 +178,7 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
         // test with the name of predefined supertype "nt:base"
         assertTrue("isNodeType(String nodeTypeName) must return true if " +
                 "nodeTypeName is the name of a node type of a supertype",
-                rootNode.isNodeType(ntBase));
+                testRootNode.isNodeType(ntBase));
     }
 
     //-----------------------< internal >---------------------------------------

@@ -29,7 +29,7 @@ import javax.jcr.Property;
 /**
  * Tests if the type of a property is set according to the node type as well
  * as no property is of type UNDEFINED. This test runs recursively through
- * the entire repository.
+ * the workspace starting at {@link #testRoot}.
  *
  * @test
  * @sources PropertyTypeTest.java
@@ -49,12 +49,16 @@ public class PropertyTypeTest extends AbstractJCRTest {
     /**
      * Tests if the type of a property is set according to the node type as well
      * as no property is of type UNDEFINED. This test runs recursively through
-     * the entire repository.
+     * the workspace starting at {@link #testRoot}.
      */
     public void testType() throws RepositoryException {
         Session session = helper.getReadOnlySession();
-        Node root = session.getRootNode();
-        typeCheckChildren(root);
+        try {
+            Node root = session.getRootNode().getNode(testPath);
+            typeCheckChildren(root);
+        } finally {
+            session.logout();
+        }
     }
 
     private void typeCheckChildren(Node parentNode)

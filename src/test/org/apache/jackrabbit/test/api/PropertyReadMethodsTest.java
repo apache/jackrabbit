@@ -47,11 +47,6 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
     private Session session;
 
     /**
-     * The root node of the default workspace
-     */
-    private Node rootNode;
-
-    /**
      * A property of the root node
      */
     private Property property;
@@ -64,9 +59,9 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
         super.setUp();
 
         session = helper.getReadOnlySession();
-        rootNode = session.getRootNode();
+        testRootNode = session.getRootNode().getNode(testPath);
 
-        PropertyIterator properties = rootNode.getProperties();
+        PropertyIterator properties = testRootNode.getProperties();
         try {
             property = properties.nextProperty();
         } catch (NoSuchElementException e) {
@@ -94,7 +89,7 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         assertEquals("getPath returns wrong result",
-                "/" + property.getName(),
+                testRoot + "/" + property.getName(),
                 property.getPath());
     }
 
@@ -158,14 +153,14 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetParent() throws RepositoryException {
         assertTrue("getParent() of a property must return the parent node.",
-                rootNode.isSame(property.getParent()));
+                testRootNode.isSame(property.getParent()));
     }
 
     /**
-     * Tests if depth of a property of root is 1
+     * Tests if depth of a property of depth of node + 1
      */
     public void testGetDepth() throws RepositoryException {
-        assertEquals("getDepth() of a property of root must be 1", 1,
+        assertEquals("getDepth() of a property of root must be 1", testRootNode.getDepth() + 1,
                 property.getDepth());
     }
 
@@ -193,7 +188,7 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      */
     public void testIsSame() throws RepositoryException {
         // access same property through different session
-        PropertyIterator properties = helper.getReadOnlySession().getRootNode().getProperties();
+        PropertyIterator properties = testRootNode.getProperties();
         Property otherProperty = properties.nextProperty();
         assertTrue("isSame must return true for the same " +
                 "property retrieved through different sessions.",
@@ -226,7 +221,7 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      */
     public void testNoNullValue() throws RepositoryException {
         assertFalse("Single property with null value found.",
-                PropertyUtil.nullValues(rootNode));
+                PropertyUtil.nullValues(testRootNode));
     }
 
     /**
@@ -234,7 +229,7 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      * type.
      */
     public void testMultiValueType() throws RepositoryException, NotExecutableException {
-        Property multiValProp = PropertyUtil.searchMultivalProp(rootNode);
+        Property multiValProp = PropertyUtil.searchMultivalProp(testRootNode);
         if (multiValProp != null) {
             Value[] vals = multiValProp.getValues();
             if (vals.length > 0) {
@@ -253,7 +248,7 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      * Tests failure of Property.getValue() method for a multivalue property.
      */
     public void testGetValue() throws RepositoryException, NotExecutableException {
-        Property multiValProp = PropertyUtil.searchMultivalProp(rootNode);
+        Property multiValProp = PropertyUtil.searchMultivalProp(testRootNode);
         if (multiValProp != null) {
             try {
                 multiValProp.getValue();
@@ -272,7 +267,7 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      * property.
      */
     public void testGetValues() throws RepositoryException {
-        Property singleProp = PropertyUtil.searchProp(session, rootNode, PropertyType.STRING);
+        Property singleProp = PropertyUtil.searchProp(session, testRootNode, PropertyType.STRING);
         try {
             singleProp.getValues();
             fail("Property.getValues() called on a single property " +
