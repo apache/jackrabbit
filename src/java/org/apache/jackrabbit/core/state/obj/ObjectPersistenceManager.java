@@ -261,7 +261,18 @@ public class ObjectPersistenceManager implements BLOBStore, PersistenceManager {
                 // special handling required for binary value:
                 // spool binary value to file in blob store
                 BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
-                String blobId = blobStore.put((PropertyId) state.getId(), i, blobVal.getStream(), blobVal.getLength());
+                InputStream in = blobVal.getStream();
+                String blobId;
+                try {
+                    blobId = blobStore.put((PropertyId) state.getId(), i, in,
+                            blobVal.getLength());
+                } finally {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
                 // store id of blob as property value
                 out.writeUTF(blobId);   // value
                 // replace value instance with value
