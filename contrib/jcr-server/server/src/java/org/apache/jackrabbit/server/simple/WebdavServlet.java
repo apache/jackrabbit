@@ -159,6 +159,10 @@ public class WebdavServlet extends AbstractWebdavServlet {
 	    getDavSessionProvider().releaseSession(webdavRequest);
 
 	} catch (DavException e) {
+            // special handling for unauthorized, should be done nicer
+            if (e.getErrorCode() == HttpServletResponse.SC_UNAUTHORIZED) {
+                response.setHeader("WWW-Authenticate", "Basic Realm=Jackrabbit");
+            }
 	    response.sendError(e.getErrorCode());
 	}
     }

@@ -24,6 +24,7 @@ import org.apache.jackrabbit.webdav.spi.DefaultItemCollection;
 import org.apache.jackrabbit.webdav.*;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Item;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 import java.util.ArrayList;
@@ -45,8 +46,10 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
      * @param session
      * @param factory
      */
-    public VersionHistoryItemCollection(DavResourceLocator resourcePath, DavSession session, DavResourceFactory factory) {
-        super(resourcePath, session, factory);
+    public VersionHistoryItemCollection(DavResourceLocator resourcePath,
+                                        DavSession session, DavResourceFactory factory,
+                                        Item item) {
+        super(resourcePath, session, factory, item);
         if (item == null || !(item instanceof VersionHistory)) {
             throw new IllegalArgumentException("VersionHistory item expected.");
         }

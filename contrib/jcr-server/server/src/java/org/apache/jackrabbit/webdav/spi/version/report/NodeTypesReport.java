@@ -28,6 +28,7 @@ import org.apache.jackrabbit.webdav.spi.JcrDavException;
 import org.apache.jackrabbit.core.util.IteratorHelper;
 import org.jdom.Document;
 import org.jdom.Element;
+import org.jdom.Namespace;
 
 import javax.jcr.nodetype.*;
 import javax.jcr.*;
@@ -60,7 +61,7 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
      */
     public static final ReportType NODETYPES_REPORT = ReportType.register("nodetypes", NodeTypeConstants.NAMESPACE, NodeTypesReport.class);
 
-    private NodeTypeManager ntMgr;
+    private Session session;
     private ReportInfo info;
 
     /**
@@ -82,15 +83,11 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
         if (resource == null) {
             throw new IllegalArgumentException("Resource must not be null.");
         }
-        try {
-            DavSession session = resource.getSession();
-            if (session == null || session.getRepositorySession() == null) {
-                throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the jcr:nodetypes report.");
-            }
-            ntMgr = session.getRepositorySession().getWorkspace().getNodeTypeManager();
-        } catch (RepositoryException e) {
-            log.error(e.getMessage());
+        DavSession session = resource.getSession();
+        if (session == null || session.getRepositorySession() == null) {
+            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the jcr:nodetypes report.");
         }
+        this.session = session.getRepositorySession();
     }
 
     /**
@@ -116,11 +113,19 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
      * @see org.apache.jackrabbit.webdav.version.report.Report#toXml()
      */
     public Document toXml() throws DavException {
-        if (info == null || ntMgr == null) {
+        if (info == null || session == null) {
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running jcr:nodetypes report");
         }
         try {
             Element report = new Element(XML_NODETYPES);
+            // make sure all namespace declarations are present on the root element.
+            // since the nodetype-manager uses session-local jcr names, prefix/namespace
+            // pairs are retrieved from the session and not from the namespace registry.
+            String[] prefixes = session.getNamespacePrefixes();
+            for (int i = 0; i < prefixes.length; i++) {
+                report.addNamespaceDeclaration(Namespace.getNamespace(prefixes[i], session.getNamespaceURI(prefixes[i])));
+            }
+            // retrieve the requested nodetypes
             NodeTypeIterator ntIter = getNodeTypes();
             while (ntIter.hasNext()) {
                 NodeType nt = ntIter.nextNodeType();
@@ -177,6 +182,7 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
      */
     private NodeTypeIterator getNodeTypes() throws RepositoryException, DavException {
         NodeTypeIterator ntIter = null;
+        NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
         Iterator it = info.getReportElement().getChildren().iterator();
         while (it.hasNext() && ntIter == null) {
             Element elem = (Element) it.next();

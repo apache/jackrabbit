@@ -400,7 +400,8 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @param request
      * @return status code indicating whether the destination is valid.
      */
-    private int validateDestination(DavResource destResource, WebdavRequest request) {
+    private int validateDestination(DavResource destResource, WebdavRequest request)
+        throws DavException {
 
         String destHeader = request.getHeader(HEADER_DESTINATION);
         if (destHeader == null || "".equals(destHeader)){
@@ -417,8 +418,8 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 if (!request.matchesIfHeader(destResource)) {
                     return DavServletResponse.SC_PRECONDITION_FAILED;
                 } else {
-                    // overwrite existing resource: its up to the webdavresource
-                    // object to deal with any delete prior to the copy/move
+                    // overwrite existing resource
+                    destResource.getCollection().removeMember(destResource);                    
                     status = DavServletResponse.SC_NO_CONTENT;
                 }
             } else {
@@ -450,6 +451,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             ActiveLock[] activeLocks = resource.getLocks();
             List lList = new ArrayList();
             for (int i = 0; i < activeLocks.length; i++) {
+                // todo: do not ignore etag
                 if (request.matchesIfHeader(resource.getHref(), activeLocks[i].getToken(), "")) {
                     lList.add(resource.refreshLock(lockInfo, activeLocks[i].getToken()));
                 }

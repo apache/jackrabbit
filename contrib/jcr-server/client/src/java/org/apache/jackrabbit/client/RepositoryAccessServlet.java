@@ -54,6 +54,9 @@ public class RepositoryAccessServlet extends HttpServlet {
     /** the 'rmi-uri' init parameter */
     public final static String INIT_PARAM_RMI_URI = "rmi-uri";
 
+    /** the 'missing-auth-mapping' init parameter */
+    public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
+
     /** Authorization header name */
     private static final String HEADER_AUTHORIZATION = "Authorization";
 
@@ -66,6 +69,8 @@ public class RepositoryAccessServlet extends HttpServlet {
 
     private static Repository repository;
 
+    private static String missingAuthMapping;
+
     /**
      * Initializes this servlet
      *
@@ -77,6 +82,9 @@ public class RepositoryAccessServlet extends HttpServlet {
 	initJNDI();
 	initRMI();
 	initRepository();
+        missingAuthMapping = getServletConfig().getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING);
+        log.info("  " + INIT_PARAM_MISSING_AUTH_MAPPING + " = " + missingAuthMapping);
+
 	log.info("RepositoryAccessServlet initialized.");
     }
 
@@ -205,18 +213,31 @@ public class RepositoryAccessServlet extends HttpServlet {
     /**
      * Build a {@link Credentials} object for the given authorization header.
      * The creds may be used to login to the repository. If the specified header
-     * string is <code>null</code> or not of the required format, <code>null</code>
-     * is returned.
+     * string is <code>null</code> or not of the required format the behaviour
+     * depends on the {@link #INIT_PARAM_MISSING_AUTH_MAPPING} param:<br>
+     * <ul>
+     * <li> if this init-param is missing, a LoginException is thrown.
+     *      This is suiteable for clients (eg. webdav clients) for with
+     *      sending a proper authorization header is not possible, if the
+     *      server never send a 401.
+     * <li> if this init-param is present, but with an empty value,
+     *      null-credentials are returned, thus forcing an null login
+     *      on the repository
+     * <li> if this init-param has a 'user:password' value, the respective
+     *      simple credentials are generated.
+     * </ul>
      *
      * @param authHeader Authorization header as present in the Http request
      * @return credentials or <code>null</code>.
      * @throws ServletException If an IOException occured while decoding the
      * Authorization header.
+     * @throws LoginException if no suitable auth header and missing-auth-mapping
+     * is not present
      * @see #getRepository()
      * @see #login(HttpServletRequest)
      */
     public static Credentials getCredentialsFromHeader(String authHeader)
-	    throws ServletException {
+	    throws ServletException, LoginException {
 	try {
 	    if (authHeader != null) {
 		String[] authStr = authHeader.split(" ");
@@ -230,7 +251,22 @@ public class RepositoryAccessServlet extends HttpServlet {
 		    return new SimpleCredentials(userid, passwd.toCharArray());
 		}
 	    }
-	    return null;
+            // check special handling
+            if (missingAuthMapping == null) {
+                throw new LoginException();
+            } else if (missingAuthMapping.equals("")) {
+                return null;
+            } else {
+                int pos = missingAuthMapping.indexOf(':');
+                if (pos<0) {
+                    return new SimpleCredentials(missingAuthMapping, null);
+                } else {
+                    return new SimpleCredentials(
+                            missingAuthMapping.substring(0, pos),
+                            missingAuthMapping.substring(pos+1).toCharArray()
+                    );
+                }
+            }
 	} catch (IOException e) {
 	    throw new ServletException("Unable to decode authorization: " + e.toString());
 	}
@@ -248,14 +284,18 @@ public class RepositoryAccessServlet extends HttpServlet {
      * @param request
      * @return  Session object obtained upon {@link Repository#login(javax.jcr.Credentials)}.
      * @throws ServletException
+     * @throws LoginException if credentials are invalid
      * @see #getRepository() in order to be able to login to a specific workspace.
      * @see #getCredentialsFromHeader(String) for a utility method to retrieve
      * credentials from the Authorization header string.
      */
-    public static Session login(HttpServletRequest request) throws ServletException {
+    public static Session login(HttpServletRequest request)
+            throws LoginException, ServletException {
         String authHeader = request.getHeader(HEADER_AUTHORIZATION);
 	try {
 	    return repository.login(getCredentialsFromHeader(authHeader));
+        } catch (LoginException e) {
+            throw e;
 	} catch (RepositoryException e) {
 	    throw new ServletException("Failed to login to the repository: " + e.toString());
 	}
