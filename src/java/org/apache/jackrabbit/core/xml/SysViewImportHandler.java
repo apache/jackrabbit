@@ -29,6 +29,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.jcr.*;
 import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -291,7 +292,7 @@ class SysViewImportHandler extends DefaultHandler {
 			try {
 			    // try setting single-value
 			    current.node.setProperty(currentPropName, vals[0]);
-			} catch (ValueFormatException vfe) {
+			} catch (ConstraintViolationException vfe) {
 			    // try setting value array
 			    current.node.setProperty(currentPropName, vals);
 			}
