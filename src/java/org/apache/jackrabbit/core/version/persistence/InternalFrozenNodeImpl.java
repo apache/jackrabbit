@@ -18,11 +18,11 @@ package org.apache.jackrabbit.core.version.persistence;
 
 import org.apache.jackrabbit.core.version.*;
 import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ItemStateException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -85,7 +85,12 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
         this.id = id;
 
         // init the frozen properties
-        PropertyState[] props = node.getProperties();
+        PropertyState[] props = new org.apache.jackrabbit.core.state.PropertyState[0];
+        try {
+            props = node.getProperties();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
         List propList = new ArrayList();
 
         for (int i = 0; i < props.length; i++) {

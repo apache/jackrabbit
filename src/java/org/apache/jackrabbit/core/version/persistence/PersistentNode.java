@@ -113,19 +113,15 @@ class PersistentNode {
      *
      * @return
      */
-    protected PropertyState[] getProperties() {
-        try {
-            List list = nodeState.getPropertyEntries();
-            PropertyState[] props = new PropertyState[list.size()];
-            for (int i = 0; i < list.size(); i++) {
-                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) list.get(i);
-                PropertyId propId = new PropertyId(nodeState.getUUID(), entry.getName());
-                props[i] = (PropertyState) stateMgr.getItemState(propId);
-            }
-            return props;
-        } catch (ItemStateException e) {
-            return null;
+    protected PropertyState[] getProperties() throws ItemStateException {
+        List list = nodeState.getPropertyEntries();
+        PropertyState[] props = new PropertyState[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) list.get(i);
+            PropertyId propId = new PropertyId(nodeState.getUUID(), entry.getName());
+            props[i] = (PropertyState) stateMgr.getItemState(propId);
         }
+        return props;
     }
 
     /**
@@ -227,7 +223,9 @@ class PersistentNode {
             try {
                 PersistentPropertyState propState = (PersistentPropertyState) stateMgr.getItemState(propId);
                 // someone calling this method will always alter the property state, so set status to modified
-                propState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                if (propState.getStatus()==ItemState.STATUS_EXISTING) {
+                    propState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                }
                 // although this is not quite correct, we mark node as modified aswell
                 if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
                     nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
