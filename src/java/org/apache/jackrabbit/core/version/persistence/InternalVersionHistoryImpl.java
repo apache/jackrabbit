@@ -239,6 +239,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         try {
             // remove from persistance state
             node.removeNode(versionName);
+            node.store();
 
             // unregister from labels
             String[] labels = v.internalGetLabels();
@@ -253,7 +254,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
 
             // and remove from history
             versionCache.remove(v.getId());
-            store();
         } catch (RepositoryException e) {
             throw new VersionException("error while storing modifications", e);
         }
@@ -354,7 +354,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         InternalFrozenNodeImpl.checkin(vNode, VersionManager.NODENAME_FROZEN, src, false, false);
 
         // and store
-        store();
+        node.store();
 
         // update version graph
         InternalVersionImpl version = new InternalVersionImpl(this, vNode);
@@ -364,26 +364,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl implements Inte
         versionCache.put(version.getId(), version);
 
         return version;
-    }
-
-
-    /**
-     * Stores the changes made to this version history
-     *
-     * @throws RepositoryException
-     */
-    protected void store() throws RepositoryException {
-        node.store();
-    }
-
-    /**
-     * discards the changes made to this version history
-     *
-     * @throws RepositoryException
-     */
-    protected void reload() throws RepositoryException {
-        node.reload();
-        init();
     }
 
     /**

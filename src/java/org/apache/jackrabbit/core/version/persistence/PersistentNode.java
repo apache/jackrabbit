@@ -228,6 +228,10 @@ class PersistentNode {
                 PersistentPropertyState propState = (PersistentPropertyState) stateMgr.getItemState(propId);
                 // someone calling this method will always alter the property state, so set status to modified
                 propState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                // although this is not quite correct, we mark node as modified aswell
+                if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
+                    nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                }
                 return propState;
             } catch (ItemStateException e) {
                 throw new RepositoryException("Unable to create property: " + e.toString());
@@ -242,7 +246,9 @@ class PersistentNode {
 
                 // need to store nodestate
                 nodeState.addPropertyEntry(name);
-                nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
+                    nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                }
                 return propState;
             } catch (ItemStateException e) {
                 throw new RepositoryException("Unable to store property: " + e.toString());
@@ -333,7 +339,9 @@ class PersistentNode {
      */
     protected boolean removeNode(QName name, int index) throws RepositoryException {
         if (nodeState.removeChildNodeEntry(name, index)) {
-            nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+            if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
+                nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+            }
             return true;
         } else {
             return false;
@@ -441,7 +449,9 @@ class PersistentNode {
         PersistentNode node = new PersistentNode(stateMgr, ntMgr, state);
         // add new child node entry
         nodeState.addChildNodeEntry(name, state.getUUID());
-        nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+        if (nodeState.getStatus()==ItemState.STATUS_EXISTING) {
+            nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+        }
 
         // add 'auto-create' properties defined in node type
         PropertyDef[] pda = nodeType.getAutoCreatePropertyDefs();

@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.version.persistence;
 import org.apache.jackrabbit.core.version.*;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 
 import javax.jcr.RepositoryException;
@@ -140,13 +141,14 @@ class InternalVersionImpl extends InternalVersionItemImpl implements InternalVer
     public InternalFrozenNode getFrozenNode() {
         // get frozen node
         try {
-            // assuming only child
-            PersistentNode[] nodes = node.getChildNodes();
-            return nodes.length==0 ? null : (InternalFrozenNode) getVersionManager().getItemByInternal(nodes[0].getUUID());
+            NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(VersionManager.NODENAME_FROZEN, 1);
+            if (entry==null) {
+                throw new IllegalStateException("version has no frozen node: " + getId());
+            }
+            return (InternalFrozenNode) getVersionManager().getItemByInternal(entry.getUUID());
         } catch (RepositoryException e) {
-            // ignore
+            throw new IllegalStateException("unable to retrieve frozen node: " + e);
         }
-        return null;
     }
 
     /**

@@ -188,7 +188,7 @@ public class NativePVM implements PersistentVersionManager {
             initVirtualIds(historyRoot.getState());
             log.info("loaded " + idsByExternal.size() + " virtual ids.");
         } catch (ItemStateException e) {
-            throw new RepositoryException("Unable to initialize PersistentVersionManager: " + e.toString());
+            throw new RepositoryException("Unable to initialize PersistentVersionManager: " + e.toString(), e);
         }
     }
 
@@ -274,6 +274,12 @@ public class NativePVM implements PersistentVersionManager {
     public InternalVersionHistory createVersionHistory(NodeImpl node)
             throws RepositoryException {
 
+        // check if version history for that node already exists
+        InternalVersionHistoryImpl hist = (InternalVersionHistoryImpl) getVersionHistory(node.internalGetUUID());
+        if (hist!=null) {
+            return hist;
+        }
+
         // create deep path
         String uuid = UUID.randomUUID().toString();
         PersistentNode root = historyRoot;
@@ -288,7 +294,7 @@ public class NativePVM implements PersistentVersionManager {
         QName historyNodeName = new QName(NamespaceRegistryImpl.NS_DEFAULT_URI, uuid);
 
         // create new history node in the persistent state
-        InternalVersionHistoryImpl hist = InternalVersionHistoryImpl.create(this, root, uuid, historyNodeName, node);
+        hist = InternalVersionHistoryImpl.create(this, root, uuid, historyNodeName, node);
         try {
             initVirtualIds(hist.getId(), hist.getNode().getState());
         } catch (ItemStateException e) {

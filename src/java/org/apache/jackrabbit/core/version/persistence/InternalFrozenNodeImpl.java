@@ -304,7 +304,6 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl implements InternalFroze
                 }
             }
         }
-        parent.store();
         return node;
     }
 
