@@ -21,11 +21,18 @@ package org.apache.jackrabbit.core.search;
  */
 public class PathQueryNode extends NAryQueryNode {
 
+    /** Flag indicating whether this path is absolute. */
+    private boolean absolute = false;
+
     /**
      * Empty step node array.
      */
     private static final LocationStepQueryNode[] EMPTY = new LocationStepQueryNode[0];
 
+    /**
+     * Creates a relative <code>PathQueryNode</code> with no location steps.
+     * @param parent the parent query node.
+     */
     public PathQueryNode(QueryNode parent) {
         super(parent);
     }
@@ -55,6 +62,26 @@ public class PathQueryNode extends NAryQueryNode {
         } else {
             return (LocationStepQueryNode[]) operands.toArray(new LocationStepQueryNode[operands.size()]);
         }
+    }
+
+    /**
+     * If <code>absolute</code> is <code>true</code> sets this
+     * <code>PathQueryNode</code> to an absolute path. If <code>absolute</code>
+     * is <code>false</code> this path is considered relative.
+     * @param absolute sets the absolute property to this new value.
+     */
+    public void setAbsolute(boolean absolute) {
+        this.absolute = absolute;
+    }
+
+    /**
+     * Returns <code>true</code> if this is an absolute path; <code>false</code>
+     * otherwise.
+     * @return <code>true</code> if this is an absolute path; <code>false</code>
+     *   otherwise.
+     */
+    public boolean isAbsolute() {
+        return absolute;
     }
 
 }

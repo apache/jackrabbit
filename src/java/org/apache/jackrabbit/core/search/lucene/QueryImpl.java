@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.search.QueryParser;
 import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.search.OrderQueryNode;
 import org.apache.jackrabbit.core.search.LocationStepQueryNode;
-import org.apache.jackrabbit.core.search.QueryNode;
 import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
 import org.apache.jackrabbit.core.search.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.QName;

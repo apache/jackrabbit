@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
 import javax.jcr.query.InvalidQueryException;
@@ -62,6 +63,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /** QName for jcrfn:contains */
     static final QName JCRFN_CONTAINS = new QName(SearchManager.NS_JCRFN_URI, "contains");
+
+    /** QName for jcr:root */
+    static final QName JCR_ROOT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "root");
 
     /** String constant for operator 'eq' */
     private static final String OP_EQ = "eq";
@@ -153,13 +157,6 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                                             NamespaceResolver resolver)
             throws InvalidQueryException {
         QueryRootNode root = new XPathQueryBuilder(statement, resolver).getRootNode();
-        LocationStepQueryNode[] steps = root.getLocationNode().getPathSteps();
-        if (steps.length > 0) {
-            QName nameTest = steps[0].getNameTest();
-            if (nameTest == null || nameTest.getLocalName().length() > 0) {
-                throw new InvalidQueryException("Path must be absolute: " + statement);
-            }
-        }
         return root;
     }
 
@@ -200,10 +197,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 data = createPathQueryNode(node);
                 break;
             case JJTROOT:
-                ((PathQueryNode) data).addPathStep(new LocationStepQueryNode((QueryNode) data, new QName("", ""), false));
-                break;
             case JJTROOTDESCENDANTS:
-                ((PathQueryNode) data).addPathStep(new LocationStepQueryNode((QueryNode) data, new QName("", ""), false));
+                ((PathQueryNode) data).setAbsolute(true);
                 break;
             case JJTSTEPEXPR:
                 if (isAttributeAxis(node)) {
@@ -341,6 +336,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 try {
                     if (queryNode instanceof LocationStepQueryNode) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
+                        if (name.equals(JCR_ROOT)) {
+                            name = new QName("", "");
+                        }
                         ((LocationStepQueryNode) queryNode).setNameTest(name);
                     } else if (queryNode instanceof RelationQueryNode) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));

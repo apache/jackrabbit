@@ -150,6 +150,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         // use //* if no path has been set
         PathQueryNode pathNode = root.getLocationNode();
         if (pathNode.getPathSteps().length == 0) {
+            pathNode.setAbsolute(true);
             pathNode.addPathStep(new LocationStepQueryNode(pathNode, new QName("", ""), false));
             pathNode.addPathStep(new LocationStepQueryNode(pathNode, null, true));
         }
@@ -444,6 +445,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      */
     private void createPathQuery(String path) {
         PathQueryNode pathNode = root.getLocationNode();
+        pathNode.setAbsolute(true);
 
         String[] names = path.split("/");
 

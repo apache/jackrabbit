@@ -35,6 +35,7 @@ import org.apache.lucene.search.TermQuery;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.query.InvalidQueryException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
@@ -292,8 +293,43 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(PathQueryNode node, Object data) {
         Query context = null;
+        LocationStepQueryNode[] steps = node.getPathSteps();
+        if (steps.length > 0) {
+            if (node.isAbsolute() && !steps[0].getIncludeDescendants()) {
+                // eat up first step
+                QName nameTest = steps[0].getNameTest();
+                if (nameTest == null) {
+                    // this is equivalent to the root node
+                    context = new TermQuery(new Term(FieldNames.PARENT, ""));
+                } else if (nameTest.getLocalName().length() == 0) {
+                    // root node
+                    context = new TermQuery(new Term(FieldNames.PARENT, ""));
+                } else {
+                    // then this is a node != the root node
+                    // will never match anything!
+                    String name = "";
+                    try {
+                        name = nameTest.toJCRName(nsMappings);
+                    } catch (NoPrefixDeclaredException e) {
+                        exceptions.add(e);
+                    }
+                    BooleanQuery and = new BooleanQuery();
+                    and.add(new TermQuery(new Term(FieldNames.PARENT, "")), true, false);
+                    and.add(new TermQuery(new Term(FieldNames.LABEL, name)), true, false);
+                    context = and;
+                }
+                LocationStepQueryNode[] tmp = new LocationStepQueryNode[steps.length - 1];
+                System.arraycopy(steps, 1, tmp, 0, steps.length - 1);
+                steps = tmp;
+            } else {
+                // path is 1) relative or 2) descendant-or-self
+                // use root node as context
+                context = new TermQuery(new Term(FieldNames.PARENT, ""));
+            }
+        } else {
+            exceptions.add(new InvalidQueryException("Number of location steps must be > 0"));
+        }
         // loop over steps
-        QueryNode[] steps = node.getPathSteps();
         for (int i = 0; i < steps.length; i++) {
             context = (Query) steps[i].accept(this, context);
         }
@@ -308,14 +344,9 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(LocationStepQueryNode node, Object data) {
-        if (node.getNameTest() != null && node.getNameTest().getLocalName().length() == 0) {
-            // select root node
-            return new TermQuery(new Term(FieldNames.PARENT, ""));
-        }
-
         Query context = (Query) data;
-
         BooleanQuery andQuery = new BooleanQuery();
+
         if (context == null) {
             exceptions.add(new IllegalArgumentException("Unsupported query"));
         }

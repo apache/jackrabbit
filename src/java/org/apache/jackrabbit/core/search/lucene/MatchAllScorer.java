@@ -36,7 +36,7 @@ class MatchAllScorer extends Scorer {
     /**
      * next doc number
      */
-    private int nextDoc = 0;
+    private int nextDoc = -1;
 
     /**
      * IndexReader giving access to index

@@ -217,13 +217,15 @@ class QueryFormat implements QueryNodeVisitor, Constants {
 
     public Object visit(PathQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
+        if (node.isAbsolute()) {
+            sb.append("/");
+        }
         LocationStepQueryNode[] steps = node.getPathSteps();
+        String slash = "";
         for (int i = 0; i < steps.length; i++) {
-            if (steps[i].getNameTest() == null
-                    || steps[i].getNameTest().getLocalName().length() > 0) {
-                sb.append('/');
-            }
+            sb.append(slash);
             steps[i].accept(this, sb);
+            slash = "/";
         }
         return sb;
     }
@@ -237,7 +239,11 @@ class QueryFormat implements QueryNodeVisitor, Constants {
             sb.append("*");
         } else {
             try {
-                sb.append(ISO9075.encode(node.getNameTest()).toJCRName(resolver));
+                if (node.getNameTest().getLocalName().length() == 0) {
+                    sb.append(XPathQueryBuilder.JCR_ROOT.toJCRName(resolver));
+                } else {
+                    sb.append(ISO9075.encode(node.getNameTest()).toJCRName(resolver));
+                }
             } catch (NoPrefixDeclaredException e) {
                 exceptions.add(e);
             }
