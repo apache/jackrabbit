@@ -200,5 +200,16 @@
     </childNodeDef>
   </nodeType>
 
+  <!-- Defines a nodetype for testing Node.setProperty(). -->
+  <nodeType name="test:setProperty" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+      <supertype>mix:referenceable</supertype>
+    </supertypes>
+    <propertyDef name="*" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDef name="test:multiProperty" requiredType="undefined" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true" />
+    <childNodeDef name="*" defaultPrimaryType="test:setProperty" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSibs="false" />
+  </nodeType>
+
 </nodeTypes>
 

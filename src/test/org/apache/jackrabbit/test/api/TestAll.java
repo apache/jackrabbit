@@ -81,6 +81,15 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SetValueReferenceTest.class);
         suite.addTestSuite(SetValueStringTest.class);
 
+        suite.addTestSuite(SetPropertyBooleanTest.class);
+        suite.addTestSuite(SetPropertyCalendarTest.class);
+        suite.addTestSuite(SetPropertyDoubleTest.class);
+        suite.addTestSuite(SetPropertyInputStreamTest.class);
+        suite.addTestSuite(SetPropertyLongTest.class);
+        suite.addTestSuite(SetPropertyNodeTest.class);
+        suite.addTestSuite(SetPropertyStringTest.class);
+        suite.addTestSuite(SetPropertyValueTest.class);
+
         suite.addTestSuite(NodeItemIsModifiedTest.class);
         suite.addTestSuite(NodeItemIsNewTest.class);
         suite.addTestSuite(PropertyItemIsModifiedTest.class);
