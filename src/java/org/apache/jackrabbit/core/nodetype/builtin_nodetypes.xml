@@ -97,7 +97,7 @@
             </requiredPrimaryTypes>
         </childNodeDef>
     </nodeType>
-    <nodeType name="nt:resource" mixin="false" orderableChildNodes="false" primaryItemName="">
+    <nodeType name="nt:resource" mixin="false" orderableChildNodes="false" primaryItemName="jcr:data">
         <supertypes>
             <supertype>nt:base</supertype>
             <supertype>mix:referenceable</supertype>
@@ -125,6 +125,7 @@
         <propertyDef name="jcr:supertypes" type="Name" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="true"/>
         <propertyDef name="jcr:isMixin" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDef name="jcr:orderableChildNodes" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
+        <propertyDef name="jcr:primaryItemName" type="String" autoCreate="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
         <childNodeDef name="jcr:propertyDef" defaultPrimaryType="nt:propertyDef" autoCreate="false" mandatory="false" onParentVersion="VERSION" protected="false" sameNameSibs="true">
             <requiredPrimaryTypes>
                 <requiredPrimaryType>nt:propertyDef</requiredPrimaryType>
@@ -148,7 +149,6 @@
         <propertyDef name="jcr:mandatory" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDef name="jcr:onParentVersion" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDef name="jcr:protected" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
-        <propertyDef name="jcr:primaryItem" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDef name="jcr:multiple" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:childNodeDef" mixin="false" orderableChildNodes="false" primaryItemName="">
@@ -166,7 +166,6 @@
         <propertyDef name="jcr:mandatory" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDef name="jcr:onParentVersion" type="String" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDef name="jcr:protected" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
-        <propertyDef name="jcr:primaryItem" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDef name="jcr:sameNameSibs" type="Boolean" autoCreate="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
     </nodeType>
     <nodeType name="nt:versionHistory" mixin="false" orderableChildNodes="false" primaryItemName="">

@@ -163,6 +163,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public String getUUID()
             throws UnsupportedRepositoryOperationException, RepositoryException {
+        //history.getRootVersion().getFrozenNode().getFrozenUUID();
         return history.getId();
     }
 
@@ -176,5 +177,13 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Returns the UUID of the node that was versioned.
+     * @return
+     */
+    public String getVersionedUUID() throws RepositoryException {
+        return getName();
     }
 }

@@ -2398,7 +2398,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (hasProperty(name)) {
             return getProperty(name);
         } else if (hasNode(name)) {
-            return getProperty(name);
+            return getNode(name);
         } else {
             throw new ItemNotFoundException();
         }
@@ -3138,8 +3138,8 @@ public class NodeImpl extends ItemImpl implements Node {
                 checkUUIDCollisions((InternalFrozenNode) fs[i], removeExisting);
             } else if (!removeExisting) {
                 InternalFrozenVersionHistory fh = (InternalFrozenVersionHistory) fs[i];
-                VersionHistory history = (VersionHistory) session.getNodeByUUID(fh.getVersionHistoryId());
-                String nodeId = history.getName(); // this is implementation detail!
+                VersionHistoryImpl history = (VersionHistoryImpl) session.getNodeByUUID(fh.getVersionHistoryId());
+                String nodeId = history.getVersionedUUID();
 
                 // check if representing vh already exists somewhere
                 if (itemMgr.itemExists(new NodeId(nodeId))) {
@@ -3300,8 +3300,8 @@ public class NodeImpl extends ItemImpl implements Node {
                 n.restoreFrozenState(f, vsel, removeExisting);
             } else if (child instanceof InternalFrozenVersionHistory) {
                 InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
-                VersionHistory history = (VersionHistory) session.getNodeByUUID(f.getVersionHistoryId());
-                String nodeId = history.getName(); // this is implementation detail!
+                VersionHistoryImpl history = (VersionHistoryImpl) session.getNodeByUUID(f.getVersionHistoryId());
+                String nodeId = history.getVersionedUUID();
 
                 // check if representing vh already exists somewhere
                 if (itemMgr.itemExists(new NodeId(nodeId))) {
