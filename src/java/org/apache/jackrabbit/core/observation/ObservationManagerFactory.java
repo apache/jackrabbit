@@ -18,15 +18,13 @@ package org.apache.jackrabbit.core.observation;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.UnboundedFifoBuffer;
+import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.MalformedPathException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
@@ -37,13 +35,14 @@ import java.util.Set;
 
 /**
  * The class <code>ObservationManagerFactory</code> creates new
- * <code>ObservationManager</code> instances for sessions. It also implements the
- * {@link EventDispatcher} interface where {@link EventStateCollection}s can be
- * dispatched to {@link javax.jcr.observation.EventListener}s.
+ * <code>ObservationManager</code> instances for sessions. It also
+ * creates new {@link EventStateCollection}s that can be dispatched
+ * to registered {@link javax.jcr.observation.EventListener}s.
  *
  * @author Marcel Reutegger
+ * @version $Revision:  $, $Date:  $
  */
-public final class ObservationManagerFactory implements EventDispatcher, Runnable {
+final public class ObservationManagerFactory implements Runnable {
 
     /**
      * Logger instance for this class
@@ -57,14 +56,24 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
     private static final DispatchAction DISPOSE_MARKER = new DispatchAction(null, null);
 
     /**
-     * Currently active <code>EventConsumer</code>s for notification
+     * Currently active <code>EventConsumer</code>s for notification.
      */
     private Set activeConsumers = new HashSet();
+
+    /**
+     * Currently active synchronous <code>EventConsumer</code>s for notification.
+     */
+    private Set synchronousConsumers = new HashSet();
 
     /**
      * Set of <code>EventConsumer</code>s for read only Set access
      */
     private Set readOnlyConsumers;
+
+    /**
+     * Set of synchronous <code>EventConsumer</code>s for read only Set access.
+     */
+    private Set synchronousReadOnlyConsumers;
 
     /**
      * synchronization monitor for listener changes
@@ -112,12 +121,21 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
      *
      * @return <code>Set</code> of <code>EventConsumer</code>s.
      */
-    private Set getConsumers() {
+    private Set getAsynchronousConsumers() {
 	synchronized (consumerChange) {
 	    if (readOnlyConsumers == null) {
 		readOnlyConsumers = Collections.unmodifiableSet(new HashSet(activeConsumers));
 	    }
 	    return readOnlyConsumers;
+	}
+    }
+
+    private Set getSynchronousConsumers() {
+	synchronized (consumerChange) {
+	    if (synchronousReadOnlyConsumers == null) {
+		synchronousReadOnlyConsumers = Collections.unmodifiableSet(new HashSet(synchronousConsumers));
+	    }
+	    return synchronousReadOnlyConsumers;
 	}
     }
 
@@ -134,6 +152,12 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
 	return new SessionLocalObservationManager(session, itemMgr);
     }
 
+    public EventStateCollection createEventStateCollection(
+	    SessionImpl session,
+	    ItemStateProvider provider,
+	    HierarchyManager hmgr) {
+	return new EventStateCollection(this, session, provider, hmgr);
+    }
 
     /**
      * Implements the run method of the background notification
@@ -150,7 +174,7 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
 		try {
 		    c.consumeEvents(action.eventStates);
 		} catch (Throwable t) {
-		    log.error("EventConsumer threw exception.", t);
+		    log.warn("EventConsumer threw exception.", t);
 		    // move on to the next consumer
 		}
 	    }
@@ -159,13 +183,45 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
 	}
     }
 
-    //-------------------------< EventDispatcher >------------------------------
+    /**
+     * Gives this observation manager the oportunity to
+     * prepare the events for dispatching.
+     *
+     * @param events the {@link EventState}s to prepare.
+     */
+    void prepareEvents(EventStateCollection events)
+	    throws RepositoryException {
+	Set consumers = new HashSet();
+	consumers.addAll(getSynchronousConsumers());
+	consumers.addAll(getAsynchronousConsumers());
+	for (Iterator it = consumers.iterator(); it.hasNext(); ) {
+	    EventConsumer c = (EventConsumer)it.next();
+	    c.prepareEvents(events);
+	}
+    }
 
     /**
-     * @see EventDispatcher#dispatchEvents
+     * Dispatches the {@link EventStateCollection events} to all
+     * registered {@link javax.jcr.observation.EventListener}s.
+     *
+     * @param events the {@link EventState}s to dispatch.
      */
-    public void dispatchEvents(EventStateCollection events) {
-	eventQueue.add(new DispatchAction(events, getConsumers()));
+    void dispatchEvents(EventStateCollection events) {
+	// notify synchronous listeners
+	Set synchronous = getSynchronousConsumers();
+	if (log.isDebugEnabled()) {
+	    log.debug("notifying " + synchronous.size() + " synchronous listeners.");
+	}
+	for (Iterator it = synchronous.iterator(); it.hasNext(); ) {
+	    EventConsumer c = (EventConsumer) it.next();
+	    try {
+		c.consumeEvents(events);
+	    } catch (Throwable t) {
+		log.error("Synchronous EventConsumer threw exception.", t);
+		// move on to next consumer
+	    }
+	}
+	eventQueue.add(new DispatchAction(events, getAsynchronousConsumers()));
     }
 
     //----------------------------< adapter class >-----------------------------
@@ -224,14 +280,14 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
 		throws RepositoryException {
 
 	    // create NodeType instances from names
-	    NodeType[] nodeTypes;
+	    NodeTypeImpl[] nodeTypes;
 	    if (nodeTypeName == null) {
 		nodeTypes = null;
 	    } else {
-		NodeTypeManager ntMgr = session.getNodeTypeManager();
-		nodeTypes = new NodeType[nodeTypeName.length];
+		NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+		nodeTypes = new NodeTypeImpl[nodeTypeName.length];
 		for (int i = 0; i < nodeTypes.length; i++) {
-		    nodeTypes[i] = ntMgr.getNodeType(nodeTypeName[i]);
+		    nodeTypes[i] = (NodeTypeImpl)ntMgr.getNodeType(nodeTypeName[i]);
 		}
 	    }
 
@@ -257,12 +313,21 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
 		    new EventConsumer(session, listener, filter);
 
 	    synchronized (consumerChange) {
-		// remove existing if any
-		activeConsumers.remove(consumer);
-		// re-add it
-		activeConsumers.add(consumer);
-		// reset read only consumer set
-		readOnlyConsumers = null;
+                if (listener instanceof SynchronousEventListener) {
+		    // remove existing if any
+		    synchronousConsumers.remove(consumer);
+		    // re-add it
+		    synchronousConsumers.add(consumer);
+		    // reset read only consumer set
+		    synchronousReadOnlyConsumers = null;
+		} else {
+		    // remove existing if any
+		    activeConsumers.remove(consumer);
+		    // re-add it
+		    activeConsumers.add(consumer);
+		    // reset read only consumer set
+		    readOnlyConsumers = null;
+		}
 	    }
 	}
 
@@ -275,9 +340,15 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
 		    new EventConsumer(session, listener, EventFilter.BLOCK_ALL);
 
 	    synchronized (consumerChange) {
-		activeConsumers.remove(consumer);
-		// reset read only listener set
-		readOnlyConsumers = null;
+		if (listener instanceof SynchronousEventListener) {
+		    synchronousConsumers.remove(consumer);
+		    // reset read only listener set
+		    synchronousReadOnlyConsumers = null;
+		} else {
+		    activeConsumers.remove(consumer);
+		    // reset read only listener set
+		    readOnlyConsumers = null;
+		}
 	    }
 	}
 
@@ -286,7 +357,9 @@ public final class ObservationManagerFactory implements EventDispatcher, Runnabl
 	 */
 	public EventListenerIterator getRegisteredEventListeners()
 		throws RepositoryException {
-	    return new EventListenerIteratorImpl(session, getConsumers());
+	    return new EventListenerIteratorImpl(session,
+		    getSynchronousConsumers(),
+		    getAsynchronousConsumers());
 	}
     }
 }

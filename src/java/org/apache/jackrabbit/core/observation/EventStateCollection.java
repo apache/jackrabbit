@@ -16,12 +16,11 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.*;
+import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,10 +30,10 @@ import java.util.List;
  * objects are created based on the {@link org.apache.jackrabbit.core.state.ItemState}s
  * passed to the {@link #createEventStates} method.
  *
- * @author mreutegg
+ * @author Marcel Reutegger
  * @version $Revision: 1.5 $
  */
-public final class EventStateCollection {
+final public class EventStateCollection {
 
     /**
      * Logger instance for this class
@@ -47,17 +46,38 @@ public final class EventStateCollection {
     private final List events = new ArrayList();
 
     /**
+     * The <code>ObservationManagerFactory</code> that notifies the EventListeners.
+     */
+    private final ObservationManagerFactory dispatcher;
+
+    /**
      * The session that created these events
      */
-    private final Session session;
+    private final SessionImpl session;
+
+    /**
+     * The ItemStateProvider of the session that creates the events.
+     */
+    private final ItemStateProvider provider;
+
+    /**
+     * The HierarchyManager of the session that creates the events.
+     */
+    private final HierarchyManager hmgr;
 
     /**
      * Creates a new empty <code>EventStateCollection</code>.
      *
      * @param session the session that created these events.
      */
-    public EventStateCollection(Session session) {
+    EventStateCollection(ObservationManagerFactory dispatcher,
+			 SessionImpl session,
+			 ItemStateProvider provider,
+			 HierarchyManager hmgr) {
+	this.dispatcher = dispatcher;
 	this.session = session;
+	this.provider = provider;
+	this.hmgr = hmgr;
     }
 
     /**
@@ -66,24 +86,28 @@ public final class EventStateCollection {
      *
      * @param state the transient <code>ItemState</code> for whom
      *              to create {@link EventState}s.
-     * @throws RepositoryException if an error occurs.
      */
     public void createEventStates(ItemState state)
 	    throws RepositoryException {
 	int status = state.getStatus();
 
-	if (status == ItemState.STATUS_EXISTING_MODIFIED
-		|| status == ItemState.STATUS_NEW) {
+	if (status == ItemState.STATUS_EXISTING_MODIFIED ||
+		status == ItemState.STATUS_NEW) {
 
 	    if (state.isNode()) {
+		NodeState currentNode = (NodeState) state;
+		QName nodeTypeName = currentNode.getNodeTypeName();
+                NodeTypeImpl nodeType = session.getNodeTypeManager().getNodeType(nodeTypeName);
+                Path parentPath = hmgr.getPath(currentNode.getId());
 
 		// 1) check added properties
-		NodeState currentNode = (NodeState) state;
 		List addedProperties = currentNode.getAddedPropertyEntries();
 		for (Iterator it = addedProperties.iterator(); it.hasNext();) {
 		    NodeState.PropertyEntry prop = (NodeState.PropertyEntry) it.next();
-		    events.add(EventState.createPropertyAdded(currentNode.getUUID(),
+		    events.add(EventState.propertyAdded(currentNode.getUUID(),
+			    parentPath,
 			    prop.getName(),
+			    nodeType,
 			    session));
 		}
 
@@ -91,8 +115,10 @@ public final class EventStateCollection {
 		List removedProperties = currentNode.getRemovedPropertyEntries();
 		for (Iterator it = removedProperties.iterator(); it.hasNext();) {
 		    NodeState.PropertyEntry prop = (NodeState.PropertyEntry) it.next();
-		    events.add(EventState.createPropertyRemoved(currentNode.getUUID(),
+		    events.add(EventState.propertyRemoved(currentNode.getUUID(),
+			    parentPath,
 			    prop.getName(),
+			    nodeType,
 			    session));
 		}
 
@@ -100,8 +126,11 @@ public final class EventStateCollection {
 		List addedNodes = currentNode.getAddedChildNodeEntries();
 		for (Iterator it = addedNodes.iterator(); it.hasNext();) {
 		    NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
-		    events.add(EventState.createChildNodeAdded(currentNode.getUUID(),
+		    events.add(EventState.childNodeAdded(currentNode.getUUID(),
+			    parentPath,
+			    child.getUUID(),
 			    child.getName(),
+			    nodeType,
 			    session));
 		}
 
@@ -109,19 +138,69 @@ public final class EventStateCollection {
 		List removedNodes = currentNode.getRemovedChildNodeEntries();
 		for (Iterator it = removedNodes.iterator(); it.hasNext();) {
 		    NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
-		    events.add(EventState.createChildNodeRemoved(currentNode.getUUID(),
+		    events.add(EventState.childNodeRemoved(currentNode.getUUID(),
+			    parentPath,
+			    child.getUUID(),
 			    child.getName(),
+			    nodeType,
 			    session));
 		}
 	    } else {
 		// only add property changed event if property is existing
 		if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
-		    events.add(EventState.createPropertyChanged(state.getParentUUID(),
-			    ((PropertyState) state).getName(),
-			    session));
+		    NodeId parentId = new NodeId(state.getParentUUID());
+		    try {
+			NodeState parentState = (NodeState)provider.getItemState(parentId);
+			Path parentPath = hmgr.getPath(parentId);
+			events.add(EventState.propertyChanged(state.getParentUUID(),
+				parentPath,
+				((PropertyState) state).getName(),
+				session.getNodeTypeManager().getNodeType(parentState.getNodeTypeName()),
+				session));
+		    } catch (ItemStateException e) {
+			// should never happen
+			log.error("internal error: item state exception", e);
+		    }
+		}
+	    }
+	} else if (status == ItemState.STATUS_EXISTING_REMOVED) {
+	    if (state.isNode()) {
+		// zombie nodes
+		NodeState currentNode = (NodeState) state;
+		QName nodeTypeName = currentNode.getNodeTypeName();
+		NodeTypeImpl nodeType = session.getNodeTypeManager().getNodeType(nodeTypeName);
+
+		// FIXME replace by HierarchyManager.getPath(ItemId id, boolean includeZombie)
+		// when available.
+		Path[] parentPaths = hmgr.getAllPaths(currentNode.getId(), true);   // include zombie
+		for (int i = 0; i < parentPaths.length; i++) {
+		    List removedNodes = currentNode.getRemovedChildNodeEntries();
+		    for (Iterator it = removedNodes.iterator(); it.hasNext();) {
+			NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
+			events.add(EventState.childNodeRemoved(currentNode.getUUID(),
+				parentPaths[i],
+				child.getUUID(),
+				child.getName(),
+				nodeType,
+				session));
+		    }
 		}
 	    }
 	}
+    }
+
+    /**
+     * Prepares the events for dispatching.
+     */
+    public void prepare() throws RepositoryException {
+     	dispatcher.prepareEvents(this);
+    }
+
+    /**
+     * Dispatches the events to the {@link javax.jcr.observation.EventListener}s.
+     */
+    public void dispatch() {
+	dispatcher.dispatchEvents(this);
     }
 
     /**

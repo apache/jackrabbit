@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.search.QueryManagerImpl;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.xml.sax.ContentHandler;
@@ -87,6 +88,11 @@ class WorkspaceImpl implements Workspace {
      * The <code>ObservationManager</code> instance for this session.
      */
     protected ObservationManager obsMgr;
+
+    /**
+     * The <code>QueryManager</code> for this <code>Workspace</code>.
+     */
+    protected QueryManagerImpl queryManager;
 
     /**
      * the session that was used to acquire this <code>Workspace</code>
@@ -877,8 +883,24 @@ class WorkspaceImpl implements Workspace {
      * @see Workspace#getQueryManager
      */
     public QueryManager getQueryManager() throws RepositoryException {
-	// @todo implement query support
-	throw new RepositoryException("not yet implemented");
+	if (queryManager == null) {
+	    try {
+		SearchManager searchManager = rep.getSearchManager(wspName);
+		if (searchManager == null) {
+		    throw new UnsupportedOperationException("No search manager configured for this workspace.");
+		}
+		queryManager = new QueryManagerImpl(session, session.getItemManager(), searchManager);
+	    } catch (NoSuchWorkspaceException e) {
+		String msg = "internal error: failed to instantiate query manager";
+		log.error(msg, e);
+		return null;
+	    } catch (RepositoryException e) {
+		String msg = "internal error: failed to instantiate query manager";
+		log.error(msg, e);
+		return null;
+	    }
+	}
+	return queryManager;
     }
 
     /**

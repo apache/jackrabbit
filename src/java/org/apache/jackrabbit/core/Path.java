@@ -532,12 +532,28 @@ public final class Path {
 	    queue.addFirst(new PathElement(nameSpaceURI, localName, index));
 	}
 
+	public void addFirst(QName name) {
+	    queue.addFirst(new PathElement(name));
+	}
+
+	public void addFirst(QName name, int index) {
+	    queue.addFirst(new PathElement(name, index));
+	}
+
 	public void addLast(String nameSpaceURI, String localName) {
 	    queue.addLast(new PathElement(nameSpaceURI, localName));
 	}
 
 	public void addLast(String nameSpaceURI, String localName, int index) {
 	    queue.addLast(new PathElement(nameSpaceURI, localName, index));
+	}
+
+	public void addLast(QName name) {
+	    queue.addLast(new PathElement(name));
+	}
+
+	public void addLast(QName name, int index) {
+	    queue.addLast(new PathElement(name, index));
 	}
 
 	public Path getPath() throws MalformedPathException {
@@ -638,16 +654,30 @@ public final class Path {
 	private final int index;
 
 	private PathElement(String namespaceURI, String localName) {
-	    name = new QName(namespaceURI, localName);
-	    this.index = 0;
+	    this(new QName(namespaceURI, localName));
 	}
 
 	private PathElement(String namespaceURI, String localName, int index) {
-	    name = new QName(namespaceURI, localName);
+	    this(new QName(namespaceURI, localName), index);
+	}
+
+	private PathElement(QName name) {
+	    if (name == null) {
+		throw new IllegalArgumentException("name must not be null");
+	    }
+	    this.name = name;
+	    this.index = 0;
+	}
+
+	private PathElement(QName name, int index) {
+	    if (name == null) {
+		throw new IllegalArgumentException("name must not be null");
+	    }
 	    if (index < 1) {
 		throw new IllegalArgumentException("index is 1-based");
 	    }
 	    this.index = index;
+	    this.name = name;
 	}
 
 	/**

@@ -19,10 +19,7 @@ import org.apache.commons.collections.BeanMap;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PersistenceManager;
-import org.apache.jackrabbit.core.state.PersistentItemStateManager;
-import org.apache.jackrabbit.core.state.ReferenceManager;
+import org.apache.jackrabbit.core.state.*;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -103,6 +100,9 @@ public class RepositoryImpl implements Repository, EventListener {
 
     // map of workspace names and observation managers
     private final HashMap wspObsMgrFactory = new HashMap();
+
+    // map of search managers
+    private final HashMap wspSearchMgrs = new HashMap();
 
     // map of workspace names and system sessions
     private final HashMap wspSystemSessions = new HashMap();
@@ -287,11 +287,23 @@ public class RepositoryImpl implements Repository, EventListener {
 	// register as an event listener
 	Iterator iter = wspDefs.values().iterator();
 	while (iter.hasNext()) {
-	    Session s = getSystemSession(((WorkspaceDef) iter.next()).getName());
+	    String wspName = ((WorkspaceDef) iter.next()).getName();
+	    Session s = getSystemSession(wspName);
 	    s.getWorkspace().getObservationManager().addEventListener(this,
 		    EventType.CHILD_NODE_ADDED | EventType.CHILD_NODE_REMOVED
 		    | EventType.PROPERTY_ADDED | EventType.PROPERTY_REMOVED,
 		    "/", true, null, null, false);
+
+	    // register SearchManager as EventListener
+	    SearchManager searchMgr = getSearchManager(wspName);
+
+	    if (searchMgr != null) {
+		s.getWorkspace().getObservationManager().addEventListener(searchMgr,
+			EventType.CHILD_NODE_ADDED | EventType.CHILD_NODE_REMOVED |
+			EventType.PROPERTY_ADDED | EventType.PROPERTY_REMOVED |
+			EventType.PROPERTY_CHANGED,
+			"/", true, null, null, false);
+	    }
 	}
     }
 
@@ -379,6 +391,42 @@ public class RepositoryImpl implements Repository, EventListener {
 	return obsMgr;
     }
 
+    /**
+     * Returns the {@link SearchManager} for the workspace with name
+     * <code>workspaceName</code>.
+     *
+     * @param workspaceName the name of the workspace.
+     * @return the <code>SearchManager</code> for the workspace, or
+     *         <code>null</code> if the workspace does not have a
+     *         <code>SearchManager</code> configured.
+     *
+     * @throws NoSuchWorkspaceException if there is no workspace with name
+     *                                  <code>workspaceName</code>.
+     * @throws RepositoryException      if an error occurs while opening the
+     *                                  search index.
+     */
+    synchronized SearchManager getSearchManager(String workspaceName)
+	    throws NoSuchWorkspaceException, RepositoryException {
+	SearchManager searchMgr
+		= (SearchManager) wspSearchMgrs.get(workspaceName);
+	if (searchMgr == null) {
+	    try {
+		StableWorkspaceDef wspDef = (StableWorkspaceDef)wspDefs.get(workspaceName);
+                if (wspDef.getSearchIndexPath() == null) {
+		    // no search index location configured
+		    return null;
+		}
+		ItemStateProvider stateProvider = getWorkspaceStateManager(workspaceName);
+		SystemSession s = getSystemSession(workspaceName);
+		searchMgr = new SearchManager(stateProvider, s.hierMgr, s, wspDef.getSearchIndexPath());
+	    } catch (IOException e) {
+		throw new RepositoryException("Exception opening search index.", e);
+	    }
+	    wspSearchMgrs.put(workspaceName, searchMgr);
+	}
+	return searchMgr;
+    }
+
     synchronized SystemSession getSystemSession(String workspaceName)
 	    throws NoSuchWorkspaceException, RepositoryException {
 	SystemSession systemSession
@@ -446,6 +494,12 @@ public class RepositoryImpl implements Repository, EventListener {
 	for (Iterator it = wspObsMgrFactory.values().iterator(); it.hasNext();) {
 	    ObservationManagerFactory obsMgr = (ObservationManagerFactory) it.next();
 	    obsMgr.dispose();
+	}
+
+	// shutdown search managers
+	for (Iterator it = wspSearchMgrs.values().iterator(); it.hasNext(); ) {
+	    SearchManager searchMgr = (SearchManager)it.next();
+	    searchMgr.close();
 	}
     }
 

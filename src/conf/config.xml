@@ -5,7 +5,7 @@
   <!ATTLIST Repository
     name CDATA #REQUIRED>
   <!ELEMENT RepositoryStore (FileSystem)>
-  <!ELEMENT StableWorkspace (PersistenceManager,WorkspaceStore,BLOBStore?,DynamicWorkspace*)>
+  <!ELEMENT StableWorkspace (PersistenceManager,WorkspaceStore,BLOBStore?,DynamicWorkspace*,SearchIndex?)>
   <!ATTLIST StableWorkspace
     name CDATA #REQUIRED>
   <!ELEMENT PersistenceManager (param*)>
@@ -16,6 +16,9 @@
   <!ELEMENT DynamicWorkspace (PersistenceManager,WorkspaceStore,BLOBStore?)>
   <!ATTLIST DynamicWorkspace
     name CDATA #REQUIRED>
+  <!ELEMENT SearchIndex EMPTY>
+  <!ATTLIST SearchIndex
+    path CDATA #REQUIRED>  
   <!ELEMENT FileSystem (param*)>
   <!ATTLIST FileSystem
     class CDATA #REQUIRED>
@@ -45,6 +48,7 @@
 		    <param name="path" value="${factory.home}/repositories/localfs/workspaces/default/blobs"/>
 		</FileSystem>
 	    </BLOBStore>
+	    <SearchIndex path="${factory.home}/repositories/localfs/workspaces/default/index"/>
 	</StableWorkspace>
     </Repository>
 </Repositories>

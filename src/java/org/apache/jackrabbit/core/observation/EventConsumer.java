@@ -15,9 +15,19 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.log4j.Logger;
+
 import javax.jcr.Session;
+import javax.jcr.RepositoryException;
+import javax.jcr.access.Permission;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
+import javax.jcr.observation.EventType;
+import java.util.*;
 
 /**
  * The <code>EventConsumer</code> class combines the {@link
@@ -33,9 +43,14 @@ import javax.jcr.observation.EventListener;
 class EventConsumer {
 
     /**
+     * The default Logger instance for this class.
+     */
+    private static final Logger log = Logger.getLogger(EventConsumer.class);
+
+    /**
      * The <code>Session</code> associated with this <code>EventConsumer</code>.
      */
-    private final Session session;
+    private final SessionImpl session;
 
     /**
      * The listener part of this <code>EventConsumer</code>.
@@ -46,6 +61,13 @@ class EventConsumer {
      * The <code>EventFilter</code> for this <code>EventConsumer</code>.
      */
     private final EventFilter filter;
+
+    /**
+     * A map of <code>Set</code> objects that hold references to denied
+     * <code>EventState</code>s. The map uses the <code>EventStateCollection</code>
+     * as the key to reference a deny Set.
+     */
+    private final Map accessDenied = Collections.synchronizedMap(new HashMap());
 
     /**
      * cached hash code value
@@ -64,7 +86,7 @@ class EventConsumer {
      * @throws NullPointerException if <code>session</code>, <code>listener</code>
      *                              or <code>filter</code> is<code>null</code>.
      */
-    EventConsumer(Session session, EventListener listener, EventFilter filter) {
+    EventConsumer(SessionImpl session, EventListener listener, EventFilter filter) {
 	if (session == null) {
 	    throw new NullPointerException("session");
 	}
@@ -101,14 +123,90 @@ class EventConsumer {
     }
 
     /**
+     * Checks for what {@link EventState}s this <code>EventConsumer</code> has
+     * enough access rights to see the event.
+     *
+     * @param events the collection of {@link EventState}s.
+     * @throws RepositoryException if an error occurs while checking access
+     *   rights on the {@link EventStateCollection}.
+     */
+    void prepareEvents(EventStateCollection events) throws RepositoryException {
+	Iterator it = events.iterator();
+	Set denied = null;
+	while (it.hasNext()) {
+	    EventState state = (EventState)it.next();
+	    if (state.getType() == EventType.CHILD_NODE_REMOVED
+		    || state.getType() == EventType.PROPERTY_REMOVED) {
+
+		if (session.equals(state.getSession())) {
+		    // if we created the event, we can be sure that
+		    // we have enough access rights to see the event
+		    continue;
+		}
+
+		try {
+		    // FIXME is there a better way to check access right
+		    // without transforming path
+		    Path p = Path.create(state.getParentPath(), state.getChildItemQName(), false);
+		    if (!session.getWorkspace().getAccessManager().isGranted(
+			    p.toJCRPath(session.getNamespaceResolver()),
+			    Permission.READ_ITEM)) {
+			if (denied == null) {
+			    denied = new HashSet();
+			}
+			denied.add(state);
+		    }
+		} catch (MalformedPathException e) {
+		    // should actually never happen
+		    log.error("internal error: malformed path exception", e);
+		} catch (NoPrefixDeclaredException e) {
+		    // should actually never happen
+		    log.error("internal error: no prefix declared", e);
+		}
+	    }
+	}
+	if (denied != null) {
+	    accessDenied.put(events, denied);
+	}
+    }
+
+    /**
      * Dispatches the events to the <code>EventListener</code>.
      *
      * @param events a collection of {@link EventState}s
      *               to dispatch.
      */
-    void consumeEvents(EventStateCollection events) {
+    void consumeEvents(EventStateCollection events) throws RepositoryException {
+	Set denied = (Set)accessDenied.remove(events);
+	// check permissions
+	for (Iterator it = events.iterator(); it.hasNext(); ) {
+	    EventState state = (EventState)it.next();
+	    if (state.getType() == EventType.CHILD_NODE_ADDED
+		    || state.getType() == EventType.PROPERTY_ADDED
+		    || state.getType() == EventType.PROPERTY_CHANGED) {
+		try {
+		    // FIXME is there a better way to check access right
+		    // without transforming path
+		    Path p = Path.create(state.getParentPath(), state.getChildItemQName(), false);
+		    if (!session.getWorkspace().getAccessManager().isGranted(
+			    p.toJCRPath(session.getNamespaceResolver()),
+			    Permission.READ_ITEM)) {
+			if (denied == null) {
+			    denied = new HashSet();
+			}
+			denied.add(state);
+		    }
+		} catch (MalformedPathException e) {
+		    // should actually never happen
+		    log.error("internal error: malformed path exception", e);
+		} catch (NoPrefixDeclaredException e) {
+		    // should actually never happen
+		    log.error("internal error: no prefix declared", e);
+		}
+	    }
+	}
 	// check if filtered iterator has at least one event
-	EventIterator it = new FilteredEventIterator(events, filter);
+	EventIterator it = new FilteredEventIterator(events, filter, denied);
 	if (it.hasNext()) {
 	    listener.onEvent(it);
 	} else {

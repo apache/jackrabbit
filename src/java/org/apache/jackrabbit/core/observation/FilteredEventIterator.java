@@ -22,6 +22,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * @author Marcel Reutegger
@@ -44,6 +45,8 @@ class FilteredEventIterator implements EventIterator {
      */
     private final EventFilter filter;
 
+    private final Set denied;
+
     /**
      * The next {@link javax.jcr.observation.Event} in this iterator
      */
@@ -57,14 +60,19 @@ class FilteredEventIterator implements EventIterator {
     /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
-     * @param c      an unmodifiable Collection of
-     *               {@link javax.jcr.observation.Event}s.
-     * @param filter only event that pass the filter will be
-     *               dispatched to the event listener.
+     * @param c      an unmodifiable Collection of {@link javax.jcr.observation.Event}s.
+     * @param filter only event that pass the filter will be dispatched to the
+     *               event listener.
+     * @param denied <code>Set</code> of denied <code>EventState</code>s
+     *               rejected by the <code>AccessManager</code>. If
+     *               <code>null</code> no <code>EventState</code> is denied.
      */
-    public FilteredEventIterator(EventStateCollection c, EventFilter filter) {
+    public FilteredEventIterator(EventStateCollection c,
+				 EventFilter filter,
+				 Set denied) {
 	actualEvents = c.iterator();
 	this.filter = filter;
+	this.denied = denied;
 	fetchNext();
     }
 
@@ -142,12 +150,15 @@ class FilteredEventIterator implements EventIterator {
 	next = null;
 	while (next == null && actualEvents.hasNext()) {
 	    state = (EventState) actualEvents.next();
-	    try {
-		next = filter.blocks(state) ? null : new EventImpl(filter.getSession(),
-			filter.getItemManager(),
-			state);
-	    } catch (RepositoryException e) {
-		log.error("Exception while applying filter.", e);
+	    // check denied set
+	    if (denied == null || !denied.contains(state)) {
+		try {
+		    next = filter.blocks(state) ? null : new EventImpl(filter.getSession(),
+			    /* filter.getItemManager(), */
+			    state);
+		} catch (RepositoryException e) {
+		    log.error("Exception while applying filter.", e);
+		}
 	    }
 	}
     }

@@ -21,6 +21,7 @@ import javax.jcr.observation.EventListenerIterator;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
 
 /**
  * @author Marcel Reutegger
@@ -54,19 +55,25 @@ class EventListenerIteratorImpl implements EventListenerIterator {
      * Creates a new <code>EventListenerIteratorImpl</code>.
      *
      * @param session
-     * @param consumers
-     * @throws NullPointerException if <code>session</code> or <code>consumer</code>
+     * @param sConsumers synchronous consumers.
+     * @param aConsumers asynchronous consumers.
+     * @throws NullPointerException if <code>ticket</code> or <code>consumer</code>
      *                              is <code>null</code>.
      */
-    EventListenerIteratorImpl(Session session, Collection consumers) {
+    EventListenerIteratorImpl(Session session, Collection sConsumers, Collection aConsumers) {
 	if (session == null) {
 	    throw new NullPointerException("session");
 	}
-	if (consumers == null) {
+	if (sConsumers == null) {
+	    throw new NullPointerException("consumers");
+	}
+	if (aConsumers == null) {
 	    throw new NullPointerException("consumers");
 	}
 	this.session = session;
-	this.consumers = consumers.iterator();
+	Collection allConsumers = new ArrayList(sConsumers);
+	allConsumers.addAll(aConsumers);
+	this.consumers = allConsumers.iterator();
 	fetchNext();
     }
 

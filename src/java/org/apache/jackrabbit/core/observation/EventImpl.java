@@ -16,9 +16,7 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.RepositoryException;
@@ -30,7 +28,7 @@ import javax.jcr.observation.Event;
  * @author Marcel Reutegger
  * @version $Revision: 1.6 $
  */
-final class EventImpl implements Event {
+public final class EventImpl implements Event {
 
     /**
      * Logger instance for this class
@@ -46,7 +44,7 @@ final class EventImpl implements Event {
     /**
      * The <code>ItemManager</code> of the session.
      */
-    private final ItemManager itemMgr;
+    //private final ItemManager itemMgr;
 
     /**
      * The shared {@link EventState} object.
@@ -68,9 +66,9 @@ final class EventImpl implements Event {
      *                   <code>Session</code>.
      * @param eventState the underlying <code>EventState</code>.
      */
-    EventImpl(SessionImpl session, ItemManager itemMgr, EventState eventState) {
+    EventImpl(SessionImpl session, /*ItemManager itemMgr, */ EventState eventState) {
 	this.session = session;
-	this.itemMgr = itemMgr;
+	//this.itemMgr = itemMgr;
 	this.eventState = eventState;
     }
 
@@ -85,7 +83,13 @@ final class EventImpl implements Event {
      * @see Event#getNodePath()
      */
     public String getNodePath() throws RepositoryException {
-	return itemMgr.getItem(new NodeId(eventState.getParentUUID())).getPath();
+	try {
+	    return eventState.getParentPath().toJCRPath(session.getNamespaceResolver()); //itemMgr.getItem(new NodeId(eventState.getParentUUID())).getPath();
+	} catch (NoPrefixDeclaredException e) {
+	    String msg = "internal error: encountered unregistered namespace in path";
+	    log.error(msg, e);
+	    throw new RepositoryException(msg, e);
+	}
     }
 
     /**
@@ -94,11 +98,11 @@ final class EventImpl implements Event {
     public String getChildName() throws RepositoryException {
 	try {
 	    return eventState.getChildItemQName().toJCRName(session.getNamespaceResolver());
-	} catch (NoPrefixDeclaredException npde) {
+	} catch (NoPrefixDeclaredException e) {
 	    // should never get here...
 	    String msg = "internal error: encountered unregistered namespace in name";
-	    log.error(msg, npde);
-	    throw new RepositoryException(msg, npde);
+	    log.error(msg, e);
+	    throw new RepositoryException(msg, e);
 	}
     }
 
@@ -107,6 +111,25 @@ final class EventImpl implements Event {
      */
     public String getUserId() {
 	return eventState.getUserId();
+    }
+
+    /**
+     * Returns the uuid of the parent node.
+     *
+     * @return the uuid of the parent node.
+     */
+    public String getParentUUID() {
+	return eventState.getParentUUID();
+    }
+
+    /**
+     * Returns the UUID of a child node operation.
+     * If this <code>Event</code> was generated for a property
+     * operation this method returns <code>null</code>.
+     * @return the UUID of a child node operation.
+     */
+    public String getChildUUID() {
+	return eventState.getChildUUID();
     }
 
     /**

@@ -56,6 +56,9 @@ public class NodeTypeRegistry {
     // nt:mimeResource
     public static final QName NT_MIME_RESOURCE =
 	    new QName(NamespaceRegistryImpl.NS_NT_URI, "mimeResource");
+    // nt:query
+    public static final QName NT_QUERY =
+	    new QName(NamespaceRegistryImpl.NS_NT_URI, "query");
     // mix:referenceable
     public static final QName MIX_REFERENCEABLE =
 	    new QName(NamespaceRegistryImpl.NS_MIX_URI, "referenceable");
@@ -77,6 +80,9 @@ public class NodeTypeRegistry {
     // nt:frozenVersionableChild
     public static final QName NT_FROZEN_VERSIONABLE_CHILD =
 	    new QName(NamespaceRegistryImpl.NS_NT_URI, "frozenVersionableChild");
+    // jcr:primaryType
+    public static final QName JCR_PRIMARY_TYPE =
+	    new QName(NamespaceRegistryImpl.NS_JCR_URI, "primaryType");
 
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
 	    "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";

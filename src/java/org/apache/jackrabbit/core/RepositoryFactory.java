@@ -116,6 +116,8 @@ public final class RepositoryFactory {
     private static final String WORKSPACE_STORE_ELEMENT = "WorkspaceStore";
     private static final String BLOB_STORE_ELEMENT = "BLOBStore";
     private static final String DYNAMIC_WORKSPACE_ELEMENT = "DynamicWorkspace";
+    private static final String SEARCH_INDEX_ELEMENT = "SearchIndex";
+    private static final String PATH_ATTRIB = "path";
     private static final String PARAM_ELEMENT = "param";
     private static final String CLASS_ATTRIB = "class";
     private static final String NAME_ATTRIB = "name";
@@ -348,8 +350,16 @@ public final class RepositoryFactory {
 	}
 	DynamicWorkspaceDef[] wspDefs = (DynamicWorkspaceDef[]) list.toArray(new DynamicWorkspaceDef[list.size()]);
 
+	// read config of search index (optional)
+	String searchIndexPath = null;
+	if (stableWspConfig.getChild(SEARCH_INDEX_ELEMENT) != null) {
+	    searchIndexPath = stableWspConfig.getChild(SEARCH_INDEX_ELEMENT).getAttributeValue(PATH_ATTRIB);
+	    searchIndexPath = searchIndexPath.replaceAll("\\$\\{factory\\.home\\}", factoryHomeDir.replace('\\', '/'));
+	}
+
 	return new StableWorkspaceDef(name, wspStore, blobStore,
-		persistenceManagerClassName, persistenceManagerParams, wspDefs);
+		persistenceManagerClassName, persistenceManagerParams, wspDefs,
+		searchIndexPath);
     }
 
     /**

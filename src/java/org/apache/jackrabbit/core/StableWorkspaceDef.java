@@ -33,6 +33,8 @@ public class StableWorkspaceDef extends WorkspaceDef {
 
     private DynamicWorkspaceDef[] dynWorkspaces;
 
+    private String searchIndexPath;
+
     /**
      * Creates a <code>StableWorkspaceDef</code> object, defining a stable
      * workspace.
@@ -44,12 +46,14 @@ public class StableWorkspaceDef extends WorkspaceDef {
      * @param persistenceManagerParams parameters for the <code>PersistenceManager</code>
      * @param dynWorkspaces            array of dynamic workspaces that are based on this
      *                                 stable workspace.
+     * @param searchIndexPath          path to the location where the search index is stored
      */
     StableWorkspaceDef(String name, FileSystem wspStore, FileSystem blobStore,
 		       String persistenceManagerClass, HashMap persistenceManagerParams,
-		       DynamicWorkspaceDef[] dynWorkspaces) {
+		       DynamicWorkspaceDef[] dynWorkspaces, String searchIndexPath) {
 	super(name, wspStore, blobStore, persistenceManagerClass, persistenceManagerParams);
 	this.dynWorkspaces = dynWorkspaces;
+	this.searchIndexPath = searchIndexPath;
     }
 
     /**
@@ -68,5 +72,13 @@ public class StableWorkspaceDef extends WorkspaceDef {
      */
     public boolean isDynamic() {
 	return false;
+    }
+
+    /**
+     * Returns the path to the location where the search index is stored.
+     * @return the path to the location where the search index is stored.
+     */
+    public String getSearchIndexPath() {
+	return searchIndexPath;
     }
 }

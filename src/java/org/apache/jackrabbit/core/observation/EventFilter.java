@@ -16,11 +16,10 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.log4j.Logger;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.access.AccessDeniedException;
-import javax.jcr.nodetype.NodeType;
 
 /**
  * The <code>EventFilter</code> class implements the filter logic based
@@ -30,6 +29,8 @@ import javax.jcr.nodetype.NodeType;
  * @version $Revision: 1.5 $, $Date: 2004/08/25 16:44:50 $
  */
 class EventFilter {
+
+    private static final Logger log = Logger.getLogger(EventFilter.class);
 
     static final EventFilter BLOCK_ALL = new BlockAllFilter();
 
@@ -68,7 +69,7 @@ class EventFilter {
     /**
      * Only allow Nodes with the specified {@link javax.jcr.nodetype.NodeType}s.
      */
-    private final NodeType[] nodeTypes;
+    private final NodeTypeImpl[] nodeTypes;
 
     /**
      * If <code>noLocal</code> is true this filter will block events from
@@ -103,7 +104,7 @@ class EventFilter {
 		Path path,
 		boolean isDeep,
 		String[] uuids,
-		NodeType[] nodeTypes,
+		NodeTypeImpl[] nodeTypes,
 		boolean noLocal) {
 
 	this.itemMgr = itemMgr;
@@ -174,18 +175,21 @@ class EventFilter {
 	    }
 	}
 
+	/*
 	Node parent = null;
 	try {
 	    parent = (Node) itemMgr.getItem(new NodeId(eventState.getParentUUID()));
 	} catch (AccessDeniedException e) {
+	    log.debug("Access denied for " + eventState.getParentPath());
 	    return true;
 	}
+	*/
 
 	// check node types
 	if (nodeTypes != null) {
 	    boolean match = false;
 	    for (int i = 0; i < nodeTypes.length && !match; i++) {
-		match |= parent.isNodeType(nodeTypes[i].getName());
+		match |= eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
 	    }
 	    if (!match) {
 		return true;
@@ -193,10 +197,12 @@ class EventFilter {
 	}
 
 	// finally check path
-	Path parentPath;
 	try {
-	    parentPath = Path.create(parent.getPath(), session.getNamespaceResolver(), false);
-	    boolean match = (isDeep) ? path.isDescendantOf(parentPath) : path.equals(parentPath);
+	    //parentPath = Path.create(parent.getPath(), session.getNamespaceResolver(), false);
+	    boolean match = eventState.getParentPath().equals(path);
+	    if (!match && isDeep) {
+		match = eventState.getParentPath().isDescendantOf(path);
+	    }
 
 	    return !match;
 	} catch (MalformedPathException mpe) {
