@@ -19,50 +19,77 @@ package org.apache.jackrabbit.core.config;
 import org.apache.jackrabbit.core.fs.FileSystem;
 
 /**
- * A <code>WorkspaceConfig</code> ...
+ * Workspace configuration. This configuration class is used to
+ * create configured workspace objects.
+ * <p>
+ * The contained configuration information are: the home directory and name
+ * of the workspace, and the file system, the persistence manager, and the
+ * search index configuration. The search index is an optional part of the
+ * configuration.
  */
 public class WorkspaceConfig {
 
     /**
-     * workspace home directory
+     * Workspace home directory.
      */
-    private String wspHomeDir;
+    private final String home;
 
     /**
-     * virtual file system where the workspace stores meta data etc.
+     * Workspace name.
      */
-    private FileSystem wspFS;
+    private final String name;
 
     /**
-     * workspace name
+     * Workspace file system configuration.
      */
-    private String wspName;
+    private FileSystemConfig fsc;
 
     /**
-     * configuration for the persistence manager
+     * Workspace persistence manager configuration.
      */
-    private BeanConfig pmc;
+    private PersistenceManagerConfig pmc;
 
     /**
-     * configuration for the search manager
+     * Workspace search index configuration.
      */
-    private SearchConfig searchConfig;
+    private SearchConfig sc;
 
-    public WorkspaceConfig(String home, String name, FileSystem fs, BeanConfig pmc, SearchConfig sc) {
-        this.wspHomeDir = home;
-        this.wspName = name;
-        this.wspFS = fs;
+    /**
+     * Creates a workspace configuration object.
+     *
+     * @param home home directory
+     * @param name workspace name
+     * @param fsc file system configuration
+     * @param pmc persistence manager configuration
+     * @param sc search index configuration
+     */
+    public WorkspaceConfig(
+            String home, String name, FileSystemConfig fsc,
+            PersistenceManagerConfig pmc, SearchConfig sc) {
+        this.home = home;
+        this.name = name;
+        this.fsc = fsc;
         this.pmc = pmc;
-        this.searchConfig = sc;
+        this.sc = sc;
     }
 
     /**
-     * Returns the home directory of the workspace.
+     * Initializes the workspace file system and search index implementations.
      *
-     * @return the home directory of the workspace
+     * @throws ConfigurationException on initialization errors
+     */
+    public void init() throws ConfigurationException {
+        fsc.init();
+        sc.init();
+    }
+
+    /**
+     * Returns the workspace home directory.
+     *
+     * @return workspace home directory
      */
     public String getHomeDir() {
-        return wspHomeDir;
+        return home;
     }
 
     /**
@@ -71,35 +98,35 @@ public class WorkspaceConfig {
      * @return the workspace name
      */
     public String getName() {
-        return wspName;
+        return name;
     }
 
     /**
-     * Returns the virtual file system where the workspace stores global state.
+     * Returns the workspace file system implementation.
      *
-     * @return the virtual file system where the workspace stores global state
+     * @return file system implementation
      */
     public FileSystem getFileSystem() {
-        return wspFS;
+        return fsc.getFileSystem();
     }
 
     /**
-     * Returns the configuration of the persistence manager.
+     * Returns the workspace persistence manager configuration.
      *
-     * @return the <code>PersistenceManagerConfig</code> for this workspace
+     * @return persistence manager configuration
      */
     public PersistenceManagerConfig getPersistenceManagerConfig() {
-        return new PersistenceManagerConfig(pmc);
+        return pmc;
     }
 
     /**
-     * Returns the configuration of the search manager.
-     * Returns <code>null</code> if no search manager is configured.
+     * Returns the workspace search index configuration. Returns
+     * <code>null</code> if a search index has not been configured.
      *
-     * @return the <code>SearchConfig</code> for this workspace
+     * @return search index configuration, or <code>null</code>
      */
     public SearchConfig getSearchConfig() {
-        return searchConfig;
+        return sc;
     }
 
 }

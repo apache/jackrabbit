@@ -21,35 +21,60 @@ import java.util.Properties;
 import org.apache.jackrabbit.core.fs.FileSystem;
 
 /**
- * Implements the search configuration.
+ * Search index configuration. This bean configuration class
+ * is used to create configured search index objects.
+ * <p>
+ * In addition to generic bean configuration information, this
+ * class also contains a configured file system implementation
+ * used by the search index.
+ *
+ * @see WorkspaceConfig#getSearchConfig()
  */
 public class SearchConfig extends BeanConfig {
 
-    /** The <code>FileSystem</code> for the search index. */
-    private final FileSystem fs;
-
-    public SearchConfig(
-            String className, Properties properties, FileSystem fs) {
-        super(className, properties);
-        this.fs = fs;
-    }
-
     /**
-     * Returns <code>FileSystem</code> for search index persistence.
-     * @return <code>FileSystem</code> for search index persistence.
+     * The search index file system configuration.
      */
-    public FileSystem getFileSystem() {
-        return fs;
+    private final FileSystemConfig fsc;
+
+    /**
+     * Creates a search index configuration object.
+     *
+     * @param className search index implementation class
+     * @param properties search index properties
+     * @param fsc search index file system configuration
+     */
+    public SearchConfig(
+            String className, Properties properties, FileSystemConfig fsc) {
+        super(className, properties);
+        this.fsc = fsc;
     }
 
     /**
-     * Returns the name of the class implementing the <code>QueryHandler</code>
-     * interface.
-     * @return the name of the class implementing the <code>QueryHandler</code>
-     *   interface.
+     * Initializes the search index file system.
+     *
+     * @throws ConfigurationException on file system configuration errors
+     */
+    public void init() throws ConfigurationException {
+        fsc.init();
+    }
+
+    /**
+     * Returns the search implementation class name.
+     *
+     * @return search implementation class name
      */
     public String getHandlerClassName() {
         return getClassName();
+    }
+
+    /**
+     * Returns the search index file system.
+     *
+     * @return search index file system
+     */
+    public FileSystem getFileSystem() {
+        return fsc.getFileSystem();
     }
 
 }

@@ -17,270 +17,185 @@
 package org.apache.jackrabbit.core.config;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 
-import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
 import org.xml.sax.InputSource;
 
 /**
- * TODO
+ * Configuration parser. This class is used to parse the repository and
+ * workspace configuration files. Each configuration parser instance
+ * contains a set of parser variables that are used for variable replacement
+ * in the configuration file.
+ * <p>
+ * The following code sample outlines the usage of this class:
+ * <pre>
+ *     Properties variables = ...; // parser variables
+ *     ConfigurationParser parser = new ConfigurationParser(variables);
+ *     RepositoryConfig rc = parser.parseRepositoryConfig(...);
+ *     WorkspaceConfig wc = parser.parseWorkspaceConfig(...);
+ * </pre>
  */
 public class ConfigurationParser {
 
-    private static Logger log = Logger.getLogger(ConfigurationParser.class);
-
-    private static final String SECURITY_ELEMENT = "Security";
-    private static final String APP_NAME_ATTRIB = "appName";
-    private static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
-
-    private static final String WORKSPACES_ELEMENT = "Workspaces";
-    private static final String ROOT_PATH_ATTRIB = "rootPath";
-    private static final String DEFAULT_WORKSPACE_ATTRIB = "defaultWorkspace";
-
-    private static final String WORKSPACE_ELEMENT = "Workspace";
-
-    private static final String VERSIONING_ELEMENT = "Versioning";
-
-    /**
-     * wellknown variables (will be replaced with their respective values
-     * whereever they occur within the configuration)
-     */
+    /** Name of the repository home directory parser variable. */
     public static final String REPOSITORY_HOME_VARIABLE = "rep.home";
 
-    protected static final String FILE_SYSTEM_ELEMENT = "FileSystem";
-    private static final String PERSISTENCE_MANAGER_ELEMENT = "PersistenceManager";
+    /** Name of the workspace home directory parser variable. */
+    public static final String WORKSPACE_HOME_VARIABLE = "wsp.home";
+
+    /** Name of the repository name parser variable. */
+    private static final String WORKSPACE_NAME_VARIABLE = "wsp.name";
+
+    /** Name of the security configuration element. */
+    private static final String SECURITY_ELEMENT = "Security";
+
+    /** Name of the access manager configuration element. */
+    private static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
+
+    /** Name of the general workspace configuration element. */
+    private static final String WORKSPACES_ELEMENT = "Workspaces";
+
+    /** Name of the workspace configuration element. */
+    private static final String WORKSPACE_ELEMENT = "Workspace";
+
+    /** Name of the versioning configuration element. */
+    private static final String VERSIONING_ELEMENT = "Versioning";
+
+    /** Name of the file system configuration element. */
+    private static final String FILE_SYSTEM_ELEMENT = "FileSystem";
+
+    /** Name of the persistence manager configuration element. */
+    private static final String PERSISTENCE_MANAGER_ELEMENT =
+        "PersistenceManager";
+
+    /** Name of the search index configuration element. */
     private static final String SEARCH_INDEX_ELEMENT = "SearchIndex";
 
+    /** Name of the bean parameter configuration element. */
+    private static final String PARAM_ELEMENT = "param";
+
+    /** Name of the application name configuration attribute. */
+    private static final String APP_NAME_ATTRIBUTE = "appName";
+
+    /** Name of the root path configuration attribute. */
+    private static final String ROOT_PATH_ATTRIBUTE = "rootPath";
+
+    /** Name of the default workspace configuration attribute. */
+    private static final String DEFAULT_WORKSPACE_ATTRIBUTE =
+        "defaultWorkspace";
+
+    /** Name of the bean implementation class configuration attribute. */
     private static final String CLASS_ATTRIBUTE = "class";
 
-    private static final String PARAM_ELEMENT = "param";
+    /** Name of the bean parameter name configuration attribute. */
     private static final String NAME_ATTRIBUTE = "name";
+
+    /** Name of the bean parameter value configuration attribute. */
     private static final String VALUE_ATTRIBUTE = "value";
 
-    /** attribute name of home dir */
-    private static final String ROOTPATH_ATTRIBUTE = "rootPath";
+    /** Name of the default search index implementation class. */
+    private static final String DEFAULT_QUERY_HANDLER =
+            "org.apache.jackrabbit.core.search.lucene.SearchIndex";
 
     /**
-     * wellknown variables (will be replaced with their respective values
-     * whereever they occur within the configuration)
+     * The configuration parser variables. These name-value pairs
+     * are used to substitute <code>${...}</code> variable references
+     * with context-dependent values in the configuration.
+     *
+     * @see #replaceVariables(String)
      */
-    public static final String WORKSPACE_HOME_VARIABLE = "wsp.home";
-    public static final String WORKSPACE_NAME_VARIABLE = "wsp.name";
+    private final Properties variables;
 
-    /** FQN of the default query handler implementation */
-    private static final String DEFAULT_QUERY_HANDLER
-            = "org.apache.jackrabbit.core.search.lucene.SearchIndex";
-
-    private Properties variables;
-
+    /**
+     * Creates a new configuration parser with the given parser variables.
+     *
+     * @param variables parser variables
+     */
     public ConfigurationParser(Properties variables) {
         this.variables = variables;
     }
 
-    public Document parse(InputSource xml) throws IOException, JDOMException {
-        SAXBuilder builder = new SAXBuilder();
-        builder.setEntityResolver(new ConfigurationEntityResolver());
-        return builder.build(xml);
-    }
-    
     /**
-     * Creates a new <code>RepositoryFactory</code> instance. The configuration
-     * is read from the specified configuration file.
+     * Parses repository configuration. Repository configuration uses the
+     * following format:
+     * <pre>
+     *   &lt;Repository&gt;
+     *     &lt;FileSystem ...&gt;
+     *     &lt;Security appName="..."&gt;
+     *       &lt;AccessManager ...&gt;
+     *     &lt;/Security&gt;
+     *     &lt;Workspaces rootPath="..." defaultWorkspace="..."/&gt;
+     *     &lt;Workspace ...&gt;
+     *     &lt;Versioning ...&gt;
+     *   &lt;/Repository&gt;
+     * </pre>
+     * <p>
+     * The <code>FileSystem</code> element is a
+     * {@link #parseBeanConfig(Element,String) bean configuration} element,
+     * that specifies the file system implementation for storing global
+     * repository information. The <code>Security</code> element contains
+     * an <code>AccessManager</code> bean configuration element and the
+     * JAAS name of the repository application. The <code>Workspaces</code>
+     * element contains general workspace parameters, and the
+     * <code>Workspace</code> element is a template for the individual
+     * workspace configuration files. The <code>Versioning</code> element
+     * contains
+     * {@link #parseVersioningConfig(Element) versioning configuration} for
+     * the repository.
+     * <p>
+     * In addition to the configured information, the returned repository
+     * configuration object also contains the repository home directory path
+     * that is given as the ${rep.home} parser variable. Note that the
+     * variable <em>must</em> be available for the configuration document to
+     * be correctly parsed.
+     * <p>
+     * {@link #replaceVariables(String) Variable replacement} is performed
+     * on the security application name attribute, the general workspace
+     * configuration attributes, and on the file system, access manager,
+     * and versioning configuration information.
      *
-     * @param configFilePath path to the configuration file
-     * @param repHomeDir     repository home directory
-     * @return a new <code>RepositoryConfig</code> instance
-     * @throws RepositoryException If an error occurs
+     * @param xml repository configuration document
+     * @return repository configuration
+     * @throws ConfigurationException if the configuration is broken
+     * @see #parseBeanConfig(Element, String)
+     * @see #parseVersioningConfig(Element)
      */
-    public RepositoryConfig parseRepositoryConfig(
-            String configFilePath, String repHomeDir) throws RepositoryException {
-        try {
-            File config = new File(configFilePath);
-            InputSource is = new InputSource(new FileReader(config));
-            is.setSystemId(config.toURI().toString());
-            return parseRepositoryConfig(is, repHomeDir);
-        } catch (IOException ioe) {
-            String msg = "error while reading config file " + configFilePath;
-            throw new RepositoryException(msg, ioe);
-        }
-    }
-
-    /**
-     * private constructor.
-     *
-     * @param xml
-     * @param repHomeDir
-     * @throws RepositoryException
-     */
-    public RepositoryConfig parseRepositoryConfig(
-            InputSource xml, String repHomeDir)
-            throws RepositoryException {
-        Properties newVariables = new Properties(variables);
-        newVariables.setProperty(REPOSITORY_HOME_VARIABLE, repHomeDir);
-        ConfigurationParser parser = new ConfigurationParser(newVariables);
-        return parser.parseRepositoryConfig(xml);
-    }
-
     public RepositoryConfig parseRepositoryConfig(InputSource xml)
-            throws RepositoryException {
-        try {
-            Document config = parse(xml);
-            Element root = config.getRootElement();
+            throws ConfigurationException {
+        Element root = parseXML(xml);
 
-            String home = variables.getProperty(REPOSITORY_HOME_VARIABLE);
+        // Repository home directory
+        String home = variables.getProperty(REPOSITORY_HOME_VARIABLE);
 
-            // file system
-            BeanConfig fsc = parseBeanConfig(root, FILE_SYSTEM_ELEMENT);
+        // File system implementation
+        FileSystemConfig fsc =
+            new FileSystemConfig(parseBeanConfig(root, FILE_SYSTEM_ELEMENT));
 
-            // security & access manager config
-            Element secEleme = root.getChild(SECURITY_ELEMENT);
-            String appName = secEleme.getAttributeValue(APP_NAME_ATTRIB);
-            BeanConfig amc = parseBeanConfig(secEleme, ACCESS_MANAGER_ELEMENT);
+        // Security configuration and access manager implementation
+        Element security = getElement(root, SECURITY_ELEMENT);
+        String appName = getAttribute(security, APP_NAME_ATTRIBUTE);
+        AccessManagerConfig amc = new AccessManagerConfig(
+                parseBeanConfig(security, ACCESS_MANAGER_ELEMENT));
 
-            // workspaces
-            Element wspsElem = root.getChild(WORKSPACES_ELEMENT);
-            String wspConfigRootDir = replaceVariables(wspsElem.getAttributeValue(ROOT_PATH_ATTRIB));
-            String defaultWspName = replaceVariables(wspsElem.getAttributeValue(DEFAULT_WORKSPACE_ATTRIB));
+        // General workspace configuration
+        Element workspaces = getElement(root, WORKSPACES_ELEMENT);
+        String workspaceDirectory = replaceVariables(
+                getAttribute(workspaces, ROOT_PATH_ATTRIBUTE));
+        String defaultWorkspace = replaceVariables(
+                getAttribute(workspaces, DEFAULT_WORKSPACE_ATTRIBUTE));
 
-            // load wsp configs
-            Map wspConfigs = new HashMap();
-            File wspRoot = new File(wspConfigRootDir);
-            if (!wspRoot.exists()) {
-                wspRoot.mkdirs();
-            }
-            File[] files = wspRoot.listFiles();
-            if (files == null) {
-                String msg = "invalid repsitory home directory";
-                throw new RepositoryException(msg);
-            }
-            for (int i = 0; i < files.length; i++) {
-                // check if <subfolder>/workspace.xml exists
-                File configFile = new File(files[i], "workspace.xml");
-                if (configFile.isFile()) {
-                    // create workspace config
-                    Properties newVariables = new Properties(variables);
-                    newVariables.setProperty(
-                            WORKSPACE_HOME_VARIABLE, configFile.getParent());
-                    ConfigurationParser parser =
-                        new ConfigurationParser(newVariables);
+        // Versioning configuration
+        VersioningConfig vc = parseVersioningConfig(root);
 
-                    InputSource wsxml =
-                        new InputSource(new FileReader(configFile));
-                    wsxml.setSystemId(configFile.toURI().toString());
-                    WorkspaceConfig wspConfig =
-                        parser.parseWorkspaceConfig(wsxml);
-                    String wspName = wspConfig.getName();
-                    if (wspConfigs.containsKey(wspName)) {
-                        String msg = "duplicate workspace name: " + wspName;
-                        throw new RepositoryException(msg);
-                    }
-                    wspConfigs.put(wspName, wspConfig);
-                }
-            }
-            if (wspConfigs.isEmpty()) {
-                // create initial default workspace
-                wspConfigs.put(defaultWspName, createWorkspaceConfig(
-                        config, wspConfigRootDir, defaultWspName));
-            } else {
-                if (!wspConfigs.containsKey(defaultWspName)) {
-                    String msg = "no configuration found for default workspace: " + defaultWspName;
-                    throw new RepositoryException(msg);
-                }
-            }
-
-            // load versioning config
-            Element vElement = config.getRootElement().getChild(VERSIONING_ELEMENT);
-            VersioningConfig vc = parseVersioningConfig(vElement);
-
-            return new RepositoryConfig(
-                    config, this, home, appName, wspConfigs,
-                    createFileSystem(fsc), wspConfigRootDir,
-                    defaultWspName, amc, vc);
-        } catch (JDOMException ex) {
-            throw new RepositoryException(ex);
-        } catch (IOException ex) {
-            throw new RepositoryException(ex);
-        }
-    }
-
-    /**
-     * Creates a new workspace configuration with the specified name.
-     *
-     * @param name workspace name
-     * @return a new <code>WorkspaceConfig</code> object.
-     * @throws RepositoryException if the specified name already exists or
-     *                             if an error occured during the creation.
-     */
-    public WorkspaceConfig createWorkspaceConfig(
-            Document config, String root, String name)
-            throws RepositoryException {
-        // create the workspace folder (i.e. the workspace home directory)
-        File wspFolder = new File(root, name);
-        if (!wspFolder.mkdir()) {
-            String msg = "Failed to create the workspace home directory: " + wspFolder.getPath();
-            throw new RepositoryException(msg);
-        }
-        // clone the workspace definition template
-        Element wspCongigElem =
-            (Element) config.getRootElement().getChild("Workspace").clone();
-        wspCongigElem.setAttribute("name", name);
-
-        // create workspace.xml file
-/*
-        DocType docType = new DocType(WORKSPACE_ELEMENT, null, WorkspaceConfig.PUBLIC_ID);
-        Document doc = new Document(wspCongigElem, docType);
-*/
-        Document doc = new Document(wspCongigElem);
-        XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-        File configFile = new File(wspFolder, "workspace.xml");
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(configFile);
-            out.output(doc, fos);
-        } catch (IOException ioe) {
-            String msg = "Failed to create workspace configuration file: " + configFile.getPath();
-            throw new RepositoryException(msg, ioe);
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        }
-
-        try {
-            // create workspace config object
-            Properties newVariables = new Properties(variables);
-            newVariables.setProperty(
-                    WORKSPACE_HOME_VARIABLE, configFile.getParent());
-            ConfigurationParser parser = new ConfigurationParser(newVariables);
-
-            InputSource xml = new InputSource(new FileReader(configFile));
-            xml.setSystemId(configFile.toURI().toString());
-
-            return parser.parseWorkspaceConfig(xml);
-        } catch (FileNotFoundException e) {
-            throw new ConfigurationException("TODO", e);
-        }
+        return new RepositoryConfig(
+                root, this, home, appName, fsc, workspaceDirectory,
+                defaultWorkspace, amc, vc);
     }
 
     /**
@@ -291,7 +206,7 @@ public class ConfigurationParser {
      *     &lt;FileSystem ...&gt;
      *     &lt;PersistenceManager ...&gt;
      *     &lt;SearchIndex ...&gt;
-     *   &lt;/Search&gt;
+     *   &lt;/Workspace&gt;
      * </pre>
      * <p>
      * All the child elements (<code>FileSystem</code>,
@@ -303,7 +218,9 @@ public class ConfigurationParser {
      * <p>
      * In addition to the configured information, the returned workspace
      * configuration object also contains the workspace home directory path
-     * that is given as the ${wsp.home} parser variable.
+     * that is given as the ${wsp.home} parser variable. Note that the
+     * variable <em>must</em> be available for the configuration document to
+     * be correctly parsed.
      * <p>
      * Variable replacement is performed on the optional workspace name
      * attribute. If the name is not given, then the name of the workspace
@@ -323,49 +240,32 @@ public class ConfigurationParser {
      */
     public WorkspaceConfig parseWorkspaceConfig(InputSource xml)
             throws ConfigurationException {
-        try {
-            Document document = parse(xml);
-            Element element = document.getRootElement();
+        Element root = parseXML(xml);
 
-            // Workspace home directory
-            String home = variables.getProperty(WORKSPACE_HOME_VARIABLE);
+        // Workspace home directory
+        String home = variables.getProperty(WORKSPACE_HOME_VARIABLE);
 
-            // Workspace name
-            String name = element.getAttributeValue(NAME_ATTRIBUTE);
-            if (name != null) {
-                name = replaceVariables(name);
-            } else {
-                name = new File(home).getName();
-            }
+        // Workspace name
+        String name =
+            getAttribute(root, NAME_ATTRIBUTE, new File(home).getName());
 
-            // Create a temporary parser that contains the ${wsp.name} variable
-            Properties newVariables = new Properties(variables);
-            newVariables.put(WORKSPACE_NAME_VARIABLE, name);
-            ConfigurationParser parser = new ConfigurationParser(newVariables);
+        // Create a temporary parser that contains the ${wsp.name} variable
+        Properties tmpVariables = (Properties) variables.clone();
+        tmpVariables.put(WORKSPACE_NAME_VARIABLE, name);
+        ConfigurationParser tmpParser = new ConfigurationParser(tmpVariables);
 
-            // File system implementation
-            BeanConfig fsc =
-                parser.parseBeanConfig(element, FILE_SYSTEM_ELEMENT);
+        // File system implementation
+        FileSystemConfig fsc = new FileSystemConfig(
+                tmpParser.parseBeanConfig(root, FILE_SYSTEM_ELEMENT));
 
-            // Persistence manager implementation
-            BeanConfig pmc =
-                parser.parseBeanConfig(element, PERSISTENCE_MANAGER_ELEMENT);
+        // Persistence manager implementation
+        PersistenceManagerConfig pmc = new PersistenceManagerConfig(
+            tmpParser.parseBeanConfig(root, PERSISTENCE_MANAGER_ELEMENT));
 
-            // Search implementation (optional)
-            SearchConfig sc = null;
-            Element search = element.getChild(SEARCH_INDEX_ELEMENT);
-            if (search != null) {
-                sc = parser.parseSearchConfig(search);
-            }
+        // Search implementation (optional)
+        SearchConfig sc = tmpParser.parseSearchConfig(root);
 
-            return new WorkspaceConfig(home, name, createFileSystem(fsc), pmc, sc);
-        } catch (JDOMException e) {
-            throw new ConfigurationException(
-                    "Workspace configuration syntax error.", e);
-        } catch (IOException e) {
-            throw new ConfigurationException(
-                    "Workspace configuration could not be read.", e);
-        }
+        return new WorkspaceConfig(home, name, fsc, pmc, sc);
     }
 
     /**
@@ -383,26 +283,34 @@ public class ConfigurationParser {
      * elements are {@link #parseBeanConfig(Element,String) bean configuration}
      * elements. If the search implementation class is not given, then
      * a default implementation is used.
+     * <p>
+     * The search index is an optional feature of workspace configuration.
+     * If the search configuration element is not found, then this method
+     * returns <code>null</code>.
      *
-     * @param element search configuration element
-     * @return search configuration
+     * @param parent parent of the <code>SearchIndex</code> element
+     * @return search configuration, or <code>null</code>
      * @throws ConfigurationException if the configuration is broken
      */
-    private SearchConfig parseSearchConfig(Element element)
+    private SearchConfig parseSearchConfig(Element parent)
             throws ConfigurationException {
-        // Search implementation class
-        String className = element.getAttributeValue(CLASS_ATTRIBUTE);
-        if (className == null) {
-            className = DEFAULT_QUERY_HANDLER;
+        Element element = parent.getChild(SEARCH_INDEX_ELEMENT);
+        if (element != null) {
+            // Search implementation class
+            String className =
+                getAttribute(element, CLASS_ATTRIBUTE, DEFAULT_QUERY_HANDLER);
+
+            // Search parameters
+            Properties parameters = parseParameters(element);
+
+            // File system implementation
+            FileSystemConfig fsc = new FileSystemConfig(
+                    parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
+
+            return new SearchConfig(className, parameters, fsc);
+        } else {
+            return null;
         }
-
-        // Search parameters
-        Properties parameters = parseParameters(element);
-
-        // File system implementation
-        BeanConfig fsc = parseBeanConfig(element, FILE_SYSTEM_ELEMENT);
-
-        return new SearchConfig(className, parameters, createFileSystem(fsc));
     }
 
     /**
@@ -421,58 +329,27 @@ public class ConfigurationParser {
      * {@link #replaceVariables(String) variable replacement} is performed
      * also on the versioning root path attribute.
      *
-     * @param element versioning configuration element
+     * @param parent parent of the <code>Versioning</code> element
      * @return versioning configuration
      * @throws ConfigurationException if the configuration is broken
      */
-    private VersioningConfig parseVersioningConfig(Element element)
+    private VersioningConfig parseVersioningConfig(Element parent)
             throws ConfigurationException {
+        Element element = getElement(parent, VERSIONING_ELEMENT);
+
         // Versioning home directory
-        String home = element.getAttributeValue(ROOTPATH_ATTRIBUTE);
-        if (home == null) {
-            throw new ConfigurationException("Versioning root path not set.");
-        }
+        String home =
+            replaceVariables(getAttribute(element, ROOT_PATH_ATTRIBUTE));
 
         // File system implementation
-        BeanConfig fsc = parseBeanConfig(element, FILE_SYSTEM_ELEMENT);
+        FileSystemConfig fsc = new FileSystemConfig(
+                parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
 
         // Persistence manager implementation
-        BeanConfig pmc = parseBeanConfig(element, PERSISTENCE_MANAGER_ELEMENT);
+        PersistenceManagerConfig pmc = new PersistenceManagerConfig(
+                parseBeanConfig(element, PERSISTENCE_MANAGER_ELEMENT));
 
-        return new VersioningConfig(
-                replaceVariables(home), createFileSystem(fsc), pmc);
-    }
-
-    /**
-     * Instantiates and initializes the file system implementation class
-     * configured by the given bean configuration object.
-     *
-     * @param config file system configuration
-     * @return initialized file system implementation
-     * @throws ConfigurationException if the file system could not be created
-     */
-    private FileSystem createFileSystem(BeanConfig config)
-            throws ConfigurationException {
-        try {
-            FileSystem filesystem = (FileSystem) config.newInstance();
-            filesystem.init();
-            return filesystem;
-        } catch (ClassNotFoundException e) {
-            throw new ConfigurationException(
-                    "File system implementation class not found.", e);
-        } catch (InstantiationException e) {
-            throw new ConfigurationException(
-                    "File system implementation can not be instantiated.", e);
-        } catch (IllegalAccessException e) {
-            throw new ConfigurationException(
-                    "File system implementation class is protected.", e);
-        } catch (ClassCastException e) {
-            throw new ConfigurationException(
-                    "Invalid file system implementation class.", e);
-        } catch (FileSystemException e) {
-            throw new ConfigurationException(
-                    "File system initialization failure.", e);
-        }
+        return new VersioningConfig(home, fsc, pmc);
     }
 
     /**
@@ -498,18 +375,10 @@ public class ConfigurationParser {
     private BeanConfig parseBeanConfig(Element parent, String name)
             throws ConfigurationException {
         // Bean configuration element
-        Element element = parent.getChild(name);
-        if (element == null) {
-            throw new ConfigurationException(
-                    "Configuration element not found: " + name);
-        }
+        Element element = getElement(parent, name);
 
         // Bean implementation class
-        String className = element.getAttributeValue(CLASS_ATTRIBUTE);
-        if (className == null) {
-            throw new ConfigurationException(
-                    "Class attribute not set: " + name);
-        }
+        String className = getAttribute(element, CLASS_ATTRIBUTE);
 
         // Bean properties
         Properties properties = parseParameters(element);
@@ -571,26 +440,110 @@ public class ConfigurationParser {
         // +--+-+--------+-+-----------------+
         // |  |p|-->     |q|-->              |
         // +--+-+--------+-+-----------------+
-        int p = 0, q = value.indexOf("${");              // Find first ${
+        int p = 0, q = value.indexOf("${");                // Find first ${
         while (q != -1) {
-            result.append(value.substring(p, q));                  // Text before ${
+            result.append(value.substring(p, q));          // Text before ${
             p = q;
-            q = value.indexOf("}", q + 2);               // Find }
+            q = value.indexOf("}", q + 2);                 // Find }
             if (q != -1) {
                 String variable = value.substring(p + 2, q);
                 String replacement = variables.getProperty(variable);
                 if (replacement == null) {
                     throw new ConfigurationException(
-                            "Variable replacement not found: " + variable);
+                            "Replacement not found for ${" + variable + "}.");
                 }
                 result.append(replacement);
                 p = q + 1;
-                q = value.indexOf("${", p);              // Find next ${
+                q = value.indexOf("${", p);                // Find next ${
             }
         }
-        result.append(value.substring(p, value.length()));         // Trailing text
+        result.append(value.substring(p, value.length())); // Trailing text
 
         return result.toString();
+    }
+
+    /**
+     * Parses the given XML document and returns the DOM root element.
+     * A custom entity resolver is used to make the included configuration
+     * file DTD available using the specified public identifiers.
+     *
+     * @see ConfigurationEntityResolver
+     * @param xml xml document
+     * @return root element
+     * @throws ConfigurationException if the configuration document could
+     *                                not be read or parsed
+     */
+    private Element parseXML(InputSource xml) throws ConfigurationException {
+        try {
+            SAXBuilder builder = new SAXBuilder();
+            builder.setEntityResolver(new ConfigurationEntityResolver());
+            Document document = builder.build(xml);
+            return document.getRootElement();
+        } catch (JDOMException e) {
+            throw new ConfigurationException(
+                    "Configuration file syntax error.", e);
+        } catch (IOException e) {
+            throw new ConfigurationException(
+                    "Configuration file could not be read.", e);
+        }
+    }
+
+    /**
+     * Returns the named child of the given parent element.
+     *
+     * @param parent parent element
+     * @param name name of the child element
+     * @return named child element
+     * @throws ConfigurationException if the child element is not found
+     */
+    private Element getElement(Element parent, String name)
+            throws ConfigurationException {
+        Element element = parent.getChild(name);
+        if (element != null) {
+            return element;
+        } else {
+            throw new ConfigurationException(
+                    "Configuration element " + name + " not found in "
+                    + parent.getName() + ".");
+        }
+    }
+
+    /**
+     * Returns the value of the named attribute of the given element.
+     *
+     * @param element element
+     * @param name attribute name
+     * @return attribute value
+     * @throws ConfigurationException if the attribute is not found
+     */
+    private String getAttribute(Element element, String name)
+            throws ConfigurationException {
+        String value = element.getAttributeValue(name);
+        if (value != null) {
+            return value;
+        } else {
+            throw new ConfigurationException(
+                    "Configuration attribute " + name + " not found in "
+                    + element.getName() + ".");
+        }
+    }
+
+    /**
+     * Returns the value of the named attribute of the given element.
+     * If the attribute is not found, then the given default value is returned.
+     *
+     * @param element element
+     * @param name attribute name
+     * @param def default value
+     * @return attribute value, or the default value
+     */
+    private String getAttribute(Element element, String name, String def) {
+        String value = element.getAttributeValue(name);
+        if (value != null) {
+            return value;
+        } else {
+            return def;
+        }
     }
 
 }

@@ -49,7 +49,7 @@ public class BeanConfig {
      */
     protected BeanConfig(String className, Properties properties) {
         this.className = className;
-        this.properties = new Properties(properties);
+        this.properties = (Properties) properties.clone();
     }
 
     /**
@@ -83,24 +83,34 @@ public class BeanConfig {
      * Creates a new instance of the configured bean class.
      *
      * @return new bean instance
-     * @throws ClassNotFoundException if the bean class is not found
-     * @throws InstantiationException if the bean could not be instantiated
-     * @throws IllegalAccessException if the bean methods are protected
+     * @throws ConfigurationException on bean configuration errors
      */
-    public Object newInstance()
-            throws ClassNotFoundException, InstantiationException,
-            IllegalAccessException {
-        Object object = Class.forName(className).newInstance();
-        BeanMap map = new BeanMap(object);
-        Iterator iterator = map.keyIterator();
-        while (iterator.hasNext()) {
-            String name = (String) iterator.next();
-            String value = properties.getProperty(name);
-            if (value != null) {
-                map.put(name, properties.getProperty(name));
+    public Object newInstance() throws ConfigurationException {
+        try {
+            Object object = Class.forName(getClassName()).newInstance();
+            BeanMap map = new BeanMap(object);
+            Iterator iterator = map.keyIterator();
+            while (iterator.hasNext()) {
+                String name = (String) iterator.next();
+                String value = properties.getProperty(name);
+                if (value != null) {
+                    map.put(name, properties.getProperty(name));
+                }
             }
+            return object;
+        } catch (ClassNotFoundException e) {
+            throw new ConfigurationException(
+                    "Configured bean implementation class " + getClassName()
+                    + " was not found.", e);
+        } catch (InstantiationException e) {
+            throw new ConfigurationException(
+                    "Configured bean implementation class " + getClassName()
+                    + " can not be instantiated.", e);
+        } catch (IllegalAccessException e) {
+            throw new ConfigurationException(
+                    "Configured bean implementation class " + getClassName()
+                    + " is protected.", e);
         }
-        return object;
     }
 
 }

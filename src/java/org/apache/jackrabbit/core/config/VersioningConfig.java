@@ -21,45 +21,80 @@ import java.io.File;
 import org.apache.jackrabbit.core.fs.FileSystem;
 
 /**
- * This Class implements the configuration object for the versioning.
+ * Versioning configuration. This configuration class is used to
+ * create configured versioning objects.
+ * <p>
+ * The contained configuration information are: the home directory,
+ * the file system implementation, and the persistence manager
+ * implementation.
+ *
+ * @see RepositoryConfig#getVersioningConfig()
  */
 public class VersioningConfig {
 
-    /** the homedir for the versioning */
+    /**
+     * Versioning home directory.
+     */
     private final String home;
 
-    /** The <code>FileSystem</code> for the versioing. */
-    private final FileSystem fs;
+    /**
+     * Versioning file system configuration.
+     */
+    private final FileSystemConfig fsc;
 
-    /** The <code>PersistenceManagerConfig</code> for the versioning */
-    private final BeanConfig pmc;
+    /**
+     * Versioning persistence manager configuration.
+     */
+    private final PersistenceManagerConfig pmc;
 
-    public VersioningConfig(String home, FileSystem fs, BeanConfig pmc) {
+    /**
+     * Creates a versioning configuration object.
+     *
+     * @param home home directory
+     * @param fsc file system configuration
+     * @param pmc persistence manager configuration
+     */
+    public VersioningConfig(
+            String home, FileSystemConfig fsc, PersistenceManagerConfig pmc) {
         this.home = home;
-        this.fs = fs;
+        this.fsc = fsc;
         this.pmc = pmc;
     }
 
+    /**
+     * Initializes the versioning file system.
+     *
+     * @throws ConfigurationException on file system configuration errors
+     */
+    public void init() throws ConfigurationException {
+        fsc.init();
+    }
+
+    /**
+     * Returns the versioning home directory.
+     *
+     * @return versioning home directory
+     */
     public File getHomeDir() {
         return new File(home);
     }
 
     /**
-     * Returns the virtual file system where the workspace stores global state.
+     * Returns the versioning file system implementation.
      *
-     * @return the virtual file system where the workspace stores global state
+     * @return file system implementation
      */
     public FileSystem getFileSystem() {
-        return fs;
+        return fsc.getFileSystem();
     }
 
     /**
-     * Returns the configuration of the persistence manager.
+     * Returns the versioning persistence manager configuration.
      *
-     * @return the <code>PersistenceManagerConfig</code> for this workspace
+     * @return persistence manager configuration
      */
     public PersistenceManagerConfig getPersistenceManagerConfig() {
-        return new PersistenceManagerConfig(pmc);
+        return pmc;
     }
 
 }

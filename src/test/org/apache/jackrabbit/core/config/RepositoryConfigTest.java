@@ -29,12 +29,6 @@ import junit.framework.TestCase;
  */
 public class RepositoryConfigTest extends TestCase {
 
-    private ConfigurationParser parser;
-
-    protected void setUp() {
-        parser = new ConfigurationParser(new Properties());
-    }
-
     /**
      * Test that a standard repository configuration file is
      * correctly parsed.
@@ -45,7 +39,7 @@ public class RepositoryConfigTest extends TestCase {
         InputStream xml = getClass().getClassLoader().getResourceAsStream(
                 "org/apache/jackrabbit/core/config/repository.xml");
         RepositoryConfig config =
-            parser.parseRepositoryConfig(new InputSource(xml), "target");
+            RepositoryConfig.create(new InputSource(xml), "target");
 
         assertEquals("target", config.getHomeDir());
         assertEquals("default", config.getDefaultWorkspaceName());
