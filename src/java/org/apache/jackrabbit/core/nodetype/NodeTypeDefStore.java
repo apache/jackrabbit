@@ -66,7 +66,7 @@ class NodeTypeDefStore {
 
     /**
      * @param out
-     * @param nsReg
+     * @param registry
      * @throws IOException
      * @throws RepositoryException
      */
@@ -119,5 +119,4 @@ class NodeTypeDefStore {
     Collection all() {
         return Collections.unmodifiableCollection(ntDefs.values());
     }
-
 }

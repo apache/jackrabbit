@@ -117,8 +117,9 @@ public class RepositoryImpl implements Repository, SessionListener,
     // sub file system where the repository stores meta data such as uuid of root node, etc.
     private final FileSystem metaDataStore;
 
-    /** the deletagin observation dispatcher for all workspaces */
-    private final DelegatingObservationDispatcher delegatingDispatcher = new DelegatingObservationDispatcher();
+    /** the delegating observation dispatcher for all workspaces */
+    private final DelegatingObservationDispatcher delegatingDispatcher =
+            new DelegatingObservationDispatcher();
 
     /**
      * map of workspace names and <code>WorkspaceInfo<code>s.
