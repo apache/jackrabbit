@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.version.VersionHistoryNodeState;
 import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -115,13 +116,18 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
             throws NoSuchItemStateException, ItemStateException {
 
         if (id instanceof NodeId) {
+            ItemState s;
             if (nodes.containsKey(id)) {
-                return (ItemState) nodes.get(id);
+                s = (ItemState) nodes.get(id);
             } else if (id.equals(rootNodeId)) {
-                return getRootState();
+                s = getRootState();
             } else {
-                return cache(internalGetNodeState((NodeId) id));
+                s = cache(internalGetNodeState((NodeId) id));
             }
+            if (s instanceof VersionHistoryNodeState) {
+                s.getId();
+            }
+            return s;
         } else {
             return internalGetPropertyState((PropertyId) id);
         }
@@ -286,6 +292,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
     protected NodeState cache(NodeState state) {
         if (state != null) {
             nodes.put(state.getId(), state);
+            state.addListener(this);
             log.debug("item added to cache. size=" + nodes.size());
         }
         return state;
@@ -373,7 +380,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
      */
     public void stateDestroyed(ItemState destroyed) {
         destroyed.removeListener(this);
-        if (destroyed.isNode() && ((NodeState) destroyed).getId().equals(rootNodeId)) {
+        if (destroyed.isNode() && destroyed.getId().equals(rootNodeId)) {
             try {
                 root = createRootNodeState();
             } catch (RepositoryException e) {
@@ -388,7 +395,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
      */
     public void stateDiscarded(ItemState discarded) {
         discarded.removeListener(this);
-        if (discarded.isNode() && ((NodeState) discarded).getId().equals(rootNodeId)) {
+        if (discarded.isNode() && discarded.getId().equals(rootNodeId)) {
             try {
                 root = createRootNodeState();
             } catch (RepositoryException e) {

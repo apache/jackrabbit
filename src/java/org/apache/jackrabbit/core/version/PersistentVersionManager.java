@@ -17,12 +17,10 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.version.VersionException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -108,29 +106,19 @@ public interface PersistentVersionManager {
     /**
      * checks, if the item with the given external id exists
      *
-     * @param externalId
+     * @param id
      * @return
      */
-    public boolean hasItem(String externalId);
+    public boolean hasItem(String id);
 
     /**
-     * returns the item referred by the external id
+     * returns the item referred by the id
      *
-     * @param externalId
+     * @param id
      * @return
      * @throws RepositoryException
      */
-    public InternalVersionItem getItemByExternal(String externalId)
-            throws RepositoryException;
-
-    /**
-     * returns the item referred by the internal id
-     *
-     * @param internalId
-     * @return
-     * @throws RepositoryException
-     */
-    public InternalVersionItem getItemByInternal(String internalId)
+    public InternalVersionItem getItem(String id)
             throws RepositoryException;
 
     /**

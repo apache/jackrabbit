@@ -37,17 +37,15 @@ class InternalFrozenVHImpl extends InternalFreezeImpl implements InternalFrozenV
      */
     private PersistentNode node;
 
-    private final String id;
-
     /**
      * Creates a new frozen version history.
      *
      * @param node
      */
-    protected InternalFrozenVHImpl(PersistentVersionManager vMgr, PersistentNode node, String id, InternalVersionItem parent) {
+    protected InternalFrozenVHImpl(PersistentVersionManager vMgr, PersistentNode node,
+                                   InternalVersionItem parent) {
         super(vMgr, parent);
         this.node = node;
-        this.id = id;
     }
 
     /**
@@ -59,12 +57,8 @@ class InternalFrozenVHImpl extends InternalFreezeImpl implements InternalFrozenV
         return node.getName();
     }
 
-    protected String getPersistentId() {
-        return node.getUUID();
-    }
-
     public String getId() {
-        return id;
+        return node.getUUID();
     }
 
     /**

@@ -340,10 +340,10 @@ public class PersistentNode {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    protected PersistentNode addNode(QName nodeName, QName nodeTypeName)
+    protected PersistentNode addNode(QName nodeName, QName nodeTypeName, String uuid)
             throws NoSuchNodeTypeException, ConstraintViolationException, RepositoryException {
 
-        return createChildNode(nodeName, nodeTypeName, null);
+        return createChildNode(nodeName, nodeTypeName, uuid);
     }
 
     /**

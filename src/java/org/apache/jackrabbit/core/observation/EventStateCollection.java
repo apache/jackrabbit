@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * The <code>EventStateCollection</code> class implements how {@link EventState}
@@ -180,7 +181,6 @@ public final class EventStateCollection {
                             Path parentPath = getParent(newPath);
                             Path oldPath = null;
                             try {
-                                oldPath = null;
                                 if (moved.getIndex() == 0) {
                                     oldPath = Path.create(parentPath, moved.getName(), false);
                                 } else {
@@ -325,6 +325,14 @@ public final class EventStateCollection {
                 }
             }
         }
+    }
+
+    /**
+     * Adds all event states in the given collection to this collection
+     * @param c
+     */
+    public void addAll(Collection c) {
+        events.addAll(c);
     }
 
     /**

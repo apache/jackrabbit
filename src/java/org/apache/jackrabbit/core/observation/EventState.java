@@ -26,7 +26,7 @@ import javax.jcr.observation.Event;
  * The <code>EventState</code> class encapsulates the session
  * independent state of an {@link javax.jcr.observation.Event}.
  */
-class EventState {
+public class EventState {
 
     /**
      * The {@link javax.jcr.observation.Event} of this event.

@@ -170,11 +170,12 @@ public class VersionItemStateProvider extends AbstractVISProvider {
         try {
             InternalVersionItem vi = vMgr.getItem(id.getUUID());
             if (vi instanceof InternalVersionHistory) {
-                state = new VersionHistoryNodeState(this, (InternalVersionHistory) vi, rootNodeId.getUUID());
+                InternalVersionHistory vh = (InternalVersionHistory) vi;
+                state = new VersionHistoryNodeState(this, vh, rootNodeId.getUUID());
                 state.setDefinitionId(NDEF_VERSION_HISTORY);
                 // add version labels node state
-                String uuid = UUID.randomUUID().toString();
-                VersionLabelsNodeState vlns = new VersionLabelsNodeState(this, (InternalVersionHistory) vi, state.getUUID(), uuid);
+                String uuid = vh.getVersionLabelsUUID();
+                VersionLabelsNodeState vlns = new VersionLabelsNodeState(this, vh, state.getUUID(), uuid);
                 vlns.setDefinitionId(NDEF_VERSION_LABELS);
                 state.addChildNodeEntry(JCR_VERSIONLABELS, uuid);
                 // need to add as hard reference to version history, so that it does not get fluhed.
@@ -186,11 +187,6 @@ public class VersionItemStateProvider extends AbstractVISProvider {
                 state = new VersionNodeState(this, v, vi.getParent().getId());
                 state.setDefinitionId(NDEF_VERSION);
                 state.setPropertyValue(JCR_CREATED, InternalValue.create(v.getCreated()));
-                // todo: do not read frozen stuff from frozen node instance here, rather put to version
-                //state.setPropertyValue(JCR_FROZENUUID, InternalValue.create(v.getFrozenNode().getFrozenUUID()));
-                //state.setPropertyValue(JCR_FROZENPRIMARYTYPE, InternalValue.create(v.getFrozenNode().getFrozenPrimaryType()));
-                //state.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, InternalValue.create(v.getFrozenNode().getFrozenMixinTypes()));
-                //state.setPropertyValues(JCR_VERSIONLABELS, PropertyType.STRING, InternalValue.create(v.getLabels()));
                 state.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
                 state.setPropertyValues(JCR_SUCCESSORS, PropertyType.REFERENCE, new InternalValue[0]);
 

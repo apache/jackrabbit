@@ -20,7 +20,6 @@ import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -33,7 +32,6 @@ import org.apache.log4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyIterator;
 import javax.jcr.version.VersionException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -108,7 +106,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         labelCache.clear();
 
         // get id
-        historyId = (String) node.getPropertyValue(NativePVM.PROPNAME_HISTORY_ID).internalValue();
+        historyId = node.getUUID();
 
         // get versionable id
         versionableId = (String) node.getPropertyValue(NativePVM.PROPNAME_VERSIONABLE_ID).internalValue();
@@ -121,7 +119,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 labelNode = child;
                 continue;
             }
-            InternalVersionImpl v = new InternalVersionImpl(this, child);
+            InternalVersionImpl v = new InternalVersionImpl(this, child, child.getName());
             versionCache.put(v.getId(), v);
             if (v.isRootVersion()) {
                 rootVersion = v;
@@ -154,10 +152,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      */
     public String getId() {
         return historyId;
-    }
-
-    protected String getPersistentId() {
-        return node.getUUID();
     }
 
     public InternalVersionItem getParent() {
@@ -323,7 +317,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         boolean succeeded = false;
         try {
             stateMgr.edit();
-            PersistentNode lNode = labelNode.addNode(label, NT_UNSTRUCTURED);
+            PersistentNode lNode = labelNode.addNode(label, NT_UNSTRUCTURED, null);
             lNode.setPropertyValue(NativePVM.PROPNAME_NAME, InternalValue.create(label));
             lNode.setPropertyValue(NativePVM.PROPNAME_VERSION, InternalValue.create(version.getId()));
             labelNode.store();
@@ -402,10 +396,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
 
         String versionId = UUID.randomUUID().toString();
-        QName nodeName = new QName(NS_DEFAULT_URI, versionId);
-        PersistentNode vNode = node.addNode(nodeName, NativePVM.NT_REP_VERSION);
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_ID, InternalValue.create(versionId));
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(name));
+        PersistentNode vNode = node.addNode(name, NativePVM.NT_REP_VERSION, versionId);
 
         // initialize 'created' and 'predecessors'
         vNode.setPropertyValue(JCR_CREATED, InternalValue.create(Calendar.getInstance()));
@@ -418,7 +409,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         node.store();
 
         // update version graph
-        InternalVersionImpl version = new InternalVersionImpl(this, vNode);
+        InternalVersionImpl version = new InternalVersionImpl(this, vNode, name);
         version.resolvePredecessors();
 
         // update cache
@@ -459,10 +450,17 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         return (QName[]) labelCache.keySet().toArray(new QName[labelCache.size()]);
     }
 
-    protected String getUUID() {
-        return node.getUUID();
+    /**
+     * {@inheritDoc}
+     */
+    public String getVersionLabelsUUID() {
+        return labelNode.getUUID();
     }
 
+    /**
+     * Returns the persistent node of this version history
+     * @return
+     */
     protected PersistentNode getNode() {
         return node;
     }
@@ -480,22 +478,18 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throws RepositoryException {
 
         // create history node
-        PersistentNode pNode = parent.addNode(name, NativePVM.NT_REP_VERSION_HISTORY);
-        pNode.setPropertyValue(NativePVM.PROPNAME_HISTORY_ID, InternalValue.create(historyId));
+        PersistentNode pNode = parent.addNode(name, NativePVM.NT_REP_VERSION_HISTORY, historyId);
 
         // set the versionable uuid
         pNode.setPropertyValue(NativePVM.PROPNAME_VERSIONABLE_ID, InternalValue.create(src.internalGetUUID()));
 
         // create label node
-        pNode.addNode(NativePVM.NODENAME_VERSION_LABELS, NT_UNSTRUCTURED);
+        pNode.addNode(NativePVM.NODENAME_VERSION_LABELS, NT_UNSTRUCTURED, null);
 
         // create root version
         String versionId = UUID.randomUUID().toString();
-        QName nodeName = new QName(NS_DEFAULT_URI, versionId);
 
-        PersistentNode vNode = pNode.addNode(nodeName, NativePVM.NT_REP_VERSION);
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_ID, InternalValue.create(versionId));
-        vNode.setPropertyValue(NativePVM.PROPNAME_VERSION_NAME, InternalValue.create(JCR_ROOTVERSION));
+        PersistentNode vNode = pNode.addNode(JCR_ROOTVERSION, NativePVM.NT_REP_VERSION, versionId);
 
         // initialize 'created' and 'predecessors'
         vNode.setPropertyValue(JCR_CREATED, InternalValue.create(Calendar.getInstance()));

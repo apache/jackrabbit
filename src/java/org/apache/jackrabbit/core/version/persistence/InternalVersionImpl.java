@@ -65,11 +65,6 @@ class InternalVersionImpl extends InternalVersionItemImpl
     private HashSet labelCache = null;
 
     /**
-     * the id of this version
-     */
-    private String versionId;
-
-    /**
      * specifies if this is the root version
      */
     private final boolean isRoot;
@@ -91,33 +86,21 @@ class InternalVersionImpl extends InternalVersionItemImpl
      *
      * @param node
      */
-    InternalVersionImpl(InternalVersionHistoryImpl vh, PersistentNode node) {
+    InternalVersionImpl(InternalVersionHistoryImpl vh, PersistentNode node, QName name) {
         super(vh.getVersionManager());
         this.versionHistory = vh;
         this.node = node;
-
-        // get id
-        versionId = (String) node.getPropertyValue(NativePVM.PROPNAME_VERSION_ID).internalValue();
+        this.name = name;
 
         // init internal values
         InternalValue[] values = node.getPropertyValues(JCR_CREATED);
         if (values != null) {
             created = (Calendar) values[0].internalValue();
         }
-        values = node.getPropertyValues(NativePVM.PROPNAME_VERSION_NAME);
-        if (values != null) {
-            name = (QName) values[0].internalValue();
-        } else {
-            name = null; // ????
-        }
         isRoot = name.equals(JCR_ROOTVERSION);
     }
 
     public String getId() {
-        return versionId;
-    }
-
-    protected String getPersistentId() {
         return node.getUUID();
     }
 
@@ -150,7 +133,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
             if (entry == null) {
                 throw new InternalError("version has no frozen node: " + getId());
             }
-            return (InternalFrozenNode) getVersionManager().getItemByInternal(entry.getUUID());
+            return (InternalFrozenNode) getVersionManager().getItem(entry.getUUID());
         } catch (RepositoryException e) {
             throw new IllegalStateException("unable to retrieve frozen node: " + e);
         }

@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateProvider;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
+import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.security.CredentialsCallbackHandler;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PMContext;
@@ -63,8 +64,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.security.AccessControlContext;
-import java.security.AccessController;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -115,6 +114,9 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     // sub file system where the repository stores meta data such as uuid of root node, etc.
     private final FileSystem metaDataStore;
+
+    /** the deletagin observation dispatcher for all workspaces */
+    private final DelegatingObservationDispatcher delegatingDispatcher = new DelegatingObservationDispatcher();
 
     /**
      * map of workspace names and <code>WorkspaceInfo<code>s.
@@ -272,7 +274,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                 nsReg,
                 ntReg);
         pvMgr = new NativePVM(pm, getNodeTypeRegistry());
-        vMgr = new VersionManagerImpl(pvMgr, ntReg, VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
+        vMgr = new VersionManagerImpl(pvMgr, ntReg, delegatingDispatcher, VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
 
         // initialize workspaces
         iter = wspInfos.keySet().iterator();
@@ -348,6 +350,9 @@ public class RepositoryImpl implements Repository, SessionListener,
                     Event.PROPERTY_CHANGED,
                     "/", true, null, null, false);
         }
+
+        // register the observation factory of that workspace
+        delegatingDispatcher.addDispatcher(getObservationManagerFactory(wspName));
     }
 
     RepositoryConfig getConfig() {

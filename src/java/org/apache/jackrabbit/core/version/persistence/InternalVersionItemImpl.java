@@ -75,13 +75,6 @@ abstract class InternalVersionItemImpl implements InternalVersionItem {
     }
 
     /**
-     * Returns the internal persistent id of this item
-     *
-     * @return
-     */
-    protected abstract String getPersistentId();
-
-    /**
      * Returns the external id of this item
      *
      * @return

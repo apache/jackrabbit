@@ -144,4 +144,11 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @return
      */
     public QName[] getVersionLabels();
+
+    /**
+     * Returns the UUID of the version labels node
+     * 
+     * @return
+     */
+    public String getVersionLabelsUUID();
 }
