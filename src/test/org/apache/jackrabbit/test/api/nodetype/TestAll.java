@@ -55,6 +55,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(CanSetPropertyStringTest.class);
         suite.addTestSuite(CanSetPropertyTest.class);
 
+        suite.addTestSuite(CanAddChildNodeCallWithNodeTypeTest.class);
+        suite.addTestSuite(CanAddChildNodeCallWithoutNodeTypeTest.class);
+
         return suite;
     }
 }
