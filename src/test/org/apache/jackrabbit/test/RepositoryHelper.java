@@ -19,11 +19,40 @@ package org.apache.jackrabbit.test;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Utility class to get access to {@link javax.jcr.Session} instances.
  */
 public class RepositoryHelper {
+
+    /**
+     * Repository stub reference.
+     */
+    private RepositoryStub repoStub;
+
+    /**
+     * Overlay configuration.
+     */
+    private Map configuration = new HashMap();
+
+    /**
+     * Creates a repository helper with configuration from
+     * <code>repositoryStubImpl.properties</code> file.
+     */
+    public RepositoryHelper() {
+    }
+
+    /**
+     * Creates a repository helper with additional configuration parameters.
+     *
+     * @param config configuration which overlays the values from the property
+     *   file.
+     */
+    public RepositoryHelper(Map config) {
+        configuration.putAll(config);
+    }
 
     /**
      * Returns the repository instance to test.
@@ -32,8 +61,10 @@ public class RepositoryHelper {
      */
     public Repository getRepository() throws RepositoryException {
         try {
-            RepositoryStub repStub = RepositoryStub.getInstance();
-            return repStub.getRepository();
+            if (repoStub == null) {
+                repoStub = RepositoryStub.getInstance(configuration);
+            }
+            return repoStub.getRepository();
         } catch (RepositoryStubException e) {
             throw new RepositoryException("Failed to get Repository instance.", e);
         }
@@ -58,12 +89,7 @@ public class RepositoryHelper {
      * @throws RepositoryException if login to the repository failed.
      */
     public Session getSuperuserSession(String workspaceName) throws RepositoryException {
-        try {
-            RepositoryStub repStub = RepositoryStub.getInstance();
-            return repStub.getRepository().login(repStub.getSuperuserCredentials(), workspaceName);
-        } catch (RepositoryStubException e) {
-            throw new RepositoryException("Failed to login to Repository.", e);
-        }
+        return getRepository().login(repoStub.getSuperuserCredentials(), workspaceName);
     }
 
     /**
@@ -83,12 +109,7 @@ public class RepositoryHelper {
      * @throws RepositoryException if login to the repository failed.
      */
     public Session getReadWriteSession(String workspaceName) throws RepositoryException {
-        try {
-            RepositoryStub repStub = RepositoryStub.getInstance();
-            return repStub.getRepository().login(repStub.getReadWriteCredentials(), workspaceName);
-        } catch (RepositoryStubException e) {
-            throw new RepositoryException("Failed to login to Repository.", e);
-        }
+        return getRepository().login(repoStub.getReadWriteCredentials(), workspaceName);
     }
 
     /**
@@ -108,12 +129,7 @@ public class RepositoryHelper {
      * @throws RepositoryException if login to the repository failed.
      */
     public Session getReadOnlySession(String workspaceName) throws RepositoryException {
-        try {
-            RepositoryStub repStub = RepositoryStub.getInstance();
-            return repStub.getRepository().login(repStub.getReadOnlyCredentials(), workspaceName);
-        } catch (RepositoryStubException e) {
-            throw new RepositoryException("Failed to login to Repository.", e);
-        }
+        return getRepository().login(repoStub.getReadOnlyCredentials(), workspaceName);
     }
 
     /**
@@ -129,10 +145,8 @@ public class RepositoryHelper {
      * @throws RepositoryException if the configuration file cannot be found.
      */
     public String getProperty(String name) throws RepositoryException {
-        try {
-            return RepositoryStub.getInstance().getProperty(name);
-        } catch (RepositoryStubException e) {
-            throw new RepositoryException("Failed to obtain Repository instance.", e);
-        }
+        // force assignment of repoStub
+        getRepository();
+        return repoStub.getProperty(name);
     }
 }

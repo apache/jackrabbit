@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
+import java.util.Map;
 
 /**
  * The <code>RepositoryStub</code> is the entry point to the JCR Repository
@@ -68,8 +69,6 @@ public abstract class RepositoryStub {
 
     public static final String PROP_WORKSPACE_NAME = "workspacename";
 
-    protected static RepositoryStub instance;
-
     protected final Properties environment;
 
     protected SimpleCredentials superuser;
@@ -107,36 +106,37 @@ public abstract class RepositoryStub {
      * <li>If the system property <code>-Djavax.jcr.tck.properties</code> is
      * not set, then the TCK tries to load the file <code>repositoryStubImpl.properties</code>
      * as a resource from the ClassLoader of this <code>RepositryStub</code> class.</li>
-     * <li>If none of the above is found, a {@link RepositoryStubException} is thrown.
      * </ol>
+     * The properties are then overlayed with the the key / values from
+     * <code>configuration</code> map.
      *
+     * @param configuration a <code>Map</code> of additional configuration entries.
      * @return a <code>RepositoryStub</code> implementation.
      * @throws RepositoryStubException
      */
-    public static synchronized RepositoryStub getInstance() throws RepositoryStubException {
-        if (instance == null) {
-            Properties props = null;
-            String implProp = System.getProperty(STUB_IMPL_SYS_PROPS);
-            if (implProp != null) {
-                File implPropFile = new File(implProp);
-                if (implPropFile.exists()) {
-                    props = new Properties();
-                    try {
-                        props.load(new FileInputStream(implPropFile));
-                    } catch (IOException e) {
-                        throw new RepositoryStubException("Unable to load config file: "
-                                + implProp + " " + e.toString());
-                    }
-                } else {
-                    throw new RepositoryStubException("File does not exist: " + implProp);
+    static synchronized RepositoryStub getInstance(Map configuration)
+        throws RepositoryStubException {
+        Properties props = null;
+        RepositoryStub stub = null;
+        String implProp = System.getProperty(STUB_IMPL_SYS_PROPS);
+        if (implProp != null) {
+            File implPropFile = new File(implProp);
+            if (implPropFile.exists()) {
+                props = new Properties();
+                try {
+                    props.load(new FileInputStream(implPropFile));
+                } catch (IOException e) {
+                    throw new RepositoryStubException("Unable to load config file: "
+                            + implProp + " " + e.toString());
                 }
+            } else {
+                throw new RepositoryStubException("File does not exist: " + implProp);
             }
+        }
 
-            if (props == null) {
-                InputStream is = RepositoryStub.class.getClassLoader().getResourceAsStream(STUB_IMPL_PROPS);
-                if (is == null) {
-                    throw new RepositoryStubException(STUB_IMPL_PROPS + " not found in classpath!");
-                }
+        if (props == null) {
+            InputStream is = RepositoryStub.class.getClassLoader().getResourceAsStream(STUB_IMPL_PROPS);
+            if (is != null) {
                 try {
                     props = new Properties();
                     props.load(is);
@@ -145,30 +145,34 @@ public abstract class RepositoryStub {
                             + STUB_IMPL_PROPS + ": " + e.toString());
                 }
             }
-
-            try {
-                String className = props.getProperty(PROP_STUB_IMPL_CLASS);
-                if (className == null || className.length() == 0) {
-                    throw new RepositoryStubException("Property " + PROP_STUB_IMPL_CLASS + " not defined!");
-                }
-                Class stubClass = Class.forName(className);
-                Constructor constr = stubClass.getConstructor(new Class[]{Properties.class});
-                instance = (RepositoryStub) constr.newInstance(new Object[]{props});
-            } catch (ClassCastException e) {
-                throw new RepositoryStubException(e.toString());
-            } catch (NoSuchMethodException e) {
-                throw new RepositoryStubException(e.toString());
-            } catch (ClassNotFoundException e) {
-                throw new RepositoryStubException(e.toString());
-            } catch (InstantiationException e) {
-                throw new RepositoryStubException(e.toString());
-            } catch (IllegalAccessException e) {
-                throw new RepositoryStubException(e.toString());
-            } catch (InvocationTargetException e) {
-                throw new RepositoryStubException(e.toString());
-            }
         }
-        return instance;
+
+        // overlay with configuration parameter
+        props.putAll(configuration);
+
+        try {
+            String className = props.getProperty(PROP_STUB_IMPL_CLASS);
+            if (className == null || className.length() == 0) {
+                throw new RepositoryStubException("Property " + PROP_STUB_IMPL_CLASS + " not defined!");
+            }
+            Class stubClass = Class.forName(className);
+            Constructor constr = stubClass.getConstructor(new Class[]{Properties.class});
+            stub = (RepositoryStub) constr.newInstance(new Object[]{props});
+        } catch (ClassCastException e) {
+            throw new RepositoryStubException(e.toString());
+        } catch (NoSuchMethodException e) {
+            throw new RepositoryStubException(e.toString());
+        } catch (ClassNotFoundException e) {
+            throw new RepositoryStubException(e.toString());
+        } catch (InstantiationException e) {
+            throw new RepositoryStubException(e.toString());
+        } catch (IllegalAccessException e) {
+            throw new RepositoryStubException(e.toString());
+        } catch (InvocationTargetException e) {
+            throw new RepositoryStubException(e.toString());
+        }
+
+        return stub;
     }
 
     /**
