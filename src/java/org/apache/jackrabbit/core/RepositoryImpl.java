@@ -69,6 +69,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.security.AccessControlContext;
+import java.security.AccessController;
 
 /**
  * A <code>RepositoryImpl</code> ...
