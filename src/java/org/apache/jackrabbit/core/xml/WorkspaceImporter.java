@@ -40,16 +40,18 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -178,7 +180,7 @@ public class WorkspaceImporter implements Importer, Constants {
                 String msg = "an applicable node type could not be determined for "
                         + nodeName;
                 log.debug(msg);
-                throw new ConstraintViolationException (msg);
+                throw new ConstraintViolationException(msg);
             }
         }
         NodeState node = stateMgr.createNew(uuid, nodeTypeName, parent.getUUID());
@@ -709,7 +711,7 @@ public class WorkspaceImporter implements Importer, Constants {
             while (iter.hasNext()) {
                 PropInfo pi = (PropInfo) iter.next();
                 QName propName = pi.getName();
-                InternalValue[] vals = pi.getValues();
+                TextValue[] tva = pi.getValues();
                 int type = pi.getType();
 
                 PropertyState prop = null;
@@ -742,7 +744,7 @@ public class WorkspaceImporter implements Importer, Constants {
                     // find applicable definition
 
                     // multi- or single-valued property?
-                    if (vals.length == 1) {
+                    if (tva.length == 1) {
                         // could be single- or multi-valued (n == 1)
                         try {
                             // try single-valued
@@ -770,29 +772,80 @@ public class WorkspaceImporter implements Importer, Constants {
                 }
 
                 // check multi-valued characteristic
-                if ((vals.length == 0 || vals.length > 1) && !def.isMultiple()) {
+                if ((tva.length == 0 || tva.length > 1) && !def.isMultiple()) {
                     throw new ConstraintViolationException(resolveJCRPath(prop.getId())
                             + " is not multi-valued");
                 }
 
-                // check whether type conversion is required
-                if (def.getRequiredType() != PropertyType.UNDEFINED
-                        && def.getRequiredType() != type) {
-                    // type doesn't match required type,
-                    // type conversion required
-                    for (int i = 0; i < vals.length; i++) {
-                        // convert InternalValue to Value of required type
-                        Value v =
-                                ValueHelper.convert(vals[i].toJCRValue(nsContext),
-                                        def.getRequiredType());
-                        // convert Value to InternalValue using
-                        // current namespace context of xml document
-                        vals[i] = InternalValue.create(v, nsContext);
+                // convert serialized values to InternalValue objects
+                InternalValue[] iva = new InternalValue[tva.length];
+                int targetType = def.getRequiredType();
+                if (targetType == PropertyType.UNDEFINED) {
+                    if (type == PropertyType.UNDEFINED) {
+                        targetType = PropertyType.STRING;
+                    } else {
+                        targetType = type;
                     }
+                }
+                for (int i = 0; i < tva.length; i++) {
+                    TextValue tv = tva[i];
+                    if (targetType == PropertyType.BINARY) {
+                        // base64 encoded BINARY type;
+                        // decode using Reader
+/*
+                        // @todo decode to temp file and pass FileInputStream to InternalValue factory method
+                        File tmpFile = null;
+                        try {
+                            tmpFile = File.createTempFile("bin", null);
+                            FileOutputStream out = new FileOutputStream(tmpFile);
+                            Base64.decode(tv.reader(), out);
+                            out.close();
+                            iva[i] = InternalValue.create(new FileInputStream(tmpFile));
+                        } catch (IOException ioe) {
+                            String msg = "failed to decode binary value";
+                            log.debug(msg, ioe);
+                            throw new RepositoryException(msg, ioe);
+                        } finally {
+                            // the temp file can be deleted because
+                            // the InternalValue instance has spooled
+                            // its contents
+                            if (tmpFile != null) {
+                                tmpFile.delete();
+                            }
+                        }
+*/
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        try {
+                            Base64.decode(tv.reader(), baos);
+                            // no need to close ByteArrayOutputStream
+                            //baos.close();
+                            iva[i] = InternalValue.create(new ByteArrayInputStream(baos.toByteArray()));
+                        } catch (IOException ioe) {
+                            String msg = "failed to decode binary value";
+                            log.debug(msg, ioe);
+                            throw new RepositoryException(msg, ioe);
+                        }
+                    } else {
+                        // retrieve serialized value
+                        String serValue;
+                        try {
+                            serValue = tv.retrieve();
+                        } catch (IOException ioe) {
+                            String msg = "failed to retrieve serialized value";
+                            log.debug(msg, ioe);
+                            throw new RepositoryException(msg, ioe);
+                        }
+
+                        // convert serialized value to InternalValue using
+                        // current namespace context of xml document
+                        iva[i] = InternalValue.create(serValue, targetType,
+                                nsContext);
+                    }
+
                 }
 
                 // set values
-                prop.setValues(vals);
+                prop.setValues(iva);
 
                 // make sure node is valid according to its definition
                 wsp.validate(prop);

@@ -270,6 +270,9 @@ public class ImportHandler extends DefaultHandler {
     }
 
     //--------------------------------------------------------< inner classes >
+    /**
+     * <code>NamespaceContext</code> supports scoped namespace declarations.
+     */
     class NamespaceContext implements NamespaceResolver {
 
         private final NamespaceSupport nsContext;
@@ -347,6 +350,5 @@ public class ImportHandler extends DefaultHandler {
             }
             return prefix;
         }
-
     }
 }

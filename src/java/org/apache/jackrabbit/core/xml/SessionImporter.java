@@ -38,6 +38,8 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeDef;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -225,14 +227,14 @@ public class SessionImporter implements Importer {
         while (iter.hasNext()) {
             PropInfo pi = (PropInfo) iter.next();
             QName propName = pi.getName();
-            InternalValue[] iva = pi.getValues();
+            TextValue[] tva = pi.getValues();
             int type = pi.getType();
 
             // find applicable definition
             EffectiveNodeType ent = node.getEffectiveNodeType();
             PropDef def;
             // multi- or single-valued property?
-            if (iva.length == 1) {
+            if (tva.length == 1) {
                 // could be single- or multi-valued (n == 1)
                 try {
                     // try single-valued
@@ -252,33 +254,66 @@ public class SessionImporter implements Importer {
                 continue;
             }
 
-            // convert InternalValue objects to Value objects using this
-            // session's namespace mappings
-            Value[] va = new Value[iva.length];
-            // check whether type conversion is required
-            if (def.getRequiredType() != PropertyType.UNDEFINED
-                    && def.getRequiredType() != type) {
-                // type doesn't match required type,
-                // type conversion required
-                // FIXME: awkward code
-                for (int i = 0; i < iva.length; i++) {
-                    // convert InternalValue to Value of required type
-                    Value v =
-                            ValueHelper.convert(iva[i].toJCRValue(nsContext),
-                                    def.getRequiredType());
-                    // convert Value to InternalValue using
+            // convert serialized values to Value objects
+            Value[] va = new Value[tva.length];
+            int targetType = def.getRequiredType();
+            if (targetType == PropertyType.UNDEFINED) {
+                if (type == PropertyType.UNDEFINED) {
+                    targetType = PropertyType.STRING;
+                } else {
+                    targetType = type;
+                }
+            }
+            for (int i = 0; i < tva.length; i++) {
+                TextValue tv = tva[i];
+
+                if (targetType == PropertyType.NAME ||
+                        targetType == PropertyType.PATH) {
+                    // NAME and PATH require special treatment because
+                    // they depend on the current namespace context
+                    // of the xml document
+
+                    // retrieve serialized value
+                    String serValue;
+                    try {
+                        serValue = tv.retrieve();
+                    } catch (IOException ioe) {
+                        String msg = "failed to retrieve serialized value";
+                        log.debug(msg, ioe);
+                        throw new RepositoryException(msg, ioe);
+                    }
+
+                    // convert serialized value to InternalValue using
                     // current namespace context of xml document
-                    InternalValue ival = InternalValue.create(v, nsContext);
-                    // convert InternalValue back to Value using this
+                    InternalValue ival =
+                            InternalValue.create(serValue, targetType, nsContext);
+                    // convert InternalValue to Value using this
                     // session's namespace mappings
                     va[i] = ival.toJCRValue(session.getNamespaceResolver());
-                }
-            } else {
-                // no type conversion required:
-                // convert InternalValue to Value using this
-                // session's namespace mappings
-                for (int i = 0; i < iva.length; i++) {
-                    va[i] = iva[i].toJCRValue(session.getNamespaceResolver());
+                } else if (targetType == PropertyType.BINARY) {
+                    // deserialize BINARY type using Reader
+                    try {
+                        Reader reader = tv.reader();
+                        va[i] = ValueHelper.deserialize(reader, targetType, false);
+                    } catch (IOException ioe) {
+                        String msg = "failed to deserialize binary value";
+                        log.debug(msg, ioe);
+                        throw new RepositoryException(msg, ioe);
+                    }
+                } else {
+                    // all other types
+
+                    // retrieve serialized value
+                    String serValue;
+                    try {
+                        serValue = tv.retrieve();
+                    } catch (IOException ioe) {
+                        String msg = "failed to retrieve serialized value";
+                        log.debug(msg, ioe);
+                        throw new RepositoryException(msg, ioe);
+                    }
+
+                    va[i] = ValueHelper.deserialize(serValue, targetType, true);
                 }
             }
 
