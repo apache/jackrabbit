@@ -31,7 +31,7 @@
   <description>
     The Jackrabbit Project has been formed to develop an open source implementation of the Content Repository
     for Java Technology API (JCR), being specified within the Java Community Process as
-    &lt;a href=http://www.jcp.org/en/jsr/detail?id=170&gt;JSR-170&lt;/a&gt;. &lt;a href=http://www.day.com/&gt;Day Software&lt;/a&gt;,
+    &lt;a href="http://www.jcp.org/en/jsr/detail?id=170"&gt;JSR-170&lt;/a&gt;. &lt;a href="http://www.day.com/"&gt;Day Software&lt;/a&gt;,
     the JSR-170 specification lead, has licensed an initial implementation of the JCR reference implementation 
     for use as seed code for this project.  JCR specifies an API for application developers (and application 
     frameworks) to use for interaction with modern content repositories -- content management systems that provide 
