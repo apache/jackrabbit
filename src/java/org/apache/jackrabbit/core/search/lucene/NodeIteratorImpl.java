@@ -45,9 +45,11 @@ class NodeIteratorImpl implements NodeIterator {
     }
 
     public Node nextNode() {
-	if (pos >= uuids.length) throw new NoSuchElementException();
+	if (pos >= uuids.length) {
+	    throw new NoSuchElementException();
+	}
 	try {
-	    return (Node)itemMgr.getItem(new NodeId(uuids[pos++]));
+	    return (Node) itemMgr.getItem(new NodeId(uuids[pos++]));
 	} catch (RepositoryException e) {
 	    log.error("Exception retrieving Node with UUID: "
 		    + uuids[pos] + ": " + e.toString());
@@ -61,7 +63,9 @@ class NodeIteratorImpl implements NodeIterator {
     }
 
     public void skip(long skipNum) {
-	if ((pos + skipNum) > uuids.length) throw new NoSuchElementException();
+	if ((pos + skipNum) > uuids.length) {
+	    throw new NoSuchElementException();
+	}
 	pos += skipNum;
     }
 

@@ -38,7 +38,9 @@ class MatchAllQuery extends Query {
      * @throws NullPointerException if <code>field</code> is null.
      */
     MatchAllQuery(String field) {
-        if (field == null) throw new NullPointerException("field");
+        if (field == null) {
+	    throw new NullPointerException("field");
+	}
         this.field = field.intern();
     }
 

@@ -19,7 +19,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.jackrabbit.core.search.lucene.AbstractIndex;
 
 import java.io.IOException;
 
@@ -43,7 +42,9 @@ public class PersistentIndex extends AbstractIndex {
 
     void mergeIndex(AbstractIndex index) throws IOException {
 	this.getIndexWriter().addIndexes(
-		new IndexReader[] { index.getIndexReader() });
+		new IndexReader[] {
+		    index.getIndexReader()
+		});
     }
 
     Directory getDirectory() throws IOException {

@@ -29,7 +29,7 @@ public class NodeTypeQueryNode extends ExactQueryNode {
      * Creates a new <code>NodeTypeQueryNode</code>.
      * @param parent the parent node for this query node.
      * @param nodeType the name of the node type.
-     */ 
+     */
     public NodeTypeQueryNode(QueryNode parent, String nodeType) {
 	// we only use the jcr primary type as a dummy value
 	// the property name is actually replaced in the query builder

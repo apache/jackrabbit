@@ -67,14 +67,18 @@ public class AndQueryNode extends NAryQueryNode {
 	if (getParent() instanceof NotQueryNode) {
 	    bracket = true;
 	}
-	if (bracket) sb.append("(");
+	if (bracket) {
+	    sb.append("(");
+	}
 	String and = "";
-	for (Iterator it = operands.iterator(); it.hasNext(); ) {
+	for (Iterator it = operands.iterator(); it.hasNext();) {
 	    sb.append(and);
-	    sb.append(((QueryNode)it.next()).toJCRQLString());
+	    sb.append(((QueryNode) it.next()).toJCRQLString());
 	    and = " AND ";
 	}
-	if (bracket) sb.append(")");
+	if (bracket) {
+	    sb.append(")");
+	}
 	return sb.toString();
     }
 

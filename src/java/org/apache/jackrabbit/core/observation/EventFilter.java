@@ -15,9 +15,11 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.MalformedPathException;
 
 import javax.jcr.RepositoryException;
 
@@ -29,8 +31,6 @@ import javax.jcr.RepositoryException;
  * @version $Revision: 1.5 $, $Date: 2004/08/25 16:44:50 $
  */
 class EventFilter {
-
-    private static final Logger log = Logger.getLogger(EventFilter.class);
 
     static final EventFilter BLOCK_ALL = new BlockAllFilter();
 

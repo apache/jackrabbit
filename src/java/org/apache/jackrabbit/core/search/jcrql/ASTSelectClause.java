@@ -35,7 +35,7 @@ public class ASTSelectClause extends SimpleNode {
     }
 
     public String[] getProperties() {
-	return (String[])properties.toArray(new String[properties.size()]);
+	return (String[]) properties.toArray(new String[properties.size()]);
     }
 
     /**

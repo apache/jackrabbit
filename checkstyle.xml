@@ -159,5 +159,9 @@
         <module name="UpperEll"/>
 
     </module>
+    
+    <module name="SuppressionFilter">
+        <property name="file" value="checkstyle-suppressions.xml"/>
+    </module>    
 
 </module>

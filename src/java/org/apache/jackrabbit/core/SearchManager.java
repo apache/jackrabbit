@@ -15,10 +15,14 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.search.lucene.*;
 import org.apache.jackrabbit.core.search.NamespaceMappings;
 import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.search.OrderQueryNode;
+import org.apache.jackrabbit.core.search.lucene.SearchIndex;
+import org.apache.jackrabbit.core.search.lucene.NodeIndexer;
+import org.apache.jackrabbit.core.search.lucene.FieldNames;
+import org.apache.jackrabbit.core.search.lucene.QueryResultImpl;
+import org.apache.jackrabbit.core.search.lucene.LuceneQueryBuilder;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.state.ItemStateProvider;
@@ -37,10 +41,16 @@ import javax.jcr.RepositoryException;
 import javax.jcr.access.Permission;
 import java.io.IOException;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
- * 
+ * Acts as a global entry point to execute queries and index nodes.
+ *
  * @author Marcel Reutegger
  * @version $Revision:  $, $Date:  $
  */
@@ -55,7 +65,7 @@ public class SearchManager implements SynchronousEventListener {
     private final HierarchyManager hmgr;
 
     private final SessionImpl session;
-    
+
     private final NamespaceMappings nsMappings;
 
     public SearchManager(ItemStateProvider stateProvider,
@@ -134,7 +144,7 @@ public class SearchManager implements SynchronousEventListener {
 
 	// return QueryResult
 	return new QueryResultImpl(itemMgr,
-		(String[])uuids.toArray(new String[uuids.size()]),
+		(String[]) uuids.toArray(new String[uuids.size()]),
 		root.getSelectProperties());
     }
 
@@ -148,7 +158,7 @@ public class SearchManager implements SynchronousEventListener {
 
 	while (events.hasNext()) {
 	    try {
-		EventImpl e = (EventImpl)events.nextEvent();
+		EventImpl e = (EventImpl) events.nextEvent();
 		long type = e.getType();
 		if (type == EventType.CHILD_NODE_ADDED) {
 
@@ -160,7 +170,7 @@ public class SearchManager implements SynchronousEventListener {
 		    path = getIndexlessPath(path);
 
 		    ItemId id = new NodeId(e.getChildUUID());
-		    addNode((NodeState)stateProvider.getItemState(id),
+		    addNode((NodeState) stateProvider.getItemState(id),
 			    path.toJCRPath(nsMappings));
 
 		} else if (type == EventType.CHILD_NODE_REMOVED) {
@@ -193,12 +203,12 @@ public class SearchManager implements SynchronousEventListener {
 	    }
 	}
 
-	for (Iterator it = modified.iterator(); it.hasNext(); ) {
+	for (Iterator it = modified.iterator(); it.hasNext();) {
 	    try {
-		Path path = (Path)it.next();
+		Path path = (Path) it.next();
 		ItemId id = hmgr.resolvePath(path);
 		path = getIndexlessPath(path);
-		updateNode((NodeState)stateProvider.getItemState(id),
+		updateNode((NodeState) stateProvider.getItemState(id),
 			path.toJCRPath(nsMappings));
 	    } catch (NoPrefixDeclaredException e) {
 		log.error("error indexing node.", e);

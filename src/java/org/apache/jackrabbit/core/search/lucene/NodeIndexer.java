@@ -15,10 +15,17 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.state.*;
-import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.search.NamespaceMappings;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.Path;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -71,7 +78,7 @@ public class NodeIndexer {
 	    NodeState.PropertyEntry prop = (NodeState.PropertyEntry) it.next();
 	    PropertyId id = new PropertyId(node.getUUID(), prop.getName());
 	    try {
-		PropertyState propState = (PropertyState)stateProvider.getItemState(id);
+		PropertyState propState = (PropertyState) stateProvider.getItemState(id);
 		InternalValue[] values = propState.getValues();
 		for (int i = 0; i < values.length; i++) {
 		    addValue(doc, values[i], propState.getName());
@@ -105,7 +112,7 @@ public class NodeIndexer {
 			false));
 		break;
 	    case PropertyType.DATE:
-                long millis = ((Calendar)internalValue).getTimeInMillis();
+                long millis = ((Calendar) internalValue).getTimeInMillis();
 		doc.add(new Field(fieldName,
 			DateField.timeToString(millis),
 			false,
@@ -113,7 +120,7 @@ public class NodeIndexer {
 			false));
 		break;
 	    case PropertyType.DOUBLE:
-		double doubleVal = ((Double)internalValue).doubleValue();
+		double doubleVal = ((Double) internalValue).doubleValue();
 		doc.add(new Field(fieldName,
 			DoubleField.doubleToString(doubleVal),
 			false,
@@ -121,7 +128,7 @@ public class NodeIndexer {
 			false));
 		break;
 	    case PropertyType.LONG:
-		long longVal = ((Long)internalValue).longValue();
+		long longVal = ((Long) internalValue).longValue();
 		doc.add(new Field(fieldName,
 			LongField.longToString(longVal),
 			false,
@@ -129,7 +136,7 @@ public class NodeIndexer {
 			false));
 		break;
 	    case PropertyType.REFERENCE:
-		String uuid = ((UUID)internalValue).toString();
+		String uuid = ((UUID) internalValue).toString();
 		doc.add(new Field(fieldName,
 			uuid,
 			false,
@@ -137,7 +144,7 @@ public class NodeIndexer {
 			false));
 		break;
 	    case PropertyType.PATH:
-                String path = ((Path)internalValue).toString();
+                String path = ((Path) internalValue).toString();
 		doc.add(new Field(fieldName,
 			path,
 			false,
@@ -159,7 +166,7 @@ public class NodeIndexer {
 			true));
 		break;
 	    case PropertyType.NAME:
-		QName qualiName = (QName)internalValue;
+		QName qualiName = (QName) internalValue;
 		String normValue = internalValue.toString();
 		try {
 		    normValue = mappings.getPrefix(qualiName.getNamespaceURI())

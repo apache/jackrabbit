@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.search.lucene;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.Directory;
-import org.apache.jackrabbit.core.search.lucene.AbstractIndex;
 
 import java.io.IOException;
 

@@ -23,6 +23,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
 
 /**
+ * Implements the <code>javax.jcr.query.QueryResult</code> interface.
  *
  * @author Marcel Reutegger
  * @version $Revision:  $, $Date:  $
@@ -36,9 +37,9 @@ public class QueryResultImpl implements QueryResult {
     private final String[] uuids;
 
     private final String[] selectProps;
-    
+
     public QueryResultImpl(ItemManager itemMgr,
-			   String[] uuids, 
+			   String[] uuids,
 			   String[] selectProps) {
 	this.uuids = uuids;
 	this.itemMgr = itemMgr;
@@ -47,7 +48,7 @@ public class QueryResultImpl implements QueryResult {
 
     public PropertyIterator getProperties() {
 	return new PropertyIteratorImpl(selectProps,
-	    new NodeIteratorImpl(itemMgr, uuids));
+		new NodeIteratorImpl(itemMgr, uuids));
     }
 
     public NodeIterator getNodes() {

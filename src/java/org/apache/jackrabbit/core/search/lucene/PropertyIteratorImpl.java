@@ -17,7 +17,10 @@ package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.PropertyIterator;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
 import java.util.NoSuchElementException;
 
 /**
@@ -53,7 +56,9 @@ class PropertyIteratorImpl implements PropertyIterator {
     }
 
     public Property nextProperty() {
-	if (next == null) throw new NoSuchElementException();
+	if (next == null) {
+	    throw new NoSuchElementException();
+	}
 	try {
 	    Property tmp = next;
 	    fetchNext();

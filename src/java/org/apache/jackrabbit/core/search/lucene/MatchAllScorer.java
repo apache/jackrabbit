@@ -15,18 +15,22 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.*;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.HitCollector;
 
 import java.io.IOException;
 import java.util.BitSet;
 
 /**
  * The MatchAllScorer implements a Scorer that scores / collects all
- * documents in the index that match an optional field / atom-filter.
+ * documents in the index that match a field.
  * In case there are no filters, this MatchAllScores simply collects
  * all documents in the index that are not marked as deleted.
  *
@@ -51,7 +55,7 @@ class MatchAllScorer extends Scorer {
     private BitSet docFilter;
 
     /** Explanation object. the same for all docs */
-    private Explanation MATCH_EXPL;
+    private final Explanation matchExpl;
 
     /**
      * Creates a new MatchAllScorer.
@@ -68,7 +72,7 @@ class MatchAllScorer extends Scorer {
         this.reader = reader;
         this.weight = weight;
         this.field = field;
-        MATCH_EXPL
+        matchExpl
             = new Explanation(Similarity.getDefault().idf(reader.maxDoc(),
                     reader.maxDoc()),
                     "matchAll");
@@ -99,7 +103,7 @@ class MatchAllScorer extends Scorer {
      * @see Scorer#explain
      */
     public Explanation explain(int doc) {
-        return MATCH_EXPL;
+        return matchExpl;
     }
 
     /**

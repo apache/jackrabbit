@@ -18,10 +18,14 @@ package org.apache.jackrabbit.core.observation;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.UnboundedFifoBuffer;
-import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.state.ItemStateProvider;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -42,7 +46,7 @@ import java.util.Set;
  * @author Marcel Reutegger
  * @version $Revision:  $, $Date:  $
  */
-final public class ObservationManagerFactory implements Runnable {
+public final class ObservationManagerFactory implements Runnable {
 
     /**
      * Logger instance for this class
@@ -168,11 +172,11 @@ final public class ObservationManagerFactory implements Runnable {
 	while ((action = (DispatchAction) eventQueue.remove()) != DISPOSE_MARKER) {
 
 	    log.debug("got EventStateCollection");
-	    log.debug("event delivery to " + action.eventConsumers.size() + " consumers started...");
-	    for (Iterator it = action.eventConsumers.iterator(); it.hasNext();) {
+	    log.debug("event delivery to " + action.getEventConsumers().size() + " consumers started...");
+	    for (Iterator it = action.getEventConsumers().iterator(); it.hasNext();) {
 		EventConsumer c = (EventConsumer) it.next();
 		try {
-		    c.consumeEvents(action.eventStates);
+		    c.consumeEvents(action.getEventStates());
 		} catch (Throwable t) {
 		    log.warn("EventConsumer threw exception.", t);
 		    // move on to the next consumer
@@ -194,8 +198,8 @@ final public class ObservationManagerFactory implements Runnable {
 	Set consumers = new HashSet();
 	consumers.addAll(getSynchronousConsumers());
 	consumers.addAll(getAsynchronousConsumers());
-	for (Iterator it = consumers.iterator(); it.hasNext(); ) {
-	    EventConsumer c = (EventConsumer)it.next();
+	for (Iterator it = consumers.iterator(); it.hasNext();) {
+	    EventConsumer c = (EventConsumer) it.next();
 	    c.prepareEvents(events);
 	}
     }
@@ -212,7 +216,7 @@ final public class ObservationManagerFactory implements Runnable {
 	if (log.isDebugEnabled()) {
 	    log.debug("notifying " + synchronous.size() + " synchronous listeners.");
 	}
-	for (Iterator it = synchronous.iterator(); it.hasNext(); ) {
+	for (Iterator it = synchronous.iterator(); it.hasNext();) {
 	    EventConsumer c = (EventConsumer) it.next();
 	    try {
 		c.consumeEvents(events);
@@ -287,7 +291,7 @@ final public class ObservationManagerFactory implements Runnable {
 		NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
 		nodeTypes = new NodeTypeImpl[nodeTypeName.length];
 		for (int i = 0; i < nodeTypes.length; i++) {
-		    nodeTypes[i] = (NodeTypeImpl)ntMgr.getNodeType(nodeTypeName[i]);
+		    nodeTypes[i] = (NodeTypeImpl) ntMgr.getNodeType(nodeTypeName[i]);
 		}
 	    }
 

@@ -99,6 +99,6 @@ public class QueryManagerImpl implements QueryManager {
      * @see QueryManager#getSupportedQueryLanguages()
      */
     public String[] getSupportedQueryLanguages() {
-	return (String[])SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
+	return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
     }
 }

@@ -15,22 +15,31 @@
  */
 package org.apache.jackrabbit.core.search.jcrql;
 
-import org.apache.jackrabbit.core.search.*;
+import org.apache.jackrabbit.core.search.QueryRootNode;
+import org.apache.jackrabbit.core.search.NAryQueryNode;
+import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.search.AndQueryNode;
+import org.apache.jackrabbit.core.search.PathQueryNode;
+import org.apache.jackrabbit.core.search.OrQueryNode;
+import org.apache.jackrabbit.core.search.NotQueryNode;
+import org.apache.jackrabbit.core.search.RelationQueryNode;
+import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.search.TextsearchQueryNode;
+import org.apache.jackrabbit.core.search.OrderQueryNode;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.util.ISO8601;
 import java.util.Date;
 
 /**
- * 
+ * Query builder that translates a JCRQL statement into query tree structure.
+ *
  * @author Marcel Reutegger
  * @version $Revision:  $, $Date:  $
  */
 public class JCRQLQueryBuilder implements JCRQLParserVisitor {
 
     private final ASTStatement stmt;
-
-    private QueryNode currentNode;
 
     private QueryRootNode root;
 
@@ -50,7 +59,7 @@ public class JCRQLQueryBuilder implements JCRQLParserVisitor {
 
     QueryRootNode getRootNode() {
 	if (root == null) {
-	    root = (QueryRootNode)stmt.jjtAccept(this, null);
+	    root = (QueryRootNode) stmt.jjtAccept(this, null);
 	}
 	return root;
     }
@@ -71,7 +80,7 @@ public class JCRQLQueryBuilder implements JCRQLParserVisitor {
     }
 
     public Object visit(ASTSelectClause node, Object data) {
-	QueryRootNode root = (QueryRootNode)data;
+	QueryRootNode root = (QueryRootNode) data;
 	String[] properties = node.getProperties();
 	for (int i = 0; i < properties.length; i++) {
 	    root.addSelectProperty(properties[i]);
@@ -80,7 +89,7 @@ public class JCRQLQueryBuilder implements JCRQLParserVisitor {
     }
 
     public Object visit(ASTFromClause node, Object data) {
-	QueryRootNode root = (QueryRootNode)data;
+	QueryRootNode root = (QueryRootNode) data;
 	// add node type query to parent
 	node.childrenAccept(this, root.getConstraintNode());
 
@@ -88,26 +97,26 @@ public class JCRQLQueryBuilder implements JCRQLParserVisitor {
     }
 
     public Object visit(ASTNodeType node, Object data) {
-        NAryQueryNode parent = (NAryQueryNode)data;
+        NAryQueryNode parent = (NAryQueryNode) data;
 	parent.addOperand(new NodeTypeQueryNode(parent, node.getName()));
 	return parent;
     }
 
     public Object visit(ASTLocationClause node, Object data) {
-	QueryRootNode root = (QueryRootNode)data;
+	QueryRootNode root = (QueryRootNode) data;
 	root.setLocationNode(new PathQueryNode(root, node.getStringLocation(),
 		node.getType()));
 	return root;
     }
 
     public Object visit(ASTWhereClause node, Object data) {
-	QueryRootNode root = (QueryRootNode)data;
+	QueryRootNode root = (QueryRootNode) data;
         // just pass it to the expression
 	return node.childrenAccept(this, root.getConstraintNode());
     }
 
     public Object visit(ASTOrExpr node, Object data) {
-	NAryQueryNode parent = (NAryQueryNode)data;
+	NAryQueryNode parent = (NAryQueryNode) data;
 	OrQueryNode orQuery = new OrQueryNode(parent);
 	// pass to operands
 	node.childrenAccept(this, orQuery);
@@ -117,7 +126,7 @@ public class JCRQLQueryBuilder implements JCRQLParserVisitor {
     }
 
     public Object visit(ASTAndExpr node, Object data) {
-	NAryQueryNode parent = (NAryQueryNode)data;
+	NAryQueryNode parent = (NAryQueryNode) data;
 	AndQueryNode andQuery = new AndQueryNode(parent);
 	// pass to operands
 	node.childrenAccept(this, andQuery);
@@ -127,7 +136,7 @@ public class JCRQLQueryBuilder implements JCRQLParserVisitor {
     }
 
     public Object visit(ASTNotExpr node, Object data) {
-	NAryQueryNode parent = (NAryQueryNode)data;
+	NAryQueryNode parent = (NAryQueryNode) data;
 	NotQueryNode notQuery = new NotQueryNode(parent);
 	// pass to operand
 	node.childrenAccept(this, notQuery);
@@ -137,8 +146,8 @@ public class JCRQLQueryBuilder implements JCRQLParserVisitor {
     }
 
     public Object visit(ASTRelExpr node, Object data) {
-	NAryQueryNode parent = (NAryQueryNode)data;
-	ASTValue value = (ASTValue)node.jjtGetChild(0);
+	NAryQueryNode parent = (NAryQueryNode) data;
+	ASTValue value = (ASTValue) node.jjtGetChild(0);
 	int type = value.getType();
 	RelationQueryNode rel = null;
 
@@ -186,13 +195,13 @@ public class JCRQLQueryBuilder implements JCRQLParserVisitor {
     }
 
     public Object visit(ASTTextsearchClause node, Object data) {
-	QueryRootNode root = (QueryRootNode)data;
+	QueryRootNode root = (QueryRootNode) data;
 	root.setTextsearchNode(new TextsearchQueryNode(root, node.getQuery()));
 	return root;
     }
 
     public Object visit(ASTOrderClause node, Object data) {
-	QueryRootNode root = (QueryRootNode)data;
+	QueryRootNode root = (QueryRootNode) data;
 	root.setOrderNode(
 		new OrderQueryNode(root, node.getProperties(), node.isAscending()));
 	return root;

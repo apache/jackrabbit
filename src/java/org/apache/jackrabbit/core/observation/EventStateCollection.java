@@ -16,9 +16,17 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.core.state.*;
-import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.state.ItemStateProvider;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ItemStateException;
 
 import javax.jcr.RepositoryException;
 import java.util.ArrayList;
@@ -33,7 +41,7 @@ import java.util.List;
  * @author Marcel Reutegger
  * @version $Revision: 1.5 $
  */
-final public class EventStateCollection {
+public final class EventStateCollection {
 
     /**
      * Logger instance for this class
@@ -91,8 +99,8 @@ final public class EventStateCollection {
 	    throws RepositoryException {
 	int status = state.getStatus();
 
-	if (status == ItemState.STATUS_EXISTING_MODIFIED ||
-		status == ItemState.STATUS_NEW) {
+	if (status == ItemState.STATUS_EXISTING_MODIFIED
+		|| status == ItemState.STATUS_NEW) {
 
 	    if (state.isNode()) {
 		NodeState currentNode = (NodeState) state;
@@ -150,7 +158,7 @@ final public class EventStateCollection {
 		if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
 		    NodeId parentId = new NodeId(state.getParentUUID());
 		    try {
-			NodeState parentState = (NodeState)provider.getItemState(parentId);
+			NodeState parentState = (NodeState) provider.getItemState(parentId);
 			Path parentPath = hmgr.getPath(parentId);
 			events.add(EventState.propertyChanged(state.getParentUUID(),
 				parentPath,

@@ -30,13 +30,13 @@ class DispatchAction {
     /**
      * The collection of <code>EventState</code>s
      */
-    final EventStateCollection eventStates;
+    private final EventStateCollection eventStates;
 
     /**
      * <code>EventStates</code> are dispatched to these
      * <code>EventConsumer</code>s.
      */
-    final Collection eventConsumers;
+    private final Collection eventConsumers;
 
     /**
      * Creates a new <code>DispatchAction</code> struct with
@@ -45,5 +45,22 @@ class DispatchAction {
     DispatchAction(EventStateCollection eventStates, Collection eventConsumers) {
 	this.eventStates = eventStates;
 	this.eventConsumers = eventConsumers;
+    }
+
+    /**
+     * Returns a collection of {@link EventState}s to dispatch.
+     * @return a collection of {@link EventState}s to dispatch.
+     */
+    EventStateCollection getEventStates() {
+	return eventStates;
+    }
+
+    /**
+     * Returns a <code>Collection</code> of {@link EventConsumer}s where
+     * the events should be dispatched to.
+     * @return a <code>Collection</code> of {@link EventConsumer}s.
+     */
+    Collection getEventConsumers() {
+	return eventConsumers;
     }
 }

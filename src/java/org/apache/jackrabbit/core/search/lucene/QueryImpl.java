@@ -15,25 +15,37 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.jackrabbit.core.*;
 import org.apache.jackrabbit.core.search.QueryRootNode;
 import org.apache.jackrabbit.core.SearchManager;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.search.QueryParser;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.*;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.ItemExistsException;
+import javax.jcr.PathNotFoundException;
 
 /**
  * @author Marcel Reutegger
  * @version $Revision:  $, $Date:  $
  */
 public class QueryImpl implements Query {
-    
+
     /** jcr:statement */
     private static final QName PROP_STATEMENT =
 	    new QName(NamespaceRegistryImpl.NS_JCR_URI, "statement");
@@ -69,9 +81,9 @@ public class QueryImpl implements Query {
 
 	// parse query according to language
 	// build query tree
-	this.root = QueryParser.parse(statement, language/*, session.getNamespaceResolver()*/);
+	this.root = QueryParser.parse(statement, language);
     }
-    
+
     public QueryImpl(SessionImpl session,
 	      ItemManager itemMgr,
 	      SearchManager searchMgr,
@@ -88,8 +100,12 @@ public class QueryImpl implements Query {
 		query = session.getRootNode().getNode(absPath);
 		// assert query has mix:referenceable
 		query.getUUID();
-		NodeType ntQuery = session.getWorkspace().getNodeTypeManager().getNodeType(NodeTypeRegistry.NT_QUERY.toJCRName(session.getNamespaceResolver()));
-		if (query.getPrimaryNodeType().equals(ntQuery));
+		NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
+		NodeType ntQuery = ntMgr.getNodeType(NodeTypeRegistry.NT_QUERY.toJCRName(
+			session.getNamespaceResolver()));
+		if (!query.getPrimaryNodeType().equals(ntQuery)) {
+		    throw new InvalidQueryException("node is not of type nt:query");
+		}
 	    } else {
 		throw new ItemNotFoundException(absPath);
 	    }
@@ -101,7 +117,7 @@ public class QueryImpl implements Query {
 
 	    // parse query according to language
 	    // build query tree and pass to QueryImpl
-	    QueryRootNode root = QueryParser.parse(statement, language/*, session.getNamespaceResolver()*/);
+	    QueryRootNode root = QueryParser.parse(statement, language);
 	    this.root = root;
 	} catch (NoPrefixDeclaredException e) {
 	    throw new InvalidQueryException(e.getMessage(), e);
@@ -167,7 +183,7 @@ public class QueryImpl implements Query {
 	    }
 	    Node queryNode = session.getRootNode().addNode(p.toJCRPath(resolver),
 		    NodeTypeRegistry.NT_QUERY.toJCRName(resolver));
-	    // set 
+	    // set properties
 	    queryNode.setProperty(PROP_LANGUAGE.toJCRName(resolver), language);
 	    queryNode.setProperty(PROP_STATEMENT.toJCRName(resolver), statement);
 	    // add mixin referenceable

@@ -39,7 +39,9 @@ public class ExactQueryNode extends QueryNode {
      */
     public ExactQueryNode(QueryNode parent, String property, String value) {
 	super(parent);
-	if (parent == null) throw new NullPointerException("parent");
+	if (parent == null) {
+	    throw new NullPointerException("parent");
+	}
 	this.property = property;
 	this.value = value;
     }

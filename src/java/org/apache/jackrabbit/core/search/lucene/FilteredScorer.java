@@ -20,7 +20,6 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.search.lucene.PackageFilter;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -31,7 +30,6 @@ import java.util.BitSet;
  *
  * @version $Revision: 1.1 $, $Date: 2004/01/23 15:55:40 $
  * @author Marcel Reutegger
- * @since gumbear
  */
 class FilteredScorer extends Scorer {
 

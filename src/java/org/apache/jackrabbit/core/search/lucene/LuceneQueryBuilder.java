@@ -22,9 +22,23 @@ import org.apache.lucene.search.RangeQuery;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.jackrabbit.core.*;
-import org.apache.jackrabbit.core.search.*;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.search.QueryNodeVisitor;
+import org.apache.jackrabbit.core.search.QueryRootNode;
+import org.apache.jackrabbit.core.search.NamespaceMappings;
+import org.apache.jackrabbit.core.search.TextsearchQueryNode;
+import org.apache.jackrabbit.core.search.OrQueryNode;
+import org.apache.jackrabbit.core.search.AndQueryNode;
+import org.apache.jackrabbit.core.search.NotQueryNode;
+import org.apache.jackrabbit.core.search.ExactQueryNode;
+import org.apache.jackrabbit.core.search.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.search.RangeQueryNode;
+import org.apache.jackrabbit.core.search.PathQueryNode;
+import org.apache.jackrabbit.core.search.RelationQueryNode;
+import org.apache.jackrabbit.core.search.Constants;
+import org.apache.jackrabbit.core.search.OrderQueryNode;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -46,7 +60,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     private SessionImpl session;
 
     private NamespaceMappings nsMappings;
-    
+
     private Analyzer analyzer;
 
     private List exceptions = new ArrayList();
@@ -73,7 +87,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 	Query q = builder.createLuceneQuery();
 	if (builder.exceptions.size() > 0) {
 	    StringBuffer msg = new StringBuffer();
-	    for (Iterator it = builder.exceptions.iterator(); it.hasNext(); ) {
+	    for (Iterator it = builder.exceptions.iterator(); it.hasNext();) {
 		msg.append(it.next().toString()).append('\n');
 	    }
 	    throw new RepositoryException("Exception parsing query: " + msg.toString());
@@ -82,12 +96,12 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     private Query createLuceneQuery() {
-	return (Query)root.accept(this, null);
+	return (Query) root.accept(this, null);
     }
 
     public Object visit(QueryRootNode node, Object data) {
 	BooleanQuery root = new BooleanQuery();
-	Query constraintQuery = (Query)node.getConstraintNode().accept(this, null);
+	Query constraintQuery = (Query) node.getConstraintNode().accept(this, null);
 	if (constraintQuery != null) {
 	    root.add(constraintQuery, true, false);
 	}
@@ -105,7 +119,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
 	TextsearchQueryNode textsearchNode = node.getTextsearchNode();
 	if (textsearchNode != null) {
-	    Query textsearch = (Query)textsearchNode.accept(this, null);
+	    Query textsearch = (Query) textsearchNode.accept(this, null);
 	    if (textsearch != null) {
 		root.add(textsearch, true, false);
 	    }
@@ -113,7 +127,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
 	Query wrapped = root;
 	if (node.getLocationNode() != null) {
-	    wrapped = (Query)node.getLocationNode().accept(this, root);
+	    wrapped = (Query) node.getLocationNode().accept(this, root);
 	}
 
 	return wrapped;
@@ -123,7 +137,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 	BooleanQuery orQuery = new BooleanQuery();
 	Object[] result = node.acceptOperands(this, null);
 	for (int i = 0; i < result.length; i++) {
-	    Query operand = (Query)result[i];
+	    Query operand = (Query) result[i];
 	    orQuery.add(operand, false, false);
 	}
 	return orQuery;
@@ -136,7 +150,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 	}
 	BooleanQuery andQuery = new BooleanQuery();
 	for (int i = 0; i < result.length; i++) {
-	    Query operand = (Query)result[i];
+	    Query operand = (Query) result[i];
 	    andQuery.add(operand, true, false);
 	}
 	return andQuery;
@@ -146,7 +160,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 	BooleanQuery notQuery = new BooleanQuery();
 	Object[] result = node.acceptOperands(this, null);
 	for (int i = 0; i < result.length; i++) {
-	    Query operand = (Query)result[i];
+	    Query operand = (Query) result[i];
 	    notQuery.add(operand, false, true);
 	}
 	return notQuery;
@@ -233,7 +247,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 	    exceptions.add(e);
 	}
 	PathFilter filter = new PathFilter(path, node.getType());
-	return new PathFilterQuery((Query)data, new PackageFilter(filter));
+	return new PathFilterQuery((Query) data, new PackageFilter(filter));
     }
 
     public Object visit(RelationQueryNode node, Object data) {

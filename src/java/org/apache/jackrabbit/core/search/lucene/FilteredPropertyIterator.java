@@ -17,7 +17,10 @@ package org.apache.jackrabbit.core.search.lucene;
 
 import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.PropertyIterator;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
 import java.util.NoSuchElementException;
 
 /**
@@ -40,19 +43,23 @@ class FilteredPropertyIterator implements PropertyIterator {
     }
 
     public Property nextProperty() {
-	if (propIndex >= props.length) throw new NoSuchElementException();
+	if (propIndex >= props.length) {
+	    throw new NoSuchElementException();
+	}
 	try {
 	    return node.getProperty(props[propIndex++]);
 	} catch (RepositoryException e) {
 	    // FIXME find better error handling
 	    log.error("Exception retrieving property with name: "
-		    + props[propIndex-1]);
+		    + props[propIndex - 1]);
 	    throw new NoSuchElementException();
 	}
     }
 
     public void skip(long skipNum) {
-	if ((propIndex + skipNum) > props.length) throw new NoSuchElementException();
+	if ((propIndex + skipNum) > props.length) {
+	    throw new NoSuchElementException();
+	}
 	propIndex += skipNum;
     }
 

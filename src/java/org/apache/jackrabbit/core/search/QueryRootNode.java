@@ -84,7 +84,7 @@ public class QueryRootNode extends QueryNode {
      * @return an array of select properties.
      */
     public String[] getSelectProperties() {
-	return (String[])selectProperties.toArray(new String[selectProperties.size()]);
+	return (String[]) selectProperties.toArray(new String[selectProperties.size()]);
     }
 
     /**
@@ -148,8 +148,8 @@ public class QueryRootNode extends QueryNode {
 	if (nodeTypes.size() > 0) {
 	    sb.append(" FROM");
 	}
-	for (Iterator it = nodeTypes.iterator(); it.hasNext(); ) {
-	    NodeTypeQueryNode nodeType = (NodeTypeQueryNode)it.next();
+	for (Iterator it = nodeTypes.iterator(); it.hasNext();) {
+	    NodeTypeQueryNode nodeType = (NodeTypeQueryNode) it.next();
 	    sb.append(comma);
 	    sb.append(" ").append(nodeType.getValue());
 	    comma = ",";

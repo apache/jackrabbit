@@ -82,7 +82,7 @@ abstract class AbstractIndex {
 	getIndexReader().delete(idTerm);
     }
 
-    synchronized protected IndexReader getIndexReader() throws IOException {
+    protected synchronized IndexReader getIndexReader() throws IOException {
 	if (indexWriter != null) {
 	    indexWriter.close();
 	    indexWriter = null;
@@ -93,7 +93,7 @@ abstract class AbstractIndex {
 	return indexReader;
     }
 
-    synchronized protected IndexWriter getIndexWriter() throws IOException {
+    protected synchronized IndexWriter getIndexWriter() throws IOException {
 	if (indexReader != null) {
 	    indexReader.close();
 	    indexReader = null;

@@ -67,14 +67,18 @@ public class OrQueryNode extends NAryQueryNode {
 	if (getParent() instanceof AndQueryNode || getParent() instanceof NotQueryNode) {
 	    bracket = true;
 	}
-	if (bracket) sb.append("(");
+	if (bracket) {
+	    sb.append("(");
+	}
 	String or = "";
-	for (Iterator it = operands.iterator(); it.hasNext(); ) {
+	for (Iterator it = operands.iterator(); it.hasNext();) {
 	    sb.append(or);
-	    sb.append(((QueryNode)it.next()).toJCRQLString());
+	    sb.append(((QueryNode) it.next()).toJCRQLString());
 	    or = " OR ";
 	}
-	if (bracket) sb.append(")");
+	if (bracket) {
+	    sb.append(")");
+	}
 	return sb.toString();
     }
 

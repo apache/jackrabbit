@@ -37,7 +37,9 @@ public class NotQueryNode extends NAryQueryNode {
      * @param node the child query node to invert.
      */
     public NotQueryNode(QueryNode parent, QueryNode node) {
-	super(parent, new QueryNode[] { node });
+	super(parent, new QueryNode[] {
+	    node
+	});
     }
 
     /**
@@ -53,7 +55,7 @@ public class NotQueryNode extends NAryQueryNode {
      */
     public String toJCRQLString() {
         if (operands.size() > 0) {
-	    return "NOT " + ((QueryNode)operands.get(0)).toJCRQLString();
+	    return "NOT " + ((QueryNode) operands.get(0)).toJCRQLString();
 	}
 	return "";
     }

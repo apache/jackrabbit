@@ -55,7 +55,9 @@ public class RangeQueryNode extends QueryNode implements Constants {
      */
     public RangeQueryNode(QueryNode parent, long lower, long upper) {
     	super(parent);
-	rangeLong = new long[] { lower, upper };
+	rangeLong = new long[] {
+	    lower, upper
+	};
 	type = TYPE_LONG;
     }
 
@@ -67,7 +69,7 @@ public class RangeQueryNode extends QueryNode implements Constants {
      */
     public RangeQueryNode(QueryNode parent, double lower, double upper) {
 	super(parent);
-	rangeDouble = new double[] { lower, upper };
+	rangeDouble = new double[]{lower, upper};
 	type = TYPE_DOUBLE;
     }
 
@@ -79,7 +81,7 @@ public class RangeQueryNode extends QueryNode implements Constants {
      */
     public RangeQueryNode(QueryNode parent, String lower, String upper) {
 	super(parent);
-	rangeString = new String[] { lower, upper };
+	rangeString = new String[]{lower, upper};
 	type = TYPE_STRING;
     }
 
@@ -91,7 +93,7 @@ public class RangeQueryNode extends QueryNode implements Constants {
      */
     public RangeQueryNode(QueryNode parent, Date lower, Date upper) {
 	super(parent);
-	rangeDate = new Date[] { lower, upper };
+	rangeDate = new Date[]{lower, upper};
 	type = TYPE_DATE;
     }
 

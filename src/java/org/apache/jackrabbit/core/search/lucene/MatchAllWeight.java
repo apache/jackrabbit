@@ -15,8 +15,13 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.*;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.Similarity;
 
 import java.io.IOException;
 

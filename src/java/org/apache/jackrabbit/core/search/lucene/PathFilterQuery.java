@@ -15,10 +15,12 @@
  */
 package org.apache.jackrabbit.core.search.lucene;
 
-import org.apache.lucene.search.*;
 import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.search.lucene.PackageFilter;
-import org.apache.jackrabbit.core.search.lucene.FilteredScorer;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.Scorer;
 
 import java.io.IOException;
 
@@ -84,8 +86,8 @@ class PathFilterQuery extends Query {
      * Returns a clone of this query.
      */
     public Object clone() {
-	PathFilterQuery clone = (PathFilterQuery)super.clone();
-	clone.delegatee = (Query)this.delegatee.clone();
+	PathFilterQuery clone = (PathFilterQuery) super.clone();
+	clone.delegatee = (Query) this.delegatee.clone();
 	return clone;
     }
 

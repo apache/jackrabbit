@@ -27,7 +27,12 @@ import javax.jcr.access.Permission;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventType;
-import java.util.*;
+import java.util.Map;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * The <code>EventConsumer</code> class combines the {@link
@@ -134,7 +139,7 @@ class EventConsumer {
 	Iterator it = events.iterator();
 	Set denied = null;
 	while (it.hasNext()) {
-	    EventState state = (EventState)it.next();
+	    EventState state = (EventState) it.next();
 	    if (state.getType() == EventType.CHILD_NODE_REMOVED
 		    || state.getType() == EventType.PROPERTY_REMOVED) {
 
@@ -177,10 +182,10 @@ class EventConsumer {
      *               to dispatch.
      */
     void consumeEvents(EventStateCollection events) throws RepositoryException {
-	Set denied = (Set)accessDenied.remove(events);
+	Set denied = (Set) accessDenied.remove(events);
 	// check permissions
-	for (Iterator it = events.iterator(); it.hasNext(); ) {
-	    EventState state = (EventState)it.next();
+	for (Iterator it = events.iterator(); it.hasNext();) {
+	    EventState state = (EventState) it.next();
 	    if (state.getType() == EventType.CHILD_NODE_ADDED
 		    || state.getType() == EventType.PROPERTY_ADDED
 		    || state.getType() == EventType.PROPERTY_CHANGED) {

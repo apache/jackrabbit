@@ -54,7 +54,9 @@ public class PathQueryNode extends QueryNode {
      */
     public PathQueryNode(QueryNode parent, String path, int type) {
 	super(parent);
-	if (type < TYPE_EXACT || type > TYPE_DESCENDANT) throw new IllegalArgumentException(String.valueOf(type));
+	if (type < TYPE_EXACT || type > TYPE_DESCENDANT) {
+	    throw new IllegalArgumentException(String.valueOf(type));
+	}
 	this.path = path;
 	this.type = type;
 	this.indexedName = (path.indexOf('[') > -1);

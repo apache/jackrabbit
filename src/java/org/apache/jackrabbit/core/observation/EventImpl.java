@@ -62,13 +62,10 @@ public final class EventImpl implements Event {
      *
      * @param session    the session of the registerd <code>EventListener</code>
      *                   where this <code>Event</code> will be delivered to.
-     * @param itemMgr    the <code>ItemManager</code> of the above
-     *                   <code>Session</code>.
      * @param eventState the underlying <code>EventState</code>.
      */
-    EventImpl(SessionImpl session, /*ItemManager itemMgr, */ EventState eventState) {
+    EventImpl(SessionImpl session, EventState eventState) {
 	this.session = session;
-	//this.itemMgr = itemMgr;
 	this.eventState = eventState;
     }
 
@@ -84,7 +81,7 @@ public final class EventImpl implements Event {
      */
     public String getNodePath() throws RepositoryException {
 	try {
-	    return eventState.getParentPath().toJCRPath(session.getNamespaceResolver()); //itemMgr.getItem(new NodeId(eventState.getParentUUID())).getPath();
+	    return eventState.getParentPath().toJCRPath(session.getNamespaceResolver());
 	} catch (NoPrefixDeclaredException e) {
 	    String msg = "internal error: encountered unregistered namespace in path";
 	    log.error(msg, e);

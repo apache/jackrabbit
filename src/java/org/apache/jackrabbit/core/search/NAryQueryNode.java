@@ -70,7 +70,7 @@ public abstract class NAryQueryNode extends QueryNode {
     public Object[] acceptOperands(QueryNodeVisitor visitor, Object data) {
 	Object[] result = new Object[operands.size()];
 	for (int i = 0; i < operands.size(); i++) {
-	    result[i] = ((QueryNode)operands.get(i)).accept(visitor, data);
+	    result[i] = ((QueryNode) operands.get(i)).accept(visitor, data);
 	}
 	return result;
     }

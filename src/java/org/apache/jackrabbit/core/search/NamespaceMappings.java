@@ -15,15 +15,24 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import org.apache.jackrabbit.core.*;
 import org.apache.log4j.Logger;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 
 import javax.jcr.NamespaceException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Iterator;
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.File;
 
 /**
  * The class <code>NamespaceMappings</code> implements a {@link
@@ -34,7 +43,7 @@ import java.io.*;
  * Whenever a yet unknown namespace uri to prefix mapping is requested, a new
  * prefix is created on the fly and associated with the namespace. Known
  * namespace mappings are stored in a properties file.
- * 
+ *
  * @author Marcel Reutegger
  * @version $Revision:  $, $Date:  $
  */
@@ -96,7 +105,7 @@ public class NamespaceMappings implements NamespaceResolver {
      *                            mapping could not be stored.
      */
     public synchronized String getPrefix(String uri) throws NamespaceException {
-	String prefix = (String)uriToPrefix.get(uri);
+	String prefix = (String) uriToPrefix.get(uri);
 	if (prefix == null) {
 	    // make sure prefix is not taken
 	    while (prefixToURI.get(String.valueOf(prefixCount)) != null) {
