@@ -537,7 +537,7 @@ class NodeTypeDefStore {
                     Element constraintsElem = new Element(VALUECONSTRAINTS_ELEMENT);
                     elem.addContent(constraintsElem);
                     for (int j = 0; j < vca.length; j++) {
-                        Element constraintElem = new Element(VALUECONSTRAINTS_ELEMENT);
+                        Element constraintElem = new Element(VALUECONSTRAINT_ELEMENT);
                         constraintsElem.addContent(constraintElem);
                         constraintElem.setText(vca[j].getDefinition());
                     }
