@@ -154,10 +154,11 @@ public class SerializationTest extends AbstractJCRTest {
     public void testLockException() throws RepositoryException, IOException {
         Repository repository = session.getRepository();
         exportRepository(SKIPBINARY, RECURSE);
-        if (repository.getDescriptor("OPTION_LOCKING_SUPPORTED") != null) {
+        if (repository.getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) != null) {
             //A LockException is thrown if a lock prevents the addition of the subtree.
-            Node lNode = testRootNode.addNode("lNode");
-            lNode.addMixin("mix:lockable");
+            Node lNode = testRootNode.addNode(nodeName1);
+            lNode.addMixin(mixLockable);
+            testRootNode.save();
             Lock lock = lNode.lock(true, true);
             session.removeLockToken(lock.getLockToken());   //remove the token, so the lock is for me, too
             FileInputStream in = new FileInputStream(file);

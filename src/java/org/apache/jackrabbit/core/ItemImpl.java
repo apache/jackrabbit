@@ -1094,6 +1094,11 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             throw new ConstraintViolationException(msg);
         }
 
+        // check lock status
+        if (!noChecks) {
+            parentNode.checkLock();
+        }
+
         // delegate the removal of the child item to the parent node
         if (isNode()) {
             parentNode.removeChildNode(thisName.getName(), thisName.getIndex());

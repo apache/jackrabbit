@@ -36,7 +36,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("javax.jcr.lock tests");
 
-        // ADD TEST CLASSES HERE:
+        suite.addTestSuite(LockTest.class);
 
         return suite;
     }

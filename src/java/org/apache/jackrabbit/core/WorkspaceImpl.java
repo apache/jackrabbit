@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -112,6 +113,11 @@ public class WorkspaceImpl implements Workspace, Constants {
      * the session that was used to acquire this <code>Workspace</code>
      */
     protected final SessionImpl session;
+
+    /**
+     * The <code>LockManager</code> for this <code>Workspace</code>
+     */
+    protected LockManager lockMgr;
 
     /**
      * Package private constructor.
@@ -279,7 +285,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      */
     protected void checkRemoveNode(Path nodePath)
             throws ConstraintViolationException, AccessDeniedException,
-            PathNotFoundException, RepositoryException {
+            PathNotFoundException, LockException, RepositoryException {
 
         AccessManager accessMgr = session.getAccessManager();
 
@@ -577,7 +583,8 @@ public class WorkspaceImpl implements Workspace, Constants {
         // make sure destination parent node is checked-out
         verifyCheckedOut(destParentPath);
 
-        // @todo check locked-status
+        // check lock status
+        getLockManager().checkLock(destParentPath, session);
 
         // 2. check access rights & node type constraints
 
@@ -623,6 +630,24 @@ public class WorkspaceImpl implements Workspace, Constants {
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
+    }
+
+    /**
+     * Return the lock manager for this workspace. If not already done, creates
+     * a new instance.
+     *
+     * @return lock manager for this workspace
+     * @throws RepositoryException if an error occurs
+     */
+    public synchronized LockManager getLockManager() throws RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        if (lockMgr == null) {
+            lockMgr = rep.getLockManager(wspConfig.getName());
+        }
+        return lockMgr;
     }
 
     //------------------------------------------------------------< Workspace >
@@ -804,7 +829,8 @@ public class WorkspaceImpl implements Workspace, Constants {
         verifyCheckedOut(srcParentPath);
         verifyCheckedOut(destParentPath);
 
-        // @todo check locked-status
+        // check locked-status
+        getLockManager().checkLock(destParentPath, session);
 
         // 2. check node type constraints & access rights
 

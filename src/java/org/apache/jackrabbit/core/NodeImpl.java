@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -665,6 +666,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        parentNode.checkLock();
+
         // delegate the creation of the child node to the parent node
         return parentNode.internalAddChildNode(nodeName, nodeType, uuid);
     }
@@ -914,12 +918,18 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         // check protected flag
         if (definition.isProtected()) {
             String msg = safeGetJCRPath() + ": cannot add a mixin node type to a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
@@ -1023,6 +1033,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         // check if mixin is assigned
         if (!((NodeState) state).getMixinTypeNames().contains(mixinName)) {
@@ -1420,6 +1433,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         NodeTypeImpl nt = (nodeTypeName == null) ?
                 null : session.getNodeTypeManager().getNodeType(nodeTypeName);
         return internalAddChildNode(nodeName, nt, uuid);
@@ -1441,6 +1457,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyImpl setProperty(QName name, Value[] values)
             throws ValueFormatException, VersionException, LockException,
             RepositoryException {
+
         int type;
         if (values == null || values.length == 0
                 || values[0] == null) {
@@ -1477,6 +1494,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new VersionException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
@@ -1518,6 +1538,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new VersionException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
 
@@ -1700,6 +1723,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ConstraintViolationException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         ArrayList list = new ArrayList(((NodeState) state).getChildNodeEntries());
         int srcInd = -1, destInd = -1;
         for (int i = 0; i < list.size(); i++) {
@@ -1789,6 +1815,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
         try {
@@ -1833,6 +1862,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
         try {
@@ -1863,6 +1895,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new VersionException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         /**
          * if the target property is not of type STRING then a
@@ -1899,6 +1934,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
 
         BitSet status = new BitSet();
@@ -1932,6 +1970,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.BINARY, false, status);
         try {
@@ -1962,6 +2003,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new VersionException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.BOOLEAN, false, status);
@@ -1994,6 +2038,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.DOUBLE, false, status);
         try {
@@ -2024,6 +2071,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new VersionException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.LONG, false, status);
@@ -2056,6 +2106,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.DATE, false, status);
         try {
@@ -2086,6 +2139,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new VersionException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.REFERENCE, false, status);
@@ -2616,6 +2672,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         Version v = session.getVersionManager().checkin(this);
         Property prop = internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(false));
         prop.save();
@@ -2645,6 +2704,9 @@ public class NodeImpl extends ItemImpl implements Node {
             return;
         }
 
+        // check lock status
+        checkLock();
+
         Property prop = internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));
         prop.save();
         prop = internalSetProperty(JCR_PREDECESSORS,
@@ -2669,6 +2731,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         // @todo FIXME need to get session with same credentials as current
         SessionImpl srcSession = rep.getSystemSession(srcWorkspaceName);
@@ -2721,6 +2786,9 @@ public class NodeImpl extends ItemImpl implements Node {
         if (srcWorkspace.equals(session.getWorkspace().getName())) {
             return;
         }
+
+        // check lock status
+        checkLock();
 
         // @todo FIXME need to get session with same credentials as current
         SessionImpl srcSession = rep.getSystemSession(srcWorkspace);
@@ -2846,6 +2914,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new InvalidItemStateException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         GenericVersionSelector gvs = new GenericVersionSelector();
         gvs.setName(versionName);
         internalRestore(getVersionHistory().getVersion(versionName), gvs, removeExisting);
@@ -2868,6 +2939,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         // check if 'own' version
         // TODO: change if Version.getContainingVersionHistory() is introduced
@@ -2896,6 +2970,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new InvalidItemStateException(msg);
         }
 
+        // check lock status
+        checkLock();
+
         // if node exists, do a 'normal' restore
         if (hasNode(relPath)) {
             getNode(relPath).restore(version, removeExisting);
@@ -2923,6 +3000,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
+
+        // check lock status
+        checkLock();
 
         Version v = getVersionHistory().getVersionByLabel(versionLabel);
         if (v == null) {
@@ -3232,7 +3312,11 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     private void internalUpdate(NodeImpl srcNode, boolean removeExisting, boolean replaceExisting)
-            throws RepositoryException {
+            throws LockException, RepositoryException {
+
+        // check lock status
+        checkLock();
+
         /*
          * The "state" of the node in this context means the set of properties and
          * child nodes it has. In other words, when a node is updated, its set of
@@ -3293,6 +3377,9 @@ public class NodeImpl extends ItemImpl implements Node {
                             log.debug(msg);
                             throw new ConstraintViolationException(msg, re);
                         }
+
+                        // check lock status of current parent
+                        ((NodeImpl) dstNode.getParent()).checkLock();
 
                         // add target to new parent and remove from old one
                         createChildNodeLink(child.getQName(), uuid);
@@ -3550,15 +3637,30 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check for pending changes
         if (hasPendingChanges()) {
-            String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
+            String msg = "Unable to lock node. Node has pending changes: " + safeGetJCRPath();
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
         checkLockable();
 
-        // @todo implement locking support
-        throw new UnsupportedRepositoryOperationException();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        Lock lock = lockMgr.lock(this, isDeep, isSessionScoped);
+
+        try {
+            internalSetProperty(JCR_LOCKOWNER,
+                    InternalValue.create(session.getUserId()));
+            internalSetProperty(JCR_LOCKISDEEP,
+                    InternalValue.create(isDeep));
+            save();
+
+        } catch (RepositoryException e) {
+
+            // An error occurred, so remove lock
+            lockMgr.unlock(this);
+            throw e;
+        }
+        return lock;
     }
 
     /**
@@ -3572,8 +3674,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         checkLockable();
 
-        // @todo implement locking support
-        throw new UnsupportedRepositoryOperationException();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        return lockMgr.getLock(this);
     }
 
     /**
@@ -3588,15 +3690,19 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check for pending changes
         if (hasPendingChanges()) {
-            String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
+            String msg = "Unable to unlock node. Node has pending changes: " + safeGetJCRPath();
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
 
         checkLockable();
 
-        // @todo implement locking support
-        throw new UnsupportedRepositoryOperationException();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        lockMgr.unlock(this);
+
+        removeChildProperty(JCR_LOCKOWNER);
+        removeChildProperty(JCR_LOCKISDEEP);
+        save();
     }
 
     /**
@@ -3606,8 +3712,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // @todo implement locking support
-        return false;
+        checkLockable();
+
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        return lockMgr.holdsLock(this);
     }
 
     /**
@@ -3617,8 +3725,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // @todo implement locking support
-        return false;
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        return lockMgr.isLocked(this);
     }
 
     /**
@@ -3635,5 +3743,16 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
         }
+    }
+
+    /**
+     * Check whether this node is locked by somebody else.
+     *
+     * @throws LockException       if this node is locked by somebody else
+     * @throws RepositoryException if some other error occurs
+     */
+    protected void checkLock() throws LockException, RepositoryException {
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        lockMgr.checkLock(this);
     }
 }

@@ -39,6 +39,8 @@ import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.version.persistence.NativePVM;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Credentials;
@@ -85,6 +87,11 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     private static final String PROPERTIES_RESOURCE = "rep.properties";
     private final Properties repProps;
+
+    /**
+     * Name of the lock file, relative to the workspace home directory
+     */
+    private static final String LOCKS_FILE = "locks";
 
     // names of well-known repository properties
     public static final String STATS_NODE_COUNT_PROPERTY = "jcr.repository.stats.nodes.count";
@@ -469,6 +476,28 @@ public class RepositoryImpl implements Repository, SessionListener,
         return wspInfo.getSearchManager();
     }
 
+    /**
+     * Returns the {@link LockManager} for the workspace with name
+     * <code>workspaceName</code>
+     * @param workspaceName workspace name
+     * @return <code>LockManager</code> for the workspace
+     * @throws NoSuchWorkspaceException if such a workspace does not exist
+     * @throws RepositoryException if some other error occurs
+     */
+    LockManager getLockManager(String workspaceName) throws
+            NoSuchWorkspaceException, RepositoryException {
+
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
+
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
+            throw new NoSuchWorkspaceException(workspaceName);
+        }
+        return wspInfo.getLockManager();
+    }
+
     SystemSession getSystemSession(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         // check state
@@ -830,6 +859,11 @@ public class RepositoryImpl implements Repository, SessionListener,
         private SearchManager searchMgr;
 
         /**
+         * Lock manager
+         */
+        private LockManagerImpl lockMgr;
+
+        /**
          * Creates a new <code>WorkspaceInfo</code> based on the given
          * <code>config</code>.
          *
@@ -957,6 +991,20 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         /**
+         * Returns the lock manager for this workspace
+         *
+         * @return the lock manager for this workspace
+         * @throws RepositoryException if the lock manager could not be created
+         */
+        synchronized LockManager getLockManager() throws RepositoryException {
+            if (lockMgr == null) {
+                lockMgr = new LockManagerImpl(getSystemSession(),
+                        new File(config.getHomeDir(), LOCKS_FILE));
+            }
+            return lockMgr;
+        }
+
+        /**
          * Disposes all objects this <code>WorkspaceInfo</code> is holding.
          */
         void dispose() {
@@ -993,6 +1041,10 @@ public class RepositoryImpl implements Repository, SessionListener,
                     log.error("error while closing persistence manager of workspace " + config.getName(), e);
                 }
                 persistMgr = null;
+            }
+
+            if (lockMgr != null) {
+                lockMgr.close();
             }
 
             // close workspace file system

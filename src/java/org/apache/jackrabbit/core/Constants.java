@@ -84,6 +84,12 @@ public interface Constants {
     /** jcr:mergeFailed */
     public static final QName JCR_MERGEFAILED = new QName(NS_JCR_URI, "mergeFailed");
 
+    /** jcr:lockOwner */
+    public static final QName JCR_LOCKOWNER = new QName(NS_JCR_URI, "lockOwner");
+
+    /** jcr:lockIsDeep */
+    public static final QName JCR_LOCKISDEEP = new QName(NS_JCR_URI, "lockIsDeep");
+
     /**
      * root path for version storage
      */

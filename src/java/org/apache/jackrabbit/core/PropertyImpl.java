@@ -539,6 +539,9 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
         }
 
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
+
         // check protected flag
         if (definition.isProtected()) {
             throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
@@ -596,6 +599,9 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
         }
 
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
+
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
@@ -637,6 +643,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (definition.isMultiple()) {
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
         }
+
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -691,6 +700,9 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
         }
 
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
+
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
@@ -736,6 +748,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (!definition.isMultiple()) {
             throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
         }
+
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -790,6 +805,9 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
         }
 
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
+
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
@@ -831,6 +849,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (definition.isMultiple()) {
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued");
         }
+
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -886,6 +907,9 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
         }
 
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
+
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
@@ -929,6 +953,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (definition.isMultiple()) {
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
         }
+
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -975,6 +1002,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (!definition.isMultiple()) {
             throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
         }
+
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
 
         int reqType = definition.getRequiredType();
 

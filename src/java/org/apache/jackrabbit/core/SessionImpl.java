@@ -73,9 +73,11 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.security.AccessControlException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -164,6 +166,11 @@ public class SessionImpl implements Session, Constants {
      * Listeners (weak references)
      */
     protected final Map listeners = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+
+    /**
+     * Lock tokens
+     */
+    protected final List lockTokens = new ArrayList();
 
     /**
      * Protected constructor.
@@ -310,7 +317,7 @@ public class SessionImpl implements Session, Constants {
      *
      * @return the <code>ItemManager</code>
      */
-    protected ItemManager getItemManager() {
+    public ItemManager getItemManager() {
         return itemMgr;
     }
 
@@ -845,6 +852,9 @@ public class SessionImpl implements Session, Constants {
             throw new ConstraintViolationException(msg);
         }
 
+        // check lock status
+        destParentNode.checkLock();
+
         // do move operation
 
         String targetUUID = ((NodeState) targetNode.getItemState()).getUUID();
@@ -898,6 +908,9 @@ public class SessionImpl implements Session, Constants {
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
+
+        // check lock status
+        parent.checkLock();
 
         SessionImporter importer = new SessionImporter(parent, this, Importer.IMPORT_UUID_CREATE_NEW);
         return new ImportHandler(importer, getNamespaceResolver(), rep.getNamespaceRegistry());
@@ -1108,23 +1121,62 @@ public class SessionImpl implements Session, Constants {
      * {@inheritDoc}
      */
     public void addLockToken(String lt) {
-        // @todo implement locking support
-        throw new UnsupportedOperationException("Locking not implemented yet.");
+        addLockToken(lt, true);
+    }
+
+    /**
+     * Internal implementation of {@link #addLockToken(String)}. Additionally
+     * takes a parameter indicating whether the lock manager needs to be
+     * informed.
+     */
+    public void addLockToken(String lt, boolean notify) {
+        synchronized (lockTokens) {
+            lockTokens.add(lt);
+
+            if (notify) {
+                try {
+                    wsp.getLockManager().lockTokenAdded(this, lt);
+                } catch (RepositoryException e) {
+                    log.error("Lock manager not available.", e);
+                }
+            }
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getLockTokens() {
-        // @todo implement locking support
-        return new String[0];
+        synchronized (lockTokens) {
+            String[] result = new String[lockTokens.size()];
+            lockTokens.toArray(result);
+            return result;
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public void removeLockToken(String lt) {
-        // @todo implement locking support
-        throw new UnsupportedOperationException("Locking not implemented yet.");
+        removeLockToken(lt, true);
+    }
+
+    /**
+     * Internal implementation of {@link #removeLockToken(String)}. Additionally
+     * takes a parameter indicating whether the lock manager needs to be
+     * informed.
+     */
+    public void removeLockToken(String lt, boolean notify) {
+        synchronized (lockTokens) {
+            lockTokens.remove(lt);
+
+            if (notify) {
+                try {
+                    wsp.getLockManager().lockTokenRemoved(this, lt);
+                } catch (RepositoryException e) {
+                    log.error("Lock manager not available.", e);
+                }
+            }
+        }
     }
 }
