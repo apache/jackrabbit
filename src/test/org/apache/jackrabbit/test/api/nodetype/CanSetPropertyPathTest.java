@@ -130,21 +130,19 @@ public class CanSetPropertyPathTest extends AbstractJCRTest {
                 nodeType.canSetProperty(propDef.getName(), booleanValue));
 
         Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
-        assertFalse("canSetProperty(String propertyName, Value value) must return " +
-                "false if the property is of type Path and value is a NameValue",
+        assertTrue("canSetProperty(String propertyName, Value value) must return " +
+                "true if the property is of type Path and value is a NameValue",
                 nodeType.canSetProperty(propDef.getName(), pathValue));
 
-        Value pathPathValue = PathValue.valueOf("abc");
+        Value relPathValue = PathValue.valueOf("abc");
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
-                "true if the property is of type Path and value is a PathValue " +
-                "if Path is relative, is one element long and has no index",
-                nodeType.canSetProperty(propDef.getName(), pathPathValue));
+                "true if the property is of type Path and value is a PathValue",
+                nodeType.canSetProperty(propDef.getName(), relPathValue));
 
-        Value noPathPathValue = PathValue.valueOf("/abc");
-        assertFalse("canSetProperty(String propertyName, Value value) must return " +
-                "false if the property is of type Path and value is a PathValue " +
-                "if Path is not relative, is more than one element long or has an index",
-                nodeType.canSetProperty(propDef.getName(), noPathPathValue));
+        Value absPathValue = PathValue.valueOf("/abc");
+        assertTrue("canSetProperty(String propertyName, Value value) must return " +
+                "true if the property is of type Path and value is a PathValue",
+                nodeType.canSetProperty(propDef.getName(), absPathValue));
     }
 
     /**
@@ -215,8 +213,8 @@ public class CanSetPropertyPathTest extends AbstractJCRTest {
 
         Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
         Value booleanValues[] = {booleanValue};
-        assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
-                "true if the property is of type Path and values are of type BooleanValue",
+        assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
+                "false if the property is of type Path and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
         Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
@@ -226,8 +224,8 @@ public class CanSetPropertyPathTest extends AbstractJCRTest {
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
         Value pathValues[] = {pathValue, pathValue};
-        assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
-                "false if the property is of type Path and values are of type NameValue",
+        assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
+                "true if the property is of type Path and values are of type PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValues));
     }
 
