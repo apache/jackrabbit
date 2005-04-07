@@ -16,17 +16,14 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
+import java.util.Enumeration;
 import java.util.Properties;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.NamespaceResolver;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 
 /**
  * A simple namespace resolver implementation, that uses the additional
@@ -41,20 +38,18 @@ public class AdditionalNamespaceResolver implements NamespaceResolver {
     private final Properties uriToPrefix = new Properties();
 
     /**
-     * Creates a namespace resolver using the namespaces declared
-     * in the given XML element.
+     * Creates a namespace resolver using the namespaces defined in
+     * the given prefix-to-URI property set.
      *
-     * @param element XML element
+     * @param namespaces namespace properties
      */
-    public AdditionalNamespaceResolver(Element element) {
-        NamedNodeMap attributes = element.getAttributes();
-        for (int i = 0; i < attributes.getLength(); i++) {
-            Attr attribute = (Attr) attributes.item(i);
-            if (Constants.NS_XMLNS_PREFIX.equals(attribute.getPrefix())) {
-                addNamespace(attribute.getLocalName(), attribute.getValue());
-            }
+    public AdditionalNamespaceResolver(Properties namespaces) {
+        Enumeration prefixes = namespaces.propertyNames();
+        while (prefixes.hasMoreElements()) {
+            String prefix = (String) prefixes.nextElement();
+            addNamespace(prefix, namespaces.getProperty(prefix));
         }
-        addNamespace(Constants.NS_EMPTY_PREFIX, Constants.NS_DEFAULT_URI);
+        addNamespace("", "");
     }
 
     /**
