@@ -18,19 +18,22 @@ package org.apache.jackrabbit.core.config;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
+import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
 /**
@@ -292,25 +295,22 @@ public class RepositoryConfig {
                     + name + ".");
         }
 
-        // Create the workspace.xml file from the configuration template.
+        // Create the workspace.xml file using the configuration template.
         try {
-            Element element = (Element) template.clone();
-            element.setAttribute("name", name);
-            Document document = new Document(element);
-            XMLOutputter outputter =
-                new XMLOutputter(Format.getPrettyFormat());
+            template.setAttribute("name", name);
+            File xml = new File(directory, WORKSPACE_XML);
 
-            FileOutputStream fos =
-                new FileOutputStream(new File(directory, WORKSPACE_XML));
-            try {
-                outputter.output(document, fos);
-            } finally {
-                try { fos.close(); } catch (Exception e) { }
-            }
-        } catch (IOException e) {
+            TransformerFactory factory = TransformerFactory.newInstance();
+            Transformer transformer = factory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.transform(
+                    new DOMSource(template), new StreamResult(xml));
+        } catch (TransformerConfigurationException e) {
             throw new ConfigurationException(
-                    "Failed to create a configuration file for workspace "
-                    + name + ".", e);
+                    "Cannot create a workspace configuration writer", e);
+        } catch (TransformerException e) {
+            throw new ConfigurationException(
+                    "Cannot create a workspace configuration file", e);
         }
 
         // Load the created workspace configuration.
