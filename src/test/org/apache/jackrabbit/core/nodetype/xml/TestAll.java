@@ -20,8 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.Arrays;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -52,11 +51,8 @@ public class TestAll extends TestCase {
     private static final String TEST_NODETYPES =
         "org/apache/jackrabbit/core/nodetype/xml/test_nodetypes.xml";
 
-    /** Node type formatter object being tested. */
-    private NodeTypeFormatter formatter;
-
     /** Test node types definitions. */
-    private Collection types;
+    private NodeTypeDef[] types;
 
     /** Registry for the test namespaces. */
     private NamespaceRegistry registry;
@@ -70,8 +66,7 @@ public class TestAll extends TestCase {
         InputStream xml =
             getClass().getClassLoader().getResourceAsStream(TEST_NODETYPES);
 
-        formatter = new NodeTypeFormatter();
-        types = formatter.read(xml);
+        types = NodeTypeReader.read(xml);
 
         registry = new SimpleNamespaceRegistry();
         registry.registerNamespace("test", TEST_NAMESPACE);
@@ -86,11 +81,9 @@ public class TestAll extends TestCase {
      */
     private NodeTypeDef getNodeType(String name) {
         QName qname = new QName(TEST_NAMESPACE, name);
-        Iterator iterator = types.iterator();
-        while (iterator.hasNext()) {
-            NodeTypeDef def = (NodeTypeDef) iterator.next();
-            if (qname.equals(def.getName())) {
-                return def;
+        for (int i = 0; i < types.length; i++) {
+            if (qname.equals(types[i].getName())) {
+                return types[i];
             }
         }
         throw new AssertionFailedError("Node type " + name + " does not exist");
@@ -167,7 +160,7 @@ public class TestAll extends TestCase {
      * just verifies the number of node types.
      */
     public void testRead() {
-        assertEquals("number of node types", 6, types.size());
+        assertEquals("number of node types", 6, types.length);
     }
 
     /** Test for the empty node type. */
@@ -512,10 +505,11 @@ public class TestAll extends TestCase {
     public void testWrite() throws IOException, RepositoryException {
         try {
             ByteArrayOutputStream xml = new ByteArrayOutputStream();
-            formatter.write(xml, registry, types);
+            NodeTypeWriter.write(xml, types, registry);
             byte[] bytes = xml.toByteArray();
-            Collection output = formatter.read(new ByteArrayInputStream(bytes));
-            assertEquals("write output", types, output);
+            NodeTypeDef[] output =
+                NodeTypeReader.read(new ByteArrayInputStream(bytes));
+            assertTrue("write output", Arrays.equals(types, output));
         } catch (InvalidNodeTypeDefException e) {
             fail(e.getMessage());
         }
