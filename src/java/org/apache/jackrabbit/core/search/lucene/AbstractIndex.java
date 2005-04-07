@@ -76,11 +76,9 @@ abstract class AbstractIndex {
 
         if (!IndexReader.indexExists(directory)) {
             indexWriter = new IndexWriter(directory, analyzer, true);
-            indexWriter.minMergeDocs = minMergeDocs;
-            indexWriter.maxMergeDocs = maxMergeDocs;
-            indexWriter.mergeFactor = mergeFactor;
-            indexWriter.setUseCompoundFile(useCompoundFile);
-            indexWriter.infoStream = STREAM_LOGGER;
+            // immediately close, now that index has been created
+            indexWriter.close();
+            indexWriter = null;
         }
     }
 
@@ -155,11 +153,14 @@ abstract class AbstractIndex {
 
     /**
      * Commits all pending changes to the underlying <code>Directory</code>.
-     * After commit both <code>IndexReader</code> and <code>IndexWriter</code>
-     * are released.
      * @throws IOException if an error occurs while commiting changes.
      */
     protected synchronized void commit() throws IOException {
+        // if index is not locked there are no pending changes
+        if (!IndexReader.isLocked(getDirectory())) {
+            return;
+        }
+
         if (indexReader != null) {
             indexReader.close();
             log.debug("closing IndexReader.");
