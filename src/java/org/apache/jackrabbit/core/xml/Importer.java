@@ -161,32 +161,26 @@ public interface Importer {
     public interface TextValue {
         /**
          * Returns the length of the serialized value.
+         *
          * @return the length of the serialized value
-         * @throws IllegalStateException if the serialized value is not
-         *                               available anymore (e.g. because it
-         *                               been discarded)
          * @throws IOException if an I/O error occurs
          */
-        public long length() throws IllegalStateException, IOException;
+        public long length() throws IOException;
 
         /**
          * Retrieves the serialized value.
+         *
          * @return the serialized value
-         * @throws IllegalStateException if the serialized value is not
-         *                               available anymore (e.g. because it
-         *                               been discarded)
          * @throws IOException if an I/O error occurs
          */
-        public String retrieve() throws IllegalStateException, IOException;
+        public String retrieve() throws IOException;
 
         /**
          * Returns a <code>Reader</code> for reading the serialized value.
+         *
          * @return a <code>Reader</code> for reading the serialized value.
-         * @throws IllegalStateException if the serialized value is not
-         *                               available anymore (e.g. because it
-         *                               been discarded)
          * @throws IOException if an I/O error occurs
          */
-        public Reader reader() throws IllegalStateException, IOException;
+        public Reader reader() throws IOException;
     }
 }
