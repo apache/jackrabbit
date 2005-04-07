@@ -1,18 +1,52 @@
 <body>
 Contains the core classes that provide the implementation of the JCR API.
 <p>
-<i>Implementation notes:</i><p>
-The following classes implement the 'core' JCR interfaces <code>Item</code>,
-<code>Property</code>, <code>Node</code>, <code>Session</code>,
-<code>Workspace</code> and <code>Repository</code>:
-<ul><code>
-<li>ItemImpl
-<li>PropertyImpl
-<li>NodeImpl
-<li>SessionImpl
-<li>WorkspaceImpl
-<li>RepositoryImpl
-</code></ul>
+The following table lists the core JCR interfaces and the corresponding
+Jackrabbit implementation classes found in this package.
+<table>
+  <thead>
+    <tr>
+      <th>JCR interface</th>
+      <th>Implementation class</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{@link javax.jcr.Repository Repository}</td>
+      <td>{@link org.apache.jackrabbit.core.RepositoryImpl RepositoryImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Session Session}</td>
+      <td>{@link org.apache.jackrabbit.core.SessionImpl SessionImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Workspace Workspace}</td>
+      <td>{@link org.apache.jackrabbit.core.WorkspaceImpl WorkspaceImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Item Item}</td>
+      <td>{@link org.apache.jackrabbit.core.ItemImpl ItemImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Property Property}</td>
+      <td>{@link org.apache.jackrabbit.core.PropertyImpl PropertyImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Node Node}</td>
+      <td>{@link org.apache.jackrabbit.core.NodeImpl NodeImpl}</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+A Jackrabbit repository instance can be created using the static
+{@link org.apache.jackrabbit.core.RepositoryImpl#create(org.apache.jackrabbit.core.config.RepositoryConfig) RepositoryImpl.create(RepositoryConfig)}
+method. The
+{@link org.apache.jackrabbit.core.jndi.RepositoryHelper RepositoryHelper}
+and other classes in the
+{@link org.apache.jackrabbit.core.jndi org.apache.jackrabbit.core.jndi}
+package provide a mechanism for binding a Jackrabbit repository in a
+JNDI directory context.
+<p>
 A <code>SessionImpl</code> instance is created upon successfully login to the
 <code>Repository</code> (see <code>Repository#login(Credentials, String)</code>).
 <p/>
@@ -28,34 +62,37 @@ Every repository item is uniquely identified by its <code>ItemId</code>. The id
 of a node (<code>NodeId</code>) consists of the node's uuid. The id of a property
 (<code>PropertyId</code>) consists of the parent node's uuid and the qualified
 name of the property.
-<p/>
+
+<h2>Item managers</h2>
+<p>
 Every <code>SessionImpl</code> instance has its own <code>ItemManager</code>.
 The per-session instance of <code>ItemManager</code> acts as item factory (i.e.
 it creates <code>NodeImpl</code> and <code>PropertyImpl</code> instances) and
 provides item access by item id and item caching.
-<p/>
+<p>
 The data (or state) of an item is represented by the following classes in the
 subpackage <code>state</code>:
-<ul><code>
-<li>ItemState
-<li>PropertyState
-<li>NodeState
-</code></ul>
+<ul>
+  <li>{@link org.apache.jackrabbit.core.state.ItemState ItemState}</li>
+  <li>{@link org.apache.jackrabbit.core.state.PropertyState PropertyState}</li>
+  <li>{@link org.apache.jackrabbit.core.state.NodeState NodeState}</li>
+</ul>
+<p>
 There's one <code>SharedItemStateManager</code> for every workspace.
 It provides item state caching and it guarantees that there's only one
 (persistent) item state instance for any distinct item id in that workspace.
-<p/>
+<p>
 Every session has its own <code>SessionItemStateManager</code> that consists
 of the session's <code>TransientItemStateManager</code> and the workspace's
 <code>SharedItemStateManager</code>.
-<p/>
+<p>
 Each item (i.e. <code>NodeImpl</code> and <code>PropertyImpl</code>) instance
 is holding an <code>ItemState</code> instance. When e.g. a session is modifying
 a property by changing the property's value, a new transient item state
 is created by the session's <code>TransientItemStateManager</code>. This
 transient state is actually wrapping the (old) shared state (<i>copy on write</i>).
 The <code>PropertyImpl</code>'s state is then replaced by the new transient state.
-<p/>
+<p>
 Transient (i.e. unsaved) modifications are 'session-local',  i.e. they are not
 visible to other sessions. When the modifications are saved they become instantly
 visible to all sessions accessing the same workspace.
