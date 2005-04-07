@@ -18,14 +18,18 @@ package org.apache.jackrabbit.core.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Properties;
 
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * Configuration parser. This class is used to parse the repository and
@@ -306,23 +310,28 @@ public class ConfigurationParser {
      */
     private SearchConfig parseSearchConfig(Element parent)
             throws ConfigurationException {
-        Element element = parent.getChild(SEARCH_INDEX_ELEMENT);
-        if (element != null) {
-            // Search implementation class
-            String className =
-                getAttribute(element, CLASS_ATTRIBUTE, DEFAULT_QUERY_HANDLER);
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && SEARCH_INDEX_ELEMENT.equals(child.getNodeName())) {
+                Element element = (Element) child;
 
-            // Search parameters
-            Properties parameters = parseParameters(element);
+                // Search implementation class
+                String className = getAttribute(
+                        element, CLASS_ATTRIBUTE, DEFAULT_QUERY_HANDLER);
 
-            // File system implementation
-            FileSystemConfig fsc = new FileSystemConfig(
-                    parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
+                // Search parameters
+                Properties parameters = parseParameters(element);
 
-            return new SearchConfig(className, parameters, fsc);
-        } else {
-            return null;
+                // File system implementation
+                FileSystemConfig fsc = new FileSystemConfig(
+                        parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
+
+                return new SearchConfig(className, parameters, fsc);
+            }
         }
+        return null;
     }
 
     /**
@@ -416,18 +425,22 @@ public class ConfigurationParser {
             throws ConfigurationException {
         Properties parameters = new Properties();
 
-        Iterator iterator = element.getChildren(PARAM_ELEMENT).iterator();
-        while (iterator.hasNext()) {
-            Element parameter = (Element) iterator.next();
-            String name = parameter.getAttributeValue(NAME_ATTRIBUTE);
-            if (name == null) {
-                throw new ConfigurationException("Parameter name not set.");
+        NodeList children = element.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && PARAM_ELEMENT.equals(child.getNodeName())) {
+                Element parameter = (Element) child;
+                String name = parameter.getAttribute(NAME_ATTRIBUTE);
+                if (name == null) {
+                    throw new ConfigurationException("Parameter name not set");
+                }
+                String value = parameter.getAttribute(VALUE_ATTRIBUTE);
+                if (value == null) {
+                    throw new ConfigurationException("Parameter value not set");
+                }
+                parameters.put(name, replaceVariables(value));
             }
-            String value = parameter.getAttributeValue(VALUE_ATTRIBUTE);
-            if (value == null) {
-                throw new ConfigurationException("Parameter value not set.");
-            }
-            parameters.put(name, replaceVariables(value));
         }
 
         return parameters;
@@ -487,11 +500,16 @@ public class ConfigurationParser {
      */
     private Element parseXML(InputSource xml) throws ConfigurationException {
         try {
-            SAXBuilder builder = new SAXBuilder();
+            DocumentBuilderFactory factory =
+                DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
             builder.setEntityResolver(new ConfigurationEntityResolver());
-            Document document = builder.build(xml);
-            return document.getRootElement();
-        } catch (JDOMException e) {
+            Document document = builder.parse(xml);
+            return document.getDocumentElement();
+        } catch (ParserConfigurationException e) {
+            throw new ConfigurationException(
+                    "Unable to create configuration XML parser", e);
+        } catch (SAXException e) {
             throw new ConfigurationException(
                     "Configuration file syntax error.", e);
         } catch (IOException e) {
@@ -510,14 +528,17 @@ public class ConfigurationParser {
      */
     private Element getElement(Element parent, String name)
             throws ConfigurationException {
-        Element element = parent.getChild(name);
-        if (element != null) {
-            return element;
-        } else {
-            throw new ConfigurationException(
-                    "Configuration element " + name + " not found in "
-                    + parent.getName() + ".");
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && name.equals(child.getNodeName())) {
+                return (Element) child;
+            }
         }
+        throw new ConfigurationException(
+                "Configuration element " + name + " not found in "
+                + parent.getNodeName() + ".");
     }
 
     /**
@@ -530,13 +551,13 @@ public class ConfigurationParser {
      */
     private String getAttribute(Element element, String name)
             throws ConfigurationException {
-        String value = element.getAttributeValue(name);
+        String value = element.getAttribute(name);
         if (value != null) {
             return value;
         } else {
             throw new ConfigurationException(
                     "Configuration attribute " + name + " not found in "
-                    + element.getName() + ".");
+                    + element.getNodeName() + ".");
         }
     }
 
@@ -550,7 +571,7 @@ public class ConfigurationParser {
      * @return attribute value, or the default value
      */
     private String getAttribute(Element element, String name, String def) {
-        String value = element.getAttributeValue(name);
+        String value = element.getAttribute(name);
         if (value != null) {
             return value;
         } else {
