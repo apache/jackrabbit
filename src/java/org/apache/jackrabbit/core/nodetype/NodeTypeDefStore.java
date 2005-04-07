@@ -22,13 +22,13 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.nodetype.xml.NodeTypeFormatter;
+import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
+import org.apache.jackrabbit.core.nodetype.xml.NodeTypeWriter;
 
 /**
  * <code>NodeTypeDefStore</code> ...
@@ -38,15 +38,11 @@ class NodeTypeDefStore {
     /** Map of node type names to node type definitions. */
     private final HashMap ntDefs;
 
-    /** The node type definition file formatter. */
-    private final NodeTypeFormatter formatter;
-
     /**
      * Empty default constructor.
      */
     NodeTypeDefStore() throws RepositoryException {
         ntDefs = new HashMap();
-        formatter = new NodeTypeFormatter();
     }
 
     /**
@@ -57,10 +53,9 @@ class NodeTypeDefStore {
     void load(InputStream in)
             throws IOException, InvalidNodeTypeDefException,
             RepositoryException {
-        Collection types = formatter.read(in);
-        Iterator iterator = types.iterator();
-        while (iterator.hasNext()) {
-            add((NodeTypeDef) iterator.next());
+        NodeTypeDef[] types = NodeTypeReader.read(in);
+        for (int i = 0; i < types.length; i++) {
+            add(types[i]);
         }
     }
 
@@ -72,7 +67,9 @@ class NodeTypeDefStore {
      */
     void store(OutputStream out, NamespaceRegistry registry)
             throws IOException, RepositoryException {
-        formatter.write(out, registry, ntDefs.values());
+        NodeTypeDef[] types = (NodeTypeDef[])
+            ntDefs.values().toArray(new NodeTypeDef[ntDefs.size()]);
+        NodeTypeWriter.write(out, types, registry);
     }
 
     /**
