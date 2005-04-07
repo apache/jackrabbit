@@ -47,7 +47,11 @@ public class LocalFileSystem implements FileSystem {
     }
 
     public String getPath() {
-        return root == null ? null : root.getPath();
+        if (root != null) {
+            return root.getPath();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -79,7 +83,11 @@ public class LocalFileSystem implements FileSystem {
         }
         if (obj instanceof LocalFileSystem) {
             LocalFileSystem other = (LocalFileSystem) obj;
-            return (root == null ? other.root == null : root.equals(other.root));
+            if (root == null) {
+                return other.root == null;
+            } else {
+                return root.equals(other.root);
+            }
         }
         return false;
     }
@@ -391,9 +399,9 @@ public class LocalFileSystem implements FileSystem {
             FileUtil.copy(src, dest);
             FileUtil.delete(src);
         } catch (IOException ioe) {
-	    String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
-	    log.debug(msg);
-	    throw new FileSystemException(msg, ioe);
+            String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
+            log.debug(msg);
+            throw new FileSystemException(msg, ioe);
         }
 */
     }
