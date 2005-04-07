@@ -277,10 +277,6 @@
       <version>2.1</version>
     </dependency>
     <dependency>
-      <id>jdom</id>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
       <id>javacc</id>
       <version>3.2</version>
     </dependency>
