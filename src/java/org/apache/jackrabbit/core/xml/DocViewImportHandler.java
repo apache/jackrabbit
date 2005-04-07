@@ -26,6 +26,7 @@ import org.xml.sax.SAXException;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Stack;
 
@@ -44,7 +45,7 @@ class DocViewImportHandler extends TargetImportHandler {
      */
     private final Stack stack = new Stack();
     // buffer used to merge adjacent character data
-    private StringBufferValue textHandler = new StringBufferValue();
+    private BufferedStringValue textHandler = new BufferedStringValue();
 
     /**
      * Constructs a new <code>DocViewImportHandler</code>.
@@ -57,34 +58,75 @@ class DocViewImportHandler extends TargetImportHandler {
     }
 
     /**
-     * Translates character data encountered in
-     * <code>{@link #characters(char[], int, int)}</code> into a
-     * <code>jcr:xmltext</code> child node with a <code>jcr:xmlcharacters</code>
-     * property.
+     * Appends the given character data to the internal buffer.
      *
-     * @param text
-     * @throws SAXException
+     * @param ch     the characters to be appended
+     * @param start  the index of the first character to append
+     * @param length the number of characters to append
+     * @throws SAXException if an error occurs
+     * @see #characters(char[], int, int)
+     * @see #ignorableWhitespace(char[], int, int)
+     * @see #processCharacters()
      */
-    private void onTextNode(StringBufferValue text)
+    private void appendCharacters(char ch[], int start, int length)
             throws SAXException {
-        String s = textHandler.retrieve();
-        if (s.trim().length() == 0) {
-            // ignore whitespace-only character data
-            log.debug("ignoring withespace character data: " + s);
-            return;
+        if (textHandler == null) {
+            textHandler = new BufferedStringValue();
         }
         try {
-            Importer.NodeInfo node =
-                    new Importer.NodeInfo(JCR_XMLTEXT, null, null, null);
-            Importer.TextValue[] values = new Importer.TextValue[]{text};
-            ArrayList props = new ArrayList();
-            Importer.PropInfo prop =
-                    new Importer.PropInfo(JCR_XMLCHARACTERS,
-                            PropertyType.STRING, values);
-            props.add(prop);
-            // call Importer
-            importer.startNode(node, props, nsContext);
-            importer.endNode(node);
+            textHandler.append(ch, start, length);
+        } catch (IOException ioe) {
+            String msg = "internal error while processing internal buffer data";
+            log.error(msg, ioe);
+            throw new SAXException(msg, ioe);
+        }
+    }
+
+    /**
+     * Translates character data reported by the
+     * <code>{@link #characters(char[], int, int)}</code> &
+     * <code>{@link #ignorableWhitespace(char[], int, int)}</code> SAX events
+     * into a  <code>jcr:xmltext</code> child node with one
+     * <code>jcr:xmlcharacters</code> property.
+     *
+     * @throws SAXException if an error occurs
+     * @see #appendCharacters(char[], int, int)
+     */
+    private void processCharacters()
+            throws SAXException {
+        try {
+            if (textHandler != null && textHandler.length() > 0) {
+                // there is character data that needs to be added to
+                // the current node
+
+                String text = textHandler.retrieve();
+                if (text.trim().length() == 0) {
+                    // ignore whitespace-only character data
+                    log.debug("ignoring withespace character data: " + text);
+                    return;
+                }
+
+                Importer.NodeInfo node =
+                        new Importer.NodeInfo(JCR_XMLTEXT, null, null, null);
+                Importer.TextValue[] values =
+                        new Importer.TextValue[]{textHandler};
+                ArrayList props = new ArrayList();
+                Importer.PropInfo prop =
+                        new Importer.PropInfo(JCR_XMLCHARACTERS,
+                                PropertyType.STRING, values);
+                props.add(prop);
+                // call Importer
+                importer.startNode(node, props, nsContext);
+                importer.endNode(node);
+
+                // reset handler
+                textHandler.dispose();
+                textHandler = null;
+            }
+        } catch (IOException ioe) {
+            String msg = "internal error while processing internal buffer data";
+            log.error(msg, ioe);
+            throw new SAXException(msg, ioe);
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
@@ -108,13 +150,8 @@ class DocViewImportHandler extends TargetImportHandler {
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
-        if (textHandler != null && textHandler.length() > 0) {
-            // there is character data that needs to be added to the current node
-            onTextNode(textHandler);
-            // reset handler
-            textHandler.dispose();
-            textHandler = null;
-        }
+        // process buffered character data
+        processCharacters();
 
         try {
             QName nodeName = new QName(namespaceURI, localName);
@@ -196,13 +233,10 @@ class DocViewImportHandler extends TargetImportHandler {
     public void characters(char[] ch, int start, int length)
             throws SAXException {
         /**
-         * buffer character data; will be processed
-         * in endElement and startElement method
+         * buffer data reported by the characters event;
+         * will be processed on the next endElement or startElement event.
          */
-        if (textHandler == null) {
-            textHandler = new StringBufferValue();
-        }
-        textHandler.append(ch, start, length);
+        appendCharacters(ch, start, length);
     }
 
     /**
@@ -212,12 +246,9 @@ class DocViewImportHandler extends TargetImportHandler {
             throws SAXException {
         /**
          * buffer data reported by the ignorableWhitespace event;
-         * will be processed in endElement and startElement method
+         * will be processed on the next endElement or startElement event.
          */
-        if (textHandler == null) {
-            textHandler = new StringBufferValue();
-        }
-        textHandler.append(ch, start, length);
+        appendCharacters(ch, start, length);
     }
 
     /**
@@ -225,13 +256,9 @@ class DocViewImportHandler extends TargetImportHandler {
      */
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
-        if (textHandler != null && textHandler.length() > 0) {
-            // there is character data that needs to be added to the current node
-            onTextNode(textHandler);
-            // reset handler
-            textHandler.dispose();
-            textHandler = null;
-        }
+        // process buffered character data
+        processCharacters();
+
         Importer.NodeInfo node = (Importer.NodeInfo) stack.peek();
         try {
             // call Importer

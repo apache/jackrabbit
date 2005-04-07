@@ -47,6 +47,11 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
         this.nsContext = nsContext;
     }
 
+    /**
+     * Disposes all instances of <code>AppendableValue</code> contained in the
+     * given property info's value array.
+     * @param prop property info
+     */
     protected void disposePropertyValues(Importer.PropInfo prop) {
         Importer.TextValue[] vals = prop.getValues();
         for (int i = 0; i < vals.length; i++) {
@@ -54,8 +59,8 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
                 try {
                     ((AppendableValue) vals[i]).dispose();
                 } catch (IOException ioe) {
-                    log.warn("error while disposing temporary value appender",
-                            ioe);
+                    log.warn("error while disposing temporary value", ioe);
+                    // fall through...
                 }
             }
         }
@@ -65,18 +70,36 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
     /**
      * <code>AppendableValue</code> represents a serialized value that is
      * appendable.
+     * <p/>
+     * <b>Important:</b> Note that in order to free resources
+     * <code>{@link #dispose()}</code> should be called as soon as an an
+     * <code>AppendableValue</code> object is not used anymore.
      */
     public interface AppendableValue extends Importer.TextValue {
+        /**
+         * Append a portion of an array of characters.
+         * @param chars the characters to be appended
+         * @param start the index of the first character to append
+         * @param length the number of characters to append
+         * @throws IOException if an I/O error occurs
+         */
         public void append(char[] chars, int start, int length)
-                throws IllegalStateException, IOException;
+                throws IOException;
 
         /**
-         * @throws IOException
+         * Close this value. Once a value has been closed,
+         * further append() invocations will cause an IOException to be thrown.
+         *
+         * @throws IOException if an I/O error occurs
          */
         public void close() throws IOException;
 
         /**
-         * @throws IOException
+         * Dispose this value, i.e. free all bound resources. Once a value has
+         * been disposed, further method invocations will cause an IOException
+         * to be thrown.
+         *
+         * @throws IOException if an I/O error occurs
          */
         public void dispose() throws IOException;
     }
@@ -122,112 +145,108 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
     }
 
     /**
-     * <code>StringBufferValue</code> represents an appendable serialized value
-     * that is internally backed by a <code>StringBuffer</code>.
+     * <code>BufferedStringValue</code> represents an appendable
+     * serialized value that is either buffered in-memory or backed
+     * by a temporary file if its size exceeds a certain limit.
+     * <p/>
+     * <b>Important:</b> Note that in order to free resources
+     * <code>{@link #dispose()}</code> should be called as soon as an
+     * <code>BufferedStringValue</code> instance is not used anymore.
      */
-    protected class StringBufferValue implements AppendableValue {
-
-        private final StringBuffer buffer;
+    protected class BufferedStringValue implements AppendableValue {
 
         /**
-         * Constructs a new empty <code>StringBufferValue</code>.
+         * max size for buffering data in memory
          */
-        protected StringBufferValue() {
-            buffer = new StringBuffer();
-        }
-
-        //--------------------------------------------------------< TextValue >
+        private static final int MAX_BUFFER_SIZE = 0x10000;
         /**
-         * {@inheritDoc}
+         * size of increment if capacity buffer needs to be enlarged
          */
-        public long length() {
-            return buffer.length();
-        }
-
+        private static final int BUFFER_INCREMENT = 0x2000;
         /**
-         * {@inheritDoc}
+         * in-memory buffer
          */
-        public String retrieve() {
-            return buffer.toString();
-        }
+        private char[] buffer;
+        /**
+         * current position within buffer (size of actual data in buffer)
+         */
+        private int bufferPos;
 
         /**
-         * {@inheritDoc}
+         * backing temporary file created when size of data exceeds
+         * MAX_BUFFER_SIZE
          */
-        public Reader reader() {
-            return new StringReader(buffer.toString());
-        }
-
-        //--------------------------------------------------< AppendableValue >
-        /**
-         * {@inheritDoc}
-         */
-        public void append(char[] chars, int start, int length) {
-            buffer.append(chars, start, length);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void close() {
-            // nop
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void dispose() {
-            buffer.setLength(0);
-        }
-    }
-
-    /**
-     * <code>CLOBValue</code> represents an appendable serialized value
-     * that is internally backed by a temporary file.
-     */
-    protected class CLOBValue implements AppendableValue {
-
         private File tmpFile;
+        /**
+         * writer used to write to tmpFile; writer & tmpFile are always
+         * instantiated together, i.e. they are either both null or both not null.
+         */
         private Writer writer;
 
-        protected CLOBValue() throws IOException {
-            tmpFile = File.createTempFile("bin", null);
-            writer = new FileWriter(tmpFile);
+        /**
+         * Constructs a new empty <code>BufferedStringValue</code>.
+         */
+        protected BufferedStringValue() {
+            buffer = new char[0x2000];
+            bufferPos = 0;
+            tmpFile = null;
+            writer = null;
         }
 
         //--------------------------------------------------------< TextValue >
         /**
          * {@inheritDoc}
          */
-        public long length() throws IllegalStateException, IOException {
-            if (tmpFile == null) {
-                throw new IllegalStateException();
+        public long length() throws IOException {
+            if (buffer != null) {
+                return bufferPos;
+            } else if (tmpFile != null) {
+                writer.flush();
+                return tmpFile.length();
+            } else {
+                throw new IOException("this instance has already been disposed");
             }
-            return tmpFile.length();
         }
 
         /**
          * {@inheritDoc}
          */
-        public String retrieve() throws IllegalStateException, IOException {
-            Reader reader = reader();
-            char[] chunk = new char[8192];
-            int read;
-            StringBuffer buf = new StringBuffer();
-            while ((read = reader.read(chunk)) > -1) {
-                buf.append(chunk, 0, read);
+        public String retrieve() throws IOException {
+            if (buffer != null) {
+                return new String(buffer, 0, bufferPos);
+            } else if (tmpFile != null) {
+                if (length() > Integer.MAX_VALUE) {
+                    throw new IOException("size of value is too big, use reader()");
+                }
+                StringBuffer sb = new StringBuffer((int) tmpFile.length());
+                char[] chunk = new char[0x2000];
+                int read;
+                Reader reader = new FileReader(tmpFile);
+                try {
+                    while ((read = reader.read(chunk)) > -1) {
+                        sb.append(chunk, 0, read);
+                    }
+                } finally {
+                    reader.close();
+                }
+                return sb.toString();
+            } else {
+                throw new IOException("this instance has already been disposed");
             }
-            return buf.toString();
         }
 
         /**
          * {@inheritDoc}
          */
-        public Reader reader() throws IllegalStateException, IOException {
-            if (tmpFile == null) {
-                throw new IllegalStateException();
+        public Reader reader() throws IOException {
+            if (buffer != null) {
+                return new StringReader(new String(buffer, 0, bufferPos));
+            } else if (tmpFile != null) {
+                writer.flush();
+                return new FileReader(tmpFile);
+            } else {
+                throw new IOException("this instance has already been disposed");
             }
-            return new FileReader(tmpFile);
         }
 
         //--------------------------------------------------< AppendableValue >
@@ -235,20 +254,45 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
          * {@inheritDoc}
          */
         public void append(char[] chars, int start, int length)
-                throws IllegalStateException, IOException {
-            if (writer == null) {
-                throw new IllegalStateException();
+                throws IOException {
+            if (buffer != null) {
+                if (bufferPos + length > MAX_BUFFER_SIZE) {
+                    // threshold for keeping data in memory exceeded;
+                    // create temp file and spool buffer contents
+                    tmpFile = File.createTempFile("txt", null);
+                    writer = new FileWriter(tmpFile);
+                    writer.write(buffer, 0, bufferPos);
+                    writer.write(chars, start, length);
+                    // reset fields
+                    buffer = null;
+                    bufferPos = 0;
+                } else {
+                    if (bufferPos + length > buffer.length) {
+                        // reallocate new buffer and spool old buffer contents
+                        char[] newBuffer = new char[buffer.length + BUFFER_INCREMENT];
+                        System.arraycopy(buffer, 0, newBuffer, 0, bufferPos);
+                        buffer = newBuffer;
+                    }
+                    System.arraycopy(chars, start, buffer, bufferPos, length);
+                    bufferPos += length;
+                }
+            } else if (tmpFile != null) {
+                writer.write(chars, start, length);
+            } else {
+                throw new IOException("this instance has already been disposed");
             }
-            writer.write(chars, start, length);
         }
 
         /**
          * {@inheritDoc}
          */
         public void close() throws IOException {
-            if (writer != null) {
+            if (buffer != null) {
+                // nop
+            } else if (tmpFile != null) {
                 writer.close();
-                writer = null;
+            } else {
+                throw new IOException("this instance has already been disposed");
             }
         }
 
@@ -256,10 +300,16 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
          * {@inheritDoc}
          */
         public void dispose() throws IOException {
-            close();
-            if (tmpFile != null) {
+            if (buffer != null) {
+                buffer = null;
+                bufferPos = 0;
+            } else if (tmpFile != null) {
+                writer.close();
                 tmpFile.delete();
                 tmpFile = null;
+                writer = null;
+            } else {
+                throw new IOException("this instance has already been disposed");
             }
         }
     }

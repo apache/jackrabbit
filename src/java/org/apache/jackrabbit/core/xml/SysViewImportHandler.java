@@ -20,7 +20,6 @@ import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -36,8 +35,6 @@ import java.util.Stack;
  * <code>SysViewImportHandler</code>  ...
  */
 class SysViewImportHandler extends TargetImportHandler {
-
-    private static Logger log = Logger.getLogger(SysViewImportHandler.class);
 
     /**
      * stack of ImportState instances; an instance is pushed onto the stack
@@ -179,20 +176,7 @@ class SysViewImportHandler extends TargetImportHandler {
             // sv:value element
 
             // reset temp fields
-            if (currentPropType == PropertyType.BINARY) {
-                // binary value; use temp-file backed value appender
-                try {
-                    currentPropValue = new CLOBValue();
-                } catch (IOException ioe) {
-                    String msg = "error while processing property value "
-                            + currentPropName;
-                    log.debug(msg, ioe);
-                    throw new SAXException(msg, ioe);
-                }
-            } else {
-                // 'normal' value; use StringBuffer-backed value appender
-                currentPropValue = new StringBufferValue();
-            }
+            currentPropValue = new BufferedStringValue();
         } else {
             throw new SAXException(new InvalidSerializedDataException("unexpected element found in system view xml document: "
                     + localName));

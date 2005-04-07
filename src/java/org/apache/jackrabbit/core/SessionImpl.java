@@ -1057,7 +1057,7 @@ public class SessionImpl implements Session, Constants {
                               boolean skipBinary, boolean noRecurse)
             throws InvalidSerializedDataException, IOException,
             PathNotFoundException, RepositoryException {
-        boolean indenting = true;
+        boolean indenting = false;
         OutputFormat format = new OutputFormat("xml", "UTF-8", indenting);
         XMLSerializer serializer = new XMLSerializer(out, format);
         try {
@@ -1091,7 +1091,7 @@ public class SessionImpl implements Session, Constants {
     public void exportSysView(String absPath, OutputStream out,
                               boolean skipBinary, boolean noRecurse)
             throws IOException, PathNotFoundException, RepositoryException {
-        boolean indenting = true;
+        boolean indenting = false;
         OutputFormat format = new OutputFormat("xml", "UTF-8", indenting);
         XMLSerializer serializer = new XMLSerializer(out, format);
         try {
