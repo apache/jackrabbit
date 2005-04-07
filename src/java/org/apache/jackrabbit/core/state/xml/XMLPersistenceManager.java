@@ -37,12 +37,8 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.util.DOMWalker;
 import org.apache.log4j.Logger;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.filter.ContentFilter;
-import org.jdom.filter.Filter;
-import org.jdom.input.SAXBuilder;
 
 import javax.jcr.PropertyType;
 import java.io.BufferedWriter;
@@ -182,22 +178,22 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         return buildNodeFolderPath(uuid) + "/" + NODEREFSFILENAME;
     }
 
-    private void readState(Element nodeElement, NodeState state)
+    private void readState(DOMWalker walker, NodeState state)
             throws ItemStateException {
         // first do some paranoid sanity checks
-        if (!nodeElement.getName().equals(NODE_ELEMENT)) {
-            String msg = "invalid serialization format (unexpected element: " + nodeElement.getName() + ")";
+        if (!walker.getName().equals(NODE_ELEMENT)) {
+            String msg = "invalid serialization format (unexpected element: " + walker.getName() + ")";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check uuid
-        if (!state.getUUID().equals(nodeElement.getAttributeValue(UUID_ATTRIBUTE))) {
+        if (!state.getUUID().equals(walker.getAttribute(UUID_ATTRIBUTE))) {
             String msg = "invalid serialized state: uuid mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check nodetype
-        String ntName = nodeElement.getAttributeValue(NODETYPE_ATTRIBUTE);
+        String ntName = walker.getAttribute(NODETYPE_ATTRIBUTE);
         if (!QName.valueOf(ntName).equals(state.getNodeTypeName())) {
             String msg = "invalid serialized state: nodetype mismatch";
             log.debug(msg);
@@ -207,75 +203,76 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         // now we're ready to read state
 
         // primary parent
-        String parentUUID = nodeElement.getAttributeValue(PARENTUUID_ATTRIBUTE);
+        String parentUUID = walker.getAttribute(PARENTUUID_ATTRIBUTE);
         if (parentUUID.length() > 0) {
             state.setParentUUID(parentUUID);
         }
 
         // definition id
-        String definitionId = nodeElement.getAttributeValue(DEFINITIONID_ATTRIBUTE);
+        String definitionId = walker.getAttribute(DEFINITIONID_ATTRIBUTE);
         state.setDefinitionId(NodeDefId.valueOf(definitionId));
 
         // parent uuid's
-        Iterator iter = nodeElement.getChild(PARENTS_ELEMENT).getChildren(PARENT_ELEMENT).iterator();
-        ArrayList parentUUIDs = new ArrayList();
-        while (iter.hasNext()) {
-            Element parentElement = (Element) iter.next();
-            parentUUIDs.add(parentElement.getAttributeValue(UUID_ATTRIBUTE));
-        }
-        if (parentUUIDs.size() > 0) {
-            state.setParentUUIDs(parentUUIDs);
+        if (walker.enterElement(PARENTS_ELEMENT)) {
+            ArrayList parentUUIDs = new ArrayList();
+            while (walker.iterateElements(PARENT_ELEMENT)) {
+                parentUUIDs.add(walker.getAttribute(UUID_ATTRIBUTE));
+            }
+            if (parentUUIDs.size() > 0) {
+                state.setParentUUIDs(parentUUIDs);
+            }
+            walker.leaveElement();
         }
 
         // mixin types
-        Element mixinsElement = nodeElement.getChild(MIXINTYPES_ELEMENT);
-        if (mixinsElement != null) {
-            iter = mixinsElement.getChildren(MIXINTYPE_ELEMENT).iterator();
+        if (walker.enterElement(MIXINTYPES_ELEMENT)) {
             Set mixins = new HashSet();
-            while (iter.hasNext()) {
-                Element mixinElement = (Element) iter.next();
-                mixins.add(QName.valueOf(mixinElement.getAttributeValue(NAME_ATTRIBUTE)));
+            while (walker.iterateElements(MIXINTYPE_ELEMENT)) {
+                mixins.add(QName.valueOf(walker.getAttribute(NAME_ATTRIBUTE)));
             }
             if (mixins.size() > 0) {
                 state.setMixinTypeNames(mixins);
             }
+            walker.leaveElement();
         }
 
         // property entries
-        iter = nodeElement.getChild(PROPERTIES_ELEMENT).getChildren(PROPERTY_ELEMENT).iterator();
-        while (iter.hasNext()) {
-            Element propElement = (Element) iter.next();
-            String propName = propElement.getAttributeValue(NAME_ATTRIBUTE);
-            // @todo deserialize type and values
-            state.addPropertyEntry(QName.valueOf(propName));
+        if (walker.enterElement(PROPERTIES_ELEMENT)) {
+            while (walker.iterateElements(PROPERTY_ELEMENT)) {
+                String propName = walker.getAttribute(NAME_ATTRIBUTE);
+                // @todo deserialize type and values
+                state.addPropertyEntry(QName.valueOf(propName));
+            }
+            walker.leaveElement();
         }
 
         // child node entries
-        iter = nodeElement.getChild(NODES_ELEMENT).getChildren(NODE_ELEMENT).iterator();
-        while (iter.hasNext()) {
-            Element childNodeElement = (Element) iter.next();
-            String childName = childNodeElement.getAttributeValue(NAME_ATTRIBUTE);
-            String childUUID = childNodeElement.getAttributeValue(UUID_ATTRIBUTE);
-            state.addChildNodeEntry(QName.valueOf(childName), childUUID);
+        if (walker.enterElement(NODES_ELEMENT)) {
+            while (walker.iterateElements(NODE_ELEMENT)) {
+                String childName = walker.getAttribute(NAME_ATTRIBUTE);
+                String childUUID = walker.getAttribute(UUID_ATTRIBUTE);
+                state.addChildNodeEntry(QName.valueOf(childName), childUUID);
+            }
+            walker.leaveElement();
         }
     }
 
-    private void readState(Element propElement, PropertyState state)
+    private void readState(DOMWalker walker, PropertyState state)
             throws ItemStateException {
         // first do some paranoid sanity checks
-        if (!propElement.getName().equals(PROPERTY_ELEMENT)) {
-            String msg = "invalid serialization format (unexpected element: " + propElement.getName() + ")";
+        if (!walker.getName().equals(PROPERTY_ELEMENT)) {
+            String msg = "invalid serialization format (unexpected element: " + walker.getName() + ")";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check name
-        if (!state.getName().equals(QName.valueOf(propElement.getAttributeValue(NAME_ATTRIBUTE)))) {
+        if (!state.getName().equals(QName.valueOf(walker.getAttribute(NAME_ATTRIBUTE)))) {
             String msg = "invalid serialized state: name mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check parentUUID
-        String parentUUID = propElement.getAttributeValue(PARENTUUID_ATTRIBUTE);
+        String parentUUID = walker.getAttribute(PARENTUUID_ATTRIBUTE);
         if (!parentUUID.equals(state.getParentUUID())) {
             String msg = "invalid serialized state: parentUUID mismatch";
             log.debug(msg);
@@ -285,7 +282,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         // now we're ready to read state
 
         // type
-        String typeName = propElement.getAttributeValue(TYPE_ATTRIBUTE);
+        String typeName = walker.getAttribute(TYPE_ATTRIBUTE);
         int type;
         try {
             type = PropertyType.valueFromName(typeName);
@@ -296,56 +293,52 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         state.setType(type);
 
         // multiValued
-        String multiValued = propElement.getAttributeValue(MULTIVALUED_ATTRIBUTE);
+        String multiValued = walker.getAttribute(MULTIVALUED_ATTRIBUTE);
         state.setMultiValued(Boolean.getBoolean(multiValued));
 
         // definition id
-        String definitionId = propElement.getAttributeValue(DEFINITIONID_ATTRIBUTE);
+        String definitionId = walker.getAttribute(DEFINITIONID_ATTRIBUTE);
         state.setDefinitionId(PropDefId.valueOf(definitionId));
 
         // values
-        Iterator iter = propElement.getChild(VALUES_ELEMENT).getChildren(VALUE_ELEMENT).iterator();
         ArrayList values = new ArrayList();
-        while (iter.hasNext()) {
-            Element valueElement = (Element) iter.next();
-            Filter filter = new ContentFilter(ContentFilter.TEXT | ContentFilter.CDATA);
-            List content = valueElement.getContent(filter);
-
-            InternalValue val;
-            if (!content.isEmpty()) {
+        if (walker.enterElement(VALUES_ELEMENT)) {
+            while (walker.iterateElements(VALUE_ELEMENT)) {
                 // read serialized value
-                String text = valueElement.getText();
-                if (type == PropertyType.BINARY) {
-                    // special handling required for binary value:
-                    // the value stores the path to the actual binary file in the blob store
-                    try {
-                        val = InternalValue.create(new FileSystemResource(blobStore, text));
-                    } catch (IOException ioe) {
-                        String msg = "error while reading serialized binary value";
-                        log.debug(msg);
-                        throw new ItemStateException(msg, ioe);
+                String content = walker.getContent();
+                InternalValue val;
+                if (content.length() > 0) {
+                    if (type == PropertyType.BINARY) {
+                        // special handling required for binary value:
+                        // the value stores the path to the actual binary file in the blob store
+                        try {
+                            values.add(InternalValue.create(new FileSystemResource(blobStore, content)));
+                        } catch (IOException ioe) {
+                            String msg = "error while reading serialized binary value";
+                            log.debug(msg);
+                            throw new ItemStateException(msg, ioe);
+                        }
+                    } else {
+                        values.add(InternalValue.valueOf(content, type));
                     }
-                } else {
-                    val = InternalValue.valueOf(text, type);
                 }
-                values.add(val);
-            } else {
-                continue;
             }
+            walker.leaveElement();
         }
-        state.setValues((InternalValue[]) values.toArray(new InternalValue[values.size()]));
+        state.setValues((InternalValue[])
+                values.toArray(new InternalValue[values.size()]));
     }
 
-    private void readState(Element refsElement, NodeReferences refs)
+    private void readState(DOMWalker walker, NodeReferences refs)
             throws ItemStateException {
         // first do some paranoid sanity checks
-        if (!refsElement.getName().equals(NODEREFERENCES_ELEMENT)) {
-            String msg = "invalid serialization format (unexpected element: " + refsElement.getName() + ")";
+        if (!walker.getName().equals(NODEREFERENCES_ELEMENT)) {
+            String msg = "invalid serialization format (unexpected element: " + walker.getName() + ")";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
         // check targetId
-        if (!refs.getTargetId().equals(NodeReferencesId.valueOf(refsElement.getAttributeValue(TARGETID_ATTRIBUTE)))) {
+        if (!refs.getTargetId().equals(NodeReferencesId.valueOf(walker.getAttribute(TARGETID_ATTRIBUTE)))) {
             String msg = "invalid serialized state: targetId  mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -355,10 +348,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         // property id's
         refs.clearAllReferences();
-        Iterator iter = refsElement.getChildren(NODEREFERENCE_ELEMENT).iterator();
-        while (iter.hasNext()) {
-            Element elem = (Element) iter.next();
-            refs.addReference(PropertyId.valueOf(elem.getAttributeValue(PROPERTYID_ATTRIBUTE)));
+        while (walker.iterateElements(NODEREFERENCE_ELEMENT)) {
+            refs.addReference(PropertyId.valueOf(walker.getAttribute(PROPERTYID_ATTRIBUTE)));
         }
     }
 
@@ -429,20 +420,16 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             InputStream in = itemStateStore.getInputStream(nodeFilePath);
 
             try {
-                SAXBuilder builder = new SAXBuilder();
-                Element rootElement = builder.build(in).getRootElement();
-                String ntName = rootElement.getAttributeValue(NODETYPE_ATTRIBUTE);
+                DOMWalker walker = new DOMWalker(in);
+                String ntName = walker.getAttribute(NODETYPE_ATTRIBUTE);
 
                 NodeState state = createNew(id);
                 state.setNodeTypeName(QName.valueOf(ntName));
-                readState(rootElement, state);
+                readState(walker, state);
                 return state;
             } finally {
                 in.close();
             }
-        } catch (JDOMException jde) {
-            e = jde;
-            // fall through
         } catch (IOException ioe) {
             e = ioe;
             // fall through
@@ -474,18 +461,13 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             }
             InputStream in = itemStateStore.getInputStream(propFilePath);
             try {
-                SAXBuilder builder = new SAXBuilder();
-                Element rootElement = builder.build(in).getRootElement();
-
+                DOMWalker walker = new DOMWalker(in);
                 PropertyState state = createNew(id);
-                readState(rootElement, state);
+                readState(walker, state);
                 return state;
             } finally {
                 in.close();
             }
-        } catch (JDOMException jde) {
-            e = jde;
-            // fall through
         } catch (IOException ioe) {
             e = ioe;
             // fall through
@@ -779,18 +761,13 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             InputStream in = itemStateStore.getInputStream(refsFilePath);
 
             try {
-                SAXBuilder builder = new SAXBuilder();
-                Element rootElement = builder.build(in).getRootElement();
-
+                DOMWalker walker = new DOMWalker(in);
                 NodeReferences refs = new NodeReferences(id);
-                readState(rootElement, refs);
+                readState(walker, refs);
                 return refs;
             } finally {
                 in.close();
             }
-        } catch (JDOMException jde) {
-            e = jde;
-            // fall through
         } catch (IOException ioe) {
             e = ioe;
             // fall through
