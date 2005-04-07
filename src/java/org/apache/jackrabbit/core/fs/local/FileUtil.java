@@ -22,9 +22,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * A <code>FileUtil</code> ...
+ * Static utility methods for recursively copying and deleting files and
+ * directories.
  */
-
 public final class FileUtil {
 
     /**
@@ -34,9 +34,12 @@ public final class FileUtil {
     }
 
     /**
-     * @param src
-     * @param dest
-     * @throws IOException
+     * Recursively copies the given file or directory to the
+     * given destination.
+     *
+     * @param src source file or directory
+     * @param dest destination file or directory
+     * @throws IOException if the file or directory cannot be copied
      */
     public static void copy(File src, File dest) throws IOException {
         if (!src.canRead()) {
@@ -86,8 +89,10 @@ public final class FileUtil {
     }
 
     /**
-     * @param f
-     * @throws IOException
+     * Recursively deletes the given file or directory.
+     *
+     * @param f file or directory
+     * @throws IOException if the file or directory cannot be deleted
      */
     public static void delete(File f) throws IOException {
         if (f.isDirectory()) {
