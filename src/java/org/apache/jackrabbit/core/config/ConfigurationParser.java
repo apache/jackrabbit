@@ -24,6 +24,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -431,15 +432,16 @@ public class ConfigurationParser {
             if (child.getNodeType() == Node.ELEMENT_NODE
                     && PARAM_ELEMENT.equals(child.getNodeName())) {
                 Element parameter = (Element) child;
-                String name = parameter.getAttribute(NAME_ATTRIBUTE);
+                Attr name = parameter.getAttributeNode(NAME_ATTRIBUTE);
                 if (name == null) {
                     throw new ConfigurationException("Parameter name not set");
                 }
-                String value = parameter.getAttribute(VALUE_ATTRIBUTE);
+                Attr value = parameter.getAttributeNode(VALUE_ATTRIBUTE);
                 if (value == null) {
                     throw new ConfigurationException("Parameter value not set");
                 }
-                parameters.put(name, replaceVariables(value));
+                parameters.put(
+                        name.getValue(), replaceVariables(value.getValue()));
             }
         }
 
@@ -551,9 +553,9 @@ public class ConfigurationParser {
      */
     private String getAttribute(Element element, String name)
             throws ConfigurationException {
-        String value = element.getAttribute(name);
-        if (value != null) {
-            return value;
+        Attr attribute = element.getAttributeNode(name);
+        if (attribute != null) {
+            return attribute.getValue();
         } else {
             throw new ConfigurationException(
                     "Configuration attribute " + name + " not found in "
@@ -571,9 +573,9 @@ public class ConfigurationParser {
      * @return attribute value, or the default value
      */
     private String getAttribute(Element element, String name, String def) {
-        String value = element.getAttribute(name);
-        if (value != null) {
-            return value;
+        Attr attribute = element.getAttributeNode(name);
+        if (attribute != null) {
+            return attribute.getValue();
         } else {
             return def;
         }

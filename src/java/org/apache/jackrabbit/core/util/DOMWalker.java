@@ -107,7 +107,12 @@ public final class DOMWalker {
      * @return attribute value, or <code>null</code> if not found
      */
     public String getAttribute(String name) {
-        return current.getAttribute(name);
+        Attr attribute = current.getAttributeNode(name);
+        if (attribute != null) {
+            return attribute.getValue();
+        } else {
+            return null;
+        }
     }
 
     /**
