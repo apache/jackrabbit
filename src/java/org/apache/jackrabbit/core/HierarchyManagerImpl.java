@@ -372,6 +372,31 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
+    public int getDepth(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
+        try {
+            int depth = 0;
+            ItemState state = getItemState(id);
+            for (String parentUUID = state.getParentUUID(); parentUUID != null;) {
+                state = (NodeState) getItemState(new NodeId(parentUUID));
+                parentUUID = state.getParentUUID();
+                depth++;
+            }
+            return depth;
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "failed to determine depth of " + id;
+            log.debug(msg);
+            throw new ItemNotFoundException(msg, nsise);
+        } catch (ItemStateException ise) {
+            String msg = "failed to determine depth of " + id;
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public synchronized Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException {
         return getAllPaths(id, false);
     }
