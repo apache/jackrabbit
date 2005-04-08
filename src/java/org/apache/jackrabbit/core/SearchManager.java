@@ -128,8 +128,7 @@ public class SearchManager implements SynchronousEventListener {
         ntReg.addListener(propRegistry);
         // initialize query handler
         try {
-            Class handlerClass = Class.forName(config.getHandlerClassName());
-            handler = (QueryHandler) handlerClass.newInstance();
+            handler = (QueryHandler) config.newInstance();
             NodeId rootId = (NodeId) session.getHierarchyManager().resolvePath(Path.ROOT);
             handler.init(fs, session.getItemStateManager(), rootId.getUUID(), propRegistry);
         } catch (Exception e) {

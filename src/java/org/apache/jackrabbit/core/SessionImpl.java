@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.BeanMap;
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
@@ -266,27 +265,13 @@ public class SessionImpl implements Session, Constants {
                                                 HierarchyManager hierMgr)
             throws AccessDeniedException, RepositoryException {
         AccessManagerConfig amConfig = rep.getConfig().getAccessManagerConfig();
-        String className = amConfig.getClassName();
-        Map params = amConfig.getParameters();
         try {
-            Class c = Class.forName(className);
-            AccessManager accessMgr = (AccessManager) c.newInstance();
-            /**
-             * set the properties of the access manager object
-             * from the param map
-             */
-            BeanMap bm = new BeanMap(accessMgr);
-            Iterator iter = params.keySet().iterator();
-            while (iter.hasNext()) {
-                Object name = iter.next();
-                Object value = params.get(name);
-                bm.put(name, value);
-            }
             AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
                     rep.getConfig().getFileSystem(),
                     subject,
                     hierMgr,
                     wsp.getName());
+            AccessManager accessMgr = (AccessManager) amConfig.newInstance();
             accessMgr.init(ctx);
             return accessMgr;
         } catch (AccessDeniedException ade) {
@@ -294,7 +279,7 @@ public class SessionImpl implements Session, Constants {
             throw ade;
         } catch (Exception e) {
             // wrap in RepositoryException
-            String msg = "failed to instantiate AccessManager implementation: " + className;
+            String msg = "failed to instantiate AccessManager implementation: " + amConfig.getClassName();
             log.error(msg, e);
             throw new RepositoryException(msg, e);
         }
