@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.BeanMap;
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
@@ -67,7 +66,6 @@ import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -711,39 +709,26 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * Returns the workspace persistence manager
+     * Creates a workspace persistence manager based on the given
+     * configuration. The persistence manager is instantiated using
+     * information in the given persistencem manager configuration and
+     * initialized with a persistence manager context containing the other
+     * arguments.
      *
-     * @return the workspace persistence manager
-     * @throws RepositoryException if the persistence manager could not be instantiated/initialized
+     * @return the created workspace persistence manager
+     * @throws RepositoryException if the persistence manager could
+     *                             not be instantiated/initialized
      */
-    private static PersistenceManager createPersistenceManager(File homeDir,
-                                                               FileSystem fs,
-                                                               PersistenceManagerConfig pmConfig,
-                                                               String rootNodeUUID,
-                                                               NamespaceRegistry nsReg,
-                                                               NodeTypeRegistry ntReg)
+    private static PersistenceManager createPersistenceManager(
+            File homeDir, FileSystem fs, PersistenceManagerConfig pmConfig,
+            String rootNodeUUID, NamespaceRegistry nsReg, NodeTypeRegistry ntReg)
             throws RepositoryException {
-        String className = pmConfig.getClassName();
-        Map params = pmConfig.getParameters();
         try {
-            Class c = Class.forName(className);
-            PersistenceManager persistMgr = (PersistenceManager) c.newInstance();
-            /**
-             * set the properties of the persistence manager object
-             * from the param map
-             */
-            BeanMap bm = new BeanMap(persistMgr);
-            Iterator iter = params.keySet().iterator();
-            while (iter.hasNext()) {
-                Object name = iter.next();
-                Object value = params.get(name);
-                bm.put(name, value);
-            }
-            PMContext ctx = new PMContext(homeDir, fs, rootNodeUUID, nsReg, ntReg);
-            persistMgr.init(ctx);
-            return persistMgr;
+            PersistenceManager pm = (PersistenceManager) pmConfig.newInstance();
+            pm.init(new PMContext(homeDir, fs, rootNodeUUID, nsReg, ntReg));
+            return pm;
         } catch (Exception e) {
-            String msg = "Cannot instantiate implementing class " + className;
+            String msg = "Cannot instantiate persistence manager " + pmConfig.getClassName();
             log.error(msg, e);
             throw new RepositoryException(msg, e);
         }
