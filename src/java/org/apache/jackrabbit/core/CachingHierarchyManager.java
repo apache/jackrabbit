@@ -134,6 +134,18 @@ public class CachingHierarchyManager implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
+    public int getDepth(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
+        if (pathCache.containsKey(id)) {
+            return getPath(id).getAncestorCount();
+        } else {
+            return delegatee.getDepth(id);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public synchronized Path[] getAllPaths(ItemId id)
             throws ItemNotFoundException, RepositoryException {
         return getAllPaths(id, false);

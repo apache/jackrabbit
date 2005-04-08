@@ -50,6 +50,16 @@ public interface HierarchyManager {
     public QName getName(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
+     * Returns the depth of the specified item which is equivalent to
+     * <code>getPath(id).getAncestorCount()</code>.  
+     * @param id
+     * @return
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    public int getDepth(ItemId id) throws ItemNotFoundException, RepositoryException;
+
+    /**
      * @param id
      * @return
      * @throws ItemNotFoundException

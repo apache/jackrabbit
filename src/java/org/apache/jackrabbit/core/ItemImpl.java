@@ -1438,7 +1438,11 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      * {@inheritDoc}
      */
     public int getDepth() throws RepositoryException {
-        return getPrimaryPath().getAncestorCount();
+        if (state.getParentUUID() == null) {
+            // shortcut
+            return 0;
+        }
+        return session.getHierarchyManager().getDepth(id);
     }
 
     /**
