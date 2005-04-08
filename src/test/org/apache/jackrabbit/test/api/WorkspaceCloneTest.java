@@ -52,12 +52,12 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
     /**
      * A NoSuchWorkspaceException is thrown if srcWorkspace does not exist.
      */
-    public void testCloneNodesUnvalidWorkspace() throws RepositoryException {
+    public void testCloneNodesInvalidWorkspace() throws RepositoryException {
         // clone a node to a non-existing workspace
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
         try {
             workspaceW2.clone(getNonExistingWorkspaceName(superuser), node1.getPath(), dstAbsPath, true);
-            fail("Unvalid Source Workspace should throw NoSuchWorkspaceException.");
+            fail("Invalid Source Workspace should throw NoSuchWorkspaceException.");
         } catch (NoSuchWorkspaceException e) {
             // successful
         }
@@ -128,19 +128,19 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
 
         // srcAbsPath is not existing
-        String unvalidSrcPath = srcAbsPath + "unvalid";
+        String invalidSrcPath = srcAbsPath + "invalid";
         try {
-            workspaceW2.clone(workspace.getName(), unvalidSrcPath, dstAbsPath, true);
-            fail("Not existing source path '" + unvalidSrcPath + "' should throw PathNotFoundException.");
+            workspaceW2.clone(workspace.getName(), invalidSrcPath, dstAbsPath, true);
+            fail("Not existing source path '" + invalidSrcPath + "' should throw PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // successful
         }
 
         // dstAbsPath parent is not existing
-        String unvalidDstParentPath = node2W2.getPath() + "unvalid/" + node1.getName();
+        String invalidDstParentPath = node2W2.getPath() + "invalid/" + node1.getName();
         try {
-            workspaceW2.clone(workspace.getName(), srcAbsPath, unvalidDstParentPath, true);
-            fail("Not existing destination parent path '" + unvalidDstParentPath + "' should throw PathNotFoundException.");
+            workspaceW2.clone(workspace.getName(), srcAbsPath, invalidDstParentPath, true);
+            fail("Not existing destination parent path '" + invalidDstParentPath + "' should throw PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // successful
         }
@@ -153,20 +153,25 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
         // we assume repository supports locking
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
 
+        // get lock target node in destination wsp through other session
+        Node lockTarget = (Node) rwSessionW2.getItem(node2W2.getPath());
+
         // add mixin "lockable" to be able to lock the node
-        if (!node2W2.getPrimaryNodeType().isNodeType(mixLockable)) {
-            node2W2.addMixin(mixLockable);
-            testRootNodeW2.save();
+        if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
+            lockTarget.addMixin(mixLockable);
+            lockTarget.getParent().save();
         }
 
-        // lock dst parent node
-        node2W2.lock(true, true);
+        // lock dst parent node using other session
+        lockTarget.lock(true, true);
 
         try {
             workspaceW2.clone(workspace.getName(), node1.getPath(), dstAbsPath, true);
             fail("LockException was expected.");
         } catch (LockException e) {
             // successful
+        } finally {
+            lockTarget.unlock();
         }
     }
 }
