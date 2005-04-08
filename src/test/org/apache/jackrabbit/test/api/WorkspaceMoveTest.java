@@ -113,19 +113,19 @@ public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
         String dstAbsPath = node2.getPath() + "/" + node1.getName();
 
         // srcAbsPath is not existing
-        String unvalidSrcPath = srcAbsPath + "unvalid";
+        String invalidSrcPath = srcAbsPath + "invalid";
         try {
-            workspace.move(unvalidSrcPath, dstAbsPath);
-            fail("Not existing source path '" + unvalidSrcPath + "' should throw PathNotFoundException.");
+            workspace.move(invalidSrcPath, dstAbsPath);
+            fail("Not existing source path '" + invalidSrcPath + "' should throw PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // successful
         }
 
         // dstAbsPath parent is not existing
-        String unvalidDstParentPath = node2.getPath() + "unvalid/" + node1.getName();
+        String invalidDstParentPath = node2.getPath() + "invalid/" + node1.getName();
         try {
-            workspace.move(srcAbsPath, unvalidDstParentPath);
-            fail("Not existing destination parent path '" + unvalidDstParentPath + "' should throw PathNotFoundException.");
+            workspace.move(srcAbsPath, invalidDstParentPath);
+            fail("Not existing destination parent path '" + invalidDstParentPath + "' should throw PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // successful
         }

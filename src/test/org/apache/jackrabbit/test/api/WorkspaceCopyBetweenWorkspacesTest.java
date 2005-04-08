@@ -55,12 +55,12 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
     /**
      * A NoSuchWorkspaceException is thrown if srcWorkspace does not exist.
      */
-    public void testCopyNodesUnvalidWorkspace() throws RepositoryException {
+    public void testCopyNodesInvalidWorkspace() throws RepositoryException {
         // copy referenceable node below non-referenceable node to a non-existing workspace
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
         try {
             superuserW2.getWorkspace().copy(getNonExistingWorkspaceName(superuser), node1.getPath(), dstAbsPath);
-            fail("Unvalid Source Workspace should throw NoSuchWorkspaceException.");
+            fail("Invalid Source Workspace should throw NoSuchWorkspaceException.");
         } catch (NoSuchWorkspaceException e) {
             // successful
         }
@@ -132,19 +132,19 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
 
         // srcAbsPath is not existing
-        String unvalidSrcPath = srcAbsPath + "unvalid";
+        String invalidSrcPath = srcAbsPath + "invalid";
         try {
-            workspaceW2.copy(workspace.getName(), unvalidSrcPath, dstAbsPath);
-            fail("Not existing source path '" + unvalidSrcPath + "' should throw PathNotFoundException.");
+            workspaceW2.copy(workspace.getName(), invalidSrcPath, dstAbsPath);
+            fail("Not existing source path '" + invalidSrcPath + "' should throw PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // successful
         }
 
         // dstAbsPath parent is not existing
-        String unvalidDstParentPath = node2W2.getPath() + "unvalid/" + node1.getName();
+        String invalidDstParentPath = node2W2.getPath() + "invalid/" + node1.getName();
         try {
-            workspaceW2.copy(workspace.getName(), srcAbsPath, unvalidDstParentPath);
-            fail("Not existing destination parent path '" + unvalidDstParentPath + "' should throw PathNotFoundException.");
+            workspaceW2.copy(workspace.getName(), srcAbsPath, invalidDstParentPath);
+            fail("Not existing destination parent path '" + invalidDstParentPath + "' should throw PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // successful
         }
