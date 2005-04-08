@@ -154,7 +154,7 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
 
         // get lock target node in destination wsp through other session
-        Node lockTarget = (Node) rwSessionW2.getItem(node2W2.getPath());
+        Node lockTarget = (Node) superuserW2.getItem(node2W2.getPath());
 
         // add mixin "lockable" to be able to lock the node
         if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
