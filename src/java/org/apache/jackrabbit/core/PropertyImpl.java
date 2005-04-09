@@ -1053,6 +1053,25 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check lock status
         ((NodeImpl) getParent()).checkLock();
 
+        if (values != null) {
+            // check type of values
+            int valueType = PropertyType.UNDEFINED;
+            for (int i = 0; i < values.length; i++) {
+                if (values[i] == null) {
+                    // skip null values as those will be purged later
+                    continue;
+                }
+                if (valueType == PropertyType.UNDEFINED) {
+                    valueType = values[i].getType();
+                } else if (valueType != values[i].getType()) {
+                    // inhomogeneous types
+                    String msg = "inhomogeneous type of values";
+                    log.debug(msg);
+                    throw new ValueFormatException(msg);
+                }
+            }
+        }
+
         int reqType = definition.getRequiredType();
 
         InternalValue[] internalValues = null;

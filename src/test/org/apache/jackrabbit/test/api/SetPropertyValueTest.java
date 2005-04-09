@@ -223,10 +223,16 @@ public class SetPropertyValueTest extends AbstractJCRTest {
 
     /**
      * Tests if <code>Node.setProperty(String, Value[])</code> throws a {@link
-     * javax.jcr.ValueFormatException} when trying to set a single-value
-     * property to a multi-value
+     * javax.jcr.ValueFormatException} when trying to set an existing
+     * single-valued property to a multi-value
      */
     public void testSetSingleValueArrayValueFormatException() throws Exception {
+        // prerequisite: existing single-valued property
+        if (!testNode.hasProperty(propertyName1)) {
+            testNode.setProperty(propertyName1, v1);
+            testNode.getParent().save();
+        }
+
         try {
             testNode.setProperty(propertyName1, vArray1);
             fail("setProperty(singleValueProperty, Value[]) not throwing a ValueFormatException");
@@ -357,10 +363,16 @@ public class SetPropertyValueTest extends AbstractJCRTest {
 
     /**
      * Tests if <code>Node.setProperty(String, Value[], int)</code> throws a
-     * {@link javax.jcr.ValueFormatException} when trying to set a single-value
-     * property to a multi-value
+     * {@link javax.jcr.ValueFormatException} when trying to set an existing
+     * single-valued property to a multi-value
      */
     public void testSetSingleValueArrayValueFormatExceptionWithPropertyType() throws Exception {
+        // prerequisite: existing single-valued property
+        if (!testNode.hasProperty(propertyName1)) {
+            testNode.setProperty(propertyName1, v1);
+            testNode.getParent().save();
+        }
+
         try {
             testNode.setProperty(propertyName1, vArray1, PropertyType.STRING);
             fail("setProperty(singleValueProperty, Value[], int) not throwing a ValueFormatException");

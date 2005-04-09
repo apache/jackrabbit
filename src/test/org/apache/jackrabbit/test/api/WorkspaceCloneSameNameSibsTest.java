@@ -19,6 +19,7 @@ package org.apache.jackrabbit.test.api;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.NodeIterator;
 
 /**
  * <code>WorkspaceCloneSameNameSibsTest</code> contains tests for cloning nodes
@@ -38,7 +39,7 @@ public class WorkspaceCloneSameNameSibsTest extends AbstractWorkspaceSameNameSib
      */
     public void testCloneNodesOrderingSupportedByParent() throws RepositoryException {
         // test assumes that repositry supports Orderable Child Node Support (optional)
-        /*String[] orderList = {nodeName1, nodeName2, nodeName3};
+        String[] orderList = {nodeName1, nodeName2, nodeName3};
 
         // copy node three times below a node and check the order
         for (int i = 0; i < orderList.length; i++) {
@@ -54,9 +55,7 @@ public class WorkspaceCloneSameNameSibsTest extends AbstractWorkspaceSameNameSib
 
             assertTrue(n.getName().equals(orderList[cnt]));
             cnt++;
-        } */
-        //@TODO: Testcase corrupts workspace, so it's commented.
-        fail("Testcase corrupts workspace, so it's commented.");
+        }
     }
 
     /**
