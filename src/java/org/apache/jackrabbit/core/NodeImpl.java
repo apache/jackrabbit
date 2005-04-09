@@ -2476,15 +2476,19 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check lock status
-        checkLock();
+        if (isLocked()) {
+            return false;
+        }
 
         QName ntName;
         try {
             ntName = QName.fromJCRName(mixinName, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid mixin type name: " + mixinName, ine);
+            throw new RepositoryException("invalid mixin type name: "
+                    + mixinName, ine);
         } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid mixin type name: " + mixinName, upe);
+            throw new RepositoryException("invalid mixin type name: "
+                    + mixinName, upe);
         }
 
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
@@ -2496,7 +2500,8 @@ public class NodeImpl extends ItemImpl implements Node {
             return false;
         }
 
-        // build effective node type of mixins & primary type in order to detect conflicts
+        // build effective node type of mixins & primary type
+        // in order to detect conflicts
         NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
         EffectiveNodeType entExisting;
         try {

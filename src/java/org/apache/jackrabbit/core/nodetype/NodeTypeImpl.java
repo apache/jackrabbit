@@ -481,6 +481,10 @@ public class NodeTypeImpl implements NodeType {
             // determine type of values
             int type = PropertyType.UNDEFINED;
             for (int i = 0; i < values.length; i++) {
+                if (values[i] == null) {
+                    // skip null values as those would be purged
+                    continue;
+                }
                 if (type == PropertyType.UNDEFINED) {
                     type = values[i].getType();
                 } else if (type != values[i].getType()) {

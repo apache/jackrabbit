@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test.api;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemExistsException;
 
 /**
  * <code>WorkspaceCloneReferenceableTest</code> contains tests for cloning
@@ -61,7 +62,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
      */
     public void testCloneNodesRemoveExistingTrue() throws RepositoryException {
         // add mixin referenceable to node1
-        /*addMixinReferenceableToNode(testRootNode, node1);
+        addMixinReferenceableToNode(testRootNode, node1);
 
         // clone a node from default workspace to have the same uuid on second workspace
         String dstAbsPath = node2W2.getPath() + "/" + nodeName2;
@@ -70,7 +71,6 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
 
         // clone node1 from default workspace to second workspace
         dstAbsPath = node2W2.getPath() + "/" + nodeName3;
-        //@TODO: Testcase corrupts workspace and functionality is not implemented right now, so it's commented.
         workspaceW2.clone(workspace.getName(), node1.getPath(), dstAbsPath, true);
         Node clonedNode2 = node2W2.getNode(nodeName3);
 
@@ -80,8 +80,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
 
         // ... and is copied to this workspace as part of the copied subtree (that is, not into the former location of the old node).
         Node clonedNodeMoved = clonedNode2.getNode(clonedNode.getName());
-        assertTrue(testRootNodeW2.hasNode(clonedNodeMoved.getName()));*/
-        fail("Testcase corrupts workspace, so it's commented.");
+        assertTrue(testRootNodeW2.hasNode(clonedNodeMoved.getName()));
     }
 
     /**
@@ -90,21 +89,18 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
      */
     public void testCloneNodesRemoveExistingFalse() throws RepositoryException {
         // add mixin referenceable to node1
-        /*addMixinReferenceableToNode(testRootNode, node1);
+        addMixinReferenceableToNode(testRootNode, node1);
 
         // clone a node from default workspace to have the same uuid on second workspace
         workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName2, false);
 
         // clone node1 from default workspace to second workspace
         try {
-            //@TODO: Testcase corrupts workspace, so it's commented.
             workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName3, false);
             fail("If removeExisting is false then a UUID collision should throw a ItemExistsException");
         } catch (ItemExistsException e) {
             // successful
-        } */
-
-        fail("Testcase corrupts workspace, so it's commented.");
+        }
     }
 
     /**

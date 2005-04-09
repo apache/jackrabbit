@@ -35,6 +35,11 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
     protected Session superuserW2;
 
     /**
+     * A read-write session for the non default workspace
+     */
+    protected Session rwSessionW2;
+
+    /**
      * The workspace in the non default session.
      */
     Workspace workspaceW2;
@@ -59,6 +64,7 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
 
         // init second workspace
         superuserW2 = helper.getSuperuserSession(workspaceName);
+        rwSessionW2 = helper.getReadWriteSession(workspaceName);
         workspaceW2 = superuserW2.getWorkspace();
 
         initNodesW2();

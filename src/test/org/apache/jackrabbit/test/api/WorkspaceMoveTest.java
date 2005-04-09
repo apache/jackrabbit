@@ -139,20 +139,28 @@ public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
         // we assume repository supports locking
         String dstAbsPath = node2.getPath() + "/" + node1.getName();
 
+        // get other session
+        Session otherSession = helper.getReadWriteSession();
+
+        // get lock target node in destination wsp through other session
+        Node lockTarget = (Node) otherSession.getItem(node2.getPath());
+
         // add mixin "lockable" to be able to lock the node
-        if (!node2.getPrimaryNodeType().isNodeType(mixLockable)) {
-            node2.addMixin(mixLockable);
-            testRootNode.save();
+        if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
+            lockTarget.addMixin(mixLockable);
+            lockTarget.getParent().save();
         }
 
-        // lock dst parent node
-        node2.lock(true, true);
+        // lock dst parent node using other session
+        lockTarget.lock(true, true);
 
         try {
             workspace.move(node1.getPath(), dstAbsPath);
             fail("LockException was expected.");
         } catch (LockException e) {
             // successful
+        } finally {
+            lockTarget.unlock();
         }
     }
 }
