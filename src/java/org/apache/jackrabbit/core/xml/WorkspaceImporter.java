@@ -393,7 +393,7 @@ public class WorkspaceImporter implements Importer, Constants {
             NodeId parentId = new NodeId(parentUUID);
 
             // unlink target node from this parent
-            unlinkNodeState(target, parentUUID);
+            unlinkNode(target, parentUUID);
 
             // remove child node entries
             NodeState parent;
@@ -436,7 +436,7 @@ public class WorkspaceImporter implements Importer, Constants {
      * @param parentUUID
      * @throws RepositoryException if an error occurs
      */
-    private void unlinkNodeState(NodeState target, String parentUUID)
+    private void unlinkNode(NodeState target, String parentUUID)
             throws RepositoryException {
 
         // check if this node state would be orphaned after unlinking it from parent
@@ -453,14 +453,14 @@ public class WorkspaceImporter implements Importer, Constants {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
                 NodeId nodeId = new NodeId(entry.getUUID());
                 try {
-                    NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
+                    NodeState node = (NodeState) stateMgr.getItemState(nodeId);
                     // check if child node can be removed
                     // (access rights, locking & versioning status)
-                    wsp.checkRemoveNode(nodeState, (NodeId) target.getId(),
+                    wsp.checkRemoveNode(node, (NodeId) target.getId(),
                             WorkspaceImpl.CHECK_ACCESS | WorkspaceImpl.CHECK_LOCK
                             | WorkspaceImpl.CHECK_VERSIONING);
                     // unlink child node (recursive)
-                    unlinkNodeState(nodeState, target.getUUID());
+                    unlinkNode(node, target.getUUID());
                 } catch (ItemStateException ise) {
                     String msg = "internal error: failed to retrieve state of "
                             + nodeId;
@@ -480,11 +480,11 @@ public class WorkspaceImporter implements Importer, Constants {
                 PropertyId propId =
                         new PropertyId(target.getUUID(), entry.getName());
                 try {
-                    PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
+                    PropertyState prop = (PropertyState) stateMgr.getItemState(propId);
                     // remove property entry
                     target.removePropertyEntry(propId.getName());
                     // destroy property state
-                    stateMgr.destroy(propState);
+                    stateMgr.destroy(prop);
                 } catch (ItemStateException ise) {
                     String msg = "internal error: failed to retrieve state of "
                             + propId;
@@ -499,10 +499,10 @@ public class WorkspaceImporter implements Importer, Constants {
         target.removeParentUUID(parentUUID);
 
         if (orphaned) {
-            // destroy target state
+            // destroy target
             stateMgr.destroy(target);
         } else {
-            // store target state
+            // store target
             stateMgr.store(target);
         }
     }
