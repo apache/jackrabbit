@@ -372,17 +372,73 @@ public class WorkspaceImporter implements Importer, Constants {
     }
 
     /**
-     * Recursively removes the specified node state including its properties and
-     * child nodes.
+     * Unlinks the specified target node from all its parents and recursively
+     * removes it including its properties and child nodes.
      * <p/>
-     * todo duplicate code in WorkspaceImpl; consolidate in WorkspaceOperations class
+     * <b>Precondition:</b> the state manager of this workspace needs to be in
+     * edit mode.
+     * todo duplicate code in WorkspaceImporter; consolidate in WorkspaceOperations class
+     *
+     * @param target
+     * @throws RepositoryException if an error occurs
+     */
+    protected void removeNode(NodeState target)
+            throws RepositoryException {
+
+        // copy list to avoid ConcurrentModificationException
+        ArrayList parentUUIDs = new ArrayList(target.getParentUUIDs());
+        Iterator iter = parentUUIDs.iterator();
+        while (iter.hasNext()) {
+            String parentUUID = (String) iter.next();
+            NodeId parentId = new NodeId(parentUUID);
+
+            // unlink target node from this parent
+            unlinkNodeState(target, parentUUID);
+
+            // remove child node entries
+            NodeState parent;
+            try {
+                parent = (NodeState) stateMgr.getItemState(parentId);
+            } catch (ItemStateException ise) {
+                // should never get here...
+                String msg = "internal error: failed to retrieve parent state";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
+            // use temp array to avoid ConcurrentModificationException
+            ArrayList tmp =
+                    new ArrayList(parent.getChildNodeEntries(target.getUUID()));
+            // remove from tail to avoid problems with same-name siblings
+            for (int i = tmp.size() - 1; i >= 0; i--) {
+                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
+                parent.removeChildNodeEntry(entry.getName(), entry.getIndex());
+            }
+            // store parent
+            stateMgr.store(parent);
+        }
+    }
+
+    /**
+     * Unlinks the given target node from the specified parent i.e. removes
+     * <code>parentUUID</code> from its list of parents. If as a result
+     * the target node would be orphaned it will be recursively removed
+     * including its properties and child nodes.
+     * <p/>
+     * Note that the child node entry refering to <code>target</code> is
+     * <b><i>not</i></b> automatically removed from <code>target</code>'s
+     * parent denoted by <code>parentUUID</code>.
+     * <p/>
+     * <b>Precondition:</b> the state manager of this workspace needs to be in
+     * edit mode.
+     * todo duplicate code in WorkspaceImporter; consolidate in WorkspaceOperations class
      *
      * @param target
      * @param parentUUID
      * @throws RepositoryException if an error occurs
      */
-    protected void removeNode(NodeState target, String parentUUID)
+    private void unlinkNodeState(NodeState target, String parentUUID)
             throws RepositoryException {
+
         // check if this node state would be orphaned after unlinking it from parent
         ArrayList parentUUIDs = new ArrayList(target.getParentUUIDs());
         parentUUIDs.remove(parentUUID);
@@ -397,14 +453,14 @@ public class WorkspaceImporter implements Importer, Constants {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
                 NodeId nodeId = new NodeId(entry.getUUID());
                 try {
-                    NodeState node = (NodeState) stateMgr.getItemState(nodeId);
-                    // check if existing can be removed
+                    NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
+                    // check if child node can be removed
                     // (access rights, locking & versioning status)
-                    wsp.checkRemoveNode(node,
+                    wsp.checkRemoveNode(nodeState, (NodeId) target.getId(),
                             WorkspaceImpl.CHECK_ACCESS | WorkspaceImpl.CHECK_LOCK
                             | WorkspaceImpl.CHECK_VERSIONING);
-                    // remove child node (recursive)
-                    removeNode(node, target.getUUID());
+                    // unlink child node (recursive)
+                    unlinkNodeState(nodeState, target.getUUID());
                 } catch (ItemStateException ise) {
                     String msg = "internal error: failed to retrieve state of "
                             + nodeId;
@@ -424,11 +480,11 @@ public class WorkspaceImporter implements Importer, Constants {
                 PropertyId propId =
                         new PropertyId(target.getUUID(), entry.getName());
                 try {
-                    PropertyState prop = (PropertyState) stateMgr.getItemState(propId);
+                    PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
                     // remove property entry
                     target.removePropertyEntry(propId.getName());
                     // destroy property state
-                    stateMgr.destroy(prop);
+                    stateMgr.destroy(propState);
                 } catch (ItemStateException ise) {
                     String msg = "internal error: failed to retrieve state of "
                             + propId;
@@ -483,7 +539,7 @@ public class WorkspaceImporter implements Importer, Constants {
             Path p0 = hierMgr.getPath(importTarget.getId());
             Path p1 = hierMgr.getPath(conflicting.getId());
             try {
-                if (p0.equals(p1) || p0.isAncestorOf(p1)) {
+                if (p1.equals(p0) || p1.isAncestorOf(p0)) {
                     String msg = "cannot remove ancestor node";
                     log.debug(msg);
                     throw new RepositoryException(msg);
@@ -503,7 +559,8 @@ public class WorkspaceImporter implements Importer, Constants {
                     | WorkspaceImpl.CHECK_VERSIONING
                     | WorkspaceImpl.CHECK_CONSTRAINTS);
             // do remove conflicting (recursive)
-            removeNode(conflicting, conflicting.getParentUUID());
+            removeNode(conflicting);
+
             // create new with given uuid:
             // check if new node can be added (check access rights &
             // node type constraints only, assume locking & versioning status
@@ -540,7 +597,7 @@ public class WorkspaceImporter implements Importer, Constants {
                     | WorkspaceImpl.CHECK_VERSIONING
                     | WorkspaceImpl.CHECK_CONSTRAINTS);
             // do remove conflicting (recursive)
-            removeNode(conflicting, conflicting.getParentUUID());
+            removeNode(conflicting);
             // create new with given uuid at same location as conflicting:
             // check if new node can be added at other location
             // (access rights, node type constraints, locking & versioning status)
