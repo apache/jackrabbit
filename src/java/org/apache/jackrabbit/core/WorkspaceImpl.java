@@ -82,6 +82,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * A <code>WorkspaceImpl</code> ...
@@ -480,8 +481,8 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * Checks if removing the given target node is allowed in the current
-     * context.
+     * Checks if removing the given target node entirely (i.e. unlinking from
+     * all its parents) is allowed in the current context.
      *
      * @param targetState
      * @param options     bit-wise OR'ed flags specifying the checks that should be
@@ -511,13 +512,54 @@ public class WorkspaceImpl implements Workspace, Constants {
             throws ConstraintViolationException, AccessDeniedException,
             VersionException, LockException, ItemNotFoundException,
             ReferentialIntegrityException, RepositoryException {
+        List parentUUIDs = targetState.getParentUUIDs();
+        Iterator iter = parentUUIDs.iterator();
+        while (iter.hasNext()) {
+            NodeId parentId = new NodeId((String) iter.next());
+            checkRemoveNode(targetState, parentId, options);
+        }
+    }
+
+    /**
+     * Checks if removing the given target node from the specifed parent
+     * is allowed in the current context.
+     *
+     * @param targetState
+     * @param parentId
+     * @param options     bit-wise OR'ed flags specifying the checks that should be
+     *                    performed; any combination of the following constants:
+     *                    <ul>
+     *                    <li><code>{@link #CHECK_ACCESS}</code>: make sure
+     *                    current session is granted read access on parent
+     *                    and remove privilege on target node</li>
+     *                    <li><code>{@link #CHECK_LOCK}</code>: make sure
+     *                    there's no foreign lock on parent node</li>
+     *                    <li><code>{@link #CHECK_VERSIONING}</code>: make sure
+     *                    parent node is checked-out</li>
+     *                    <li><code>{@link #CHECK_CONSTRAINTS}</code>:
+     *                    make sure no node type constraints would be violated</li>
+     *                    <li><code>{@link #CHECK_REFERENCES}</code>:
+     *                    make sure no references exist on target node</li>
+     *                    </ul>
+     * @throws ConstraintViolationException
+     * @throws AccessDeniedException
+     * @throws VersionException
+     * @throws LockException
+     * @throws ItemNotFoundException
+     * @throws ReferentialIntegrityException
+     * @throws RepositoryException
+     */
+    public void checkRemoveNode(NodeState targetState, NodeId parentId,
+                                int options)
+            throws ConstraintViolationException, AccessDeniedException,
+            VersionException, LockException, ItemNotFoundException,
+            ReferentialIntegrityException, RepositoryException {
 
         if (targetState.getParentUUID() == null) {
             // root or orphaned node
             throw new ConstraintViolationException("cannot remove root node");
         }
         NodeId targetId = (NodeId) targetState.getId();
-        NodeId parentId = new NodeId(targetState.getParentUUID());
         NodeState parentState = getNodeState(parentId);
         Path parentPath = hierMgr.getPath(parentId);
 
@@ -762,8 +804,53 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
-     * Recursively removes the specified node state including its properties and
-     * child nodes.
+     * Unlinks the specified node state from all its parents and recursively
+     * removes it including its properties and child nodes.
+     * <p/>
+     * <b>Precondition:</b> the state manager of this workspace needs to be in
+     * edit mode.
+     * todo duplicate code in WorkspaceImporter; consolidate in WorkspaceOperations class
+     *
+     * @param targetState
+     * @throws RepositoryException if an error occurs
+     */
+    private void removeNodeState(NodeState targetState)
+            throws RepositoryException {
+
+        // copy list to avoid ConcurrentModificationException
+        ArrayList parentUUIDs = new ArrayList(targetState.getParentUUIDs());
+        Iterator iter = parentUUIDs.iterator();
+        while (iter.hasNext()) {
+            String parentUUID = (String) iter.next();
+            NodeId parentId = new NodeId(parentUUID);
+
+            // unlink node state from this parent
+            unlinkNodeState(targetState, parentUUID);
+
+            // remove child node entries
+            NodeState parent = getNodeState(parentId);
+            // use temp array to avoid ConcurrentModificationException
+            ArrayList tmp =
+                    new ArrayList(parent.getChildNodeEntries(targetState.getUUID()));
+            // remove from tail to avoid problems with same-name siblings
+            for (int i = tmp.size() - 1; i >= 0; i--) {
+                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
+                parent.removeChildNodeEntry(entry.getName(), entry.getIndex());
+            }
+            // store parent
+            stateMgr.store(parent);
+        }
+    }
+
+    /**
+     * Unlinks the given node state from the specified parent i.e. removes
+     * <code>parentUUID</code> from its list of parents. If as a result
+     * the given node state would be orphaned it will be recursively removed
+     * including its properties and child nodes.
+     * <p/>
+     * Note that the child node entry refering to <code>targetState</code> is
+     * <b><i>not</i></b> automatically removed from <code>targetState</code>'s
+     * parent denoted by <code>parentUUID</code>.
      * <p/>
      * <b>Precondition:</b> the state manager of this workspace needs to be in
      * edit mode.
@@ -773,7 +860,7 @@ public class WorkspaceImpl implements Workspace, Constants {
      * @param parentUUID
      * @throws RepositoryException if an error occurs
      */
-    private void removeNodeState(NodeState targetState, String parentUUID)
+    private void unlinkNodeState(NodeState targetState, String parentUUID)
             throws RepositoryException {
 
         // check if this node state would be orphaned after unlinking it from parent
@@ -791,11 +878,12 @@ public class WorkspaceImpl implements Workspace, Constants {
                 NodeId nodeId = new NodeId(entry.getUUID());
                 try {
                     NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
-                    // check if existing can be removed
-                    checkRemoveNode(nodeState, CHECK_ACCESS | CHECK_LOCK
-                            | CHECK_VERSIONING);
-                    // remove child node (recursive)
-                    removeNodeState(nodeState, targetState.getUUID());
+                    // check if child node can be removed
+                    // (access rights, locking & versioning status)
+                    checkRemoveNode(nodeState, (NodeId) targetState.getId(),
+                            CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING);
+                    // unlink child node (recursive)
+                    unlinkNodeState(nodeState, targetState.getUUID());
                 } catch (ItemStateException ise) {
                     String msg = "internal error: failed to retrieve state of "
                             + nodeId;
@@ -815,7 +903,8 @@ public class WorkspaceImpl implements Workspace, Constants {
                 PropertyId propId =
                         new PropertyId(targetState.getUUID(), entry.getName());
                 try {
-                    PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
+                    PropertyState propState =
+                            (PropertyState) stateMgr.getItemState(propId);
                     // remove property entry
                     targetState.removePropertyEntry(propId.getName());
                     // destroy property state
@@ -911,11 +1000,30 @@ public class WorkspaceImpl implements Workspace, Constants {
                     id = new NodeId(uuid);
                     if (stateMgr.hasItemState(id)) {
                         NodeState existingState = (NodeState) stateMgr.getItemState(id);
+                        // make sure existing node is not the parent
+                        // or an ancestor thereof
+                        NodeId newParentId = new NodeId(parentUUID);
+                        Path p0 = hierMgr.getPath(newParentId);
+                        Path p1 = hierMgr.getPath(id);
+                        try {
+                            if (p1.equals(p0) || p1.isAncestorOf(p0)) {
+                                String msg = "cannot remove ancestor node";
+                                log.debug(msg);
+                                throw new RepositoryException(msg);
+                            }
+                        } catch (MalformedPathException mpe) {
+                            // should never get here...
+                            String msg = "internal error: failed to determine degree of relationship";
+                            log.error(msg, mpe);
+                            throw new RepositoryException(msg, mpe);
+                        }
+
                         // check if existing can be removed
                         checkRemoveNode(existingState, CHECK_ACCESS | CHECK_LOCK
                                 | CHECK_VERSIONING | CHECK_CONSTRAINTS);
+
                         // do remove existing
-                        removeNodeState(existingState, existingState.getParentUUID());
+                        removeNodeState(existingState);
                     }
                     break;
                 default:
@@ -1390,8 +1498,8 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         // 2. check if target state can be removed from old/added to new parent
 
-        checkRemoveNode(targetState, CHECK_ACCESS | CHECK_LOCK
-                | CHECK_VERSIONING | CHECK_CONSTRAINTS);
+        checkRemoveNode(targetState, (NodeId) srcParentState.getId(),
+                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS);
         checkAddNode(destParentState, destName.getName(),
                 targetState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
                 | CHECK_VERSIONING | CHECK_CONSTRAINTS);
