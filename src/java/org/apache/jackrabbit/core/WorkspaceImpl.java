@@ -897,8 +897,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             // remove properties
             // use temp array to avoid ConcurrentModificationException
             tmp = new ArrayList(targetState.getPropertyEntries());
-            // remove from tail to avoid problems with same-name siblings
-            for (int i = tmp.size() - 1; i >= 0; i--) {
+            for (int i = 0; i < tmp.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) tmp.get(i);
                 PropertyId propId =
                         new PropertyId(targetState.getUUID(), entry.getName());
@@ -923,8 +922,9 @@ public class WorkspaceImpl implements Workspace, Constants {
         targetState.removeParentUUID(parentUUID);
 
         if (orphaned) {
-            // destroy target state
-            stateMgr.destroy(targetState);
+            // destroy target state (pass overlayed state since target state
+            // might have been modified during unlinking)
+            stateMgr.destroy(targetState.getOverlayedState());
         } else {
             // store target state
             stateMgr.store(targetState);

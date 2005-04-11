@@ -474,8 +474,7 @@ public class WorkspaceImporter implements Importer, Constants {
             // remove properties
             // use temp array to avoid ConcurrentModificationException
             tmp = new ArrayList(target.getPropertyEntries());
-            // remove from tail to avoid problems with same-name siblings
-            for (int i = tmp.size() - 1; i >= 0; i--) {
+            for (int i = 0; i < tmp.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) tmp.get(i);
                 PropertyId propId =
                         new PropertyId(target.getUUID(), entry.getName());
@@ -499,7 +498,9 @@ public class WorkspaceImporter implements Importer, Constants {
         target.removeParentUUID(parentUUID);
 
         if (orphaned) {
-            // destroy target
+            // destroy target state (pass overlayed state since target state
+            // might have been modified during unlinking)
+            stateMgr.destroy(target.getOverlayedState());
             stateMgr.destroy(target);
         } else {
             // store target

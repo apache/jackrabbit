@@ -90,8 +90,6 @@ public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
      * sufficient access permissions to complete the operation.
      */
     public void testMoveNodesAccessDenied() throws RepositoryException {
-        // logout and get read only session
-        superuser.logout();
         Session readOnlySuperuser = helper.getReadOnlySession();
 
         String dstAbsPath = node2.getPath() + "/" + node1.getName();
