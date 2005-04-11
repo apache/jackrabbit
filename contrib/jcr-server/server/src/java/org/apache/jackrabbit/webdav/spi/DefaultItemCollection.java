@@ -24,6 +24,7 @@ import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.ordering.*;
 import org.apache.jackrabbit.webdav.util.Text;
 import org.apache.jackrabbit.webdav.lock.*;
+import org.apache.jackrabbit.JCRConstants;
 
 import javax.jcr.*;
 import javax.jcr.lock.Lock;
@@ -430,8 +431,12 @@ public class DefaultItemCollection extends AbstractItemResource
             throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
         }
 
-        ActiveLock lock = getWriteLock();
-        if (lock != null && lockToken.equals(lock.getToken())) {
+        ActiveLock lock = getLock(reqLockInfo.getType(), reqLockInfo.getScope());
+        if (lock == null) {
+            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "No lock with the given scope/type present on this resource.");
+        }
+
+        if (Type.WRITE.equals(lock.getType())) {
             try {
                 Lock jcrLock = ((Node) item).getLock();
                 jcrLock.refresh();
@@ -599,13 +604,13 @@ public class DefaultItemCollection extends AbstractItemResource
      * resource: write locks (exclusive or exclusive session-scoped) in case the underlaying
      * node has the node type mix:lockable.
      *
-     * @see #MIX_LOCKABLE
+     * @see org.apache.jackrabbit.JCRConstants#MIX_LOCKABLE
      */
     protected void initLockSupport() {
         super.initLockSupport();
         // add exclusive write lock if allowed for the given node
         try {
-            if (exists() && ((Node)item).isNodeType(MIX_LOCKABLE)) {
+            if (exists() && ((Node)item).isNodeType(JCRConstants.MIX_LOCKABLE)) {
                 supportedLock.addEntry(Type.WRITE, Scope.EXCLUSIVE);
                 // TODO: do session-scoped lock properly (including session caching and proper scope discovery)
                 //supportedLock.addEntry(new SessionScopedLockEntry());
@@ -643,16 +648,16 @@ public class DefaultItemCollection extends AbstractItemResource
             Node n = (Node)item;
             // overwrite the default modificationtime if possible
             try {
-		if (n.hasProperty(PROP_LASTMODIFIED)) {
-                    setModificationTime(n.getProperty(PROP_LASTMODIFIED).getLong());
+		if (n.hasProperty(JCRConstants.JCR_LASTMODIFIED)) {
+                    setModificationTime(n.getProperty(JCRConstants.JCR_LASTMODIFIED).getLong());
 		}
 	    } catch (RepositoryException e) {
 		log.warn("Error while accessing jcr:lastModified property");
 	    }
             // overwrite the default creation date if possible
             try {
-                if (n.hasProperty(PROP_CREATED)) {
-                    long creationTime = n.getProperty(PROP_CREATED).getValue().getLong();
+                if (n.hasProperty(JCRConstants.JCR_CREATED)) {
+                    long creationTime = n.getProperty(JCRConstants.JCR_CREATED).getValue().getLong();
                     properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE,
                             DavConstants.creationDateFormat.format(new Date(creationTime))));
                 }

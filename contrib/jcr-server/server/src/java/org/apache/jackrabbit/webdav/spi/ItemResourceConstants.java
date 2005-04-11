@@ -50,16 +50,6 @@ public interface ItemResourceConstants {
     public static final String VERSIONSTORAGE_PATH = "/jcr:system/jcr:versionStorage";
 
     /**
-     * Constant for the mix:versionable node type name.
-     */
-    public static final String MIX_VERSIONABLE = "mix:versionable";
-
-    /**
-     * Constant for the mix:lockable node type name.
-     */
-    public static final String MIX_LOCKABLE = "mix:lockable";
-
-    /**
      * The namespace for all jcr specific extensions.
      */
     public static final Namespace NAMESPACE = Namespace.getNamespace("jcr", "http://www.day.com/jcr/webdav/1.0");
@@ -129,16 +119,4 @@ public interface ItemResourceConstants {
 
     // property names used for resource representing a workspace
     public static final DavPropertyName JCR_NAMESPACES = DavPropertyName.create("namespaces", NAMESPACE);
-
-    /**
-     * Property name for the jcr:created property present on Version items.
-     */
-    public static final DavPropertyName CREATED = DavPropertyName.create("created", ItemResourceConstants.NAMESPACE);
-
-    // JCR property names
-    public static final String PROP_LASTMODIFIED = "jcr:lastModified";
-    public static final String PROP_CREATED = "jcr:created";
-    public static final String PROP_BASEVERSION = "jcr:baseVersion";
-    public static final String PROP_PREDECESSORS = "jcr:predecessors";
-    public static final String PROP_MERGEFAILED = "jcr:mergeFailed";
 }

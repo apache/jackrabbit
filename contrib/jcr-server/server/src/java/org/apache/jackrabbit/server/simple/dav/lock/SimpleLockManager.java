@@ -140,7 +140,7 @@ public class SimpleLockManager implements LockManager {
     public ActiveLock refreshLock(LockInfo lockInfo, String lockToken, DavResource resource)
 	    throws DavException {
 	// timeout is always infinite > no test for expiration or adjusting timeout needed.
-	ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE, resource);
+	ActiveLock lock = getLock(lockInfo.getType(), lockInfo.getScope(), resource);
 	if (lock == null) {
 	    throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
 	} else if (!lock.getToken().equals(lockToken)) {

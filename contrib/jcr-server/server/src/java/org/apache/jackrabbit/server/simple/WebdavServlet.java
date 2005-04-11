@@ -23,10 +23,15 @@ import org.apache.jackrabbit.server.simple.dav.DavSessionProviderImpl;
 import javax.servlet.http.*;
 import javax.servlet.*;
 import java.io.*;
+import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.lock.LockManager;
+import org.apache.commons.chain.config.ConfigParser;
+import org.apache.commons.chain.Catalog;
+import org.apache.commons.chain.impl.CatalogFactoryBase;
 
 /**
  * WebdavServlet provides webdav support (level 1 and 2 complient) for repository
@@ -40,13 +45,16 @@ public class WebdavServlet extends AbstractWebdavServlet {
     /** init param name of the repository prefix */
     public static final String INIT_PARAM_RESOURCE_PATH_PREFIX = "resource-path-prefix";
 
+    /** init param file of the commons chain catalog*/
+    public static final String INIT_PARAM_CHAIN_CATALOG = "chain-catalog";
+
     /**
      * Map used to remember any webdav lock created without being reflected
      * in the underlaying repository.
      * This is needed because some clients rely on a successful locking
      * mechanism in order to perform properly (e.g. mac OSX built-in dav client)
      */
-    private SimpleLockManager lockManager;
+    private LockManager lockManager;
 
     /** the resource factory */
     private DavResourceFactory resourceFactory;
@@ -59,6 +67,8 @@ public class WebdavServlet extends AbstractWebdavServlet {
 
     /** the repository prefix retrieved from config */
     private static String resourcePathPrefix;
+
+    private static Catalog chainCatalog;
 
     /**
      * Init this servlet
@@ -78,9 +88,16 @@ public class WebdavServlet extends AbstractWebdavServlet {
 	}
 	log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = '" + resourcePathPrefix + "'");
 
-	lockManager = new SimpleLockManager();
-        resourceFactory = new ResourceFactoryImpl(lockManager);
-        locatorFactory = new LocatorFactoryImpl(resourcePathPrefix);
+        try {
+            String chain = getInitParameter(INIT_PARAM_CHAIN_CATALOG);
+            URL chainUrl = getServletContext().getResource(chain);
+            ConfigParser parser = new ConfigParser();
+            parser.parse(chainUrl);
+            chainCatalog = CatalogFactoryBase.getInstance().getCatalog();
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+        log.info(INIT_PARAM_CHAIN_CATALOG + " = '" + chainCatalog + "'");
     }
 
     /**
@@ -95,11 +112,11 @@ public class WebdavServlet extends AbstractWebdavServlet {
 	throws ServletException, IOException {
 
 	try {
-            WebdavRequest webdavRequest = new WebdavRequestImpl(request, locatorFactory);
+            WebdavRequest webdavRequest = new WebdavRequestImpl(request, getLocatorFactory());
             WebdavResponse webdavResponse = new WebdavResponseImpl(response);
 
             // make sure there is a authenticated user
-	    getDavSessionProvider().acquireSession(webdavRequest);
+	    getSessionProvider().acquireSession(webdavRequest);
 	    if (webdavRequest.getDavSession() == null) {
  		return;
  	    }
@@ -156,7 +173,7 @@ public class WebdavServlet extends AbstractWebdavServlet {
 		    // GET, HEAD, TRACE......
 		    super.service(request, response);
 	    }
-	    getDavSessionProvider().releaseSession(webdavRequest);
+	    getSessionProvider().releaseSession(webdavRequest);
 
 	} catch (DavException e) {
             // special handling for unauthorized, should be done nicer
@@ -192,7 +209,7 @@ public class WebdavServlet extends AbstractWebdavServlet {
      */
     protected DavResource createResource(DavResourceLocator locator, WebdavRequest request, WebdavResponse response)
             throws DavException {
-        return resourceFactory.createResource(locator, request, response);
+        return getResourceFactory().createResource(locator, request, response);
     }
 
     /**
@@ -206,13 +223,82 @@ public class WebdavServlet extends AbstractWebdavServlet {
     }
 
     /**
+     * Returns the <code>DavLocatorFactory</code>. If no locator factory has
+     * been set or created a new instance of {@link LocatorFactoryImpl} is
+     * returned.
+     *
+     * @return the locator factory
+     */
+    public DavLocatorFactory getLocatorFactory() {
+	if (locatorFactory == null) {
+	    locatorFactory = new LocatorFactoryImpl(resourcePathPrefix);
+	}
+	return locatorFactory;
+    }
+
+    /**
+     * Set the locator factory
+     *
+     * @param locatorFactory
+     */
+    public void setLocatorFactory(DavLocatorFactory locatorFactory) {
+	this.locatorFactory = locatorFactory;
+    }
+
+    /**
+     * Returns the <code>LockManager</code>. If no lock manager has
+     * been set or created a new instance of {@link SimpleLockManager} is
+     * returned.
+     *
+     * @return the lock manager
+     */
+    public LockManager getLockManager() {
+	if (lockManager == null) {
+	    lockManager = new SimpleLockManager();
+	}
+	return lockManager;
+    }
+
+    /**
+     * Set the lock manager
+     *
+     * @param lockManager
+     */
+    public void setLockManager(LockManager lockManager) {
+	this.lockManager = lockManager;
+    }
+
+    /**
+     * Returns the <code>DavResourceFactory</code>. If no request factory has
+     * been set or created a new instance of {@link ResourceFactoryImpl} is
+     * returned.
+     *
+     * @return the resource factory
+     */
+    public DavResourceFactory getResourceFactory() {
+	if (resourceFactory == null) {
+	    resourceFactory = new ResourceFactoryImpl(getLockManager());
+	}
+	return resourceFactory;
+    }
+
+    /**
+     * Set the resource factory
+     *
+     * @param resourceFactory
+     */
+    public void setResourceFactory(DavResourceFactory resourceFactory) {
+	this.resourceFactory = resourceFactory;
+    }
+
+    /**
      * Returns the <code>DavSessionProvider</code>. If no session provider has
      * been set or created a new instance of {@link DavSessionProviderImpl} is
-     * return.
+     * returned.
      *
      * @return the session provider
      */
-    public DavSessionProvider getDavSessionProvider() {
+    public DavSessionProvider getSessionProvider() {
 	if (sessionProvider == null) {
 	    sessionProvider = new DavSessionProviderImpl();
 	}
@@ -224,7 +310,7 @@ public class WebdavServlet extends AbstractWebdavServlet {
      *
      * @param sessionProvider
      */
-    public void setDavSessionProvider(DavSessionProvider sessionProvider) {
+    public void setSessionProvider(DavSessionProvider sessionProvider) {
 	this.sessionProvider = sessionProvider;
     }
 }
