@@ -24,7 +24,7 @@
       <item name="Overview"                 href="/arch/overview.html" collapse="true">
         <item name="JSR-170 Levels"         href="/arch/overview/jcrlevels.html"/>
       </item>
-      <item name="Deployment&#xA0;Models"   href="/arch/deploy.html">
+      <item name="Deployment&#xA0;Models"   href="/arch/deploy.html" collapse="true">
         <item name="Deployment&#xA0;HOWTO"  href="/arch/deploy/howto-deploy.html"/>
       </item>
       <item name="Core&#xA0;Operations"     href="/arch/operate/index.html"  collapse="true">
