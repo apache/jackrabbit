@@ -28,18 +28,22 @@ public class ORMChildNodeEntry
     private String uuid;
     private String parentUUID;
     private String name;
-    private Integer index;
+    // this is the index used for same name siblings
+    private Integer sameNameIndex;
     private Integer dbId;
     private ORMNodeState parent;
+    // this is the index used for conserving the order of child nodes.
+    private Integer childrenIndex;
     public ORMChildNodeEntry() {
     }
 
-    public ORMChildNodeEntry(ORMNodeState parent, ChildNodeEntry childNodeEntry, String parentUUID) {
+    public ORMChildNodeEntry(ORMNodeState parent, ChildNodeEntry childNodeEntry, String parentUUID, int childrenIndex) {
         this.parent = parent;
         uuid = childNodeEntry.getUUID();
         this.parentUUID = parentUUID;
         name = childNodeEntry.getName().toString();
-        index = new Integer(childNodeEntry.getIndex());
+        sameNameIndex = new Integer(childNodeEntry.getIndex());
+        this.childrenIndex = new Integer(childrenIndex);
     }
 
     public void setUuid(String uuid) {
@@ -54,8 +58,9 @@ public class ORMChildNodeEntry
         this.name = name;
     }
 
-    public void setIndex(Integer index) {
-        this.index = index;
+    public void setSameNameIndex(Integer sameNameIndex) {
+
+        this.sameNameIndex = sameNameIndex;
     }
 
     public void setDbId(Integer dbId) {
@@ -64,6 +69,10 @@ public class ORMChildNodeEntry
 
     public void setParent(ORMNodeState parent) {
         this.parent = parent;
+    }
+
+    public void setChildrenIndex(Integer childrenIndex) {
+        this.childrenIndex = childrenIndex;
     }
 
     public String getUuid() {
@@ -78,8 +87,9 @@ public class ORMChildNodeEntry
         return name;
     }
 
-    public Integer getIndex() {
-        return index;
+    public Integer getSameNameIndex() {
+
+        return sameNameIndex;
     }
 
     public Integer getDbId() {
@@ -90,6 +100,10 @@ public class ORMChildNodeEntry
         return parent;
     }
 
+    public Integer getChildrenIndex() {
+        return childrenIndex;
+    }
+
     public boolean equals(Object obj) {
         if (!(obj instanceof ORMChildNodeEntry)) {
             return false;
@@ -97,7 +111,8 @@ public class ORMChildNodeEntry
         ORMChildNodeEntry right = (ORMChildNodeEntry) obj;
             if (getUuid().equals(right.getUuid()) &&
                 getName().equals(right.getName()) &&
-                (getIndex().equals(right.getIndex()))) {
+                (getSameNameIndex().equals(right.getSameNameIndex())) &&
+                (getChildrenIndex().equals(right.getChildrenIndex()))) {
                 return true;
             } else {
                 return false;
@@ -109,10 +124,10 @@ public class ORMChildNodeEntry
             return 0;
         }
         ORMChildNodeEntry right = (ORMChildNodeEntry) obj;
-        return (getUuid() + getName() + getIndex()).compareTo(right.getUuid() + right.getName() + right.getIndex());
+        return (getChildrenIndex() + getUuid() + getName() + getSameNameIndex()).compareTo(right.getChildrenIndex() + right.getUuid() + right.getName() + right.getSameNameIndex());
     }
 
     public int hashCode() {
-        return (getUuid() + getName() + getIndex()).hashCode();
+        return (getChildrenIndex() + getUuid() + getName() + getSameNameIndex()).hashCode();
     }
 }

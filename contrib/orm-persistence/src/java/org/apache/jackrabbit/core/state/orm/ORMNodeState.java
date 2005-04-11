@@ -71,11 +71,13 @@ public abstract class ORMNodeState implements Serializable {
             definitionId = state.getDefinitionId().toString();
         }
         Iterator childNodeEntriesIter = state.getChildNodeEntries().iterator();
+        int i=0;
         while (childNodeEntriesIter.hasNext()) {
             ChildNodeEntry curChildNodeEntry = (ChildNodeEntry) childNodeEntriesIter.next();
             log.debug("childNodeEntry " + curChildNodeEntry.getIndex() + " name=" + curChildNodeEntry.getName() + " uuid=" + curChildNodeEntry.getUUID());
-            ORMChildNodeEntry childNode = new ORMChildNodeEntry(this, curChildNodeEntry, uuid);
+            ORMChildNodeEntry childNode = new ORMChildNodeEntry(this, curChildNodeEntry, uuid, i);
             getChildNodeEntries().add(childNode);
+            i++;
         }
         Iterator propertyEntryIter = state.getPropertyEntries().iterator();
         while (propertyEntryIter.hasNext()) {

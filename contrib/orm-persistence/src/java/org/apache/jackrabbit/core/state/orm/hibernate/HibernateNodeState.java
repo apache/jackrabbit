@@ -23,6 +23,9 @@ import java.util.Set;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.orm.ORMNodeState;
+import java.util.TreeSet;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <p> Hibernate-specific node state class. This is necessary because
@@ -30,7 +33,9 @@ import org.apache.jackrabbit.core.state.orm.ORMNodeState;
  */
 public class HibernateNodeState extends ORMNodeState {
 
-    private Set setChildNodeEntries = new HashSet();
+    // might be a bug here because it seems that these entries should be
+    // ordered
+    private List listChildNodeEntries = new ArrayList();
     private Set setParentUUIDs = new HashSet();
     private Set setMixinTypeNames = new HashSet();
     private Set setPropertyEntries = new HashSet();
@@ -45,11 +50,11 @@ public class HibernateNodeState extends ORMNodeState {
         fromPersistentNodeState(state);
     }
     public Collection getChildNodeEntries() {
-        return setChildNodeEntries;
+        return listChildNodeEntries;
     }
     public void setChildNodeEntries(Collection childNodeEntries) {
-        this.setChildNodeEntries.clear();
-        this.setChildNodeEntries.addAll(childNodeEntries);
+        this.listChildNodeEntries.clear();
+        this.listChildNodeEntries.addAll(childNodeEntries);
     }
 
     public Collection getPropertyEntries() {
@@ -79,12 +84,12 @@ public class HibernateNodeState extends ORMNodeState {
         this.setParentUUIDs.addAll(parentUUIDs);
     }
 
-    public Set getSetChildNodeEntries() {
-        return setChildNodeEntries;
+    public List getListChildNodeEntries() {
+        return listChildNodeEntries;
     }
 
-    public void setSetChildNodeEntries(Set setChildNodeEntries) {
-        this.setChildNodeEntries = setChildNodeEntries;
+    public void setListChildNodeEntries(List listChildNodeEntries) {
+        this.listChildNodeEntries = listChildNodeEntries;
     }
 
     public Set getSetPropertyEntries() {

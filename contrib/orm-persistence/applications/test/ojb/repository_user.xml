@@ -55,7 +55,7 @@
        element-class-ref="org.apache.jackrabbit.core.state.orm.ORMChildNodeEntry"
        auto-update="true"
        auto-delete="true"
-       orderby="index"
+       orderby="childrenIndex"
        sort="ASC"
     >
        <inverse-foreignkey field-ref="parentUUID"/>
@@ -160,8 +160,14 @@
          primarykey="true"
       />
        <field-descriptor
-         name="index"
-         column="NODE_INDEX"
+         name="sameNameIndex"
+         column="SAMENAME_INDEX"
+         jdbc-type="INTEGER"
+         primarykey="true"
+      />
+       <field-descriptor
+         name="childrenIndex"
+         column="CHILDREN_INDEX"
          jdbc-type="INTEGER"
          primarykey="true"
       />
