@@ -1617,12 +1617,14 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public String getName() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         if (state.getParentUUID() == null) {
             // this is the root node
             return "";
         }
 
-        //QName name = getPrimaryPath().getNameElement().getName();
         QName name = session.getHierarchyManager().getName(id);
         try {
             return name.toJCRName(session.getNamespaceResolver());
