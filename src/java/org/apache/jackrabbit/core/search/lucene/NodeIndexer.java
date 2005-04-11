@@ -29,6 +29,9 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.search.TextFilterService;
+import org.apache.log4j.Logger;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -36,18 +39,39 @@ import javax.jcr.RepositoryException;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.io.Reader;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
- *
- * todo add support for indexing of nt:resource. e.g. when mime type is text/*
  */
 public class NodeIndexer {
+
+    /**
+     * The logger instance for this class.
+     */
+    private static final Logger log = Logger.getLogger(NodeIndexer.class);
+
+    /**
+     * QName for jcr:encoding
+     */
+    private static final QName JCR_ENCODING = new QName(Constants.NS_JCR_URI, "encoding");
+
+    /**
+     * QName for jcr:mimeType
+     */
+    private static final QName JCR_MIMETYPE = new QName(Constants.NS_JCR_URI, "mimeType");
+
+    /**
+     * QName for jcr:data
+     */
+    private static final QName JCR_DATA = new QName(Constants.NS_JCR_URI, "data");
 
     /**
      * The <code>NodeState</code> of the node to index
      */
     protected final NodeState node;
+
     /**
      * The persistent item state provider
      */
@@ -222,15 +246,45 @@ public class NodeIndexer {
     /**
      * Adds the binary value to the document as the named field.
      * <p>
-     * This implementation does nothing as binary indexing is not implemented
-     * here.
+     * This implementation checks if this {@link #node} is of type nt:resource
+     * and if that is the case, tries to extract text from the data atom using
+     * {@link TextFilterService}add a {@link FieldNames#FULLTEXT} field
+     * .
      * 
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addBinaryValue(Document doc, String fieldName, Object internalValue) {
-        // don't know how to index -> ignore
+        // 'check' if node is of type nt:resource
+        try {
+            String jcrData = mappings.getPrefix(Constants.NS_JCR_URI) + ":data";
+            if (!jcrData.equals(fieldName)) {
+                // don't know how to index
+                return;
+            }
+            if (node.hasPropertyEntry(JCR_ENCODING)
+                    && node.hasPropertyEntry(JCR_MIMETYPE)) {
+                PropertyState dataProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_DATA));
+                PropertyState mimeTypeProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_MIMETYPE));
+                PropertyState encodingProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
+
+                Map fields = TextFilterService.extractText(dataProp,
+                        mimeTypeProp.getValues()[0].internalValue().toString(),
+                        encodingProp.getValues()[0].internalValue().toString());
+                for (Iterator it = fields.keySet().iterator(); it.hasNext();) {
+                    String field = (String) it.next();
+                    Reader r = (Reader) fields.get(field);
+                    doc.add(Field.Text(field, r));
+                }
+            }
+        } catch (ItemStateException e) {
+            log.warn("Exception while indexing binary property: " + e.toString());
+            log.debug("Dump: ", e);
+        } catch (RepositoryException e) {
+            log.warn("Exception while indexing binary property: " + e.toString());
+            log.debug("Dump: ", e);
+        }
     }
     
     /**
