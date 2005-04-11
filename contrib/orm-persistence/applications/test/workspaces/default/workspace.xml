@@ -14,8 +14,8 @@
       persistence of the workspace:
       class: FQN of class implementing PersistenceManager interface
   -->
-        <PersistenceManager class="org.apache.jackrabbit.core.state.orm.ojb.OJBPersistenceManager" />
-        <!--PersistenceManager class="org.apache.jackrabbit.core.state.orm.hibernate.HibernatePersistenceManager" /-->
+        <!--PersistenceManager class="org.apache.jackrabbit.core.state.orm.ojb.OJBPersistenceManager" /-->
+        <PersistenceManager class="org.apache.jackrabbit.core.state.orm.hibernate.HibernatePersistenceManager" />
   <!--
       Search index and the file system it uses.
   -->

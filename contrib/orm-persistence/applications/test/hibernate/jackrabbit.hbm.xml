@@ -40,14 +40,15 @@
             <column name="DEFINITION_ID" not-null="false"/>
         </property>
 
-        <set name="setChildNodeEntries" table="JCR_CHILD_NODE" order-by="NODE_INDEX ASC">
+        <list name="listChildNodeEntries" table="JCR_CHILD_NODE">
             <key column="PARENT_UUID"/>
+            <index column="CHILDREN_INDEX" />
             <composite-element class="org.apache.jackrabbit.core.state.orm.ORMChildNodeEntry">
               <property name="uuid" type="string" column="UUID"/>
               <property name="name" type="string" column="NAME"/>
-              <property name="index" type="integer" column="NODE_INDEX"/>
+              <property name="sameNameIndex" type="integer" column="SAMENAME_INDEX"/>
             </composite-element>
-        </set>
+        </list>
 
         <set name="setPropertyEntries" table="JCR_NODE_PROPERTY">
             <key column="PARENT_UUID"/>
