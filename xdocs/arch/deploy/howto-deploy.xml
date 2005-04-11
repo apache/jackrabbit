@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<document>
+	<properties>
+		<title>Jackrabbit Deployment Models - HOWTO</title>
+	</properties>
+	<body>
+		<section name="HOW-TO Model 1: The (Web-) Application Bundle">
+			<ol>
+				<li>Place the jackrabbit jar file and all the dependencies
+					under [tomcat folder]/webapps/[your app]/WEB-INF/lib.</li>
+				<li>Register a bindable repository factory in the context 
+					scope. Configure the Java class name of the factory 
+					implementation, as well as the repository configuration 
+					file path and the repository home directory path. Use the 
+					full path in both cases.</li>
+				<li>Declare the JNDI address under which you will request the 
+					repository instance in the web application.</li>
+				<li>Code your application to use the resource.</li>
+			</ol>
+			<p> Limitations: the application should not be redeployed during 
+				the same jvm process. In case you want to redeploy your 
+				application be sure to shutdown the repository when your 
+				application is undeployed. It can be done by calling 
+				RepositoryImpl.shutdown() (e.g. in the destroy() method of a 
+				servlet). </p>
+			<subsection name="Snippet">
+				<p>In server.xml under the "context" tag (steps #2)</p>
+				<source>
+&lt;Resource name="jcr/repositoryFactory" auth="Container" 
+	type="org.apache.jackrabbit.core.jndi.BindableRepository"/&gt;
+&lt;ResourceParams name="jcr/repositoryFactory"&gt;
+	&lt;parameter&gt;
+		&lt;name&gt;factory&lt;/name&gt;
+		&lt;value&gt;
+			org.apache.jackrabbit.core.jndi.BindableRepositoryFactory
+		&lt;/value&gt;
+	&lt;/parameter&gt;
+	&lt;parameter&gt;
+		&lt;name&gt;configFilePath&lt;/name&gt;
+		&lt;value&gt;
+			[full path to repository.xml]
+		&lt;/value&gt;
+	&lt;/parameter&gt;
+	&lt;parameter&gt;
+		&lt;name&gt;repHomeDir&lt;/name&gt;
+		&lt;value&gt;
+			[full path to the repository home folder]
+		&lt;/value&gt;
+	&lt;/parameter&gt;
+&lt;/ResourceParams&gt;
+				</source>
+				<p>In web.xml (steps #3)</p>
+				<source>
+&lt;resource-env-ref&gt;
+	&lt;description&gt;
+		Jackrabbit repository factory
+	&lt;/description&gt;
+	&lt;resource-env-ref-name&gt;
+		jcr/repositoryFactory
+	&lt;/resource-env-ref-name&gt;
+	&lt;resource-env-ref-type&gt;
+		org.apache.jackrabbit.core.jndi.BindableRepository
+	&lt;/resource-env-ref-type&gt;
+&lt;/resource-env-ref&gt;	
+				</source>
+				<p>Java code (step #4)</p>
+				<source>
+InitialContext ctx = new InitialContext();
+Context env = (Context) ctx.lookup("java:comp/env");
+Repository repo = (Repository) env.lookup("jcr/repositoryFactory");
+				</source>
+			</subsection>
+		</section>
+	<section name="HOW-TO Model 2: Shared J2EE Resource">
+		<p>
+		Same as Model 1 with the following modifications.
+		</p>
+		<ol>
+			<li>Place the jackrabbit jar file 
+				and all the dependencies
+				under [tomcat folder]/common/lib.</li>
+			<li>
+				Register the bindable repository factory as a global resource
+				(same as model 1 but place the resource under 
+				"GlobalNamingResources" tag) and link the global resource 
+				to a context scoped JNDI address.
+			</li>
+		</ol>		
+		<subsection name="Snippet">
+			<p>In server.xml under "GlobalNamingResources" tag. (step #2)</p>
+			<source>
+&lt;Resource name="jcr/globalRepositoryFactory" auth="Container" 
+	type="org.apache.jackrabbit.core.jndi.BindableRepository"/&gt;
+&lt;ResourceParams name="jcr/globalRepositoryFactory"&gt;
+	&lt;parameter&gt;
+		&lt;name&gt;factory&lt;/name&gt;
+		&lt;value&gt;
+			org.apache.jackrabbit.core.jndi.BindableRepositoryFactory
+		&lt;/value&gt;
+	&lt;/parameter&gt;
+	&lt;parameter&gt;
+		&lt;name&gt;configFilePath&lt;/name&gt;
+		&lt;value&gt;
+			[full path to repository.xml]
+		&lt;/value&gt;
+	&lt;/parameter&gt;
+	&lt;parameter&gt;
+		&lt;name&gt;repHomeDir&lt;/name&gt;
+		&lt;value&gt;
+			[full path to the repository home folder]
+		&lt;/value&gt;
+	&lt;/parameter&gt;
+&lt;/ResourceParams&gt;
+			</source>
+			<p>In server.xml under the "context" tag (step #2)</p>
+			<source>
+&lt;ResourceLink name="jcr/repositoryFactory"
+		  global="jcr/globalRepositoryFactory"
+		  type="org.apache.jackrabbit.core.jndi.BindableRepository"/&gt;
+			</source>
+		</subsection>		
+	</section>		
+	</body>
+</document>
