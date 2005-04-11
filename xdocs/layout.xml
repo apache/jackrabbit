@@ -38,6 +38,41 @@
      <td>src/conf</td>
      <td>The directory with sample configuration files etc.</td>
     </tr>
+    <tr>
+     <td>src/grammar</td>
+     <td>
+       The directory with
+       <a href="https://javacc.dev.java.net/">JavaCC</a> grammar files
+       for the XPath and SQL query languages.
+     </td>
+    </tr>
+    <tr>
+     <td>src/test</td>
+     <td>
+       The directory containing
+       <a href="http://www.junit.org/">JUnit</a> test cases.
+     </td>
+    </tr>
+    <tr>
+     <td>applications/test</td>
+     <td>
+       The directory containing the test repository used by the unit tests.
+     </td>
+    </tr>
+    <tr>
+     <td>xdocs</td>
+     <td>
+       The directory containing documentation files shown on
+       the Maven-generated Jackrabbit web site.
+     </td>
+    </tr>
+    <tr>
+     <td>contrib</td>
+     <td>
+       The directory containing contributed JCR and Jackrabbit
+       components and subprojects organized in subdirectories.
+     </td>
+    </tr>
    </table>
    </p>
   </section>
