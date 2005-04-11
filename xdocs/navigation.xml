@@ -24,13 +24,15 @@
       <item name="Overview"                 href="/arch/overview.html" collapse="true">
         <item name="JSR-170 Levels"         href="/arch/overview/jcrlevels.html"/>
       </item>
-      <item name="Deployment&#xA0;Options"  href="/arch/deploy.html"/>
+      <item name="Deployment&#xA0;Models"   href="/arch/deploy.html">
+        <item name="Deployment&#xA0;HOWTO"  href="/arch/deploy/howto-deploy.html"/>
+      </item>
       <item name="Core&#xA0;Operations"     href="/arch/operate/index.html"  collapse="true">
         <item name="Start-up,&#xA0;Initialize" href="/arch/operate/startup.html"/>
       </item>
     </item>
     <item name="First&#xA0;Steps"       href="/firststeps.html" />
-    <item name="API&#xA0;Documentation" href="http://www.day.com/maven/jsr170/javadocs/jcr-0.16.1-pfd/" target="_blank"/>
+    <item name="JCR&#xA0;API&#xA0;Documentation (0.16.1)" href="http://www.day.com/maven/jsr170/javadocs/jcr-0.16.1-pfd/" target="_blank"/>
     <item name="Layout"                 href="/layout.html"/>
     <item name="Downloads"              href="/downloads.html"/>
   </menu>
