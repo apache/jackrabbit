@@ -1424,6 +1424,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      * {@inheritDoc}
      */
     public String getPath() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         try {
             return getPrimaryPath().toJCRPath(session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
@@ -1438,6 +1441,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      * {@inheritDoc}
      */
     public int getDepth() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         if (state.getParentUUID() == null) {
             // shortcut
             return 0;
@@ -1449,6 +1455,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      * {@inheritDoc}
      */
     public Session getSession() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         return session;
     }
 

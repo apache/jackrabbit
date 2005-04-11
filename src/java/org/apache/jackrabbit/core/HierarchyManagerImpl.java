@@ -377,7 +377,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
         try {
             int depth = 0;
             ItemState state = getItemState(id);
-            for (String parentUUID = state.getParentUUID(); parentUUID != null;) {
+            String parentUUID = state.getParentUUID();
+            while (parentUUID != null) {
                 state = (NodeState) getItemState(new NodeId(parentUUID));
                 parentUUID = state.getParentUUID();
                 depth++;

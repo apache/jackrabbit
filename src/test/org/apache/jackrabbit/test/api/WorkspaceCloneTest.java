@@ -106,7 +106,7 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
      */
     public void testCloneNodesAccessDenied() throws RepositoryException {
         // logout and get read only session
-        superuser.logout();
+        //superuser.logout();
         Session readOnlySuperuser = helper.getReadOnlySession();
 
         String dstAbsPath = node2.getPath() + "/" + node1.getName();

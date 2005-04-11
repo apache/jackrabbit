@@ -1173,6 +1173,9 @@ public class PropertyImpl extends ItemImpl implements Property {
      * {@inheritDoc}
      */
     public String getName() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         PropertyId propId = (PropertyId) id;
         QName name = propId.getName();
         try {

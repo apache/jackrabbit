@@ -36,7 +36,7 @@ public class WorkspaceMoveReferenceableTest extends AbstractWorkspaceReferenceab
      */
     public void testMoveNodesReferenceableNodesNewUUID() throws RepositoryException {
         // add mixin referenceable to node1
-        addMixinReferenceableToNode(testRootNode, node1);
+        addMixinReferenceableToNode(node1);
         
         // copy referenceable node below non-referenceable node
         String dstAbsPath = node2.getPath() + "/" + node1.getName();

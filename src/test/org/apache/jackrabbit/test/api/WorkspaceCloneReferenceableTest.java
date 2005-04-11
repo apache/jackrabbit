@@ -38,7 +38,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
      */
     public void testCloneNodesReferenceableNodesOriginalUUID() throws RepositoryException {
         // add mixin referenceable to node1
-        addMixinReferenceableToNode(testRootNode, node1);
+        addMixinReferenceableToNode(node1);
 
         // copy referenceable node below non-referenceable node
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
@@ -62,7 +62,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
      */
     public void testCloneNodesRemoveExistingTrue() throws RepositoryException {
         // add mixin referenceable to node1
-        addMixinReferenceableToNode(testRootNode, node1);
+        addMixinReferenceableToNode(node1);
 
         // clone a node from default workspace to have the same uuid on second workspace
         String dstAbsPath = node2W2.getPath() + "/" + nodeName2;
@@ -76,11 +76,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
 
         // because a node with same uuid exists (cloned node in earlier step - nodeName2), the existing node (and its subtree)
         // should be removed ...
-        assertFalse(testRootNodeW2.hasNode(clonedNode.getName()));
-
-        // ... and is copied to this workspace as part of the copied subtree (that is, not into the former location of the old node).
-        Node clonedNodeMoved = clonedNode2.getNode(clonedNode.getName());
-        assertTrue(testRootNodeW2.hasNode(clonedNodeMoved.getName()));
+        assertFalse(node2W2.hasNode(nodeName2));
     }
 
     /**
@@ -89,7 +85,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
      */
     public void testCloneNodesRemoveExistingFalse() throws RepositoryException {
         // add mixin referenceable to node1
-        addMixinReferenceableToNode(testRootNode, node1);
+        addMixinReferenceableToNode(node1);
 
         // clone a node from default workspace to have the same uuid on second workspace
         workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName2, false);
@@ -110,7 +106,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
         // clone referenceable node
 
         // add mixin referenceable to node1
-        addMixinReferenceableToNode(testRootNode, node1);
+        addMixinReferenceableToNode(node1);
         if (node1.isNodeType(mixReferenceable)) {
             workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName2, false);
         } else {

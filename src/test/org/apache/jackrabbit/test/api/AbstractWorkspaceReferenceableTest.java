@@ -50,17 +50,14 @@ abstract class AbstractWorkspaceReferenceableTest extends AbstractWorkspaceCopyB
     /**
      * add the mix:referenceable mixin type to a node.
      *
-     * @param parent
      * @param node
      * @return referenceable node.
      */
-    protected Node addMixinReferenceableToNode(Node parent, Node node) throws RepositoryException {
-        NodeType nodetype = node.getPrimaryNodeType();
-        if (!nodetype.isNodeType(mixReferenceable)) {
+    protected Node addMixinReferenceableToNode(Node node) throws RepositoryException {
+        if (!node.isNodeType(mixReferenceable)) {
             node.addMixin(mixReferenceable);
+            node.save();
         }
-        parent.save();
-
         return node;
     }
 }

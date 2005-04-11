@@ -626,8 +626,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // remove properties
             // use temp array to avoid ConcurrentModificationException
             tmp = new ArrayList(thisState.getPropertyEntries());
-            // remove from tail to avoid problems with same-name siblings
-            for (int i = tmp.size() - 1; i >= 0; i--) {
+            for (int i = 0; i < tmp.size(); i++) {
                 NodeState.PropertyEntry entry = (NodeState.PropertyEntry) tmp.get(i);
                 removeChildProperty(entry.getName());
             }
