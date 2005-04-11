@@ -23,6 +23,7 @@ import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.version.*;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.JCRConstants;
 import org.jdom.Element;
 
 import javax.jcr.*;
@@ -156,8 +157,6 @@ public class VersionItemCollection extends DefaultItemCollection
             // created and creationDate properties
             try {
                 String creationDate = DavConstants.creationDateFormat.format(v.getCreated().getTime());
-                // jcr specific 'created' property
-                properties.add(new DefaultDavProperty(CREATED, creationDate));
                 // replace dummy creation date from default collection
                 properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, creationDate));
 
@@ -185,7 +184,7 @@ public class VersionItemCollection extends DefaultItemCollection
                 List nodeList = new ArrayList();
                 while (it.hasNext()) {
                     Property p = it.nextProperty();
-                    if (PROP_BASEVERSION.equals(p.getName())) {
+                    if (JCRConstants.JCR_BASEVERSION.equals(p.getName())) {
                         Node n = p.getParent();
                         if (n.isCheckedOut()) {
                            nodeList.add(n);

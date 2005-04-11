@@ -106,7 +106,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      * @see DavResourceLocator#getHref(boolean)
      */
     public String getHref() {
-        return locator.getHref(true);
+        return locator.getHref(isCollection());
     }
 
     /**
@@ -294,7 +294,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      * @see DavResource#refreshLock(org.apache.jackrabbit.webdav.lock.LockInfo, String)
      */
     public ActiveLock refreshLock(LockInfo info, String lockToken) throws DavException {
-        return txMgr.refreshLock(info, lockToken, this);
+        return txMgr.refreshLock(info, lockToken, this);        
     }
 
     /**

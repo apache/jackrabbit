@@ -26,11 +26,19 @@ import org.apache.jackrabbit.webdav.spi.lock.JcrActiveLock;
 import org.apache.jackrabbit.webdav.spi.JcrDavException;
 import org.apache.jackrabbit.webdav.lock.*;
 import org.apache.jackrabbit.webdav.property.*;
+import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.server.io.ImportContext;
+import org.apache.jackrabbit.server.io.ImportNCResourceChain;
+import org.apache.jackrabbit.server.io.ImportCollectionChain;
+import org.apache.log4j.Logger;
 
 /**
  * DavResourceImpl imeplements a DavResource.
  */
-public class DavResourceImpl implements DavResource {
+public class DavResourceImpl implements DavResource, JCRConstants {
+
+    /** the default logger */
+    private static final Logger log = Logger.getLogger(DavResourceImpl.class);
 
     private DavResourceFactory factory;
     private LockManager lockManager;
@@ -79,7 +87,7 @@ public class DavResourceImpl implements DavResource {
         node = (Node)repositoryItem;
 
         // define what is a resource in webdav
-        if (node.isNodeType("nt:resource") || node.isNodeType("nt:file")) {
+        if (node.isNodeType(NT_RESOURCE) || node.isNodeType(NT_FILE)) {
             isCollection = false;
         }
     }
@@ -315,67 +323,21 @@ public class DavResourceImpl implements DavResource {
 
         try {
             String fileName = member.getDisplayName();
-	    Node file;
-	    boolean makeVersionable = true; // todo: to be configurable somewhere
-	    if (node.hasNode(fileName)) {
-		file = node.getNode(fileName);
-		if (file.hasNode("jcr:content")) {
-		    // remove an existing repository entry for 'overwriting' is not possible
-		    file.getNode("jcr:content").remove();
-		}
-	    } else {
-		file = node.addNode(fileName, "nt:file");
-		if (makeVersionable) {
-		    file.addMixin("mix:versionable");
-		}
-	    }
-
-	    if (fileName.endsWith(".xml")) {
-		importXml(file, in, "text/xml");
-	    } else {
-		// todo: retrieve proper mimetype from filename
-		importFile(file, in, "application/octet-stream");
-	    }
+            ImportContext ctx = new ImportContext(node);
+            ctx.setInputStream(in);
+            ctx.setSystemId(fileName);
+            ImportNCResourceChain.getChain().execute(ctx);
             session.getRepositorySession().save();
         } catch (RepositoryException e) {
+            log.error("Error while executing import chain: " + e.toString());
             throw new JcrDavException(e);
         } catch (IOException e) {
+            log.error("Error while executing import chain: " + e.toString());
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (Exception e) {
+            log.error("Error while executing import chain: " + e.toString());
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-    }
-
-    /**
-     * Imports a xml into the repository
-     *
-     * @param parentNode
-     * @param in
-     * @param contentType
-     * @throws RepositoryException
-     * @throws IOException
-     */
-    private void importXml(Node parentNode, InputStream in, String contentType)
-	    throws RepositoryException, IOException {
-	Node content = parentNode.addNode("jcr:content", "nt:unstructured");
-	content.setProperty("jcr:mimeType", contentType);
-	content.setProperty("jcr:lastModified", Calendar.getInstance());
-	session.getRepositorySession().importXML(content.getPath(), in);
-    }
-
-    /**
-     * Imports a plain file to the repository
-     *
-     * @param parentNode
-     * @param in
-     * @param contentType
-     * @throws RepositoryException
-     */
-    private void importFile(Node parentNode, InputStream in, String contentType)
-	    throws RepositoryException {
-	Node content = parentNode.addNode("jcr:content", "nt:resource");
-	content.setProperty("jcr:mimeType", contentType);
-	content.setProperty("jcr:encoding", "");
-	content.setProperty("jcr:data", in);
-	content.setProperty("jcr:lastModified", Calendar.getInstance());
     }
 
     /**
@@ -391,12 +353,19 @@ public class DavResourceImpl implements DavResource {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
         try {
-            node.addNode(member.getDisplayName(), "nt:folder");
+            ImportContext ctx = new ImportContext(node);
+            ctx.setSystemId(member.getDisplayName());
+            ImportCollectionChain.getChain().execute(ctx);
             node.save();
         } catch (ItemExistsException e) {
+            log.error("Error while executing import chain: " + e.toString());
             throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
         } catch (RepositoryException e) {
+            log.error("Error while executing import chain: " + e.toString());
             throw new JcrDavException(e);
+        } catch (Exception e) {
+            log.error("Error while executing import chain: " + e.toString());
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -508,8 +477,12 @@ public class DavResourceImpl implements DavResource {
                     // LockException: no lock applies to this node >> ignore
                     // RepositoryException, AccessDeniedException or another error >> ignore
                 }
-            } else {
-                // not-jcr lockable >> check for webdav lock
+            }
+
+            // could not retrieve jcr-lock (either not jcr-lockable or the lock has
+            // been created before the node was made jcr-lockable. test if a simple
+            // webdav lock is present.
+            if (lock == null) {
                 lock = lockManager.getLock(type, scope, this);
             }
         }
@@ -528,8 +501,9 @@ public class DavResourceImpl implements DavResource {
      */
     public ActiveLock lock(LockInfo lockInfo) throws DavException {
 	ActiveLock lock = null;
-	if (isLockable(lockInfo.getType(), lockInfo.getScope())) {
-	    if (isJsrLockable()) {
+        if (isLockable(lockInfo.getType(), lockInfo.getScope())) {
+            // todo: deal with existing locks, that may have been created, before the node was jcr-lockable...            
+            if (isJsrLockable()) {
 		try {
 		    // try to execute the lock operation
 		    Lock jcrLock = node.lock(lockInfo.isDeep(), false);
@@ -540,7 +514,7 @@ public class DavResourceImpl implements DavResource {
 		    throw new JcrDavException(e);
 		}
 	    } else {
-		// create a new lock which creates a random lock token
+		// create a new webdav lock
 		lock = lockManager.createLock(lockInfo, this);
 	    }
 	} else {
@@ -556,11 +530,9 @@ public class DavResourceImpl implements DavResource {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-        /* since lock is always has infinite timeout >> no extra refresh needed
-           return a lockdiscovery with the lock-info and the default scope and type */
-        ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
+        ActiveLock lock = getLock(lockInfo.getType(), lockInfo.getScope());
         if (lock == null) {
-           throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "No lock present on resource " + getResourcePath());
+           throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "No lock with the given type/scope present on resource " + getResourcePath());
         }
         
         if (lock instanceof JcrActiveLock) {
@@ -573,6 +545,8 @@ public class DavResourceImpl implements DavResource {
         } else {
             lock = lockManager.refreshLock(lockInfo, lockToken, this);
         }
+        /* since lock has infinite lock (simple) or undefined timeout (jcr)
+           return the lock as retrieved from getLock. */
         return lock;
     }
 

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.version.*;
 import org.apache.jackrabbit.webdav.version.report.*;
+import org.apache.jackrabbit.JCRConstants;
 
 import javax.jcr.*;
 import javax.jcr.observation.*;
@@ -95,7 +96,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         }
         if (!isVersionControlled()) {
             try {
-                ((Node)item).addMixin(MIX_VERSIONABLE);
+                ((Node)item).addMixin(JCRConstants.MIX_VERSIONABLE);
                 item.save();
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
@@ -308,10 +309,10 @@ public class VersionControlledItemCollection extends DefaultItemCollection
             Node n = (Node)item;
             if (removePropertyNames.contains(AUTO_MERGE_SET)) {
                 // retrieve the current jcr:mergeFailed property values
-                if (!((Node)item).hasProperty(PROP_MERGEFAILED)) {
+                if (!((Node)item).hasProperty(JCRConstants.JCR_MERGEFAILED)) {
                     throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
                 }
-                Value[] mergeFailed = ((Node)item).getProperty(PROP_MERGEFAILED).getValues();
+                Value[] mergeFailed = ((Node)item).getProperty(JCRConstants.JCR_MERGEFAILED).getValues();
 
                 // resolve all remaining merge conflicts with 'cancel'
                 for (int i = 0; i < mergeFailed.length; i++) {
@@ -322,10 +323,10 @@ public class VersionControlledItemCollection extends DefaultItemCollection
 
             } else if (setProperties.contains(AUTO_MERGE_SET) && setProperties.contains(PREDECESSOR_SET)){
                 // retrieve the current jcr:mergeFailed property values
-                if (!((Node)item).hasProperty(PROP_MERGEFAILED)) {
+                if (!((Node)item).hasProperty(JCRConstants.JCR_MERGEFAILED)) {
                     throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
                 }
-                Value[] mergeFailed = ((Node)item).getProperty(PROP_MERGEFAILED).getValues();
+                Value[] mergeFailed = ((Node)item).getProperty(JCRConstants.JCR_MERGEFAILED).getValues();
 
 
                 // check which mergeFailed entries have been removed from the
@@ -460,15 +461,15 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                         properties.add(new HrefProperty(CHECKED_OUT, baseVHref, true));
 
                         // DAV:predecessors property
-                        if (n.hasProperty(PROP_PREDECESSORS)) {
-                            Value[] predec = n.getProperty(PROP_PREDECESSORS).getValues();
+                        if (n.hasProperty(JCRConstants.JCR_PREDECESSORS)) {
+                            Value[] predec = n.getProperty(JCRConstants.JCR_PREDECESSORS).getValues();
                             addHrefProperty(PREDECESSOR_SET, predec, false);
                         }
                         // DAV:auto-merge-set property. NOTE: the DAV:merge-set
                         // never occurs, because merging without bestEffort flag
                         // being set results in an exception on failure.
-                        if (n.hasProperty(PROP_MERGEFAILED)) {
-                            ReferenceValue[] mergeFailed = (ReferenceValue[]) n.getProperty(PROP_MERGEFAILED).getValues();
+                        if (n.hasProperty(JCRConstants.JCR_MERGEFAILED)) {
+                            ReferenceValue[] mergeFailed = (ReferenceValue[]) n.getProperty(JCRConstants.JCR_MERGEFAILED).getValues();
                             addHrefProperty(AUTO_MERGE_SET, mergeFailed, false);
                         }
                         // todo: checkout-fork, checkin-fork

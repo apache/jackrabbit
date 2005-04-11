@@ -16,7 +16,10 @@
 package org.apache.jackrabbit.server.simple.dav;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.util.Text;
+import org.apache.jackrabbit.server.io.ExportContext;
+import org.apache.jackrabbit.server.io.ExportCollectionChain;
+import org.apache.jackrabbit.server.io.ExportNCResourceChain;
+import org.apache.commons.chain.Command;
 
 import javax.jcr.*;
 import java.util.Date;
@@ -50,11 +53,6 @@ public class NodeResource {
     public static SimpleDateFormat creationDateFormat =
 	new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    private static final String PROP_MIMETYPE = "jcr:mimeType";
-    private static final String PROP_ENCODING = "jcr:encoding";
-    private static final String PROP_LASTMODIFIED = "jcr:lastModified";
-    private static final String PROP_CREATED = "jcr:created";
-
     private long creationTime = 0;
     private long modificationTime = new Date().getTime();
     private long contentLength = 0;
@@ -69,120 +67,21 @@ public class NodeResource {
      * @throws IllegalArgumentException if the given item is <code>null</code>
      */
     public NodeResource(DavResourceImpl davResource, Node node) throws ItemNotFoundException, RepositoryException {
-	try {
-	    if (davResource.isCollection()) {
-		createDirListingContent(node);
-	    } else {
-		if (node.hasProperty(PROP_CREATED)) {
-		    creationTime = node.getProperty(PROP_CREATED).getValue().getLong();
-		}
-		Node content = node.getPrimaryNodeType().getName().equals("nt:file")
-			? node.getNode("jcr:content")
-			: node;
-		if (content.getPrimaryNodeType().getName().equals("nt:resource")) {
-		    createPlainFileContent(content);
-		} else {
-		    createDocViewContent(content);
-		}
-	    }
-	} catch (IOException e) {
-	    // ignore
-	}
-    }
-
-    private void createPlainFileContent(Node content) throws IOException, RepositoryException {
-	if (content.hasProperty(PROP_LASTMODIFIED)) {
-	    modificationTime = content.getProperty(PROP_LASTMODIFIED).getLong();
-	}
-	if (content.hasProperty(PROP_MIMETYPE)) {
-	    contentType = content.getProperty(PROP_MIMETYPE).getString();
-	}
-	if (content.hasProperty(PROP_ENCODING)) {
-	    String encoding = content.getProperty(PROP_ENCODING).getString();
-	    if (!encoding.equals("")) {
-		contentType+="; charset=\"" + encoding + "\"";
-	    }
-	}
-	if (content.hasProperty("jcr:data")) {
-	    Property p = content.getProperty("jcr:data");
-	    contentLength = p.getLength();
-	    in = p.getStream();
-	} else {
-	    contentLength = 0;
-	}
-    }
-
-    private void createDocViewContent(Node node) throws IOException, RepositoryException {
-	File tmpfile = File.createTempFile("__webdav", ".xml");
-	FileOutputStream out = new FileOutputStream(tmpfile);
-	node.getSession().exportDocView(node.getPath(), out, true, false);
-	out.close();
-	in = new FileInputStream(tmpfile);
-	contentLength = tmpfile.length();
-	modificationTime = tmpfile.lastModified();
-	contentType = "text/xml";
-	tmpfile.deleteOnExit();
-    }
-
-    private void createSysViewContent(Node node) throws IOException, RepositoryException {
-	File tmpfile = File.createTempFile("__webdav", ".xml");
-	FileOutputStream out = new FileOutputStream(tmpfile);
-	node.getSession().exportSysView(node.getPath(), out, true, false);
-	out.close();
-	in = new FileInputStream(tmpfile);
-	contentLength = tmpfile.length();
-	modificationTime = tmpfile.lastModified();
-	contentType = "text/xml";
-	tmpfile.deleteOnExit();
-    }
-
-    private void createDirListingContent(Node node) throws IOException, RepositoryException {
-	File tmpfile = File.createTempFile("__webdav", ".xml");
-	FileOutputStream out = new FileOutputStream(tmpfile);
-
-	String repName = node.getSession().getRepository().getDescriptor(Repository.REP_NAME_DESC);
-	String repURL = node.getSession().getRepository().getDescriptor(Repository.REP_VENDOR_URL_DESC);
-	String repVersion = node.getSession().getRepository().getDescriptor(Repository.REP_VERSION_DESC);
-	PrintWriter writer = new PrintWriter(out);
-	writer.print("<html><head><title>");
-	writer.print(repName);
-	writer.print(" ");
-	writer.print(repVersion);
-	writer.print(" ");
-	writer.print(node.getPath());
-	writer.print("</title></head>");
-	writer.print("<body><h2>");
-	writer.print(node.getPath());
-	writer.print("</h2><ul>");
-	writer.print("<li><a href=\"..\">..</a></li>");
-	NodeIterator iter = node.getNodes();
-	while (iter.hasNext()) {
-	    Node child = iter.nextNode();
-	    String label = Text.getLabel(child.getPath());
-	    writer.print("<li><a href=\"");
-	    writer.print(Text.escape(label));
-	    if (!child.getPrimaryNodeType().getName().equals("nt:file")) {
-		writer.print("/");
-	    }
-	    writer.print("\">");
-	    writer.print(label);
-	    writer.print("</a></li>");
-	}
-	writer.print("</ul><hr size=\"1\"><em>Powered by <a href=\"");
-	writer.print(repURL);
-	writer.print("\">");
-	writer.print(repName);
-	writer.print("</a> version ");
-	writer.print(repVersion);
-	writer.print("</em></body></html>");
-
-	writer.close();
-	out.close();
-	in = new FileInputStream(tmpfile);
-	contentLength = tmpfile.length();
-	modificationTime = tmpfile.lastModified();
-	contentType = "text/html";
-	tmpfile.deleteOnExit();
+        ExportContext ctx = new ExportContext(node);
+        Command exportChain =davResource.isCollection()
+                ? ExportCollectionChain.getChain()
+                : ExportNCResourceChain.getChain();
+        try {
+            exportChain.execute(ctx);
+        } catch (Exception e) {
+            log.error("Error while executing export chain: " + e.toString());
+            throw new RepositoryException(e);
+        }
+        this.contentLength = ctx.getContentLength();
+        this.contentType = ctx.getContentType();
+        this.in = ctx.getInputStream();
+        this.creationTime = ctx.getCreationTime();
+        this.modificationTime = ctx.getModificationTime();
     }
 
     /**
