@@ -99,7 +99,8 @@ public class DefaultItemResource extends AbstractItemResource {
      * @param property
      * @throws DavException
      * @see DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
-     * @todo undo incomplete modifications...
+     *
+     * todo: undo incomplete modifications...
      */
     public void setProperty(DavProperty property) throws DavException {
         if (!exists()) {

@@ -68,6 +68,18 @@
             <id>jcr-rmi</id>
             <version>0.16.2</version>
         </dependency>
+        <dependency>
+            <id>commons-chain</id>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <id>commons-digester</id>
+            <version>1.6</version>
+        </dependency>
+        <dependency>
+            <id>commons-beanutils</id>
+            <version>1.7.0</version>
+        </dependency>
         <!-- dependencies of jackrabbit -->
         <!--
         <dependency>

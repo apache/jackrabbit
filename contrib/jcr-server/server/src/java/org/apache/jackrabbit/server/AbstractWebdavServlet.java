@@ -451,6 +451,10 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             ActiveLock[] activeLocks = resource.getLocks();
             List lList = new ArrayList();
             for (int i = 0; i < activeLocks.length; i++) {
+                // adjust lockinfo with type/scope retrieved from the lock.
+                lockInfo.setType(activeLocks[i].getType());
+                lockInfo.setScope(activeLocks[i].getScope());
+                
                 // todo: do not ignore etag
                 if (request.matchesIfHeader(resource.getHref(), activeLocks[i].getToken(), "")) {
                     lList.add(resource.refreshLock(lockInfo, activeLocks[i].getToken()));

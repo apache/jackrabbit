@@ -169,6 +169,28 @@ public final class Text {
     }
 
     /**
+     * Creates a valid jcr label from the given one
+     *
+     * @param label
+     * @return
+     */
+    public static String makeValidJCRPath(String label) {
+        StringBuffer ret = new StringBuffer(label.length());
+        for (int i=0; i<label.length(); i++) {
+            char c = label.charAt(i);
+            if (c=='*' || c=='\'' || c=='\"') {
+                c='_';
+            } else if (c=='[') {
+                c='(';
+            } else if (c==']') {
+                c=')';
+            }
+            ret.append(c);
+        }
+        return ret.toString();
+    }
+
+    /**
      * compares to handles lexigographically with one exception: the '/'
      * character is always considered smaller than all other chars. this results
      * in a ordering, in which the parent pages come first (it's about 6 times

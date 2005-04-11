@@ -110,7 +110,8 @@ public class LockInfo {
 
     /**
      * Returns the lock type or <code>null</null> if no 'lockinfo' element was
-     * passed to the constructor or did not contain an 'type' element.
+     * passed to the constructor or did not contain an 'type' element and the
+     * type has not been set otherwise.
      *
      * @return type or <code>null</code>
      */
@@ -119,13 +120,32 @@ public class LockInfo {
     }
 
     /**
+     * Set the lock type.
+     *
+     * @param type
+     */
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    /**
      * Return the lock scope or <code>null</null> if no 'lockinfo' element was
-     * passed to the constructor or did not contain an 'scope' element.
+     * passed to the constructor or did not contain an 'scope' element and the
+     * scope has not been set otherwise.
      *
      * @return scope or <code>null</code>
      */
     public Scope getScope() {
         return scope;
+    }
+
+    /**
+     * Set the lock scope.
+     *
+     * @param scope
+     */
+    public void setScope(Scope scope) {
+        this.scope = scope;
     }
 
     /**

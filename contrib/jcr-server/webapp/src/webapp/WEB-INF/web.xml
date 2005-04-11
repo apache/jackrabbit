@@ -151,6 +151,13 @@
                 defines the prefix for spooling resources out of the repository.
             </description>
         </init-param>
+        <init-param>
+            <param-name>chain-catalog</param-name>
+            <param-value>/WEB-INF/catalog.xml</param-value>
+            <description>
+                the defines the commons-chain catalog for server tasks.
+            </description>
+        </init-param>
         <load-on-startup>3</load-on-startup>
     </servlet>
 
