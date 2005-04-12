@@ -17,10 +17,8 @@
 package org.apache.jackrabbit.core.search;
 
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.fs.FileSystem;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
@@ -38,17 +36,10 @@ public interface QueryHandler {
      * Initializes this query handler. This method is called after the
      * <code>QueryHandler</code> is instantiated.
      *
-     * @param fs a {@link FileSystem} this
-     *  <code>QueryHandler</code> may use to store its index.
-     * @param stateProvider provides persistent item states.
-     * @param rootUUID the UUID of the root node.
-     * @param registry the property type registry.
+     * @param context the context for this query handler.
      * @throws IOException if an error occurs during initialization.
      */
-    public void init(FileSystem fs,
-                     ItemStateManager stateProvider,
-                     String rootUUID,
-                     PropertyTypeRegistry registry) throws IOException;
+    public void init(QueryHandlerContext context) throws IOException;
 
     /**
      * Adds a <code>Node</code> to the search index.
