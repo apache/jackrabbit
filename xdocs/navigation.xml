@@ -25,7 +25,10 @@
         <item name="JSR-170 Levels"         href="/arch/overview/jcrlevels.html"/>
       </item>
       <item name="Deployment&#xA0;Models"   href="/arch/deploy.html" collapse="true">
-        <item name="Deployment&#xA0;HOWTO"  href="/arch/deploy/howto-deploy.html"/>
+        <item name="Application HOWTO"      href="/arch/deploy/howto-client.html"/>
+        <item name="Model 1 HOWTO"          href="/arch/deploy/howto-model1.html"/>
+        <item name="Model 2 HOWTO"          href="/arch/deploy/howto-model2.html"/>
+        <item name="Model 3 HOWTO"          href="/arch/deploy/howto-model3.html"/>
       </item>
       <item name="Core&#xA0;Operations"     href="/arch/operate/index.html"  collapse="true">
         <item name="Start-up,&#xA0;Initialize" href="/arch/operate/startup.html"/>

@@ -29,7 +29,7 @@ models.
 </p>
 <p>
 Jackrabbit is built to support a variety of different deployment models, 
-some of the possibilities on how to deploy Jackrabbit will be outlined here
+some of the possibilities on how to deploy Jackrabbit will be outlined here.
 </p>
 </section>
 
@@ -38,7 +38,7 @@ some of the possibilities on how to deploy Jackrabbit will be outlined here
 For many applications, usually applications that run in a closed 
 context without interacting with other applications or data sources, 
 it might be desirable to bundle a content repository with the 
-application itself. 
+application itself.
 </p>
 <p>
 Jackrabbit is built for this lightweight model and allows obviously 
