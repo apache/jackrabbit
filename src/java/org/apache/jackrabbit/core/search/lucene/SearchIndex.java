@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.search.AbstractQueryHandler;
 import org.apache.jackrabbit.core.search.QueryConstants;
 import org.apache.jackrabbit.core.search.ExecutableQuery;
+import org.apache.jackrabbit.core.search.QueryHandlerContext;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
@@ -78,8 +79,9 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected void doInit() throws IOException {
         try {
-            index = new MultiIndex(getFileSystem(),
-                    this, getItemStateProvider(), getRootUUID());
+            QueryHandlerContext context = getContext();
+            index = new MultiIndex(context.getFileSystem(), this,
+                    context.getItemStateManager(), context.getRootUUID());
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
         }
@@ -148,7 +150,8 @@ public class SearchIndex extends AbstractQueryHandler {
                                              String statement,
                                              String language)
             throws InvalidQueryException {
-        return new QueryImpl(session, itemMgr, this, getPropertyTypeRegistry(), statement, language);
+        return new QueryImpl(session, itemMgr, this,
+                getContext().getPropertyTypeRegistry(), statement, language);
     }
 
     /**
@@ -158,6 +161,7 @@ public class SearchIndex extends AbstractQueryHandler {
     public void close() {
         log.info("Closing search index.");
         index.close();
+        getContext().destroy();
     }
 
     /**
@@ -240,7 +244,8 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected Document createDocument(NodeState node, NamespaceMappings nsMappings)
             throws RepositoryException {
-        return NodeIndexer.createDocument(node, getItemStateProvider(), nsMappings);
+        return NodeIndexer.createDocument(node, getContext().getItemStateManager(),
+                nsMappings);
     }
     
     //--------------------------< properties >----------------------------------

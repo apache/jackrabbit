@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.core.search;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-
 import java.io.IOException;
 
 /**
@@ -27,44 +24,18 @@ import java.io.IOException;
 public abstract class AbstractQueryHandler implements QueryHandler {
 
     /**
-     * A <code>FileSystem</code> to store the search index
+     * The context for this query handler.
      */
-    private FileSystem fs;
-
-    /**
-     * The persistent <code>ItemStateManager</code>
-     */
-    private ItemStateManager stateProvider;
-
-    /**
-     * PropertyType registry to look up the type of a property with a given name.
-     */ 
-    private PropertyTypeRegistry propRegistry;
-
-    /**
-     * The UUID of the root node.
-     */
-    private String rootUUID;
+    private QueryHandlerContext context;
 
     /**
      * Initializes this query handler by setting all properties in this class
      * with appropriate parameter values.
      *
-     * @param fs            a {@link FileSystem} this
-     *                      <code>QueryHandler</code> may use to store its index.
-     * @param stateProvider provides persistent item states.
-     * @param rootUUID the uuid of the root node.
-     * @param registry the property type registry.
+     * @param context the context for this query handler.
      */
-    public final void init(FileSystem fs, 
-                           ItemStateManager stateProvider, 
-                           String rootUUID,
-                           PropertyTypeRegistry registry)
-            throws IOException {
-        this.fs = fs;
-        this.stateProvider = stateProvider;
-        this.rootUUID = rootUUID;
-        this.propRegistry = registry;
+    public final void init(QueryHandlerContext context) throws IOException {
+        this.context = context;
         doInit();
     }
 
@@ -75,40 +46,12 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     protected abstract void doInit() throws IOException;
 
     /**
-     * Returns the persistent {@link ItemStateManager}
-     * of the workspace this <code>QueryHandler</code> is based on.
+     * Returns the context for this query handler.
      *
-     * @return the persistent <code>ItemStateProvider</code> of the current
-     *         workspace.
-     */
-    public ItemStateManager getItemStateProvider() {
-        return stateProvider;
-    }
-
-    /**
-     * Returns the {@link org.apache.jackrabbit.core.fs.FileSystem} instance
-     * this <code>QueryHandler</code> may use to store its index.
-     *
-     * @return the <code>FileSystem</code> instance for this
+     * @return the <code>QueryHandlerContext</code> instance for this
      *         <code>QueryHandler</code>.
      */
-    protected FileSystem getFileSystem() {
-        return fs;
-    }
-
-    /**
-     * Returns the UUID of the root node.
-     * @return the UUID of the root node.
-     */
-    protected String getRootUUID() {
-        return rootUUID;
-    }
-
-    /**
-     * Returns the PropertyTypeRegistry for this repository.
-     * @return the PropertyTypeRegistry for this repository.
-     */
-    protected PropertyTypeRegistry getPropertyTypeRegistry() {
-        return propRegistry;
+    public QueryHandlerContext getContext() {
+        return context;
     }
 }
