@@ -18,8 +18,8 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -283,7 +283,7 @@ public class WorkspaceImpl implements Workspace, Constants {
         // effective node type (primary type incl. mixins)
         EffectiveNodeType ent = getEffectiveNodeType(nodeState);
         NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
-        ChildNodeDef def = ntReg.getNodeDef(nodeState.getDefinitionId());
+        NodeDef def = ntReg.getNodeDef(nodeState.getDefinitionId());
 
         // check if primary type satisfies the 'required node types' constraint
         QName[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
@@ -309,9 +309,9 @@ public class WorkspaceImpl implements Workspace, Constants {
             }
         }
         // mandatory child nodes
-        ChildNodeDef[] cnda = ent.getMandatoryNodeDefs();
+        NodeDef[] cnda = ent.getMandatoryNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
-            ChildNodeDef cnd = cnda[i];
+            NodeDef cnd = cnda[i];
             if (!nodeState.hasChildNodeEntry(cnd.getName())) {
                 String msg = hierMgr.safeGetJCRPath(nodeState.getId())
                         + ": mandatory child node " + cnd.getName()
@@ -430,7 +430,7 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
-            ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+            NodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
             // make sure parent node is not protected
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(hierMgr.safeGetJCRPath(parentState.getId())
@@ -439,7 +439,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             // make sure there's an applicable definition for new child node
             EffectiveNodeType entParent = getEffectiveNodeType(parentState);
             entParent.checkAddNodeConstraints(nodeName, nodeTypeName);
-            ChildNodeDef newNodeDef =
+            NodeDef newNodeDef =
                     findApplicableNodeDefinition(nodeName, nodeTypeName,
                             parentState);
 
@@ -466,11 +466,11 @@ public class WorkspaceImpl implements Workspace, Constants {
                     log.debug(msg);
                     throw new RepositoryException(msg, ise);
                 }
-                ChildNodeDef conflictingTargetDef =
+                NodeDef conflictingTargetDef =
                         ntReg.getNodeDef(conflictingState.getDefinitionId());
                 // check same-name sibling setting of both target and existing node
-                if (!conflictingTargetDef.allowSameNameSibs()
-                        || !newNodeDef.allowSameNameSibs()) {
+                if (!conflictingTargetDef.allowsSameNameSiblings()
+                        || !newNodeDef.allowsSameNameSiblings()) {
                     throw new ItemExistsException("cannot add child node '"
                             + nodeName.getLocalName() + "' to "
                             + hierMgr.safeGetJCRPath(parentState.getId())
@@ -603,12 +603,12 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             NodeTypeRegistry ntReg = rep.getNodeTypeRegistry();
-            ChildNodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
+            NodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
             if (parentDef.isProtected()) {
                 throw new ConstraintViolationException(hierMgr.safeGetJCRPath(parentId)
                         + ": cannot remove child node of protected parent node");
             }
-            ChildNodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
+            NodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
             if (targetDef.isMandatory()) {
                 throw new ConstraintViolationException(hierMgr.safeGetJCRPath(targetId)
                         + ": cannot remove mandatory node");
@@ -767,14 +767,14 @@ public class WorkspaceImpl implements Workspace, Constants {
      * @param name
      * @param nodeTypeName
      * @param parentState
-     * @return a <code>ChildNodeDef</code>
+     * @return a <code>NodeDef</code>
      * @throws ConstraintViolationException if no applicable child node definition
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    public ChildNodeDef findApplicableNodeDefinition(QName name,
-                                                     QName nodeTypeName,
-                                                     NodeState parentState)
+    public NodeDef findApplicableNodeDefinition(QName name,
+                                                QName nodeTypeName,
+                                                NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
         return entParent.getApplicableChildNodeDef(name, nodeTypeName);
@@ -1222,7 +1222,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
 
             // change definition (id) of new node
-            ChildNodeDef newNodeDef =
+            NodeDef newNodeDef =
                     findApplicableNodeDefinition(destName.getName(),
                             srcState.getNodeTypeName(), destParentState);
             newState.setDefinitionId(new NodeDefId(newNodeDef));
@@ -1518,7 +1518,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             destParentState.addChildNodeEntry(destName.getName(), targetState.getUUID());
 
             // change definition (id) of target node
-            ChildNodeDef newTargetDef =
+            NodeDef newTargetDef =
                     findApplicableNodeDefinition(destName.getName(),
                             targetState.getNodeTypeName(), destParentState);
             targetState.setDefinitionId(new NodeDefId(newTargetDef));
@@ -1621,7 +1621,7 @@ public class WorkspaceImpl implements Workspace, Constants {
         final HashMap toRestore = new HashMap();
         for (int i = 0; i < versions.length; i++) {
             VersionImpl v = (VersionImpl) versions[i];
-            VersionHistory vh = v.getContainingVersionHistory();
+            VersionHistory vh = v.getContainingHistory();
             // check for collision
             if (toRestore.containsKey(vh.getUUID())) {
                 throw new VersionException("Unable to restore. Two or more versions have same version history.");

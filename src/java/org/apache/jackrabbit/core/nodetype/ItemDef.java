@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.version.OnParentVersionAction;
 
 /**
  * An <code>ItemDef</code> ...
  */
-public abstract class ChildItemDef implements Cloneable {
+public abstract class ItemDef implements Cloneable {
 
     // '*' denoting residual child item definition
     public static final QName ANY_NAME =
@@ -32,7 +32,7 @@ public abstract class ChildItemDef implements Cloneable {
 
     protected QName declaringNodeType = null;
     private QName name = ANY_NAME;
-    private boolean autoCreate = false;
+    private boolean autoCreated = false;
     private int onParentVersion = OnParentVersionAction.COPY;
     private boolean writeProtected = false;
     private boolean mandatory = false;
@@ -48,11 +48,11 @@ public abstract class ChildItemDef implements Cloneable {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof ChildItemDef) {
-            ChildItemDef other = (ChildItemDef) obj;
+        if (obj instanceof ItemDef) {
+            ItemDef other = (ItemDef) obj;
             return (declaringNodeType == null ? other.declaringNodeType == null : declaringNodeType.equals(other.declaringNodeType))
                     && (name == null ? other.name == null : name.equals(other.name))
-                    && autoCreate == other.autoCreate
+                    && autoCreated == other.autoCreated
                     && onParentVersion == other.onParentVersion
                     && writeProtected == other.writeProtected
                     && mandatory == other.mandatory;
@@ -74,8 +74,8 @@ public abstract class ChildItemDef implements Cloneable {
         this.name = name;
     }
 
-    public void setAutoCreate(boolean autoCreate) {
-        this.autoCreate = autoCreate;
+    public void setAutoCreated(boolean autoCreated) {
+        this.autoCreated = autoCreated;
     }
 
     public void setOnParentVersion(int onParentVersion) {
@@ -98,8 +98,8 @@ public abstract class ChildItemDef implements Cloneable {
         return name;
     }
 
-    public boolean isAutoCreate() {
-        return autoCreate;
+    public boolean isAutoCreated() {
+        return autoCreated;
     }
 
     public int getOnParentVersion() {

@@ -8,12 +8,12 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-PropertyDef
+PropertyDefinition
   Name jcr:created
   RequiredType DATE
   ValueConstraints []
   DefaultValues null
-  AutoCreate true
+  AutoCreated true
   Mandatory true
   OnParentVersion INITIALIZE
   Protected true

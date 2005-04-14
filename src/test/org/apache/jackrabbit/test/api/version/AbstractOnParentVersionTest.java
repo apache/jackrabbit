@@ -19,7 +19,7 @@ package org.apache.jackrabbit.test.api.version;
 import javax.jcr.RepositoryException;
 import javax.jcr.Property;
 import javax.jcr.Node;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
 import javax.jcr.version.OnParentVersionAction;
 
@@ -46,7 +46,7 @@ public abstract class AbstractOnParentVersionTest extends AbstractVersionTest {
         p = versionableNode.setProperty(propertyName1, initialPropValue);
 
         // assert that property has the proper opv-behaviour
-        PropertyDef pd = p.getDefinition();
+        PropertyDefinition pd = p.getDefinition();
         if (pd.getOnParentVersion() != OPVAction) {
             fail("JCR Property at '"+p.getPath()+"' does not have the required OnParentVersion "+OnParentVersionAction.nameFromValue(OPVAction)+" definition.");
         }

@@ -16,28 +16,27 @@
  */
 package org.apache.jackrabbit.core.nodetype.virtual;
 
-import org.apache.jackrabbit.core.virtual.VirtualNodeState;
-import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
+import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.ItemDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
-import org.apache.jackrabbit.core.nodetype.ChildItemDef;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
+import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import javax.jcr.nodetype.ItemDef;
+import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.io.UnsupportedEncodingException;
 
 /**
  * This Class implements a virtual item state provider that exposes the
@@ -51,7 +50,6 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     private final String parentId;
 
     /**
-     *
      * @param ntReg
      * @param rootNodeId
      * @param parentId
@@ -63,13 +61,13 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
 
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * currently we have no dynamic ones, we just recreate the entire nodetypes tree
      */
     protected VirtualNodeState createRootNodeState() throws RepositoryException {
         VirtualNodeState root = new VirtualNodeState(this, parentId, rootNodeId.getUUID(), REP_NODETYPES, null);
         QName[] ntNames = ntReg.getRegisteredNodeTypes();
-        for (int i=0; i<ntNames.length; i++) {
+        for (int i = 0; i < ntNames.length; i++) {
             NodeTypeDef ntDef = ntReg.getNodeTypeDef(ntNames[i]);
             VirtualNodeState ntState = createNodeTypeState(root, ntDef);
             root.addChildNodeEntry(ntNames[i], ntState.getUUID());
@@ -137,6 +135,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
 
     /**
      * Creates a node type state
+     *
      * @param parent
      * @param ntDef
      * @return
@@ -157,18 +156,18 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
 
         // add property defs
         PropDef[] propDefs = ntDef.getPropertyDefs();
-        for (int i=0; i<propDefs.length; i++) {
+        for (int i = 0; i < propDefs.length; i++) {
             VirtualNodeState pdState = createPropertyDefState(ntState, propDefs[i], ntDef, i);
-            ntState.addChildNodeEntry(JCR_PROPERTYDEF, pdState.getUUID());
+            ntState.addChildNodeEntry(JCR_PROPERTYDEFINITION, pdState.getUUID());
             // add as hard reference
             ntState.addStateReference(pdState);
         }
 
         // add child node defs
-        ChildNodeDef[] cnDefs = ntDef.getChildNodeDefs();
-        for (int i=0; i<cnDefs.length; i++) {
+        NodeDef[] cnDefs = ntDef.getChildNodeDefs();
+        for (int i = 0; i < cnDefs.length; i++) {
             VirtualNodeState cnState = createChildNodeDefState(ntState, cnDefs[i], ntDef, i);
-            ntState.addChildNodeEntry(JCR_CHILDNODEDEF, cnState.getUUID());
+            ntState.addChildNodeEntry(JCR_CHILDNODEDEFINITION, cnState.getUUID());
             // add as hard reference
             ntState.addStateReference(cnState);
         }
@@ -178,6 +177,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
 
     /**
      * creates a node state for the given property def
+     *
      * @param parent
      * @param propDef
      * @return
@@ -187,13 +187,13 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
                                                     PropDef propDef,
                                                     NodeTypeDef ntDef, int n)
             throws RepositoryException {
-        String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + JCR_PROPERTYDEF.toString() + "/" + n);
-        VirtualNodeState pState = createNodeState(parent, JCR_PROPERTYDEF, uuid, NT_PROPERTYDEF);
+        String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + JCR_PROPERTYDEFINITION.toString() + "/" + n);
+        VirtualNodeState pState = createNodeState(parent, JCR_PROPERTYDEFINITION, uuid, NT_PROPERTYDEFINITION);
         // add properties
-        if (!propDef.getName().equals(ChildItemDef.ANY_NAME)) {
+        if (!propDef.getName().equals(ItemDef.ANY_NAME)) {
             pState.setPropertyValue(JCR_NAME, InternalValue.create(propDef.getName()));
         }
-        pState.setPropertyValue(JCR_AUTOCREATE, InternalValue.create(propDef.isAutoCreate()));
+        pState.setPropertyValue(JCR_AUTOCREATED, InternalValue.create(propDef.isAutoCreated()));
         pState.setPropertyValue(JCR_MANDATORY, InternalValue.create(propDef.isMandatory()));
         pState.setPropertyValue(JCR_ONPARENTVERSION, InternalValue.create(OnParentVersionAction.nameFromValue(propDef.getOnParentVersion())));
         pState.setPropertyValue(JCR_PROTECTED, InternalValue.create(propDef.isProtected()));
@@ -202,7 +202,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         pState.setPropertyValues(JCR_DEFAULTVALUES, PropertyType.STRING, propDef.getDefaultValues());
         ValueConstraint[] vc = propDef.getValueConstraints();
         InternalValue[] vals = new InternalValue[vc.length];
-        for (int i=0; i<vc.length; i++) {
+        for (int i = 0; i < vc.length; i++) {
             vals[i] = InternalValue.create(vc[i].getDefinition());
         }
         pState.setPropertyValues(JCR_VALUECONSTRAINTS, PropertyType.STRING, vals);
@@ -211,22 +211,23 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
 
     /**
      * creates a node state for the given child node def
+     *
      * @param parent
      * @param cnDef
      * @return
      * @throws RepositoryException
      */
     private VirtualNodeState createChildNodeDefState(VirtualNodeState parent,
-                                                     ChildNodeDef cnDef,
+                                                     NodeDef cnDef,
                                                      NodeTypeDef ntDef, int n)
             throws RepositoryException {
-        String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + JCR_CHILDNODEDEF.toString() + "/" + n);
-        VirtualNodeState pState = createNodeState(parent, JCR_CHILDNODEDEF, uuid, NT_CHILDNODEDEF);
+        String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + JCR_CHILDNODEDEFINITION.toString() + "/" + n);
+        VirtualNodeState pState = createNodeState(parent, JCR_CHILDNODEDEFINITION, uuid, NT_CHILDNODEDEFINITION);
         // add properties
-        if (!cnDef.getName().equals(ChildItemDef.ANY_NAME)) {
+        if (!cnDef.getName().equals(ItemDef.ANY_NAME)) {
             pState.setPropertyValue(JCR_NAME, InternalValue.create(cnDef.getName()));
         }
-        pState.setPropertyValue(JCR_AUTOCREATE, InternalValue.create(cnDef.isAutoCreate()));
+        pState.setPropertyValue(JCR_AUTOCREATED, InternalValue.create(cnDef.isAutoCreated()));
         pState.setPropertyValue(JCR_MANDATORY, InternalValue.create(cnDef.isMandatory()));
         pState.setPropertyValue(JCR_ONPARENTVERSION, InternalValue.create(OnParentVersionAction.nameFromValue(cnDef.getOnParentVersion())));
         pState.setPropertyValue(JCR_PROTECTED, InternalValue.create(cnDef.isProtected()));
@@ -234,18 +235,18 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         if (cnDef.getDefaultPrimaryType() != null) {
             pState.setPropertyValue(JCR_DEFAULTPRIMARYTYPE, InternalValue.create(cnDef.getDefaultPrimaryType()));
         }
-        pState.setPropertyValue(JCR_SAMENAMESIBS, InternalValue.create(cnDef.allowSameNameSibs()));
+        pState.setPropertyValue(JCR_SAMENAMESIBLINGS, InternalValue.create(cnDef.allowsSameNameSiblings()));
         return pState;
     }
-    
+
     /**
      * Calclulates a stable uuid out of the given string. The alogrith does a
      * MD5 digest from the string an converts it into the uuid format.
-     * 
+     *
      * @param name
      * @return
      * @throws RepositoryException
-     */ 
+     */
     private static String calculateStableUUID(String name) throws RepositoryException {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");

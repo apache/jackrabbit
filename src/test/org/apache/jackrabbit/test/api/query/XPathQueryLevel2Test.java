@@ -42,9 +42,6 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testScoreColumn() throws Exception {
-        if (!hasDescriptor(Repository.QUERY_JCRSCORE)) {
-            throw new NotExecutableException("Repository does not support jcr:score");
-        }
         setUpFullTextTest();
         QueryResult result = execute(getFullTextStatement());
         RowIterator rows = result.getRows();
@@ -116,9 +113,6 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testPathColumn() throws Exception {
-        if (!hasDescriptor(Repository.QUERY_JCRPATH)) {
-            throw new NotExecutableException("Repository does not support jcr:path");
-        }
         setUpFullTextTest();
         QueryResult result = execute(getFullTextStatement());
         RowIterator rows = result.getRows();

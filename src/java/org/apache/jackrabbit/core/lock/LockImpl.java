@@ -17,12 +17,11 @@
 package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.NodeId;
 
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
 
 /**
  * Implementation of a <code>Lock</code> that gets returned to clients asking
@@ -42,6 +41,7 @@ class LockImpl implements Lock {
 
     /**
      * Create a new instance of this class.
+     *
      * @param info lock information
      * @param node node holding lock
      */
@@ -87,8 +87,15 @@ class LockImpl implements Lock {
     /**
      * {@inheritDoc}
      */
-    public boolean isLive() {
+    public boolean isLive() throws RepositoryException {
         return info.isLive();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isSessionScoped() {
+        return info.isSessionScoped();
     }
 
     /**

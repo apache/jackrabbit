@@ -28,12 +28,12 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.nodetype.ItemDef;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -146,12 +146,12 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
 
     /** Test for the predefined nt:propertyDef node type. */
     public void testPropertyDef() {
-        testPredefinedNodeType("nt:propertyDef");
+        testPredefinedNodeType("nt:propertyDefinition");
     }
 
     /** Test for the predefined nt:childNodeDef node type. */
     public void testChildNodeDef() {
-        testPredefinedNodeType("nt:childNodeDef");
+        testPredefinedNodeType("nt:childNodeDefinition");
     }
 
     /** Test for the predefined nt:versionHistory node type. */
@@ -259,12 +259,12 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         writer.println("  " + type.hasOrderableChildNodes());
         writer.println("PrimaryItemName");
         writer.println("  " + type.getPrimaryItemName());
-        NodeDef[] nodes = type.getDeclaredChildNodeDefs();
+        NodeDefinition[] nodes = type.getDeclaredChildNodeDefinitions();
         Arrays.sort(nodes, ITEM_DEF_COMPARATOR);
         for (int i = 0; i < nodes.length; i++) {
             writer.print(getChildNodeDefSpec(nodes[i]));
         }
-        PropertyDef[] properties = type.getDeclaredPropertyDefs();
+        PropertyDefinition[] properties = type.getDeclaredPropertyDefinitions();
         Arrays.sort(properties, ITEM_DEF_COMPARATOR);
         for (int i = 0; i < properties.length; i++) {
             writer.print(getPropertyDefSpec(properties[i]));
@@ -281,11 +281,11 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * @param node child node definition
      * @return spec string
      */
-    private static String getChildNodeDefSpec(NodeDef node) {
+    private static String getChildNodeDefSpec(NodeDefinition node) {
         StringWriter buffer = new StringWriter();
 
         PrintWriter writer = new PrintWriter(buffer);
-        writer.println("ChildNodeDef");
+        writer.println("ChildNodeDefinition");
         if (node.getName().equals("*")) {
             writer.println("  Name \"*\"");
         } else {
@@ -304,12 +304,12 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         } else {
             writer.println("  DefaultPrimaryType null");
         }
-        writer.println("  AutoCreate " + node.isAutoCreate());
+        writer.println("  AutoCreated " + node.isAutoCreated());
         writer.println("  Mandatory " + node.isMandatory());
         writer.println("  OnParentVersion "
                 + OnParentVersionAction.nameFromValue(node.getOnParentVersion()));
         writer.println("  Protected " + node.isProtected());
-        writer.println("  SameNameSibs " + node.allowSameNameSibs());
+        writer.println("  SameNameSiblings " + node.allowsSameNameSiblings());
 
         return buffer.toString();
     }
@@ -323,12 +323,12 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * @return spec string
      * @throws RepositoryException on repository errors
      */
-    private static String getPropertyDefSpec(PropertyDef property)
+    private static String getPropertyDefSpec(PropertyDefinition property)
             throws RepositoryException {
         StringWriter buffer = new StringWriter();
 
         PrintWriter writer = new PrintWriter(buffer);
-        writer.println("PropertyDef");
+        writer.println("PropertyDefinition");
         if (property.getName().equals("*")) {
             writer.println("  Name \"*\"");
         } else {
@@ -352,7 +352,7 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         } else {
             writer.println("  DefaultValues null");
         }
-        writer.println("  AutoCreate " + property.isAutoCreate());
+        writer.println("  AutoCreated " + property.isAutoCreated());
         writer.println("  Mandatory " + property.isMandatory());
         String action = OnParentVersionAction.nameFromValue(
                 property.getOnParentVersion());
@@ -370,8 +370,8 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      */
     private static final Comparator ITEM_DEF_COMPARATOR = new Comparator() {
         public int compare(Object a, Object b) {
-            ItemDef ida = (ItemDef) a;
-            ItemDef idb = (ItemDef) b;
+            ItemDefinition ida = (ItemDefinition) a;
+            ItemDefinition idb = (ItemDefinition) b;
             if (ida.getName().equals("*") && !idb.getName().equals("*")) {
                 return 1;
             } else if (!ida.getName().equals("*") && idb.getName().equals("*")) {

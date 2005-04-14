@@ -20,7 +20,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ public class GetPropertyNamesTest extends AbstractQueryTest {
         QueryResult result = query.execute();
 
         // Get the node's non-residual properties
-        PropertyDef[] pd = superuser.getWorkspace().getNodeTypeManager().getNodeType(ntBase).getDeclaredPropertyDefs();
+        PropertyDefinition[] pd = superuser.getWorkspace().getNodeTypeManager().getNodeType(ntBase).getDeclaredPropertyDefinitions();
 
         List singleValPropNames = new ArrayList();
         for (int i = 0; i < pd.length; i++) {
@@ -81,7 +81,7 @@ public class GetPropertyNamesTest extends AbstractQueryTest {
             }
         }
 
-        String[] foundPropertyNames = result.getPropertyNames();
+        String[] foundPropertyNames = result.getColumnNames();
         Object[] realPropertyNames = singleValPropNames.toArray();
 
         // sort the 2 arrays before comparing them

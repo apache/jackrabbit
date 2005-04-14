@@ -8,22 +8,22 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-PropertyDef
+PropertyDefinition
   Name jcr:lockIsDeep
   RequiredType BOOLEAN
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion IGNORE
   Protected true
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:lockOwner
   RequiredType STRING
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion IGNORE
   Protected true

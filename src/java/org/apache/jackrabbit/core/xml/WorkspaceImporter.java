@@ -29,7 +29,7 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -48,6 +48,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -86,12 +87,13 @@ public class WorkspaceImporter implements Importer, Constants {
     private final ReferenceChangeTracker refTracker;
 
     /**
-     * Creates a <code>WorkspaceImporter</code> instance.
+     * Creates a new <code>WorkspaceImporter</code> instance.
      *
      * @param importTarget
      * @param wsp
      * @param ntReg
-     * @param uuidBehavior
+     * @param uuidBehavior     any of the constants declared by
+     *                         {@link ImportUUIDBehavior}
      */
     public WorkspaceImporter(NodeState importTarget,
                              WorkspaceImpl wsp,
@@ -145,7 +147,7 @@ public class WorkspaceImporter implements Importer, Constants {
                                    QName[] mixinNames,
                                    String uuid)
             throws RepositoryException {
-        ChildNodeDef def =
+        NodeDef def =
                 wsp.findApplicableNodeDefinition(nodeName, nodeTypeName, parent);
         return createNode(parent, nodeName, nodeTypeName, mixinNames, uuid, def);
     }
@@ -155,7 +157,7 @@ public class WorkspaceImporter implements Importer, Constants {
                                    QName nodeTypeName,
                                    QName[] mixinNames,
                                    String uuid,
-                                   ChildNodeDef def)
+                                   NodeDef def)
             throws RepositoryException {
         // check for name collisions with existing properties
         if (parent.hasPropertyEntry(nodeName)) {
@@ -164,7 +166,7 @@ public class WorkspaceImporter implements Importer, Constants {
             throw new RepositoryException(msg);
         }
         // check for name collisions with existing nodes
-        if (!def.allowSameNameSibs() && parent.hasChildNodeEntry(nodeName)) {
+        if (!def.allowsSameNameSiblings() && parent.hasChildNodeEntry(nodeName)) {
             NodeId id = new NodeId(parent.getChildNodeEntry(nodeName, 1).getUUID());
             throw new ItemExistsException(resolveJCRPath(id));
         }
@@ -209,9 +211,9 @@ public class WorkspaceImporter implements Importer, Constants {
         }
 
         // recursively add 'auto-create' child nodes defined in node type
-        ChildNodeDef[] nda = ent.getAutoCreateNodeDefs();
+        NodeDef[] nda = ent.getAutoCreateNodeDefs();
         for (int i = 0; i < nda.length; i++) {
-            ChildNodeDef nd = nda[i];
+            NodeDef nd = nda[i];
             createNode(node, nd.getName(), nd.getDefaultPrimaryType(),
                     null, null, nd);
         }
@@ -514,7 +516,7 @@ public class WorkspaceImporter implements Importer, Constants {
             throws RepositoryException {
 
         NodeState node;
-        if (uuidBehavior == IMPORT_UUID_CREATE_NEW) {
+        if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW) {
             // create new with new uuid:
             // check if new node can be added (check access rights &
             // node type constraints only, assume locking & versioning status
@@ -530,12 +532,12 @@ public class WorkspaceImporter implements Importer, Constants {
             if (ent.includesNodeType(MIX_REFERENCEABLE)) {
                 refTracker.mappedUUID(nodeInfo.getUUID(), node.getUUID());
             }
-        } else if (uuidBehavior == IMPORT_UUID_COLLISION_THROW) {
+        } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
             String msg = "a node with uuid " + nodeInfo.getUUID()
                     + " already exists!";
             log.debug(msg);
             throw new ItemExistsException(msg);
-        } else if (uuidBehavior == IMPORT_UUID_COLLISION_REMOVE_EXISTING) {
+        } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING) {
             // make sure conflicting node is not importTarget or an ancestor thereof
             Path p0 = hierMgr.getPath(importTarget.getId());
             Path p1 = hierMgr.getPath(conflicting.getId());
@@ -574,7 +576,7 @@ public class WorkspaceImporter implements Importer, Constants {
             node = createNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
                     nodeInfo.getUUID());
-        } else if (uuidBehavior == IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
+        } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
             if (conflicting.getParentUUID() == null) {
                 String msg = "root node cannot be replaced";
                 log.debug(msg);
@@ -677,9 +679,9 @@ public class WorkspaceImporter implements Importer, Constants {
                         parent.getChildNodeEntry(nodeName, 1);
                 NodeId idExisting = new NodeId(entry.getUUID());
                 NodeState existing = (NodeState) stateMgr.getItemState(idExisting);
-                ChildNodeDef def = ntReg.getNodeDef(existing.getDefinitionId());
+                NodeDef def = ntReg.getNodeDef(existing.getDefinitionId());
 
-                if (!def.allowSameNameSibs()) {
+                if (!def.allowsSameNameSiblings()) {
                     // existing doesn't allow same-name siblings,
                     // check for potential conflicts
                     EffectiveNodeType entExisting =
@@ -692,7 +694,7 @@ public class WorkspaceImporter implements Importer, Constants {
                                 + resolveJCRPath(existing.getId()));
                         return;
                     }
-                    if (def.isAutoCreate() && entExisting.includesNodeType(ntName)) {
+                    if (def.isAutoCreated() && entExisting.includesNodeType(ntName)) {
                         // this node has already been auto-created,
                         // no need to create it
                         node = existing;
@@ -707,7 +709,7 @@ public class WorkspaceImporter implements Importer, Constants {
                 if (uuid == null) {
                     // no potential uuid conflict, always create new node
 
-                    ChildNodeDef def =
+                    NodeDef def =
                             wsp.findApplicableNodeDefinition(nodeName, ntName, parent);
                     if (def.isProtected()) {
                         // skip protected node
@@ -741,7 +743,7 @@ public class WorkspaceImporter implements Importer, Constants {
                     } else {
                         // create new with given uuid
 
-                        ChildNodeDef def =
+                        NodeDef def =
                                 wsp.findApplicableNodeDefinition(nodeName, ntName, parent);
                         if (def.isProtected()) {
                             // skip protected node
@@ -787,7 +789,7 @@ public class WorkspaceImporter implements Importer, Constants {
                                 + resolveJCRPath(idExisting));
                         continue;
                     }
-                    if (def.isAutoCreate() && (existing.getType() == type
+                    if (def.isAutoCreated() && (existing.getType() == type
                             || type == PropertyType.UNDEFINED)
                             && def.isMultiple() == existing.isMultiValued()) {
                         // this property has already been auto-created,

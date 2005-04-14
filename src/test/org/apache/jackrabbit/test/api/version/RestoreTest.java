@@ -18,7 +18,7 @@ package org.apache.jackrabbit.test.api.version;
 
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.OnParentVersionAction;
@@ -259,7 +259,7 @@ public class RestoreTest extends AbstractVersionTest {
         try {
             Node naa = createVersionableNode(versionableNode, nodeName4, versionableNodeType);
             // Verify that nodes used for the test have proper opv behaviour
-            NodeDef nd = naa.getDefinition();
+            NodeDefinition nd = naa.getDefinition();
             if (nd.getOnParentVersion() != OnParentVersionAction.COPY && nd.getOnParentVersion() != OnParentVersionAction.VERSION) {
                 throw new NotExecutableException("Child nodes must have OPV COPY or VERSION in order to be able to test Node.restore with uuid conflict.");
             }

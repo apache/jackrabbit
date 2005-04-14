@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.log4j.Logger;
-
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import javax.security.auth.callback.Callback;
@@ -31,8 +29,6 @@ import java.io.IOException;
  * A <code>CredentialsCallbackHandler</code> ...
  */
 public class CredentialsCallbackHandler implements CallbackHandler {
-
-    private static Logger log = Logger.getLogger(CredentialsCallbackHandler.class);
 
     protected final Credentials credentials;
 
@@ -61,7 +57,7 @@ public class CredentialsCallbackHandler implements CallbackHandler {
                 NameCallback ncb = (NameCallback) callbacks[i];
                 SimpleCredentials sc = (SimpleCredentials) credentials;
                 // supply name
-                ncb.setName(sc.getUserId());
+                ncb.setName(sc.getUserID());
             } else if (callbacks[i] instanceof PasswordCallback
                     && credentials instanceof SimpleCredentials) {
                 PasswordCallback pcb = (PasswordCallback) callbacks[i];

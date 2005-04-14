@@ -214,9 +214,9 @@ public interface Constants {
     public static final QName JCR_SUPERTYPES = new QName(NS_JCR_URI, "supertypes");
 
     /**
-     * jcr:propertyDef
+     * jcr:propertyDefinition
      */
-    public static final QName JCR_PROPERTYDEF = new QName(NS_JCR_URI, "propertyDef");
+    public static final QName JCR_PROPERTYDEFINITION = new QName(NS_JCR_URI, "propertyDefinition");
 
     /**
      * jcr:name
@@ -264,19 +264,19 @@ public interface Constants {
     public static final QName JCR_DEFAULTVALUES = new QName(NS_JCR_URI, "defaultValues");
 
     /**
-     * jcr:autoCreate
+     * jcr:autoCreated
      */
-    public static final QName JCR_AUTOCREATE = new QName(NS_JCR_URI, "autoCreate");
+    public static final QName JCR_AUTOCREATED = new QName(NS_JCR_URI, "autoCreated");
 
     /**
-     * jcr:childNodeDef
+     * jcr:childNodeDefinition
      */
-    public static final QName JCR_CHILDNODEDEF = new QName(NS_JCR_URI, "childNodeDef");
+    public static final QName JCR_CHILDNODEDEFINITION = new QName(NS_JCR_URI, "childNodeDefinition");
 
     /**
-     * jcr:sameNameSibs
+     * jcr:sameNameSiblings
      */
-    public static final QName JCR_SAMENAMESIBS = new QName(NS_JCR_URI, "sameNameSibs");
+    public static final QName JCR_SAMENAMESIBLINGS = new QName(NS_JCR_URI, "sameNameSiblings");
 
     /**
      * jcr:defaultPrimaryType
@@ -381,14 +381,14 @@ public interface Constants {
     public static final QName NT_NODETYPE = new QName(NS_NT_URI, "nodeType");
 
     /**
-     * nt:propertyDef
+     * nt:propertyDefinition
      */
-    public static final QName NT_PROPERTYDEF = new QName(NS_NT_URI, "propertyDef");
+    public static final QName NT_PROPERTYDEFINITION = new QName(NS_NT_URI, "propertyDefinition");
 
     /**
-     * nt:childNodeDef
+     * nt:childNodeDefinition
      */
-    public static final QName NT_CHILDNODEDEF = new QName(NS_NT_URI, "childNodeDef");
+    public static final QName NT_CHILDNODEDEFINITION = new QName(NS_NT_URI, "childNodeDefinition");
 
     //-------------------------------------------< security related constants >
     /**

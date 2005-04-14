@@ -8,22 +8,22 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-PropertyDef
+PropertyDefinition
   Name jcr:language
   RequiredType STRING
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion COPY
   Protected false
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:statement
   RequiredType STRING
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion COPY
   Protected false

@@ -37,7 +37,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +51,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     private static Logger log = Logger.getLogger(PropertyImpl.class);
 
-    private PropertyDef definition;
+    private PropertyDefinition definition;
 
     /**
      * Package private constructor.
@@ -64,7 +64,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @param listeners  listeners on life cylce changes of this <code>PropertyImpl</code>
      */
     PropertyImpl(ItemManager itemMgr, SessionImpl session, PropertyId id,
-                 PropertyState state, PropertyDef definition,
+                 PropertyState state, PropertyDefinition definition,
                  ItemLifeCycleListener[] listeners) {
         super(itemMgr, session, id, state, listeners);
         this.definition = definition;
@@ -125,6 +125,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     /**
      * Determines the length of the given value.
+     *
      * @param value value whose length should be determined
      * @return the length of the given value
      * @throws RepositoryException if an error occurs
@@ -132,7 +133,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see javax.jcr.Property#getLengths()
      */
     protected long getLength(InternalValue value) throws RepositoryException {
-       switch (value.getType()) {
+        switch (value.getType()) {
             case PropertyType.STRING:
             case PropertyType.LONG:
             case PropertyType.DOUBLE:
@@ -577,7 +578,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(Calendar date)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -627,7 +629,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(double number)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -672,7 +675,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(InputStream stream)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -728,7 +732,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(String string)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -777,7 +782,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(String[] strings)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -833,7 +839,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(boolean b)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -878,7 +885,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(Node target)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -980,7 +988,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public synchronized void setValue(Value value)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1031,7 +1040,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(Value[] values)
             throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1147,7 +1157,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * {@inheritDoc}
      */
-    public PropertyDef getDefinition() {
+    public PropertyDefinition getDefinition() {
         return definition;
     }
 

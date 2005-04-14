@@ -61,7 +61,7 @@ public class AddNodeTest extends AbstractJCRTest {
      * siblings are not supported a ItemExistsException is thrown.
      */
     public void testSameNameSiblings() throws RepositoryException {
-        if (testRootNode.getDefinition().allowSameNameSibs()) {
+        if (testRootNode.getDefinition().allowsSameNameSiblings()) {
             Node n1 = testRootNode.addNode(nodeName1, testNodeType);
             Node n2 = testRootNode.addNode(nodeName1, testNodeType);
             testRootNode.save();

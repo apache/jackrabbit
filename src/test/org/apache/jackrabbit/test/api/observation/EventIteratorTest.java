@@ -27,7 +27,7 @@ import java.util.NoSuchElementException;
  * Tests the methods the following methods:
  * <ul>
  * <li>{@link javax.jcr.observation.EventIterator#getSize()}</li>
- * <li>{@link javax.jcr.observation.EventIterator#getPos()}</li>
+ * <li>{@link javax.jcr.observation.EventIterator#getPosition()}</li>
  * <li>{@link javax.jcr.observation.EventIterator#skip(long)}</li>
  * </ul>
  * <p/>
@@ -64,9 +64,9 @@ public class EventIteratorTest extends AbstractObservationTest{
     }
 
     /**
-     * Tests if getPos() returns the correct values.
+     * Tests if getPosition() returns the correct values.
      */
-    public void testGetPos() throws RepositoryException {
+    public void testGetPosition() throws RepositoryException {
         EventResult listener = new EventResult(log);
         addEventListener(listener, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
@@ -76,13 +76,13 @@ public class EventIteratorTest extends AbstractObservationTest{
         removeEventListener(listener);
         EventIterator events = listener.getEventIterator(DEFAULT_WAIT_TIMEOUT);
         assertNotNull("No events delivered within " + DEFAULT_WAIT_TIMEOUT + "ms.", events);
-        assertEquals("Initial call to getPos() must return 0.", 0, events.getPos());
+        assertEquals("Initial call to getPosition() must return 0.", 0, events.getPosition());
         events.nextEvent();
-        assertEquals("Wrong value for getPos()", 1, events.getPos());
+        assertEquals("Wrong value for getPosition()", 1, events.getPosition());
         events.nextEvent();
-        assertEquals("Wrong value for getPos()", 2, events.getPos());
+        assertEquals("Wrong value for getPosition()", 2, events.getPosition());
         events.nextEvent();
-        assertEquals("Wrong value for getPos()", 3, events.getPos());
+        assertEquals("Wrong value for getPosition()", 3, events.getPosition());
     }
 
     /**
@@ -100,10 +100,10 @@ public class EventIteratorTest extends AbstractObservationTest{
         assertNotNull("No events delivered within " + DEFAULT_WAIT_TIMEOUT + "ms.", events);
         // skip zero elements
         events.skip(0);
-        assertEquals("getPos() for first element must return 0.", 0, events.getPos());
+        assertEquals("getPosition() for first element must return 0.", 0, events.getPosition());
         // skip one element
         events.skip(2);
-        assertEquals("Wrong value for getPos()", 2, events.getPos());
+        assertEquals("Wrong value for getPosition()", 2, events.getPosition());
         // skip past end
         try {
             events.skip(2);

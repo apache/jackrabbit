@@ -19,16 +19,16 @@ package org.apache.jackrabbit.test.api.nodetype;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.Session;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.PropertyDef;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.PropertyDefinition;
 
 /**
  * Tests if the node type hierarchy is correctly mapped to the methods
@@ -266,8 +266,8 @@ public class NodeTypeTest extends AbstractJCRTest {
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
 
-            PropertyDef declaredDefs[] = type.getDeclaredPropertyDefs();
-            PropertyDef defs[] = type.getPropertyDefs();
+            PropertyDefinition declaredDefs[] = type.getDeclaredPropertyDefinitions();
+            PropertyDefinition defs[] = type.getPropertyDefinitions();
 
             try {
                 for (int i = 0; i < declaredDefs.length; i++) {
@@ -302,7 +302,7 @@ public class NodeTypeTest extends AbstractJCRTest {
         NodeTypeIterator types = manager.getPrimaryNodeTypes();
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            PropertyDef defs[] = type.getPropertyDefs();
+            PropertyDefinition defs[] = type.getPropertyDefinitions();
             boolean hasJCRPrimaryType = false;
             for (int i = 0; i < defs.length; i++) {
                 if (defs[i].getName().equals(jcrPrimaryType)) {
@@ -327,8 +327,8 @@ public class NodeTypeTest extends AbstractJCRTest {
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
 
-            NodeDef declaredDefs[] = type.getDeclaredChildNodeDefs();
-            NodeDef defs[] = type.getChildNodeDefs();
+            NodeDefinition declaredDefs[] = type.getDeclaredChildNodeDefinitions();
+            NodeDefinition defs[] = type.getChildNodeDefinitions();
 
             try {
                 for (int i = 0; i < declaredDefs.length; i++) {

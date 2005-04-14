@@ -22,30 +22,30 @@ import org.apache.jackrabbit.core.QName;
 import java.util.Arrays;
 
 /**
- * A <code>ChildNodeDef</code> ...
+ * A <code>NodeDef</code> ...
  */
-public class ChildNodeDef extends ChildItemDef {
+public class NodeDef extends ItemDef {
 
     private QName defaultPrimaryType = null;
     private QName[] requiredPrimaryTypes = new QName[]{Constants.NT_BASE};
-    private boolean allowSameNameSibs = false;
+    private boolean allowsSameNameSiblings = false;
 
     /**
      * Default constructor.
      */
-    public ChildNodeDef() {
+    public NodeDef() {
     }
 
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof ChildNodeDef) {
-            ChildNodeDef other = (ChildNodeDef) obj;
+        if (obj instanceof NodeDef) {
+            NodeDef other = (NodeDef) obj;
             return super.equals(obj)
                     && Arrays.equals(requiredPrimaryTypes, other.requiredPrimaryTypes)
                     && (defaultPrimaryType == null ? other.defaultPrimaryType == null : defaultPrimaryType.equals(other.defaultPrimaryType))
-                    && allowSameNameSibs == other.allowSameNameSibs;
+                    && allowsSameNameSiblings == other.allowsSameNameSiblings;
         }
         return false;
     }
@@ -68,10 +68,10 @@ public class ChildNodeDef extends ChildItemDef {
     }
 
     /**
-     * @param allowSameNameSibs
+     * @param allowsSameNameSiblings
      */
-    public void setAllowSameNameSibs(boolean allowSameNameSibs) {
-        this.allowSameNameSibs = allowSameNameSibs;
+    public void setAllowsSameNameSiblings(boolean allowsSameNameSiblings) {
+        this.allowsSameNameSiblings = allowsSameNameSiblings;
     }
 
     /**
@@ -91,8 +91,8 @@ public class ChildNodeDef extends ChildItemDef {
     /**
      * @return
      */
-    public boolean allowSameNameSibs() {
-        return allowSameNameSibs;
+    public boolean allowsSameNameSiblings() {
+        return allowsSameNameSiblings;
     }
 
     /**

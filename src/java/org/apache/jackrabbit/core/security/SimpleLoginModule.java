@@ -39,10 +39,14 @@ public class SimpleLoginModule implements LoginModule {
 
     private static Logger log = Logger.getLogger(SimpleLoginModule.class);
 
-    /** Name of the anonymous user id option in the LoginModule configuration */
+    /**
+     * Name of the anonymous user id option in the LoginModule configuration
+     */
     private static final String OPT_ANONYMOUS = "anonymousId";
 
-    /** The default user id for anonymous login */
+    /**
+     * The default user id for anonymous login
+     */
     private static final String DEFAULT_ANONYMOUS_ID = "anonymous";
 
     // initial state
@@ -58,7 +62,9 @@ public class SimpleLoginModule implements LoginModule {
     // the principals, i.e. the authenticated identities
     private final Set principals = new HashSet();
 
-    /** Id of an anonymous user login */
+    /**
+     * Id of an anonymous user login
+     */
     private String anonymousUserId = DEFAULT_ANONYMOUS_ID;
 
     /**
@@ -119,11 +125,11 @@ public class SimpleLoginModule implements LoginModule {
                         // @todo implement simple username/password authentication
                     }
 
-                    if (anonymousUserId.equals(sc.getUserId())) {
+                    if (anonymousUserId.equals(sc.getUserID())) {
                         principals.add(new AnonymousPrincipal());
                     } else {
                         // else assume the user we authenticated is the UserPrincipal
-                        principals.add(new UserPrincipal(sc.getUserId()));
+                        principals.add(new UserPrincipal(sc.getUserID()));
                     }
                     authenticated = true;
                 }

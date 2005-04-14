@@ -28,10 +28,10 @@ final class Constants {
     public static final String NODETYPE_ELEMENT = "nodeType";
 
     /** Name of the child node definition element. */
-    public static final String CHILDNODEDEF_ELEMENT = "childNodeDef";
+    public static final String CHILDNODEDEFINITION_ELEMENT = "childNodeDefinition";
 
     /** Name of the property definition element. */
-    public static final String PROPERTYDEF_ELEMENT = "propertyDef";
+    public static final String PROPERTYDEFINITION_ELEMENT = "propertyDefinition";
 
     /** Name of the <code>isMixin</code> attribute. */
     public static final String ISMIXIN_ATTRIBUTE = "isMixin";
@@ -52,8 +52,8 @@ final class Constants {
     /** Name of the <code>name</code> attribute. */
     public static final String NAME_ATTRIBUTE = "name";
 
-    /** Name of the <code>autoCreate</code> attribute. */
-    public static final String AUTOCREATE_ATTRIBUTE = "autoCreate";
+    /** Name of the <code>autoCreated</code> attribute. */
+    public static final String AUTOCREATED_ATTRIBUTE = "autoCreated";
 
     /** Name of the <code>mandatory</code> attribute. */
     public static final String MANDATORY_ATTRIBUTE = "mandatory";
@@ -94,7 +94,7 @@ final class Constants {
     public static final String DEFAULTPRIMARYTYPE_ATTRIBUTE =
         "defaultPrimaryType";
 
-    /** Name of the <code>sameNameSibs</code> attribute. */
-    public static final String SAMENAMESIBS_ATTRIBUTE = "sameNameSibs";
+    /** Name of the <code>sameNameSiblings</code> attribute. */
+    public static final String SAMENAMESIBLINGS_ATTRIBUTE = "sameNameSiblings";
 
 }

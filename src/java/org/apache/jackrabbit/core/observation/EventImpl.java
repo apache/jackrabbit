@@ -102,7 +102,7 @@ public final class EventImpl implements Event {
     /**
      * {@inheritDoc}
      */
-    public String getUserId() {
+    public String getUserID() {
         return eventState.getUserId();
     }
 
@@ -142,7 +142,7 @@ public final class EventImpl implements Event {
                 sb.append("[Error retrieving path]");
             }
             sb.append(", ").append(EventState.valueOf(getType())).append(": ");
-            sb.append(", UserId: ").append(getUserId());
+            sb.append(", UserId: ").append(getUserID());
             stringValue = sb.toString();
         }
         return stringValue;

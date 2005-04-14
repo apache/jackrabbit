@@ -22,9 +22,8 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.version.VersionHistoryNodeState;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -41,8 +40,8 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * This Class implements a virtual item state provider, in order to expose the
@@ -76,6 +75,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * Creates an abstract virtual item state provider
+     *
      * @param ntReg
      * @param rootNodeId
      */
@@ -86,6 +86,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * Creates the root node state.
+     *
      * @return
      * @throws RepositoryException
      */
@@ -157,6 +158,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * Returns the root state
+     *
      * @return the root state
      */
     public synchronized NodeState getRootState() throws ItemStateException {
@@ -172,6 +174,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * Checks if this provide has the node state of the given node id
+     *
      * @param id
      * @return
      */
@@ -179,6 +182,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * Retrieves the node state with the given node id
+     *
      * @param id
      * @return
      * @throws NoSuchItemStateException
@@ -189,6 +193,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * Checks if this provider has the property state of the given id.
+     *
      * @param id
      * @return
      */
@@ -210,6 +215,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * Retrieces the property state for the given id
+     *
      * @param id
      * @return
      * @throws NoSuchItemStateException
@@ -257,7 +263,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
             // hack, use nt:unstructured as parent
             NodeTypeRegistry ntReg = getNodeTypeRegistry();
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(NT_UNSTRUCTURED);
-            ChildNodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
+            NodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
             ntReg.getNodeDef(new NodeDefId(cnd));
             def = new NodeDefId(cnd);
         }
@@ -285,6 +291,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * adds the node state to the cache
+     *
      * @param state
      */
     protected NodeState cache(NodeState state) {
@@ -298,6 +305,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
     /**
      * removes the nodes state from the cache
+     *
      * @param id
      */
     protected NodeState evict(NodeId id) {
@@ -307,6 +315,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
     /**
      * Removes the item and all hard refernces from the cache and discards the
      * states.
+     *
      * @param id
      */
     public void invalidateItem(ItemId id) {
@@ -357,7 +366,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
      * @return
      * @throws RepositoryException
      */
-    protected ChildNodeDef getApplicableChildNodeDef(NodeState parent, QName nodeName, QName nodeTypeName)
+    protected NodeDef getApplicableChildNodeDef(NodeState parent, QName nodeName, QName nodeTypeName)
             throws RepositoryException {
         return getEffectiveNodeType(parent).getApplicableChildNodeDef(nodeName, nodeTypeName);
     }

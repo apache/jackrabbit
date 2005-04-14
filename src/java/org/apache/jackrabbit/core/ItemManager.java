@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -40,8 +40,8 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeDef;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -74,7 +74,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
 
     private static Logger log = Logger.getLogger(ItemManager.class);
 
-    private final NodeDef rootNodeDef;
+    private final NodeDefinition rootNodeDef;
     private final NodeId rootNodeId;
 
     private final SessionImpl session;
@@ -99,7 +99,8 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * @param rootNodeUUID      the UUID of the root node
      */
     ItemManager(ItemStateManager itemStateProvider, HierarchyManager hierMgr,
-                SessionImpl session, NodeDef rootNodeDef, String rootNodeUUID) {
+                SessionImpl session, NodeDefinition rootNodeDef,
+                String rootNodeUUID) {
         this.itemStateProvider = itemStateProvider;
         this.hierMgr = hierMgr;
         this.session = session;
@@ -161,10 +162,10 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         itemCache.clear();
     }
 
-    private NodeDef getDefinition(NodeState state)
+    private NodeDefinition getDefinition(NodeState state)
             throws RepositoryException {
         NodeDefId defId = state.getDefinitionId();
-        NodeDefImpl def = session.getNodeTypeManager().getNodeDef(defId);
+        NodeDefinitionImpl def = session.getNodeTypeManager().getNodeDefinition(defId);
         if (def == null) {
             log.warn("node at " + safeGetJCRPath(state.getId()) + " has invalid definitionId (" + defId + ")");
 
@@ -173,23 +174,23 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             NodeImpl parent = (NodeImpl) getItem(parentId);
             NodeState parentState = (NodeState) parent.getItemState();
             NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) parentState.getChildNodeEntries(state.getUUID()).get(0);
-            def = parent.getApplicableChildNodeDef(cne.getName(), state.getNodeTypeName());
+            def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
             state.setDefinitionId(new NodeDefId(def.unwrap()));
         }
         return def;
     }
 
-    private PropertyDef getDefinition(PropertyState state)
+    private PropertyDefinition getDefinition(PropertyState state)
             throws RepositoryException {
         PropDefId defId = state.getDefinitionId();
-        PropertyDefImpl def = session.getNodeTypeManager().getPropDef(defId);
+        PropertyDefinitionImpl def = session.getNodeTypeManager().getPropertyDefinition(defId);
         if (def == null) {
             log.warn("property at " + safeGetJCRPath(state.getId()) + " has invalid definitionId (" + defId + ")");
 
             // fallback: try finding applicable definition
             NodeId parentId = new NodeId(state.getParentUUID());
             NodeImpl parent = (NodeImpl) getItem(parentId);
-            def = parent.getApplicablePropertyDef(state.getName(), state.getType(), state.isMultiValued());
+            def = parent.getApplicablePropertyDefinition(state.getName(), state.getType(), state.isMultiValued());
             state.setDefinitionId(new PropDefId(def.unwrap()));
         }
         return def;
@@ -242,19 +243,6 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * @return true if the specified item exists
      */
     boolean itemExists(Path path) {
-/*
-        try {
-            getItem(path);
-            return true;
-        } catch (PathNotFoundException pnfe) {
-            return false;
-        } catch (AccessDeniedException ade) {
-            // item exists but the session has not been granted read access
-            return false;
-        } catch (RepositoryException re) {
-            return false;
-        }
-*/
         try {
             // check sanity of session
             session.sanityCheck();
@@ -292,19 +280,6 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * @return true if the specified item exists
      */
     boolean itemExists(ItemId id) {
-/*
-        try {
-            getItem(id);
-            return true;
-        } catch (ItemNotFoundException infe) {
-            return false;
-        } catch (AccessDeniedException ade) {
-            // item exists but the session has not been granted read access
-            return false;
-        } catch (RepositoryException re) {
-            return false;
-        }
-*/
         try {
             // check sanity of session
             session.sanityCheck();
@@ -546,7 +521,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         return item;
     }
 
-    NodeImpl createNodeInstance(NodeState state, NodeDef def)
+    NodeImpl createNodeInstance(NodeState state, NodeDefinition def)
             throws RepositoryException {
         NodeId id = new NodeId(state.getUUID());
         // we want to be informed on life cycle changes of the new node object
@@ -555,11 +530,13 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
 
         // check special nodes
         if (state.getNodeTypeName().equals(NT_VERSION)) {
-            InternalVersion version = session.getVersionManager().getVersion(state.getUUID());
+            InternalVersion version =
+                    session.getVersionManager().getVersion(state.getUUID());
             return new VersionImpl(this, session, id, state, def, listeners, version);
 
         } else if (state.getNodeTypeName().equals(NT_VERSIONHISTORY)) {
-            InternalVersionHistory history = session.getVersionManager().getVersionHistory(state.getUUID());
+            InternalVersionHistory history =
+                    session.getVersionManager().getVersionHistory(state.getUUID());
             return new VersionHistoryImpl(this, session, id, state, def, listeners, history);
 
         } else {
@@ -571,12 +548,13 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
 
     NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
         // 1. get definition of the specified node
-        NodeDef def = getDefinition(state);
+        NodeDefinition def = getDefinition(state);
         // 2. create instance
         return createNodeInstance(state, def);
     }
 
-    PropertyImpl createPropertyInstance(PropertyState state, PropertyDef def) {
+    PropertyImpl createPropertyInstance(PropertyState state,
+                                        PropertyDefinition def) {
         PropertyId id = new PropertyId(state.getParentUUID(), state.getName());
         // we want to be informed on life cycle changes of the new property object
         // in order to maintain item cache consistency
@@ -586,9 +564,10 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         return prop;
     }
 
-    PropertyImpl createPropertyInstance(PropertyState state) throws RepositoryException {
+    PropertyImpl createPropertyInstance(PropertyState state)
+            throws RepositoryException {
         // 1. get definition for the specified property
-        PropertyDef def = getDefinition(state);
+        PropertyDefinition def = getDefinition(state);
         // 2. create instance
         return createPropertyInstance(state, def);
     }

@@ -8,31 +8,31 @@ HasOrderableChildNodes
   true
 PrimaryItemName
   null
-ChildNodeDef
+ChildNodeDefinition
   Name "*"
   RequiredPrimaryTypes [nt:base]
   DefaultPrimaryType nt:unstructured
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion VERSION
   Protected false
-  SameNameSibs true
-PropertyDef
+  SameNameSiblings true
+PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion COPY
   Protected false
   Multiple true
-PropertyDef
+PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion COPY
   Protected false

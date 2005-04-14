@@ -105,7 +105,7 @@ public class TextNodeTest extends AbstractQueryTest {
             throw new NotExecutableException("Repository does not support position index");
         }
         Node text1 = testRootNode.addNode(jcrXMLText);
-        if (!text1.getDefinition().allowSameNameSibs()) {
+        if (!text1.getDefinition().allowsSameNameSiblings()) {
             throw new NotExecutableException("Node at path: " + testRoot + " does not allow same name siblings with name: " + jcrXMLText);
         }
         testRootNode.addNode(nodeName1, testNodeType);

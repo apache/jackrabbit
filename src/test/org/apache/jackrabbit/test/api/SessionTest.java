@@ -381,54 +381,6 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Moves an unreferencable node with one session and saves the same node
-     * using a different session at same time.<br/> <br/> Procedure: <ul>
-     * <li>Creates node 1 and node 2 with session 1</li> <li>Gets reference to
-     * node 1 using session 2</li> <li>session 1 moves node 1 under node 2 ,
-     * saves using session1.save()</li> <li>session 2 modifies node 1 by adding
-     * a child node, saves using session2.save()</li> </ul> Should throw {@link
-     * javax.jcr.InvalidItemStateException} since saving an unreferencable node
-     * that has been moved by and other session is not possible.
-     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
-     * must accept children of same nodetype and it must not be
-     * referencable</li> </ul>
-     */
-    public void testSaveMovedNotRefNode() throws RepositoryException {
-        // get default workspace test root node using superuser session
-        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
-
-        // create non referenciable node to be moved with session 1
-        Node testNodeSession1 = defaultRootNode.addNode(nodeName1, testNodeType);
-
-        // create a second node with session 1 that will serve as new parent
-        Node newParentNodeSession1 = defaultRootNode.addNode(nodeName2, testNodeType);
-
-        // save the new nodes
-        superuser.save();
-
-        // get the moving node with session 2
-        Session testSession = helper.getReadWriteSession();
-        Node testNodeSession2 = (Node) testSession.getItem(testNodeSession1.getPath());
-
-        //move the node with session 1
-        superuser.move(testNodeSession1.getPath(), newParentNodeSession1.getPath() + "/" + nodeName1);
-
-        // make the move persistent with session 1
-        superuser.save();
-
-        // add a child to the node with session
-        testNodeSession2.addNode(nodeName3, testNodeType);
-
-        // save it
-        try {
-            testSession.save();
-            fail("Saving a unreferencedable Node that has been moved by other session should throw InvalidItemStateException");
-        } catch (InvalidItemStateException e) {
-            // ok, works as expected
-        }
-    }
-
-    /**
      * Checks if {@link javax.jcr.Session#refresh(boolean refresh)} works
      * properly with <code>refresh</code> set to <code>false</code>.<br/> <br/>
      * Procedure: <ul> <li>Creates two nodes with session 1</li> <li>Modifies

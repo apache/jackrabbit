@@ -35,7 +35,7 @@ public class NodeTypeDef implements Cloneable {
     private boolean orderableChildNodes;
     private QName primaryItemName;
     private PropDef[] propDefs;
-    private ChildNodeDef[] nodeDefs;
+    private NodeDef[] nodeDefs;
     private Set dependencies;
 
     /**
@@ -44,7 +44,7 @@ public class NodeTypeDef implements Cloneable {
     public NodeTypeDef() {
         dependencies = null;
         name = null;
-        nodeDefs = new ChildNodeDef[0];
+        nodeDefs = new NodeDef[0];
         propDefs = new PropDef[0];
         supertypes = new QName[0];
         mixin = false;
@@ -192,9 +192,9 @@ public class NodeTypeDef implements Cloneable {
     /**
      * Sets the child node definitions.
      *
-     * @param defs An array of <code>ChildNodeDef</code> objects
+     * @param defs An array of <code>NodeDef</code> objects
      */
-    public void setChildNodeDefs(ChildNodeDef[] defs) {
+    public void setChildNodeDefs(NodeDef[] defs) {
         resetDependencies();
         nodeDefs = defs;
     }
@@ -266,7 +266,7 @@ public class NodeTypeDef implements Cloneable {
      * @return an array containing the child node definitions or
      *         <code>null</code> if not set.
      */
-    public ChildNodeDef[] getChildNodeDefs() {
+    public NodeDef[] getChildNodeDefs() {
         return nodeDefs;
     }
 }

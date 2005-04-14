@@ -20,7 +20,7 @@ import org.apache.commons.collections.ReferenceMap;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
@@ -32,7 +32,6 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.log4j.Logger;
@@ -63,6 +62,7 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
@@ -495,15 +495,9 @@ public class SessionImpl implements Session, Constants {
      * {@inheritDoc}
      */
     public void checkPermission(String absPath, String actions)
-            throws AccessControlException {
+            throws AccessControlException, RepositoryException {
         // check sanity of this session
-        try {
-            sanityCheck();
-        } catch (RepositoryException re) {
-            String msg = "failed to check permissions on " + absPath;
-            log.warn(msg, re);
-            throw new AccessControlException(actions);
-        }
+        sanityCheck();
 
         // build the set of actions to be checked
         String[] strings = actions.split(",");
@@ -530,11 +524,7 @@ public class SessionImpl implements Session, Constants {
             } catch (MalformedPathException mpe) {
                 String msg = "invalid path: " + absPath;
                 log.warn(msg, mpe);
-                throw new AccessControlException(READ_ACTION);
-            } catch (RepositoryException re) {
-                String msg = "failed to check READ permission on " + absPath;
-                log.warn(msg, re);
-                throw new AccessControlException(READ_ACTION);
+                throw new RepositoryException(msg);
             }
         }
 
@@ -559,14 +549,10 @@ public class SessionImpl implements Session, Constants {
             } catch (MalformedPathException mpe) {
                 String msg = "invalid path: " + absPath;
                 log.warn(msg, mpe);
-                throw new AccessControlException(ADD_NODE_ACTION);
+                throw new RepositoryException(msg);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
-                throw new AccessControlException(ADD_NODE_ACTION);
-            } catch (RepositoryException re) {
-                String msg = "failed to check WRITE permission on parent of " + absPath;
-                log.warn(msg, re);
                 throw new AccessControlException(ADD_NODE_ACTION);
             }
         }
@@ -590,14 +576,10 @@ public class SessionImpl implements Session, Constants {
             } catch (MalformedPathException mpe) {
                 String msg = "invalid path: " + absPath;
                 log.warn(msg, mpe);
-                throw new AccessControlException(REMOVE_ACTION);
+                throw new RepositoryException(msg);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
-                throw new AccessControlException(REMOVE_ACTION);
-            } catch (RepositoryException re) {
-                String msg = "failed to check REMOVE permission on " + absPath;
-                log.warn(msg, re);
                 throw new AccessControlException(REMOVE_ACTION);
             }
         }
@@ -637,14 +619,10 @@ public class SessionImpl implements Session, Constants {
             } catch (MalformedPathException mpe) {
                 String msg = "invalid path: " + absPath;
                 log.warn(msg, mpe);
-                throw new AccessControlException(SET_PROPERTY_ACTION);
+                throw new RepositoryException(msg);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
-                throw new AccessControlException(SET_PROPERTY_ACTION);
-            } catch (RepositoryException re) {
-                String msg = "failed to check WRITE permission on parent of " + absPath;
-                log.warn(msg, re);
                 throw new AccessControlException(SET_PROPERTY_ACTION);
             }
         }
@@ -740,27 +718,26 @@ public class SessionImpl implements Session, Constants {
     /**
      * {@inheritDoc}
      */
-    public boolean itemExists(String absPath) {
-        try {
-            // check sanity of this session
-            sanityCheck();
+    public boolean itemExists(String absPath) throws RepositoryException {
+        // check sanity of this session
+        sanityCheck();
 
-            getItemManager().getItem(Path.create(absPath, getNamespaceResolver(), true));
-            return true;
-        } catch (RepositoryException re) {
-            // fall through...
+        try {
+            return getItemManager().itemExists(Path.create(absPath, getNamespaceResolver(), true));
         } catch (MalformedPathException mpe) {
-            // fall through...
+            String msg = "invalid path:" + absPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, mpe);
         }
-        return false;
     }
 
     /**
      * {@inheritDoc}
      */
     public void save()
-            throws AccessDeniedException, ConstraintViolationException,
-            InvalidItemStateException, VersionException, LockException,
+            throws AccessDeniedException, ItemExistsException,
+            ConstraintViolationException, InvalidItemStateException,
+            VersionException, LockException, NoSuchNodeTypeException,
             RepositoryException {
         // check sanity of this session
         sanityCheck();
@@ -798,7 +775,8 @@ public class SessionImpl implements Session, Constants {
      */
     public void move(String srcAbsPath, String destAbsPath)
             throws ItemExistsException, PathNotFoundException,
-            VersionException, LockException, RepositoryException {
+            VersionException, ConstraintViolationException, LockException,
+            RepositoryException {
         // check sanity of this session
         sanityCheck();
 
@@ -878,8 +856,8 @@ public class SessionImpl implements Session, Constants {
             } else {
                 // there's already a node with that name
                 // check same-name sibling setting of both new and existing node
-                if (!destParentNode.getDefinition().allowSameNameSibs()
-                        || !((NodeImpl) item).getDefinition().allowSameNameSibs()) {
+                if (!destParentNode.getDefinition().allowsSameNameSiblings()
+                        || !((NodeImpl) item).getDefinition().allowsSameNameSiblings()) {
                     throw new ItemExistsException(item.safeGetJCRPath());
                 }
             }
@@ -894,9 +872,9 @@ public class SessionImpl implements Session, Constants {
 
         // get applicable definition of target node at new location
         NodeTypeImpl nt = (NodeTypeImpl) targetNode.getPrimaryNodeType();
-        NodeDefImpl newTargetDef;
+        NodeDefinitionImpl newTargetDef;
         try {
-            newTargetDef = destParentNode.getApplicableChildNodeDef(destName.getName(), nt.getQName());
+            newTargetDef = destParentNode.getApplicableChildNodeDefinition(destName.getName(), nt.getQName());
         } catch (RepositoryException re) {
             String msg = destAbsPath + ": no definition found in parent node's node type for new node";
             log.debug(msg);
@@ -928,7 +906,7 @@ public class SessionImpl implements Session, Constants {
         srcParentNode.removeChildNode(srcName.getName(),
                 srcName.getIndex() == 0 ? 1 : srcName.getIndex());
         // change definition of target if necessary
-        NodeDefImpl oldTargetDef = (NodeDefImpl) targetNode.getDefinition();
+        NodeDefinitionImpl oldTargetDef = (NodeDefinitionImpl) targetNode.getDefinition();
         NodeDefId oldTargetDefId = new NodeDefId(oldTargetDef.unwrap());
         NodeDefId newTargetDefId = new NodeDefId(newTargetDef.unwrap());
         if (!oldTargetDefId.equals(newTargetDefId)) {
@@ -939,7 +917,8 @@ public class SessionImpl implements Session, Constants {
     /**
      * {@inheritDoc}
      */
-    public ContentHandler getImportContentHandler(String parentAbsPath)
+    public ContentHandler getImportContentHandler(String parentAbsPath,
+                                                  int uuidBehavior)
             throws PathNotFoundException, ConstraintViolationException,
             VersionException, LockException, RepositoryException {
         // check sanity of this session
@@ -977,21 +956,23 @@ public class SessionImpl implements Session, Constants {
         // check lock status
         parent.checkLock();
 
-        SessionImporter importer = new SessionImporter(parent, this, Importer.IMPORT_UUID_CREATE_NEW);
+        SessionImporter importer = new SessionImporter(parent, this, uuidBehavior);
         return new ImportHandler(importer, getNamespaceResolver(), rep.getNamespaceRegistry());
     }
 
     /**
      * {@inheritDoc}
      */
-    public void importXML(String parentAbsPath, InputStream in)
+    public void importXML(String parentAbsPath, InputStream in,
+                          int uuidBehavior)
             throws IOException, PathNotFoundException, ItemExistsException,
             ConstraintViolationException, VersionException,
             InvalidSerializedDataException, LockException, RepositoryException {
         // check sanity of this session
         sanityCheck();
 
-        ImportHandler handler = (ImportHandler) getImportContentHandler(parentAbsPath);
+        ImportHandler handler = (ImportHandler)
+                getImportContentHandler(parentAbsPath, uuidBehavior);
         try {
             XMLReader parser =
                     XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
@@ -1019,10 +1000,9 @@ public class SessionImpl implements Session, Constants {
     /**
      * {@inheritDoc}
      */
-    public void exportDocView(String absPath, ContentHandler contentHandler,
-                              boolean skipBinary, boolean noRecurse)
-            throws InvalidSerializedDataException, PathNotFoundException,
-            SAXException, RepositoryException {
+    public void exportDocumentView(String absPath, ContentHandler contentHandler,
+                                   boolean skipBinary, boolean noRecurse)
+            throws PathNotFoundException, SAXException, RepositoryException {
         // check sanity of this session
         sanityCheck();
 
@@ -1038,15 +1018,15 @@ public class SessionImpl implements Session, Constants {
     /**
      * {@inheritDoc}
      */
-    public void exportDocView(String absPath, OutputStream out,
-                              boolean skipBinary, boolean noRecurse)
-            throws InvalidSerializedDataException, IOException,
-            PathNotFoundException, RepositoryException {
+    public void exportDocumentView(String absPath, OutputStream out,
+                                   boolean skipBinary, boolean noRecurse)
+            throws IOException, PathNotFoundException, RepositoryException {
         boolean indenting = false;
         OutputFormat format = new OutputFormat("xml", "UTF-8", indenting);
         XMLSerializer serializer = new XMLSerializer(out, format);
         try {
-            exportDocView(absPath, serializer.asContentHandler(), skipBinary, noRecurse);
+            exportDocumentView(absPath, serializer.asContentHandler(),
+                    skipBinary, noRecurse);
         } catch (SAXException se) {
             throw new RepositoryException(se);
         }
@@ -1055,8 +1035,8 @@ public class SessionImpl implements Session, Constants {
     /**
      * {@inheritDoc}
      */
-    public void exportSysView(String absPath, ContentHandler contentHandler,
-                              boolean skipBinary, boolean noRecurse)
+    public void exportSystemView(String absPath, ContentHandler contentHandler,
+                                 boolean skipBinary, boolean noRecurse)
             throws PathNotFoundException, SAXException, RepositoryException {
         // check sanity of this session
         sanityCheck();
@@ -1073,17 +1053,25 @@ public class SessionImpl implements Session, Constants {
     /**
      * {@inheritDoc}
      */
-    public void exportSysView(String absPath, OutputStream out,
-                              boolean skipBinary, boolean noRecurse)
+    public void exportSystemView(String absPath, OutputStream out,
+                                 boolean skipBinary, boolean noRecurse)
             throws IOException, PathNotFoundException, RepositoryException {
         boolean indenting = false;
         OutputFormat format = new OutputFormat("xml", "UTF-8", indenting);
         XMLSerializer serializer = new XMLSerializer(out, format);
         try {
-            exportSysView(absPath, serializer.asContentHandler(), skipBinary, noRecurse);
+            exportSystemView(absPath, serializer.asContentHandler(),
+                    skipBinary, noRecurse);
         } catch (SAXException se) {
             throw new RepositoryException(se);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isLive() {
+        return alive;
     }
 
     /**
@@ -1140,7 +1128,7 @@ public class SessionImpl implements Session, Constants {
     /**
      * {@inheritDoc}
      */
-    public String getUserId() {
+    public String getUserID() {
         return userId;
     }
 

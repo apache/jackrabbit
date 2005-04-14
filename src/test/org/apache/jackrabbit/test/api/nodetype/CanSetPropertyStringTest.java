@@ -19,7 +19,7 @@ package org.apache.jackrabbit.test.api.nodetype;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.Session;
 import javax.jcr.PropertyType;
@@ -71,7 +71,7 @@ public class CanSetPropertyStringTest extends AbstractJCRTest {
     public void testConversions()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.STRING, false, false, false, false);
 
         if (propDef == null) {
@@ -132,7 +132,7 @@ public class CanSetPropertyStringTest extends AbstractJCRTest {
     public void testConversionsMultiple()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.STRING, true, false, false, false);
 
         if (propDef == null) {
@@ -195,12 +195,12 @@ public class CanSetPropertyStringTest extends AbstractJCRTest {
 
     /**
      * Tests if canSetProperty(String propertyName, Value value) returns false
-     * if value does not match the value constraints of the property def
+     * if value does not satisfy the value constraints of the property def
      */
-    public void testOutOfValueConstraint()
+    public void testValueConstraintNotSatisfied()
             throws NotExecutableException, ParseException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.STRING, false, false, true, false);
 
         if (propDef == null) {
@@ -224,12 +224,12 @@ public class CanSetPropertyStringTest extends AbstractJCRTest {
 
     /**
      * Tests if canSetProperty(String propertyName, Value[] values) returns
-     * false if values do not match the value constraints of the property def
+     * false if values do not satisfy the value constraints of the property def
      */
-    public void testOutOfValueConstraintMultiple()
+    public void testValueConstraintNotSatisfiedMultiple()
             throws NotExecutableException, ParseException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.STRING, true, false, true, false);
 
         if (propDef == null) {

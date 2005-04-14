@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.log4j.Logger;
 
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Property;
@@ -37,7 +38,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Iterator;
@@ -63,6 +64,14 @@ public class SessionImporter implements Importer {
      */
     private final ReferenceChangeTracker refTracker;
 
+    /**
+     * Creates a new <code>SessionImporter</code> instance.
+     *
+     * @param importTargetNode
+     * @param session
+     * @param uuidBehavior     any of the constants declared by
+     *                         {@link ImportUUIDBehavior}
+     */
     public SessionImporter(NodeImpl importTargetNode,
                            SessionImpl session,
                            int uuidBehavior) {
@@ -99,7 +108,7 @@ public class SessionImporter implements Importer {
                                            NodeInfo nodeInfo)
             throws RepositoryException {
         NodeImpl node;
-        if (uuidBehavior == IMPORT_UUID_CREATE_NEW) {
+        if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW) {
             // create new with new uuid
             node = createNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
@@ -107,11 +116,11 @@ public class SessionImporter implements Importer {
             if (node.isNodeType(Constants.MIX_REFERENCEABLE)) {
                 refTracker.mappedUUID(nodeInfo.getUUID(), node.getUUID());
             }
-        } else if (uuidBehavior == IMPORT_UUID_COLLISION_THROW) {
+        } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
             String msg = "a node with uuid " + nodeInfo.getUUID() + " already exists!";
             log.debug(msg);
             throw new ItemExistsException(msg);
-        } else if (uuidBehavior == IMPORT_UUID_COLLISION_REMOVE_EXISTING) {
+        } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING) {
             // make sure conflicting node is not importTargetNode or an ancestor thereof
             if (importTargetNode.getPath().startsWith(conflicting.getPath())) {
                 String msg = "cannot remove ancestor node";
@@ -124,7 +133,7 @@ public class SessionImporter implements Importer {
             node = createNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
                     nodeInfo.getUUID());
-        } else if (uuidBehavior == IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
+        } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
             if (conflicting.getDepth() == 0) {
                 String msg = "root node cannot be replaced";
                 log.debug(msg);
@@ -179,8 +188,8 @@ public class SessionImporter implements Importer {
         if (parent.hasNode(nodeName)) {
             // a node with that name already exists...
             NodeImpl existing = parent.getNode(nodeName);
-            NodeDef def = existing.getDefinition();
-            if (!def.allowSameNameSibs()) {
+            NodeDefinition def = existing.getDefinition();
+            if (!def.allowsSameNameSiblings()) {
                 // existing doesn't allow same-name siblings,
                 // check for potential conflicts
                 if (def.isProtected() && existing.isNodeType(ntName)) {
@@ -189,7 +198,7 @@ public class SessionImporter implements Importer {
                     log.debug("skipping protected node " + existing.safeGetJCRPath());
                     return;
                 }
-                if (def.isAutoCreate() && existing.isNodeType(ntName)) {
+                if (def.isAutoCreated() && existing.isNodeType(ntName)) {
                     // this node has already been auto-created, no need to create it
                     node = existing;
                 } else {

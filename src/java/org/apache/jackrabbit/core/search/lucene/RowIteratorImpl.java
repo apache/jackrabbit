@@ -105,8 +105,8 @@ class RowIteratorImpl implements RowIterator {
      *
      * @return the current position withing this iterator.
      */
-    public long getPos() {
-        return nodes.getPos();
+    public long getPosition() {
+        return nodes.getPosition();
     }
 
     /**
@@ -171,7 +171,7 @@ class RowIteratorImpl implements RowIterator {
         /**
          * Returns an array of all the values in the same order as the property
          * names (column names) returned by
-         * {@link javax.jcr.query.QueryResult#getPropertyNames()}.
+         * {@link javax.jcr.query.QueryResult#getColumnNames()}.
          *
          * @return a <code>Value</code> array.
          * @throws RepositoryException if an error occurs while retrieving the

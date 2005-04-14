@@ -59,15 +59,15 @@ public class NodeIteratorTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests if {@link javax.jcr.NodeIterator#getPos()} return correct values.
+     * Tests if {@link javax.jcr.NodeIterator#getPosition()} return correct values.
      */
     public void testGetPos() throws RepositoryException {
         NodeIterator iter = testRootNode.getNodes();
-        assertEquals("Initial call to getPos() must return zero", 0, iter.getPos());
+        assertEquals("Initial call to getPos() must return zero", 0, iter.getPosition());
         int index = 0;
         while (iter.hasNext()) {
             iter.nextNode();
-            assertEquals("Wrong position returned by getPos()", ++index, iter.getPos());
+            assertEquals("Wrong position returned by getPos()", ++index, iter.getPosition());
         }
     }
 

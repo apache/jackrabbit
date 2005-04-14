@@ -18,30 +18,31 @@ package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.XMLReader;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.jcr.lock.LockException;
-import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.Workspace;
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.Repository;
-import javax.jcr.PathNotFoundException;
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Workspace;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.File;
-import java.io.IOException;
 import java.io.FileInputStream;
-import java.io.StringReader;
-import java.io.Reader;
-import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 
 /**
  * <code>SerializationTest</code> contains the test cases for the method
@@ -96,7 +97,7 @@ public class SerializationTest extends AbstractJCRTest {
 
         FileInputStream in = new FileInputStream(file);
         try {
-            session.importXML(n.getPath(), in);
+            session.importXML(n.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
             fail("Importing to a checked-in node must throw a ConstraintViolationException.");
         } catch (ConstraintViolationException e) {
             // success
@@ -113,7 +114,7 @@ public class SerializationTest extends AbstractJCRTest {
         Node n = initVersioningException(false);
         FileInputStream in = new FileInputStream(file);
         try {
-            session.importXML(n.getPath(), in);
+            session.importXML(n.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
             fail("Importing to a child of a checked-in node must throw a ConstraintViolationException.");
         } catch (ConstraintViolationException e) {
             // success
@@ -163,7 +164,7 @@ public class SerializationTest extends AbstractJCRTest {
             session.removeLockToken(lock.getLockToken());   //remove the token, so the lock is for me, too
             FileInputStream in = new FileInputStream(file);
             try {
-                session.importXML(lNode.getPath(), in);
+                session.importXML(lNode.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                 fail("De-serializing to a locked node must throw a lock exception.");
             } catch (LockException e) {
                 // success
@@ -181,7 +182,8 @@ public class SerializationTest extends AbstractJCRTest {
         StringReader in = new StringReader("<this is not a <valid> <xml> file/>");
         ContentHandler ih = null;
         try {
-            ih = session.getImportContentHandler(treeComparator.targetFolder);
+            ih = session.getImportContentHandler(treeComparator.targetFolder,
+                    ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         } catch (RepositoryException e) {
             fail("ImportHandler not created: " + e);
         }
@@ -225,7 +227,8 @@ public class SerializationTest extends AbstractJCRTest {
     public void testGetImportContentHandlerExceptions() throws RepositoryException {
         //Specifying a path that does not exist throws a PathNotFound exception
         try {
-            session.getImportContentHandler(treeComparator.targetFolder + "/thisIsNotAnExistingNode");
+            session.getImportContentHandler(treeComparator.targetFolder + "/thisIsNotAnExistingNode",
+                    ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
             fail("Specifying a non-existing path must throw a PathNotFoudException.");
         } catch (PathNotFoundException e) {
             // success
@@ -241,7 +244,8 @@ public class SerializationTest extends AbstractJCRTest {
 
         // If no node exists at parentAbsPath, a PathNotFoundException is thrown.
         try {
-            session.importXML(treeComparator.targetFolder + "/thisNodeDoesNotExist", in);
+            session.importXML(treeComparator.targetFolder + "/thisNodeDoesNotExist",
+                    in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
             fail("Importing to a non-existing node does not throw a PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // success
@@ -280,14 +284,15 @@ public class SerializationTest extends AbstractJCRTest {
         subfolder = folder.addNode("mySubFolder", "nt:folder");
         session.save();
         out = new FileOutputStream(file);
-        session.exportSysView(subfolder.getPath(), out, true, true);
+        session.exportSystemView(subfolder.getPath(), out, true, true);
         subfolder.addNode("mySubSubFolder", "nt:folder");
         subfolder.remove();
         session.save();
         in = new FileInputStream(file);
 
         try {
-            session.importXML(folder.getPath(), in);
+            session.importXML(folder.getPath(), in,
+                    ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
             session.save();
             fail("Overwriting an existing node during import must throw an ItemExistsException");
         } catch (ItemExistsException e) {
@@ -302,7 +307,8 @@ public class SerializationTest extends AbstractJCRTest {
     public void testSessionImportXml() throws RepositoryException, IOException {
         FileInputStream in = new FileInputStream(file);
         exportRepository(SAVEBINARY, RECURSE);
-        session.importXML(treeComparator.targetFolder, in);
+        session.importXML(treeComparator.targetFolder, in,
+                ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
 
         // after logout/login, no nodes are in the session
         session.logout();
@@ -411,7 +417,7 @@ public class SerializationTest extends AbstractJCRTest {
         try {
             out = new FileOutputStream(file);
             session.refresh(false); //move the workspace into the session, then save it. The workspace is always valid, the session not necessarily.
-            session.exportSysView(treeComparator.getSourceRootPath(), out, skipBinary, noRecurse);
+            session.exportSystemView(treeComparator.getSourceRootPath(), out, skipBinary, noRecurse);
         } catch (RepositoryException e) {
             fail("Could not export the repository: " + e);
         }
@@ -445,7 +451,8 @@ public class SerializationTest extends AbstractJCRTest {
                     fail("Error while parsing the imported repository: " + e);
                 }
             } else {
-                ContentHandler ih = session.getImportContentHandler(treeComparator.targetFolder);
+                ContentHandler ih = session.getImportContentHandler(treeComparator.targetFolder,
+                        ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                 try {
                     XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
                     parser.setContentHandler(ih);
@@ -459,7 +466,8 @@ public class SerializationTest extends AbstractJCRTest {
             if (workspace) {
                 this.workspace.importXML(treeComparator.targetFolder, in, 0);
             } else {
-                session.importXML(treeComparator.targetFolder, in);
+                session.importXML(treeComparator.targetFolder, in,
+                        ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
             }
         }
     }

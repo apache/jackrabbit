@@ -112,7 +112,7 @@ class NodeIteratorImpl implements NodeIterator {
      * Returns the current position in this <code>NodeIterator</code>.
      * @return the current position in this <code>NodeIterator</code>.
      */
-    public long getPos() {
+    public long getPosition() {
         return pos;
     }
 

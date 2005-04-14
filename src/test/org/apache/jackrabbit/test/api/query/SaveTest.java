@@ -30,7 +30,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
- * Tests the method {@link javax.jcr.query.Query#save(String)}.
+ * Tests the method {@link javax.jcr.query.Query#storeAsNode(String)}.
  *
  * @test
  * @sources SaveTest.java
@@ -53,7 +53,7 @@ public class SaveTest extends AbstractJCRTest {
      */
     public void testSave() throws RepositoryException {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
-        query.save(testRoot + "/" + nodeName1);
+        query.storeAsNode(testRoot + "/" + nodeName1);
 
         assertTrue("Node has not been saved", testRootNode.hasNode(nodeName1));
 
@@ -70,12 +70,12 @@ public class SaveTest extends AbstractJCRTest {
      */
     public void testItemExistsException() throws RepositoryException {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
-        query.save(testRoot + "/" + nodeName1);
+        query.storeAsNode(testRoot + "/" + nodeName1);
 
         // create another one
         query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
-            query.save(testRoot + "/" + nodeName1);
+            query.storeAsNode(testRoot + "/" + nodeName1);
             fail("Query.save() did not throw ItemExistsException");
         } catch (ItemExistsException e) {
             // expected behaviour
@@ -89,7 +89,7 @@ public class SaveTest extends AbstractJCRTest {
     public void testPathNotFoundException() throws RepositoryException {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
-            query.save(testRoot + "/" + nodeName1 + "/" + nodeName1);
+            query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName1);
             fail("Query.save() must throw PathNotFoundException on invalid path");
         } catch (PathNotFoundException e) {
             // expected behaviour
@@ -127,7 +127,7 @@ public class SaveTest extends AbstractJCRTest {
         versionable.checkin();
 
         try {
-            query.save(testRoot + "/" + nodeName1 + "/" + nodeName2);
+            query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
             fail("Query.save() must throw VersionException, parent node is checked in.");
         } catch (VersionException e) {
             // expected behaviour
@@ -147,7 +147,7 @@ public class SaveTest extends AbstractJCRTest {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         testRootNode.addNode(nodeName1, testNodeType);
         try {
-            query.save(testRoot + "/" + nodeName1 + "/" + nodeName2);
+            query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
             fail("Query.save() must throw ConstraintViolationException, parent node does not allow child nodes.");
         } catch (ConstraintViolationException e) {
             // expected behaviour
@@ -184,7 +184,7 @@ public class SaveTest extends AbstractJCRTest {
         Session readWrite = helper.getReadWriteSession();
         Query query = readWrite.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
-            query.save(testRoot + "/" + nodeName1 + "/" + nodeName2);
+            query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
             fail("Query.save() must throw LockException, parent node is locked.");
         } catch (LockException e) {
             // expected behaviour
@@ -195,12 +195,12 @@ public class SaveTest extends AbstractJCRTest {
 
     /**
      * Tests if the a {@link javax.jcr.RepositoryException} is thrown when
-     * an malformed path is passed in {@link javax.jcr.query.Query#save(String)}.
+     * an malformed path is passed in {@link javax.jcr.query.Query#storeAsNode(String)}.
      */
     public void testRepositoryException() throws RepositoryException {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
-            query.save(testRoot + "/invalid[path");
+            query.storeAsNode(testRoot + "/invalid[path");
             fail("Query.save() must throw RepositoryException on malformed path.");
         } catch (RepositoryException e) {
             // expected behaviour

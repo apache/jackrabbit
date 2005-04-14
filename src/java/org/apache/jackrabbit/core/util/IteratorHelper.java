@@ -81,7 +81,7 @@ public class IteratorHelper
     /**
      * {@inheritDoc}
      */
-    public long getPos() {
+    public long getPosition() {
         return pos;
     }
 

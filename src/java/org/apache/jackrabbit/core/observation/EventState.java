@@ -319,7 +319,7 @@ public class EventState {
      * {@inheritDoc}
      */
     public String getUserId() {
-        return session.getUserId();
+        return session.getUserID();
     }
 
     /**
@@ -344,7 +344,7 @@ public class EventState {
             sb.append("EventState: ").append(valueOf(type));
             sb.append(", Parent: ").append(parentUUID);
             sb.append(", Child: ").append(childRelPath);
-            sb.append(", UserId: ").append(session.getUserId());
+            sb.append(", UserId: ").append(session.getUserID());
             stringValue = sb.toString();
         }
         return stringValue;

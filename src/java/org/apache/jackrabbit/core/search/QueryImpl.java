@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.search;
 
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.Constants;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -149,7 +149,8 @@ public class QueryImpl implements Query {
     /**
      * {@inheritDoc}
      */
-    public String getPersistentQueryPath() throws ItemNotFoundException, RepositoryException {
+    public String getStoredQueryPath()
+            throws ItemNotFoundException, RepositoryException {
         if (node == null) {
             throw new ItemNotFoundException("not a persistent query");
         }
@@ -159,7 +160,7 @@ public class QueryImpl implements Query {
     /**
      * {@inheritDoc}
      */
-    public void save(String absPath)
+    public Node storeAsNode(String absPath)
             throws ItemExistsException,
             PathNotFoundException,
             VersionException,
@@ -171,15 +172,15 @@ public class QueryImpl implements Query {
             NamespaceResolver resolver = session.getNamespaceResolver();
             Path p = Path.create(absPath, resolver, true);
             if (!p.isAbsolute()) {
-                throw new RepositoryException(absPath + " is not an absolut path");
+                throw new RepositoryException(absPath + " is not an absolute path");
             }
-            if (!session.getRootNode().hasNode(p.getAncestor(1).toJCRPath(resolver).substring(1))) {
+            if (session.itemExists(absPath)) {
+                throw new ItemExistsException(absPath);
+            }
+            if (!session.itemExists(p.getAncestor(1).toJCRPath(resolver))) {
                 throw new PathNotFoundException(p.getAncestor(1).toJCRPath(resolver));
             }
             String relPath = p.toJCRPath(resolver).substring(1);
-            if (session.getRootNode().hasNode(relPath)) {
-                throw new ItemExistsException(p.toJCRPath(resolver));
-            }
             Node queryNode = session.getRootNode().addNode(relPath,
                     Constants.NT_QUERY.toJCRName(resolver));
             // set properties
@@ -188,6 +189,7 @@ public class QueryImpl implements Query {
             // todo this should be changed in the spec some time!
             queryNode.getParent().save();
             node = queryNode;
+            return node;
         } catch (MalformedPathException e) {
             throw new RepositoryException(e.getMessage(), e);
         } catch (NoPrefixDeclaredException e) {

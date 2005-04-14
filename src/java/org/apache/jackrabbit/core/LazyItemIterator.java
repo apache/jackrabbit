@@ -110,7 +110,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
     /**
      * {@inheritDoc}
      */
-    public long getPos() {
+    public long getPosition() {
         return pos;
     }
 

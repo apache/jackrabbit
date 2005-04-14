@@ -24,7 +24,7 @@ import java.util.Arrays;
 /**
  * A <code>PropDef</code> ...
  */
-public class PropDef extends ChildItemDef {
+public class PropDef extends ItemDef {
 
     private int requiredType = PropertyType.UNDEFINED;
     private ValueConstraint[] valueConstraints = new ValueConstraint[0];

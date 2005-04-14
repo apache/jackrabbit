@@ -19,11 +19,11 @@ package org.apache.jackrabbit.test.api.nodetype;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.Session;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
 /**
  * Tests <code>NodeType.canRemoveItem(String itemName)</code> returns true if a
@@ -70,8 +70,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
     public void testRemovableProperty()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
-            NodeTypeUtil.locatePropertyDef(session, false, false);
+        PropertyDefinition propDef =
+                NodeTypeUtil.locatePropertyDef(session, false, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No mandatory property def found.");
@@ -80,8 +80,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
         NodeType type = propDef.getDeclaringNodeType();
 
         assertTrue("NodeType.canRemoveIten(String itemName) must return true " +
-                    "if itemName is nor a protected nor a mandatory property def.",
-                    type.canRemoveItem(propDef.getName()));
+                "if itemName is nor a protected nor a mandatory property def.",
+                type.canRemoveItem(propDef.getName()));
     }
 
     /**
@@ -91,8 +91,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
     public void testProtectedProperty()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
-            NodeTypeUtil.locatePropertyDef(session, true, false);
+        PropertyDefinition propDef =
+                NodeTypeUtil.locatePropertyDef(session, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No protected property def found.");
@@ -101,8 +101,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
         NodeType type = propDef.getDeclaringNodeType();
 
         assertFalse("NodeType.canRemoveIten(String itemName) must return false " +
-                    "if itemName is a protected property def.",
-                    type.canRemoveItem(propDef.getName()));
+                "if itemName is a protected property def.",
+                type.canRemoveItem(propDef.getName()));
     }
 
     /**
@@ -112,8 +112,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
     public void testMandatoryProperty()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
-            NodeTypeUtil.locatePropertyDef(session, false, true);
+        PropertyDefinition propDef =
+                NodeTypeUtil.locatePropertyDef(session, false, true);
 
         if (propDef == null) {
             throw new NotExecutableException("No mandatory property def found.");
@@ -122,8 +122,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
         NodeType type = propDef.getDeclaringNodeType();
 
         assertFalse("NodeType.canRemoveIten(String itemName) must return false " +
-                    "if itemName is a mandatory property def.",
-                    type.canRemoveItem(propDef.getName()));
+                "if itemName is a mandatory property def.",
+                type.canRemoveItem(propDef.getName()));
     }
 
     /**
@@ -134,8 +134,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
     public void testRemovableChildNode()
             throws NotExecutableException, RepositoryException {
 
-        NodeDef nodeDef =
-            NodeTypeUtil.locateChildNodeDef(session, false, false);
+        NodeDefinition nodeDef =
+                NodeTypeUtil.locateChildNodeDef(session, false, false);
 
         if (nodeDef == null) {
             throw new NotExecutableException("No mandatory property def found.");
@@ -144,8 +144,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
         NodeType type = nodeDef.getDeclaringNodeType();
 
         assertTrue("NodeType.canRemoveIten(String itemName) must return true " +
-                   "if itemName is nor a protected nor a mandatory child node def.",
-                   type.canRemoveItem(nodeDef.getName()));
+                "if itemName is nor a protected nor a mandatory child node def.",
+                type.canRemoveItem(nodeDef.getName()));
     }
 
     /**
@@ -155,8 +155,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
     public void testProtectedChildNode()
             throws NotExecutableException, RepositoryException {
 
-        NodeDef nodeDef =
-            NodeTypeUtil.locateChildNodeDef(session, true, false);
+        NodeDefinition nodeDef =
+                NodeTypeUtil.locateChildNodeDef(session, true, false);
 
         if (nodeDef == null) {
             throw new NotExecutableException("No mandatory property def found.");
@@ -165,8 +165,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
         NodeType type = nodeDef.getDeclaringNodeType();
 
         assertFalse("NodeType.canRemoveIten(String itemName) must return false " +
-                    "if itemName is a protected child node def.",
-                    type.canRemoveItem(nodeDef.getName()));
+                "if itemName is a protected child node def.",
+                type.canRemoveItem(nodeDef.getName()));
     }
 
     /**
@@ -176,8 +176,8 @@ public class CanRemoveItemTest extends AbstractJCRTest {
     public void testMandatoryChildNode()
             throws NotExecutableException, RepositoryException {
 
-        NodeDef nodeDef =
-            NodeTypeUtil.locateChildNodeDef(session, true, false);
+        NodeDefinition nodeDef =
+                NodeTypeUtil.locateChildNodeDef(session, true, false);
 
         if (nodeDef == null) {
             throw new NotExecutableException("No mandatory property def found.");
@@ -186,7 +186,7 @@ public class CanRemoveItemTest extends AbstractJCRTest {
         NodeType type = nodeDef.getDeclaringNodeType();
 
         assertFalse("NodeType.canRemoveIten(String itemName) must return false " +
-                    "if itemName is a mandatory child node def.",
-                    type.canRemoveItem(nodeDef.getName()));
+                "if itemName is a mandatory child node def.",
+                type.canRemoveItem(nodeDef.getName()));
     }
 }

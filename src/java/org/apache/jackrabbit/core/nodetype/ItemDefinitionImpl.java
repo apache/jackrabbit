@@ -21,16 +21,16 @@ import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 
-import javax.jcr.nodetype.ItemDef;
+import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 
 /**
- * An <code>ItemDefImpl</code> ...
+ * An <code>ItemDefinitionImpl</code> ...
  */
-abstract class ItemDefImpl implements ItemDef {
+abstract class ItemDefinitionImpl implements ItemDefinition {
 
-    private static Logger log = Logger.getLogger(ItemDefImpl.class);
+    private static Logger log = Logger.getLogger(ItemDefinitionImpl.class);
 
     protected static final String ANY_NAME = "*";
 
@@ -38,7 +38,7 @@ abstract class ItemDefImpl implements ItemDef {
     // namespace resolver used to translate qualified names to JCR names
     protected final NamespaceResolver nsResolver;
 
-    private final ChildItemDef itemDef;
+    private final ItemDef itemDef;
 
     /**
      * Package private constructor
@@ -47,7 +47,8 @@ abstract class ItemDefImpl implements ItemDef {
      * @param ntMgr      node type manager
      * @param nsResolver namespace resolver
      */
-    ItemDefImpl(ChildItemDef itemDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+    ItemDefinitionImpl(ItemDef itemDef, NodeTypeManagerImpl ntMgr,
+                       NamespaceResolver nsResolver) {
         this.itemDef = itemDef;
         this.ntMgr = ntMgr;
         this.nsResolver = nsResolver;
@@ -99,8 +100,8 @@ abstract class ItemDefImpl implements ItemDef {
     /**
      * {@inheritDoc}
      */
-    public boolean isAutoCreate() {
-        return itemDef.isAutoCreate();
+    public boolean isAutoCreated() {
+        return itemDef.isAutoCreated();
     }
 
     /**

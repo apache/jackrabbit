@@ -8,12 +8,12 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-ChildNodeDef
+ChildNodeDefinition
   Name "*"
   RequiredPrimaryTypes [nt:hierarchyNode]
   DefaultPrimaryType null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion VERSION
   Protected false
-  SameNameSibs false
+  SameNameSiblings false
