@@ -29,7 +29,7 @@ public class NodeId extends ItemId {
         if (uuid == null) {
             throw new IllegalArgumentException("uuid can not be null");
         }
-        this.uuid = uuid;
+        this.uuid = uuid.intern();
     }
 
     /**
@@ -49,7 +49,7 @@ public class NodeId extends ItemId {
         }
         if (obj instanceof NodeId) {
             NodeId other = (NodeId) obj;
-            return uuid.equals(other.uuid);
+            return uuid == other.uuid;
         }
         return false;
     }

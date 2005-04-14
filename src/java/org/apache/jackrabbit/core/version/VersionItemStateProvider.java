@@ -88,10 +88,10 @@ public class VersionItemStateProvider extends AbstractVISProvider {
         super(ntReg, new NodeId(rootId));
         this.vMgr = vMgr;
         this.parentId = parentId;
-        NDEF_VERSION = new NodeDefId(ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSION));
-        NDEF_VERSION_HISTORY = new NodeDefId(ntReg.getEffectiveNodeType(NT_UNSTRUCTURED).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSIONHISTORY));
-        NDEF_VERSION_HISTORY_ROOT = new NodeDefId(ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicableChildNodeDef(JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE));
-        NDEF_VERSION_LABELS = new NodeDefId(ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_VERSIONLABELS, NT_VERSIONLABELS));
+        NDEF_VERSION = ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSION).getId();
+        NDEF_VERSION_HISTORY = ntReg.getEffectiveNodeType(NT_UNSTRUCTURED).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSIONHISTORY).getId();
+        NDEF_VERSION_HISTORY_ROOT = ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicableChildNodeDef(JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE).getId();
+        NDEF_VERSION_LABELS = ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_VERSIONLABELS, NT_VERSIONLABELS).getId();
     }
 
     /**
@@ -166,7 +166,7 @@ public class VersionItemStateProvider extends AbstractVISProvider {
     protected VirtualNodeState internalGetNodeState(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        VirtualNodeState state = null;
+        VirtualNodeState state;
         try {
             InternalVersionItem vi = vMgr.getItem(id.getUUID());
             if (vi instanceof InternalVersionHistory) {
@@ -193,8 +193,8 @@ public class VersionItemStateProvider extends AbstractVISProvider {
                 state = new VersionNodeState(this, v, vi.getParent().getId());
                 state.setDefinitionId(NDEF_VERSION);
                 state.setPropertyValue(JCR_CREATED, InternalValue.create(v.getCreated()));
-                state.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, new InternalValue[0]);
-                state.setPropertyValues(JCR_SUCCESSORS, PropertyType.REFERENCE, new InternalValue[0]);
+                state.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY);
+                state.setPropertyValues(JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY);
 
             } else if (vi instanceof InternalFrozenNode) {
                 InternalFrozenNode fn = (InternalFrozenNode) vi;

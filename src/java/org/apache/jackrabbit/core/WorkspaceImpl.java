@@ -1225,7 +1225,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             NodeDef newNodeDef =
                     findApplicableNodeDefinition(destName.getName(),
                             srcState.getNodeTypeName(), destParentState);
-            newState.setDefinitionId(new NodeDefId(newNodeDef));
+            newState.setDefinitionId(newNodeDef.getId());
 
             // adjust references that refer to uuid's which have been mapped to
             // newly generated uuid's on copy/clone
@@ -1521,7 +1521,7 @@ public class WorkspaceImpl implements Workspace, Constants {
             NodeDef newTargetDef =
                     findApplicableNodeDefinition(destName.getName(),
                             targetState.getNodeTypeName(), destParentState);
-            targetState.setDefinitionId(new NodeDefId(newTargetDef));
+            targetState.setDefinitionId(newTargetDef.getId());
 
             // remove from old parent
             if (!renameOnly) {

@@ -28,7 +28,6 @@ import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -205,7 +204,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
             // handle some default prop states
             if (parent instanceof VirtualNodeState) {
-                return ((VirtualNodeState) parent).hasPropertyEntry(id.getName());
+                return parent.hasPropertyEntry(id.getName());
             }
         } catch (ItemStateException e) {
             // ignore
@@ -245,7 +244,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
         VirtualPropertyState prop = new VirtualPropertyState(name, parent.getUUID());
         prop.setType(type);
         prop.setMultiValued(multiValued);
-        prop.setDefinitionId(new PropDefId(def));
+        prop.setDefinitionId(def.getId());
         return prop;
     }
 
@@ -258,18 +257,18 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
 
         NodeDefId def;
         try {
-            def = new NodeDefId(getApplicableChildNodeDef(parent, name, nodeTypeName));
+            def = getApplicableChildNodeDef(parent, name, nodeTypeName).getId();
         } catch (RepositoryException re) {
             // hack, use nt:unstructured as parent
             NodeTypeRegistry ntReg = getNodeTypeRegistry();
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(NT_UNSTRUCTURED);
             NodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
-            ntReg.getNodeDef(new NodeDefId(cnd));
-            def = new NodeDefId(cnd);
+            ntReg.getNodeDef(cnd.getId());
+            def = cnd.getId();
         }
 
         // create a new node state
-        VirtualNodeState state = null;
+        VirtualNodeState state;
         if (uuid == null) {
             uuid = UUID.randomUUID().toString();	// version 4 uuid
         }

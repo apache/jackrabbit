@@ -35,24 +35,43 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * A <code>NodeTypeManagerImpl</code> ...
+ * A <code>NodeTypeManagerImpl</code> implements a session dependant
+ * NodeTypeManager.
  */
 public class NodeTypeManagerImpl implements NodeTypeManager,
         NodeTypeRegistryListener {
 
+    /**
+     * the default logger
+     */
     private static Logger log = Logger.getLogger(NodeTypeManagerImpl.class);
 
+    /**
+     * the underlaying node type registry
+     */
     private final NodeTypeRegistry ntReg;
 
     private final NodeDefinitionImpl rootNodeDef;
 
-    // namespace resolver used to translate qualified names to JCR names
+    /**
+     * namespace resolver used to translate qualified names to JCR names
+     */
     private final NamespaceResolver nsResolver;
 
     /**
      * A cache for <code>NodeType</code> instances created by this <code>NodeTypeManager</code>
      */
     private final Map ntCache;
+
+    /**
+     * A cache for <code>PropertyDef</code> instances created by this <code>NodeTypeManager</code>
+     */
+    private final Map pdCache;
+
+    /**
+     * A cache for <code>NodeDef</code> instances created by this <code>NodeTypeManager</code>
+     */
+    private final Map ndCache;
 
     /**
      * Constructor.
@@ -64,9 +83,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
 
         // setup item cache with soft references to node type instances
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
         rootNodeDef = new RootNodeDefinition(ntReg.getRootNodeDef(), this,
                 nsResolver);
+        ndCache.put(rootNodeDef.unwrap().getId(), rootNodeDef);
     }
 
     /**
@@ -81,11 +103,17 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
      * @return
      */
     public NodeDefinitionImpl getNodeDefinition(NodeDefId id) {
-        NodeDef cnd = ntReg.getNodeDef(id);
-        if (cnd == null) {
-            return null;
+        synchronized (ndCache) {
+            NodeDefinitionImpl nd = (NodeDefinitionImpl) ndCache.get(id);
+            if (nd == null) {
+                NodeDef cnd = ntReg.getNodeDef(id);
+                if (cnd != null) {
+                    nd = new NodeDefinitionImpl(cnd, this, nsResolver);
+                    ndCache.put(id, nd);
+                }
+            }
+            return nd;
         }
-        return new NodeDefinitionImpl(cnd, this, nsResolver);
     }
 
     /**
@@ -93,11 +121,17 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
      * @return
      */
     public PropertyDefinitionImpl getPropertyDefinition(PropDefId id) {
-        PropDef pd = ntReg.getPropDef(id);
-        if (pd == null) {
-            return null;
+        synchronized (pdCache) {
+            PropertyDefinitionImpl pdi = (PropertyDefinitionImpl) pdCache.get(id);
+            if (pdi == null) {
+                PropDef pd = ntReg.getPropDef(id);
+                if (pd != null) {
+                    pdi = new PropertyDefinitionImpl(pd, this, nsResolver);
+                    pdCache.put(id, pdi);
+                }
+            }
+            return pdi;
         }
-        return new PropertyDefinitionImpl(pd, this, nsResolver);
     }
 
     /**
@@ -105,19 +139,17 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
      * @return
      * @throws NoSuchNodeTypeException
      */
-    public synchronized NodeTypeImpl getNodeType(QName name)
-            throws NoSuchNodeTypeException {
-        NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
-        if (nt != null) {
+    public NodeTypeImpl getNodeType(QName name) throws NoSuchNodeTypeException {
+        synchronized (ntCache) {
+            NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
+            if (nt == null) {
+                EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
+                NodeTypeDef def = ntReg.getNodeTypeDef(name);
+                nt = new NodeTypeImpl(ent, def, this, nsResolver);
+                ntCache.put(name, nt);
+            }
             return nt;
         }
-
-        EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
-        NodeTypeDef def = ntReg.getNodeTypeDef(name);
-        nt = new NodeTypeImpl(ent, def, this, nsResolver);
-        ntCache.put(name, nt);
-
-        return nt;
     }
 
     /**
@@ -141,6 +173,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
     public void nodeTypeReRegistered(QName ntName) {
         // flush cache
         ntCache.remove(ntName);
+        // just clear all definitions from cache
+        pdCache.clear();
+        ndCache.clear();
     }
 
     /**
@@ -149,6 +184,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
     public void nodeTypeUnregistered(QName ntName) {
         // sync cache
         ntCache.remove(ntName);
+        // just clear all definitions from cache
+        pdCache.clear();
+        ndCache.clear();
     }
 
     //------------------------------------------------------< NodeTypeManager >

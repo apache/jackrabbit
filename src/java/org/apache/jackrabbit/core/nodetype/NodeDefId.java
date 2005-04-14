@@ -27,11 +27,21 @@ import java.util.TreeSet;
  */
 public class NodeDefId implements Serializable {
 
+    /**
+     * the serial number
+     */
     static final long serialVersionUID = 7020286139887664713L;
 
+    /**
+     * the internal id
+     */
     private final int id;
 
-    public NodeDefId(NodeDef def) {
+    /**
+     * Creates a new NodeDefId from the given NodeDef
+     * @param def
+     */
+    NodeDefId(NodeDefImpl def) {
         if (def == null) {
             throw new IllegalArgumentException("NodeDef argument can not be null");
         }
@@ -57,6 +67,10 @@ public class NodeDefId implements Serializable {
         id = sb.toString().hashCode();
     }
 
+    /**
+     * Private constructor that creates an NodeDefId from an internal id
+     * @param id
+     */
     private NodeDefId(int id) {
         this.id = id;
     }
@@ -80,6 +94,9 @@ public class NodeDefId implements Serializable {
         return new NodeDefId(Integer.parseInt(s));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -91,10 +108,16 @@ public class NodeDefId implements Serializable {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return Integer.toString(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public int hashCode() {
         // id is already the computed hash code
         return id;

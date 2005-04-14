@@ -24,7 +24,6 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
@@ -133,7 +132,7 @@ public class SharedItemStateManager extends ItemStateCache
         // definition of jcr:primaryType property
         PropDef propDef;
         try {
-            nodeDefId = new NodeDefId(ntReg.getRootNodeDef());
+            nodeDefId = ntReg.getRootNodeDef().getId();
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(Constants.REP_ROOT);
             propDef = ent.getApplicablePropertyDef(Constants.JCR_PRIMARYTYPE,
                     PropertyType.NAME, false);
@@ -155,7 +154,7 @@ public class SharedItemStateManager extends ItemStateCache
         prop.setValues(new InternalValue[]{InternalValue.create(Constants.REP_ROOT)});
         prop.setType(propDef.getRequiredType());
         prop.setMultiValued(propDef.isMultiple());
-        prop.setDefinitionId(new PropDefId(propDef));
+        prop.setDefinitionId(propDef.getId());
 
         ChangeLog changeLog = new ChangeLog();
         changeLog.added(rootState);

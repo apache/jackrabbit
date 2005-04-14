@@ -21,24 +21,39 @@ import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 
-import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.ItemDefinition;
 
 /**
- * An <code>ItemDefinitionImpl</code> ...
+ * this class implements the ItemDef interface
  */
 abstract class ItemDefinitionImpl implements ItemDefinition {
 
-    private static Logger log = Logger.getLogger(ItemDefinitionImpl.class);
+    /**
+     * the default logger
+     */
+    private static Logger log = Logger.getLogger(ItemDefImpl.class);
 
+    /**
+     * Literal for 'any name'
+     */
     protected static final String ANY_NAME = "*";
 
+    /**
+     * the node type manager of this session
+     */
     protected final NodeTypeManagerImpl ntMgr;
-    // namespace resolver used to translate qualified names to JCR names
+
+    /**
+     * namespace resolver used to translate qualified names to JCR names
+     */
     protected final NamespaceResolver nsResolver;
 
-    private final ItemDef itemDef;
+    /**
+     * the underlaying child item def
+     */
+    protected final ItemDef itemDef;
 
     /**
      * Package private constructor
@@ -47,13 +62,17 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
      * @param ntMgr      node type manager
      * @param nsResolver namespace resolver
      */
-    ItemDefinitionImpl(ItemDef itemDef, NodeTypeManagerImpl ntMgr,
-                       NamespaceResolver nsResolver) {
+    ItemDefinitionImpl(ItemDef itemDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
         this.itemDef = itemDef;
         this.ntMgr = ntMgr;
         this.nsResolver = nsResolver;
     }
 
+    /**
+     * Returns the qname of this item def
+     *
+     * @return
+     */
     public QName getQName() {
         return itemDef.getName();
     }

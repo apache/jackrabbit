@@ -179,6 +179,7 @@
             <supertype>nt:base</supertype>
             <supertype>mix:referenceable</supertype>
         </supertypes>
+        <propertyDefinition name="jcr:versionableUuid" requiredType="String" autoCreated="true" mandatory="true" onParentVersion="ABORT" protected="true" multiple="false"/>
         <childNodeDefinition name="jcr:rootVersion" defaultPrimaryType="nt:version" autoCreated="true" mandatory="true" onParentVersion="ABORT" protected="true" sameNameSiblings="false">
             <requiredPrimaryTypes>
                 <requiredPrimaryType>nt:version</requiredPrimaryType>

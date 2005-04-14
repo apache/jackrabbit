@@ -907,8 +907,8 @@ public class SessionImpl implements Session, Constants {
                 srcName.getIndex() == 0 ? 1 : srcName.getIndex());
         // change definition of target if necessary
         NodeDefinitionImpl oldTargetDef = (NodeDefinitionImpl) targetNode.getDefinition();
-        NodeDefId oldTargetDefId = new NodeDefId(oldTargetDef.unwrap());
-        NodeDefId newTargetDefId = new NodeDefId(newTargetDef.unwrap());
+        NodeDefId oldTargetDefId = oldTargetDef.unwrap().getId();
+        NodeDefId newTargetDefId = newTargetDef.unwrap().getId();
         if (!oldTargetDefId.equals(newTargetDefId)) {
             targetNode.onRedefine(newTargetDefId);
         }

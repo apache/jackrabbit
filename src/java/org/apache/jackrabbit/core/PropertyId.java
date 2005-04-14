@@ -33,7 +33,7 @@ public class PropertyId extends ItemId {
         if (propName == null) {
             throw new IllegalArgumentException("propName can not be null");
         }
-        this.parentUUID = parentUUID;
+        this.parentUUID = parentUUID.intern();
         this.propName = propName;
     }
 
@@ -58,7 +58,7 @@ public class PropertyId extends ItemId {
         }
         if (obj instanceof PropertyId) {
             PropertyId other = (PropertyId) obj;
-            return parentUUID.equals(other.parentUUID)
+            return parentUUID == other.parentUUID
                     && propName.equals(other.propName);
         }
         return false;

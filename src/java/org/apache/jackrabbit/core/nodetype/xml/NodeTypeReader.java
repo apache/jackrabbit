@@ -35,6 +35,8 @@ import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
+import org.apache.jackrabbit.core.nodetype.PropDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.core.util.DOMWalker;
 
 /**
@@ -54,11 +56,9 @@ public final class NodeTypeReader {
      *                                     cannot be read
      * @throws InvalidNodeTypeDefException if the node type definition
      *                                     format is invalid
-     * @throws RepositoryException         on repository errors
      */
     public static NodeTypeDef[] read(InputStream xml)
-            throws IOException, InvalidNodeTypeDefException,
-            RepositoryException {
+            throws IOException, InvalidNodeTypeDefException {
         try {
             NodeTypeReader reader = new NodeTypeReader(xml);
             return reader.getNodeTypeDefs();
@@ -154,7 +154,7 @@ public final class NodeTypeReader {
         // property definitions
         Vector properties = new Vector();
         while (walker.iterateElements(Constants.PROPERTYDEFINITION_ELEMENT)) {
-            PropDef def = getPropDef();
+            PropDefImpl def = getPropDef();
             def.setDeclaringNodeType(type.getName());
             properties.add(def);
         }
@@ -164,7 +164,7 @@ public final class NodeTypeReader {
         // child node definitions
         Vector nodes = new Vector();
         while (walker.iterateElements(Constants.CHILDNODEDEFINITION_ELEMENT)) {
-            NodeDef def = getChildNodeDef();
+            NodeDefImpl def = getChildNodeDef();
             def.setDeclaringNodeType(type.getName());
             nodes.add(def);
         }
@@ -184,10 +184,10 @@ public final class NodeTypeReader {
      * @throws UnknownPrefixException      if the definition contains an
      *                                     unknown namespace prefix
      */
-    private PropDef getPropDef()
+    private PropDefImpl getPropDef()
             throws InvalidNodeTypeDefException, IllegalNameException,
             UnknownPrefixException {
-        PropDef def = new PropDef();
+        PropDefImpl def = new PropDefImpl();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
             def.setName(new QName("", "*"));
@@ -259,16 +259,14 @@ public final class NodeTypeReader {
      * Returns the child node definition specified by the current element.
      *
      * @return child node definition
-     * @throws InvalidNodeTypeDefException if the definition is invalid
      * @throws IllegalNameException        if the definition contains an
      *                                     illegal name
      * @throws UnknownPrefixException      if the definition contains an
      *                                     unknown namespace prefix
      */
-    private NodeDef getChildNodeDef()
-            throws InvalidNodeTypeDefException, IllegalNameException,
-            UnknownPrefixException {
-        NodeDef def = new NodeDef();
+    private NodeDefImpl getChildNodeDef()
+            throws IllegalNameException, UnknownPrefixException {
+        NodeDefImpl def = new NodeDefImpl();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
             def.setName(new QName("", "*"));
