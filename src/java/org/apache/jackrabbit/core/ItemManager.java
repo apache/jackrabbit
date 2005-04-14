@@ -175,7 +175,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             NodeState parentState = (NodeState) parent.getItemState();
             NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) parentState.getChildNodeEntries(state.getUUID()).get(0);
             def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
-            state.setDefinitionId(new NodeDefId(def.unwrap()));
+            state.setDefinitionId(def.unwrap().getId());
         }
         return def;
     }
@@ -191,7 +191,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             NodeId parentId = new NodeId(state.getParentUUID());
             NodeImpl parent = (NodeImpl) getItem(parentId);
             def = parent.getApplicablePropertyDefinition(state.getName(), state.getType(), state.isMultiValued());
-            state.setDefinitionId(new PropDefId(def.unwrap()));
+            state.setDefinitionId(def.unwrap().getId());
         }
         return def;
     }

@@ -22,19 +22,18 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeDefinition;
 
 /**
- * A <code>NodeDefinitionImpl</code> ...
+ * This class implements the NodeDef interface.
  */
-public class NodeDefinitionImpl extends ItemDefinitionImpl
-        implements NodeDefinition {
+public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefinition {
 
-    private static Logger log = Logger.getLogger(NodeDefinitionImpl.class);
-
-    private final NodeDef nodeDef;
-
+    /**
+     * the default logger
+     */
+    private static Logger log = Logger.getLogger(NodeDefImpl.class);
 
     /**
      * Package private constructor
@@ -44,13 +43,16 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl
      * @param nsResolver namespace resolver
      */
     NodeDefinitionImpl(NodeDef nodeDef, NodeTypeManagerImpl ntMgr,
-                       NamespaceResolver nsResolver) {
+                NamespaceResolver nsResolver) {
         super(nodeDef, ntMgr, nsResolver);
-        this.nodeDef = nodeDef;
     }
 
+    /**
+     * Returns the underlaying item def
+     * @return
+     */
     public NodeDef unwrap() {
-        return nodeDef;
+        return (NodeDef) itemDef;
     }
 
     //--------------------------------------------------------------< NodeDef >
@@ -58,7 +60,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl
      * {@inheritDoc}
      */
     public NodeType getDefaultPrimaryType() {
-        QName ntName = nodeDef.getDefaultPrimaryType();
+        QName ntName = ((NodeDef) itemDef).getDefaultPrimaryType();
         if (ntName == null) {
             return null;
         }
@@ -75,7 +77,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl
      * {@inheritDoc}
      */
     public NodeType[] getRequiredPrimaryTypes() {
-        QName[] ntNames = nodeDef.getRequiredPrimaryTypes();
+        QName[] ntNames = ((NodeDef) itemDef).getRequiredPrimaryTypes();
         try {
             if (ntNames == null || ntNames.length == 0) {
                 // return "nt:base"
@@ -98,7 +100,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl
      * {@inheritDoc}
      */
     public boolean allowsSameNameSiblings() {
-        return nodeDef.allowsSameNameSiblings();
+        return ((NodeDef) itemDef).allowsSameNameSiblings();
     }
 }
 

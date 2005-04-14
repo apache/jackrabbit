@@ -45,6 +45,8 @@ import java.util.regex.PatternSyntaxException;
 public abstract class ValueConstraint {
     protected static Logger log = Logger.getLogger(ValueConstraint.class);
 
+    public static final ValueConstraint[] EMPTY = new ValueConstraint[0];
+
     final String definition;
 
     protected ValueConstraint(String definition) {

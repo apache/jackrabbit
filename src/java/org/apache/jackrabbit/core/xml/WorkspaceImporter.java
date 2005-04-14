@@ -31,10 +31,8 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -189,7 +187,7 @@ public class WorkspaceImporter implements Importer, Constants {
         if (mixinNames != null && mixinNames.length > 0) {
             node.setMixinTypeNames(new HashSet(Arrays.asList(mixinNames)));
         }
-        node.setDefinitionId(new NodeDefId(def));
+        node.setDefinitionId(def.getId());
 
         // now add new child node entry to parent
         parent.addChildNodeEntry(nodeName, node.getUUID());
@@ -263,7 +261,7 @@ public class WorkspaceImporter implements Importer, Constants {
         // create property
         PropertyState prop = stateMgr.createNew(propName, parent.getUUID());
 
-        prop.setDefinitionId(new PropDefId(def));
+        prop.setDefinitionId(def.getId());
         if (def.getRequiredType() != PropertyType.UNDEFINED) {
             prop.setType(def.getRequiredType());
         } else if (type != PropertyType.UNDEFINED) {

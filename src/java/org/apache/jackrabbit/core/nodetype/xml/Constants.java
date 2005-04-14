@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.nodetype.xml;
 /**
  * Name constants for the node type XML elements and attributes.
  */
-final class Constants {
+public class Constants {
 
     /** Name of the node type definition root element. */
     public static final String NODETYPES_ELEMENT = "nodeTypes";

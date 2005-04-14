@@ -25,15 +25,14 @@ import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
 
 /**
- * A <code>PropertyDefinitionImpl</code> ...
+ * This class implements the PropertyDef interface.
  */
-public class PropertyDefinitionImpl extends ItemDefinitionImpl
-        implements PropertyDefinition {
+public class PropertyDefinitionImpl extends ItemDefinitionImpl implements PropertyDefinition {
 
+    /**
+     * the default logger
+     */
     private static Logger log = Logger.getLogger(PropertyDefinitionImpl.class);
-
-    private final PropDef propDef;
-
 
     /**
      * Package private constructor
@@ -42,14 +41,16 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      * @param ntMgr      node type manager
      * @param nsResolver namespace resolver
      */
-    PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr,
-                           NamespaceResolver nsResolver) {
+    PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
         super(propDef, ntMgr, nsResolver);
-        this.propDef = propDef;
     }
 
+    /**
+     * Returns the underlaying prop def
+     * @return
+     */
     public PropDef unwrap() {
-        return propDef;
+        return (PropDef) itemDef;
     }
 
     //----------------------------------------------------------< PropertyDef >
@@ -57,7 +58,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      * {@inheritDoc}
      */
     public Value[] getDefaultValues() {
-        InternalValue[] defVals = propDef.getDefaultValues();
+        InternalValue[] defVals = ((PropDef) itemDef).getDefaultValues();
         if (defVals == null) {
             return null;
         }
@@ -68,9 +69,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
             } catch (RepositoryException re) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();
-                log.error("illegal default value specified for property "
-                        + propName + " in node type " + getDeclaringNodeType(),
-                        re);
+                log.error("illegal default value specified for property " + propName + " in node type " + getDeclaringNodeType(), re);
                 return null;
             }
         }
@@ -81,14 +80,14 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      * {@inheritDoc}
      */
     public int getRequiredType() {
-        return propDef.getRequiredType();
+        return ((PropDef) itemDef).getRequiredType();
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getValueConstraints() {
-        ValueConstraint[] constraints = propDef.getValueConstraints();
+        ValueConstraint[] constraints = ((PropDef) itemDef).getValueConstraints();
         if (constraints == null || constraints.length == 0) {
             return new String[0];
         }
@@ -103,7 +102,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      * {@inheritDoc}
      */
     public boolean isMultiple() {
-        return propDef.isMultiple();
+        return ((PropDef) itemDef).isMultiple();
     }
 }
 

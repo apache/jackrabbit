@@ -103,8 +103,8 @@ public class NodeTypeImpl implements NodeType {
     public NodeDefinitionImpl getApplicableChildNodeDefinition(QName nodeName,
                                                                QName nodeTypeName)
             throws RepositoryException {
-        return new NodeDefinitionImpl(ent.getApplicableChildNodeDef(nodeName, nodeTypeName),
-                ntMgr, nsResolver);
+        return ntMgr.getNodeDefinition(
+                ent.getApplicableChildNodeDef(nodeName, nodeTypeName).getId());
     }
 
     /**
@@ -122,9 +122,8 @@ public class NodeTypeImpl implements NodeType {
                                                                   int type,
                                                                   boolean multiValued)
             throws RepositoryException {
-        return new PropertyDefinitionImpl(
-                ent.getApplicablePropertyDef(propertyName, type, multiValued),
-                ntMgr, nsResolver);
+        return ntMgr.getPropertyDefinition(
+                ent.getApplicablePropertyDef(propertyName, type, multiValued).getId());
     }
 
     /**
@@ -168,7 +167,7 @@ public class NodeTypeImpl implements NodeType {
         NodeDef[] cnda = ent.getAutoCreateNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = new NodeDefinitionImpl(cnda[i], ntMgr, nsResolver);
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
         }
         return nodeDefs;
     }
@@ -186,7 +185,7 @@ public class NodeTypeImpl implements NodeType {
         PropDef[] pda = ent.getAutoCreatePropDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefinitionImpl(pda[i], ntMgr, nsResolver);
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
         }
         return propDefs;
     }
@@ -204,7 +203,7 @@ public class NodeTypeImpl implements NodeType {
         PropDef[] pda = ent.getMandatoryPropDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefinitionImpl(pda[i], ntMgr, nsResolver);
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
         }
         return propDefs;
     }
@@ -222,7 +221,7 @@ public class NodeTypeImpl implements NodeType {
         NodeDef[] cnda = ent.getMandatoryNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = new NodeDefinitionImpl(cnda[i], ntMgr, nsResolver);
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
         }
         return nodeDefs;
     }
@@ -377,7 +376,7 @@ public class NodeTypeImpl implements NodeType {
         NodeDef[] cnda = ent.getAllNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = new NodeDefinitionImpl(cnda[i], ntMgr, nsResolver);
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
         }
         return nodeDefs;
     }
@@ -389,7 +388,7 @@ public class NodeTypeImpl implements NodeType {
         PropDef[] pda = ent.getAllPropDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefinitionImpl(pda[i], ntMgr, nsResolver);
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
         }
         return propDefs;
     }
@@ -419,7 +418,7 @@ public class NodeTypeImpl implements NodeType {
         NodeDef[] cnda = ntd.getChildNodeDefs();
         NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = new NodeDefinitionImpl(cnda[i], ntMgr, nsResolver);
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
         }
         return nodeDefs;
     }
@@ -597,7 +596,7 @@ public class NodeTypeImpl implements NodeType {
         PropDef[] pda = ntd.getPropertyDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefinitionImpl(pda[i], ntMgr, nsResolver);
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
         }
         return propDefs;
     }

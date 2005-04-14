@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -440,7 +439,7 @@ public class NodeImpl extends ItemImpl implements Node {
             propState = stateMgr.createTransientPropertyState(parentUUID, name, ItemState.STATUS_NEW);
             propState.setType(type);
             propState.setMultiValued(def.isMultiple());
-            propState.setDefinitionId(new PropDefId(def.unwrap()));
+            propState.setDefinitionId(def.unwrap().getId());
             // compute system generated values if necessary
             InternalValue[] genValues =
                     computeSystemGeneratedPropertyValues(name, def);
@@ -478,7 +477,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 uuid = UUID.randomUUID().toString();	// version 4 uuid
             }
             nodeState = stateMgr.createTransientNodeState(uuid, nodeType.getQName(), parentUUID, ItemState.STATUS_NEW);
-            nodeState.setDefinitionId(new NodeDefId(def.unwrap()));
+            nodeState.setDefinitionId(def.unwrap().getId());
         } catch (ItemStateException ise) {
             String msg = "failed to add child node " + name + " to " + safeGetJCRPath();
             log.debug(msg);
@@ -823,7 +822,7 @@ public class NodeImpl extends ItemImpl implements Node {
                                                                   QName nodeTypeName)
             throws ConstraintViolationException, RepositoryException {
         NodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(nodeName, nodeTypeName);
-        return session.getNodeTypeManager().getNodeDefinition(new NodeDefId(cnd));
+        return session.getNodeTypeManager().getNodeDefinition(cnd.getId());
     }
 
     /**
@@ -843,7 +842,7 @@ public class NodeImpl extends ItemImpl implements Node {
                                                                      boolean multiValued)
             throws ConstraintViolationException, RepositoryException {
         PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(propertyName, type, multiValued);
-        return session.getNodeTypeManager().getPropertyDefinition(new PropDefId(pd));
+        return session.getNodeTypeManager().getPropertyDefinition(pd.getId());
     }
 
     protected void makePersistent() {
@@ -2673,7 +2672,7 @@ public class NodeImpl extends ItemImpl implements Node {
         prop.save();
         prop = internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
         prop.save();
-        prop = internalSetProperty(JCR_PREDECESSORS, new InternalValue[0], PropertyType.REFERENCE);
+        prop = internalSetProperty(JCR_PREDECESSORS, InternalValue.EMPTY, PropertyType.REFERENCE);
         prop.save();
         return v;
     }
@@ -2791,7 +2790,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkLock();
 
         // check if 'own' version
-        if (!((VersionImpl) version).getContainingHistory().isSame(getVersionHistory())) {
+        if (!version.getContainingHistory().isSame(getVersionHistory())) {
             throw new VersionException("Unable to restore version. Not same version history.");
         }
 
@@ -3482,7 +3481,7 @@ public class NodeImpl extends ItemImpl implements Node {
         internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(version.getId())));
 
         // 4. N's jcr:predecessor property is set to null
-        internalSetProperty(JCR_PREDECESSORS, new InternalValue[0], PropertyType.REFERENCE);
+        internalSetProperty(JCR_PREDECESSORS, InternalValue.EMPTY, PropertyType.REFERENCE);
 
         // also clear mergeFailed
         internalSetProperty(JCR_MERGEFAILED, (InternalValue[]) null);

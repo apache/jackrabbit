@@ -191,6 +191,11 @@ public interface Constants {
      */
     public static final QName JCR_ROOTVERSION = new QName(NS_JCR_URI, "rootVersion");
 
+    /**
+     * jcr:versionableUuid
+     */
+    public static final QName JCR_VERSIONABLEUUID = new QName(NS_JCR_URI, "versionableUuid");
+
     //--------------------------------------< node type item name constants >---
 
     /**

@@ -18,102 +18,39 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.InternalValue;
 
-import javax.jcr.PropertyType;
-import java.util.Arrays;
-
 /**
- * A <code>PropDef</code> ...
+ * This interface defines the property def.
  */
-public class PropDef extends ItemDef {
-
-    private int requiredType = PropertyType.UNDEFINED;
-    private ValueConstraint[] valueConstraints = new ValueConstraint[0];
-    private InternalValue[] defaultValues = new InternalValue[0];
-    private boolean multiple = false;
+public interface PropDef extends ItemDef {
 
     /**
-     * Default constructor.
+     * Returns the property definition id.
+     * @return the PropDefId
      */
-    public PropDef() {
-    }
-
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof PropDef) {
-            PropDef other = (PropDef) obj;
-            return super.equals(obj)
-                    && requiredType == other.requiredType
-                    && Arrays.equals(valueConstraints, other.valueConstraints)
-                    && Arrays.equals(defaultValues, other.defaultValues)
-                    && multiple == other.multiple;
-        }
-        return false;
-    }
+    public PropDefId getId();
 
     /**
-     * @param requiredType
+     * Returns the required type
+     * @return the required type
      */
-    public void setRequiredType(int requiredType) {
-        this.requiredType = requiredType;
-    }
+    public int getRequiredType();
 
     /**
-     * @param valueConstraints
+     * Returns the array of value constraints
+     * @return the array of value constraints
      */
-    public void setValueConstraints(ValueConstraint valueConstraints[]) {
-        this.valueConstraints =
-                (valueConstraints == null) ? new ValueConstraint[0] : valueConstraints;
-    }
+    public ValueConstraint[] getValueConstraints();
 
     /**
-     * @param defaultValues
+     * Returns the array of default values
+     * @return the array of default values
      */
-    public void setDefaultValues(InternalValue[] defaultValues) {
-        this.defaultValues =
-                (defaultValues == null) ? new InternalValue[0] : defaultValues;
-    }
+    public InternalValue[] getDefaultValues();
 
     /**
-     * @param multiple
+     * Returns the 'multiple' flag.
+     * @return the 'multiple' flag.
      */
-    public void setMultiple(boolean multiple) {
-        this.multiple = multiple;
-    }
+    public boolean isMultiple();
 
-    /**
-     * @return
-     */
-    public int getRequiredType() {
-        return requiredType;
-    }
-
-    /**
-     * @return
-     */
-    public ValueConstraint[] getValueConstraints() {
-        return valueConstraints;
-    }
-
-    /**
-     * @return
-     */
-    public InternalValue[] getDefaultValues() {
-        return defaultValues;
-    }
-
-    /**
-     * @return
-     */
-    public boolean isMultiple() {
-        return multiple;
-    }
-
-    /**
-     * @return
-     */
-    public boolean definesNode() {
-        return false;
-    }
 }

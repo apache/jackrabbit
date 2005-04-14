@@ -53,9 +53,7 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
 
         // version history is referenceable
         setPropertyValue(JCR_UUID, InternalValue.create(vh.getId()));
-
-        // enable for spec 0.16.3
-        // setPropertyValue(JCR_VERSIONABLEUUID, InternalValue.create(vh.getVersionableUUID()));
+        setPropertyValue(JCR_VERSIONABLEUUID, InternalValue.create(vh.getVersionableUUID()));
 
         this.vh = vh;
     }

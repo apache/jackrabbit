@@ -16,107 +16,64 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.QName;
-
-import javax.jcr.version.OnParentVersionAction;
+import org.apache.jackrabbit.core.Constants;
 
 /**
- * An <code>ItemDef</code> ...
+ * This interface define the base for item definitions.
  */
-public abstract class ItemDef implements Cloneable {
+public interface ItemDef  {
 
-    // '*' denoting residual child item definition
-    public static final QName ANY_NAME =
-            new QName(Constants.NS_DEFAULT_URI, "*");
+    /**
+     * '*' denoting residual child item definition
+     */
+    public static final QName ANY_NAME = new QName(Constants.NS_DEFAULT_URI, "*");
 
-    protected QName declaringNodeType = null;
-    private QName name = ANY_NAME;
-    private boolean autoCreated = false;
-    private int onParentVersion = OnParentVersionAction.COPY;
-    private boolean writeProtected = false;
-    private boolean mandatory = false;
+    /**
+     * Returns the name of this item def.
+     * @return the name of this item def.
+     */
+    public QName getName();
 
-    protected Object clone() throws CloneNotSupportedException {
-        // delegate to superclass which does a shallow copy;
-        // but since all fields are either primitives or immutables
-        // this is sufficient
-        return super.clone();
-    }
+    /**
+     * Returns the name of the declaring node type.
+     * @return the name of the declaring node type.
+     */
+    public QName getDeclaringNodeType();
 
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof ItemDef) {
-            ItemDef other = (ItemDef) obj;
-            return (declaringNodeType == null ? other.declaringNodeType == null : declaringNodeType.equals(other.declaringNodeType))
-                    && (name == null ? other.name == null : name.equals(other.name))
-                    && autoCreated == other.autoCreated
-                    && onParentVersion == other.onParentVersion
-                    && writeProtected == other.writeProtected
-                    && mandatory == other.mandatory;
-        }
-        return false;
-    }
+    /**
+     * Returns the auto created flag.
+     * @return the auto created flag.
+     */
+    public boolean isAutoCreated();
 
-    public void setDeclaringNodeType(QName declaringNodeType) {
-        if (declaringNodeType == null) {
-            throw new IllegalArgumentException("declaringNodeType can not be null");
-        }
-        this.declaringNodeType = declaringNodeType;
-    }
+    /**
+     * Returns the on-parent-version attribute.
+     * @return the on-parent-version attribute.
+     */
+    public int getOnParentVersion();
 
-    public void setName(QName name) {
-        if (name == null) {
-            throw new IllegalArgumentException("name can not be null");
-        }
-        this.name = name;
-    }
+    /**
+     * Returns the protected flag.
+     * @return the protected flag.
+     */
+    public boolean isProtected();
 
-    public void setAutoCreated(boolean autoCreated) {
-        this.autoCreated = autoCreated;
-    }
+    /**
+     * Returns the mandatory flag.
+     * @return the mandatory flag.
+     */
+    public boolean isMandatory();
 
-    public void setOnParentVersion(int onParentVersion) {
-        this.onParentVersion = onParentVersion;
-    }
+    /**
+     * Returns if this is a residual definition.
+     * @return if this is a residual definition.
+     */
+    public boolean definesResidual();
 
-    public void setProtected(boolean writeProtected) {
-        this.writeProtected = writeProtected;
-    }
-
-    public void setMandatory(boolean mandatory) {
-        this.mandatory = mandatory;
-    }
-
-    public QName getDeclaringNodeType() {
-        return declaringNodeType;
-    }
-
-    public QName getName() {
-        return name;
-    }
-
-    public boolean isAutoCreated() {
-        return autoCreated;
-    }
-
-    public int getOnParentVersion() {
-        return onParentVersion;
-    }
-
-    public boolean isProtected() {
-        return writeProtected;
-    }
-
-    public boolean isMandatory() {
-        return mandatory;
-    }
-
-    public boolean definesResidual() {
-        return name.equals(ANY_NAME);
-    }
-
-    public abstract boolean definesNode();
+    /**
+     * Returns if this is a node definition.
+     * @return if this is a node definition.
+     */
+    public boolean definesNode();
 }

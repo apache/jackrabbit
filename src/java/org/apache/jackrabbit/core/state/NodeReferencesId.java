@@ -42,7 +42,7 @@ public class NodeReferencesId extends NodeId {
         }
         if (obj instanceof NodeReferencesId) {
             NodeReferencesId other = (NodeReferencesId) obj;
-            return uuid.equals(other.uuid);
+            return uuid == other.uuid;
         }
         return false;
     }

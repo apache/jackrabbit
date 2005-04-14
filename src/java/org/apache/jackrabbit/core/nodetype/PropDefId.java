@@ -24,11 +24,21 @@ import java.io.Serializable;
  */
 public class PropDefId implements Serializable {
 
+    /**
+     * Serial number
+     */
     static final long serialVersionUID = 3675238890036653593L;
 
+    /**
+     * the internal id
+     */
     private final int id;
 
-    public PropDefId(PropDef def) {
+    /**
+     * Creates a new PropDefId from the given PropDef
+     * @param def
+     */
+    PropDefId(PropDefImpl def) {
         if (def == null) {
             throw new IllegalArgumentException("PropDef argument can not be null");
         }
@@ -50,6 +60,10 @@ public class PropDefId implements Serializable {
         id = sb.toString().hashCode();
     }
 
+    /**
+     * Creates a new PropDefId with the given internal id
+     * @param id
+     */
     private PropDefId(int id) {
         this.id = id;
     }
@@ -73,6 +87,9 @@ public class PropDefId implements Serializable {
         return new PropDefId(Integer.parseInt(s));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -84,10 +101,16 @@ public class PropDefId implements Serializable {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String toString() {
         return Integer.toString(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public int hashCode() {
         // id is already the computed hash code
         return id;

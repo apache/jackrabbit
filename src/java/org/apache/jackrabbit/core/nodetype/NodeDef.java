@@ -16,89 +16,35 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.QName;
 
-import java.util.Arrays;
-
 /**
- * A <code>NodeDef</code> ...
+ * This interface define a ChilsNodeDefinition
  */
-public class NodeDef extends ItemDef {
-
-    private QName defaultPrimaryType = null;
-    private QName[] requiredPrimaryTypes = new QName[]{Constants.NT_BASE};
-    private boolean allowsSameNameSiblings = false;
+public interface NodeDef extends ItemDef {
 
     /**
-     * Default constructor.
+     * Returns the nodedef id of this node def.
+     * @return the node def id.
      */
-    public NodeDef() {
-    }
-
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof NodeDef) {
-            NodeDef other = (NodeDef) obj;
-            return super.equals(obj)
-                    && Arrays.equals(requiredPrimaryTypes, other.requiredPrimaryTypes)
-                    && (defaultPrimaryType == null ? other.defaultPrimaryType == null : defaultPrimaryType.equals(other.defaultPrimaryType))
-                    && allowsSameNameSiblings == other.allowsSameNameSiblings;
-        }
-        return false;
-    }
+    public NodeDefId getId();
 
     /**
-     * @param defaultNodeType
+     * Returns the name of the default primary type.
+     * @return the name of the default primary type.
      */
-    public void setDefaultPrimaryType(QName defaultNodeType) {
-        this.defaultPrimaryType = defaultNodeType;
-    }
+    public QName getDefaultPrimaryType();
 
     /**
-     * @param requiredPrimaryTypes
+     * Returns the array of names of the required primary types.
+     * @return the array of names of the required primary types.
      */
-    public void setRequiredPrimaryTypes(QName[] requiredPrimaryTypes) {
-        if (requiredPrimaryTypes == null) {
-            throw new IllegalArgumentException("requiredPrimaryTypes can not be null");
-        }
-        this.requiredPrimaryTypes = requiredPrimaryTypes;
-    }
+    public QName[] getRequiredPrimaryTypes();
 
     /**
-     * @param allowsSameNameSiblings
+     * Returns the 'allowSameNameSiblings' flag.
+     * @return the 'allowSameNameSiblings' flag.
      */
-    public void setAllowsSameNameSiblings(boolean allowsSameNameSiblings) {
-        this.allowsSameNameSiblings = allowsSameNameSiblings;
-    }
+    public boolean allowsSameNameSiblings();
 
-    /**
-     * @return
-     */
-    public QName getDefaultPrimaryType() {
-        return defaultPrimaryType;
-    }
-
-    /**
-     * @return
-     */
-    public QName[] getRequiredPrimaryTypes() {
-        return requiredPrimaryTypes;
-    }
-
-    /**
-     * @return
-     */
-    public boolean allowsSameNameSiblings() {
-        return allowsSameNameSiblings;
-    }
-
-    /**
-     * @return
-     */
-    public boolean definesNode() {
-        return true;
-    }
 }

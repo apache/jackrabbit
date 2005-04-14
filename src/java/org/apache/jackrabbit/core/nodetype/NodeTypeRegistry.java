@@ -153,7 +153,7 @@ public class NodeTypeRegistry implements Constants {
 
         // setup definition of root node
         rootNodeDef = createRootNodeDef();
-        nodeDefs.put(new NodeDefId(rootNodeDef), rootNodeDef);
+        nodeDefs.put(rootNodeDef.getId(), rootNodeDef);
 
         // load and register pre-defined (i.e. built-in) node types
         /**
@@ -237,7 +237,7 @@ public class NodeTypeRegistry implements Constants {
     }
 
     private static NodeDef createRootNodeDef() {
-        NodeDef def = new NodeDef();
+        NodeDefImpl def = new NodeDefImpl();
 
         // FIXME need a fake declaring node type
         def.setDeclaringNodeType(new QName(NS_DEFAULT_URI, ""));
@@ -328,15 +328,11 @@ public class NodeTypeRegistry implements Constants {
         // store property & child node definitions of new node type by id
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
-            PropDef def = pda[i];
-            PropDefId id = new PropDefId(def);
-            propDefs.put(id, def);
+            propDefs.put(pda[i].getId(), pda[i]);
         }
         NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
-            NodeDef def = nda[i];
-            NodeDefId id = new NodeDefId(def);
-            nodeDefs.put(id, def);
+            nodeDefs.put(nda[i].getId(), nda[i]);
         }
 
         return ent;
@@ -375,13 +371,11 @@ public class NodeTypeRegistry implements Constants {
         // remove property & child node definitions
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
-            PropDefId id = new PropDefId(pda[i]);
-            propDefs.remove(id);
+            propDefs.remove(pda[i].getId());
         }
         NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
-            NodeDefId id = new NodeDefId(nda[i]);
-            nodeDefs.remove(id);
+            nodeDefs.remove(nda[i].getId());
         }
     }
 
@@ -1437,18 +1431,7 @@ public class NodeTypeRegistry implements Constants {
      * @return
      */
     public NodeDef getNodeDef(NodeDefId id) {
-        NodeDef def = (NodeDef) nodeDefs.get(id);
-        if (def == null) {
-            return null;
-        }
-        // return clone to make sure nobody messes around with the 'real' definition
-        try {
-            return (NodeDef) def.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+        return (NodeDef) nodeDefs.get(id);
     }
 
     /**
@@ -1456,18 +1439,7 @@ public class NodeTypeRegistry implements Constants {
      * @return
      */
     public PropDef getPropDef(PropDefId id) {
-        PropDef def = (PropDef) propDefs.get(id);
-        if (def == null) {
-            return null;
-        }
-        // return clone to make sure nobody messes around with the 'real' definition
-        try {
-            return (PropDef) def.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+        return (PropDef) propDefs.get(id);
     }
 
     //----------------------------------------------------------< diagnostics >
@@ -1497,7 +1469,7 @@ public class NodeTypeRegistry implements Constants {
             PropDef[] pd = ntd.getPropertyDefs();
             for (int i = 0; i < pd.length; i++) {
                 ps.print("\tPropertyDefinition");
-                ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + new PropDefId(pd[i]));
+                ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + pd[i].getId());
                 ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
                 String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
                 ps.println("\t\tRequiredType\t" + type);
@@ -1536,7 +1508,7 @@ public class NodeTypeRegistry implements Constants {
             NodeDef[] nd = ntd.getChildNodeDefs();
             for (int i = 0; i < nd.length; i++) {
                 ps.print("\tNodeDefinition");
-                ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + new NodeDefId(nd[i]));
+                ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + nd[i].getId());
                 ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
                 QName[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
                 if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
