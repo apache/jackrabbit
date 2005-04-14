@@ -390,6 +390,21 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
+     * Load item state from persistent storage.
+     * @param id item id
+     * @return item state
+     */
+    private ItemState loadItemState(ItemId id)
+            throws NoSuchItemStateException, ItemStateException {
+
+        if (id.denotesNode()) {
+            return persistMgr.load((NodeId) id);
+        } else {
+            return persistMgr.load((PropertyId) id);
+        }
+    }
+
+    /**
      * Store modifications registered in a <code>ChangeLog</code>. The items
      * contained in the <tt>ChangeLog</tt> are not states returned by this
      * item state manager but rather must be reconnected to items provided
@@ -493,11 +508,36 @@ public class SharedItemStateManager extends ItemStateCache
         } finally {
 
             /**
-             * If some store operation was unsuccessful, we have to restore
-             * the original state of all items in the local change log.
+             * If some store operation was unsuccessful, we have to reload
+             * the state of modified and deleted items from persistent
+             * storage.
              */
             if (!succeeded) {
                 local.disconnect();
+
+                iter = shared.modifiedStates();
+                while (iter.hasNext()) {
+                    ItemState state = (ItemState) iter.next();
+                    try {
+                        state.copy(loadItemState(state.getId()));
+                    } catch (ItemStateException e) {
+                        state.discard();
+                    }
+                }
+                iter = shared.deletedStates();
+                while (iter.hasNext()) {
+                    ItemState state = (ItemState) iter.next();
+                    try {
+                        state.copy(loadItemState(state.getId()));
+                    } catch (ItemStateException e) {
+                        state.discard();
+                    }
+                }
+                iter = shared.addedStates();
+                while (iter.hasNext()) {
+                    ItemState state = (ItemState) iter.next();
+                    state.discard();
+                }
             }
         }
 
