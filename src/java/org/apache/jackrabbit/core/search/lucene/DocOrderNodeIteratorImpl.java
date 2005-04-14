@@ -145,8 +145,8 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
     /**
      * {@inheritDoc}
      */
-    public long getPos() {
-        return orderedNodes.getPos();
+    public long getPosition() {
+        return orderedNodes.getPosition();
     }
 
     /**

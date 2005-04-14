@@ -244,7 +244,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                 fail("Wrong accept method executed.");
             }
 
-            public void visit(Node node) {
+            public void visit(Node node) throws RepositoryException {
                 assertTrue("Visited node is not the same as the one passed in method visit(Node)",
                         n.isSame(node));
             }

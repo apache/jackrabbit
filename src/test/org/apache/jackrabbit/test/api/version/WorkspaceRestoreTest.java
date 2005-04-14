@@ -18,7 +18,7 @@ package org.apache.jackrabbit.test.api.version;
 
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.OnParentVersionAction;
@@ -201,7 +201,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
     public void testWorkspaceRestoreWithUUIDConflict() throws RepositoryException, NotExecutableException {
         try {
             // Verify that nodes used for the test are indeed versionable
-            NodeDef nd = wVersionableNode.getDefinition();
+            NodeDefinition nd = wVersionableNode.getDefinition();
             if (nd.getOnParentVersion() != OnParentVersionAction.COPY && nd.getOnParentVersion() != OnParentVersionAction.VERSION) {
                 throw new NotExecutableException("Nodes must be versionable in order to run this test.");
             }

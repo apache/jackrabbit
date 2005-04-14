@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 
@@ -31,12 +31,12 @@ import org.apache.jackrabbit.test.NotExecutableException;
 abstract class AbstractWorkspaceSameNameSibsTest extends AbstractWorkspaceCopyBetweenTest {
 
     /**
-     * Node type with sameNameSibs=true ChildNodeDef
+     * Node type with sameNameSibs=true NodeDef
      */
     protected final String PROP_SAME_NAME_SIBS_TRUE_NODE_TYPE = "sameNameSibsTrueNodeType";
 
     /**
-     * Node type with sameNameSibs=false ChildNodeDef
+     * Node type with sameNameSibs=false NodeDef
      */
     protected final String PROP_SAME_NAME_SIBS_FALSE_NODE_TYPE = "sameNameSibsFalseNodeType";
 
@@ -63,10 +63,10 @@ abstract class AbstractWorkspaceSameNameSibsTest extends AbstractWorkspaceCopyBe
             if (sameNameSibsTrueNodeType == null) {
                 fail("Property 'sameNameSibsTrueNodeType' does not define a nodetype where sameNameSibs are allowed: '" + sameNameSibsTrueNodeType.getName() + "'");
             } else {
-                NodeDef[] childNodeDefs = sameNameSibsTrueNodeType.getDeclaredChildNodeDefs();
+                NodeDefinition[] childNodeDefs = sameNameSibsTrueNodeType.getDeclaredChildNodeDefinitions();
                 boolean isSameNameSibs = false;
                 for (int i = 0; i < childNodeDefs.length; i++) {
-                    if (childNodeDefs[i].allowSameNameSibs()) {
+                    if (childNodeDefs[i].allowsSameNameSiblings()) {
                         isSameNameSibs = true;
                         break;
                     }
@@ -86,10 +86,10 @@ abstract class AbstractWorkspaceSameNameSibsTest extends AbstractWorkspaceCopyBe
             if (sameNameSibsFalseNodeType == null) {
                 fail("Property 'sameNameSibsFalseNodeType' does define a nodetype where sameNameSibs are allowed: '" + sameNameSibsFalseNodeType.getName() + "'");
             } else {
-                NodeDef[] childNodeDefs = sameNameSibsFalseNodeType.getDeclaredChildNodeDefs();
+                NodeDefinition[] childNodeDefs = sameNameSibsFalseNodeType.getDeclaredChildNodeDefinitions();
                 boolean isSameNameSibs = true;
                 for (int i = 0; i < childNodeDefs.length; i++) {
-                    if (!childNodeDefs[i].allowSameNameSibs()) {
+                    if (!childNodeDefs[i].allowsSameNameSiblings()) {
                         isSameNameSibs = false;
                         break;
                     }

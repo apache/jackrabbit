@@ -37,13 +37,14 @@ import java.util.Map;
 /**
  * A <code>NodeTypeManagerImpl</code> ...
  */
-public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryListener {
+public class NodeTypeManagerImpl implements NodeTypeManager,
+        NodeTypeRegistryListener {
 
     private static Logger log = Logger.getLogger(NodeTypeManagerImpl.class);
 
     private final NodeTypeRegistry ntReg;
 
-    private final NodeDefImpl rootNodeDef;
+    private final NodeDefinitionImpl rootNodeDef;
 
     // namespace resolver used to translate qualified names to JCR names
     private final NamespaceResolver nsResolver;
@@ -64,13 +65,14 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         // setup item cache with soft references to node type instances
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
-        rootNodeDef = new RootNodeDefinition(ntReg.getRootNodeDef(), this, nsResolver);
+        rootNodeDef = new RootNodeDefinition(ntReg.getRootNodeDef(), this,
+                nsResolver);
     }
 
     /**
      * @return
      */
-    public NodeDefImpl getRootNodeDefinition() {
+    public NodeDefinitionImpl getRootNodeDefinition() {
         return rootNodeDef;
     }
 
@@ -78,24 +80,24 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @param id
      * @return
      */
-    public NodeDefImpl getNodeDef(NodeDefId id) {
-        ChildNodeDef cnd = ntReg.getNodeDef(id);
+    public NodeDefinitionImpl getNodeDefinition(NodeDefId id) {
+        NodeDef cnd = ntReg.getNodeDef(id);
         if (cnd == null) {
             return null;
         }
-        return new NodeDefImpl(cnd, this, nsResolver);
+        return new NodeDefinitionImpl(cnd, this, nsResolver);
     }
 
     /**
      * @param id
      * @return
      */
-    public PropertyDefImpl getPropDef(PropDefId id) {
+    public PropertyDefinitionImpl getPropertyDefinition(PropDefId id) {
         PropDef pd = ntReg.getPropDef(id);
         if (pd == null) {
             return null;
         }
-        return new PropertyDefImpl(pd, this, nsResolver);
+        return new PropertyDefinitionImpl(pd, this, nsResolver);
     }
 
     /**
@@ -103,7 +105,8 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @return
      * @throws NoSuchNodeTypeException
      */
-    public synchronized NodeTypeImpl getNodeType(QName name) throws NoSuchNodeTypeException {
+    public synchronized NodeTypeImpl getNodeType(QName name)
+            throws NoSuchNodeTypeException {
         NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
         if (nt != null) {
             return nt;
@@ -222,12 +225,13 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * The <code>RootNodeDefinition</code> defines the characteristics of
      * the root node.
      */
-    private static class RootNodeDefinition extends NodeDefImpl {
+    private static class RootNodeDefinition extends NodeDefinitionImpl {
 
         /**
          * Creates a new <code>RootNodeDefinition</code>.
          */
-        RootNodeDefinition(ChildNodeDef def, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+        RootNodeDefinition(NodeDef def, NodeTypeManagerImpl ntMgr,
+                           NamespaceResolver nsResolver) {
             super(def, ntMgr, nsResolver);
         }
 

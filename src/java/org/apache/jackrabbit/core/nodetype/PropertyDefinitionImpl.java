@@ -22,14 +22,15 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
 /**
- * A <code>PropertyDefImpl</code> ...
+ * A <code>PropertyDefinitionImpl</code> ...
  */
-public class PropertyDefImpl extends ItemDefImpl implements PropertyDef {
+public class PropertyDefinitionImpl extends ItemDefinitionImpl
+        implements PropertyDefinition {
 
-    private static Logger log = Logger.getLogger(PropertyDefImpl.class);
+    private static Logger log = Logger.getLogger(PropertyDefinitionImpl.class);
 
     private final PropDef propDef;
 
@@ -41,7 +42,8 @@ public class PropertyDefImpl extends ItemDefImpl implements PropertyDef {
      * @param ntMgr      node type manager
      * @param nsResolver namespace resolver
      */
-    PropertyDefImpl(PropDef propDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+    PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr,
+                           NamespaceResolver nsResolver) {
         super(propDef, ntMgr, nsResolver);
         this.propDef = propDef;
     }
@@ -66,7 +68,9 @@ public class PropertyDefImpl extends ItemDefImpl implements PropertyDef {
             } catch (RepositoryException re) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();
-                log.error("illegal default value specified for property " + propName + " in node type " + getDeclaringNodeType(), re);
+                log.error("illegal default value specified for property "
+                        + propName + " in node type " + getDeclaringNodeType(),
+                        re);
                 return null;
             }
         }

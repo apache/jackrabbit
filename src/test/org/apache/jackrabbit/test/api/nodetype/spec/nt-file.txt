@@ -8,12 +8,12 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   jcr:content
-ChildNodeDef
+ChildNodeDefinition
   Name jcr:content
   RequiredPrimaryTypes [nt:base]
   DefaultPrimaryType null
-  AutoCreate false
+  AutoCreated false
   Mandatory true
   OnParentVersion COPY
   Protected false
-  SameNameSibs false
+  SameNameSiblings false

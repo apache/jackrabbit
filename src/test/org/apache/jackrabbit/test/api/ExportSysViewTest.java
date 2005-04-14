@@ -176,7 +176,7 @@ public class ExportSysViewTest extends AbstractJCRTest {
             if (workspace) {
                 //workspace.exportSysView(testPath, contentHandler, skipBinary, noRecurse);
             } else {
-                session.exportSysView(testPath, contentHandler, skipBinary, noRecurse);
+                session.exportSystemView(testPath, contentHandler, skipBinary, noRecurse);
             }
         } catch (RepositoryException re) {
             fail("Could not initialize the contenthandler due to: " + re.toString());
@@ -199,7 +199,7 @@ public class ExportSysViewTest extends AbstractJCRTest {
             thisSession = workspace.getSession();
         }
         try {
-            thisSession.exportSysView(testPath, os, false, false);
+            thisSession.exportSystemView(testPath, os, false, false);
             SysViewParser parser = new SysViewParser(testPath, thisSession, SAVEBINARY, RECURSE);
             parser.parse(file);
         } catch (RepositoryException re) {

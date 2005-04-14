@@ -110,7 +110,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
     /**
      * {@inheritDoc}
      */
-    public long getPos() {
+    public long getPosition() {
         return pos;
     }
 

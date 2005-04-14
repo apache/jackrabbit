@@ -117,7 +117,7 @@ class FilteredEventIterator implements EventIterator {
     /**
      * {@inheritDoc}
      */
-    public long getPos() {
+    public long getPosition() {
         return pos;
     }
 

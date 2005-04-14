@@ -173,7 +173,8 @@ public class SQLPathTest extends AbstractQueryTest {
         final List descendants = new ArrayList();
 
         node.accept(new TraversingItemVisitor.Default() {
-            protected void entering(Node n, int level) {
+            protected void entering(Node n, int level)
+                    throws RepositoryException {
                 if (!node.isSame(n)) {
                     descendants.add(n);
                 }

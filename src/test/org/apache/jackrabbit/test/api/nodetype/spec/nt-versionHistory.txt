@@ -9,30 +9,30 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-ChildNodeDef
+ChildNodeDefinition
   Name jcr:rootVersion
   RequiredPrimaryTypes [nt:version]
   DefaultPrimaryType nt:version
-  AutoCreate true
+  AutoCreated true
   Mandatory true
   OnParentVersion ABORT
   Protected true
-  SameNameSibs false
-ChildNodeDef
+  SameNameSiblings false
+ChildNodeDefinition
   Name jcr:versionLabels
   RequiredPrimaryTypes [nt:versionLabels]
   DefaultPrimaryType nt:versionLabels
-  AutoCreate true
+  AutoCreated true
   Mandatory true
   OnParentVersion ABORT
   Protected true
-  SameNameSibs false
-ChildNodeDef
+  SameNameSiblings false
+ChildNodeDefinition
   Name "*"
   RequiredPrimaryTypes [nt:version]
   DefaultPrimaryType nt:version
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion ABORT
   Protected true
-  SameNameSibs false
+  SameNameSiblings false

@@ -18,11 +18,11 @@ package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.ReferenceMap;
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -46,11 +46,13 @@ import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ItemExistsException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.util.ArrayList;
@@ -484,7 +486,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 NodeState nodeState = (NodeState) itemState;
                 ItemId id = nodeState.getId();
                 NodeImpl node = (NodeImpl) itemMgr.getItem(id);
-                NodeDef def = node.getDefinition();
+                NodeDefinition def = node.getDefinition();
                 // primary type
                 NodeTypeImpl pnt = (NodeTypeImpl) node.getPrimaryNodeType();
                 // effective node type (primary type incl. mixins)
@@ -522,9 +524,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     }
                 }
                 // mandatory child nodes
-                ChildNodeDef[] cnda = ent.getMandatoryNodeDefs();
+                NodeDef[] cnda = ent.getMandatoryNodeDefs();
                 for (int i = 0; i < cnda.length; i++) {
-                    ChildNodeDef cnd = cnda[i];
+                    NodeDef cnd = cnda[i];
                     if (!nodeState.hasChildNodeEntry(cnd.getName())) {
                         String msg = node.safeGetJCRPath() + ": mandatory child node " + cnd.getName() + " does not exist";
                         log.debug(msg);
@@ -536,7 +538,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 PropertyState propState = (PropertyState) itemState;
                 ItemId propId = propState.getId();
                 PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propId);
-                PropertyDefImpl def = (PropertyDefImpl) prop.getDefinition();
+                PropertyDefinitionImpl def = (PropertyDefinitionImpl) prop.getDefinition();
 
                 /**
                  * check value constraints
@@ -880,7 +882,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      * @throws RepositoryException
      */
     protected void internalRemove(boolean noChecks)
-            throws VersionException, LockException, RepositoryException {
+            throws VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
 
         // check state of this instance
         sanityCheck();
@@ -897,7 +900,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 throw new RepositoryException(msg);
             }
 
-            NodeDef def = node.getDefinition();
+            NodeDefinition def = node.getDefinition();
             // check protected flag
             if (!noChecks && def.isProtected()) {
                 String msg = safeGetJCRPath() + ": cannot remove a protected node";
@@ -906,7 +909,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             }
         } else {
             PropertyImpl prop = (PropertyImpl) this;
-            PropertyDef def = prop.getDefinition();
+            PropertyDefinition def = prop.getDefinition();
             // check protected flag
             if (!noChecks && def.isProtected()) {
                 String msg = safeGetJCRPath() + ": cannot remove a protected property";
@@ -1111,7 +1114,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     /**
      * {@inheritDoc}
      */
-    public void remove() throws VersionException, LockException, RepositoryException {
+    public void remove()
+            throws VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
         internalRemove(false);
     }
 
@@ -1119,9 +1124,10 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      * {@inheritDoc}
      */
     public void save()
-            throws AccessDeniedException, ConstraintViolationException,
-            InvalidItemStateException, ReferentialIntegrityException,
-            VersionException, LockException, RepositoryException {
+            throws AccessDeniedException, ItemExistsException,
+            ConstraintViolationException, InvalidItemStateException,
+            ReferentialIntegrityException, VersionException, LockException,
+            NoSuchNodeTypeException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1464,7 +1470,10 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
     /**
      * {@inheritDoc}
      */
-    public boolean isSame(Item otherItem) {
+    public boolean isSame(Item otherItem) throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         if (this == otherItem) {
             return true;
         }

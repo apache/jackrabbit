@@ -238,7 +238,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         // add properties to content
         node.internalSetProperty(Constants.JCR_LOCKOWNER,
-                InternalValue.create(node.getSession().getUserId()));
+                InternalValue.create(node.getSession().getUserID()));
         node.internalSetProperty(Constants.JCR_LOCKISDEEP,
                 InternalValue.create(info.deep));
         node.save();
@@ -305,7 +305,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         // create lock info to use and pass to internal implementation
         LockInfo info = new LockInfo(this, new LockToken(node.internalGetUUID()),
-                isSessionScoped, isDeep, node.getSession().getUserId());
+                isSessionScoped, isDeep, node.getSession().getUserID());
         return lock(node, info);
     }
 

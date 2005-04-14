@@ -51,8 +51,8 @@ public class EventTest extends AbstractObservationTest {
     }
 
     /**
-     * Tests if {@link javax.jcr.observation.Event#getUserId()} returns the same
-     * value as {@link javax.jcr.Session#getUserId()}.
+     * Tests if {@link javax.jcr.observation.Event#getUserID()} returns the same
+     * value as {@link javax.jcr.Session#getUserID()}.
      */
     public void testGetUserId() throws RepositoryException{
         EventResult result = new EventResult(log);
@@ -62,8 +62,8 @@ public class EventTest extends AbstractObservationTest {
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         assertEquals("Wrong number of events returned", 1, events.length);
-        String userId = events[0].getUserId();
-        String sessionUId = superuser.getUserId();
+        String userId = events[0].getUserID();
+        String sessionUId = superuser.getUserID();
         assertEquals("UserId of event is not equal to userId of session", userId, sessionUId);
     }
 

@@ -143,7 +143,7 @@ public class ElementTest extends AbstractQueryTest {
      */
     public void testElementTestNameTestSomeNTWithSNS() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (!n1.getDefinition().allowSameNameSibs()) {
+        if (!n1.getDefinition().allowsSameNameSiblings()) {
             throw new NotExecutableException("Node at " + testRoot + " does not allow same name siblings with name " + nodeName1);
         }
         testRootNode.addNode(nodeName1, ntBase);

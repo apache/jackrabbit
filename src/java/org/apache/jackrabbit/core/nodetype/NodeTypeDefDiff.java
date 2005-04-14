@@ -42,9 +42,9 @@ import java.util.List;
  * <li>changing property/child node <code>protected</code> flag
  * <li>changing property/child node <code>onParentVersion</code> value
  * <li>changing property/child node <code>mandatory</code> flag to <code>false</code>
- * <li>changing property/child node <code>autoCreate</code> flag
+ * <li>changing property/child node <code>autoCreated</code> flag
  * <li>changing child node <code>defaultPrimaryType</code>
- * <li>changing child node <code>sameNameSibs</code> flag to <code>true</code>
+ * <li>changing child node <code>sameNameSiblings</code> flag to <code>true</code>
  * <li>weaken property <code>valueConstraints</code> (e.g. by removing completely
  * or by adding to existing or by making a single constraint less restrictive)
  * <li>changing property <code>defaultValues</code>
@@ -293,13 +293,13 @@ public class NodeTypeDefDiff {
          */
 
         int maxType = NONE;
-        ChildNodeDef[] cnda1 = oldDef.getChildNodeDefs();
+        NodeDef[] cnda1 = oldDef.getChildNodeDefs();
         HashMap defs1 = new HashMap();
         for (int i = 0; i < cnda1.length; i++) {
             defs1.put(new NodeDefId(cnda1[i]), cnda1[i]);
         }
 
-        ChildNodeDef[] cnda2 = newDef.getChildNodeDefs();
+        NodeDef[] cnda2 = newDef.getChildNodeDefs();
         HashMap defs2 = new HashMap();
         for (int i = 0; i < cnda1.length; i++) {
             defs2.put(new NodeDefId(cnda2[i]), cnda2[i]);
@@ -312,8 +312,8 @@ public class NodeTypeDefDiff {
         Iterator iter = defs1.keySet().iterator();
         while (iter.hasNext()) {
             NodeDefId id = (NodeDefId) iter.next();
-            ChildNodeDef def1 = (ChildNodeDef) defs1.get(id);
-            ChildNodeDef def2 = (ChildNodeDef) defs2.get(id);
+            NodeDef def1 = (NodeDef) defs1.get(id);
+            NodeDef def2 = (NodeDef) defs2.get(id);
             ChildNodeDefDiff diff = new ChildNodeDefDiff(def1, def2);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -329,7 +329,7 @@ public class NodeTypeDefDiff {
         iter = defs2.keySet().iterator();
         while (iter.hasNext()) {
             NodeDefId id = (NodeDefId) iter.next();
-            ChildNodeDef def = (ChildNodeDef) defs2.get(id);
+            NodeDef def = (NodeDef) defs2.get(id);
             ChildNodeDefDiff diff = new ChildNodeDefDiff(null, def);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -342,11 +342,11 @@ public class NodeTypeDefDiff {
 
     //--------------------------------------------------------< inner classes >
     abstract class ChildItemDefDiff {
-        protected final ChildItemDef oldDef;
-        protected final ChildItemDef newDef;
+        protected final ItemDef oldDef;
+        protected final ItemDef newDef;
         protected int type;
 
-        ChildItemDefDiff(ChildItemDef oldDef, ChildItemDef newDef) {
+        ChildItemDefDiff(ItemDef oldDef, ItemDef newDef) {
             this.oldDef = oldDef;
             this.newDef = newDef;
             init();
@@ -494,16 +494,16 @@ public class NodeTypeDefDiff {
 
     public class ChildNodeDefDiff extends ChildItemDefDiff {
 
-        ChildNodeDefDiff(ChildNodeDef oldDef, ChildNodeDef newDef) {
+        ChildNodeDefDiff(NodeDef oldDef, NodeDef newDef) {
             super(oldDef, newDef);
         }
 
-        public ChildNodeDef getOldDef() {
-            return (ChildNodeDef) oldDef;
+        public NodeDef getOldDef() {
+            return (NodeDef) oldDef;
         }
 
-        public ChildNodeDef getNewDef() {
-            return (ChildNodeDef) newDef;
+        public NodeDef getNewDef() {
+            return (NodeDef) newDef;
         }
 
         protected void init() {
@@ -516,10 +516,10 @@ public class NodeTypeDefDiff {
              */
             if (isModified() && type != NONE && type != MAJOR) {
 
-                boolean b1 = getOldDef().allowSameNameSibs();
-                boolean b2 = getNewDef().allowSameNameSibs();
+                boolean b1 = getOldDef().allowsSameNameSiblings();
+                boolean b2 = getNewDef().allowsSameNameSiblings();
                 if (b1 != b1 && !b2) {
-                    // changed sameNameSibs flag to false (MAJOR change)
+                    // changed sameNameSiblings flag to false (MAJOR change)
                     type = MAJOR;
                 }
 

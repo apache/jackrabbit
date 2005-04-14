@@ -29,7 +29,7 @@ import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
@@ -153,7 +153,7 @@ public final class NodeTypeReader {
 
         // property definitions
         Vector properties = new Vector();
-        while (walker.iterateElements(Constants.PROPERTYDEF_ELEMENT)) {
+        while (walker.iterateElements(Constants.PROPERTYDEFINITION_ELEMENT)) {
             PropDef def = getPropDef();
             def.setDeclaringNodeType(type.getName());
             properties.add(def);
@@ -163,13 +163,13 @@ public final class NodeTypeReader {
 
         // child node definitions
         Vector nodes = new Vector();
-        while (walker.iterateElements(Constants.CHILDNODEDEF_ELEMENT)) {
-            ChildNodeDef def = getChildNodeDef();
+        while (walker.iterateElements(Constants.CHILDNODEDEFINITION_ELEMENT)) {
+            NodeDef def = getChildNodeDef();
             def.setDeclaringNodeType(type.getName());
             nodes.add(def);
         }
-        type.setChildNodeDefs((ChildNodeDef[])
-                nodes.toArray(new ChildNodeDef[nodes.size()]));
+        type.setChildNodeDefs((NodeDef[])
+                nodes.toArray(new NodeDef[nodes.size()]));
 
         return type;
     }
@@ -196,8 +196,8 @@ public final class NodeTypeReader {
         }
 
         // simple attributes
-        def.setAutoCreate(Boolean.valueOf(
-                walker.getAttribute(Constants.AUTOCREATE_ATTRIBUTE))
+        def.setAutoCreated(Boolean.valueOf(
+                walker.getAttribute(Constants.AUTOCREATED_ATTRIBUTE))
                 .booleanValue());
         def.setMandatory(Boolean.valueOf(
                 walker.getAttribute(Constants.MANDATORY_ATTRIBUTE))
@@ -265,10 +265,10 @@ public final class NodeTypeReader {
      * @throws UnknownPrefixException      if the definition contains an
      *                                     unknown namespace prefix
      */
-    private ChildNodeDef getChildNodeDef()
+    private NodeDef getChildNodeDef()
             throws InvalidNodeTypeDefException, IllegalNameException,
             UnknownPrefixException {
-        ChildNodeDef def = new ChildNodeDef();
+        NodeDef def = new NodeDef();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
             def.setName(new QName("", "*"));
@@ -277,8 +277,8 @@ public final class NodeTypeReader {
         }
 
         // simple attributes
-        def.setAutoCreate(Boolean.valueOf(
-                walker.getAttribute(Constants.AUTOCREATE_ATTRIBUTE))
+        def.setAutoCreated(Boolean.valueOf(
+                walker.getAttribute(Constants.AUTOCREATED_ATTRIBUTE))
                 .booleanValue());
         def.setMandatory(Boolean.valueOf(
                 walker.getAttribute(Constants.MANDATORY_ATTRIBUTE))
@@ -286,8 +286,10 @@ public final class NodeTypeReader {
         def.setProtected(Boolean.valueOf(
                 walker.getAttribute(Constants.PROTECTED_ATTRIBUTE))
                 .booleanValue());
-        def.setAllowSameNameSibs(Boolean.valueOf(
-                walker.getAttribute(Constants.SAMENAMESIBS_ATTRIBUTE))
+        def.setOnParentVersion(OnParentVersionAction.valueFromName(
+                walker.getAttribute(Constants.ONPARENTVERSION_ATTRIBUTE)));
+        def.setAllowsSameNameSiblings(Boolean.valueOf(
+                walker.getAttribute(Constants.SAMENAMESIBLINGS_ATTRIBUTE))
                 .booleanValue());
 
         // default primary type

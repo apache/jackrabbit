@@ -57,7 +57,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
         tmp.append(jcrRoot).append(testRoot).append("/*");
         tmp.append("[position()=2]");
         String resultPath = "";
-        for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPos() < 2;) {
+        for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPosition() < 2;) {
             resultPath = nodes.nextNode().getPath();
         }
         docOrderTest(new Statement(tmp.toString(), Query.XPATH), resultPath);
@@ -74,7 +74,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
         tmp.append(jcrRoot).append(testRoot).append("/*");
         tmp.append("[2]");
         String resultPath = "";
-        for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPos() < 2;) {
+        for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPosition() < 2;) {
             resultPath = nodes.nextNode().getPath();
         }
         docOrderTest(new Statement(tmp.toString(), Query.XPATH), resultPath);

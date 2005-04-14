@@ -29,7 +29,7 @@ import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
@@ -153,7 +153,7 @@ public final class NodeTypeWriter {
         }
 
         // child node definitions
-        ChildNodeDef[] nodes = def.getChildNodeDefs();
+        NodeDef[] nodes = def.getChildNodeDefs();
         for (int i = 0; i < nodes.length; i++) {
             addChildNodeDef(nodes[i]);
         }
@@ -172,13 +172,13 @@ public final class NodeTypeWriter {
      */
     private void addPropDef(PropDef def)
             throws RepositoryException, NoPrefixDeclaredException {
-        builder.startElement(Constants.PROPERTYDEF_ELEMENT);
+        builder.startElement(Constants.PROPERTYDEFINITION_ELEMENT);
 
         // simple attributes
         builder.setAttribute(
                 Constants.NAME_ATTRIBUTE, def.getName().toJCRName(resolver));
         builder.setAttribute(
-                Constants.AUTOCREATE_ATTRIBUTE, def.isAutoCreate());
+                Constants.AUTOCREATED_ATTRIBUTE, def.isAutoCreated());
         builder.setAttribute(
                 Constants.MANDATORY_ATTRIBUTE, def.isMandatory());
         builder.setAttribute(
@@ -226,15 +226,15 @@ public final class NodeTypeWriter {
      * @throws NoPrefixDeclaredException if the child node definition contains
      *                                   invalid namespace references
      */
-    private void addChildNodeDef(ChildNodeDef def)
+    private void addChildNodeDef(NodeDef def)
             throws NoPrefixDeclaredException {
-        builder.startElement(Constants.CHILDNODEDEF_ELEMENT);
+        builder.startElement(Constants.CHILDNODEDEFINITION_ELEMENT);
 
         // simple attributes
         builder.setAttribute(
                 Constants.NAME_ATTRIBUTE, def.getName().toJCRName(resolver));
         builder.setAttribute(
-                Constants.AUTOCREATE_ATTRIBUTE, def.isAutoCreate());
+                Constants.AUTOCREATED_ATTRIBUTE, def.isAutoCreated());
         builder.setAttribute(
                 Constants.MANDATORY_ATTRIBUTE, def.isMandatory());
         builder.setAttribute(
@@ -243,7 +243,7 @@ public final class NodeTypeWriter {
                 Constants.ONPARENTVERSION_ATTRIBUTE,
                 OnParentVersionAction.nameFromValue(def.getOnParentVersion()));
         builder.setAttribute(
-                Constants.SAMENAMESIBS_ATTRIBUTE, def.allowSameNameSibs());
+                Constants.SAMENAMESIBLINGS_ATTRIBUTE, def.allowsSameNameSiblings());
 
         // default primary type
         QName type = def.getDefaultPrimaryType();

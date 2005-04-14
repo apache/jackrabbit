@@ -8,12 +8,12 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   jcr:content
-PropertyDef
+PropertyDefinition
   Name jcr:content
   RequiredType REFERENCE
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory true
   OnParentVersion COPY
   Protected false

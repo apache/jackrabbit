@@ -20,7 +20,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -69,7 +69,7 @@ public class CanSetPropertyTest extends AbstractJCRTest {
     public void testReturnFalseBecauseIsProtected()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, false, true, false, false);
 
         // will never happen since at least jcr:primaryType of nt:base accomplish the request
@@ -93,7 +93,7 @@ public class CanSetPropertyTest extends AbstractJCRTest {
     public void testReturnFalseBecauseIsMultiple()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, true, false, false, false);
 
         if (propDef == null) {
@@ -115,7 +115,7 @@ public class CanSetPropertyTest extends AbstractJCRTest {
     public void testValueNull()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, false, false, false, false);
 
         if (propDef == null) {

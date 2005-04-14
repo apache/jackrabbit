@@ -9,61 +9,61 @@ HasOrderableChildNodes
   true
 PrimaryItemName
   null
-ChildNodeDef
+ChildNodeDefinition
   Name "*"
   RequiredPrimaryTypes [nt:base]
   DefaultPrimaryType null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion ABORT
   Protected true
-  SameNameSibs true
-PropertyDef
+  SameNameSiblings true
+PropertyDefinition
   Name jcr:frozenMixinTypes
-  RequiredType STRING
+  RequiredType NAME
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion ABORT
   Protected true
   Multiple true
-PropertyDef
+PropertyDefinition
   Name jcr:frozenPrimaryType
-  RequiredType STRING
+  RequiredType NAME
   ValueConstraints []
   DefaultValues null
-  AutoCreate true
+  AutoCreated true
   Mandatory true
   OnParentVersion ABORT
   Protected true
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:frozenUuid
   RequiredType STRING
   ValueConstraints []
   DefaultValues null
-  AutoCreate true
+  AutoCreated true
   Mandatory true
   OnParentVersion ABORT
   Protected true
   Multiple false
-PropertyDef
+PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion ABORT
   Protected true
   Multiple false
-PropertyDef
+PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion ABORT
   Protected true

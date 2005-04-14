@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
 import org.apache.log4j.Logger;
 
-import javax.jcr.Session;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
 /**
@@ -74,11 +73,12 @@ class LockInfo implements SessionListener {
 
     /**
      * Create a new instance of this class.
-     * @param lockMgr lock manager
-     * @param lockToken lock token
+     *
+     * @param lockMgr       lock manager
+     * @param lockToken     lock token
      * @param sessionScoped whether lock token is session scoped
-     * @param deep whether lock is deep
-     * @param lockOwner owner of lock
+     * @param deep          whether lock is deep
+     * @param lockOwner     owner of lock
      */
     public LockInfo(LockManagerImpl lockMgr, LockToken lockToken,
                     boolean sessionScoped, boolean deep, String lockOwner) {
@@ -91,6 +91,7 @@ class LockInfo implements SessionListener {
 
     /**
      * Set the live flag
+     *
      * @param live live flag
      */
     public void setLive(boolean live) {
@@ -99,6 +100,7 @@ class LockInfo implements SessionListener {
 
     /**
      * Return the UUID of the lock holding node
+     *
      * @return uuid
      */
     public String getUUID() {
@@ -107,6 +109,7 @@ class LockInfo implements SessionListener {
 
     /**
      * Return the session currently holding the lock
+     *
      * @return session currently holding the lock
      */
     public SessionImpl getLockHolder() {
@@ -115,6 +118,7 @@ class LockInfo implements SessionListener {
 
     /**
      * Set the session currently holding the lock
+     *
      * @param lockHolder session currently holding the lock
      */
     public void setLockHolder(SessionImpl lockHolder) {
@@ -135,6 +139,7 @@ class LockInfo implements SessionListener {
 
     /**
      * Return a flag indicating whether the lock is live
+     *
      * @return <code>true</code> if the lock is live; otherwise <code>false</code>
      */
     public boolean isLive() {
@@ -142,10 +147,21 @@ class LockInfo implements SessionListener {
     }
 
     /**
+     * Return a flag indicating whether the lock is session-scoped
+     *
+     * @return <code>true</code> if the lock is session-scoped;
+     *         otherwise <code>false</code>
+     */
+    public boolean isSessionScoped() {
+        return sessionScoped;
+    }
+
+    /**
      * Refresh a lock. Will try to re-insert this lock info into the lock
      * manager's path map, provided the node is not already locked.
+     *
      * @param node node to lock again
-     * @throws LockException if the node is already locked
+     * @throws LockException       if the node is already locked
      * @throws RepositoryException if some other error occurs
      * @see javax.jcr.Node#refresh
      */
@@ -157,7 +173,7 @@ class LockInfo implements SessionListener {
 
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * When the owning session is logging out, we should unlock the node on
      * behalf of the user currently holding it.
      */
@@ -170,5 +186,6 @@ class LockInfo implements SessionListener {
     /**
      * {@inheritDoc}
      */
-    public void loggedOut(SessionImpl session) {}
+    public void loggedOut(SessionImpl session) {
+    }
 }

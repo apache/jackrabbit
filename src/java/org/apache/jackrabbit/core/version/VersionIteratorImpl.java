@@ -97,7 +97,7 @@ public class VersionIteratorImpl implements VersionIterator {
     /**
      * {@inheritDoc}
      */
-    public long getPos() {
+    public long getPosition() {
         return pos;
     }
 

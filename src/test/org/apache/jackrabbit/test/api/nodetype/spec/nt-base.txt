@@ -8,22 +8,22 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-PropertyDef
+PropertyDefinition
   Name jcr:mixinTypes
   RequiredType NAME
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion COMPUTE
   Protected true
   Multiple true
-PropertyDef
+PropertyDefinition
   Name jcr:primaryType
   RequiredType NAME
   ValueConstraints []
   DefaultValues null
-  AutoCreate true
+  AutoCreated true
   Mandatory true
   OnParentVersion COMPUTE
   Protected true

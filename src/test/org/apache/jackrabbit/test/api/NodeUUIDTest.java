@@ -131,64 +131,6 @@ public class NodeUUIDTest extends AbstractJCRTest {
     }
 
     /**
-     * Moves a node using {@link javax.jcr.Session#move(String, String)} and
-     * places a new <b>referenceable</b> node at the source position with same
-     * name. A second session tries to save changes made to the moved node using
-     * {@link Node#save()}. <br/> Procedure: <ul> <li>Create node 1 and node 2
-     * with session 1</li> <li>Session 2 gets a reference to node 1</li>
-     * <li>Session 1 moves node 1 under node 2 , saves</li> <li>session 1 adds
-     * new referencable node previous position of node 1</li> <li>session 2
-     * modifes node, saves</li> </ul> This should fail since the node that
-     * replaces the moved node is referencable. Should throw {@link
-     * javax.jcr.InvalidItemStateException}. <br><br>Prerequisites: <ul>
-     * <li><code>javax.jcr.tck.nodetype</code> must allow children of
-     * itself.</li> <li><code>javax.jcr.tck.propertyname1</code> name of a
-     * property that can be modified in <code>javax.jcr.tck.nodetype</code> for
-     * testing</li> <li><code>javax.jcr.tck.NodeUUIDTest.nodetype2</code> must
-     * have the mixin type <code>mix:referenceable</code> assigned.</li> </ul>
-     */
-    public void testSaveReplacedNotRefNodeByRefNode() throws RepositoryException, NotExecutableException {
-        checkMixReferenceable();
-        // get default workspace test root node using superuser session
-        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
-
-        // create a node
-        Node parentNode = defaultRootNode.addNode(nodeName1, testNodeType);
-
-        // create a moving node
-        Node movingNode = defaultRootNode.addNode(nodeName2, testNodeType);
-
-        // save the new nodes
-        defaultRootNode.save();
-
-        // get the moving node with session 2
-        Session testSession = helper.getReadWriteSession();
-        Node movingNodeSession2 = (Node) testSession.getItem(movingNode.getPath());
-
-        //move the node with session 1
-        superuser.move(movingNode.getPath(), parentNode.getPath() + "/" + nodeName3);
-
-        // repace it it with a referenciable node
-        parentNode.addNode(nodeName2, getProperty("nodetype2"));
-
-        // make the move and adding of new node persistent with session 1
-        defaultRootNode.save();
-
-        // modify some prop of the moved node
-        movingNodeSession2.setProperty(propertyName1, "test");
-
-        // save it
-        try {
-            movingNodeSession2.save();
-            fail("Saving a unreferenceable Node using Node.save() that has been moved and replaced by a referenceable node in the meantime should" +
-                    " throw InvalidItemStateException");
-        } catch (InvalidItemStateException e) {
-            // ok, what's expected
-        }
-        testSession.logout();
-    }
-
-    /**
      * Checks if the repository supports the mixin mix:Referenceable otherwise a
      * {@link NotExecutableException} is thrown.
      *

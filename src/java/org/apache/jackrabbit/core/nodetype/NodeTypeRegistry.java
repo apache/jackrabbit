@@ -77,7 +77,7 @@ public class NodeTypeRegistry implements Constants {
     private final HashMap registeredNTDefs;
 
     // definition of the root node
-    private final ChildNodeDef rootNodeDef;
+    private final NodeDef rootNodeDef;
 
     // map of id's and property definitions
     private final HashMap propDefs;
@@ -132,14 +132,16 @@ public class NodeTypeRegistry implements Constants {
             throws RepositoryException {
         this.nsReg = nsReg;
         this.ntStore = ntStore;
-        customNodeTypesResource = new FileSystemResource(this.ntStore, CUSTOM_NODETYPES_RESOURCE_NAME);
+        customNodeTypesResource =
+                new FileSystemResource(this.ntStore, CUSTOM_NODETYPES_RESOURCE_NAME);
         try {
             // make sure path to resource exists
             if (!customNodeTypesResource.exists()) {
                 customNodeTypesResource.makeParentDirs();
             }
         } catch (FileSystemException fse) {
-            String error = "internal error: invalid resource: " + customNodeTypesResource.getPath();
+            String error = "internal error: invalid resource: "
+                    + customNodeTypesResource.getPath();
             log.debug(error);
             throw new RepositoryException(error, fse);
         }
@@ -162,15 +164,20 @@ public class NodeTypeRegistry implements Constants {
         builtInNTDefs = new NodeTypeDefStore();
         InputStream in = null;
         try {
-            in = getClass().getClassLoader().getResourceAsStream(BUILTIN_NODETYPES_RESOURCE_PATH);
+            in = getClass().getClassLoader().getResourceAsStream(
+                    BUILTIN_NODETYPES_RESOURCE_PATH);
             builtInNTDefs.load(in);
             internalRegister(builtInNTDefs.all());
         } catch (IOException ioe) {
-            String error = "internal error: failed to read built-in node type definitions stored in " + BUILTIN_NODETYPES_RESOURCE_PATH;
+            String error =
+                    "internal error: failed to read built-in node type definitions stored in "
+                    + BUILTIN_NODETYPES_RESOURCE_PATH;
             log.debug(error);
             throw new RepositoryException(error, ioe);
         } catch (InvalidNodeTypeDefException intde) {
-            String error = "internal error: invalid built-in node type definition stored in " + BUILTIN_NODETYPES_RESOURCE_PATH;
+            String error =
+                    "internal error: invalid built-in node type definition stored in "
+                    + BUILTIN_NODETYPES_RESOURCE_PATH;
             log.debug(error);
             throw new RepositoryException(error, intde);
         } finally {
@@ -195,7 +202,9 @@ public class NodeTypeRegistry implements Constants {
                 in = customNodeTypesResource.getInputStream();
             }
         } catch (FileSystemException fse) {
-            String error = "internal error: failed to access custom node type definitions stored in " + customNodeTypesResource.getPath();
+            String error =
+                    "internal error: failed to access custom node type definitions stored in "
+                    + customNodeTypesResource.getPath();
             log.debug(error);
             throw new RepositoryException(error, fse);
         }
@@ -206,11 +215,15 @@ public class NodeTypeRegistry implements Constants {
                 customNTDefs.load(in);
                 internalRegister(customNTDefs.all());
             } catch (IOException ioe) {
-                String error = "internal error: failed to read custom node type definitions stored in " + customNodeTypesResource.getPath();
+                String error =
+                        "internal error: failed to read custom node type definitions stored in "
+                        + customNodeTypesResource.getPath();
                 log.debug(error);
                 throw new RepositoryException(error, ioe);
             } catch (InvalidNodeTypeDefException intde) {
-                String error = "internal error: invalid custom node type definition stored in " + customNodeTypesResource.getPath();
+                String error =
+                        "internal error: invalid custom node type definition stored in "
+                        + customNodeTypesResource.getPath();
                 log.debug(error);
                 throw new RepositoryException(error, intde);
             } finally {
@@ -223,8 +236,8 @@ public class NodeTypeRegistry implements Constants {
         }
     }
 
-    private static ChildNodeDef createRootNodeDef() {
-        ChildNodeDef def = new ChildNodeDef();
+    private static NodeDef createRootNodeDef() {
+        NodeDef def = new NodeDef();
 
         // FIXME need a fake declaring node type
         def.setDeclaringNodeType(new QName(NS_DEFAULT_URI, ""));
@@ -233,8 +246,8 @@ public class NodeTypeRegistry implements Constants {
         def.setMandatory(true);
         def.setProtected(false);
         def.setOnParentVersion(OnParentVersionAction.VERSION);
-        def.setAllowSameNameSibs(false);
-        def.setAutoCreate(true);
+        def.setAllowsSameNameSiblings(false);
+        def.setAutoCreated(true);
         return def;
     }
 
@@ -319,9 +332,9 @@ public class NodeTypeRegistry implements Constants {
             PropDefId id = new PropDefId(def);
             propDefs.put(id, def);
         }
-        ChildNodeDef[] nda = ntd.getChildNodeDefs();
+        NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
-            ChildNodeDef def = nda[i];
+            NodeDef def = nda[i];
             NodeDefId id = new NodeDefId(def);
             nodeDefs.put(id, def);
         }
@@ -335,7 +348,8 @@ public class NodeTypeRegistry implements Constants {
             throw new NoSuchNodeTypeException(name.toString());
         }
         if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString() + ": can't unregister built-in node type.");
+            throw new RepositoryException(name.toString()
+                    + ": can't unregister built-in node type.");
         }
 
         NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
@@ -364,7 +378,7 @@ public class NodeTypeRegistry implements Constants {
             PropDefId id = new PropDefId(pda[i]);
             propDefs.remove(id);
         }
-        ChildNodeDef[] nda = ntd.getChildNodeDefs();
+        NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
             NodeDefId id = new NodeDefId(nda[i]);
             nodeDefs.remove(id);
@@ -377,11 +391,15 @@ public class NodeTypeRegistry implements Constants {
             out = customNodeTypesResource.getOutputStream();
             customNTDefs.store(out, nsReg);
         } catch (IOException ioe) {
-            String error = "internal error: failed to persist custom node type definitions to " + customNodeTypesResource.getPath();
+            String error =
+                    "internal error: failed to persist custom node type definitions to "
+                    + customNodeTypesResource.getPath();
             log.debug(error);
             throw new RepositoryException(error, ioe);
         } catch (FileSystemException fse) {
-            String error = "internal error: failed to persist custom node type definitions to " + customNodeTypesResource.getPath();
+            String error =
+                    "internal error: failed to persist custom node type definitions to "
+                    + customNodeTypesResource.getPath();
             log.debug(error);
             throw new RepositoryException(error, fse);
         } finally {
@@ -421,7 +439,8 @@ public class NodeTypeRegistry implements Constants {
      */
     private void notifyRegistered(QName ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
+        NodeTypeRegistryListener[] la =
+                new NodeTypeRegistryListener[listeners.size()];
         Iterator iter = listeners.values().iterator();
         int cnt = 0;
         while (iter.hasNext()) {
@@ -439,7 +458,8 @@ public class NodeTypeRegistry implements Constants {
      */
     private void notifyReRegistered(QName ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
+        NodeTypeRegistryListener[] la =
+                new NodeTypeRegistryListener[listeners.size()];
         Iterator iter = listeners.values().iterator();
         int cnt = 0;
         while (iter.hasNext()) {
@@ -457,7 +477,8 @@ public class NodeTypeRegistry implements Constants {
      */
     private void notifyUnregistered(QName ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
+        NodeTypeRegistryListener[] la =
+                new NodeTypeRegistryListener[listeners.size()];
         Iterator iter = listeners.values().iterator();
         int cnt = 0;
         while (iter.hasNext()) {
@@ -505,7 +526,8 @@ public class NodeTypeRegistry implements Constants {
                     throw new InvalidNodeTypeDefException(msg);
                 }
                 if (!registeredNTDefs.containsKey(supertypes[i])) {
-                    String msg = "[" + name + "] invalid supertype: " + supertypes[i];
+                    String msg = "[" + name + "] invalid supertype: "
+                            + supertypes[i];
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
@@ -576,7 +598,7 @@ public class NodeTypeRegistry implements Constants {
                 throw new InvalidNodeTypeDefException(msg);
             }
             // check that auto-created properties specify a name
-            if (pd.definesResidual() && pd.isAutoCreate()) {
+            if (pd.definesResidual() && pd.isAutoCreated()) {
                 String msg = "[" + name + "#" + pd.getName()
                         + "] auto-created properties must specify a name";
                 log.debug(msg);
@@ -584,7 +606,7 @@ public class NodeTypeRegistry implements Constants {
             }
             // check that auto-created properties specify a type
             if (pd.getRequiredType() == PropertyType.UNDEFINED
-                    && pd.isAutoCreate()) {
+                    && pd.isAutoCreated()) {
                 String msg = "[" + name + "#" + pd.getName()
                         + "] auto-created properties must specify a type";
                 log.debug(msg);
@@ -613,7 +635,7 @@ public class NodeTypeRegistry implements Constants {
                 // no default values specified
                 if (checkAutoCreatePropHasDefault) {
                     // auto-created properties must have a default value
-                    if (pd.isAutoCreate()) {
+                    if (pd.isAutoCreated()) {
                         String msg = "[" + name + "#" + pd.getName()
                                 + "] auto-created property must have a default value";
                         log.debug(msg);
@@ -674,9 +696,9 @@ public class NodeTypeRegistry implements Constants {
         }
 
         // validate child-node definitions
-        ChildNodeDef[] cnda = ntd.getChildNodeDefs();
+        NodeDef[] cnda = ntd.getChildNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
-            ChildNodeDef cnd = cnda[i];
+            NodeDef cnd = cnda[i];
             /**
              * sanity check:
              * make sure declaring node type matches name of node type definition
@@ -688,7 +710,7 @@ public class NodeTypeRegistry implements Constants {
                 throw new InvalidNodeTypeDefException(msg);
             }
             // check that auto-created child-nodes specify a name
-            if (cnd.definesResidual() && cnd.isAutoCreate()) {
+            if (cnd.definesResidual() && cnd.isAutoCreated()) {
                 String msg = "[" + name + "#" + cnd.getName()
                         + "] auto-created child-nodes must specify a name";
                 log.debug(msg);
@@ -696,7 +718,7 @@ public class NodeTypeRegistry implements Constants {
             }
             // check that auto-created child-nodes specify a default primary type
             if (cnd.getDefaultPrimaryType() == null
-                    && cnd.isAutoCreate()) {
+                    && cnd.isAutoCreated()) {
                 String msg = "[" + name + "#" + cnd.getName()
                         + "] auto-created child-nodes must specify a default primary type";
                 log.debug(msg);
@@ -737,7 +759,7 @@ public class NodeTypeRegistry implements Constants {
                         ent = EffectiveNodeType.create(this, ntd);
                         defaultENT = ent;
                     }
-                    if (cnd.isAutoCreate()) {
+                    if (cnd.isAutoCreated()) {
                         /**
                          * check for circularity through default primary types
                          * of auto-created child nodes (node type 'a' defines
@@ -860,7 +882,7 @@ public class NodeTypeRegistry implements Constants {
     /**
      * @return
      */
-    public ChildNodeDef getRootNodeDef() {
+    public NodeDef getRootNodeDef() {
         return rootNodeDef;
     }
 
@@ -1025,7 +1047,8 @@ public class NodeTypeRegistry implements Constants {
         }
     }
 
-    void checkForCircularNodeAutoCreation(EffectiveNodeType childNodeENT, Stack definingParentNTs)
+    void checkForCircularNodeAutoCreation(EffectiveNodeType childNodeENT,
+                                          Stack definingParentNTs)
             throws InvalidNodeTypeDefException {
         // check for circularity through default node types of auto-created child nodes
         // (node type 'a' defines auto-created child node with default node type 'a')
@@ -1046,11 +1069,12 @@ public class NodeTypeRegistry implements Constants {
                 buf.append("--> ");
                 buf.append("node type ");
                 buf.append(nt);
-                throw new InvalidNodeTypeDefException("circular node auto-creation detected: " + buf.toString());
+                throw new InvalidNodeTypeDefException("circular node auto-creation detected: "
+                        + buf.toString());
             }
         }
 
-        ChildNodeDef[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
+        NodeDef[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
         for (int i = 0; i < nodeDefs.length; i++) {
             QName dnt = nodeDefs[i].getDefaultPrimaryType();
             QName definingNT = nodeDefs[i].getDeclaringNodeType();
@@ -1058,11 +1082,13 @@ public class NodeTypeRegistry implements Constants {
                 if (dnt != null) {
                     // check recursively
                     definingParentNTs.push(definingNT);
-                    checkForCircularNodeAutoCreation(getEffectiveNodeType(dnt), definingParentNTs);
+                    checkForCircularNodeAutoCreation(getEffectiveNodeType(dnt),
+                            definingParentNTs);
                     definingParentNTs.pop();
                 }
             } catch (NoSuchNodeTypeException nsnte) {
-                String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
+                String msg = definingNT
+                        + " defines invalid default node type for child node " + nodeDefs[i].getName();
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg, nsnte);
             }
@@ -1197,7 +1223,8 @@ public class NodeTypeRegistry implements Constants {
             throw new NoSuchNodeTypeException(name.toString());
         }
         if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString() + ": can't unregister built-in node type.");
+            throw new RepositoryException(name.toString()
+                    + ": can't unregister built-in node type.");
         }
 
         /**
@@ -1207,7 +1234,8 @@ public class NodeTypeRegistry implements Constants {
         Set dependentNTs = getDependentNodeTypes(name);
         if (dependentNTs.size() > 0) {
             StringBuffer msg = new StringBuffer();
-            msg.append(name + " could not be removed because the following node types are referencing it: ");
+            msg.append(name
+                    + " could not be removed because the following node types are referencing it: ");
             Iterator iterator = dependentNTs.iterator();
             while (iterator.hasNext()) {
                 msg.append(iterator.next());
@@ -1260,7 +1288,8 @@ public class NodeTypeRegistry implements Constants {
             throw new NoSuchNodeTypeException(name.toString());
         }
         if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString() + ": can't reregister built-in node type.");
+            throw new RepositoryException(name.toString()
+                    + ": can't reregister built-in node type.");
         }
 
         /**
@@ -1379,7 +1408,8 @@ public class NodeTypeRegistry implements Constants {
      * @return
      * @throws NoSuchNodeTypeException
      */
-    public synchronized NodeTypeDef getNodeTypeDef(QName nodeTypeName) throws NoSuchNodeTypeException {
+    public synchronized NodeTypeDef getNodeTypeDef(QName nodeTypeName)
+            throws NoSuchNodeTypeException {
         if (!registeredNTDefs.containsKey(nodeTypeName)) {
             throw new NoSuchNodeTypeException(nodeTypeName.toString());
         }
@@ -1406,14 +1436,14 @@ public class NodeTypeRegistry implements Constants {
      * @param id
      * @return
      */
-    public ChildNodeDef getNodeDef(NodeDefId id) {
-        ChildNodeDef def = (ChildNodeDef) nodeDefs.get(id);
+    public NodeDef getNodeDef(NodeDefId id) {
+        NodeDef def = (NodeDef) nodeDefs.get(id);
         if (def == null) {
             return null;
         }
         // return clone to make sure nobody messes around with the 'real' definition
         try {
-            return (ChildNodeDef) def.clone();
+            return (NodeDef) def.clone();
         } catch (CloneNotSupportedException e) {
             // should never get here
             log.fatal("internal error", e);
@@ -1442,13 +1472,13 @@ public class NodeTypeRegistry implements Constants {
 
     //----------------------------------------------------------< diagnostics >
     /**
-     * Dumps the state of this <code>NodeTypeManager</code> instance.
+     * Dumps the state of this <code>NodeTypeRegistry</code> instance.
      *
      * @param ps
      * @throws RepositoryException
      */
     void dump(PrintStream ps) throws RepositoryException {
-        ps.println("NodeTypeManager (" + this + ")");
+        ps.println("NodeTypeRegistry (" + this + ")");
         ps.println();
         ps.println("Registered NodeTypes:");
         ps.println();
@@ -1466,7 +1496,7 @@ public class NodeTypeRegistry implements Constants {
             ps.println("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
             PropDef[] pd = ntd.getPropertyDefs();
             for (int i = 0; i < pd.length; i++) {
-                ps.print("\tPropertyDef");
+                ps.print("\tPropertyDefinition");
                 ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") id=" + new PropDefId(pd[i]));
                 ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
                 String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
@@ -1497,15 +1527,15 @@ public class NodeTypeRegistry implements Constants {
                     }
                 }
                 ps.println("\t\tDefaultValue\t" + defaultValues.toString());
-                ps.println("\t\tAutoCreate\t" + pd[i].isAutoCreate());
+                ps.println("\t\tAutoCreated\t" + pd[i].isAutoCreated());
                 ps.println("\t\tMandatory\t" + pd[i].isMandatory());
                 ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd[i].getOnParentVersion()));
                 ps.println("\t\tProtected\t" + pd[i].isProtected());
                 ps.println("\t\tMultiple\t" + pd[i].isMultiple());
             }
-            ChildNodeDef[] nd = ntd.getChildNodeDefs();
+            NodeDef[] nd = ntd.getChildNodeDefs();
             for (int i = 0; i < nd.length; i++) {
-                ps.print("\tNodeDef");
+                ps.print("\tNodeDefinition");
                 ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + new NodeDefId(nd[i]));
                 ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
                 QName[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
@@ -1518,11 +1548,11 @@ public class NodeTypeRegistry implements Constants {
                 if (defPrimaryType != null) {
                     ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
                 }
-                ps.println("\n\t\tAutoCreate\t" + nd[i].isAutoCreate());
+                ps.println("\n\t\tAutoCreated\t" + nd[i].isAutoCreated());
                 ps.println("\t\tMandatory\t" + nd[i].isMandatory());
                 ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(nd[i].getOnParentVersion()));
                 ps.println("\t\tProtected\t" + nd[i].isProtected());
-                ps.println("\t\tAllowSameNameSibs\t" + nd[i].allowSameNameSibs());
+                ps.println("\t\tAllowsSameNameSiblings\t" + nd[i].allowsSameNameSiblings());
             }
         }
         ps.println();

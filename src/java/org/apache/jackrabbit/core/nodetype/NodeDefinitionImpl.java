@@ -22,17 +22,18 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
 /**
- * A <code>NodeDefImpl</code> ...
+ * A <code>NodeDefinitionImpl</code> ...
  */
-public class NodeDefImpl extends ItemDefImpl implements NodeDef {
+public class NodeDefinitionImpl extends ItemDefinitionImpl
+        implements NodeDefinition {
 
-    private static Logger log = Logger.getLogger(NodeDefImpl.class);
+    private static Logger log = Logger.getLogger(NodeDefinitionImpl.class);
 
-    private final ChildNodeDef nodeDef;
+    private final NodeDef nodeDef;
 
 
     /**
@@ -42,12 +43,13 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      * @param ntMgr      node type manager
      * @param nsResolver namespace resolver
      */
-    NodeDefImpl(ChildNodeDef nodeDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+    NodeDefinitionImpl(NodeDef nodeDef, NodeTypeManagerImpl ntMgr,
+                       NamespaceResolver nsResolver) {
         super(nodeDef, ntMgr, nsResolver);
         this.nodeDef = nodeDef;
     }
 
-    public ChildNodeDef unwrap() {
+    public NodeDef unwrap() {
         return nodeDef;
     }
 
@@ -95,8 +97,8 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * {@inheritDoc}
      */
-    public boolean allowSameNameSibs() {
-        return nodeDef.allowSameNameSibs();
+    public boolean allowsSameNameSiblings() {
+        return nodeDef.allowsSameNameSiblings();
     }
 }
 

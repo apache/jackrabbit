@@ -17,17 +17,17 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
@@ -69,9 +69,9 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -96,7 +96,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     protected final NodeTypeImpl nodeType;
 
-    protected NodeDef definition;
+    protected NodeDefinition definition;
 
     // flag set in status passed to getOrCreateProperty if property was created
     protected static final short CREATED = 0;
@@ -113,7 +113,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     protected NodeImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                       NodeState state, NodeDef definition,
+                       NodeState state, NodeDefinition definition,
                        ItemLifeCycleListener[] listeners)
             throws RepositoryException {
         super(itemMgr, session, id, state, listeners);
@@ -288,7 +288,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     protected InternalValue[] computeSystemGeneratedPropertyValues(QName name,
-                                                                   PropertyDefImpl def)
+                                                                   PropertyDefinitionImpl def)
             throws RepositoryException {
         InternalValue[] genValues = null;
 
@@ -365,7 +365,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     *
      * @param name
      * @param type
      * @param multiValued
@@ -373,8 +372,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
-     * @throws RepositoryException if another error occurs
-     */ 
+     * @throws RepositoryException          if another error occurs
+     */
     protected PropertyImpl getOrCreateProperty(String name, int type,
                                                boolean multiValued,
                                                BitSet status)
@@ -391,7 +390,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     *
      * @param name
      * @param type
      * @param multiValued
@@ -399,7 +397,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
-     * @throws RepositoryException if another error occurs
+     * @throws RepositoryException          if another error occurs
      */
     protected synchronized PropertyImpl getOrCreateProperty(QName name, int type,
                                                             boolean multiValued,
@@ -418,14 +416,14 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // does not exist yet:
         // find definition for the specified property and create property
-        PropertyDefImpl def = getApplicablePropertyDef(name, type, multiValued);
+        PropertyDefinitionImpl def = getApplicablePropertyDefinition(name, type, multiValued);
         PropertyImpl prop = createChildProperty(name, type, def);
         status.set(CREATED);
         return prop;
     }
 
     protected synchronized PropertyImpl createChildProperty(QName name, int type,
-                                                            PropertyDefImpl def)
+                                                            PropertyDefinitionImpl def)
             throws RepositoryException {
         // check for name collisions with existing child nodes
         if (((NodeState) state).hasChildNodeEntry(name)) {
@@ -469,7 +467,7 @@ public class NodeImpl extends ItemImpl implements Node {
         return prop;
     }
 
-    protected synchronized NodeImpl createChildNode(QName name, NodeDefImpl def,
+    protected synchronized NodeImpl createChildNode(QName name, NodeDefinitionImpl def,
                                                     NodeTypeImpl nodeType, String uuid)
             throws RepositoryException {
         String parentUUID = ((NodeState) state).getUUID();
@@ -504,16 +502,16 @@ public class NodeImpl extends ItemImpl implements Node {
         thisState.addChildNodeEntry(name, nodeState.getUUID());
 
         // add 'auto-create' properties defined in node type
-        PropertyDef[] pda = nodeType.getAutoCreatePropertyDefs();
+        PropertyDefinition[] pda = nodeType.getAutoCreatedPropertyDefinitions();
         for (int i = 0; i < pda.length; i++) {
-            PropertyDefImpl pd = (PropertyDefImpl) pda[i];
+            PropertyDefinitionImpl pd = (PropertyDefinitionImpl) pda[i];
             node.createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
         }
 
         // recursively add 'auto-create' child nodes defined in node type
-        NodeDef[] nda = nodeType.getAutoCreateNodeDefs();
+        NodeDefinition[] nda = nodeType.getAutoCreatedNodeDefinitions();
         for (int i = 0; i < nda.length; i++) {
-            NodeDefImpl nd = (NodeDefImpl) nda[i];
+            NodeDefinitionImpl nd = (NodeDefinitionImpl) nda[i];
             node.createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
         }
 
@@ -589,7 +587,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     protected void onRedefine(NodeDefId defId) throws RepositoryException {
-        NodeDefImpl newDef = session.getNodeTypeManager().getNodeDef(defId);
+        NodeDefinitionImpl newDef = session.getNodeTypeManager().getNodeDefinition(defId);
         // modify the state of 'this', i.e. the target node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         // set id of new definition
@@ -714,9 +712,9 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(msg, e);
         }
 
-        NodeDefImpl def;
+        NodeDefinitionImpl def;
         try {
-            def = getApplicableChildNodeDef(nodeName, nodeType == null ? null : nodeType.getQName());
+            def = getApplicableChildNodeDefinition(nodeName, nodeType == null ? null : nodeType.getQName());
         } catch (RepositoryException re) {
             String msg = "no definition found in parent node's node type for new node";
             log.debug(msg);
@@ -728,24 +726,6 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check for name collisions
-/*
-        try {
-            Item item = itemMgr.getItem(nodePath);
-            if (!item.isNode()) {
-                // there's already a property with that name
-                throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
-            } else {
-                // there's already a node with that name
-                // check same-name sibling setting of both new and existing node
-                if (!def.allowSameNameSibs()
-                        || !((NodeImpl) item).getDefinition().allowSameNameSibs()) {
-                    throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
-                }
-            }
-        } catch (PathNotFoundException pnfe) {
-            // no name collision
-        }
-*/
         NodeState thisState = (NodeState) state;
         if (thisState.hasPropertyEntry(nodeName)) {
             // there's already a property with that name
@@ -755,12 +735,12 @@ public class NodeImpl extends ItemImpl implements Node {
         if (cne != null) {
             // there's already a child node entry with that name;
             // check same-name sibling setting of new node
-            if (!def.allowSameNameSibs()) {
+            if (!def.allowsSameNameSiblings()) {
                 throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
             }
             // check same-name sibling setting of existing node
             NodeId newId = new NodeId(cne.getUUID());
-            if (!((NodeImpl) itemMgr.getItem(newId)).getDefinition().allowSameNameSibs()) {
+            if (!((NodeImpl) itemMgr.getItem(newId)).getDefinition().allowsSameNameSiblings()) {
                 throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
             }
         }
@@ -784,7 +764,7 @@ public class NodeImpl extends ItemImpl implements Node {
             prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), JCR_MIXINTYPES));
         } else {
             // find definition for the jcr:mixinTypes property and create property
-            PropertyDefImpl def = getApplicablePropertyDef(JCR_MIXINTYPES, PropertyType.NAME, true);
+            PropertyDefinitionImpl def = getApplicablePropertyDefinition(JCR_MIXINTYPES, PropertyType.NAME, true);
             prop = createChildProperty(JCR_MIXINTYPES, PropertyType.NAME, def);
         }
 
@@ -837,12 +817,13 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return
      * @throws ConstraintViolationException if no applicable child node definition
      *                                      could be found
-     * @throws RepositoryException if another error occurs
+     * @throws RepositoryException          if another error occurs
      */
-    protected NodeDefImpl getApplicableChildNodeDef(QName nodeName, QName nodeTypeName)
+    protected NodeDefinitionImpl getApplicableChildNodeDefinition(QName nodeName,
+                                                                  QName nodeTypeName)
             throws ConstraintViolationException, RepositoryException {
-        ChildNodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(nodeName, nodeTypeName);
-        return session.getNodeTypeManager().getNodeDef(new NodeDefId(cnd));
+        NodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(nodeName, nodeTypeName);
+        return session.getNodeTypeManager().getNodeDefinition(new NodeDefId(cnd));
     }
 
     /**
@@ -855,14 +836,14 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
-     * @throws RepositoryException if another error occurs
+     * @throws RepositoryException          if another error occurs
      */
-    protected PropertyDefImpl getApplicablePropertyDef(QName propertyName,
-                                                       int type,
-                                                       boolean multiValued)
+    protected PropertyDefinitionImpl getApplicablePropertyDefinition(QName propertyName,
+                                                                     int type,
+                                                                     boolean multiValued)
             throws ConstraintViolationException, RepositoryException {
         PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(propertyName, type, multiValued);
-        return session.getNodeTypeManager().getPropDef(new PropDefId(pd));
+        return session.getNodeTypeManager().getPropertyDefinition(new PropDefId(pd));
     }
 
     protected void makePersistent() {
@@ -1002,9 +983,9 @@ public class NodeImpl extends ItemImpl implements Node {
             setMixinTypesProperty(mixins);
 
             // add 'auto-create' properties defined in mixin type
-            PropertyDef[] pda = mixin.getAutoCreatePropertyDefs();
+            PropertyDefinition[] pda = mixin.getAutoCreatedPropertyDefinitions();
             for (int i = 0; i < pda.length; i++) {
-                PropertyDefImpl pd = (PropertyDefImpl) pda[i];
+                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) pda[i];
                 // make sure that the property is not already defined by primary type
                 // or existing mixin's
                 NodeTypeImpl declaringNT = (NodeTypeImpl) pd.getDeclaringNodeType();
@@ -1014,9 +995,9 @@ public class NodeImpl extends ItemImpl implements Node {
             }
 
             // recursively add 'auto-create' child nodes defined in mixin type
-            NodeDef[] nda = mixin.getAutoCreateNodeDefs();
+            NodeDefinition[] nda = mixin.getAutoCreatedNodeDefinitions();
             for (int i = 0; i < nda.length; i++) {
-                NodeDefImpl nd = (NodeDefImpl) nda[i];
+                NodeDefinitionImpl nd = (NodeDefinitionImpl) nda[i];
                 // make sure that the child node is not already defined by primary type
                 // or existing mixin's
                 NodeTypeImpl declaringNT = (NodeTypeImpl) nd.getDeclaringNodeType();
@@ -1115,8 +1096,8 @@ public class NodeImpl extends ItemImpl implements Node {
         setMixinTypesProperty(remainingMixins);
 
         // shortcut
-        if (mixin.getChildNodeDefs().length == 0
-                && mixin.getPropertyDefs().length == 0) {
+        if (mixin.getChildNodeDefinitions().length == 0
+                && mixin.getPropertyDefinitions().length == 0) {
             // the node type has neither property nor child node definitions,
             // i.e. we're done
             return;
@@ -1829,7 +1810,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, Value[] values)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         int type;
         if (values == null || values.length == 0
                 || values[0] == null) {
@@ -1845,7 +1826,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, Value[] values, int type)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1879,7 +1860,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, String[] values)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         /**
          * if the target property is not of type STRING then a
          * best-effort conversion is tried
@@ -1892,7 +1873,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, String[] values, int type)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1926,7 +1907,20 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, String value)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
+        /**
+         * if the target property is not of type STRING then a
+         * best-effort conversion is tried
+         */
+        return setProperty(name, value, PropertyType.UNDEFINED);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Property setProperty(String name, String value, int type)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1945,7 +1939,7 @@ public class NodeImpl extends ItemImpl implements Node {
          * best-effort conversion is tried
          */
         BitSet status = new BitSet();
-        PropertyImpl prop = getOrCreateProperty(name, PropertyType.UNDEFINED, false, status);
+        PropertyImpl prop = getOrCreateProperty(name, type, false, status);
         try {
             prop.setValue(value);
         } catch (RepositoryException re) {
@@ -1962,9 +1956,9 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public Property setProperty(String name, Value value)
+    public Property setProperty(String name, Value value, int type)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -1977,8 +1971,6 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check lock status
         checkLock();
-
-        int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
@@ -1998,9 +1990,19 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
+    public Property setProperty(String name, Value value)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
+        return setProperty(name, value, type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public Property setProperty(String name, InputStream value)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2034,7 +2036,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, boolean value)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2068,7 +2070,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, double value)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2102,7 +2104,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, long value)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2136,7 +2138,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, Calendar value)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2170,7 +2172,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, Node value)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2206,28 +2208,6 @@ public class NodeImpl extends ItemImpl implements Node {
             throws PathNotFoundException, RepositoryException {
         // check state of this instance
         sanityCheck();
-/*
-        Path nodePath;
-        try {
-            nodePath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
-        } catch (MalformedPathException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-
-        try {
-            Item item = itemMgr.getItem(nodePath);
-            if (item.isNode()) {
-                return (Node) item;
-            } else {
-                // there's a property with that name, no child node though
-                throw new PathNotFoundException(relPath);
-            }
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(relPath);
-        }
-*/
         NodeId id = resolveRelativeNodePath(relPath);
         if (id == null) {
             throw new PathNotFoundException(relPath);
@@ -2300,28 +2280,6 @@ public class NodeImpl extends ItemImpl implements Node {
             throws PathNotFoundException, RepositoryException {
         // check state of this instance
         sanityCheck();
-/*
-        Path propPath;
-        try {
-            propPath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
-        } catch (MalformedPathException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-
-        try {
-            Item item = itemMgr.getItem(propPath);
-            if (!item.isNode()) {
-                return (Property) item;
-            } else {
-                // there's a child node with that name, no property though
-                throw new PathNotFoundException(relPath);
-            }
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(relPath);
-        }
-*/
         PropertyId id = resolveRelativePropertyPath(relPath);
         if (id == null) {
             throw new PathNotFoundException(relPath);
@@ -2337,14 +2295,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public boolean hasNode(String relPath) throws RepositoryException {
-/*
-        try {
-            getNode(relPath);
-            return true;
-        } catch (PathNotFoundException pnfe) {
-            return false;
-        }
-*/
         // check state of this instance
         sanityCheck();
 
@@ -2462,7 +2412,8 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public boolean canAddMixin(String mixinName) throws RepositoryException {
+    public boolean canAddMixin(String mixinName)
+            throws NoSuchNodeTypeException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2530,14 +2481,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public boolean hasProperty(String relPath) throws RepositoryException {
-/*
-        try {
-            getProperty(relPath);
-            return true;
-        } catch (PathNotFoundException pnfe) {
-            return false;
-        }
-*/
         // check state of this instance
         sanityCheck();
 
@@ -2555,7 +2498,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public NodeDef getDefinition() throws RepositoryException {
+    public NodeDefinition getDefinition() throws RepositoryException {
         return definition;
     }
 
@@ -2778,16 +2721,15 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public void merge(String srcWorkspace, boolean bestEffort)
-            throws UnsupportedRepositoryOperationException,
-            NoSuchWorkspaceException, AccessDeniedException, VersionException,
-            LockException, InvalidItemStateException, RepositoryException {
+    public NodeIterator merge(String srcWorkspace, boolean bestEffort)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            VersionException, LockException, InvalidItemStateException,
+            RepositoryException {
 
         List failedIds = new ArrayList();
         internalMerge(srcWorkspace, failedIds, bestEffort);
 
-        // enable for 0.16.4
-        // return new LazyItemIterator(itemMgr, failedIds);
+        return new LazyItemIterator(itemMgr, failedIds);
     }
 
     public void cancelMerge(Version version)
@@ -2849,7 +2791,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkLock();
 
         // check if 'own' version
-        if (!((VersionImpl) version).getContainingVersionHistory().isSame(getVersionHistory())) {
+        if (!((VersionImpl) version).getContainingHistory().isSame(getVersionHistory())) {
             throw new VersionException("Unable to restore version. Not same version history.");
         }
 
@@ -3614,9 +3556,9 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         for (int j = 0; j < mixinNames.length; j++) {
             NodeTypeImpl mixin = ntMgr.getNodeType(mixinNames[j]);
-            PropertyDef[] pda = mixin.getAutoCreatePropertyDefs();
+            PropertyDefinition[] pda = mixin.getAutoCreatedPropertyDefinitions();
             for (int i = 0; i < pda.length; i++) {
-                PropertyDefImpl pd = (PropertyDefImpl) pda[i];
+                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) pda[i];
                 if (!hasProperty(pd.getQName())) {
                     createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
                 }

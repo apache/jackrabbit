@@ -20,7 +20,7 @@ import javax.jcr.query.Query;
 import javax.jcr.RepositoryException;
 
 /**
- * Test the method {@link Query#getPersistentQueryPath()}.
+ * Test the method {@link javax.jcr.query.Query#getStoredQueryPath()}.
  *
  * @tck.config testroot node that allows to create a child node of type nt:query.
  * @tck.config nodename1 name of an nt:query node that can becreated below the
@@ -34,16 +34,16 @@ import javax.jcr.RepositoryException;
 public class GetPersistentQueryPathTest extends AbstractQueryTest {
 
     /**
-     * Tests if {@link Query#getPersistentQueryPath()} returns the correct
+     * Tests if {@link Query#getStoredQueryPath()} returns the correct
      * path where the query had been saved.
      */
     public void testGetPersistentQueryPath() throws RepositoryException {
         String statement = "/" + jcrRoot;
         Query q = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         String path = testRoot + "/" + nodeName1;
-        q.save(path);
+        q.storeAsNode(path);
         assertEquals("Query.getPersistentQueryPath() does not return the correct path.",
                 path,
-                q.getPersistentQueryPath());
+                q.getStoredQueryPath());
     }
 }

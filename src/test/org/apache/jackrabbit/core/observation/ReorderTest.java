@@ -64,7 +64,7 @@ public class ReorderTest extends AbstractObservationTest {
          *      + nodename1[4] (was 2)
          */
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        if (!n.getDefinition().allowSameNameSibs()) {
+        if (!n.getDefinition().allowsSameNameSiblings()) {
             throw new NotExecutableException("Node at " + testRoot + " does not allow same name siblings with name " + nodeName1);
         }
         testRootNode.addNode(nodeName1, testNodeType);

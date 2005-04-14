@@ -21,9 +21,8 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.PropertyDefImpl;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.search.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.search.ExecutableQuery;
 import org.apache.jackrabbit.core.search.LocationStepQueryNode;
@@ -32,12 +31,13 @@ import org.apache.jackrabbit.core.search.OrderQueryNode;
 import org.apache.jackrabbit.core.search.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.search.QueryParser;
 import org.apache.jackrabbit.core.search.QueryRootNode;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.log4j.Logger;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import java.io.IOException;
@@ -178,11 +178,12 @@ class QueryImpl implements ExecutableQuery {
                 ntName[0] = Constants.NT_BASE;
             }
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
-            PropertyDef[] propDefs = (PropertyDef[]) nt.getPropertyDefs();
+            PropertyDefinition[] propDefs =
+                    (PropertyDefinition[]) nt.getPropertyDefinitions();
             List tmp = new ArrayList();
             for (int i = 0; i < propDefs.length; i++) {
                 if (!propDefs[i].isMultiple()) {
-                    tmp.add(((PropertyDefImpl) propDefs[i]).getQName());
+                    tmp.add(((PropertyDefinitionImpl) propDefs[i]).getQName());
                 }
             }
             selectProps = (QName[]) tmp.toArray(new QName[tmp.size()]);

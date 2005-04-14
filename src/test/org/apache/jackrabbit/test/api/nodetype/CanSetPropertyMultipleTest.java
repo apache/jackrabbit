@@ -19,7 +19,7 @@ package org.apache.jackrabbit.test.api.nodetype;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
@@ -70,7 +70,7 @@ public class CanSetPropertyMultipleTest extends AbstractJCRTest {
     public void testReturnFalseBecauseIsProtected()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, true, true, false, false);
 
         // will never happen since at least jcr:mixinTypes of nt:base accomplish the request
@@ -95,7 +95,7 @@ public class CanSetPropertyMultipleTest extends AbstractJCRTest {
     public void testReturnFalseBecauseIsNotMultiple()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, false, false, false, false);
 
         if (propDef == null) {
@@ -118,7 +118,7 @@ public class CanSetPropertyMultipleTest extends AbstractJCRTest {
     public void testMultipleValuesNull()
             throws NotExecutableException, RepositoryException {
 
-        PropertyDef propDef =
+        PropertyDefinition propDef =
                 NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, true, false, false, false);
 
         if (propDef == null) {

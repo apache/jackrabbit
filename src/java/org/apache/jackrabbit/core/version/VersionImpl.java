@@ -22,19 +22,15 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.ItemStateException;
 
 import javax.jcr.Item;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.PropertyIterator;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.Calendar;
-import java.util.List;
 
 /**
  * This Class implements a Version that extends the node interface
@@ -59,7 +55,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @throws RepositoryException
      */
     public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                       NodeState state, NodeDef definition,
+                       NodeState state, NodeDefinition definition,
                        ItemLifeCycleListener[] listeners, InternalVersion version)
             throws RepositoryException {
         super(itemMgr, session, id, state, definition, listeners);
@@ -107,11 +103,9 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     * Returns the version history this version is contained in.
-     * @return this versions history
-     * @throws RepositoryException
+     * {@inheritDoc}
      */
-    public VersionHistory getContainingVersionHistory() throws RepositoryException {
+    public VersionHistory getContainingHistory() throws RepositoryException {
         return (VersionHistory) getParent();
     }
 
@@ -148,7 +142,7 @@ public class VersionImpl extends NodeImpl implements Version {
 
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * In addition to the normal behaviour, this method also filters out the
      * references that do not exist in this workspace.
      */

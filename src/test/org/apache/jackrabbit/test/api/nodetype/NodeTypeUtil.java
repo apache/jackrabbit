@@ -16,11 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.jcr.BinaryValue;
 import javax.jcr.BooleanValue;
 import javax.jcr.DateValue;
@@ -28,17 +23,22 @@ import javax.jcr.DoubleValue;
 import javax.jcr.LongValue;
 import javax.jcr.NameValue;
 import javax.jcr.PathValue;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.StringValue;
-import javax.jcr.nodetype.NodeDef;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.util.ISO8601;
-import java.util.Calendar;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.text.ParseException;
+import java.util.Calendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class to locate item definitions in the NodeTyeManager.
@@ -48,27 +48,25 @@ class NodeTypeUtil {
     /**
      * Locate a child node def parsing all node types
      *
-     * @param session:      the session to access the node types
-     * @param regardDefaultPrimaryType:
-     *                      if true, the default primary type of the returned
-     *                      <code>NodeDef</code> is according to param
-     *                      <code>defaultPrimaryType</code>. If false, the returned
-     *                      <code>NodeDef</code> might have a default primary type
-     *                      or not.
-     * @param defaultPrimaryType:
-     *                      if <code>regardDefaultPrimaryType</code> is true:
-     *                      if true, the returned <code>NodeDef</code> has a
-     *                      default primary type, else not
-     * @param residual:     if true, the returned <code>NodeDef</code> is of
-     *                      the residual name "*", else not
+     * @param session:                  the session to access the node types
+     * @param regardDefaultPrimaryType: if true, the default primary type of the returned
+     *                                  <code>NodeDef</code> is according to param
+     *                                  <code>defaultPrimaryType</code>. If false, the returned
+     *                                  <code>NodeDef</code> might have a default primary type
+     *                                  or not.
+     * @param defaultPrimaryType:       if <code>regardDefaultPrimaryType</code> is true:
+     *                                  if true, the returned <code>NodeDef</code> has a
+     *                                  default primary type, else not
+     * @param residual:                 if true, the returned <code>NodeDef</code> is of
+     *                                  the residual name "*", else not
      * @return
      * @throws RepositoryException
      */
-    public static NodeDef locateChildNodeDef(Session session,
-                                             boolean regardDefaultPrimaryType,
-                                             boolean defaultPrimaryType,
-                                             boolean residual)
-        throws RepositoryException {
+    public static NodeDefinition locateChildNodeDef(Session session,
+                                                    boolean regardDefaultPrimaryType,
+                                                    boolean defaultPrimaryType,
+                                                    boolean residual)
+            throws RepositoryException {
 
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         NodeTypeIterator types = manager.getAllNodeTypes();
@@ -77,10 +75,10 @@ class NodeTypeUtil {
 
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            NodeDef nodeDefs[] = type.getDeclaredChildNodeDefs();
+            NodeDefinition nodeDefs[] = type.getDeclaredChildNodeDefinitions();
 
             for (int i = 0; i < nodeDefs.length; i++) {
-                NodeDef nodeDef = nodeDefs[i];
+                NodeDefinition nodeDef = nodeDefs[i];
 
                 if (nodeDef.getRequiredPrimaryTypes().length > 1) {
                     // behaviour of implementations that support multiple multiple inheritance
@@ -106,7 +104,7 @@ class NodeTypeUtil {
                 if (!residual && i == 0) {
                     // if another child node def is a residual definition
                     // overjump the current node type
-                    NodeDef nodeDefsAll[] = type.getChildNodeDefs();
+                    NodeDefinition nodeDefsAll[] = type.getChildNodeDefinitions();
                     for (int j = 0; j < nodeDefsAll.length; j++) {
                         if (nodeDefsAll[j].getName().equals("*")) {
                             overjump = true;
@@ -129,28 +127,28 @@ class NodeTypeUtil {
     /**
      * Locate a child node def parsing all node types
      *
-     * @param session:      the session to access the node types
-     * @param isProtected:  if true, the returned <code>NodeDef</code> is
-     *                      protected, else not
-     * @param mandatory:    if true, the returned <code>NodeDef</code> is
-     *                      mandatory, else not
+     * @param session:     the session to access the node types
+     * @param isProtected: if true, the returned <code>NodeDef</code> is
+     *                     protected, else not
+     * @param mandatory:   if true, the returned <code>NodeDef</code> is
+     *                     mandatory, else not
      * @return the first <code>NodeDef</code> found fitting the
      *         requirements
      */
-    public static NodeDef locateChildNodeDef(Session session,
-                                             boolean isProtected,
-                                             boolean mandatory)
-        throws RepositoryException {
+    public static NodeDefinition locateChildNodeDef(Session session,
+                                                    boolean isProtected,
+                                                    boolean mandatory)
+            throws RepositoryException {
 
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         NodeTypeIterator types = manager.getAllNodeTypes();
 
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            NodeDef nodeDefs[] = type.getDeclaredChildNodeDefs();
+            NodeDefinition nodeDefs[] = type.getDeclaredChildNodeDefinitions();
 
             for (int i = 0; i < nodeDefs.length; i++) {
-                NodeDef nodeDef = nodeDefs[i];
+                NodeDefinition nodeDef = nodeDefs[i];
 
                 if (nodeDef.getName().equals("*")) {
                     continue;
@@ -191,12 +189,12 @@ class NodeTypeUtil {
      * @return the first <code>PropertyDef</code> found fitting the
      *         requirements
      */
-    public static PropertyDef locatePropertyDef(Session session,
-                                                int propertyType,
-                                                boolean multiple,
-                                                boolean isProtected,
-                                                boolean constraints,
-                                                boolean residual)
+    public static PropertyDefinition locatePropertyDef(Session session,
+                                                       int propertyType,
+                                                       boolean multiple,
+                                                       boolean isProtected,
+                                                       boolean constraints,
+                                                       boolean residual)
             throws RepositoryException {
 
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
@@ -204,9 +202,9 @@ class NodeTypeUtil {
 
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            PropertyDef propDefs[] = type.getDeclaredPropertyDefs();
+            PropertyDefinition propDefs[] = type.getDeclaredPropertyDefinitions();
             for (int i = 0; i < propDefs.length; i++) {
-                PropertyDef propDef = propDefs[i];
+                PropertyDefinition propDef = propDefs[i];
 
                 // PropertyType.UNDEFINED is in use to get a property of any type
                 if (propertyType != PropertyType.UNDEFINED &&
@@ -238,15 +236,10 @@ class NodeTypeUtil {
                         // property def has no constraints
                         continue;
                     }
-                    try {
-                        // check if a value out of constraint is buildable
-                        Value v = getValueOutOfContstraint(propDef);
-                        if (v == null) {
-                            // no value out of the constraint range available
-                            continue;
-                        }
-                    } catch (ParseException e) {
-                        // an error occured
+                    // check if a value out of constraint is buildable
+                    Value v = getValueOutOfContstraint(propDef);
+                    if (v == null) {
+                        // no value out of the constraint range available
                         continue;
                     }
                 }
@@ -268,17 +261,17 @@ class NodeTypeUtil {
     /**
      * Locate a property def parsing all node types
      *
-     * @param session:      the session to access the node types
-     * @param isProtected:  if true, the returned <code>PropertyDef</code> is
-     *                      protected, else not
-     * @param mandatory:    if true, the returned <code>PropertyDef</code> is
-     *                      mandatory, else not
+     * @param session:     the session to access the node types
+     * @param isProtected: if true, the returned <code>PropertyDef</code> is
+     *                     protected, else not
+     * @param mandatory:   if true, the returned <code>PropertyDef</code> is
+     *                     mandatory, else not
      * @return the first <code>PropertyDef</code> found fitting the
      *         requirements
      */
-    public static PropertyDef locatePropertyDef(Session session,
-                                                boolean isProtected,
-                                                boolean mandatory)
+    public static PropertyDefinition locatePropertyDef(Session session,
+                                                       boolean isProtected,
+                                                       boolean mandatory)
             throws RepositoryException {
 
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
@@ -286,9 +279,9 @@ class NodeTypeUtil {
 
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            PropertyDef propDefs[] = type.getDeclaredPropertyDefs();
+            PropertyDefinition propDefs[] = type.getDeclaredPropertyDefinitions();
             for (int i = 0; i < propDefs.length; i++) {
-                PropertyDef propDef = propDefs[i];
+                PropertyDefinition propDef = propDefs[i];
 
                 if (propDef.getName().equals("*")) {
                     continue;
@@ -319,7 +312,7 @@ class NodeTypeUtil {
      */
     public static String getUndefinedChildNodeName(NodeType nodeType) {
 
-        NodeDef nodeDefs[] = nodeType.getChildNodeDefs();
+        NodeDefinition nodeDefs[] = nodeType.getChildNodeDefinitions();
         StringBuffer s = new StringBuffer("X");
 
         for (int i = 0; i < nodeDefs.length; i++) {
@@ -364,7 +357,7 @@ class NodeTypeUtil {
         switch (type) {
             case (PropertyType.BINARY):
                 // note: If binary is not UTF-8 behavior is implementation-specific
-               return new BinaryValue("abc");
+                return new BinaryValue("abc");
             case (PropertyType.BOOLEAN):
                 return new BooleanValue(true);
             case (PropertyType.DATE):
@@ -387,8 +380,8 @@ class NodeTypeUtil {
     /**
      * Returns a value out of the value constraints
      */
-    public static Value getValueOutOfContstraint(PropertyDef propDef)
-            throws ValueFormatException, RepositoryException, ParseException {
+    public static Value getValueOutOfContstraint(PropertyDefinition propDef)
+            throws ValueFormatException, RepositoryException {
 
         int type = propDef.getRequiredType();
         String constraints[] = propDef.getValueConstraints();

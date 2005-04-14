@@ -69,16 +69,11 @@ public class SQLJcrPathTest extends AbstractQueryTest {
         String nodeTypeName = session.getRootNode().getPrimaryNodeType().getName();
         String queryStatement = "select " + jcrPath + " from " + nodeTypeName;
 
-        // verify that jcr:path is supported
-        if (session.getRepository().getDescriptor(Repository.QUERY_JCRPATH) == null) {
-            throw new NotExecutableException(jcrPath + " not supported");
-        }
-
         // execute the search query
         Query query = session.getWorkspace().getQueryManager().createQuery(queryStatement, Query.SQL);
         QueryResult result = query.execute();
 
-        String[] propNames = result.getPropertyNames();
+        String[] propNames = result.getColumnNames();
         if (propNames.length > 0) {
             // jcr:path should be the first column
             assertEquals(jcrPath + " should be the first property", jcrPath, propNames[0]);

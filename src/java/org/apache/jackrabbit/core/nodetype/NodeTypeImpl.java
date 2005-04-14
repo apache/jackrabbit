@@ -30,9 +30,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -85,9 +85,9 @@ public class NodeTypeImpl implements NodeType {
      * @throws RepositoryException if no applicable child node definition
      *                             could be found
      */
-    public NodeDefImpl getApplicableChildNodeDef(QName nodeName)
+    public NodeDefinitionImpl getApplicableChildNodeDefinition(QName nodeName)
             throws RepositoryException {
-        return getApplicableChildNodeDef(nodeName, null);
+        return getApplicableChildNodeDefinition(nodeName, null);
     }
 
     /**
@@ -100,9 +100,10 @@ public class NodeTypeImpl implements NodeType {
      * @throws RepositoryException if no applicable child node definition
      *                             could be found
      */
-    public NodeDefImpl getApplicableChildNodeDef(QName nodeName, QName nodeTypeName)
+    public NodeDefinitionImpl getApplicableChildNodeDefinition(QName nodeName,
+                                                               QName nodeTypeName)
             throws RepositoryException {
-        return new NodeDefImpl(ent.getApplicableChildNodeDef(nodeName, nodeTypeName),
+        return new NodeDefinitionImpl(ent.getApplicableChildNodeDef(nodeName, nodeTypeName),
                 ntMgr, nsResolver);
     }
 
@@ -117,10 +118,12 @@ public class NodeTypeImpl implements NodeType {
      * @throws RepositoryException if no applicable property definition
      *                             could be found
      */
-    public PropertyDefImpl getApplicablePropertyDef(QName propertyName, int type,
-                                                    boolean multiValued)
+    public PropertyDefinitionImpl getApplicablePropertyDefinition(QName propertyName,
+                                                                  int type,
+                                                                  boolean multiValued)
             throws RepositoryException {
-        return new PropertyDefImpl(ent.getApplicablePropertyDef(propertyName, type, multiValued),
+        return new PropertyDefinitionImpl(
+                ent.getApplicablePropertyDef(propertyName, type, multiValued),
                 ntMgr, nsResolver);
     }
 
@@ -155,17 +158,17 @@ public class NodeTypeImpl implements NodeType {
     /**
      * Returns an array containing only those child node definitions of this
      * node type (including the child node definitions inherited from supertypes
-     * of this node type) where <code>{@link NodeDef#isAutoCreate()}</code>
+     * of this node type) where <code>{@link NodeDefinition#isAutoCreated()}</code>
      * returns <code>true</code>.
      *
      * @return an array of child node definitions.
-     * @see NodeDef#isAutoCreate
+     * @see NodeDefinition#isAutoCreated
      */
-    public NodeDef[] getAutoCreateNodeDefs() {
-        ChildNodeDef[] cnda = ent.getAutoCreateNodeDefs();
-        NodeDef[] nodeDefs = new NodeDef[cnda.length];
+    public NodeDefinition[] getAutoCreatedNodeDefinitions() {
+        NodeDef[] cnda = ent.getAutoCreateNodeDefs();
+        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
+            nodeDefs[i] = new NodeDefinitionImpl(cnda[i], ntMgr, nsResolver);
         }
         return nodeDefs;
     }
@@ -173,17 +176,17 @@ public class NodeTypeImpl implements NodeType {
     /**
      * Returns an array containing only those property definitions of this
      * node type (including the property definitions inherited from supertypes
-     * of this node type) where <code>{@link PropertyDef#isAutoCreate()}</code>
+     * of this node type) where <code>{@link PropertyDefinition#isAutoCreated()}</code>
      * returns <code>true</code>.
      *
      * @return an array of property definitions.
-     * @see PropertyDef#isAutoCreate
+     * @see PropertyDefinition#isAutoCreated
      */
-    public PropertyDef[] getAutoCreatePropertyDefs() {
+    public PropertyDefinition[] getAutoCreatedPropertyDefinitions() {
         PropDef[] pda = ent.getAutoCreatePropDefs();
-        PropertyDef[] propDefs = new PropertyDef[pda.length];
+        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
+            propDefs[i] = new PropertyDefinitionImpl(pda[i], ntMgr, nsResolver);
         }
         return propDefs;
     }
@@ -191,17 +194,17 @@ public class NodeTypeImpl implements NodeType {
     /**
      * Returns an array containing only those property definitions of this
      * node type (including the property definitions inherited from supertypes
-     * of this node type) where <code>{@link PropertyDef#isMandatory()}</code>
+     * of this node type) where <code>{@link PropertyDefinition#isMandatory()}</code>
      * returns <code>true</code>.
      *
      * @return an array of property definitions.
-     * @see PropertyDef#isMandatory
+     * @see PropertyDefinition#isMandatory
      */
-    public PropertyDef[] getMandatoryPropertyDefs() {
+    public PropertyDefinition[] getMandatoryPropertyDefinitions() {
         PropDef[] pda = ent.getMandatoryPropDefs();
-        PropertyDef[] propDefs = new PropertyDef[pda.length];
+        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
+            propDefs[i] = new PropertyDefinitionImpl(pda[i], ntMgr, nsResolver);
         }
         return propDefs;
     }
@@ -209,17 +212,17 @@ public class NodeTypeImpl implements NodeType {
     /**
      * Returns an array containing only those child node definitions of this
      * node type (including the child node definitions inherited from supertypes
-     * of this node type) where <code>{@link NodeDef#isMandatory()}</code>
+     * of this node type) where <code>{@link NodeDefinition#isMandatory()}</code>
      * returns <code>true</code>.
      *
      * @return an array of child node definitions.
-     * @see NodeDef#isMandatory
+     * @see NodeDefinition#isMandatory
      */
-    public NodeDef[] getMandatoryNodeDefs() {
-        ChildNodeDef[] cnda = ent.getMandatoryNodeDefs();
-        NodeDef[] nodeDefs = new NodeDef[cnda.length];
+    public NodeDefinition[] getMandatoryNodeDefinitions() {
+        NodeDef[] cnda = ent.getMandatoryNodeDefs();
+        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
+            nodeDefs[i] = new NodeDefinitionImpl(cnda[i], ntMgr, nsResolver);
         }
         return nodeDefs;
     }
@@ -237,7 +240,7 @@ public class NodeTypeImpl implements NodeType {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    public static void checkSetPropertyValueConstraints(PropertyDefImpl def,
+    public static void checkSetPropertyValueConstraints(PropertyDefinitionImpl def,
                                                         InternalValue[] values)
             throws ConstraintViolationException, RepositoryException {
         EffectiveNodeType.checkSetPropertyValueConstraints(def.unwrap(), values);
@@ -370,11 +373,11 @@ public class NodeTypeImpl implements NodeType {
     /**
      * {@inheritDoc}
      */
-    public NodeDef[] getChildNodeDefs() {
-        ChildNodeDef[] cnda = ent.getAllNodeDefs();
-        NodeDef[] nodeDefs = new NodeDef[cnda.length];
+    public NodeDefinition[] getChildNodeDefinitions() {
+        NodeDef[] cnda = ent.getAllNodeDefs();
+        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
+            nodeDefs[i] = new NodeDefinitionImpl(cnda[i], ntMgr, nsResolver);
         }
         return nodeDefs;
     }
@@ -382,11 +385,11 @@ public class NodeTypeImpl implements NodeType {
     /**
      * {@inheritDoc}
      */
-    public PropertyDef[] getPropertyDefs() {
+    public PropertyDefinition[] getPropertyDefinitions() {
         PropDef[] pda = ent.getAllPropDefs();
-        PropertyDef[] propDefs = new PropertyDef[pda.length];
+        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
+            propDefs[i] = new PropertyDefinitionImpl(pda[i], ntMgr, nsResolver);
         }
         return propDefs;
     }
@@ -412,11 +415,11 @@ public class NodeTypeImpl implements NodeType {
     /**
      * {@inheritDoc}
      */
-    public NodeDef[] getDeclaredChildNodeDefs() {
-        ChildNodeDef[] cnda = ntd.getChildNodeDefs();
-        NodeDef[] nodeDefs = new NodeDef[cnda.length];
+    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
+        NodeDef[] cnda = ntd.getChildNodeDefs();
+        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
         for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = new NodeDefImpl(cnda[i], ntMgr, nsResolver);
+            nodeDefs[i] = new NodeDefinitionImpl(cnda[i], ntMgr, nsResolver);
         }
         return nodeDefs;
     }
@@ -431,13 +434,13 @@ public class NodeTypeImpl implements NodeType {
         }
         try {
             QName name = QName.fromJCRName(propertyName, nsResolver);
-            PropertyDefImpl def;
+            PropertyDefinitionImpl def;
             try {
                 // try to get definition that matches the given value type
-                def = getApplicablePropertyDef(name, value.getType(), false);
+                def = getApplicablePropertyDefinition(name, value.getType(), false);
             } catch (ConstraintViolationException cve) {
                 // fallback: ignore type
-                def = getApplicablePropertyDef(name, PropertyType.UNDEFINED, false);
+                def = getApplicablePropertyDefinition(name, PropertyType.UNDEFINED, false);
             }
             if (def.isProtected()) {
                 return false;
@@ -492,13 +495,13 @@ public class NodeTypeImpl implements NodeType {
                     return false;
                 }
             }
-            PropertyDefImpl def;
+            PropertyDefinitionImpl def;
             try {
                 // try to get definition that matches the given value type
-                def = getApplicablePropertyDef(name, type, true);
+                def = getApplicablePropertyDefinition(name, type, true);
             } catch (ConstraintViolationException cve) {
                 // fallback: ignore type
-                def = getApplicablePropertyDef(name, PropertyType.UNDEFINED, true);
+                def = getApplicablePropertyDefinition(name, PropertyType.UNDEFINED, true);
             }
 
             if (def.isProtected()) {
@@ -590,11 +593,11 @@ public class NodeTypeImpl implements NodeType {
     /**
      * {@inheritDoc}
      */
-    public PropertyDef[] getDeclaredPropertyDefs() {
+    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
         PropDef[] pda = ntd.getPropertyDefs();
-        PropertyDef[] propDefs = new PropertyDef[pda.length];
+        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefImpl(pda[i], ntMgr, nsResolver);
+            propDefs[i] = new PropertyDefinitionImpl(pda[i], ntMgr, nsResolver);
         }
         return propDefs;
     }

@@ -19,16 +19,16 @@ package org.apache.jackrabbit.test.api;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.Session;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ItemVisitor;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.PropertyType;
 import java.util.NoSuchElementException;
 
 /**
@@ -203,7 +203,8 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
         final Property p = property;
 
         ItemVisitor itemVisitor = new ItemVisitor() {
-            public void visit(Property property) {
+            public void visit(Property property)
+                    throws RepositoryException {
                 assertTrue("Visited Property is not the same as the one returned by visit(Property).",
                         p.isSame(property));
             }

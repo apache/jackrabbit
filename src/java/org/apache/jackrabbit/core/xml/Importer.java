@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
+import javax.jcr.ImportUUIDBehavior;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
@@ -31,13 +32,13 @@ import java.util.List;
 public interface Importer {
 
     public static final int IMPORT_UUID_CREATE_NEW =
-            Workspace.IMPORT_UUID_CREATE_NEW;
+            ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
     public static final int IMPORT_UUID_COLLISION_REMOVE_EXISTING =
-            Workspace.IMPORT_UUID_COLLISION_REMOVE_EXISTING;
+            ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING;
     public static final int IMPORT_UUID_COLLISION_REPLACE_EXISTING =
-            Workspace.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
+            ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
     public static final int IMPORT_UUID_COLLISION_THROW =
-            Workspace.IMPORT_UUID_COLLISION_THROW;
+            ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW;
 
     /**
      * @throws RepositoryException

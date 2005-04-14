@@ -173,7 +173,7 @@ public class LockTest extends AbstractJCRTest {
         // lock node
         Lock lock = n1.lock(false, true);
 
-        if (n1.getSession().getUserId() == null) {
+        if (n1.getSession().getUserID() == null) {
             assertFalse("jcr:lockOwner must not exist if Session.getUserId() returns null",
                     n1.hasProperty(jcrLockOwner));
         } else {
@@ -201,7 +201,7 @@ public class LockTest extends AbstractJCRTest {
 
         assertEquals("getLockOwner() must return the same value as returned " +
                 "by Session.getUserId at the time that the lock was placed",
-                testRootNode.getSession().getUserId(),
+                testRootNode.getSession().getUserID(),
                 lock.getLockOwner());
 
         n1.unlock();

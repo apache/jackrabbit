@@ -175,7 +175,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         // now check property count
         int count = 0;
         log.println("Properties:");
-        String[] propNames = result.getPropertyNames();
+        String[] propNames = result.getColumnNames();
         for (RowIterator it = result.getRows(); it.hasNext();) {
             StringBuffer msg = new StringBuffer();
             Value[] values = it.nextRow().getValues();

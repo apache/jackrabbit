@@ -8,12 +8,12 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-PropertyDef
+PropertyDefinition
   Name jcr:child
   RequiredType REFERENCE
   ValueConstraints [nt:versionHistory]
   DefaultValues null
-  AutoCreate true
+  AutoCreated true
   Mandatory true
   OnParentVersion ABORT
   Protected true

@@ -18,10 +18,11 @@ package org.apache.jackrabbit.test.api.nodetype;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import javax.jcr.Session;
+
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeDef;
 
 /**
  * Tests <code>NodeType.canAddChildNode(String childNodeName)</code> returns true if
@@ -62,58 +63,57 @@ public class CanAddChildNodeCallWithoutNodeTypeTest extends AbstractJCRTest {
 
     /**
      * Tests if <code>NodeType.canAddChildNode(String childNodeName)</code> returns
-     * true if <code>NodeType</code> contains a <code>ChildNodeDef</code>  named
+     * true if <code>NodeType</code> contains a <code>NodeDef</code>  named
      * <code>childNodeName</code> with a default primary type.
      */
     public void testDefinedWithDefault()
             throws NotExecutableException, RepositoryException {
 
-        NodeDef nodeDef = NodeTypeUtil.locateChildNodeDef(session, true, true, false);
+        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, true, true, false);
 
         if (nodeDef == null) {
             throw new NotExecutableException("No child node def with " +
-                                             "defaultPrimaryType found");
+                    "defaultPrimaryType found");
         }
 
         NodeType nodeType = nodeDef.getDeclaringNodeType();
 
         assertTrue("NodeType.canAddChildNode(String childNodeName) must return " +
-                   "true if child node def 'childNodeName' defines a defaultPrimaryType.",
-                   nodeType.canAddChildNode(nodeDef.getName()));
+                "true if child node def 'childNodeName' defines a defaultPrimaryType.",
+                nodeType.canAddChildNode(nodeDef.getName()));
     }
 
     /**
      * Tests if <code>NodeType.canAddChildNode(String childNodeName)</code> returns
-     * true if <code>NodeType</code> contains a <code>ChildNodeDef</code>  named
+     * true if <code>NodeType</code> contains a <code>NodeDef</code>  named
      * <code>childNodeName</code> without a default primary type.
      */
     public void testDefinedWithoutDefault()
             throws NotExecutableException, RepositoryException {
 
-        NodeDef nodeDef = NodeTypeUtil.locateChildNodeDef(session, true, false, false);
+        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, true, false, false);
 
         if (nodeDef == null) {
             throw new NotExecutableException("No child node def without " +
-                                             "defaultPrimaryType found");
+                    "defaultPrimaryType found");
         }
 
         NodeType nodeType = nodeDef.getDeclaringNodeType();
 
         assertFalse("NodeType.canAddChildNode(String childNodeName) must return false " +
-                    "if child node def 'childNodeName' does not define a defaultPrimaryType.",
-                    nodeType.canAddChildNode(nodeDef.getName()));
+                "if child node def 'childNodeName' does not define a defaultPrimaryType.",
+                nodeType.canAddChildNode(nodeDef.getName()));
     }
 
     /**
      * Tests if <code>NodeType.canAddChildNode(String childNodeName)</code> returns
-     * true if <code>NodeType</code> nor does contain a <code>ChildNodeDef</code>  named
+     * true if <code>NodeType</code> nor does contain a <code>NodeDef</code>  named
      * <code>childNodeName</code> nor a residual definition.
-     *
      */
     public void testUndefined()
-        throws NotExecutableException, RepositoryException {
+            throws NotExecutableException, RepositoryException {
 
-        NodeDef nodeDef = NodeTypeUtil.locateChildNodeDef(session, false, true, false);
+        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, false, true, false);
 
         if (nodeDef == null) {
             throw new NotExecutableException("No testable node type found.");
@@ -123,55 +123,55 @@ public class CanAddChildNodeCallWithoutNodeTypeTest extends AbstractJCRTest {
         String undefinedName = NodeTypeUtil.getUndefinedChildNodeName(nodeType);
 
         assertFalse("NodeType.canAddChildNode(String childNodeName) must return " +
-                    "false if 'childNodeName' is a undefined child node def",
-                    nodeType.canAddChildNode(undefinedName));
+                "false if 'childNodeName' is a undefined child node def",
+                nodeType.canAddChildNode(undefinedName));
     }
 
     /**
      * Tests if <code>NodeType.canAddChildNode(String childNodeName)</code> returns
-     * true if <code>NodeType</code> contains a residual <code>ChildNodeDef</code>
+     * true if <code>NodeType</code> contains a residual <code>NodeDef</code>
      * with a default primary type.
      */
     public void testResidualWithDefault()
             throws NotExecutableException, RepositoryException {
 
-        NodeDef nodeDef = NodeTypeUtil.locateChildNodeDef(session, true, true, true);
+        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, true, true, true);
 
         if (nodeDef == null) {
             throw new NotExecutableException("No residual child node def " +
-                                             "without a defaultPrimaryType found.");
+                    "without a defaultPrimaryType found.");
         }
 
         NodeType nodeType = nodeDef.getDeclaringNodeType();
         String undefinedName = NodeTypeUtil.getUndefinedChildNodeName(nodeType);
 
         assertTrue("NodeType.canAddChildNode(String childNodeName) must return " +
-                   "true for a not defined childNodeName if NodeType has a residual child node " +
-                   "definition with a defaultPrimaryType",
-                   nodeType.canAddChildNode(undefinedName));
+                "true for a not defined childNodeName if NodeType has a residual child node " +
+                "definition with a defaultPrimaryType",
+                nodeType.canAddChildNode(undefinedName));
     }
 
     /**
      * Tests if <code>NodeType.canAddChildNode(String childNodeName)</code> returns
-     * true if <code>NodeType</code> contains a residual <code>ChildNodeDef</code>
+     * true if <code>NodeType</code> contains a residual <code>NodeDef</code>
      * without a default primary type.
      */
     public void testResidualWithoutDefault()
             throws NotExecutableException, RepositoryException {
 
-        NodeDef nodeDef = NodeTypeUtil.locateChildNodeDef(session, true, false, true);
+        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, true, false, true);
 
         if (nodeDef == null) {
             throw new NotExecutableException("No residual child node def " +
-                                             "with a defaultPrimaryType found.");
+                    "with a defaultPrimaryType found.");
         }
 
         NodeType nodeType = nodeDef.getDeclaringNodeType();
         String undefinedName = NodeTypeUtil.getUndefinedChildNodeName(nodeType);
 
         assertFalse("NodeType.canAddChildNode(String childNodeName) must return " +
-                    "false for a not defiend childNodeName if NodeType has a " +
-                    "residual child node definition without a defaultPrimaryType",
-                    nodeType.canAddChildNode(undefinedName));
+                "false for a not defiend childNodeName if NodeType has a " +
+                "residual child node definition without a defaultPrimaryType",
+                nodeType.canAddChildNode(undefinedName));
     }
 }

@@ -128,7 +128,7 @@ public class CheckoutTest extends AbstractVersionTest {
         while (propIt.hasNext()) {
             Property origProp = propIt.nextProperty();
             Property copyProp = copiedNode.getProperty(origProp.getName());
-            if (!origProp.getDefinition().isAutoCreate()) {
+            if (!origProp.getDefinition().isAutoCreated()) {
                 if (origProp.getDefinition().isMultiple()) {
                     Value[] origValues = origProp.getValues();
                     Value[] copyValues = copyProp.getValues();

@@ -8,12 +8,12 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-PropertyDef
+PropertyDefinition
   Name "*"
   RequiredType REFERENCE
   ValueConstraints [nt:version]
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion ABORT
   Protected true

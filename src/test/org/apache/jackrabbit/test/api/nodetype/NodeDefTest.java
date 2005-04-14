@@ -19,15 +19,15 @@ package org.apache.jackrabbit.test.api.nodetype;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.Session;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.NodeIterator;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
 
 /**
  * Tests if node definitions are respected in node instances in the workspace.
@@ -92,17 +92,17 @@ public class NodeDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType currentType = types.nextNodeType();
-            NodeDef defsOfCurrentType[] =
-                    currentType.getChildNodeDefs();
+            NodeDefinition defsOfCurrentType[] =
+                    currentType.getChildNodeDefinitions();
 
             // loop all child node defs of each node type
             for (int i = 0; i < defsOfCurrentType.length; i++) {
-                NodeDef def = defsOfCurrentType[i];
+                NodeDefinition def = defsOfCurrentType[i];
                 NodeType type = def.getDeclaringNodeType();
 
                 // check if def is part of the child node defs of the
                 // declaring node type
-                NodeDef defs[] = type.getChildNodeDefs();
+                NodeDefinition defs[] = type.getChildNodeDefinitions();
                 boolean hasType = false;
                 for (int j = 0; j < defs.length; j++) {
                     if (defs[j].getName().equals(def.getName())) {
@@ -129,9 +129,9 @@ public class NodeDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            NodeDef defs[] = type.getChildNodeDefs();
+            NodeDefinition defs[] = type.getChildNodeDefinitions();
             for (int i = 0; i < defs.length; i++) {
-                if (defs[i].isAutoCreate()) {
+                if (defs[i].isAutoCreated()) {
                     assertFalse("An auto create node must not be a " +
                             "residual set definition.",
                             defs[i].getName().equals("*"));
@@ -168,7 +168,7 @@ public class NodeDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            NodeDef defs[] = type.getChildNodeDefs();
+            NodeDefinition defs[] = type.getChildNodeDefinitions();
 
             for (int i = 0; i < defs.length; i++) {
                 assertTrue("getRequiredPrimaryTypes() must never return an " +
@@ -190,11 +190,11 @@ public class NodeDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            NodeDef defs[] = type.getChildNodeDefs();
+            NodeDefinition defs[] = type.getChildNodeDefinitions();
 
             for (int i = 0; i < defs.length; i++) {
 
-                NodeDef def = defs[i];
+                NodeDefinition def = defs[i];
                 NodeType defaultType = def.getDefaultPrimaryType();
                 if (defaultType != null) {
 
@@ -254,9 +254,9 @@ public class NodeDefTest extends AbstractJCRTest {
             throws RepositoryException {
 
         // test if node contains all mandatory nodes of current type
-        NodeDef nodeDefs[] = type.getChildNodeDefs();
+        NodeDefinition nodeDefs[] = type.getChildNodeDefinitions();
         for (int i = 0; i < nodeDefs.length; i++) {
-            NodeDef nodeDef = nodeDefs[i];
+            NodeDefinition nodeDef = nodeDefs[i];
             if (nodeDef.isMandatory()) {
                 foundMandatoryNode = true;
                 try {

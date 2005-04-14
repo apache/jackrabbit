@@ -98,6 +98,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
      * @return true if the specified name matches the pattern
      */
     static boolean matches(String name, String pattern) {
+        // @todo check if pattern matching conforms with spec
         // split pattern
         StringTokenizer st = new StringTokenizer(pattern, OR, false);
         while (st.hasMoreTokens()) {

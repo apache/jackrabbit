@@ -95,7 +95,7 @@ class QueryResultImpl implements QueryResult {
     /**
      * {@inheritDoc}
      */
-    public String[] getPropertyNames() throws RepositoryException {
+    public String[] getColumnNames() throws RepositoryException {
         try {
             String[] propNames = new String[selectProps.length];
             for (int i = 0; i < selectProps.length; i++) {

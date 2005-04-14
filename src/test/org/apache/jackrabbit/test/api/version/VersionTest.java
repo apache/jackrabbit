@@ -219,13 +219,13 @@ public class VersionTest extends AbstractVersionTest {
      */
     /*
     public void testGetDefinition() throws Exception {
-        assertFalse("Version.getDefinition() does not return correct Node definition", version.getDefinition().allowSameNameSibs());
+        assertFalse("Version.getDefinition() does not return correct Node definition", version.getDefinition().allowsSameNameSiblings());
         assertEquals("Version.getDefinition() does not return correct Node definition", ntVersionHistory, version.getDefinition().getDeclaringNodeType().getName());
         assertNull("Version.getDefinition() does not return correct Node definition", version.getDefinition().getDefaultPrimaryType());
         assertEquals("Version.getDefinition() does not return correct Node definition", jcrFrozenNode, version.getDefinition().getName());
         assertEquals("Version.getDefinition() does not return correct Node definition", OnParentVersionAction.ABORT, version.getDefinition().getOnParentVersion());
         assertEquals("Version.getDefinition() does not return correct Node definition", jcrFrozenNode, (version.getDefinition().getRequiredPrimaryTypes())[0].getName());
-        assertFalse("Version.getDefinition() does not return correct Node definition", version.getDefinition().isAutoCreate());
+        assertFalse("Version.getDefinition() does not return correct Node definition", version.getDefinition().isAutoCreated());
         assertFalse("Version.getDefinition() does not return correct Node definition", version.getDefinition().isMandatory());
         assertTrue("Version.getDefinition() does not return correct Node definition", version.getDefinition().isProtected());
     }

@@ -8,12 +8,12 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-PropertyDef
+PropertyDefinition
   Name jcr:uuid
   RequiredType STRING
   ValueConstraints []
   DefaultValues null
-  AutoCreate true
+  AutoCreated true
   Mandatory true
   OnParentVersion INITIALIZE
   Protected true

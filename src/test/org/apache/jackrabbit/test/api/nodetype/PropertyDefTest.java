@@ -30,7 +30,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -117,17 +117,17 @@ public class PropertyDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType currentType = types.nextNodeType();
-            PropertyDef defsOfCurrentType[] =
-                    currentType.getPropertyDefs();
+            PropertyDefinition defsOfCurrentType[] =
+                    currentType.getPropertyDefinitions();
 
             // loop all property defs of each node type
             for (int i = 0; i < defsOfCurrentType.length; i++) {
-                PropertyDef def = defsOfCurrentType[i];
+                PropertyDefinition def = defsOfCurrentType[i];
                 NodeType type = def.getDeclaringNodeType();
 
                 // check if def is part of the property defs of the
                 // declaring node type
-                PropertyDef defs[] = type.getPropertyDefs();
+                PropertyDefinition defs[] = type.getPropertyDefinitions();
                 boolean hasType = false;
                 for (int j = 0; j < defs.length; j++) {
                     if (defs[j].getName().equals(def.getName())) {
@@ -152,9 +152,9 @@ public class PropertyDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            PropertyDef defs[] = type.getPropertyDefs();
+            PropertyDefinition defs[] = type.getPropertyDefinitions();
             for (int i = 0; i < defs.length; i++) {
-                if (defs[i].isAutoCreate()) {
+                if (defs[i].isAutoCreated()) {
                     assertFalse("An auto create property must not be a " +
                             "residual set definition.",
                             defs[i].getName().equals("*"));
@@ -189,7 +189,7 @@ public class PropertyDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            PropertyDef defs[] = type.getPropertyDefs();
+            PropertyDefinition defs[] = type.getPropertyDefinitions();
             for (int i = 0; i < defs.length; i++) {
                 switch (defs[i].getRequiredType()) {
                     case PropertyType.STRING:
@@ -223,9 +223,9 @@ public class PropertyDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            PropertyDef defs[] = type.getPropertyDefs();
+            PropertyDefinition defs[] = type.getPropertyDefinitions();
             for (int i = 0; i < defs.length; i++) {
-                PropertyDef def = defs[i];
+                PropertyDefinition def = defs[i];
 
                 String constraints[] = def.getValueConstraints();
                 if (constraints != null) {
@@ -328,9 +328,9 @@ public class PropertyDefTest extends AbstractJCRTest {
         // loop all node types
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            PropertyDef defs[] = type.getPropertyDefs();
+            PropertyDefinition defs[] = type.getPropertyDefinitions();
             for (int i = 0; i < defs.length; i++) {
-                PropertyDef def = defs[i];
+                PropertyDefinition def = defs[i];
 
                 Value values[] = def.getDefaultValues();
                 if (values != null) {
@@ -381,9 +381,9 @@ public class PropertyDefTest extends AbstractJCRTest {
             throws RepositoryException {
 
         // test if node contains all mandatory properties of current type
-        PropertyDef propDefs[] = type.getPropertyDefs();
+        PropertyDefinition propDefs[] = type.getPropertyDefinitions();
         for (int i = 0; i < propDefs.length; i++) {
-            PropertyDef propDef = propDefs[i];
+            PropertyDefinition propDef = propDefs[i];
 
             if (propDef.isMandatory()) {
                 foundMandatoryProperty = true;

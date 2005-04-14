@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.TreeSet;
 
 /**
- * <code>NodeDefId</code> uniquely identifies a <code>ChildNodeDef</code> in the
+ * <code>NodeDefId</code> uniquely identifies a <code>NodeDef</code> in the
  * node type registry.
  */
 public class NodeDefId implements Serializable {
@@ -31,9 +31,9 @@ public class NodeDefId implements Serializable {
 
     private final int id;
 
-    public NodeDefId(ChildNodeDef def) {
+    public NodeDefId(NodeDef def) {
         if (def == null) {
-            throw new IllegalArgumentException("ChildNodeDef argument can not be null");
+            throw new IllegalArgumentException("NodeDef argument can not be null");
         }
         // build key (format: <declaringNodeType>/<name>/<requiredPrimaryTypes>)
         StringBuffer sb = new StringBuffer();

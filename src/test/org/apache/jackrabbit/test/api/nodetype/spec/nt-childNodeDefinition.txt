@@ -1,5 +1,5 @@
 NodeTypeName
-  nt:childNodeDef
+  nt:childNodeDefinition
 Supertypes
   nt:base
 IsMixin
@@ -8,82 +8,82 @@ HasOrderableChildNodes
   false
 PrimaryItemName
   null
-PropertyDef
-  Name jcr:autoCreate
+PropertyDefinition
+  Name jcr:autoCreated
   RequiredType BOOLEAN
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory true
   OnParentVersion COPY
   Protected false
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:defaultPrimaryType
   RequiredType NAME
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion COPY
   Protected false
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:mandatory
   RequiredType BOOLEAN
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory true
   OnParentVersion COPY
   Protected false
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:name
   RequiredType NAME
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory false
   OnParentVersion COPY
   Protected false
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:onParentVersion
   RequiredType STRING
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory true
   OnParentVersion COPY
   Protected false
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:protected
   RequiredType BOOLEAN
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory true
   OnParentVersion COPY
   Protected false
   Multiple false
-PropertyDef
+PropertyDefinition
   Name jcr:requiredPrimaryTypes
   RequiredType NAME
   ValueConstraints []
   DefaultValues [nt:base]
-  AutoCreate false
+  AutoCreated false
   Mandatory true
   OnParentVersion COPY
   Protected false
   Multiple true
-PropertyDef
-  Name jcr:sameNameSibs
+PropertyDefinition
+  Name jcr:sameNameSiblings
   RequiredType BOOLEAN
   ValueConstraints []
   DefaultValues null
-  AutoCreate false
+  AutoCreated false
   Mandatory true
   OnParentVersion COPY
   Protected false

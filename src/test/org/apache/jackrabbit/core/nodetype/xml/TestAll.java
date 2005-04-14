@@ -34,7 +34,7 @@ import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.nodetype.ChildNodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
@@ -139,11 +139,11 @@ public class TestAll extends TestCase {
      * @param nodeName child node name
      * @return child node definition
      */
-    private ChildNodeDef getChildNode(String typeName, String nodeName) {
+    private NodeDef getChildNode(String typeName, String nodeName) {
         QName name = new QName(TEST_NAMESPACE, nodeName);
 
         NodeTypeDef def = getNodeType(typeName);
-        ChildNodeDef[] defs = def.getChildNodeDefs();
+        NodeDef[] defs = def.getChildNodeDefs();
         for (int i = 0; i < defs.length; i++) {
             if (name.equals(defs[i].getName())) {
                 return defs[i];
@@ -204,14 +204,14 @@ public class TestAll extends TestCase {
         PropDef[] defs = def.getPropertyDefs();
         assertEquals("itemNodeType wildcard property",
                 new QName(Constants.NS_DEFAULT_URI, "*"),
-                def.getPropertyDefs()[0].getName());
+                defs[0].getName());
     }
 
     /** Test for the empty item definition. */
     public void testEmptyItem() {
         PropDef def = getProperty("itemNodeType", "emptyItem");
         assertEquals("emptyItem autoCreate",
-                false, def.isAutoCreate());
+                false, def.isAutoCreated());
         assertEquals("emptyItem mandatory",
                 false, def.isMandatory());
         assertEquals("emptyItem onParentVersion",
@@ -220,11 +220,11 @@ public class TestAll extends TestCase {
                 false, def.isProtected());
     }
 
-    /** Test for the <code>autoCreate</code> item definition attribute. */
+    /** Test for the <code>autoCreated</code> item definition attribute. */
     public void testAutoCreateItem() {
-        PropDef def = getProperty("itemNodeType", "autoCreateItem");
-        assertEquals("autoCreateItem autoCreate",
-                true, def.isAutoCreate());
+        PropDef def = getProperty("itemNodeType", "autoCreatedItem");
+        assertEquals("autoCreatedItem autoCreated",
+                true, def.isAutoCreated());
     }
 
     /** Test for the <code>mandatory</code> item definition attribute. */
@@ -458,23 +458,23 @@ public class TestAll extends TestCase {
 
     /** Test for the empty child node definition. */
     public void testEmptyNode() {
-        ChildNodeDef def = getChildNode("childNodeType", "emptyNode");
-        assertEquals("emptyNode allowSameNameSibs",
-                false, def.allowSameNameSibs());
+        NodeDef def = getChildNode("childNodeType", "emptyNode");
+        assertEquals("emptyNode allowsSameNameSiblings",
+                false, def.allowsSameNameSiblings());
         assertEquals("emptyNode defaultPrimaryType",
                 null, def.getDefaultPrimaryType());
     }
 
-    /** Test for the <code>allowSameNameSibs</code> child node attribute. */
+    /** Test for the <code>allowsSameNameSiblings</code> child node attribute. */
     public void testSiblingNode() {
-        ChildNodeDef def = getChildNode("childNodeType", "siblingNode");
-        assertEquals("siblingNode allowSameNameSibs",
-                true, def.allowSameNameSibs());
+        NodeDef def = getChildNode("childNodeType", "siblingNode");
+        assertEquals("siblingNode allowsSameNameSiblings",
+                true, def.allowsSameNameSiblings());
     }
 
     /** Test for the <code>defaultPrimaryType</code> child node attribute. */
     public void testDefaultTypeNode() {
-        ChildNodeDef def = getChildNode("childNodeType", "defaultTypeNode");
+        NodeDef def = getChildNode("childNodeType", "defaultTypeNode");
         assertEquals("defaultTypeNode defaultPrimaryType",
                 new QName(TEST_NAMESPACE, "testType"),
                 def.getDefaultPrimaryType());
@@ -482,7 +482,7 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>requiredPrimaryTypes</code> child node attributes. */
     public void testRequiredTypeNode() {
-        ChildNodeDef def = getChildNode("childNodeType", "requiredTypeNode");
+        NodeDef def = getChildNode("childNodeType", "requiredTypeNode");
         assertEquals("requiredTypeNode requiredPrimaryTypes",
                 2, def.getRequiredPrimaryTypes().length);
         assertEquals("requiredTypeNode requiredPrimaryTypes[0]",
