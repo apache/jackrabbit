@@ -69,11 +69,6 @@ public class SearchManager implements SynchronousEventListener {
     private static final String NS_XS_PREFIX = "xs";
     public static final String NS_XS_URI = "http://www.w3.org/2001/XMLSchema";
 
-    /** Namespace URI for JCR functions */
-    // @todo check if consistent with spec
-    private static final String NS_JCRFN_PREFIX = "jcrfn";
-    public static final String NS_JCRFN_URI = "http://www.jcp.org/jcr/xpath-functions/1.0";
-
     /**
      * The shared item state manager instance for the workspace.
      */
@@ -116,12 +111,6 @@ public class SearchManager implements SynchronousEventListener {
         } catch (RepositoryException e) {
             // not yet known
             nsReg.registerNamespace(NS_FN_PREFIX, NS_FN_URI);
-        }
-        try {
-            nsReg.getPrefix(NS_JCRFN_URI);
-        } catch (RepositoryException e) {
-            // not yet known
-            nsReg.registerNamespace(NS_JCRFN_PREFIX, NS_JCRFN_URI);
         }
 
         // initialize query handler

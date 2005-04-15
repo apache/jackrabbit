@@ -80,7 +80,7 @@ public class TextNodeTest extends AbstractQueryTest {
     }
 
     /**
-     * Tests if text() node test is equivalent with jcr:xmltext and jcrfn:contains
+     * Tests if text() node test is equivalent with jcr:xmltext and jcr:contains
      * matches content in jcr:xmlcharacters property.
      */
     public void testTextNodeTestContains() throws RepositoryException {
@@ -89,7 +89,7 @@ public class TextNodeTest extends AbstractQueryTest {
         Node text2 = testRootNode.addNode(nodeName1, testNodeType).addNode(jcrXMLText);
         text2.setProperty(jcrXMLCharacters, "java content repository");
         testRootNode.save();
-        String xpath = "/" + jcrRoot + testRoot + "//text()[jcrfn:contains('fox')]";
+        String xpath = "/" + jcrRoot + testRoot + "//text()[" + jcrContains + "(., 'fox')]";
         executeXPathQuery(superuser, xpath, new Node[]{text1});
     }
 

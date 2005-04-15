@@ -365,7 +365,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     }
 
     public Object visit(DerefQueryNode node, Object data) {
-        exceptions.add(new InvalidQueryException("jcrfn:deref() function not supported in SQL"));
+        exceptions.add(new InvalidQueryException("jcr:deref() function not supported in SQL"));
         return data;
     }
 

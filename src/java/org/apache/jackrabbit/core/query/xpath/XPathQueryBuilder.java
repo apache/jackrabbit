@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.query.xpath;
 
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
@@ -90,7 +89,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * QName for jcr:xmltext
      */
-    static final QName JCR_XMLTEXT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "xmltext");
+    static final QName JCR_XMLTEXT = new QName(Constants.NS_JCR_URI, "xmltext");
 
     /**
      * QName for last function.
@@ -108,24 +107,24 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     static final QName XS_DATETIME = new QName(SearchManager.NS_XS_URI, "dateTime");
 
     /**
-     * QName for jcrfn:like
+     * QName for jcr:like
      */
-    static final QName JCRFN_LIKE = new QName(SearchManager.NS_JCRFN_URI, "like");
+    static final QName JCR_LIKE = new QName(Constants.NS_JCR_URI, "like");
 
     /**
-     * QName for jcrfn:deref
+     * QName for jcr:deref
      */
-    static final QName JCRFN_DEREF = new QName(SearchManager.NS_JCRFN_URI, "deref");
+    static final QName JCR_DEREF = new QName(Constants.NS_JCR_URI, "deref");
 
     /**
-     * QName for jcrfn:contains
+     * QName for jcr:contains
      */
-    static final QName JCRFN_CONTAINS = new QName(SearchManager.NS_JCRFN_URI, "contains");
+    static final QName JCR_CONTAINS = new QName(Constants.NS_JCR_URI, "contains");
 
     /**
      * QName for jcr:root
      */
-    static final QName JCR_ROOT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "root");
+    static final QName JCR_ROOT = new QName(Constants.NS_JCR_URI, "root");
 
     /**
      * String constant for operator 'eq'
@@ -680,7 +679,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     // wrong number of arguments
                     exceptions.add(new InvalidQueryException("Wrong number of arguments for xs:dateTime"));
                 }
-            } else if (JCRFN_CONTAINS.toJCRName(resolver).equals(fName)) {
+            } else if (JCR_CONTAINS.toJCRName(resolver).equals(fName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
@@ -700,35 +699,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                             path.jjtAccept(this, contains);
                             ((NAryQueryNode) queryNode).addOperand(contains);
                         } else {
-                            exceptions.add(new InvalidQueryException("Wrong argument type for jcrfn:contains"));
+                            exceptions.add(new InvalidQueryException("Wrong argument type for jcr:contains"));
                         }
-                    }
-                // todo first parameter is currently optional -> remove later
-                } else if (node.jjtGetNumChildren() == 2) {
-                    SimpleNode literal = (SimpleNode) node.jjtGetChild(1).jjtGetChild(0);
-                    if (queryNode instanceof NAryQueryNode) {
-                        if (literal.getId() == JJTSTRINGLITERAL) {
-                            String value = literal.getValue();
-                            if (value.charAt(0) == '"') {
-                                value = value.replaceAll("\"\"", "\"");
-                            } else {
-                                value = value.replaceAll("''", "'");
-                            }
-                            // strip quotes
-                            value = value.substring(1, value.length() - 1);
-                            TextsearchQueryNode contains = new TextsearchQueryNode(queryNode, value);
-                            ((NAryQueryNode) queryNode).addOperand(contains);
-                        } else {
-                            exceptions.add(new InvalidQueryException("Wrong argument type for jcrfn:contains"));
-                        }
-                    } else {
-                        exceptions.add(new InvalidQueryException("Unsupported location for function jcrfn:contains"));
                     }
                 } else {
                     // wrong number of arguments
-                    exceptions.add(new InvalidQueryException("Wrong number of arguments for jcrfn:contains"));
+                    exceptions.add(new InvalidQueryException("Wrong number of arguments for jcr:contains"));
                 }
-            } else if (JCRFN_LIKE.toJCRName(resolver).equals(fName)) {
+            } else if (JCR_LIKE.toJCRName(resolver).equals(fName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
@@ -739,7 +717,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         node.jjtGetChild(1).jjtAccept(this, like);
                         // check property name
                         if (like.getProperty() == null) {
-                            exceptions.add(new InvalidQueryException("Wrong first argument type for jcrfn:like"));
+                            exceptions.add(new InvalidQueryException("Wrong first argument type for jcr:like"));
                         }
 
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
@@ -749,14 +727,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                             value = value.substring(1, value.length() - 1);
                             like.setStringValue(value);
                         } else {
-                            exceptions.add(new InvalidQueryException("Wrong second argument type for jcrfn:like"));
+                            exceptions.add(new InvalidQueryException("Wrong second argument type for jcr:like"));
                         }
                     } else {
-                        exceptions.add(new InvalidQueryException("Unsupported location for function jcrfn:like"));
+                        exceptions.add(new InvalidQueryException("Unsupported location for function jcr:like"));
                     }
                 } else {
                     // wrong number of arguments
-                    exceptions.add(new InvalidQueryException("Wrong number of arguments for jcrfn:like"));
+                    exceptions.add(new InvalidQueryException("Wrong number of arguments for jcr:like"));
                 }
             } else if (FN_TRUE.toJCRName(resolver).equals(fName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
@@ -802,7 +780,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for last()"));
                 }
-            } else if (JCRFN_DEREF.toJCRName(resolver).equals(fName)) {
+            } else if (JCR_DEREF.toJCRName(resolver).equals(fName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode.getType() == QueryNode.TYPE_PATH) {
@@ -813,7 +791,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         node.jjtGetChild(1).jjtAccept(this, derefNode);
                         // check property name
                         if (derefNode.getRefProperty() == null) {
-                            exceptions.add(new InvalidQueryException("Wrong first argument type for jcrfn:deref"));
+                            exceptions.add(new InvalidQueryException("Wrong first argument type for jcr:deref"));
                         }
 
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
@@ -833,11 +811,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                                 derefNode.setNameTest(name);
                             }
                         } else {
-                            exceptions.add(new InvalidQueryException("Wrong second argument type for jcrfn:like"));
+                            exceptions.add(new InvalidQueryException("Wrong second argument type for jcr:like"));
                         }
                         pathNode.addPathStep(derefNode);
                     } else {
-                        exceptions.add(new InvalidQueryException("Unsupported location for jcrfn:deref()"));
+                        exceptions.add(new InvalidQueryException("Unsupported location for jcr:deref()"));
                     }
                 }
             } else {

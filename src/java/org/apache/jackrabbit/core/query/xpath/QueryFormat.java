@@ -210,7 +210,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     public Object visit(TextsearchQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
-            sb.append(XPathQueryBuilder.JCRFN_CONTAINS.toJCRName(resolver));
+            sb.append(XPathQueryBuilder.JCR_CONTAINS.toJCRName(resolver));
             sb.append("(");
             if (node.getPropertyName() == null) {
                 sb.append(".");
@@ -274,7 +274,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     public Object visit(DerefQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
-            sb.append(XPathQueryBuilder.JCRFN_DEREF.toJCRName(resolver));
+            sb.append(XPathQueryBuilder.JCR_DEREF.toJCRName(resolver));
             sb.append("(@");
             sb.append(ISO9075.encode(node.getRefProperty()).toJCRName(resolver));
             sb.append(", '");
@@ -318,7 +318,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 sb.append(propName).append(" le ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LIKE) {
-                sb.append(XPathQueryBuilder.JCRFN_LIKE.toJCRName(resolver));
+                sb.append(XPathQueryBuilder.JCR_LIKE.toJCRName(resolver));
                 sb.append("(").append(propName).append(", ");
                 appendValue(node, sb);
                 sb.append(")");
