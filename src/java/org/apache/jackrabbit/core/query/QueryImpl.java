@@ -186,8 +186,6 @@ public class QueryImpl implements Query {
             // set properties
             queryNode.setProperty(QueryConstants.JCR_LANGUAGE.toJCRName(resolver), language);
             queryNode.setProperty(QueryConstants.JCR_STATEMENT.toJCRName(resolver), statement);
-            // todo this should be changed in the spec some time!
-            queryNode.getParent().save();
             node = queryNode;
             return node;
         } catch (MalformedPathException e) {

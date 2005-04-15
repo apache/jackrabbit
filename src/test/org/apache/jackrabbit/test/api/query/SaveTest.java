@@ -189,6 +189,7 @@ public class SaveTest extends AbstractJCRTest {
         } catch (LockException e) {
             // expected behaviour
         } finally {
+            readWrite.logout();
             lockable.unlock();
         }
     }
