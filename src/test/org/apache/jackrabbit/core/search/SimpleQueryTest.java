@@ -356,50 +356,72 @@ public class SimpleQueryTest extends AbstractQueryTest {
                 "and jcr:path LIKE '" + testRoot + "/%'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
-        checkResult(result, 3); // foo, bar, bla
+        checkResult(result, new Node[]{foo, bar, bla});
 
         String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text = 'foo']";
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
-        checkResult(result, 3); // foo, bar, bla
+        checkResult(result, new Node[]{foo, bar, bla});
 
         xpath = "/jcr:root" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text = 'foo']";
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
-        checkResult(result, 3); // foo, bar, bla
+        checkResult(result, new Node[]{foo, bar, bla});
+
+        //----------------------------------------------------------------------
 
         // the text = 'foo' is now also a general comparison
         sql = "SELECT * FROM nt:unstructured WHERE text = 'foo' " +
                 "and jcr:path LIKE '" + testRoot + "/%'";
         q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
-        checkResult(result, 3); // foo, bar, bla
+        checkResult(result, new Node[]{foo, bar, bla});
 
         xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text eq 'foo']";
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
-        checkResult(result, 2); // bar, bla
+        checkResult(result, new Node[]{bar, bla});
 
         xpath = "/jcr:root" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text eq 'foo']";
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
-        checkResult(result, 2); // bar, bla
+        checkResult(result, new Node[]{bar, bla});
+
+        //----------------------------------------------------------------------
 
         sql = "SELECT * FROM nt:unstructured WHERE 'bar' NOT IN text " +
                 "and jcr:path LIKE '" + testRoot + "/%'";
         q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
-        checkResult(result, 2); // bar, bla
+        checkResult(result, new Node[]{foo, bar, bla});
 
         xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text != 'bar']";
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
-        checkResult(result, 2); // bar, bla
+        checkResult(result, new Node[]{foo, bar, bla});
 
         xpath = "/jcr:root" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text != 'bar']";
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
-        checkResult(result, 2); // bar, bla
+        checkResult(result, new Node[]{foo, bar, bla});
+
+        //----------------------------------------------------------------------
+
+        sql = "SELECT * FROM nt:unstructured WHERE 'foo' NOT IN text " +
+                "and jcr:path LIKE '" + testRoot + "/%'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        result = q.execute();
+        checkResult(result, new Node[]{foo, blu});
+
+        xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text != 'foo']";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, new Node[]{foo, blu});
+
+        xpath = "/jcr:root" + testRoot + "/*[@jcr:primaryType='nt:unstructured' and @text != 'foo']";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, new Node[]{foo, blu});
     }
 
 }

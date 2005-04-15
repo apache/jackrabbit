@@ -51,11 +51,6 @@ class DerefQuery extends Query {
     private final String refProperty;
 
     /**
-     * The name of the reference property as multi value.
-     */
-    private final String refPropertyMV;
-
-    /**
      * The nameTest to apply on target node, or <code>null</code> if all
      * target nodes should be selected.
      */
@@ -83,8 +78,6 @@ class DerefQuery extends Query {
     DerefQuery(Query context, String refProperty, String nameTest) {
         this.contextQuery = context;
         this.refProperty = refProperty;
-        String[] nameParts = refProperty.split(":");
-        this.refPropertyMV = nameParts[0] + ":" + FieldNames.MVP_PREFIX + nameParts[1];
         this.nameTest = nameTest;
     }
 
@@ -143,23 +136,20 @@ class DerefQuery extends Query {
          * {@inheritDoc}
          */
         public float getValue() {
-            // @todo implement properly
-            return 0;
+            return 1.0f;
         }
 
         /**
          * {@inheritDoc}
          */
         public float sumOfSquaredWeights() throws IOException {
-            // @todo implement properly
-            return 0;
+            return 1.0f;
         }
 
         /**
          * {@inheritDoc}
          */
         public void normalize(float norm) {
-            // @todo implement properly
         }
 
         /**
@@ -227,20 +217,6 @@ class DerefQuery extends Query {
         /**
          * {@inheritDoc}
          */
-        public void score(HitCollector hc) throws IOException {
-            calculateChildren();
-
-            int next = hits.nextSetBit(0);
-            while (next > -1) {
-                hc.collect(next, 1.0f);
-                // move to next doc
-                next = hits.nextSetBit(next + 1);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
         public boolean next() throws IOException {
             calculateChildren();
             nextDoc = hits.nextSetBit(nextDoc + 1);
@@ -258,7 +234,6 @@ class DerefQuery extends Query {
          * {@inheritDoc}
          */
         public float score() throws IOException {
-            // todo implement
             return 1.0f;
         }
 
@@ -301,15 +276,11 @@ class DerefQuery extends Query {
 
                 // retrieve uuids of target nodes
                 for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
-                    String targetUUID = reader.document(i).get(refProperty);
-                    if (targetUUID != null) {
-                        uuids.add(targetUUID);
-                    }
-                    // also find multiple values
-                    String[] targetUUIDs = reader.document(i).getValues(refPropertyMV);
-                    if (targetUUIDs != null) {
-                        for (int j = 0; j < targetUUIDs.length; j++) {
-                            uuids.add(targetUUIDs[j]);
+                    String[] values = reader.document(i).getValues(FieldNames.PROPERTIES);
+                    String prefix = FieldNames.createNamedValue(refProperty, "");
+                    for (int v = 0; v < values.length; v++) {
+                        if (values[v].startsWith(prefix)) {
+                            uuids.add(values[v].substring(prefix.length()));
                         }
                     }
                 }

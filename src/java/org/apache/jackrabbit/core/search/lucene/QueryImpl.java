@@ -124,7 +124,7 @@ class QueryImpl implements ExecutableQuery {
 
         OrderQueryNode orderNode = root.getOrderNode();
 
-        OrderQueryNode.OrderSpec[] orderSpecs = null;
+        OrderQueryNode.OrderSpec[] orderSpecs;
         if (orderNode != null) {
             orderSpecs = orderNode.getOrderSpecs();
         } else {
@@ -178,8 +178,7 @@ class QueryImpl implements ExecutableQuery {
                 ntName[0] = Constants.NT_BASE;
             }
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
-            PropertyDefinition[] propDefs =
-                    (PropertyDefinition[]) nt.getPropertyDefinitions();
+            PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
             List tmp = new ArrayList();
             for (int i = 0; i < propDefs.length; i++) {
                 if (!propDefs[i].isMultiple()) {

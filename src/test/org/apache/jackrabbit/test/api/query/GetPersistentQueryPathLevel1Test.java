@@ -58,7 +58,7 @@ public class GetPersistentQueryPathLevel1Test extends AbstractQueryTest {
      * Tests if a non-persistent query throws an {@link ItemNotFoundException}
      * when {@link Query#getStoredQueryPath()} is called.
      */
-    public void getStoredQueryPath() throws RepositoryException {
+    public void testGetStoredQueryPath() throws RepositoryException {
         String statement = "/" + jcrRoot;
         Query q = session.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {

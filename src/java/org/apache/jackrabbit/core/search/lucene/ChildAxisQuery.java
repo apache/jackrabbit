@@ -250,20 +250,6 @@ class ChildAxisQuery extends Query {
         /**
          * {@inheritDoc}
          */
-        public void score(HitCollector hc) throws IOException {
-            calculateChildren();
-
-            int next = hits.nextSetBit(0);
-            while (next > -1) {
-                hc.collect(next, 1.0f);
-                // move to next doc
-                next = hits.nextSetBit(next + 1);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
         public boolean next() throws IOException {
             calculateChildren();
             nextDoc = hits.nextSetBit(nextDoc + 1);
@@ -281,7 +267,6 @@ class ChildAxisQuery extends Query {
          * {@inheritDoc}
          */
         public float score() throws IOException {
-            // todo implement
             return 1.0f;
         }
 
