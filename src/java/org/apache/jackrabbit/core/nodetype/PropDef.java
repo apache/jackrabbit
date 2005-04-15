@@ -19,31 +19,31 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.core.InternalValue;
 
 /**
- * This interface defines the property def.
+ * This interface defines a property definition.
  */
 public interface PropDef extends ItemDef {
 
     /**
-     * Returns the property definition id.
-     * @return the PropDefId
+     * Returns the id of this property definition.
+     * @return the id of this property definition.
      */
     public PropDefId getId();
 
     /**
-     * Returns the required type
-     * @return the required type
+     * Returns the required type.
+     * @return the required type.
      */
     public int getRequiredType();
 
     /**
-     * Returns the array of value constraints
-     * @return the array of value constraints
+     * Returns the array of value constraints.
+     * @return the array of value constraints.
      */
     public ValueConstraint[] getValueConstraints();
 
     /**
-     * Returns the array of default values
-     * @return the array of default values
+     * Returns the array of default values.
+     * @return the array of default values.
      */
     public InternalValue[] getDefaultValues();
 

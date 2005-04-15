@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.Constants;
 
 /**
- * This interface define the base for item definitions.
+ * This interface defines the base for item definitions.
  */
 public interface ItemDef  {
 
@@ -42,38 +42,40 @@ public interface ItemDef  {
     public QName getDeclaringNodeType();
 
     /**
-     * Returns the auto created flag.
-     * @return the auto created flag.
+     * Returns the 'autoCreated' flag.
+     * @return the 'autoCreated' flag.
      */
     public boolean isAutoCreated();
 
     /**
-     * Returns the on-parent-version attribute.
-     * @return the on-parent-version attribute.
+     * Returns the 'onParentVersion' attribute.
+     * @return the 'onParentVersion' attribute.
      */
     public int getOnParentVersion();
 
     /**
-     * Returns the protected flag.
-     * @return the protected flag.
+     * Returns the 'protected' flag.
+     * @return the 'protected' flag.
      */
     public boolean isProtected();
 
     /**
-     * Returns the mandatory flag.
-     * @return the mandatory flag.
+     * Returns the 'mandatory' flag.
+     * @return the 'mandatory' flag.
      */
     public boolean isMandatory();
 
     /**
-     * Returns if this is a residual definition.
-     * @return if this is a residual definition.
+     * Checks if this item definition is a residual definition.
+     * @return <code>true</code> if this is a residual definition;
+     *         <code>false</code> otherwise.
      */
     public boolean definesResidual();
 
     /**
-     * Returns if this is a node definition.
-     * @return if this is a node definition.
+     * Checks if this is a node definition.
+     * @return <code>true</code> if this is a node definition;
+     *         <code>false</code> otherwise, i.e. this is a property definition.
      */
     public boolean definesNode();
 }

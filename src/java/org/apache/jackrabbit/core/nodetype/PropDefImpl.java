@@ -23,12 +23,13 @@ import javax.jcr.PropertyType;
 import java.util.Arrays;
 
 /**
- * this class implements the PropDef interface.
+ * This class implements the <code>PropDef</code> interface and holds the
+ * property definition specific attributes.
  */
 public class PropDefImpl extends ItemDefImpl implements PropDef {
 
     /**
-     * The required type
+     * The required type.
      */
     private int requiredType = PropertyType.UNDEFINED;
 
@@ -38,17 +39,17 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     private ValueConstraint[] valueConstraints = ValueConstraint.EMPTY;
 
     /**
-     * the default values
+     * The default values.
      */
     private InternalValue[] defaultValues = InternalValue.EMPTY;
 
     /**
-     * the 'multiple' flag
+     * The 'multiple' flag
      */
     private boolean multiple = false;
 
     /**
-     * the id of this property def
+     * The id of this property definition.
      */
     private PropDefId id;
 
@@ -59,32 +60,32 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     public void setRequiredType(int requiredType) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         this.requiredType = requiredType;
     }
 
     /**
-     * Sets the value constraints
+     * Sets the value constraints.
      *
      * @param valueConstraints
      */
     public void setValueConstraints(ValueConstraint valueConstraints[]) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         this.valueConstraints =
                 (valueConstraints == null) ? ValueConstraint.EMPTY : valueConstraints;
     }
 
     /**
-     * Sets the default values
+     * Sets the default values.
      *
      * @param defaultValues
      */
     public void setDefaultValues(InternalValue[] defaultValues) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         this.defaultValues =
                 (defaultValues == null) ? InternalValue.EMPTY : defaultValues;
@@ -97,7 +98,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     public void setMultiple(boolean multiple) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         this.multiple = multiple;
     }
@@ -107,7 +108,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     public void setDeclaringNodeType(QName declaringNodeType) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         super.setDeclaringNodeType(declaringNodeType);
     }
@@ -117,7 +118,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     public void setName(QName name) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         super.setName(name);
     }
@@ -127,7 +128,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     public void setAutoCreated(boolean autoCreated) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         super.setAutoCreated(autoCreated);
     }
@@ -137,7 +138,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     public void setOnParentVersion(int onParentVersion) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         super.setOnParentVersion(onParentVersion);
     }
@@ -147,7 +148,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     public void setProtected(boolean writeProtected) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         super.setProtected(writeProtected);
     }
@@ -157,7 +158,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      */
     public void setMandatory(boolean mandatory) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. PropDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         super.setMandatory(mandatory);
     }
@@ -208,9 +209,13 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     }
 
     /**
-     * Checks if this prop def is equal to the given one.
+     * Checks if this property definition is equal to the given one. Two
+     * property definitions are equal if they are the same object or if all
+     * their attributes are equal.
+     *
      * @param obj the object to compare to
-     * @return <code>true</code> if equals; <code>false</code> otherwise
+     * @return <code>true</code> if this property definition is equals to obj;
+     *         <code>false</code> otherwise.
      */
     public boolean equals(Object obj) {
         if (this == obj) {

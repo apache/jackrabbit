@@ -30,7 +30,7 @@ public class PropDefId implements Serializable {
     static final long serialVersionUID = 3675238890036653593L;
 
     /**
-     * the internal id
+     * The internal id
      */
     private final int id;
 
@@ -112,7 +112,7 @@ public class PropDefId implements Serializable {
      * {@inheritDoc}
      */
     public int hashCode() {
-        // id is already the computed hash code
+        // the computed 'id' is used as hash code
         return id;
     }
 }

@@ -28,12 +28,12 @@ import java.util.TreeSet;
 public class NodeDefId implements Serializable {
 
     /**
-     * the serial number
+     * the serial number.
      */
     static final long serialVersionUID = 7020286139887664713L;
 
     /**
-     * the internal id
+     * The internal id.
      */
     private final int id;
 
@@ -68,7 +68,7 @@ public class NodeDefId implements Serializable {
     }
 
     /**
-     * Private constructor that creates an NodeDefId from an internal id
+     * Private constructor that creates an NodeDefId using an internal id
      * @param id
      */
     private NodeDefId(int id) {
@@ -119,7 +119,7 @@ public class NodeDefId implements Serializable {
      * {@inheritDoc}
      */
     public int hashCode() {
-        // id is already the computed hash code
+        // the computed 'id' is used as hash code
         return id;
     }
 }

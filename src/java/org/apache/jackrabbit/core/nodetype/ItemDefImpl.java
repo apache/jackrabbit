@@ -21,43 +21,44 @@ import org.apache.jackrabbit.core.QName;
 import javax.jcr.version.OnParentVersionAction;
 
 /**
- * This class is an abstract imlementation for the ChildItemDef interface and
- * hold the generic item def attributes.
+ * This class is an abstract implementation for the <code>ItemDef</code>
+ * interface and holds the generic item definition attributes.
  */
 public abstract class ItemDefImpl implements ItemDef {
 
     /**
-     * the name of this item def
+     * The name of this item definition.
      */
     private QName name = ANY_NAME;
 
     /**
-     * the name of the declaring node type
+     * The name of the declaring node type.
      */
     protected QName declaringNodeType = null;
 
     /**
-     * 'autocreate' flag
+     * The 'autoCreated' flag.
      */
     private boolean autoCreated = false;
 
     /**
-     * on parent version attribute
+     * The 'onParentVersion' attribute.
      */
     private int onParentVersion = OnParentVersionAction.COPY;
 
     /**
-     * write protected flag
+     * The 'writeProtected' flag.
      */
     private boolean writeProtected = false;
 
     /**
-     * mandatory flag
+     * The 'mandatory' flag.
      */
     private boolean mandatory = false;
 
     /**
      * Sets the declaring node type.
+     *
      * @param declaringNodeType
      */
     public void setDeclaringNodeType(QName declaringNodeType) {
@@ -68,7 +69,8 @@ public abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * Sets the name
+     * Sets the name.
+     *
      * @param name
      */
     public void setName(QName name) {
@@ -79,7 +81,8 @@ public abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * Sets the auto create flag
+     * Sets the auto create flag.
+     *
      * @param autoCreated
      */
     public void setAutoCreated(boolean autoCreated) {
@@ -87,7 +90,8 @@ public abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * Sets the on parent version
+     * Sets the on parent version.
+     *
      * @param onParentVersion
      */
     public void setOnParentVersion(int onParentVersion) {
@@ -95,7 +99,8 @@ public abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * Sets the protected flag
+     * Sets the protected flag.
+     *
      * @param writeProtected
      */
     public void setProtected(boolean writeProtected) {
@@ -103,7 +108,8 @@ public abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * sets the mandatory flag
+     * Sets the mandatory flag.
+     *
      * @param mandatory
      */
     public void setMandatory(boolean mandatory) {
@@ -160,12 +166,12 @@ public abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * checks if this child item def is equal to the given one. two itemdefs
-     * are equal if they are the same object or if all their attributes are
-     * equal.
+     * Checks if this item definition is equal to the given one. Two item
+     * definitions are equal if they are the same object or if all their
+     * attributes are equal.
      *
      * @param obj the object to compare to
-     * @return <code>true</code> if this item def is equal to obj;
+     * @return <code>true</code> if this item definition is equals to obj;
      *         <code>false</code> otherwise.
      */
     public boolean equals(Object obj) {
@@ -174,7 +180,9 @@ public abstract class ItemDefImpl implements ItemDef {
         }
         if (obj instanceof ItemDefImpl) {
             ItemDefImpl other = (ItemDefImpl) obj;
-            return (declaringNodeType == null ? other.declaringNodeType == null : declaringNodeType.equals(other.declaringNodeType))
+            return (declaringNodeType == null
+                        ? other.declaringNodeType == null
+                        : declaringNodeType.equals(other.declaringNodeType))
                     && (name == null ? other.name == null : name.equals(other.name))
                     && autoCreated == other.autoCreated
                     && onParentVersion == other.onParentVersion
@@ -183,6 +191,4 @@ public abstract class ItemDefImpl implements ItemDef {
         }
         return false;
     }
-
-
 }

@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * This interface defines the version manager. It gives access to the underlaying
+ * This interface defines the version manager. It gives access to the underlying
  * persistence layer of the versioning.
  */
 public interface VersionManager {

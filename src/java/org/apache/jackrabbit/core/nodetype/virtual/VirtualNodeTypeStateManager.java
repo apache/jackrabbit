@@ -75,7 +75,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
 
     /**
      * the delegtating observation manager, that dispatches the events to
-     * all underlaying ones.
+     * all underlying ones.
      */
     private DelegatingObservationDispatcher obsDispatcher;
 

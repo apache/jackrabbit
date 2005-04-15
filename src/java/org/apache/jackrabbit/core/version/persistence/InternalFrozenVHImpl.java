@@ -33,7 +33,7 @@ import javax.jcr.version.VersionException;
 class InternalFrozenVHImpl extends InternalFreezeImpl implements InternalFrozenVersionHistory {
 
     /**
-     * the underlaying persistence node
+     * the underlying persistence node
      */
     private PersistentNode node;
 
