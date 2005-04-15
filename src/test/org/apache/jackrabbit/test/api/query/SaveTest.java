@@ -48,14 +48,14 @@ public class SaveTest extends AbstractJCRTest {
     }
 
     /**
-     * Saves a {@link javax.jcr.query.Query.XPATH} query at:
+     * Stores a {@link javax.jcr.query.Query.XPATH} query at:
      * <code>testRoot + "/" + nodeName1</code>.
      */
     public void testSave() throws RepositoryException {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         query.storeAsNode(testRoot + "/" + nodeName1);
 
-        assertTrue("Node has not been saved", testRootNode.hasNode(nodeName1));
+        assertTrue("Node has not been stored", testRootNode.hasNode(nodeName1));
 
         Node queryNode = testRootNode.getNode(nodeName1);
         assertEquals("Query node is not of type nt:query", ntQuery, queryNode.getPrimaryNodeType().getName());
@@ -66,7 +66,7 @@ public class SaveTest extends AbstractJCRTest {
 
     /**
      * Tests if an {@link javax.jcr.ItemExistsException} is thrown when a query
-     * is saved on an existing node.
+     * is stored on an existing node.
      */
     public void testItemExistsException() throws RepositoryException {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
@@ -76,7 +76,7 @@ public class SaveTest extends AbstractJCRTest {
         query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
             query.storeAsNode(testRoot + "/" + nodeName1);
-            fail("Query.save() did not throw ItemExistsException");
+            fail("Query.storeAsNode() did not throw ItemExistsException");
         } catch (ItemExistsException e) {
             // expected behaviour
         }
@@ -84,13 +84,13 @@ public class SaveTest extends AbstractJCRTest {
 
     /**
      * Tests if a {@link javax.jcr.PathNotFoundException} is thrown when a query
-     * is saved to a non existent path.
+     * is stored to a non existent path.
      */
     public void testPathNotFoundException() throws RepositoryException {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName1);
-            fail("Query.save() must throw PathNotFoundException on invalid path");
+            fail("Query.storeAsNode() must throw PathNotFoundException on invalid path");
         } catch (PathNotFoundException e) {
             // expected behaviour
         }
@@ -98,12 +98,12 @@ public class SaveTest extends AbstractJCRTest {
 
     /**
      * Tests if a {@link javax.jcr.version.VersionException} is thrown when a
-     * query is saved under a checked in node.
+     * query is stored under a checked in node.
      * <p/>
      * The tests creates a node under <code>testRoot</code> with name
      * <code>nodeName1</code> and adds a mix:versionable mixin if the node is
      * not already versionable.
-     * Then the test tries to save a query as <code>nodeName2</code> under node
+     * Then the test tries to store a query as <code>nodeName2</code> under node
      * <code>nodeName1</code>.
      */
     public void testVersionException() throws RepositoryException, NotExecutableException {
@@ -128,7 +128,7 @@ public class SaveTest extends AbstractJCRTest {
 
         try {
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
-            fail("Query.save() must throw VersionException, parent node is checked in.");
+            fail("Query.storeAsNode() must throw VersionException, parent node is checked in.");
         } catch (VersionException e) {
             // expected behaviour
         }
@@ -136,10 +136,10 @@ public class SaveTest extends AbstractJCRTest {
 
     /**
      * Tests if a {@link javax.jcr.nodetype.ConstraintViolationException} is
-     * thrown if a query is saved under a node which does not allow child nodes.
+     * thrown if a query is stored under a node which does not allow child nodes.
      * <p/>
      * The test creates a node <code>nodeName1</code> of type <code>testNodeType</code>
-     * under <code>testRoot</code>. Then the test tries to save a query as
+     * under <code>testRoot</code>. Then the test tries to store a query as
      * <code>nodeName2</code> under <code>nodeName1</code>.
      *
      */
@@ -148,7 +148,7 @@ public class SaveTest extends AbstractJCRTest {
         testRootNode.addNode(nodeName1, testNodeType);
         try {
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
-            fail("Query.save() must throw ConstraintViolationException, parent node does not allow child nodes.");
+            fail("Query.storeAsNode() must throw ConstraintViolationException, parent node does not allow child nodes.");
         } catch (ConstraintViolationException e) {
             // expected behaviour
         }
@@ -156,11 +156,11 @@ public class SaveTest extends AbstractJCRTest {
 
     /**
      * Tests if a {@link javax.jcr.lock.LockException} is thrown if a query is
-     * saved under a node locked by another <code>Session</code>.
+     * stored under a node locked by another <code>Session</code>.
      * <p/>
      * The test creates a node <code>nodeName1</code> of type <code>testNodeType</code>
      * under <code>testRoot</code> and locks the node with the superuser session.
-     * Then the test tries to save a query as <code>nodeName2</code> under
+     * Then the test tries to store a query as <code>nodeName2</code> under
      * <code>nodeName1</code> with the readWrite <code>Session</code>.
      */
     public void testLockException() throws RepositoryException, NotExecutableException {
@@ -185,7 +185,7 @@ public class SaveTest extends AbstractJCRTest {
         Query query = readWrite.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
-            fail("Query.save() must throw LockException, parent node is locked.");
+            fail("Query.storeAsNode() must throw LockException, parent node is locked.");
         } catch (LockException e) {
             // expected behaviour
         } finally {
@@ -202,7 +202,7 @@ public class SaveTest extends AbstractJCRTest {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
             query.storeAsNode(testRoot + "/invalid[path");
-            fail("Query.save() must throw RepositoryException on malformed path.");
+            fail("Query.storeAsNode() must throw RepositoryException on malformed path.");
         } catch (RepositoryException e) {
             // expected behaviour
         }
