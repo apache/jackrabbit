@@ -21,7 +21,7 @@
 	<xsl:import href="jjtree.xsl" />
 
 	<xsl:template name="set-parser-package">
-	package org.apache.jackrabbit.core.search.xpath;
+	package org.apache.jackrabbit.core.query.xpath;
 	</xsl:template>
 
 </xsl:stylesheet>
