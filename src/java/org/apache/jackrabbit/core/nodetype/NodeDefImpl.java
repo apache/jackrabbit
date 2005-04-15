@@ -22,28 +22,28 @@ import org.apache.jackrabbit.core.QName;
 import java.util.Arrays;
 
 /**
- * This class implements the ChildNodeDef interface. It basically holds the
- * respective attributes.
+ * This class implements the <code>NodeDef</code> interface and holds the node
+ * definition specific attributes.
  */
 public class NodeDefImpl extends ItemDefImpl implements NodeDef {
 
     /**
-     * the name of the default primary type
+     * The name of the default primary type.
      */
     private QName defaultPrimaryType = null;
 
     /**
-     * the names of the required primary types
+     * The names of the required primary types.
      */
     private QName[] requiredPrimaryTypes = new QName[]{Constants.NT_BASE};
 
     /**
-     * the 'allowSameNameSibs' flag.
+     * The 'allowsSameNameSiblings' flag.
      */
     private boolean allowsSameNameSiblings = false;
 
     /**
-     * the node def id. Set after 'compile'
+     * The id of the node definition.
      */
     private NodeDefId id;
 
@@ -52,7 +52,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      */
     public void setDeclaringNodeType(QName declaringNodeType) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         super.setDeclaringNodeType(declaringNodeType);
     }
@@ -62,7 +62,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      */
     public void setName(QName name) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         super.setName(name);
     }
@@ -72,7 +72,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      */
     public void setAutoCreated(boolean autoCreated) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         super.setAutoCreated(autoCreated);
     }
@@ -82,7 +82,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      */
     public void setOnParentVersion(int onParentVersion) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         super.setOnParentVersion(onParentVersion);
     }
@@ -92,7 +92,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      */
     public void setProtected(boolean writeProtected) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         super.setProtected(writeProtected);
     }
@@ -102,31 +102,31 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      */
     public void setMandatory(boolean mandatory) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         super.setMandatory(mandatory);
     }
 
     /**
-     * Sets the name of default primary type
+     * Sets the name of default primary type.
      *
      * @param defaultNodeType
      */
     public void setDefaultPrimaryType(QName defaultNodeType) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         this.defaultPrimaryType = defaultNodeType;
     }
 
     /**
-     * Sets the names of the required primary types
+     * Sets the names of the required primary types.
      *
      * @param requiredPrimaryTypes
      */
     public void setRequiredPrimaryTypes(QName[] requiredPrimaryTypes) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         if (requiredPrimaryTypes == null) {
             throw new IllegalArgumentException("requiredPrimaryTypes can not be null");
@@ -135,13 +135,13 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     }
 
     /**
-     * sets the 'allowsSameNameSiblings' flag
+     * Sets the 'allowsSameNameSiblings' flag.
      *
      * @param allowsSameNameSiblings
      */
     public void setAllowsSameNameSiblings(boolean allowsSameNameSiblings) {
         if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
+            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
         }
         this.allowsSameNameSiblings = allowsSameNameSiblings;
     }
@@ -185,9 +185,13 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     }
 
     /**
-     * checks if this child node def is equal to the given one.
+     * Checks if this node definition is equal to the given one. Two node
+     * definitions are equal if they are the same object or if all their
+     * attributes are equal.
+     *
      * @param obj the other object to compare to.
-     * @return <code>true</code> if equal; <code>false</code> otherwise.
+     * @return <code>true</code> if this item definition is equals to obj;
+     *         <code>false</code> otherwise.
      */
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -197,7 +201,9 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
             NodeDefImpl other = (NodeDefImpl) obj;
             return super.equals(obj)
                     && Arrays.equals(requiredPrimaryTypes, other.requiredPrimaryTypes)
-                    && (defaultPrimaryType == null ? other.defaultPrimaryType == null : defaultPrimaryType.equals(other.defaultPrimaryType))
+                    && (defaultPrimaryType == null
+                            ? other.defaultPrimaryType == null
+                            : defaultPrimaryType.equals(other.defaultPrimaryType))
                     && allowsSameNameSiblings == other.allowsSameNameSiblings;
         }
         return false;

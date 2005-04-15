@@ -26,17 +26,17 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeDefinition;
 
 /**
- * This class implements the NodeDef interface.
+ * This class implements the <code>NodeDefinition</code> interface.
  */
 public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefinition {
 
     /**
-     * the default logger
+     * The default logger.
      */
     private static Logger log = Logger.getLogger(NodeDefImpl.class);
 
     /**
-     * Package private constructor
+     * Package private constructor.
      *
      * @param nodeDef    child node definition
      * @param ntMgr      node type manager
@@ -48,14 +48,16 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
     }
 
     /**
-     * Returns the underlaying item def
-     * @return
+     * Returns the underlying node definition.
+     *
+     * @return the underlying node definition.
      */
     public NodeDef unwrap() {
         return (NodeDef) itemDef;
     }
 
-    //--------------------------------------------------------------< NodeDef >
+    //-----------------------------------------------------< NodeDefinition >---
+
     /**
      * {@inheritDoc}
      */

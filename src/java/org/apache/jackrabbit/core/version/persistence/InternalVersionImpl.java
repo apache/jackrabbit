@@ -50,7 +50,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     private ArrayList successors = new ArrayList();
 
     /**
-     * the underlaying persistance node of this version
+     * the underlying persistance node of this version
      */
     private PersistentNode node;
 

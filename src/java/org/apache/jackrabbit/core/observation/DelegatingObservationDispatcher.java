@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * This Class implements an observation dispatcher, that delegates events to
- * a set of underlaying dispatchers.
+ * a set of underlying dispatchers.
  */
 public class DelegatingObservationDispatcher {
 

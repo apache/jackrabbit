@@ -49,7 +49,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         implements InternalFrozenNode, Constants {
 
     /**
-     * the underlaying persistance node
+     * the underlying persistance node
      */
     private PersistentNode node;
 

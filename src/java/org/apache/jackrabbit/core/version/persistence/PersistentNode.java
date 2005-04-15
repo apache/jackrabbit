@@ -41,7 +41,7 @@ import java.util.List;
 public class PersistentNode {
 
     /**
-     * the underlaying persistent state
+     * the underlying persistent state
      */
     private NodeState nodeState;
 

@@ -42,34 +42,40 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         NodeTypeRegistryListener {
 
     /**
-     * the default logger
+     * The default logger.
      */
     private static Logger log = Logger.getLogger(NodeTypeManagerImpl.class);
 
     /**
-     * the underlaying node type registry
+     * The underlying node type registry.
      */
     private final NodeTypeRegistry ntReg;
 
+    /**
+     * The root node definition.
+     */
     private final NodeDefinitionImpl rootNodeDef;
 
     /**
-     * namespace resolver used to translate qualified names to JCR names
+     * The namespace resolver used to translate qualified names to JCR names.
      */
     private final NamespaceResolver nsResolver;
 
     /**
-     * A cache for <code>NodeType</code> instances created by this <code>NodeTypeManager</code>
+     * A cache for <code>NodeType</code> instances created by this
+     * <code>NodeTypeManager</code>
      */
     private final Map ntCache;
 
     /**
-     * A cache for <code>PropertyDef</code> instances created by this <code>NodeTypeManager</code>
+     * A cache for <code>PropertyDefinition</code> instances created by this
+     * <code>NodeTypeManager</code>
      */
     private final Map pdCache;
 
     /**
-     * A cache for <code>NodeDef</code> instances created by this <code>NodeTypeManager</code>
+     * A cache for <code>NodeDefinition</code> instances created by this
+     * <code>NodeTypeManager</code>
      */
     private final Map ndCache;
 
@@ -159,7 +165,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         return ntReg;
     }
 
-    //---------------------------------------------< NodeTypeRegistryListener >
+    //-------------------------------------------< NodeTypeRegistryListener >---
     /**
      * {@inheritDoc}
      */
@@ -189,7 +195,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         ndCache.clear();
     }
 
-    //------------------------------------------------------< NodeTypeManager >
+    //----------------------------------------------------< NodeTypeManager >---
     /**
      * {@inheritDoc}
      */
@@ -245,7 +251,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         }
     }
 
-    //----------------------------------------------------------< diagnostics >
+    //--------------------------------------------------------< diagnostics >---
     /**
      * Dumps the state of this <code>NodeTypeManager</code> instance.
      *
@@ -258,7 +264,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         ntReg.dump(ps);
     }
 
-    //--------------------------------------------------------< inner classes >
+    //------------------------------------------------------< inner classes >---
     /**
      * The <code>RootNodeDefinition</code> defines the characteristics of
      * the root node.

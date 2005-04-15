@@ -19,13 +19,13 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.core.QName;
 
 /**
- * This interface define a ChilsNodeDefinition
+ * This interface defines a node definition.
  */
 public interface NodeDef extends ItemDef {
 
     /**
-     * Returns the nodedef id of this node def.
-     * @return the node def id.
+     * Returns the id of this node definition.
+     * @return the id of this node definition.
      */
     public NodeDefId getId();
 
@@ -42,8 +42,8 @@ public interface NodeDef extends ItemDef {
     public QName[] getRequiredPrimaryTypes();
 
     /**
-     * Returns the 'allowSameNameSiblings' flag.
-     * @return the 'allowSameNameSiblings' flag.
+     * Returns the 'allowsSameNameSiblings' flag.
+     * @return the 'allowsSameNameSiblings' flag.
      */
     public boolean allowsSameNameSiblings();
 

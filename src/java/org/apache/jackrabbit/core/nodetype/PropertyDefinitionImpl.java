@@ -25,12 +25,12 @@ import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
 
 /**
- * This class implements the PropertyDef interface.
+ * This class implements the <code>PropertyDefinition</code> interface.
  */
 public class PropertyDefinitionImpl extends ItemDefinitionImpl implements PropertyDefinition {
 
     /**
-     * the default logger
+     * The default logger.
      */
     private static Logger log = Logger.getLogger(PropertyDefinitionImpl.class);
 
@@ -41,19 +41,22 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      * @param ntMgr      node type manager
      * @param nsResolver namespace resolver
      */
-    PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+    PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr,
+                           NamespaceResolver nsResolver) {
         super(propDef, ntMgr, nsResolver);
     }
 
     /**
-     * Returns the underlaying prop def
-     * @return
+     * Returns the underlying property definition.
+     * 
+     * @return the underlying property definition.
      */
     public PropDef unwrap() {
         return (PropDef) itemDef;
     }
 
-    //----------------------------------------------------------< PropertyDef >
+    //-------------------------------------------------< PropertyDefinition >---
+
     /**
      * {@inheritDoc}
      */

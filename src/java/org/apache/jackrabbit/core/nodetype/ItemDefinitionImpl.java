@@ -26,32 +26,32 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.ItemDefinition;
 
 /**
- * this class implements the ItemDef interface
+ * This class implements the <code>ItemDefinition</code> interface.
  */
 abstract class ItemDefinitionImpl implements ItemDefinition {
 
     /**
-     * the default logger
+     * The default logger.
      */
     private static Logger log = Logger.getLogger(ItemDefImpl.class);
 
     /**
-     * Literal for 'any name'
+     * Literal for 'any name'.
      */
     protected static final String ANY_NAME = "*";
 
     /**
-     * the node type manager of this session
+     * The node type manager of this session.
      */
     protected final NodeTypeManagerImpl ntMgr;
 
     /**
-     * namespace resolver used to translate qualified names to JCR names
+     * The namespace resolver used to translate qualified names to JCR names.
      */
     protected final NamespaceResolver nsResolver;
 
     /**
-     * the underlaying child item def
+     * The underlying child item definition.
      */
     protected final ItemDef itemDef;
 
@@ -62,14 +62,15 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
      * @param ntMgr      node type manager
      * @param nsResolver namespace resolver
      */
-    ItemDefinitionImpl(ItemDef itemDef, NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+    ItemDefinitionImpl(ItemDef itemDef, NodeTypeManagerImpl ntMgr,
+                       NamespaceResolver nsResolver) {
         this.itemDef = itemDef;
         this.ntMgr = ntMgr;
         this.nsResolver = nsResolver;
     }
 
     /**
-     * Returns the qname of this item def
+     * Returns the qualified name of this item definition.
      *
      * @return
      */
@@ -77,7 +78,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
         return itemDef.getName();
     }
 
-    //--------------------------------------------------------------< ItemDef >
+    //-----------------------------------------------------< ItemDefinition >---
     /**
      * {@inheritDoc}
      */
