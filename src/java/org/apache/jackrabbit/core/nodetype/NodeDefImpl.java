@@ -70,7 +70,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * {@inheritDoc}
      */
-    public void setAutoCreate(boolean autoCreated) {
+    public void setAutoCreated(boolean autoCreated) {
         if (id != null) {
             throw new IllegalStateException("Unable to set attribute. ChildNodeDef already compiled.");
         }
