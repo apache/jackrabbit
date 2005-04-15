@@ -66,9 +66,9 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
     }
 
     /** {@inheritDoc} */
-    public String[] getPropertyNames() throws RepositoryException {
+    public String[] getColumnNames() throws RepositoryException {
         try {
-            return remote.getPropertyNames();
+            return remote.getColumnNames();
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

@@ -113,7 +113,7 @@ public interface RemoteNodeType extends Remote {
      * @return property definitions
      * @throws RemoteException on RMI errors
      */
-    RemotePropertyDef[] getPropertyDefs() throws RemoteException;
+    RemotePropertyDefinition[] getPropertyDefs() throws RemoteException;
 
     /**
      * Remote version of the
@@ -123,7 +123,7 @@ public interface RemoteNodeType extends Remote {
      * @return declared property definitions
      * @throws RemoteException on RMI errors
      */
-    RemotePropertyDef[] getDeclaredPropertyDefs() throws RemoteException;
+    RemotePropertyDefinition[] getDeclaredPropertyDefs() throws RemoteException;
 
     /**
      * Remote version of the
@@ -133,7 +133,7 @@ public interface RemoteNodeType extends Remote {
      * @return child node definitions
      * @throws RemoteException on RMI errors
      */
-    RemoteNodeDef[] getChildNodeDefs() throws RemoteException;
+    RemoteNodeDefinition[] getChildNodeDefs() throws RemoteException;
 
     /**
      * Remote version of the
@@ -143,7 +143,7 @@ public interface RemoteNodeType extends Remote {
      * @return declared child node definitions
      * @throws RemoteException on RMI errors
      */
-    RemoteNodeDef[] getDeclaredChildNodeDefs() throws RemoteException;
+    RemoteNodeDefinition[] getDeclaredChildNodeDefs() throws RemoteException;
 
     /**
      * Remote version of the

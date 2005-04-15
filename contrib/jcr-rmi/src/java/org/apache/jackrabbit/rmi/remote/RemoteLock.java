@@ -76,7 +76,7 @@ public interface RemoteLock extends Remote {
      *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
-    boolean isLive() throws RemoteException;
+    boolean isLive() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -86,5 +86,16 @@ public interface RemoteLock extends Remote {
      * @throws RemoteException on RMI errors
      */
     void refresh() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.lock.Lock#isSessionScoped()} () Lock.isSessionScoped()} method.
+     *
+     * @return <code>true</code> if the lock is live,
+     *         <code>false</code> otherwise
+     * @throws RemoteException on RMI errors
+     */
+    boolean isSessionScoped() throws RemoteException;
+
 
 }

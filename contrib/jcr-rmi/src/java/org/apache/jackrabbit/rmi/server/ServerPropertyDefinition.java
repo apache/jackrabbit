@@ -19,28 +19,28 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 
 import javax.jcr.Value;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.SerialValue;
 
 /**
  * Remote adapter for the JCR
- * {@link javax.jcr.nodetype.PropertyDef PropertyDef} interface. This
+ * {@link javax.jcr.nodetype.PropertyDefinition PropertyDefinition} interface. This
  * class makes a local property definition available as an RMI service
  * using the
- * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDef RemotePropertyDef}
+ * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition RemotePropertyDefinition}
  * interface.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.PropertyDef
- * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDef
+ * @see javax.jcr.nodetype.PropertyDefinition
+ * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition
  */
-public class ServerPropertyDef extends ServerItemDef
-        implements RemotePropertyDef {
+public class ServerPropertyDefinition extends ServerItemDefinition
+        implements RemotePropertyDefinition {
 
     /** The adapted local property definition. */
-    private PropertyDef def;
+    private PropertyDefinition def;
 
     /**
      * Creates a remote adapter for the given local property definition.
@@ -49,7 +49,7 @@ public class ServerPropertyDef extends ServerItemDef
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
      */
-    public ServerPropertyDef(PropertyDef def, RemoteAdapterFactory factory)
+    public ServerPropertyDefinition(PropertyDefinition def, RemoteAdapterFactory factory)
             throws RemoteException {
         super(def, factory);
         this.def = def;

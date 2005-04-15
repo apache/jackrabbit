@@ -128,7 +128,7 @@ public class ServerVersionHistory extends ServerNode
     }
 
     /** {@inheritDoc} */
-    public boolean hasVersionLabel(String label) throws RemoteException {
+    public boolean hasVersionLabel(String label) throws RepositoryException, RemoteException {
         return versionHistory.hasVersionLabel(label);
     }
 
@@ -144,7 +144,7 @@ public class ServerVersionHistory extends ServerNode
     }
 
     /** {@inheritDoc} */
-    public String[] getVersionLabels() throws RemoteException {
+    public String[] getVersionLabels() throws RepositoryException, RemoteException {
         return versionHistory.getVersionLabels();
     }
 
@@ -170,5 +170,10 @@ public class ServerVersionHistory extends ServerNode
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
+    }
+
+    /** {@inheritDoc} */
+    public String getVersionableUUID() throws RepositoryException, RemoteException {
+        return versionHistory.getVersionableUUID();
     }
 }

@@ -36,13 +36,13 @@ import javax.jcr.RepositoryException;
  */
 public interface RemoteQueryResult extends Remote {
     /**
-     * @see javax.jcr.query.QueryResult#getPropertyNames()
+     * @see javax.jcr.query.QueryResult#getColumnNames()
      *
      * @return a <code>PropertyIterator</code>
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    String[] getPropertyNames() throws RepositoryException, RemoteException;
+    String[] getColumnNames() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.query.QueryResult#getRows()

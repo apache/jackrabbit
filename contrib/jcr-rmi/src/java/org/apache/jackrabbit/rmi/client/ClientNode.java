@@ -37,8 +37,8 @@ import javax.jcr.Session;
 import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
@@ -374,7 +374,7 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public NodeDef getDefinition() throws RepositoryException {
+    public NodeDefinition getDefinition() throws RepositoryException {
         try {
             return getFactory().getNodeDef(remote.getDefinition());
         } catch (RemoteException ex) {
@@ -410,10 +410,10 @@ public class ClientNode extends ClientItem implements Node {
     }
 
     /** {@inheritDoc} */
-    public void merge(String workspace, boolean bestEffort)
+    public NodeIterator merge(String workspace, boolean bestEffort)
             throws RepositoryException {
         try {
-            remote.merge(workspace, bestEffort);
+            return getNodeIterator(getSession(), remote.merge(workspace, bestEffort));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -516,6 +516,24 @@ public class ClientNode extends ClientItem implements Node {
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
+    }
+
+    /** {@inheritDoc} */
+    public Property setProperty(String name, Value value, int type)
+            throws RepositoryException {
+        try {
+            RemoteProperty property =
+                    remote.setProperty(name, new SerialValue(value), type);
+            return getFactory().getProperty(getSession(), property);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
+    public Property setProperty(String name, String value, int type)
+            throws RepositoryException {
+        return setProperty(name, new StringValue(value), type);
     }
 
     /** {@inheritDoc} */

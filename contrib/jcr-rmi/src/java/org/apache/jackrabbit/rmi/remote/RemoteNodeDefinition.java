@@ -19,10 +19,10 @@ package org.apache.jackrabbit.rmi.remote;
 import java.rmi.RemoteException;
 
 /**
- * Remote version of the JCR {@link javax.jcr.nodetype.NodeDef NodeDef}
+ * Remote version of the JCR {@link javax.jcr.nodetype.NodeDefinition NodeDefinition}
  * interface. Used by the
- * {@link org.apache.jackrabbit.rmi.server.ServerNodeDef ServerNodeDef} and
- * {@link org.apache.jackrabbit.rmi.client.ClientNodeDef ClientNodeDef}
+ * {@link org.apache.jackrabbit.rmi.server.ServerNodeDefinition ServerNodeDefinition} and
+ * {@link org.apache.jackrabbit.rmi.client.ClientNodeDefinition ClientNodeDefinition}
  * adapters to provide transparent RMI access to remote node definitions.
  * <p>
  * The methods in this interface are documented only with a reference
@@ -35,15 +35,15 @@ import java.rmi.RemoteException;
  * interface. RMI errors are signalled with RemoteExceptions.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.NodeDef
- * @see org.apache.jackrabbit.rmi.client.ClientNodeDef
- * @see org.apache.jackrabbit.rmi.server.ServerNodeDef
+ * @see javax.jcr.nodetype.NodeDefinition
+ * @see org.apache.jackrabbit.rmi.client.ClientNodeDefinition
+ * @see org.apache.jackrabbit.rmi.server.ServerNodeDefinition
  */
-public interface RemoteNodeDef extends RemoteItemDef {
+public interface RemoteNodeDefinition extends RemoteItemDefinition {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeDef#getRequiredPrimaryTypes() NodeDef.getRequiredPrimaryTypes()}
+     * {@link javax.jcr.nodetype.NodeDefinition#getRequiredPrimaryTypes() NodeDef.getRequiredPrimaryTypes()}
      * method.
      *
      * @return required primary node types
@@ -53,7 +53,7 @@ public interface RemoteNodeDef extends RemoteItemDef {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeDef#getDefaultPrimaryType() NodeDef.getDefaultPrimaryType()}
+     * {@link javax.jcr.nodetype.NodeDefinition#getDefaultPrimaryType() NodeDef.getDefaultPrimaryType()}
      * method.
      *
      * @return default primary node type
@@ -63,13 +63,13 @@ public interface RemoteNodeDef extends RemoteItemDef {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeDef#allowSameNameSibs() NodeDef.allowSameNameSibs()}
+     * {@link javax.jcr.nodetype.NodeDefinition#allowsSameNameSiblings() NodeDef.allowSameNameSibs()}
      * method.
      *
      * @return <code>true</code> if same name siblings are allowed,
      *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
-    boolean allowSameNameSibs() throws RemoteException;
+    boolean allowsSameNameSiblings() throws RemoteException;
 
 }

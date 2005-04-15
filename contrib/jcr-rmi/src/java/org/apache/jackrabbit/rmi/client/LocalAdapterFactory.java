@@ -24,11 +24,11 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.ItemDef;
-import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -37,15 +37,15 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
-import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
@@ -184,15 +184,15 @@ public interface LocalAdapterFactory {
      * Factory method for creating a local adapter for a remote item
      * definition. Note that before calling this method, the client may want to
      * introspect the remote item definition to determine whether to use the
-     * {@link #getNodeDef(RemoteNodeDef) getNodeDef} or
-     * {@link #getPropertyDef(RemotePropertyDef) getPropertyDef} method
+     * {@link #getNodeDef(RemoteNodeDefinition) getNodeDef} or
+     * {@link #getPropertyDef(RemotePropertyDefinition) getPropertyDef} method
      * instead, as the adapter returned by this method will only cover
-     * the {@link ItemDef ItemDef} base interface.
+     * the {@link ItemDefinition ItemDef} base interface.
      *
      * @param remote remote item definition
      * @return local item definition adapter
      */
-    ItemDef getItemDef(RemoteItemDef remote);
+    ItemDefinition getItemDef(RemoteItemDefinition remote);
 
     /**
      * Factory method for creating a local adapter for a remote node
@@ -201,7 +201,7 @@ public interface LocalAdapterFactory {
      * @param remote remote node definition
      * @return local node definition adapter
      */
-    NodeDef getNodeDef(RemoteNodeDef remote);
+    NodeDefinition getNodeDef(RemoteNodeDefinition remote);
 
     /**
      * Factory method for creating a local adapter for a remote property
@@ -210,7 +210,7 @@ public interface LocalAdapterFactory {
      * @param remote remote property definition
      * @return local property definition adapter
      */
-    PropertyDef getPropertyDef(RemotePropertyDef remote);
+    PropertyDefinition getPropertyDef(RemotePropertyDefinition remote);
 
     /**
      * Factory method for creating a local adapter for a remote lock.

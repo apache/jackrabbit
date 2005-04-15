@@ -23,6 +23,7 @@ import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
+import org.apache.jackrabbit.rmi.remote.RemoteNode;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.query.Query Query} interface.
@@ -69,14 +70,15 @@ public class ServerQuery extends ServerObject implements RemoteQuery {
     }
 
     /** {@inheritDoc} */
-    public String getPersistentQueryPath()
+    public String getStoredQueryPath()
             throws RepositoryException, RemoteException {
-        return query.getPersistentQueryPath();
+        return query.getStoredQueryPath();
     }
 
     /** {@inheritDoc} */
-    public void save(String absPath)
+    public RemoteNode storeAsNode(String absPath)
             throws RepositoryException, RemoteException {
-        query.save(absPath);
+        return getRemoteNode(query.storeAsNode(absPath));
     }
+
 }

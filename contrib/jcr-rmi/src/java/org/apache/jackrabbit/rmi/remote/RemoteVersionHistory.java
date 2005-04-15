@@ -144,11 +144,11 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @return a <code>boolean</code>
      * @throws RemoteException on RMI errors
      */
-    boolean hasVersionLabel(String label) throws RemoteException;
+    boolean hasVersionLabel(String label) throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
-     * {@link javax.jcr.version.VersionHistory#hasVersionLabel(RemoteVersion, String) hasVersionLabel(RemoteVersion, String)}
+     * {@link javax.jcr.version.VersionHistory#hasVersionLabel(javax.jcr.version.Version, String) hasVersionLabel(Version, String)}
      * method.
      *
      * @param versionUUID The UUID of the version whose labels are to be returned.
@@ -168,11 +168,11 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @return a <code>String</code> array containing all the labels of the version history
      * @throws RemoteException on RMI errors
      */
-    String[] getVersionLabels() throws RemoteException;
+    String[] getVersionLabels() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
-     * {@link javax.jcr.version.VersionHistory#getVersionLabels(RemoteVersion) VersionHistory.getVersionLabels(RemoteVersion)}
+     * {@link javax.jcr.version.VersionHistory#getVersionLabels(javax.jcr.version.Version) VersionHistory.getVersionLabels(Version)}
      * method.
      *
      * @param versionUUID The UUID of the version whose labels are to be returned.
@@ -194,4 +194,17 @@ public interface RemoteVersionHistory extends RemoteNode {
      */
     void removeVersion(String versionName)
             throws RepositoryException, RemoteException;
+
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.VersionHistory#getVersionableUUID()}  VersionHistory.getVersionableUUID()}
+     * method.
+     *
+     * @return the uuid of the versionable node
+     * @throws RepositoryException if another error occurs.
+     * @throws RemoteException on RMI errors
+     */
+    String getVersionableUUID() throws RepositoryException, RemoteException;
+
 }

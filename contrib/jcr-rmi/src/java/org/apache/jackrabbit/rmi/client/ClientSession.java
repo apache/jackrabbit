@@ -87,9 +87,9 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public String getUserId() {
+    public String getUserID() {
         try {
-            return remote.getUserId();
+            return remote.getUserID();
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }
@@ -161,7 +161,7 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public boolean itemExists(String path) {
+    public boolean itemExists(String path) throws RepositoryException {
         try {
             return remote.itemExists(path);
         } catch (RemoteException ex) {
@@ -207,7 +207,7 @@ public class ClientSession extends ClientObject implements Session {
 
     /** {@inheritDoc} */
     public void checkPermission(String path, String actions)
-            throws AccessControlException {
+            throws AccessControlException, RepositoryException{
         try {
             remote.checkPermission(path, actions);
         } catch (RemoteException ex) {
@@ -216,7 +216,7 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public void importXML(String path, InputStream xml)
+    public void importXML(String path, InputStream xml, int mode)
             throws IOException, RepositoryException {
         try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -224,16 +224,16 @@ public class ClientSession extends ClientObject implements Session {
             for (int n = xml.read(bytes); n != -1; n = xml.read(bytes)) {
                 buffer.write(bytes, 0, n);
             }
-            remote.importXML(path, buffer.toByteArray());
+            remote.importXML(path, buffer.toByteArray(), mode);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
     }
 
     /** {@inheritDoc} */
-    public ContentHandler getImportContentHandler(String path)
+    public ContentHandler getImportContentHandler(String path, int mode)
             throws RepositoryException {
-        return new SessionImportContentHandler(this, path);
+        return new SessionImportContentHandler(this, path, mode);
     }
 
     /** {@inheritDoc} */
@@ -318,12 +318,12 @@ public class ClientSession extends ClientObject implements Session {
      *
      * {@inheritDoc}
      */
-    public void exportSysView(
+    public void exportSystemView(
             String path, ContentHandler handler,
             boolean binaryAsLink, boolean noRecurse)
             throws SAXException, RepositoryException {
         try {
-            byte[] xml = remote.exportSysView(path, binaryAsLink, noRecurse);
+            byte[] xml = remote.exportSystemView(path, binaryAsLink, noRecurse);
 
             Source source = new StreamSource(new ByteArrayInputStream(xml));
             Result result = new SAXResult(handler);
@@ -350,12 +350,12 @@ public class ClientSession extends ClientObject implements Session {
      *
      * {@inheritDoc}
      */
-    public void exportSysView(
+    public void exportSystemView(
             String path, OutputStream output,
             boolean binaryAsLink, boolean noRecurse)
             throws IOException, RepositoryException {
         try {
-            byte[] xml = remote.exportSysView(path, binaryAsLink, noRecurse);
+            byte[] xml = remote.exportSystemView(path, binaryAsLink, noRecurse);
             output.write(xml);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
@@ -371,12 +371,12 @@ public class ClientSession extends ClientObject implements Session {
      *
      * {@inheritDoc}
      */
-    public void exportDocView(
+    public void exportDocumentView(
             String path, ContentHandler handler,
             boolean binaryAsLink, boolean noRecurse)
             throws SAXException, RepositoryException {
         try {
-            byte[] xml = remote.exportDocView(path, binaryAsLink, noRecurse);
+            byte[] xml = remote.exportDocumentView(path, binaryAsLink, noRecurse);
 
             Source source = new StreamSource(new ByteArrayInputStream(xml));
             Result result = new SAXResult(handler);
@@ -403,15 +403,26 @@ public class ClientSession extends ClientObject implements Session {
      *
      * {@inheritDoc}
      */
-    public void exportDocView(
+    public void exportDocumentView(
             String path, OutputStream output,
             boolean binaryAsLink, boolean noRecurse)
             throws IOException, RepositoryException {
         try {
-            byte[] xml = remote.exportDocView(path, binaryAsLink, noRecurse);
+            byte[] xml = remote.exportDocumentView(path, binaryAsLink, noRecurse);
             output.write(xml);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isLive() {
+        try {
+            return remote.isLive();
+        } catch (RemoteException e) {
+            throw new RemoteRuntimeException(e);
         }
     }
 }

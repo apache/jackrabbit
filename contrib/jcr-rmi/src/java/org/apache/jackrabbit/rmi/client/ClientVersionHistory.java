@@ -114,7 +114,7 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
     }
 
     /** {@inheritDoc} */
-    public boolean hasVersionLabel(String label) {
+    public boolean hasVersionLabel(String label) throws RepositoryException {
         try {
             return remote.hasVersionLabel(label);
         } catch (RemoteException ex) {
@@ -135,7 +135,7 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
     }
 
     /** {@inheritDoc} */
-    public String[] getVersionLabels() {
+    public String[] getVersionLabels() throws RepositoryException {
         try {
             return remote.getVersionLabels();
         } catch (RemoteException ex) {
@@ -161,6 +161,15 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
             RepositoryException {
         try {
             remote.removeVersion(versionName);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
+    public String getVersionableUUID() throws RepositoryException {
+        try {
+            return remote.getVersionableUUID();
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

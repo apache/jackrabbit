@@ -85,4 +85,16 @@ public interface RemoteVersion extends RemoteNode {
      */
     RemoteVersion[] getPredecessors() throws RepositoryException, RemoteException;
 
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.Version#getContainingHistory()} Version.getContainingHistory()} method.
+     *
+     * @return a <code>RemoteVersionHistory</code>.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    RemoteVersionHistory getContainingHistory() throws RepositoryException, RemoteException;
+
+
+
 }

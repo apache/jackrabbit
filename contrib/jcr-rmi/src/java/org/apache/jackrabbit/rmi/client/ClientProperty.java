@@ -33,7 +33,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.StringValue;
 import javax.jcr.Value;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.SerialValue;
@@ -288,7 +288,7 @@ public class ClientProperty extends ClientItem implements Property {
     }
 
     /** {@inheritDoc} */
-    public PropertyDef getDefinition() throws RepositoryException {
+    public PropertyDefinition getDefinition() throws RepositoryException {
         try {
             return getFactory().getPropertyDef(remote.getDefinition());
         } catch (RemoteException ex) {
