@@ -227,21 +227,17 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(NotQueryNode node, Object data) {
-        BooleanQuery notQuery = new BooleanQuery();
-        try {
-            // first select any node
-            notQuery.add(new MatchAllQuery(primaryType.toJCRName(nsMappings)),
-                    false, false);
-        } catch (NoPrefixDeclaredException e) {
-            // will never happen, prefixes are created when unknown
-        }
         Object[] result = node.acceptOperands(this, null);
-        for (int i = 0; i < result.length; i++) {
-            Query operand = (Query) result[i];
-            // then prohibit the nodes from the not clause
-            notQuery.add(operand, false, true);
+        if (result.length == 0) {
+            return data;
         }
-        return notQuery;
+        // join the results
+        BooleanQuery b = new BooleanQuery();
+        for (int i = 0; i < result.length; i++) {
+            b.add((Query) result[i], false, false);
+        }
+        // negate
+        return new NotQuery(b);
     }
 
     public Object visit(ExactQueryNode node, Object data) {
@@ -253,7 +249,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         } catch (NoPrefixDeclaredException e) {
             // will never happen, prefixes are created when unknown
         }
-        return new TermQuery(new Term(field, value));
+        return new TermQuery(new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value)));
     }
 
     public Object visit(NodeTypeQueryNode node, Object data) {
@@ -291,11 +287,15 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             // exception occured
             return new BooleanQuery();
         } else if (values.size() == 1) {
-            return new TermQuery(new Term(field, (String) values.get(0)));
+            Term t = new Term(FieldNames.PROPERTIES,
+                    FieldNames.createNamedValue(field, (String) values.get(0)));
+            return new TermQuery(t);
         } else {
             BooleanQuery b = new BooleanQuery();
             for (Iterator it = values.iterator(); it.hasNext();) {
-                b.add(new TermQuery(new Term(field, (String) it.next())), false, false);
+                Term t = new Term(FieldNames.PROPERTIES,
+                        FieldNames.createNamedValue(field, (String) it.next()));
+                b.add(new TermQuery(t), false, false);
             }
             return b;
         }
@@ -458,7 +458,12 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                     andQuery.add(subQuery, true, false);
                 } else {
                     // todo this will traverse the whole index, optimize!
-                    Query subQuery = new MatchAllQuery(FieldNames.UUID);
+                    Query subQuery = null;
+                    try {
+                        subQuery = new MatchAllQuery(primaryType.toJCRName(nsMappings));
+                    } catch (NoPrefixDeclaredException e) {
+                        // will never happen, prefixes are created when unknown
+                    }
                     context = new DescendantSelfAxisQuery(context, subQuery);
                     andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), true, false);
                 }
@@ -530,19 +535,8 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
         }
 
         String field = "";
-        String primaryTypeField = "";
-        String mvpField = "";
         try {
             field = node.getProperty().toJCRName(nsMappings);
-            primaryTypeField = primaryType.toJCRName(nsMappings);
-            StringBuffer tmp = new StringBuffer();
-            tmp.append(nsMappings.getPrefix(node.getProperty().getNamespaceURI()));
-            tmp.append(':').append(FieldNames.MVP_PREFIX);
-            tmp.append(node.getProperty().getLocalName());
-            mvpField = tmp.toString();
-        } catch (NamespaceException e) {
-            // should never happen
-            exceptions.add(e);
         } catch (NoPrefixDeclaredException e) {
             // should never happen
             exceptions.add(e);
@@ -550,82 +544,54 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
         switch (node.getOperation()) {
             case QueryConstants.OPERATION_EQ_VALUE:      // =
-                if (stringValues.length == 1) {
-                    query = new TermQuery(new Term(field, stringValues[0]));
-                } else {
-                    BooleanQuery or = new BooleanQuery();
-                    for (int i = 0; i < stringValues.length; i++) {
-                        or.add(new TermQuery(new Term(field, stringValues[i])), false, false);
-                    }
-                    query = or;
-                }
-                break;
-            case QueryConstants.OPERATION_EQ_GENERAL:    // =
-                // search in single and multi valued properties
+            case QueryConstants.OPERATION_EQ_GENERAL:
                 BooleanQuery or = new BooleanQuery();
                 for (int i = 0; i < stringValues.length; i++) {
-                    or.add(new TermQuery(new Term(field, stringValues[i])), false, false);
-                    or.add(new TermQuery(new Term(mvpField, stringValues[i])), false, false);
+                    or.add(new TermQuery(new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]))), false, false);
                 }
                 query = or;
+                if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE) {
+                    query = createSingleValueConstraint(or, field);
+                }
                 break;
             case QueryConstants.OPERATION_GE_VALUE:      // >=
-                if (stringValues.length == 1) {
-                    query = new RangeQuery(new Term(field, stringValues[0]), null, true);
-                } else {
-                    or = new BooleanQuery();
-                    for (int i = 0; i < stringValues.length; i++) {
-                        or.add(new RangeQuery(new Term(field, stringValues[i]), null, true), false, false);
-                    }
-                    query = or;
-                }
-                break;
-            case QueryConstants.OPERATION_GE_GENERAL:   // >=
-                // search in single and multi valued properties
+            case QueryConstants.OPERATION_GE_GENERAL:
                 or = new BooleanQuery();
                 for (int i = 0; i < stringValues.length; i++) {
-                    or.add(new RangeQuery(new Term(field, stringValues[i]), null, true), false, false);
-                    or.add(new RangeQuery(new Term(mvpField, stringValues[i]), null, true), false, false);
+                    Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                    Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
+                    or.add(new RangeQuery(lower, upper, true), false, false);
                 }
                 query = or;
+                if (node.getOperation() == QueryConstants.OPERATION_GE_VALUE) {
+                    query = createSingleValueConstraint(or, field);
+                }
                 break;
             case QueryConstants.OPERATION_GT_VALUE:      // >
-                if (stringValues.length == 1) {
-                    query = new RangeQuery(new Term(field, stringValues[0]), null, false);
-                } else {
-                    or = new BooleanQuery();
-                    for (int i = 0; i < stringValues.length; i++) {
-                        or.add(new RangeQuery(new Term(field, stringValues[i]), null, false), false, false);
-                    }
-                    query = or;
-                }
-                break;
-            case QueryConstants.OPERATION_GT_GENERAL:      // >
+            case QueryConstants.OPERATION_GT_GENERAL:
                 or = new BooleanQuery();
                 for (int i = 0; i < stringValues.length; i++) {
-                    or.add(new RangeQuery(new Term(field, stringValues[i]), null, false), false, false);
-                    or.add(new RangeQuery(new Term(mvpField, stringValues[i]), null, false), false, false);
+                    Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                    Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
+                    or.add(new RangeQuery(lower, upper, false), false, false);
                 }
                 query = or;
-                break;
-            case QueryConstants.OPERATION_LE_VALUE:      // <=
-                if (stringValues.length == 1) {
-                    query = new RangeQuery(null, new Term(field, stringValues[0]), true);
-                } else {
-                    or = new BooleanQuery();
-                    for (int i = 0; i < stringValues.length; i++) {
-                        or.add(new RangeQuery(null, new Term(field, stringValues[i]), true), false, false);
-                    }
-                    query = or;
+                if (node.getOperation() == QueryConstants.OPERATION_GT_VALUE) {
+                    query = createSingleValueConstraint(or, field);
                 }
                 break;
+            case QueryConstants.OPERATION_LE_VALUE:      // <=
             case QueryConstants.OPERATION_LE_GENERAL:      // <=
                 or = new BooleanQuery();
                 for (int i = 0; i < stringValues.length; i++) {
-                    or.add(new RangeQuery(null, new Term(field, stringValues[i]), true), false, false);
-                    or.add(new RangeQuery(null, new Term(mvpField, stringValues[i]), true), false, false);
+                    Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
+                    Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                    or.add(new RangeQuery(lower, upper, true), false, false);
                 }
                 query = or;
+                if (node.getOperation() == QueryConstants.OPERATION_LE_VALUE) {
+                    query = createSingleValueConstraint(query, field);
+                }
                 break;
             case QueryConstants.OPERATION_LIKE:          // LIKE
                 // the like operation always has one string value.
@@ -633,52 +599,60 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 if (stringValues[0].equals("%")) {
                     query = new MatchAllQuery(field);
                 } else {
-                    query = new WildcardQuery(new Term(field, stringValues[0]));
+                    Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[0]));
+                    query = new WildcardQuery(t);
                 }
                 break;
             case QueryConstants.OPERATION_LT_VALUE:      // <
-                if (stringValues.length == 1) {
-                    query = new RangeQuery(null, new Term(field, stringValues[0]), false);
-                } else {
-                    or = new BooleanQuery();
-                    for (int i = 0; i < stringValues.length; i++) {
-                        or.add(new RangeQuery(null, new Term(field, stringValues[i]), false), false, false);
-                    }
-                    query = or;
-                }
-                break;
-            case QueryConstants.OPERATION_LT_GENERAL:      // <
+            case QueryConstants.OPERATION_LT_GENERAL:
                 or = new BooleanQuery();
                 for (int i = 0; i < stringValues.length; i++) {
-                    or.add(new RangeQuery(null, new Term(field, stringValues[i]), false), false, false);
-                    or.add(new RangeQuery(null, new Term(mvpField, stringValues[i]), false), false, false);
+                    Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
+                    Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                    or.add(new RangeQuery(lower, upper, false), false, false);
                 }
                 query = or;
+                if (node.getOperation() == QueryConstants.OPERATION_LT_VALUE) {
+                    query = createSingleValueConstraint(or, field);
+                }
                 break;
             case QueryConstants.OPERATION_NE_VALUE:      // !=
+                // match nodes with property 'field' that includes svp and mvp
                 BooleanQuery notQuery = new BooleanQuery();
                 notQuery.add(new MatchAllQuery(field), false, false);
+                // exclude all nodes where 'field' has the term in question
                 for (int i = 0; i < stringValues.length; i++) {
-                    notQuery.add(new TermQuery(new Term(field, stringValues[i])), false, true);
+                    Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                    notQuery.add(new TermQuery(t), false, true);
                 }
+                // and exclude all nodes where 'field' is multi valued
+                notQuery.add(new TermQuery(new Term(FieldNames.MVP, field)), false, true);
                 query = notQuery;
                 break;
             case QueryConstants.OPERATION_NE_GENERAL:    // !=
-                // search in single and multi valued properties
+                // that's:
+                // all nodes with property 'field'
+                // minus the nodes that have a single property 'field' that is
+                //    not equal to term in question
+                // minus the nodes that have a multi-valued property 'field' and
+                //    all values are equal to term in question
                 notQuery = new BooleanQuery();
                 notQuery.add(new MatchAllQuery(field), false, false);
-                notQuery.add(new MatchAllQuery(mvpField), false, false);
                 for (int i = 0; i < stringValues.length; i++) {
-                    notQuery.add(new TermQuery(new Term(field, stringValues[i])), false, true);
-                    notQuery.add(new TermQuery(new Term(mvpField, stringValues[i])), false, true);
+                    // exclude the nodes that have the term and are single valued
+                    Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                    Query svp = new NotQuery(new TermQuery(new Term(FieldNames.MVP, field)));
+                    BooleanQuery and = new BooleanQuery();
+                    and.add(new TermQuery(t), true, false);
+                    and.add(svp, true, false);
+                    notQuery.add(and, false, true);
                 }
+                // todo above also excludes multi-valued properties that contain
+                //      multiple instances of only stringValues. e.g. text={foo, foo}
                 query = notQuery;
                 break;
             case QueryConstants.OPERATION_NULL:
-                notQuery = new BooleanQuery();
-                notQuery.add(new MatchAllQuery(primaryTypeField), false, false);
-                notQuery.add(new MatchAllQuery(field), false, true);
-                query = notQuery;
+                query = new NotQuery(new MatchAllQuery(field));
                 break;
             case QueryConstants.OPERATION_NOT_NULL:
                 query = new MatchAllQuery(field);
@@ -695,7 +669,30 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     //---------------------------< internal >-----------------------------------
-    
+
+    /**
+     * Wraps a constraint query around <code>q</code> that limits the nodes to
+     * those where <code>propName</code> is the name of a single value property
+     * on the node instance.
+     * @param q the query to wrap.
+     * @param propName the name of a property that only has one value.
+     * @return the wrapped query <code>q</code>.
+     */
+    private Query createSingleValueConstraint(Query q, String propName) {
+        // get nodes with multi-values in propName
+        Query mvp = new TermQuery(new Term(FieldNames.MVP, propName));
+        // now negate, that gives the nodes that have propName as single
+        // values but also all others
+        Query svp = new NotQuery(mvp);
+        // now join the two, which will result in those nodes where propName
+        // only contains a single value. This works because q already restricts
+        // the result to those nodes that have a property propName
+        BooleanQuery and = new BooleanQuery();
+        and.add(q, true, false);
+        and.add(svp, true, false);
+        return and;
+    }
+
     /**
      * Returns an array of String values to be used as a term to lookup the search index
      * for a String <code>literal</code> of a certain property name. This method

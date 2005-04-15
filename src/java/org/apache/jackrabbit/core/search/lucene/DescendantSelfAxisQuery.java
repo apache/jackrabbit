@@ -148,23 +148,20 @@ class DescendantSelfAxisQuery extends Query {
          * {@inheritDoc}
          */
         public float getValue() {
-            // @todo implement properly
-            return 0;
+            return 1.0f;
         }
 
         /**
          * {@inheritDoc}
          */
         public float sumOfSquaredWeights() throws IOException {
-            // @todo implement properly
-            return 0;
+            return 1.0f;
         }
 
         /**
          * {@inheritDoc}
          */
         public void normalize(float norm) {
-            // @todo implement properly
         }
 
         /**
@@ -236,12 +233,6 @@ class DescendantSelfAxisQuery extends Query {
         /**
          * {@inheritDoc}
          */
-        public void score(HitCollector hc) throws IOException {
-            while (next()) {
-                hc.collect(doc(), score());
-            }
-        }
-
         public boolean next() throws IOException {
             calculateSubHits();
             nextDoc = subHits.nextSetBit(nextDoc + 1);
@@ -279,14 +270,23 @@ class DescendantSelfAxisQuery extends Query {
             return false;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public int doc() {
             return nextDoc;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public float score() throws IOException {
             return 1.0f;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public boolean skipTo(int target) throws IOException {
             nextDoc = target - 1;
             return next();

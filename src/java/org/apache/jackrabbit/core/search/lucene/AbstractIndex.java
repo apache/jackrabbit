@@ -125,6 +125,9 @@ abstract class AbstractIndex {
         }
         if (indexReader == null) {
             indexReader = IndexReader.open(getDirectory());
+            if (useCachingReader()) {
+                indexReader = new CachingIndexReader(indexReader);
+            }
         }
         return indexReader;
     }
@@ -200,6 +203,15 @@ abstract class AbstractIndex {
                 directory = null;
             }
         }
+    }
+
+    /**
+     * Returns <code>true</code> if this index should use a
+     * {@link CachingIndexReader}, <code>false</code> otherwise.
+     * @return <code>true</code> if index reader should use caching.
+     */
+    protected boolean useCachingReader() {
+        return false;
     }
 
     //-------------------------< properties >-----------------------------------

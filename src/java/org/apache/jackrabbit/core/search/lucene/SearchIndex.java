@@ -200,7 +200,7 @@ public class SearchIndex extends AbstractQueryHandler {
                     } catch (NoPrefixDeclaredException e) {
                         // will never happen
                     }
-                    sortFields[i] = new SortField(prop, SortField.STRING, !orderSpecs[i]);
+                    sortFields[i] = new SortField(prop, SharedFieldSortComparator.PROPERTIES, !orderSpecs[i]);
                 }
             }
 

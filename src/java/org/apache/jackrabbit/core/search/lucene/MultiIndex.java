@@ -294,7 +294,7 @@ class MultiIndex {
                 readers[i] = ((PersistentIndex) indexes.get(i)).getIndexReader();
             }
             readers[readers.length - 1] = volatileIndex.getIndexReader();
-            multiReader = new MultiReader(readers);
+            multiReader = new CachingMultiReader(readers);
         }
         return multiReader;
     }

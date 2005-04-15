@@ -148,8 +148,10 @@ class MatchAllScorer extends Scorer {
         // we match all terms
         TermEnum terms = null;
         try {
-            terms = reader.terms(new Term(field, ""));
-            while (terms.term() != null && terms.term().field() == field) {
+            terms = reader.terms(new Term(FieldNames.PROPERTIES, field));
+            while (terms.term() != null
+                    && terms.term().field() == FieldNames.PROPERTIES
+                    && terms.term().text().startsWith(field)) {
                 TermDocs termDocs = null;
                 try {
                     termDocs = reader.termDocs(terms.term());

@@ -126,4 +126,12 @@ class PersistentIndex extends AbstractIndex {
     String getName() {
         return name;
     }
+
+    /**
+     * Always returns <code>true</code>.
+     * @return <code>true</code>.
+     */
+    protected boolean useCachingReader() {
+        return true;
+    }
 }

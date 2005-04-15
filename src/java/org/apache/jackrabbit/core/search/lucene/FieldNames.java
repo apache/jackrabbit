@@ -23,16 +23,22 @@ package org.apache.jackrabbit.core.search.lucene;
 public class FieldNames {
 
     /**
+     * Private constructor.
+     */
+    private FieldNames() {
+    }
+
+    /**
      * Name of the field that contains the UUID of the node. Terms are stored
      * but not tokenized.
      */
-    public static final String UUID = "_:UUID";
+    public static final String UUID = "_:UUID".intern();
 
     /**
      * Name of the field that contains the fulltext index including terms
      * from all properties of a node. Terms are tokenized.
      */
-    public static final String FULLTEXT = "_:FULLTEXT";
+    public static final String FULLTEXT = "_:FULLTEXT".intern();
 
     /**
      * Prefix for all field names that are fulltext indexed by property name.
@@ -43,16 +49,37 @@ public class FieldNames {
      * Name of the field that contains the UUID of the parent node. Terms are
      * stored and but not tokenized.
      */
-    public static final String PARENT = "_:PARENT";
+    public static final String PARENT = "_:PARENT".intern();
 
     /**
      * Name of the field that contains the label of the node. Terms are not
      * tokenized.
      */
-    public static final String LABEL = "_:LABEL";
+    public static final String LABEL = "_:LABEL".intern();
 
     /**
-     * Prefix for all field names that hold multi valued properties.
+     * Name of the field that contains the names of multi-valued properties that
+     * hold more than one value. Terms are not tokenized and not stored, only
+     * indexed.
      */
-    public static final String MVP_PREFIX = "MVP:";
+    public static final String MVP = "_:MVP".intern();
+
+    /**
+     * Name of the field that contains all values of properties that are indexed
+     * as is without tokenizing. Terms are prefixed with the property name.
+     */
+    public static final String PROPERTIES = "_:PROPERTIES".intern();
+
+    /**
+     * Returns a named value for use as a term in the index. The named
+     * value is of the form: <code>fieldName</code> + '\uFFFF' + value
+     *
+     * @param fieldName the field name.
+     * @param value the value.
+     * @return value prefixed with field name.
+     */
+    public static String createNamedValue(String fieldName, String value) {
+        return fieldName + '\uFFFF' + value;
+    }
+
 }

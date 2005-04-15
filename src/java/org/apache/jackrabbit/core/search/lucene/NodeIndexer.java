@@ -161,21 +161,12 @@ public class NodeIndexer {
             try {
                 PropertyState propState = (PropertyState) stateProvider.getItemState(id);
                 InternalValue[] values = propState.getValues();
-                if (propState.isMultiValued()) {
-                    // multi valued
-                    if (values.length == 1) {
-                        // also index as if single value property
-                        addValue(doc, values[0], propState.getName(), false);
-                    }
-                    for (int i = 0; i < values.length; i++) {
-                        addValue(doc, values[i], propState.getName(), true);
-                    }
-                } else {
-                    // single value
-                    // do we have a value at all?
-                    if (values.length == 1) {
-                        addValue(doc, values[0], propState.getName(), false);
-                    }
+                for (int i = 0; i < values.length; i++) {
+                    addValue(doc, values[i], propState.getName());
+                }
+                if (values.length > 1) {
+                    // real multi-valued
+                    addMVPName(doc, propState.getName());
                 }
             } catch (NoSuchItemStateException e) {
                 throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
@@ -187,26 +178,32 @@ public class NodeIndexer {
     }
 
     /**
+     * Adds a {@link FieldNames#MVP} field to <code>doc</code> with the resolved
+     * <code>name</code> using the internal search index namespace mapping.
+     * @param doc the lucene document.
+     * @param name the name of the multi-value property.
+     */
+    private void addMVPName(Document doc, QName name) {
+        try {
+            String propName = name.toJCRName(mappings);
+            doc.add(new Field(FieldNames.MVP, propName, false, true, false));
+        } catch (NoPrefixDeclaredException e) {
+            // will never happen, prefixes are created dynamically
+        }
+    }
+
+    /**
      * Adds a value to the lucene Document.
      *
      * @param doc   the document.
      * @param value the internal jackrabbit value.
      * @param name  the name of the property.
-     * @param multiValued if <code>true</code> the value is treated as a
-     *   multivalued.
      */
-    private void addValue(Document doc, InternalValue value, QName name, boolean multiValued) {
+    private void addValue(Document doc, InternalValue value, QName name) {
         String fieldName = name.getLocalName();
         try {
-            StringBuffer tmp = new StringBuffer();
-            tmp.append(mappings.getPrefix(name.getNamespaceURI()));
-            tmp.append(':');
-            if (multiValued) {
-                tmp.append(FieldNames.MVP_PREFIX);
-            }
-            tmp.append(name.getLocalName());
-            fieldName = tmp.toString();
-        } catch (NamespaceException e) {
+            fieldName = name.toJCRName(mappings);
+        } catch (NoPrefixDeclaredException e) {
             // will never happen
         }
         Object internalValue = value.internalValue();
@@ -296,8 +293,8 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addBooleanValue(Document doc, String fieldName, Object internalValue) {
-        doc.add(new Field(fieldName,
-            internalValue.toString(),
+        doc.add(new Field(FieldNames.PROPERTIES,
+            FieldNames.createNamedValue(fieldName, internalValue.toString()),
             false,
             true,
             false));
@@ -314,8 +311,8 @@ public class NodeIndexer {
      */
     protected void addCalendarValue(Document doc, String fieldName, Object internalValue) {
         long millis = ((Calendar) internalValue).getTimeInMillis();
-        doc.add(new Field(fieldName,
-                DateField.timeToString(millis),
+        doc.add(new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, DateField.timeToString(millis)),
                 false,
                 true,
                 false));
@@ -332,8 +329,8 @@ public class NodeIndexer {
      */
     protected void addDoubleValue(Document doc, String fieldName, Object internalValue) {
         double doubleVal = ((Double) internalValue).doubleValue();
-        doc.add(new Field(fieldName,
-                DoubleField.doubleToString(doubleVal),
+        doc.add(new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, DoubleField.doubleToString(doubleVal)),
                 false,
                 true,
                 false));
@@ -350,8 +347,8 @@ public class NodeIndexer {
      */
     protected void addLongValue(Document doc, String fieldName, Object internalValue) {
         long longVal = ((Long) internalValue).longValue();
-        doc.add(new Field(fieldName,
-                LongField.longToString(longVal),
+        doc.add(new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, LongField.longToString(longVal)),
                 false,
                 true,
                 false));
@@ -368,8 +365,8 @@ public class NodeIndexer {
      */
     protected void addReferenceValue(Document doc, String fieldName, Object internalValue) {
         String uuid = internalValue.toString();
-        doc.add(new Field(fieldName,
-                uuid,
+        doc.add(new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, uuid),
                 true, // store
                 true,
                 false));
@@ -392,8 +389,8 @@ public class NodeIndexer {
         } catch (NoPrefixDeclaredException e) {
             // will never happen
         }
-        doc.add(new Field(fieldName,
-                pathString,
+        doc.add(new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, pathString),
                 false,
                 true,
                 false));
@@ -411,8 +408,8 @@ public class NodeIndexer {
         String stringValue = String.valueOf(internalValue);
 
         // simple String
-        doc.add(new Field(fieldName,
-                stringValue,
+        doc.add(new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, stringValue),
                 false,
                 true,
                 false));
@@ -452,8 +449,8 @@ public class NodeIndexer {
         } catch (NamespaceException e) {
             // will never happen
         }
-        doc.add(new Field(fieldName,
-                normValue,
+        doc.add(new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, normValue),
                 false,
                 true,
                 false));
