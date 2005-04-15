@@ -60,7 +60,7 @@ public class WorkspaceConfigTest extends TestCase {
 
         SearchConfig sc = config.getSearchConfig();
         assertEquals(
-                "org.apache.jackrabbit.core.search.lucene.SearchIndex",
+                "org.apache.jackrabbit.core.query.lucene.SearchIndex",
                 sc.getHandlerClassName());
         assertEquals(4, sc.getParameters().size());
         assertEquals("true", sc.getParameters().get("useCompoundFile"));
