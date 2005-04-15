@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Tests the XPath function jcrfn:deref() in a level 1 repository.
+ * Tests the XPath function jcr:deref() in a level 1 repository.
  *
  * @test
  * @sources DerefQueryLevel1Test.java
@@ -160,7 +160,7 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
             throws RepositoryException {
         StringBuffer stmt = new StringBuffer();
         stmt.append("/").append(jcrRoot).append(refProperty.getParent().getPath());
-        stmt.append("/").append(jcrfnDeref).append("(@");
+        stmt.append("/").append(jcrDeref).append("(@");
         stmt.append(refProperty.getName()).append(", '");
         stmt.append(nameTest).append("')");
         return stmt.toString();

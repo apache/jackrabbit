@@ -135,8 +135,8 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
     private Statement getFullTextStatement() {
         StringBuffer tmp = new StringBuffer("/");
         tmp.append(jcrRoot).append(testRoot);
-        tmp.append("/*[").append(jcrfnContains);
-        tmp.append("(\"'quick brown' -cat\")]");
+        tmp.append("/*[").append(jcrContains);
+        tmp.append("(., \"'quick brown' -cat\")]");
         tmp.append("/(@").append(jcrPath).append("|@").append(propertyName1);
         tmp.append("|@").append(jcrScore).append(")");
         return new Statement(tmp.toString(), Query.XPATH);

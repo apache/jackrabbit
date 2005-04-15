@@ -39,11 +39,6 @@ import java.util.ArrayList;
 public abstract class AbstractQueryTest extends AbstractJCRTest {
 
     /**
-     * Namespace URI for jcr functions in XPath
-     */
-    protected static final String NS_JCRFN_URI = "http://www.jcp.org/jcr/xpath-functions/1.0";
-
-    /**
      * Resolved QName for jcr:score
      */
     protected String jcrScore;
@@ -59,14 +54,14 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected String jcrRoot;
 
     /**
-     * Resolved QName for jcrfn:contains
+     * Resolved QName for jcr:contains
      */
-    protected String jcrfnContains;
+    protected String jcrContains;
 
     /**
-     * Resolved QName for jcrfn:deref
+     * Resolved QName for jcr:deref
      */
-    protected String jcrfnDeref;
+    protected String jcrDeref;
 
     /**
      * Set-up the configuration values used for the test. Per default retrieves
@@ -78,8 +73,8 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         jcrScore = superuser.getNamespacePrefix(NS_JCR_URI) + ":score";
         jcrPath = superuser.getNamespacePrefix(NS_JCR_URI) + ":path";
         jcrRoot = superuser.getNamespacePrefix(NS_JCR_URI) + ":root";
-        jcrfnContains = superuser.getNamespacePrefix(NS_JCRFN_URI) + ":contains";
-        jcrfnDeref = superuser.getNamespacePrefix(NS_JCRFN_URI) + ":deref";
+        jcrContains = superuser.getNamespacePrefix(NS_JCR_URI) + ":contains";
+        jcrDeref = superuser.getNamespacePrefix(NS_JCR_URI) + ":deref";
     }
 
     /**
