@@ -71,7 +71,7 @@ public class ArrayIterator implements RangeIterator {
     }
 
     /** {@inheritDoc} */
-    public long getPos() {
+    public long getPosition() {
         return position;
     }
 

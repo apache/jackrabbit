@@ -18,25 +18,25 @@ package org.apache.jackrabbit.rmi.client;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 
 /**
  * Local adapter for the JCR-RMI
- * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeDef RemoteNodeDef}
+ * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition RemoteNodeDefinition}
  * inteface. This class makes a remote node definition locally available using
- * the JCR {@link javax.jcr.nodetype.NodeDef NodeDef} interface.
+ * the JCR {@link javax.jcr.nodetype.NodeDefinition NodeDef} interface.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.NodeDef
- * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDef
+ * @see javax.jcr.nodetype.NodeDefinition
+ * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition
  */
-public class ClientNodeDef extends ClientItemDef implements NodeDef {
+public class ClientNodeDefinition extends ClientItemDefinition implements NodeDefinition {
 
     /** The adapted remote node definition. */
-    private RemoteNodeDef remote;
+    private RemoteNodeDefinition remote;
 
     /**
      * Creates a local adapter for the given remote node definition.
@@ -44,7 +44,7 @@ public class ClientNodeDef extends ClientItemDef implements NodeDef {
      * @param remote remote node definition
      * @param factory local adapter factory
      */
-    public ClientNodeDef(RemoteNodeDef remote, LocalAdapterFactory factory) {
+    public ClientNodeDefinition(RemoteNodeDefinition remote, LocalAdapterFactory factory) {
         super(remote, factory);
         this.remote = remote;
     }
@@ -68,9 +68,9 @@ public class ClientNodeDef extends ClientItemDef implements NodeDef {
     }
 
     /** {@inheritDoc} */
-    public boolean allowSameNameSibs() {
+    public boolean allowsSameNameSiblings() {
         try {
-            return remote.allowSameNameSibs();
+            return remote.allowsSameNameSiblings();
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }

@@ -18,29 +18,29 @@ package org.apache.jackrabbit.rmi.client;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.nodetype.ItemDef;
+import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 
 /**
  * Local adapter for the JCR-RMI
- * {@link org.apache.jackrabbit.rmi.remote.RemoteItemDef RemoteItemDef}
+ * {@link org.apache.jackrabbit.rmi.remote.RemoteItemDefinition RemoteItemDefinition}
  * inteface. This class makes a remote item definition locally available using
- * the JCR {@link javax.jcr.nodetype.ItemDef ItemDef} interface. Used mainly
+ * the JCR {@link javax.jcr.nodetype.ItemDefinition ItemDef} interface. Used mainly
  * as the base class for the
- * {@link org.apache.jackrabbit.rmi.client.ClientPropertyDef ClientPropertyDef}
+ * {@link org.apache.jackrabbit.rmi.client.ClientPropertyDefinition ClientPropertyDefinition}
  * and
- * {@link org.apache.jackrabbit.rmi.client.ClientNodeDef ClientNodeDef} adapters.
+ * {@link org.apache.jackrabbit.rmi.client.ClientNodeDefinition ClientNodeDefinition} adapters.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.ItemDef
- * @see org.apache.jackrabbit.rmi.remote.RemoteItemDef
+ * @see javax.jcr.nodetype.ItemDefinition
+ * @see org.apache.jackrabbit.rmi.remote.RemoteItemDefinition
  */
-public class ClientItemDef extends ClientObject implements ItemDef {
+public class ClientItemDefinition extends ClientObject implements ItemDefinition {
 
     /** The adapted remote item definition. */
-    private RemoteItemDef remote;
+    private RemoteItemDefinition remote;
 
     /**
      * Creates a local adapter for the given remote item definition.
@@ -48,7 +48,7 @@ public class ClientItemDef extends ClientObject implements ItemDef {
      * @param remote remote item definition
      * @param factory local adapter factory
      */
-    public ClientItemDef(RemoteItemDef remote, LocalAdapterFactory factory) {
+    public ClientItemDefinition(RemoteItemDefinition remote, LocalAdapterFactory factory) {
         super(factory);
         this.remote = remote;
     }
@@ -72,9 +72,9 @@ public class ClientItemDef extends ClientObject implements ItemDef {
     }
 
     /** {@inheritDoc} */
-    public boolean isAutoCreate() {
+    public boolean isAutoCreated() {
         try {
-            return remote.isAutoCreate();
+            return remote.isAutoCreated();
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }

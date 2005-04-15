@@ -90,7 +90,7 @@ public class ClientLock implements Lock {
     }
 
     /** {@inheritDoc} */
-    public boolean isLive() {
+    public boolean isLive() throws RepositoryException {
         try {
             return remote.isLive();
         } catch (RemoteException ex) {
@@ -107,4 +107,12 @@ public class ClientLock implements Lock {
         }
     }
 
+    /** {@inheritDoc} */
+    public boolean isSessionScoped() {
+        try {
+            return remote.isSessionScoped();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
+    }
 }

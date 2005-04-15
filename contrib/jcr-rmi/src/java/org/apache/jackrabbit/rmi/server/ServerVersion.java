@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
+import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.version.Version Version} interface.
@@ -84,6 +85,15 @@ public class ServerVersion extends ServerNode implements RemoteVersion {
     public RemoteVersion[] getPredecessors() throws RepositoryException, RemoteException {
         try {
             return getRemoteVersionArray(version.getPredecessors());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
+    public RemoteVersionHistory getContainingHistory() throws RepositoryException, RemoteException {
+        try {
+            return getFactory().getRemoteVersionHistory(version.getContainingHistory());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

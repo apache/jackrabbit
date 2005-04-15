@@ -20,6 +20,14 @@ import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.ItemExistsException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 
@@ -85,20 +93,21 @@ public class ClientQuery extends ClientObject implements Query {
     }
 
     /** {@inheritDoc} */
-    public String getPersistentQueryPath() throws RepositoryException {
+    public String getStoredQueryPath() throws RepositoryException {
         try {
-            return remote.getPersistentQueryPath();
+            return remote.getStoredQueryPath();
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
     }
 
     /** {@inheritDoc} */
-    public void save(String absPath) throws RepositoryException {
+    public Node storeAsNode(String absPath) throws RepositoryException {
         try {
-            remote.save(absPath);
+            return getNode(session, remote.storeAsNode(absPath));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
     }
+
 }

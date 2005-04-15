@@ -41,10 +41,10 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -53,10 +53,10 @@ import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 
 /**
@@ -350,16 +350,16 @@ public class ServerObject extends UnicastRemoteObject {
      * @return remote node definition array
      * @throws RemoteException on RMI errors
      */
-    protected RemoteNodeDef[] getRemoteNodeDefArray(NodeDef[] defs)
+    protected RemoteNodeDefinition[] getRemoteNodeDefArray(NodeDefinition[] defs)
             throws RemoteException {
         if (defs != null) {
-            RemoteNodeDef[] remotes = new RemoteNodeDef[defs.length];
+            RemoteNodeDefinition[] remotes = new RemoteNodeDefinition[defs.length];
             for (int i = 0; i < defs.length; i++) {
-                remotes[i] = factory.getRemoteNodeDef(defs[i]);
+                remotes[i] = factory.getRemoteNodeDefinition(defs[i]);
             }
             return remotes;
         } else {
-            return new RemoteNodeDef[0]; // for safety
+            return new RemoteNodeDefinition[0]; // for safety
         }
     }
 
@@ -374,16 +374,16 @@ public class ServerObject extends UnicastRemoteObject {
      * @return remote property definition array
      * @throws RemoteException on RMI errors
      */
-    protected RemotePropertyDef[] getRemotePropertyDefArray(PropertyDef[] defs)
+    protected RemotePropertyDefinition[] getRemotePropertyDefArray(PropertyDefinition[] defs)
             throws RemoteException {
         if (defs != null) {
-            RemotePropertyDef[] remotes = new RemotePropertyDef[defs.length];
+            RemotePropertyDefinition[] remotes = new RemotePropertyDefinition[defs.length];
             for (int i = 0; i < defs.length; i++) {
-                remotes[i] = factory.getRemotePropertyDef(defs[i]);
+                remotes[i] = factory.getRemotePropertyDefinition(defs[i]);
             }
             return remotes;
         } else {
-            return new RemotePropertyDef[0]; // for safety
+            return new RemotePropertyDefinition[0]; // for safety
         }
     }
 

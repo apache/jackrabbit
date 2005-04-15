@@ -19,24 +19,24 @@ package org.apache.jackrabbit.rmi.client;
 import java.rmi.RemoteException;
 
 import javax.jcr.Value;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 
 /**
  * Local adapter for the JCR-RMI
- * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDef RemotePropertyDef}
+ * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition RemotePropertyDefinition}
  * inteface. This class makes a remote property definition locally available
- * using the JCR {@link javax.jcr.nodetype.PropertyDef PropertyDef} interface.
+ * using the JCR {@link javax.jcr.nodetype.PropertyDefinition PropertyDef} interface.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.PropertyDef
- * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDef
+ * @see javax.jcr.nodetype.PropertyDefinition
+ * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition
  */
-public class ClientPropertyDef extends ClientItemDef implements PropertyDef {
+public class ClientPropertyDefinition extends ClientItemDefinition implements PropertyDefinition {
 
     /** The adapted remote property. */
-    private RemotePropertyDef remote;
+    private RemotePropertyDefinition remote;
 
     /**
      * Creates a local adapter for the given remote property definition.
@@ -44,8 +44,8 @@ public class ClientPropertyDef extends ClientItemDef implements PropertyDef {
      * @param remote remote property definition
      * @param factory local adapter factory
      */
-    public ClientPropertyDef(
-            RemotePropertyDef remote, LocalAdapterFactory factory) {
+    public ClientPropertyDefinition(
+            RemotePropertyDefinition remote, LocalAdapterFactory factory) {
         super(remote, factory);
         this.remote = remote;
     }

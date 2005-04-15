@@ -20,6 +20,7 @@ import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.NodeIterator;
 
 
 /**
@@ -292,6 +293,21 @@ public interface RemoteNode extends RemoteItem {
 
     /**
      * Remote version of the
+     * {@link javax.jcr.Node#setProperty(String,Value,int) Node.setProperty(String,Value)}
+     * method.
+     *
+     * @param name property name
+     * @param value property value
+     * @param type property type
+     * @return property
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    RemoteProperty setProperty(String name, Value value, int type)
+            throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
      * {@link javax.jcr.Node#setProperty(String,Value[]) Node.setProperty(String,Value[])}
      * method.
      *
@@ -347,7 +363,7 @@ public interface RemoteNode extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteNodeDef getDefinition() throws RepositoryException, RemoteException;
+    RemoteNodeDefinition getDefinition() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -388,7 +404,7 @@ public interface RemoteNode extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    void merge(String workspace, boolean bestEffort)
+    RemoteNode[] merge(String workspace, boolean bestEffort)
             throws RepositoryException, RemoteException;
 
     /**

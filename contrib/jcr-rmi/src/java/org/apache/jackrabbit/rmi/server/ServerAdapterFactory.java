@@ -26,11 +26,11 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.ItemDef;
-import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -39,15 +39,15 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
-import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
@@ -170,30 +170,30 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     /**
-     * Creates a {@link ServerItemDef ServerItemDef} instance.
+     * Creates a {@link ServerItemDefinition ServerItemDefinition} instance.
      * {@inheritDoc}
      */
-    public RemoteItemDef getRemoteItemDef(ItemDef def)
+    public RemoteItemDefinition getRemoteItemDefinition(ItemDefinition def)
             throws RemoteException {
-        return new ServerItemDef(def, this);
+        return new ServerItemDefinition(def, this);
     }
 
     /**
-     * Creates a {@link ServerNodeDef ServerNodeDef} instance.
+     * Creates a {@link ServerNodeDefinition ServerNodeDefinition} instance.
      * {@inheritDoc}
      */
-    public RemoteNodeDef getRemoteNodeDef(NodeDef def)
+    public RemoteNodeDefinition getRemoteNodeDefinition(NodeDefinition def)
             throws RemoteException {
-        return new ServerNodeDef(def, this);
+        return new ServerNodeDefinition(def, this);
     }
 
     /**
-     * Creates a {@link ServerPropertyDef ServerPropertyDef} instance.
+     * Creates a {@link ServerPropertyDefinition ServerPropertyDefinition} instance.
      * {@inheritDoc}
      */
-    public RemotePropertyDef getRemotePropertyDef(PropertyDef def)
+    public RemotePropertyDefinition getRemotePropertyDefinition(PropertyDefinition def)
             throws RemoteException {
-        return new ServerPropertyDef(def, this);
+        return new ServerPropertyDefinition(def, this);
     }
 
     /**

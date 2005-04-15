@@ -18,30 +18,30 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.nodetype.ItemDef;
+import javax.jcr.nodetype.ItemDefinition;
 
-import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 
 /**
- * Remote adapter for the JCR {@link javax.jcr.nodetype.ItemDef ItemDef}
+ * Remote adapter for the JCR {@link javax.jcr.nodetype.ItemDefinition ItemDefinition}
  * interface. This class makes a local item definition available as an
  * RMI service using the
- * {@link org.apache.jackrabbit.rmi.remote.RemoteItemDef RemoteItemDef}
+ * {@link org.apache.jackrabbit.rmi.remote.RemoteItemDefinition RemoteItemDefinition}
  * interface. Used mainly as the base class for the
- * {@link org.apache.jackrabbit.rmi.server.ServerPropertyDef ServerPropertyDef}
+ * {@link org.apache.jackrabbit.rmi.server.ServerPropertyDefinition ServerPropertyDefinition}
  * and
- * {@link org.apache.jackrabbit.rmi.server.ServerNodeDef ServerNodeDef}
+ * {@link org.apache.jackrabbit.rmi.server.ServerNodeDefinition ServerNodeDefinition}
  * adapters.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.ItemDef
- * @see org.apache.jackrabbit.rmi.remote.RemoteItemDef
+ * @see javax.jcr.nodetype.ItemDefinition
+ * @see org.apache.jackrabbit.rmi.remote.RemoteItemDefinition
  */
-public class ServerItemDef extends ServerObject implements RemoteItemDef {
+public class ServerItemDefinition extends ServerObject implements RemoteItemDefinition {
 
     /** The adapted local item definition. */
-    private ItemDef def;
+    private ItemDefinition def;
 
     /**
      * Creates a remote adapter for the given local item definition.
@@ -50,7 +50,7 @@ public class ServerItemDef extends ServerObject implements RemoteItemDef {
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
      */
-    public ServerItemDef(ItemDef def, RemoteAdapterFactory factory)
+    public ServerItemDefinition(ItemDefinition def, RemoteAdapterFactory factory)
             throws RemoteException {
         super(factory);
         this.def = def;
@@ -67,8 +67,8 @@ public class ServerItemDef extends ServerObject implements RemoteItemDef {
     }
 
     /** {@inheritDoc} */
-    public boolean isAutoCreate() throws RemoteException {
-        return def.isAutoCreate();
+    public boolean isAutoCreated() throws RemoteException {
+        return def.isAutoCreated();
     }
 
     /** {@inheritDoc} */

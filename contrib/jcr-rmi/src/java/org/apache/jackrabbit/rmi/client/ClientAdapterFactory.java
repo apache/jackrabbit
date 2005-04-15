@@ -24,11 +24,11 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.ItemDef;
-import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -37,15 +37,15 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
-import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
@@ -174,31 +174,31 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
     }
 
     /**
-     * Creates and returns a {@link ClientItemDef ClientItemDef} instance.
+     * Creates and returns a {@link ClientItemDefinition ClientItemDefinition} instance.
      *
      * {@inheritDoc}
      */
-    public ItemDef getItemDef(RemoteItemDef remote) {
-        return new ClientItemDef(remote, this);
+    public ItemDefinition getItemDef(RemoteItemDefinition remote) {
+        return new ClientItemDefinition(remote, this);
     }
 
     /**
-     * Creates and returns a {@link ClientNodeDef ClientNodeDef} instance.
+     * Creates and returns a {@link ClientNodeDefinition ClientNodeDefinition} instance.
      *
      * {@inheritDoc}
      */
-    public NodeDef getNodeDef(RemoteNodeDef remote) {
-        return new ClientNodeDef(remote, this);
+    public NodeDefinition getNodeDef(RemoteNodeDefinition remote) {
+        return new ClientNodeDefinition(remote, this);
     }
 
     /**
-     * Creates and returns a {@link ClientPropertyDef ClientPropertyDef}
+     * Creates and returns a {@link ClientPropertyDefinition ClientPropertyDefinition}
      * instance.
      *
      * {@inheritDoc}
      */
-    public PropertyDef getPropertyDef(RemotePropertyDef remote) {
-        return new ClientPropertyDef(remote, this);
+    public PropertyDefinition getPropertyDef(RemotePropertyDefinition remote) {
+        return new ClientPropertyDefinition(remote, this);
     }
 
     /**

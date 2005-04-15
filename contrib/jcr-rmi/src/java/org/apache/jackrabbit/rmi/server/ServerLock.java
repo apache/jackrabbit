@@ -65,7 +65,7 @@ public class ServerLock extends UnicastRemoteObject implements RemoteLock {
     }
 
     /** {@inheritDoc} */
-    public boolean isLive() throws RemoteException {
+    public boolean isLive() throws RepositoryException, RemoteException {
         return lock.isLive();
     }
 
@@ -74,4 +74,7 @@ public class ServerLock extends UnicastRemoteObject implements RemoteLock {
         lock.refresh();
     }
 
+    public boolean isSessionScoped() throws RemoteException {
+        return lock.isSessionScoped();
+    }
 }

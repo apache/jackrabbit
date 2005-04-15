@@ -49,13 +49,13 @@ public interface RemoteSession extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.Session#getUserId() Session.getUserId()} method.
+     * {@link javax.jcr.Session#getUserID() Session.getUserID()} method.
      *
      * @return user id
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Session#getUserId()
+     * @see javax.jcr.Session#getUserID()
      */
-    String getUserId() throws RemoteException;
+    String getUserID() throws RemoteException;
 
     /**
      * Returns the named attribute. Note that only serializable
@@ -139,7 +139,7 @@ public interface RemoteSession extends Remote {
      *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
-    boolean itemExists(String path) throws RemoteException;
+    boolean itemExists(String path) throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -186,6 +186,16 @@ public interface RemoteSession extends Remote {
 
     /**
      * Remote version of the
+     * {@link javax.jcr.Session#isLive()} Session.isLive()}
+     * method.
+     * @return
+     *
+     * @throws RemoteException on RMI errors
+     */
+    boolean isLive() throws RemoteException;
+
+    /**
+     * Remote version of the
      * {@link javax.jcr.Session#getRootNode() Session.getRootNode()} method.
      *
      * @return root node
@@ -217,7 +227,7 @@ public interface RemoteSession extends Remote {
      * @throws RemoteException on RMI errors
      */
     void checkPermission(String path, String actions)
-            throws AccessControlException, RemoteException;
+            throws AccessControlException, RepositoryException, RemoteException;
 
     /**
      * Imports the system or document view XML data into a subtree of
@@ -232,9 +242,9 @@ public interface RemoteSession extends Remote {
      * @throws IOException on IO errors
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Session#importXML(java.lang.String, java.io.InputStream)
+     * @see javax.jcr.Session#importXML(java.lang.String, java.io.InputStream, int)
      */
-    void importXML(String path, byte[] xml)
+    void importXML(String path, byte[] xml, int mode)
             throws IOException, RepositoryException, RemoteException;
 
     /**
@@ -332,9 +342,9 @@ public interface RemoteSession extends Remote {
      * @throws IOException on IO errors
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Workspace#exportSysView(java.lang.String, java.io.OutputStream, boolean, boolean)
+     * @see javax.jcr.Session#exportSystemView
      */
-    byte[] exportSysView(String path, boolean binaryAsLink, boolean noRecurse)
+    byte[] exportSystemView(String path, boolean binaryAsLink, boolean noRecurse)
             throws IOException, RepositoryException, RemoteException;
 
     /**
@@ -352,9 +362,9 @@ public interface RemoteSession extends Remote {
      * @throws IOException on IO errors
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
-     * @see javax.jcr.Workspace#exportDocView(java.lang.String, java.io.OutputStream, boolean, boolean)
+     * @see javax.jcr.Session#exportDocumentView
      */
-    byte[] exportDocView(String path, boolean binaryAsLink, boolean noRecurse)
+    byte[] exportDocumentView(String path, boolean binaryAsLink, boolean noRecurse)
         throws IOException, RepositoryException, RemoteException;
 
 }
