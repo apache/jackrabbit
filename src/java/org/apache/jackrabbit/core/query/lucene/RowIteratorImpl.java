@@ -31,6 +31,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathValue;
 import javax.jcr.LongValue;
+import javax.jcr.PropertyType;
+import javax.jcr.StringValue;
+import javax.jcr.Property;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
@@ -184,7 +187,11 @@ class RowIteratorImpl implements RowIterator {
                     if (node.hasProperty(properties[i])) {
                         PropertyImpl prop = node.getProperty(properties[i]);
                         if (!prop.getDefinition().isMultiple()) {
-                            tmp[i] = prop.getValue();
+                            if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
+                                tmp[i] = new StringValue(prop.getString());
+                            } else {
+                                tmp[i] = prop.getValue();
+                            }
                         } else {
                             // mvp values cannot be returned
                             tmp[i] = null;
@@ -202,7 +209,10 @@ class RowIteratorImpl implements RowIterator {
                 }
                 values = tmp;
             }
-            return values;
+            // return a copy of the array
+            Value[] ret = new Value[values.length];
+            System.arraycopy(values, 0, ret, 0, values.length);
+            return ret;
         }
 
         /**
@@ -230,9 +240,14 @@ class RowIteratorImpl implements RowIterator {
                     throw new ItemNotFoundException(propertyName);
                 }
                 if (node.hasProperty(prop)) {
-                    return node.getProperty(prop).getValue();
+                    Property p = node.getProperty(prop);
+                    if (p.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
+                        return new StringValue(p.getString());
+                    } else {
+                        return p.getValue();
+                    }
                 } else {
-                    // either jcr:score / jcr:path or not set
+                    // either jcr:score, jcr:path or not set
                     if (QueryConstants.JCR_PATH.equals(prop)) {
                         return PathValue.valueOf(node.getPath());
                     } else if (QueryConstants.JCR_SCORE.equals(prop)) {
