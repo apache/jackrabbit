@@ -21,7 +21,7 @@
   <pomVersion>2</pomVersion>
   <id>jcr-rmi</id>
   <name>JCR-RMI</name>
-  <currentVersion>0.16.2</currentVersion>
+  <currentVersion>0.16.4</currentVersion>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.rmi.*</package>
   <description>
@@ -60,8 +60,8 @@
     <dependency>
       <groupId>jsr170</groupId>
       <artifactId>jcr</artifactId>
-      <version>0.16.2</version>
-      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.2.jar</url>
+      <version>0.16.4</version>
+      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.jar</url>
     </dependency>
     <dependency>
       <groupId>xerces</groupId>
