@@ -1,0 +1,74 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.query;
+
+import org.apache.jackrabbit.core.QName;
+
+/**
+ * Represents query node that dereferences a reference property into a node and
+ * does an optional name test on the target node.
+ */
+public class DerefQueryNode extends LocationStepQueryNode {
+
+    /** The name of the reference property */
+    private QName refProperty;
+
+    /**
+     * Creates a new <code>DerefQueryNode</code> without a name set for the
+     * reference property.
+     * @param parent the parent query node.
+     * @param nameTest the name test on the target node, or <code>null</code>
+     *   if no name test should be performed on the target node.
+     * @param descendants if <code>true</code> this location step uses the
+     *   descendant-or-self axis; otherwise the child axis.
+     */
+    public DerefQueryNode(QueryNode parent, QName nameTest, boolean descendants) {
+        super(parent, nameTest, descendants);
+    }
+
+    /**
+     * Sets a new name for the reference property.
+     * @param propertyName the name of the reference property.
+     */
+    public void setRefProperty(QName propertyName) {
+        refProperty = propertyName;
+    }
+
+    /**
+     * Returns the name of the reference property or <code>null</code> if
+     * none is set.
+     * @return the name of the reference property or <code>null</code> if
+     * none is set.
+     */
+    public QName getRefProperty() {
+        return refProperty;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int getType() {
+        return TYPE_DEREF;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Object accept(QueryNodeVisitor visitor, Object data) {
+        return visitor.visit(this, data);
+    }
+}

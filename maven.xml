@@ -67,7 +67,7 @@
     <postGoal name="java:prepare-filesystem">
         <ant:condition property="sqlparser_stale">
             <ant:not>
-                <ant:uptodate targetfile="src/java/org/apache/jackrabbit/core/search/sql/JCRSQLParser.java">
+                <ant:uptodate targetfile="src/java/org/apache/jackrabbit/core/query/sql/JCRSQLParser.java">
                     <ant:srcfiles dir="src/grammar/sql">
                         <ant:include name="JCRSQL.jjt"/>
                     </ant:srcfiles>
@@ -84,7 +84,7 @@
         </j:choose>
         <ant:condition property="xpathparser_stale">
             <ant:not>
-                <ant:uptodate targetfile="src/java/org/apache/jackrabbit/core/search/xpath/XPath.java">
+                <ant:uptodate targetfile="src/java/org/apache/jackrabbit/core/query/xpath/XPath.java">
                     <ant:srcfiles dir="src/grammar/xpath">
                         <ant:include name="javacc.xsl"/>
                         <ant:include name="jjtree.xsl"/>
@@ -108,7 +108,7 @@
     <!-- Generates the SQL Parser -->
     <goal name="jackrabbit:generate-sql-parser">
         <ant:java classname="jjtree" fork="true">
-            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/search/sql"/>
+            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/query/sql"/>
             <arg value="src/grammar/sql/JCRSQL.jjt"/>
             <classpath>
                 <fileset dir="${maven.repo.local}/javacc/jars">
@@ -117,8 +117,8 @@
             </classpath>
         </ant:java>
         <ant:java classname="javacc" fork="true">
-            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/search/sql"/>
-            <arg value="src/java/org/apache/jackrabbit/core/search/sql/JCRSQL.jj"/>
+            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/query/sql"/>
+            <arg value="src/java/org/apache/jackrabbit/core/query/sql/JCRSQL.jj"/>
             <classpath>
                 <fileset dir="${maven.repo.local}/javacc/jars">
                     <include name="javacc-3.2.jar"/>
@@ -143,7 +143,7 @@
         </ant:xslt>
 
         <ant:java classname="jjtree" fork="true">
-            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/search/xpath"/>
+            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/query/xpath"/>
             <arg value="src/grammar/xpath/XPath.jjt"/>
             <classpath>
                 <fileset dir="${maven.repo.local}/javacc/jars">
@@ -152,9 +152,9 @@
             </classpath>
         </ant:java>
         <ant:java classname="javacc" fork="true">
-            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/search/xpath"/>
+            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/query/xpath"/>
             <arg value="-UNICODE_INPUT=true"/>
-            <arg value="src/java/org/apache/jackrabbit/core/search/xpath/XPath.jj"/>
+            <arg value="src/java/org/apache/jackrabbit/core/query/xpath/XPath.jj"/>
             <classpath>
                 <fileset dir="${maven.repo.local}/javacc/jars">
                     <include name="javacc-3.2.jar"/>

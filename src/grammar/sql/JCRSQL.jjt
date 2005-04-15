@@ -18,7 +18,7 @@ options {
   FORCE_LA_CHECK = true;
 
   MULTI = true;
-  NODE_PACKAGE = "org.apache.jackrabbit.core.search.sql";
+  NODE_PACKAGE = "org.apache.jackrabbit.core.query.sql";
   VISITOR = true;
 }
 
@@ -39,13 +39,13 @@ PARSER_BEGIN(JCRSQLParser)
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.search.sql;
+package org.apache.jackrabbit.core.query.sql;
 
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.search.QueryConstants;
+import org.apache.jackrabbit.core.query.QueryConstants;
 
 public class JCRSQLParser {
 

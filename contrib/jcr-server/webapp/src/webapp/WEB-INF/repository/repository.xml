@@ -154,7 +154,7 @@
 	<!--
 	Search index and the file system it uses.
         -->
-	<SearchIndex class="org.apache.jackrabbit.core.search.lucene.SearchIndex">
+	<SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
 	    <param name="useCompoundFile" value="true"/>
 	    <param name="minMergeDocs" value="1000"/>
 	    <param name="maxMergeDocs" value="10000"/>
