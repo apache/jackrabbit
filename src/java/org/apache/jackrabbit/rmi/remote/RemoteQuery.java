@@ -20,6 +20,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Node;
 
 /**
  * Remote version of the JCR {@link javax.jcr.query.Query Query} interface.
@@ -62,21 +63,21 @@ public interface RemoteQuery extends Remote {
     String getLanguage() throws RemoteException;
 
     /**
-     * @see javax.jcr.query.Query#getPersistentQueryPath()
+     * @see javax.jcr.query.Query#getStoredQueryPath()
      *
      * @return path of the node representing this query.
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    String getPersistentQueryPath() throws RepositoryException, RemoteException;
+    String getStoredQueryPath() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.query.Query#save(String)
+     * @see javax.jcr.query.Query#storeAsNode(String)
      *
      * @param absPath path at which to persist this query.
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    void save(String absPath) throws RepositoryException, RemoteException;
+    RemoteNode storeAsNode(String absPath) throws RepositoryException, RemoteException;
 
 }

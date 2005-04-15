@@ -19,11 +19,11 @@ package org.apache.jackrabbit.rmi.client;
 import java.rmi.RemoteException;
 
 import javax.jcr.Value;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.SerialValue;
 
@@ -108,7 +108,7 @@ public class ClientNodeType extends ClientObject implements NodeType {
     }
 
     /** {@inheritDoc} */
-    public PropertyDef[] getPropertyDefs() {
+    public PropertyDefinition[] getPropertyDefinitions() {
         try {
             return getPropertyDefArray(remote.getPropertyDefs());
         } catch (RemoteException ex) {
@@ -117,7 +117,7 @@ public class ClientNodeType extends ClientObject implements NodeType {
     }
 
     /** {@inheritDoc} */
-    public PropertyDef[] getDeclaredPropertyDefs() {
+    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
         try {
             return getPropertyDefArray(remote.getDeclaredPropertyDefs());
         } catch (RemoteException ex) {
@@ -126,9 +126,9 @@ public class ClientNodeType extends ClientObject implements NodeType {
     }
 
     /** {@inheritDoc} */
-    public NodeDef[] getChildNodeDefs() {
+    public NodeDefinition[] getChildNodeDefinitions() {
         try {
-            RemoteNodeDef[] defs = remote.getChildNodeDefs();
+            RemoteNodeDefinition[] defs = remote.getChildNodeDefs();
             return getNodeDefArray(defs);
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
@@ -136,9 +136,9 @@ public class ClientNodeType extends ClientObject implements NodeType {
     }
 
     /** {@inheritDoc} */
-    public NodeDef[] getDeclaredChildNodeDefs() {
+    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
         try {
-            RemoteNodeDef[] defs = remote.getDeclaredChildNodeDefs();
+            RemoteNodeDefinition[] defs = remote.getDeclaredChildNodeDefs();
             return getNodeDefArray(defs);
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);

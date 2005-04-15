@@ -29,11 +29,11 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.ItemDef;
-import javax.jcr.nodetype.NodeDef;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -46,15 +46,15 @@ import junit.framework.TestCase;
 import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
-import org.apache.jackrabbit.rmi.remote.RemoteItemDef;
+import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
@@ -380,11 +380,11 @@ public class RemoteAdapterTest extends TestCase {
      * @throws Exception on errors
      */
     public void testItemDef() throws Exception {
-        prepareTests(ItemDef.class);
+        prepareTests(ItemDefinition.class);
 
-        ItemDef def = (ItemDef) mock;
-        RemoteItemDef remote = remoteFactory.getRemoteItemDef(def);
-        ItemDef local = localFactory.getItemDef(remote);
+        ItemDefinition def = (ItemDefinition) mock;
+        RemoteItemDefinition remote = remoteFactory.getRemoteItemDefinition(def);
+        ItemDefinition local = localFactory.getItemDef(remote);
 
         runTests(local);
     }
@@ -395,11 +395,11 @@ public class RemoteAdapterTest extends TestCase {
      * @throws Exception on errors
      */
     public void testNodeDef() throws Exception {
-        prepareTests(NodeDef.class);
+        prepareTests(NodeDefinition.class);
 
-        NodeDef def = (NodeDef) mock;
-        RemoteNodeDef remote = remoteFactory.getRemoteNodeDef(def);
-        NodeDef local = localFactory.getNodeDef(remote);
+        NodeDefinition def = (NodeDefinition) mock;
+        RemoteNodeDefinition remote = remoteFactory.getRemoteNodeDefinition(def);
+        NodeDefinition local = localFactory.getNodeDef(remote);
 
         runTests(local);
     }
@@ -410,11 +410,11 @@ public class RemoteAdapterTest extends TestCase {
      * @throws Exception on errors
      */
     public void testPropertyDef() throws Exception {
-        prepareTests(PropertyDef.class);
+        prepareTests(PropertyDefinition.class);
 
-        PropertyDef def = (PropertyDef) mock;
-        RemotePropertyDef remote = remoteFactory.getRemotePropertyDef(def);
-        PropertyDef local = localFactory.getPropertyDef(remote);
+        PropertyDefinition def = (PropertyDefinition) mock;
+        RemotePropertyDefinition remote = remoteFactory.getRemotePropertyDefinition(def);
+        PropertyDefinition local = localFactory.getPropertyDef(remote);
 
         runTests(local);
     }

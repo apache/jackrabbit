@@ -32,9 +32,9 @@ import javax.jcr.Value;
  * to a corresponding Property method. The remote object will simply forward
  * the method call to the underlying Property instance. Argument and return
  * values, as well as possible exceptions, are copied over the network.
- * Compex {@link javax.jcr.nodetype.PropertyDef PropertyDef} return values
+ * Compex {@link javax.jcr.nodetype.PropertyDefinition PropertyDef} return values
  * are returned as remote references to the corresponding
- * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDef RemotePropertyDef}
+ * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition RemotePropertyDefinition}
  * interface. RMI errors are signalled with RemoteExceptions.
  * <p>
  * Note that only the generic getValue and setValue methods are included
@@ -126,7 +126,7 @@ public interface RemoteProperty extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemotePropertyDef getDefinition()
+    RemotePropertyDefinition getDefinition()
             throws RepositoryException, RemoteException;
 
     /**

@@ -23,7 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.SerialValue;
 
 /**
@@ -112,10 +112,10 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
     }
 
     /** {@inheritDoc} */
-    public RemotePropertyDef getDefinition()
+    public RemotePropertyDefinition getDefinition()
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemotePropertyDef(property.getDefinition());
+            return getFactory().getRemotePropertyDefinition(property.getDefinition());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

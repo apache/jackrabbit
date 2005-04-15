@@ -29,7 +29,7 @@ import javax.jcr.version.Version;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
@@ -250,6 +250,16 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
+    public RemoteProperty setProperty(String name, Value value, int type)
+            throws RepositoryException, RemoteException {
+        try {
+            return getFactory().getRemoteProperty(node.setProperty(name, value, type));
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+
+    /** {@inheritDoc} */
     public void addMixin(String name)
             throws RepositoryException, RemoteException {
         try {
@@ -301,10 +311,10 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeDef getDefinition()
+    public RemoteNodeDefinition getDefinition()
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteNodeDef(node.getDefinition());
+            return getFactory().getRemoteNodeDefinition(node.getDefinition());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -348,10 +358,10 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
-    public void merge(String workspace, boolean bestEffort)
+    public RemoteNode[] merge(String workspace, boolean bestEffort)
             throws RepositoryException, RemoteException {
         try {
-            node.merge(workspace, bestEffort);
+            return getRemoteNodeArray(node.merge(workspace, bestEffort));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

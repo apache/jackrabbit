@@ -22,10 +22,10 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Session;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionIterator;
 
@@ -35,10 +35,10 @@ import org.apache.jackrabbit.rmi.iterator.ArrayPropertyIterator;
 import org.apache.jackrabbit.rmi.iterator.ArrayVersionIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
@@ -116,7 +116,7 @@ public class ClientObject {
         } else if (remote instanceof RemoteVersionHistory) {
             return factory.getVersionHistory(session, (RemoteVersionHistory) remote);
         } else {
-            return factory.getNode(session, (RemoteNode) remote);
+            return factory.getNode(session, remote);
         }
     }
 
@@ -254,15 +254,15 @@ public class ClientObject {
      * @param remotes remote node definitions
      * @return local node definition array
      */
-    protected NodeDef[] getNodeDefArray(RemoteNodeDef[] remotes) {
+    protected NodeDefinition[] getNodeDefArray(RemoteNodeDefinition[] remotes) {
         if (remotes != null) {
-            NodeDef[] defs = new NodeDef[remotes.length];
+            NodeDefinition[] defs = new NodeDefinition[remotes.length];
             for (int i = 0; i < remotes.length; i++) {
                 defs[i] = factory.getNodeDef(remotes[i]);
             }
             return defs;
         } else {
-            return new NodeDef[0]; // for safety
+            return new NodeDefinition[0]; // for safety
         }
     }
 
@@ -276,15 +276,15 @@ public class ClientObject {
      * @param remotes remote property definitions
      * @return local property definition array
      */
-    protected PropertyDef[] getPropertyDefArray(RemotePropertyDef[] remotes) {
+    protected PropertyDefinition[] getPropertyDefArray(RemotePropertyDefinition[] remotes) {
         if (remotes != null) {
-            PropertyDef[] defs = new PropertyDef[remotes.length];
+            PropertyDefinition[] defs = new PropertyDefinition[remotes.length];
             for (int i = 0; i < remotes.length; i++) {
                 defs[i] = factory.getPropertyDef(remotes[i]);
             }
             return defs;
         } else {
-            return new PropertyDef[0]; // for safety
+            return new PropertyDefinition[0]; // for safety
         }
     }
 

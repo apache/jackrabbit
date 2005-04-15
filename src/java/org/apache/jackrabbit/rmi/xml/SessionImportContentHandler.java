@@ -24,9 +24,9 @@ import javax.jcr.Session;
 /**
  * SAX content handler for importing XML data to a JCR {@link Session Session}.
  * This utility class can be used to implement the
- * {@link Session#getImportContentHandler(String) Session.getImportContentHandler(String)}
+ * {@link Session#getImportContentHandler(String, int) Session.getImportContentHandler(String, int)}
  * method in terms of the
- * {@link Session#importXML(String, java.io.InputStream) Session.importXML(String, InputStream)}
+ * {@link Session#importXML(String, java.io.InputStream, int) Session.importXML(String, InputStream, int)}
  * method.
  *
  * @author Jukka Zitting
@@ -39,6 +39,9 @@ public class SessionImportContentHandler extends ImportContentHandler {
     /** The import content path. */
     private String path;
 
+    /** The uuid behaviour mode */
+    private int mode;
+
     /**
      * Creates a SAX content handler for importing XML data to the given
      * session and path.
@@ -46,20 +49,21 @@ public class SessionImportContentHandler extends ImportContentHandler {
      * @param session repository session
      * @param path import content path
      */
-    public SessionImportContentHandler(Session session, String path) {
+    public SessionImportContentHandler(Session session, String path, int mode) {
         this.session = session;
         this.path = path;
+        this.mode = mode;
     }
 
     /**
      * Imports the serialized XML stream using the standard
-     * {@link Session#importXML(String, java.io.InputStream) Session.importXML(String, InputStream)}
+     * {@link Session#importXML(String, java.io.InputStream, int) Session.importXML(String, InputStream, int)}
      * method.
      *
      * {@inheritDoc}
      */
     protected void importXML(byte[] xml) throws Exception {
-        session.importXML(path, new ByteArrayInputStream(xml));
+        session.importXML(path, new ByteArrayInputStream(xml), mode);
     }
 
 }

@@ -60,8 +60,8 @@ public class ServerSession extends ServerObject implements RemoteSession {
     }
 
     /** {@inheritDoc} */
-    public String getUserId() throws RemoteException {
-        return session.getUserId();
+    public String getUserID() throws RemoteException {
+        return session.getUserID();
     }
 
     /** {@inheritDoc} */
@@ -92,7 +92,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
 
     /** {@inheritDoc} */
     public void checkPermission(String path, String actions)
-            throws AccessControlException, RemoteException {
+            throws AccessControlException, RepositoryException, RemoteException {
         session.checkPermission(path, actions);
     }
 
@@ -137,7 +137,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
     }
 
     /** {@inheritDoc} */
-    public boolean itemExists(String path) throws RemoteException {
+    public boolean itemExists(String path) throws RepositoryException, RemoteException {
         return session.itemExists(path);
     }
 
@@ -216,10 +216,15 @@ public class ServerSession extends ServerObject implements RemoteSession {
     }
 
     /** {@inheritDoc} */
-    public void importXML(String path, byte[] xml)
+    public boolean isLive() throws RemoteException {
+        return session.isLive();
+    }
+
+    /** {@inheritDoc} */
+    public void importXML(String path, byte[] xml, int mode)
             throws IOException, RepositoryException, RemoteException {
         try {
-            session.importXML(path, new ByteArrayInputStream(xml));
+            session.importXML(path, new ByteArrayInputStream(xml), mode);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -241,12 +246,12 @@ public class ServerSession extends ServerObject implements RemoteSession {
     }
 
     /** {@inheritDoc} */
-    public byte[] exportDocView(
+    public byte[] exportDocumentView(
             String path, boolean binaryAsLink, boolean noRecurse)
             throws IOException, RepositoryException, RemoteException {
         try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            session.exportDocView(path, buffer, binaryAsLink, noRecurse);
+            session.exportDocumentView(path, buffer, binaryAsLink, noRecurse);
             return buffer.toByteArray();
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
@@ -254,12 +259,12 @@ public class ServerSession extends ServerObject implements RemoteSession {
     }
 
     /** {@inheritDoc} */
-    public byte[] exportSysView(
+    public byte[] exportSystemView(
             String path, boolean binaryAsLink, boolean noRecurse)
             throws IOException, RepositoryException, RemoteException {
         try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            session.exportSysView(path, buffer, binaryAsLink, noRecurse);
+            session.exportSystemView(path, buffer, binaryAsLink, noRecurse);
             return buffer.toByteArray();
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);

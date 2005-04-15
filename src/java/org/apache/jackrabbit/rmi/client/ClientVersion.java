@@ -22,6 +22,7 @@ import java.util.Calendar;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 
@@ -79,4 +80,13 @@ public class ClientVersion extends ClientNode implements Version {
             throw new RemoteRepositoryException(ex);
         }
     }
+
+    /** {@inheritDoc */
+    public VersionHistory getContainingHistory() throws RepositoryException {
+        try {
+            return getFactory().getVersionHistory(getSession(), remote.getContainingHistory());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
+   }
 }

@@ -57,9 +57,9 @@ public class ServerQueryResult extends ServerObject
     }
 
     /** {@inheritDoc} */
-    public String[] getPropertyNames()
+    public String[] getColumnNames()
             throws RepositoryException, RemoteException {
-        return result.getPropertyNames();
+        return result.getColumnNames();
     }
 
     /** {@inheritDoc} */

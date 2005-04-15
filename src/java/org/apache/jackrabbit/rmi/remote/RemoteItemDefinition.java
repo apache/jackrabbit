@@ -20,10 +20,10 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Remote version of the JCR {@link javax.jcr.nodetype.ItemDef ItemDef}
+ * Remote version of the JCR {@link javax.jcr.nodetype.ItemDefinition ItemDef}
  * interface. Used by the
- * {@link org.apache.jackrabbit.rmi.server.ServerItemDef ServerItemDef} and
- * {@link org.apache.jackrabbit.rmi.client.ClientItemDef ClientItemDef}
+ * {@link org.apache.jackrabbit.rmi.server.ServerItemDefinition ServerItemDefinition} and
+ * {@link org.apache.jackrabbit.rmi.client.ClientItemDefinition ClientItemDefinition}
  * adapter base classes to provide transparent RMI access to remote item
  * definitions.
  * <p>
@@ -37,15 +37,15 @@ import java.rmi.RemoteException;
  * interface. RMI errors are signalled with RemoteExceptions.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.ItemDef
- * @see org.apache.jackrabbit.rmi.client.ClientItemDef
- * @see org.apache.jackrabbit.rmi.server.ServerItemDef
+ * @see javax.jcr.nodetype.ItemDefinition
+ * @see org.apache.jackrabbit.rmi.client.ClientItemDefinition
+ * @see org.apache.jackrabbit.rmi.server.ServerItemDefinition
  */
-public interface RemoteItemDef extends Remote {
+public interface RemoteItemDefinition extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.ItemDef#getDeclaringNodeType() ItemDef.getDeclaringNodeType()}
+     * {@link javax.jcr.nodetype.ItemDefinition#getDeclaringNodeType() ItemDef.getDeclaringNodeType()}
      * method.
      *
      * @return declaring node type
@@ -55,7 +55,7 @@ public interface RemoteItemDef extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.ItemDef#getName() ItemDef.getName()} method.
+     * {@link javax.jcr.nodetype.ItemDefinition#getName() ItemDef.getName()} method.
      *
      * @return item name
      * @throws RemoteException on RMI errors
@@ -64,18 +64,18 @@ public interface RemoteItemDef extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.ItemDef#isAutoCreate() ItemDef.isAutoCreate()}
+     * {@link javax.jcr.nodetype.ItemDefinition#isAutoCreated() ItemDef.isAutoCreate()}
      * method.
      *
      * @return <code>true</code> if the item is automatically created,
      *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
-    boolean isAutoCreate() throws RemoteException;
+    boolean isAutoCreated() throws RemoteException;
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.ItemDef#isMandatory() ItemDef.isMandatory()}
+     * {@link javax.jcr.nodetype.ItemDefinition#isMandatory() ItemDef.isMandatory()}
      * method.
      *
      * @return <code>true</code> if the item is mandatory,
@@ -86,7 +86,7 @@ public interface RemoteItemDef extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.ItemDef#getOnParentVersion() ItemDef.getOnParentVersion()}
+     * {@link javax.jcr.nodetype.ItemDefinition#getOnParentVersion() ItemDef.getOnParentVersion()}
      * method.
      *
      * @return parent version behaviour
@@ -96,7 +96,7 @@ public interface RemoteItemDef extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.ItemDef#isProtected() ItemDef.isProtected()}
+     * {@link javax.jcr.nodetype.ItemDefinition#isProtected() ItemDef.isProtected()}
      * method.
      *
      * @return <code>true</code> if the item is protected,

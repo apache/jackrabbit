@@ -21,11 +21,11 @@ import java.rmi.RemoteException;
 import javax.jcr.Value;
 
 /**
- * Remote version of the JCR {@link javax.jcr.nodetype.PropertyDef PropertyDef}
+ * Remote version of the JCR {@link javax.jcr.nodetype.PropertyDefinition PropertyDefinition}
  * interface. Used by the
- * {@link org.apache.jackrabbit.rmi.server.ServerPropertyDef ServerPropertyDef}
+ * {@link org.apache.jackrabbit.rmi.server.ServerPropertyDefinition ServerPropertyDefinition}
  * and
- * {@link org.apache.jackrabbit.rmi.client.ClientPropertyDef ClientPropertyDef}
+ * {@link org.apache.jackrabbit.rmi.client.ClientPropertyDefinition ClientPropertyDefinition}
  * adapters to provide transparent RMI access to remote property definitions.
  * <p>
  * The methods in this interface are documented only with a reference
@@ -41,15 +41,15 @@ import javax.jcr.Value;
  * requirements.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.PropertyDef
- * @see org.apache.jackrabbit.rmi.client.ClientPropertyDef
- * @see org.apache.jackrabbit.rmi.server.ServerPropertyDef
+ * @see javax.jcr.nodetype.PropertyDefinition
+ * @see org.apache.jackrabbit.rmi.client.ClientPropertyDefinition
+ * @see org.apache.jackrabbit.rmi.server.ServerPropertyDefinition
  */
-public interface RemotePropertyDef extends RemoteItemDef {
+public interface RemotePropertyDefinition extends RemoteItemDefinition {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.PropertyDef#getRequiredType() PropertyDef.getRequiredType()}
+     * {@link javax.jcr.nodetype.PropertyDefinition#getRequiredType() PropertyDefinition.getRequiredType()}
      * method.
      *
      * @return required type
@@ -59,7 +59,7 @@ public interface RemotePropertyDef extends RemoteItemDef {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.PropertyDef#getValueConstraints() PropertyDef.getValueConstraints()}
+     * {@link javax.jcr.nodetype.PropertyDefinition#getValueConstraints() PropertyDefinition.getValueConstraints()}
      * method.
      *
      * @return value constraints
@@ -69,7 +69,7 @@ public interface RemotePropertyDef extends RemoteItemDef {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.PropertyDef#getDefaultValues() PropertyDef.getDefaultValues()}
+     * {@link javax.jcr.nodetype.PropertyDefinition#getDefaultValues() PropertyDefinition.getDefaultValues()}
      * method.
      *
      * @return default values
@@ -79,7 +79,7 @@ public interface RemotePropertyDef extends RemoteItemDef {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.PropertyDef#isMultiple() PropertyDef.isMultiple()}
+     * {@link javax.jcr.nodetype.PropertyDefinition#isMultiple() PropertyDefinition.isMultiple()}
      * method.
      *
      * @return <code>true</code> if the property is multi-valued,

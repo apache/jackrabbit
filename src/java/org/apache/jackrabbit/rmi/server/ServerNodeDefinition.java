@@ -18,26 +18,26 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 
 /**
- * Remote adapter for the JCR {@link javax.jcr.nodetype.NodeDef NodeDef}
+ * Remote adapter for the JCR {@link javax.jcr.nodetype.NodeDefinition NodeDefinition}
  * interface. This class makes a local node definition available as an
  * RMI service using the
- * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeDef RemoteNodeDef}
+ * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition RemoteNodeDefinition}
  * interface.
  *
  * @author Jukka Zitting
- * @see javax.jcr.nodetype.NodeDef
- * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDef
+ * @see javax.jcr.nodetype.NodeDefinition
+ * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition
  */
-public class ServerNodeDef extends ServerItemDef implements RemoteNodeDef {
+public class ServerNodeDefinition extends ServerItemDefinition implements RemoteNodeDefinition {
 
     /** The adapted node definition. */
-    private NodeDef def;
+    private NodeDefinition def;
 
     /**
      * Creates a remote adapter for the given local node definition.
@@ -46,7 +46,7 @@ public class ServerNodeDef extends ServerItemDef implements RemoteNodeDef {
      * @param factory remote adapter factory
      * @throws RemoteException on RMI errors
      */
-    public ServerNodeDef(NodeDef def, RemoteAdapterFactory factory)
+    public ServerNodeDefinition(NodeDefinition def, RemoteAdapterFactory factory)
             throws RemoteException {
         super(def, factory);
         this.def = def;
@@ -63,8 +63,8 @@ public class ServerNodeDef extends ServerItemDef implements RemoteNodeDef {
     }
 
     /** {@inheritDoc} */
-    public boolean allowSameNameSibs() throws RemoteException {
-        return def.allowSameNameSibs();
+    public boolean allowsSameNameSiblings() throws RemoteException {
+        return def.allowsSameNameSiblings();
     }
 
 }

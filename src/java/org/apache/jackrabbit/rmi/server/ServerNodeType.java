@@ -20,11 +20,11 @@ import java.rmi.RemoteException;
 
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDef;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDef;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.nodetype.NodeType NodeType}
@@ -86,26 +86,26 @@ public class ServerNodeType extends ServerObject implements RemoteNodeType {
     }
 
     /** {@inheritDoc} */
-    public RemotePropertyDef[] getPropertyDefs() throws RemoteException {
-        PropertyDef[] defs = type.getPropertyDefs();
+    public RemotePropertyDefinition[] getPropertyDefs() throws RemoteException {
+        PropertyDefinition[] defs = type.getPropertyDefinitions();
         return getRemotePropertyDefArray(defs);
     }
 
     /** {@inheritDoc} */
-    public RemotePropertyDef[] getDeclaredPropertyDefs()
+    public RemotePropertyDefinition[] getDeclaredPropertyDefs()
             throws RemoteException {
-        PropertyDef[] defs = type.getDeclaredPropertyDefs();
+        PropertyDefinition[] defs = type.getDeclaredPropertyDefinitions();
         return getRemotePropertyDefArray(defs);
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeDef[] getChildNodeDefs() throws RemoteException {
-        return getRemoteNodeDefArray(type.getChildNodeDefs());
+    public RemoteNodeDefinition[] getChildNodeDefs() throws RemoteException {
+        return getRemoteNodeDefArray(type.getChildNodeDefinitions());
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeDef[] getDeclaredChildNodeDefs() throws RemoteException {
-        return getRemoteNodeDefArray(type.getDeclaredChildNodeDefs());
+    public RemoteNodeDefinition[] getDeclaredChildNodeDefs() throws RemoteException {
+        return getRemoteNodeDefArray(type.getDeclaredChildNodeDefinitions());
     }
 
     /** {@inheritDoc} */
