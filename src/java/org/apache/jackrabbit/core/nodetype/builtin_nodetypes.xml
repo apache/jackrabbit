@@ -118,7 +118,7 @@
             <supertype>nt:base</supertype>
             <supertype>mix:referenceable</supertype>
         </supertypes>
-        <propertyDefinition name="jcr:encoding" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
+        <propertyDefinition name="jcr:encoding" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:mimeType" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:data" requiredType="Binary" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:lastModified" requiredType="Date" autoCreated="false" mandatory="true" onParentVersion="IGNORE" protected="false" multiple="false"/>
