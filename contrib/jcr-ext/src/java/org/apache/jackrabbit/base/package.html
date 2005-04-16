@@ -1,0 +1,15 @@
+<body>
+General base classes for JCR implementations.
+<p>
+This package contains simple base class implementations of the JCR API
+interfaces. The API methods are implemented either by throwing
+{@link javax.jcr.UnsupportedRepositoryOperationException UnsupportedRepositoryOperationExceptions}
+or
+{@link java.lang.UnsupportedOperationException UnsupportedOperationExceptions},
+or (if possible) by calling other API methods. The implementation mechanism
+of each method is documented using the respective Javadoc comment.
+<p>
+The purpose of this package is to make it easy for JCR implementations
+to implement the JCR API incrementally without creating a large numbers of
+stub methods.
+</body>
