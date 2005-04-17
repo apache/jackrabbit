@@ -20,7 +20,7 @@ import org.apache.commons.chain.impl.ChainBase;
 import org.apache.commons.chain.impl.CatalogFactoryBase;
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Catalog;
-import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.JcrConstants;
 
 /**
  * This Class implements a default chain for importing collection resources.
@@ -29,7 +29,7 @@ import org.apache.jackrabbit.JCRConstants;
  * <li>{@link AddNodeCommand}("nt:folder").
  * </ul>
  */
-public class ImportCollectionChain extends ChainBase implements JCRConstants {
+public class ImportCollectionChain extends ChainBase implements JcrConstants {
 
     /**
      * The default name of this chain.
@@ -48,6 +48,7 @@ public class ImportCollectionChain extends ChainBase implements JCRConstants {
      * Returns an import chain. It first tries to lookup the command
      * in the default catalog. If this failes, a new instance of this class
      * is returned.
+     *
      * @return an import chain.
      */
     public static Command getChain() {
@@ -59,5 +60,4 @@ public class ImportCollectionChain extends ChainBase implements JCRConstants {
         }
         return importChain;
     }
-
 }

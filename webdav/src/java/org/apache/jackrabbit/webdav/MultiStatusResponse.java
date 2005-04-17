@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav;
 import org.jdom.Element;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.util.XmlUtil;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,7 +28,10 @@ import java.util.Iterator;
  * hold a WebDAV multistatus response. Properties can be added to this response
  * with the respective error/status code.
  */
+// todo: the propstat element may also contain a responsedescription (currently ignored)
 public class MultiStatusResponse implements DavConstants {
+
+    private static Logger log = Logger.getLogger(MultiStatusResponse.class);
 
     /**
      * The content the 'href' element for this response
@@ -133,57 +137,117 @@ public class MultiStatusResponse implements DavConstants {
     }
 
     /**
+     * Returns the href
+     *
+     * @return href
+     */
+    public String getHref() {
+        return href;
+    }
+
+    /**
      * Adds a JDOM element to this response
      *
-     * @param prop the property to add
+     * @param propertyElem the property to add
      * @param status the status of the response set to select
      */
-    private void add(Element prop, int status) {
+    private void add(Element propertyElem, int status) {
         Integer statusKey = new Integer(status);
         Element propsContainer = (Element) statusMap.get(statusKey);
         if (propsContainer == null) {
             propsContainer = new Element(XML_PROP, NAMESPACE);
             statusMap.put(statusKey, propsContainer);
         }
-        propsContainer.addContent(prop);
+        propsContainer.addContent(propertyElem.detach());
     }
 
     /**
      * Adds a property to this response '200' propstat set.
      *
-     * @param prop the property to add
+     * @param property the property to add
      */
-    public void add(DavProperty prop) {
-        status200.addContent(prop.toXml());
+    public void add(DavProperty property) {
+        status200.addContent(property.toXml());
     }
 
     /**
      * Adds a property name to this response '200' propstat set.
      *
-     * @param name the property name to add
+     * @param propertyName the property name to add
      */
-    public void add(DavPropertyName name) {
-        status200.addContent(name.toXml());
+    public void add(DavPropertyName propertyName) {
+        status200.addContent(propertyName.toXml());
     }
 
     /**
      * Adds a property to this response
      *
-     * @param prop the property to add
+     * @param property the property to add
      * @param status the status of the response set to select
      */
-    public void add(DavProperty prop, int status) {
-        add(prop.toXml(), status);
+    public void add(DavProperty property, int status) {
+        add(property.toXml(), status);
     }
 
     /**
      * Adds a property name to this response
      *
-     * @param name the property name to add
+     * @param propertyName the property name to add
      * @param status the status of the response set to select
      */
-    public void add(DavPropertyName name, int status) {
-        add(name.toXml(), status);
+    public void add(DavPropertyName propertyName, int status) {
+        add(propertyName.toXml(), status);
+    }
+
+    /**
+     * Get properties present in this response for the given status code.
+     * @param status
+     * @return property set
+     */
+    public DavPropertySet getProperties(int status) {
+        DavPropertySet set = new DavPropertySet();
+        Integer key = new Integer(status);
+        if (statusMap.containsKey(key)) {
+            Element propElem = (Element) statusMap.get(key);
+            if (propElem != null) {
+                Iterator it = propElem.getChildren().iterator();
+                while (it.hasNext()) {
+                    Element propEntry = (Element) it.next();
+                    DavProperty prop = DefaultDavProperty.createFromXml(propEntry);
+                    set.add(prop);
+                }
+            }
+        }
+        return set;
+    }
+
+    /**
+     * Get property names present in this response for the given status code.
+     *
+     * @param status
+     * @return property names
+     */
+    public DavPropertyNameSet getPropertyNames(int status) {
+        DavPropertyNameSet set = new DavPropertyNameSet();
+        Integer key = new Integer(status);
+        if (statusMap.containsKey(key)) {
+            Element propElem = (Element) statusMap.get(key);
+            if (propElem != null) {
+                Iterator it = propElem.getChildren().iterator();
+                while (it.hasNext()) {
+                    Element propEntry = (Element) it.next();
+                    set.add(DavPropertyName.createFromXml(propEntry));
+                }
+            }
+        }
+        return set;
+    }
+
+    /**
+     * @return responseDescription
+     */
+    public String getResponseDescription() {
+	return responseDescription;
     }
 
     /**
@@ -207,31 +271,26 @@ public class MultiStatusResponse implements DavConstants {
         if ("".equals(href)) {
             return null;
         }
-
         Element response= new Element(XML_RESPONSE, NAMESPACE);
-
         // add '<href>'
         response.addContent(XmlUtil.hrefToXml(href));
-
         // add '<propstat>' elements or a single '<status>' element
         Iterator iter = statusMap.keySet().iterator();
         while (iter.hasNext()) {
             Integer statusKey = (Integer) iter.next();
 	    Element prop = (Element) statusMap.get(statusKey);
             if (prop != null) {
-                Element status = new Element(XML_STATUS, NAMESPACE);
-                status.setText("HTTP/1.1 " + statusKey + " " + DavException.getStatusPhrase(statusKey.intValue()));
-
+                Status status = new Status(statusKey.intValue());
                 if (XML_PROP.equals(prop.getName())) {
                     // do not add empty propstat elements
                     if (prop.getContentSize() > 0) {
                         Element propstat = new Element(XML_PROPSTAT, NAMESPACE);
                         propstat.addContent(prop);
-                        propstat.addContent(status);
+                        propstat.addContent(status.toXml());
                         response.addContent(propstat);
                     }
                 } else {
-                    response.addContent(status);
+                    response.addContent(status.toXml());
                 }
 	    }
         }
@@ -242,5 +301,125 @@ public class MultiStatusResponse implements DavConstants {
             response.addContent(desc);
         }
         return response;
+    }
+
+    /**
+     * Build a new response object from the given xml element.
+     *
+     * @param responseElement
+     * @return new <code>MultiStatusResponse</code> instance
+     * @throws  IllegalArgumentException if the specified element is <code>null</code>
+     */
+    public static MultiStatusResponse createFromXml(Element responseElement) {
+        if (responseElement == null) {
+	    throw new IllegalArgumentException("The response element must not be null.");
+	}
+        String href = responseElement.getChildText(XML_HREF, NAMESPACE);
+        String statusLine = responseElement.getChildText(XML_STATUS, NAMESPACE);
+        MultiStatusResponse response = (statusLine != null) ? new MultiStatusResponse(href, Status.createFromStatusLine(statusLine).getStatusCode()) : new MultiStatusResponse(href);
+
+        // read propstat elements
+        Iterator it = responseElement.getChildren(XML_PROPSTAT, NAMESPACE).iterator();
+	while (it.hasNext()) {
+	    Element propstat = (Element)it.next();
+            Element prop = propstat.getChild(XML_PROP, NAMESPACE);
+            String propstatus = propstat.getChildText(XML_STATUS, NAMESPACE);
+            if (propstatus != null) {
+                Status st = Status.createFromStatusLine(propstatus);
+                Element[] propertyElems = (Element[]) prop.getChildren().toArray(new Element[0]);
+                for (int i = 0; i < propertyElems.length; i++) {
+                    response.add(propertyElems[i], st.getStatusCode());
+                }
+            }
+            // todo: propstat may also contain a responsedescription
+	}
+
+        response.setResponseDescription(responseElement.getChildText(XML_RESPONSEDESCRIPTION, NAMESPACE));
+        return response;
+    }
+
+    /**
+     * Inner class encapsulating the 'status' present in the multistatus response.
+     */
+    private static class Status {
+
+        private String version = "HTTP/1.1";
+        private int code;
+        private String phrase = "";
+
+        private Status(int code) {
+            this.code = code;
+            phrase = DavException.getStatusPhrase(code);
+        }
+
+        private Status(String version, int code, String phrase) {
+            this.version = version;
+            this.code = code;
+            this.phrase = phrase;
+        }
+
+        private int getStatusCode() {
+            return code;
+        }
+
+        private Element toXml() {
+            String statusLine = version + " " + code + " " + phrase;
+            return new Element(XML_STATUS, NAMESPACE).setText(statusLine);
+        }
+
+        private static Status createFromStatusLine(String statusLine) {
+            if (statusLine == null) {
+                throw new IllegalArgumentException("Unable to parse status line from null xml element.");
+            }
+            Status status;
+
+            // code copied from org.apache.commons.httpclient.StatusLine
+            int length = statusLine.length();
+            int at = 0;
+            int start = 0;
+            try {
+                while (Character.isWhitespace(statusLine.charAt(at))) {
+                    ++at;
+                    ++start;
+                }
+                if (!"HTTP".equals(statusLine.substring(at, at += 4))) {
+                    log.warn("Status-Line '" + statusLine + "' does not start with HTTP");
+                }
+                //handle the HTTP-Version
+                at = statusLine.indexOf(" ", at);
+                if (at <= 0) {
+                    log.warn("Unable to parse HTTP-Version from the status line: '"+ statusLine + "'");
+                }
+                String version = (statusLine.substring(start, at)).toUpperCase();
+                //advance through spaces
+                while (statusLine.charAt(at) == ' ') {
+                    at++;
+                }
+                //handle the Status-Code
+                int to = statusLine.indexOf(" ", at);
+                if (to < 0) {
+                    to = length;
+                }
+                try {
+                    int code = Integer.parseInt(statusLine.substring(at, to));
+                    status = new Status(code);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Unable to parse status code from status line: '"+ statusLine + "'");
+                }
+                //handle the Reason-Phrase
+                String phrase = "";
+                at = to + 1;
+                if (at < length) {
+                    phrase = statusLine.substring(at).trim();
+                }
+
+                status.version = version;
+                status.phrase = phrase;
+
+            } catch (StringIndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Status-Line '" + statusLine + "' is not valid");
+            }
+            return status;
+        }
     }
 }

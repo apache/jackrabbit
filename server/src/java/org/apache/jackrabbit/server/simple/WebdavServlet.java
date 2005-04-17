@@ -15,10 +15,10 @@
  */
 package org.apache.jackrabbit.server.simple;
 
-import org.apache.jackrabbit.server.simple.dav.lock.SimpleLockManager;
-import org.apache.jackrabbit.server.simple.dav.ResourceFactoryImpl;
-import org.apache.jackrabbit.server.simple.dav.LocatorFactoryImpl;
-import org.apache.jackrabbit.server.simple.dav.DavSessionProviderImpl;
+import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
+import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
+import org.apache.jackrabbit.webdav.simple.LocatorFactoryImpl;
+import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
 
 import javax.servlet.http.*;
 import javax.servlet.*;
@@ -224,7 +224,7 @@ public class WebdavServlet extends AbstractWebdavServlet {
 
     /**
      * Returns the <code>DavLocatorFactory</code>. If no locator factory has
-     * been set or created a new instance of {@link LocatorFactoryImpl} is
+     * been set or created a new instance of {@link org.apache.jackrabbit.webdav.simple.LocatorFactoryImpl} is
      * returned.
      *
      * @return the locator factory
@@ -293,7 +293,7 @@ public class WebdavServlet extends AbstractWebdavServlet {
 
     /**
      * Returns the <code>DavSessionProvider</code>. If no session provider has
-     * been set or created a new instance of {@link DavSessionProviderImpl} is
+     * been set or created a new instance of {@link org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl} is
      * returned.
      *
      * @return the session provider

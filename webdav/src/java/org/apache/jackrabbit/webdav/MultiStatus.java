@@ -21,14 +21,16 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * MultiStatus representing the content of a multistatus response body and
  * allows to retrieve the Xml representation.
  */
-public class MultiStatus {
+public class MultiStatus implements DavConstants {
 
     private ArrayList responses = new ArrayList();
+    private String responseDescription;
 
     /**
      * Add response(s) to this multistatus, in order to build a multistatus for
@@ -64,7 +66,7 @@ public class MultiStatus {
      */
     public void addResourceProperties(DavResource resource, DavPropertyNameSet propNameSet,
 				      int depth) {
-	addResourceProperties(resource, propNameSet, DavConstants.PROPFIND_BY_PROPERTY, depth);
+	addResourceProperties(resource, propNameSet, PROPFIND_BY_PROPERTY, depth);
     }
 
     /**
@@ -95,16 +97,79 @@ public class MultiStatus {
     }
 
     /**
+     * Returns the multistatus responses present as array.
+     *
+     * @return array of all {@link MultiStatusResponse responses} present in this
+     * multistatus.
+     */
+    public MultiStatusResponse[] getResponses() {
+	return (MultiStatusResponse[]) responses.toArray(new MultiStatusResponse[responses.size()]);
+    }
+
+    /**
+     * Set the response description.
+     *
+     * @param responseDescription
+     */
+    public void setResponseDescription(String responseDescription) {
+        this.responseDescription = responseDescription;
+    }
+
+    /**
+     * Returns the response description.
+     *
+     * @return responseDescription
+     */
+    public String getResponseDescription() {
+	return responseDescription;
+    }
+
+    /**
      * Return the Xml representation of this <code>MultiStatus</code>.
      *
      * @return Xml document
      */
     public Document toXml() {
-	Element multistatus = new Element(DavConstants.XML_MULTISTATUS, DavConstants.NAMESPACE);
+	Element multistatus = new Element(XML_MULTISTATUS, NAMESPACE);
         Iterator it = responses.iterator();
 	while(it.hasNext()) {
 	    multistatus.addContent(((MultiStatusResponse)it.next()).toXml());
 	}
+        if (responseDescription != null) {
+            multistatus.addContent(new Element(XML_RESPONSEDESCRIPTION, NAMESPACE).setText(responseDescription));
+        }
 	return new Document(multistatus);
+    }
+
+    /**
+     * Build a <code>MultiStatus</code> from the specified xml document.
+     *
+     * @param multistatusDocument
+     * @return new <code>MultiStatus</code> instance.
+     * @throws IllegalArgumentException if the given document is <code>null</code>
+     * or does not provide the required element.
+     */
+    public static MultiStatus createFromXml(Document multistatusDocument) {
+        if (multistatusDocument == null) {
+	    throw new IllegalArgumentException("Cannot create a MultiStatus object from a null xml document.");
+	}
+
+	Element msElem = multistatusDocument.getRootElement();
+	if (!(XML_MULTISTATUS.equals(msElem.getName()) && NAMESPACE.equals(msElem.getNamespace()))) {
+	    throw new IllegalArgumentException("DAV:multistatus element expected.");
+	}
+
+        MultiStatus multistatus = new MultiStatus();
+
+	List respList = msElem.getChildren(XML_RESPONSE, NAMESPACE);
+	Iterator it = respList.iterator();
+	while (it.hasNext()) {
+            MultiStatusResponse response = MultiStatusResponse.createFromXml((Element)it.next());
+            multistatus.addResponse(response);
+	}
+
+	// optional response description on the multistatus element
+	multistatus.setResponseDescription(msElem.getChildText(XML_RESPONSEDESCRIPTION, NAMESPACE));
+        return multistatus;
     }
 }

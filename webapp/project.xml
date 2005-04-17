@@ -57,15 +57,15 @@
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
-            <version>0.16.2</version>
-            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.2.jar</url>
+            <version>0.16.4</version>
+            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.jar</url>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
             <id>jackrabbit</id>
-            <version>0.16.2-dev</version>
+            <version>0.16.4-dev</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
@@ -90,7 +90,7 @@
         </dependency>
         <dependency>
             <id>jcr-rmi</id>
-            <version>0.16.2</version>
+            <version>0.16.4</version>
             <properties>
                 <war.bundle>false</war.bundle>
             </properties>

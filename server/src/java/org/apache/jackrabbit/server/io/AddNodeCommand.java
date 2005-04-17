@@ -18,7 +18,7 @@ package org.apache.jackrabbit.server.io;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.Node;
 
@@ -26,7 +26,7 @@ import javax.jcr.Node;
  * This Class implements a import command that adds a mixin node type to the
  * current node.
  */
-public class AddNodeCommand implements Command, JCRConstants {
+public class AddNodeCommand implements Command, JcrConstants {
 
     /**
      * the nodetype to be added.
@@ -41,6 +41,7 @@ public class AddNodeCommand implements Command, JCRConstants {
 
     /**
      * Creates a new AddNodeCommand with the given node type.
+     *
      * @param nodeType the node type of the node to be added.
      */
     public AddNodeCommand(String nodeType) {
@@ -49,6 +50,7 @@ public class AddNodeCommand implements Command, JCRConstants {
 
     /**
      * Returns the node type of the new node to be added.
+     *
      * @return the node type
      */
     public String getNodeType() {
@@ -57,6 +59,7 @@ public class AddNodeCommand implements Command, JCRConstants {
 
     /**
      * Sets the node type of the new node to be added.
+     *
      * @param nodeType the node type
      */
     public void setNodeType(String nodeType) {
@@ -66,6 +69,7 @@ public class AddNodeCommand implements Command, JCRConstants {
     /**
      * Executes this command by delegating to {@link #execute(ImportContext)} if
      * the context has the correct class.
+     *
      * @param context the (import) context.
      * @return <code>false</code>.
      * @throws Exception if an error occurrs.
@@ -87,7 +91,6 @@ public class AddNodeCommand implements Command, JCRConstants {
      * @param context the import context
      * @return <code>false</code>
      * @throws Exception in an error occurrs
-     *
      * @see ImportContext#getSystemId()
      * @see ImportContext#getNode()
      */

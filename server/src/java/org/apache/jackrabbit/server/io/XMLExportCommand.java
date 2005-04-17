@@ -94,9 +94,9 @@ public class XMLExportCommand extends AbstractExportCommand {
         File tmpfile = File.createTempFile("__webdav", ".xml");
         FileOutputStream out = new FileOutputStream(tmpfile);
         if (mode.equals(MODE_DOCVIEW)) {
-            content.getSession().exportDocView(content.getPath(), out, true, false);
+            content.getSession().exportDocumentView(content.getPath(), out, true, false);
         } else {
-            content.getSession().exportSysView(content.getPath(), out, true, false);
+            content.getSession().exportSystemView(content.getPath(), out, true, false);
         }
         out.close();
         context.setInputStream(new FileInputStream(tmpfile));

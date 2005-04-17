@@ -25,7 +25,6 @@ import java.util.Calendar;
  * the current node and a add the resource data as binary property. It further
  * sets the following properties:
  * <ul>
- * <li>jcr:encoding (to "")
  * <li>jcr:mimeType (from {@link ImportContext#getContentType()})
  * <li>jcr:lastModified (from current time)
  * <li>jcr:data (from {@link ImportContext#getInputStream()})
@@ -48,8 +47,6 @@ public class FileImportCommand extends AbstractImportCommand {
         Node content = parentNode.hasNode(JCR_CONTENT)
                 ? parentNode.getNode(JCR_CONTENT)
                 : parentNode.addNode(JCR_CONTENT, NT_RESOURCE);
-        // todo: to be removed with spec. 0.16.4 where jcr:encoding is not mandatory any more...
-        content.setProperty(JCR_ENCODING, "");
         content.setProperty(JCR_MIMETYPE, ctx.getContentType());
         content.setProperty(JCR_DATA, in);
         Calendar lastMod = Calendar.getInstance();
@@ -62,6 +59,7 @@ public class FileImportCommand extends AbstractImportCommand {
 
     /**
      * Can handle all content type thus returning <code>true</code>.
+     * 
      * @param contentType
      * @return <code>true</code>
      */

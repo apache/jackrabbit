@@ -47,14 +47,14 @@ public interface SearchResource {
     public QueryGrammerSet getQueryGrammerSet();
 
     /**
-     * Runs a search with the language and query defined in the {@link SearchRequest}
+     * Runs a search with the language and query defined in the {@link SearchInfo}
      * object specified and returns a {@link MultiStatus} object listing the
      * results.
      *
-     * @param sRequest <code>SearchRequest</code> element encapsulating the SEARCH
+     * @param sInfo <code>SearchInfo</code> element encapsulating the SEARCH
      * request body.
      * @return <code>MultiStatus</code> object listing the results.
      * @throws DavException
      */
-    public MultiStatus search(SearchRequest sRequest) throws DavException;
+    public MultiStatus search(SearchInfo sInfo) throws DavException;
 }

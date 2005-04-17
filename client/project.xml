@@ -23,7 +23,7 @@
     <id>jcr-client</id>
     <groupId>jcr-server</groupId>
     <type>jar</type>
-    <name>JCRWebdavServer Client Library</name>
+    <name>Client Library</name>
 
     <!-- ====================================================================== -->
     <!-- D E P E N D E N C I E S                                                -->
@@ -34,16 +34,19 @@
             <groupId>jcr-server</groupId>
             <version>${pom.currentVersion}</version>
         </dependency>
-
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
-            <version>0.16.2</version>
-            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.2.jar</url>
+            <version>0.16.4</version>
+            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.jar</url>
         </dependency>
         <dependency>
             <id>jackrabbit</id>
-            <version>0.16.2-dev</version>
+            <version>0.16.4-dev</version>
+        </dependency>
+        <dependency>
+            <id>jcr-rmi</id>
+            <version>0.16.4</version>
         </dependency>
         <dependency>
             <id>jdom</id>
@@ -58,50 +61,13 @@
             <version>2.3</version>
         </dependency>
         <dependency>
-            <id>jcr-rmi</id>
-            <version>0.16.2</version>
-        </dependency>
-        <!-- dependencies of jackrabbit -->
-        <!--
-        <dependency>
-          <id>concurrent</id>
-          <version>1.3.4</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
+          <id>commons-httpclient</id>
+          <version>2.0.2</version>
         </dependency>
         <dependency>
           <id>commons-collections</id>
           <version>2.1</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
         </dependency>
-        <dependency>
-          <groupId>geronimo-spec</groupId>
-          <artifactId>geronimo-spec-jta</artifactId>
-          <version>1.0-M1</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        <dependency>
-          <groupId>lucene</groupId>
-          <artifactId>lucene</artifactId>
-          <version>1.4.3</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        <dependency>
-          <groupId>xerces</groupId>
-          <artifactId>xercesImpl</artifactId>
-          <version>2.6.2</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        -->
     </dependencies>
 
     <!-- ====================================================================== -->

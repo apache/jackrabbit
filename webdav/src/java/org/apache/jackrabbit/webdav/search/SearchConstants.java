@@ -58,8 +58,8 @@ public interface SearchConstants {
     /**
      * Xml element name for the required request body of a SEARCH request.
      *
-     * @see SearchRequest
-     * @see SearchResource#search(SearchRequest)
+     * @see SearchInfo
+     * @see SearchResource#search(SearchInfo)
      */
     public static final String XML_SEARCHREQUEST = "searchrequest";
 
@@ -68,7 +68,6 @@ public interface SearchConstants {
      * in order to access a given query schema.
      */
     public static final String XML_QUERY_SCHEMA_DISCOVERY = "query-schema-discovery";
-
 
     /**
      * Predefined basic query grammer.

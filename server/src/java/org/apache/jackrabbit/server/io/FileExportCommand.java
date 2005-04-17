@@ -29,6 +29,7 @@ public class FileExportCommand extends AbstractExportCommand {
     /**
      * Exports the node by returning the content of the jcr:data property of
      * the content node.
+     *
      * @param context the export context
      * @param content the content node
      * @return <code>true</code>
@@ -37,7 +38,8 @@ public class FileExportCommand extends AbstractExportCommand {
     public boolean exportNode(ExportContext context, Node content) throws Exception {
         if (content.hasProperty(JCR_ENCODING)) {
             String encoding = content.getProperty(JCR_ENCODING).getString();
-            if (!encoding.equals("")) {
+            // ignore "" encodings (although this is avoided during import)
+            if (!"".equals(encoding)) {
                 context.setContentType(context.getContentType() + "; charset=\"" + encoding + "\"");
             }
         }
@@ -54,6 +56,7 @@ public class FileExportCommand extends AbstractExportCommand {
 
     /**
      * Returns the default content type
+     *
      * @return "application/octet-stream".
      */
     public String getDefaultContentType() {
@@ -64,6 +67,7 @@ public class FileExportCommand extends AbstractExportCommand {
      * Checks if the given node can be handled by this export command. This is
      * the case, if the node contains a 'jcr:content' node which is of node type
      * 'nt:resource'.
+     * 
      * @param node the node to be exported
      * @return <code>true</code> if the correct node is passed;
      *         <code>false</code> otherwise.
