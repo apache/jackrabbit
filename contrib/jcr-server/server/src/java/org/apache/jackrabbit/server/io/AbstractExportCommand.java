@@ -18,7 +18,7 @@ package org.apache.jackrabbit.server.io;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.Node;
 
@@ -35,7 +35,7 @@ import javax.jcr.Node;
  * <li>jcr:mimeType
  * <ul>
  */
-public abstract class AbstractExportCommand implements Command, JCRConstants {
+public abstract class AbstractExportCommand implements Command, JcrConstants {
 
     /**
      * Executes this command by calling {@link #execute(ExportContext)} if
@@ -101,12 +101,14 @@ public abstract class AbstractExportCommand implements Command, JCRConstants {
 
     /**
      * Returns the default content type of this export
-     * @return
+     *
+     * @return default content type
      */
     public abstract String getDefaultContentType();
 
     /**
      * Checks if this export command can handle the given node.
+     * 
      * @param node
      * @return <code>true</code> if it can handle the export;
      *         <code>false</code> otherwise.

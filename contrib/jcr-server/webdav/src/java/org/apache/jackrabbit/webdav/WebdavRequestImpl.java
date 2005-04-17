@@ -27,6 +27,8 @@ import org.apache.jackrabbit.webdav.version.*;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.ordering.*;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
+import org.apache.jackrabbit.webdav.header.IfHeader;
+import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.jdom.input.SAXBuilder;
 import org.jdom.JDOMException;
 import org.jdom.Document;
@@ -180,7 +182,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @see DavServletRequest#getDepth(int)
      */
     public int getDepth(int defaultValue) {
-	return DepthHeader.parse(httpRequest.getHeader(HEADER_DEPTH), defaultValue).getDepth();
+	return DepthHeader.parse(httpRequest, defaultValue).getDepth();
     }
 
     /**
@@ -233,7 +235,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @see DavServletRequest#getLockToken()
      */
     public String getLockToken() {
-	return getCodedURLHeader(HEADER_LOCK_TOKEN);
+        return CodedUrlHeader.parse(httpRequest, HEADER_LOCK_TOKEN).getCodedUrl();
     }
 
     /**
@@ -480,45 +482,16 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     public boolean matchesIfHeader(String href, String token, String eTag) {
         return ifHeader.matches(href, token, eTag);
     }
-
-    /**
-     * Retrieve the header with the given header name and parse the CodedURL
-     * value included.
-     *
-     * @param headerName
-     * @return token present in the CodedURL header or <code>null</code> if
-     * the header is not present.
-     */
-    private String getCodedURLHeader(String headerName) {
-        String headerValue = null;
-	String header = httpRequest.getHeader(headerName);
-	if (header != null) {
-	    int p1 = header.indexOf('<');
-	    if (p1<0) {
-		throw new IllegalArgumentException("Invalid CodedURL header value:"+header);
-	    }
-	    int p2 = header.indexOf('>', p1);
-	    if (p2<0) {
-		throw new IllegalArgumentException("Invalid CodedURL header value:"+header);
-	    }
-	    headerValue = header.substring(p1+1, p2);
-	}
-	return headerValue;
-    }
     
     //-----------------------------< TransactionDavServletRequest Interface >---
     /**
-     *
-     * @return
      * @see org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest#getTransactionId()
      */
     public String getTransactionId() {
-        return getCodedURLHeader(TransactionConstants.HEADER_TRANSACTIONID);
+        return CodedUrlHeader.parse(httpRequest, TransactionConstants.HEADER_TRANSACTIONID).getCodedUrl();
     }
 
     /**
-     *
-     * @return
      * @see org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest#getTransactionInfo()
      */
     public TransactionInfo getTransactionInfo() {
@@ -535,17 +508,13 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
     //-----------------------------< ObservationDavServletRequest Interface >---
     /**
-     *
-     * @return
      * @see org.apache.jackrabbit.webdav.observation.ObservationDavServletRequest#getSubscriptionId()
      */
     public String getSubscriptionId() {
-        return getCodedURLHeader(ObservationConstants.HEADER_SUBSCRIPTIONID);
+        return CodedUrlHeader.parse(httpRequest, ObservationConstants.HEADER_SUBSCRIPTIONID).getCodedUrl();
     }
 
     /**
-     *
-     * @return
      * @see org.apache.jackrabbit.webdav.observation.ObservationDavServletRequest#getSubscriptionInfo()
      */
     public SubscriptionInfo getSubscriptionInfo() {
@@ -562,8 +531,6 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
     //--------------------------------< OrderingDavServletRequest Interface >---
     /**
-     *
-     * @return
      * @see org.apache.jackrabbit.webdav.ordering.OrderingDavServletRequest#getOrderingType()
      */
     public String getOrderingType() {
@@ -571,8 +538,6 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     /**
-     *
-     * @return
      * @see org.apache.jackrabbit.webdav.ordering.OrderingDavServletRequest#getPosition()
      */
     public Position getPosition() {
@@ -592,7 +557,6 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     /**
-     *
      * @return <code>OrderPatch</code> object representing the orderpatch request
      * body or <code>null</code> if the
      * @see org.apache.jackrabbit.webdav.ordering.OrderingDavServletRequest#getOrderPatch()

@@ -34,6 +34,14 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
     private List queryLanguages = new ArrayList();
 
     /**
+     * Create a new empty <code>QueryGrammerSet</code>. Supported query grammers
+     * may be added by calling {@link #addQueryLanguage(String, Namespace).
+     */
+    public QueryGrammerSet() {
+       this(null);
+    }
+
+    /**
      * Create a new <code>QueryGrammerSet</code> from the given query languages
      * string array. The default {@link SearchConstants#NAMESPACE} is assumed.
      * @param qLanguages

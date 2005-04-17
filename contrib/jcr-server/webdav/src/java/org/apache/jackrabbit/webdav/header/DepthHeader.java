@@ -18,6 +18,8 @@ package org.apache.jackrabbit.webdav.header;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * <code>DepthHeader</code>...
  */
@@ -64,21 +66,23 @@ public class DepthHeader implements DavConstants {
      */
     public String getHeaderValue() {
         if (depth == DavConstants.DEPTH_0 || depth == DavConstants.DEPTH_1) {
-	    return depth + "";
+	    return String.valueOf(depth);
 	} else {
 	    return DavConstants.DEPTH_INFINITY_S;
 	}
     }
 
     /**
-     * Parse the given header value or use the defaultValue if the header
-     * string is empty or <code>null</code>.
+     * Retrieve the Depth header from the given request object and parse the
+     * value. If no header is present or the value is empty String, the
+     * defaultValue is used ot build a new <code>DepthHeader</code> instance.
      *
-     * @param headerValue
+     * @param request
      * @param defaultValue
-     * @return a new DepthHeader
+     * @return a new <code>DepthHeader</code> instance
      */
-    public static DepthHeader parse(String headerValue, int defaultValue) {
+    public static DepthHeader parse(HttpServletRequest request, int defaultValue) {
+        String headerValue = request.getHeader(HEADER_DEPTH);
         if (headerValue == null || "".equals(headerValue)) {
 	    return new DepthHeader(defaultValue);
 	} else {

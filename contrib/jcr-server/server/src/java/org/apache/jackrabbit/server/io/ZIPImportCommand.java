@@ -18,7 +18,7 @@ package org.apache.jackrabbit.server.io;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.util.Text;
-import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.commons.chain.Context;
 import org.apache.commons.chain.Command;
 
@@ -32,7 +32,7 @@ import java.util.zip.ZipEntry;
  * This Class implements an import command that reads entries from a zip input
  * stream and delegates the extracted file back to the import chain.
  */
-public class ZIPImportCommand implements Command, JCRConstants {
+public class ZIPImportCommand implements Command, JcrConstants {
 
     /** the default logger */
     private static final Logger log = Logger.getLogger(ZIPImportCommand.class);
@@ -116,7 +116,7 @@ public class ZIPImportCommand implements Command, JCRConstants {
                 subctx.setInputStream(bin);
                 subctx.setSystemId(Text.getLabel(path));
                 subctx.setModificationTime(entry.getTime());
-                ImportNCResourceChain.getChain().execute(subctx);
+                ImportResourceChain.getChain().execute(subctx);
                 zin.closeEntry();
             }
         }

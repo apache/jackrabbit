@@ -33,7 +33,7 @@ import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
-import org.apache.jackrabbit.webdav.search.SearchRequest;
+import org.apache.jackrabbit.webdav.search.SearchInfo;
 
 import org.jdom.Document;
 
@@ -814,7 +814,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         try {
             Document doc = request.getRequestDocument();
             if (doc != null) {
-                SearchRequest sR = new SearchRequest(doc);
+                SearchInfo sR = new SearchInfo(doc);
                 response.sendMultiStatusResponse(((SearchResource)resource).search(sR));
             } else {
                 // request without request body is valid if requested resource

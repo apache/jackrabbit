@@ -20,7 +20,7 @@ import org.apache.commons.chain.impl.ChainBase;
 import org.apache.commons.chain.impl.CatalogFactoryBase;
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Catalog;
-import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.JcrConstants;
 
 /**
  * This Class implements a default chain for exporting collection resources.
@@ -29,7 +29,7 @@ import org.apache.jackrabbit.JCRConstants;
  * <li>{@link DirListingExportCommand}("nt:folder").
  * </ul>
  */
-public class ExportCollectionChain extends ChainBase implements JCRConstants {
+public class ExportCollectionChain extends ChainBase implements JcrConstants {
 
     /**
      * the name of this chain
@@ -48,6 +48,7 @@ public class ExportCollectionChain extends ChainBase implements JCRConstants {
      * Returns an export chain. It first tries to lookup the command
      * in the default catalog. If this failes, a new instance of this class
      * is returned.
+     *
      * @return an export chain.
      */
     public static Command getChain() {
@@ -59,5 +60,4 @@ public class ExportCollectionChain extends ChainBase implements JCRConstants {
         }
         return exportChain;
     }
-
 }

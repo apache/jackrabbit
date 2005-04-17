@@ -19,7 +19,7 @@ package org.apache.jackrabbit.server.io;
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.webdav.util.Text;
-import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.Node;
 import javax.jcr.Repository;
@@ -34,7 +34,7 @@ import java.io.FileInputStream;
  * directory listing of all child nodes. All child nodes having the
  * {@link #getCollectionNodeType()} result in a directory link.
  */
-public class DirListingExportCommand implements Command, JCRConstants {
+public class DirListingExportCommand implements Command, JcrConstants {
 
     /**
      * the node type of a collection
@@ -49,6 +49,7 @@ public class DirListingExportCommand implements Command, JCRConstants {
 
     /**
      * Creates a DirListingExportCommand with the given collection node type.
+     *
      * @param collectionNodeType
      */
     public DirListingExportCommand(String collectionNodeType) {
@@ -57,6 +58,7 @@ public class DirListingExportCommand implements Command, JCRConstants {
 
     /**
      * Returns the node type of a collection node.
+     *
      * @return the node type of a collection node.
      */
     public String getCollectionNodeType() {
@@ -76,6 +78,7 @@ public class DirListingExportCommand implements Command, JCRConstants {
     /**
      * Executes this command by delegating to {@link #execute(ExportContext)} if
      * the context has the correct class.
+     *
      * @param context the (import) context.
      * @return <code>false</code>.
      * @throws Exception if an error occurrs.
@@ -149,5 +152,4 @@ public class DirListingExportCommand implements Command, JCRConstants {
 
         return true;
     }
-
 }
