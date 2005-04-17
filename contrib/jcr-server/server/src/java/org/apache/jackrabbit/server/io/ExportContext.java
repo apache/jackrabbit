@@ -64,6 +64,7 @@ public class ExportContext extends ContextBase {
 
     /**
      * Creates a new ExportContext for the given node
+     *
      * @param node
      */
     public ExportContext(Node node) {
@@ -72,6 +73,7 @@ public class ExportContext extends ContextBase {
 
     /**
      * Returns the input stream
+     *
      * @return the input stream
      */
     public InputStream getInputStream() {
@@ -81,6 +83,7 @@ public class ExportContext extends ContextBase {
     /**
      * Sets a the inpurt stream to the data to be exported. A successfull
      * export command must set this memeber.
+     *
      * @param inputStream
      */
     public void setInputStream(InputStream inputStream) {
@@ -89,6 +92,7 @@ public class ExportContext extends ContextBase {
 
     /**
      * Returns the node to be exported
+     *
      * @return
      */
     public Node getNode() {
@@ -97,6 +101,7 @@ public class ExportContext extends ContextBase {
 
     /**
      * Returns the length of the data to be exported
+     *
      * @return the content length
      */
     public long getContentLength() {
@@ -106,6 +111,7 @@ public class ExportContext extends ContextBase {
     /**
      * Sets the length of the data to be exported. A successfull export command
      * must set this memeber.
+     *
      * @param contentLength the content length
      */
     public void setContentLength(long contentLength) {
@@ -114,6 +120,7 @@ public class ExportContext extends ContextBase {
 
     /**
      * Returns the last modification time.
+     *
      * @return the last modification time.
      */
     public long getModificationTime() {
@@ -123,6 +130,7 @@ public class ExportContext extends ContextBase {
     /**
      * Sets the last modification time. A successfull export command may set
      * this member.
+     *
      * @param modificationTime the last modification time
      */
     public void setModificationTime(long modificationTime) {
@@ -131,6 +139,7 @@ public class ExportContext extends ContextBase {
 
     /**
      * Returns the creation time of the resource.
+     *
      * @return the creation time
      */
     public long getCreationTime() {
@@ -140,6 +149,7 @@ public class ExportContext extends ContextBase {
     /**
      * Sets the creation time of the resource. A successfull export command may
      * set this member.
+     *
      * @param creationTime the creation time
      */
     public void setCreationTime(long creationTime) {
@@ -148,6 +158,7 @@ public class ExportContext extends ContextBase {
 
     /**
      * Returns the content type of the resource.
+     *
      * @return the content type
      */
     public String getContentType() {
@@ -157,6 +168,7 @@ public class ExportContext extends ContextBase {
     /**
      * Sets the content type of the resource. A successfull export command
      * may set this member.
+     * 
      * @param contentType the content type
      */
     public void setContentType(String contentType) {

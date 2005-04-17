@@ -17,7 +17,7 @@
     <!--
         command-chain for importing a webdav non-collection-resource into the jcr repository
     -->
-    <chain name="import-nc-resource">
+    <chain name="import-resource">
         <command
             id="set-contenttype"
             className="org.apache.jackrabbit.server.io.SetContentTypeCommand"
@@ -42,7 +42,7 @@
     <!--
         command-chain for exporting non-collection-resources
     -->
-    <chain name="export-nc-resource">
+    <chain name="export-resource">
         <command
             id="export-file"
             className="org.apache.jackrabbit.server.io.FileExportCommand"

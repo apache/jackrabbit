@@ -6,12 +6,12 @@ the i/o catalog consists of 4 commands chains:
 <li><b>import-collection</b><br>
     commands that import a collection, eg. create a folder node in the
     repository.
-<li><b>import-nc-resource</b><br>
+<li><b>import-resource</b><br>
     commands that import a non-collection resource, eg. importing a file, deserializing
     an xml document. etc.
 <li><b>export-collection</b><br>
     commands that export a collection, eg. create a dir-listing
-<li><b>export-nc-resource</b><br>
+<li><b>export-resource</b><br>
     commands that export a non-collection resource, eg. spool a file, generate a docview response
 </ul>
 
@@ -23,7 +23,7 @@ an example catalog.xml:<br>
         <command id="add-node" className="org.apache.jackrabbit.server.io.AddNodeCommand" nodeType="nt:folder" />
     </chain>
 
-    <chain name="import-nc-resource">
+    <chain name="import-resource">
         <command id="add-node"  className="org.apache.jackrabbit.server.io.AddNodeCommand" nodeType="nt:file" />
         <command id="add-mixin" className="org.apache.jackrabbit.server.io.AddMixinCommand" nodeType="mix:versionable"/>
         <command id="import-file" className="org.apache.jackrabbit.server.io.FileImportCommand" />
@@ -32,7 +32,7 @@ an example catalog.xml:<br>
     <chain name="export-collection">
         <command id="export-dirlisting" className="org.apache.jackrabbit.server.io.DirListingExportCommand"  collectionNodeType="nt:folder"/>
     </chain>
-    <chain name="export-nc-resource">
+    <chain name="export-resource">
         <command id="export-file" className="org.apache.jackrabbit.server.io.FileExportCommand" />
     </chain>
 </catalog>

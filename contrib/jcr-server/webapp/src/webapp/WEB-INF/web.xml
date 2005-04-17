@@ -40,6 +40,7 @@
             <description>Repository Name under which the repository is registered via JNDI/RMI</description>
         </init-param>
 
+        <!--
         <init-param>
             <param-name>rmi-port</param-name>
             <param-value>0</param-value>
@@ -49,7 +50,7 @@
                 disable RMI server completely.
             </description>
         </init-param>
-
+        -->
         <!--
             JNDI environment variables for creating the initial context
             (all init parameters starting with java.naming.* will be added to the initial context environment).
@@ -169,7 +170,7 @@
         <description>
             The webdav servlet that connects HTTP request to the repository.
         </description>
-        <servlet-class>org.apache.jackrabbit.server.JCRWebdavServerServlet</servlet-class>
+        <servlet-class>org.apache.jackrabbit.server.jcr.JCRWebdavServerServlet</servlet-class>
 
         <init-param>
             <param-name>resource-path-prefix</param-name>

@@ -24,7 +24,7 @@
     <!--
         command-chain for importing a webdav non-collection-resource into the jcr repository
     -->
-    <chain name="import-nc-resource">
+    <chain name="import-resource">
         <!--
             registers the content type of the resource in the import context
             @return false
@@ -109,7 +109,7 @@
     <!--
         command-chain for exporting non-collection-resources
     -->
-    <chain name="export-nc-resource">
+    <chain name="export-resource">
         <!--
             exports the jcr:data property if the node contains a jcr:content
             node of type nt:resource.

@@ -18,7 +18,7 @@ package org.apache.jackrabbit.server.io;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.Node;
 
@@ -26,7 +26,7 @@ import javax.jcr.Node;
  * This Class implements a import command that adds a mixin node type to the
  * current node.
  */
-public class AddMixinCommand implements Command, JCRConstants {
+public class AddMixinCommand implements Command, JcrConstants {
 
     /**
      * the mixin node type to add
@@ -41,6 +41,7 @@ public class AddMixinCommand implements Command, JCRConstants {
 
     /**
      * Creates a new AddMixinCommand with the given node type.
+     *
      * @param nodeType the node type to add as mixin.
      */
     public AddMixinCommand(String nodeType) {
@@ -49,6 +50,7 @@ public class AddMixinCommand implements Command, JCRConstants {
 
     /**
      * Returns the node type parameter
+     *
      * @return the node type.
      */
     public String getNodeType() {
@@ -57,6 +59,7 @@ public class AddMixinCommand implements Command, JCRConstants {
 
     /**
      * Sets the node type that is to be added to the current node.
+     *
      * @param nodeType the mixin node type
      */
     public void setNodeType(String nodeType) {
@@ -66,6 +69,7 @@ public class AddMixinCommand implements Command, JCRConstants {
     /**
      * Executes this command by delegating to {@link #execute(ImportContext)} if
      * the context has the correct class.
+     *
      * @param context the (import) context.
      * @return <code>false</code>.
      * @throws Exception if an error occurrs.
@@ -80,6 +84,7 @@ public class AddMixinCommand implements Command, JCRConstants {
 
     /**
      * Adds the mixin nodetype to the current import node.
+     * 
      * @param context the import context.
      * @return <code>false</code>
      * @throws Exception if an error occurrs.

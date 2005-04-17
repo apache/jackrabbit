@@ -18,7 +18,7 @@ package org.apache.jackrabbit.server.io;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.JCRConstants;
+import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.Node;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ import java.io.InputStream;
 /**
  * This Class implements an abstract import command for a nc-resource.
  */
-public abstract class AbstractImportCommand implements Command, JCRConstants {
+public abstract class AbstractImportCommand implements Command, JcrConstants {
 
     /**
      * Executes this command by calling {@link #importResource} if
@@ -72,6 +72,7 @@ public abstract class AbstractImportCommand implements Command, JCRConstants {
 
     /**
      * Imports the resource contained in the import context.
+     *
      * @param ctx
      * @param parentNode
      * @param in
@@ -83,6 +84,7 @@ public abstract class AbstractImportCommand implements Command, JCRConstants {
 
     /**
      * Returns true, if this command handles the given content type.
+     * 
      * @param contentType
      * @return <code>true</code> if this command handles the given content type;
      *         <code>false</code> otherwise.

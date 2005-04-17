@@ -17,12 +17,13 @@
 package org.apache.jackrabbit.server.io;
 
 import javax.jcr.Node;
+import javax.jcr.ImportUUIDBehavior;
 import java.io.InputStream;
 import java.util.Calendar;
 
 /**
  * This Class implements an import command that deserializes the xml contained
- * in the import stream, using {@link javax.jcr.Session#importXML(String, java.io.InputStream)}.
+ * in the import stream, using {@link javax.jcr.Session#importXML(String, java.io.InputStream, int)}.
  * It further sets the following properties:
  * <ul>
  * <li>jcr:mimeType (from {@link ImportContext#getContentType()})
@@ -56,7 +57,7 @@ public class XMLImportCommand extends AbstractImportCommand {
             lastMod.setTimeInMillis(ctx.getModificationTime());
         }
         content.setProperty(JCR_LASTMODIFIED, lastMod);
-        parentNode.getSession().importXML(content.getPath(), in);
+        parentNode.getSession().importXML(content.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         return true;
     }
 
