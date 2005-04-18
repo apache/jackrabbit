@@ -18,7 +18,6 @@ package org.apache.jackrabbit.test.api.query;
 
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
@@ -59,15 +58,12 @@ public class SQLJcrPathTest extends AbstractQueryTest {
     }
     
     /**
-     * Verify that the jcr:path is the first property from the found property
-     * names, when explicitely declared in the select clause as the 1st
-     * property
-     * @throws NotExecutableException if the repository does not support the
-     *  jcr:path property in the query result.
+     * Verify that the jcr:path is the last property from the found property
+     * names when the query statement does not use a contains function.
      */
     public void testJcrPath() throws RepositoryException, NotExecutableException {
         String nodeTypeName = session.getRootNode().getPrimaryNodeType().getName();
-        String queryStatement = "select " + jcrPath + " from " + nodeTypeName;
+        String queryStatement = "select * from " + nodeTypeName;
 
         // execute the search query
         Query query = session.getWorkspace().getQueryManager().createQuery(queryStatement, Query.SQL);
@@ -75,8 +71,8 @@ public class SQLJcrPathTest extends AbstractQueryTest {
 
         String[] propNames = result.getColumnNames();
         if (propNames.length > 0) {
-            // jcr:path should be the first column
-            assertEquals(jcrPath + " should be the first property", jcrPath, propNames[0]);
+            // jcr:path should be the last column
+            assertEquals(jcrPath + " should be the last property", jcrPath, propNames[propNames.length - 1]);
         }
     }
 }

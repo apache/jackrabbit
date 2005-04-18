@@ -40,7 +40,7 @@ public class OrderByTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String sql = "SELECT value, jcr:score FROM nt:unstructured WHERE " +
+        String sql = "SELECT value FROM nt:unstructured WHERE " +
                 "jcr:path LIKE '" + testRoot + "/%' ORDER BY jcr:score, value";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();

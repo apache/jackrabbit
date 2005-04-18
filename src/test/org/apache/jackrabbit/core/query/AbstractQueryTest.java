@@ -60,25 +60,25 @@ public class AbstractQueryTest extends AbstractJCRTest {
 
     /**
      * Checks if the <code>result</code> contains a number of <code>hits</code>
-     * and <code>properties</code>.
+     * and <code>columns</code>.
      *
-     * @param result     the <code>QueryResult</code>.
-     * @param hits       the number of expected hits.
-     * @param properties the number of expected properties.
-     * @throws RepositoryException if an error occurs while iterating over
-     *                             the result nodes.
+     * @param result  the <code>QueryResult</code>.
+     * @param hits    the number of expected hits.
+     * @param columns the number of expected columns.
+     * @throws RepositoryException if an error occurs while iterating over the
+     *                             result nodes.
      */
-    protected void checkResult(QueryResult result, int hits, int properties)
+    protected void checkResult(QueryResult result, int hits, int columns)
             throws RepositoryException {
         checkResult(result, hits);
-        // now check property count
+        // now check column count
         int count = 0;
         log.println("Properties:");
         String[] propNames = result.getColumnNames();
-        for (RowIterator it = result.getRows(); it.hasNext();) {
+        for (RowIterator it = result.getRows(); it.hasNext(); count++) {
             StringBuffer msg = new StringBuffer();
             Value[] values = it.nextRow().getValues();
-            for (int i = 0; i < propNames.length; i++, count++) {
+            for (int i = 0; i < propNames.length; i++) {
                 msg.append("  ").append(propNames[i]).append(": ");
                 if (values[i] == null) {
                     msg.append("null");
@@ -91,7 +91,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
         if (count == 0) {
             log.println("  NONE");
         }
-        assertEquals("Wrong property count.", properties, count);
+        assertEquals("Wrong column count.", columns, count);
     }
 
     /**
