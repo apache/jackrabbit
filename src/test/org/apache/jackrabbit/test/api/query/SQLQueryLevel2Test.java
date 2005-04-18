@@ -135,8 +135,6 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
      */
     private Statement getFullTextStatement() {
         StringBuffer tmp = new StringBuffer("SELECT ");
-        tmp.append(jcrPath).append(", ");
-        tmp.append(jcrScore).append(", ");
         tmp.append(propertyName1);
         tmp.append(" FROM ").append(testNodeType);
         tmp.append(" WHERE CONTAINS(*, ");

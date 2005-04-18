@@ -80,6 +80,8 @@ public class GetPropertyNamesTest extends AbstractQueryTest {
                 singleValPropNames.add(pd[i].getName());
             }
         }
+        // add jcr:path
+        singleValPropNames.add(jcrPath);
 
         String[] foundPropertyNames = result.getColumnNames();
         Object[] realPropertyNames = singleValPropNames.toArray();

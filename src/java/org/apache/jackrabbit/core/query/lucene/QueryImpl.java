@@ -31,6 +31,12 @@ import org.apache.jackrabbit.core.query.OrderQueryNode;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryParser;
 import org.apache.jackrabbit.core.query.QueryRootNode;
+import org.apache.jackrabbit.core.query.OrQueryNode;
+import org.apache.jackrabbit.core.query.AndQueryNode;
+import org.apache.jackrabbit.core.query.NotQueryNode;
+import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.query.PathQueryNode;
+import org.apache.jackrabbit.core.query.QueryConstants;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.log4j.Logger;
 import org.apache.lucene.search.Hits;
@@ -44,6 +50,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Arrays;
 
 /**
  * Implements the {@link ExecutableQuery} interface.
@@ -163,8 +170,9 @@ class QueryImpl implements ExecutableQuery {
         }
 
         // get select properties
-        QName[] selectProps = root.getSelectProperties();
-        if (selectProps.length == 0) {
+        List selectProps = new ArrayList();
+        selectProps.addAll(Arrays.asList(root.getSelectProperties()));
+        if (selectProps.size() == 0) {
             // use node type constraint
             LocationStepQueryNode[] steps = root.getLocationNode().getPathSteps();
             final QName[] ntName = new QName[1];
@@ -179,21 +187,64 @@ class QueryImpl implements ExecutableQuery {
             }
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
             PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
-            List tmp = new ArrayList();
             for (int i = 0; i < propDefs.length; i++) {
                 if (!propDefs[i].isMultiple()) {
-                    tmp.add(((PropertyDefinitionImpl) propDefs[i]).getQName());
+                    selectProps.add(((PropertyDefinitionImpl) propDefs[i]).getQName());
                 }
             }
-            selectProps = (QName[]) tmp.toArray(new QName[tmp.size()]);
+        }
+
+        // add jcr:path
+        selectProps.add(QueryConstants.JCR_PATH);
+
+        // add jcr:score if necessary
+        if(hasTextsearchNode(root.getLocationNode())) {
+            selectProps.add(QueryConstants.JCR_SCORE);
         }
 
         // return QueryResult
         return new QueryResultImpl(itemMgr,
                 (String[]) uuids.toArray(new String[uuids.size()]),
                 (Float[]) scores.toArray(new Float[scores.size()]),
-                selectProps,
+                (QName[]) selectProps.toArray(new QName[selectProps.size()]),
                 session.getNamespaceResolver(),
                 orderNode == null);
+    }
+
+    //-----------------------------< internal >---------------------------------
+
+    /**
+     * Returns <code>true</code> if <code>node</code> has a
+     * {@link org.apache.jackrabbit.core.query.TextsearchQueryNode} somewhere
+     * down the query tree; <code>false</code> otherwise.
+     * @param node the path node.
+     * @return <code>true</code> if the query tree contains a textsearch
+     *  node, <code>false</code> otherwise.
+     */
+    private static boolean hasTextsearchNode(PathQueryNode node) {
+        final boolean[] textsearch = new boolean[1];
+        node.acceptOperands(new DefaultQueryNodeVisitor() {
+            public Object visit(OrQueryNode node, Object data) {
+                return node.acceptOperands(this, data);
+            }
+
+            public Object visit(AndQueryNode node, Object data) {
+                return node.acceptOperands(this, data);
+            }
+
+            public Object visit(NotQueryNode node, Object data) {
+                return node.acceptOperands(this, data);
+            }
+
+            public Object visit(TextsearchQueryNode node, Object data) {
+                textsearch[0] = true;
+                return data;
+            }
+
+            public Object visit(LocationStepQueryNode node, Object data) {
+                return node.acceptOperands(this, data);
+            }
+        }, null);
+        return textsearch[0];
     }
 }
