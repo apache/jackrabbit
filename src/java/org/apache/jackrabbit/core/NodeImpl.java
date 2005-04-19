@@ -35,6 +35,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.core.util.IteratorHelper;
+import org.apache.jackrabbit.core.util.ValueHelper;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.GenericVersionSelector;
 import org.apache.jackrabbit.core.version.InternalFreeze;
@@ -1889,7 +1890,7 @@ public class NodeImpl extends ItemImpl implements Node {
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
         try {
-            prop.setValue(values);
+            prop.setValue(ValueHelper.convert(values, type));
         } catch (RepositoryException re) {
             if (status.get(CREATED)) {
                 // setting value failed, get rid of newly created property
@@ -1933,14 +1934,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        /**
-         * if the target property is not of type STRING then a
-         * best-effort conversion is tried
-         */
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
         try {
-            prop.setValue(value);
+            prop.setValue(ValueHelper.convert(value, type));
         } catch (RepositoryException re) {
             if (status.get(CREATED)) {
                 // setting value failed, get rid of newly created property
