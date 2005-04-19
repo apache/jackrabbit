@@ -43,9 +43,10 @@ import java.util.regex.PatternSyntaxException;
  * it.
  */
 public abstract class ValueConstraint {
+
     protected static Logger log = Logger.getLogger(ValueConstraint.class);
 
-    public static final ValueConstraint[] EMPTY = new ValueConstraint[0];
+    public static final ValueConstraint[] EMPTY_ARRAY = new ValueConstraint[0];
 
     final String definition;
 

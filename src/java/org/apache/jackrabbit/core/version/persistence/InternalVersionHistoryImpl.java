@@ -470,7 +470,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // initialize 'created' and 'predecessors'
         vNode.setPropertyValue(JCR_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY);
+        vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
         // add also an empty frozen node to the root version
         InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, true, false);

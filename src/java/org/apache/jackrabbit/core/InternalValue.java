@@ -60,7 +60,7 @@ import java.util.Calendar;
  */
 public class InternalValue {
 
-    public static final InternalValue[] EMPTY = new InternalValue[0];
+    public static final InternalValue[] EMPTY_ARRAY = new InternalValue[0];
 
     private final Object val;
     private final int type;

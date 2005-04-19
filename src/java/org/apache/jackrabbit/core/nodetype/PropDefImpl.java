@@ -36,12 +36,12 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     /**
      * The value constrsints.
      */
-    private ValueConstraint[] valueConstraints = ValueConstraint.EMPTY;
+    private ValueConstraint[] valueConstraints = ValueConstraint.EMPTY_ARRAY;
 
     /**
      * The default values.
      */
-    private InternalValue[] defaultValues = InternalValue.EMPTY;
+    private InternalValue[] defaultValues = InternalValue.EMPTY_ARRAY;
 
     /**
      * The 'multiple' flag
@@ -75,7 +75,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
             throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         this.valueConstraints =
-                (valueConstraints == null) ? ValueConstraint.EMPTY : valueConstraints;
+                (valueConstraints == null) ? ValueConstraint.EMPTY_ARRAY : valueConstraints;
     }
 
     /**
@@ -88,7 +88,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
             throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
         this.defaultValues =
-                (defaultValues == null) ? InternalValue.EMPTY : defaultValues;
+                (defaultValues == null) ? InternalValue.EMPTY_ARRAY : defaultValues;
     }
 
     /**

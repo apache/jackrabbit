@@ -923,7 +923,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
     }
 
-    //-----------------------------------------< overrideable factory methods >
+    //------------------------------------------< overridable factory methods >
     /**
      * Creates an instance of the {@link SessionImpl} class representing a
      * user authenticated by the <code>loginContext</code> instance attached

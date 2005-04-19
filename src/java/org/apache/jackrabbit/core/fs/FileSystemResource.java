@@ -155,7 +155,7 @@ public class FileSystemResource {
         InputStream in = fs.getInputStream(path);
         try {
             byte[] buffer = new byte[8192];
-            int read = 0;
+            int read;
             while ((read = in.read(buffer)) > 0) {
                 out.write(buffer, 0, read);
             }
