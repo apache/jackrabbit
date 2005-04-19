@@ -51,11 +51,13 @@ import java.util.TreeSet;
  * A <code>NodeTypeRegistry</code> ...
  */
 public class NodeTypeRegistry implements Constants {
+
     private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
 
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
             "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";
-    private static final String CUSTOM_NODETYPES_RESOURCE_NAME = "custom_nodetypes.xml";
+    private static final String CUSTOM_NODETYPES_RESOURCE_NAME =
+            "custom_nodetypes.xml";
 
     // file system where node type registrations are persisted
     private final FileSystem ntStore;
@@ -122,13 +124,13 @@ public class NodeTypeRegistry implements Constants {
     }
 
     /**
-     * Private constructor
+     * Protected constructor
      *
      * @param nsReg
      * @param ntStore
      * @throws RepositoryException
      */
-    private NodeTypeRegistry(NamespaceRegistry nsReg, FileSystem ntStore)
+    protected NodeTypeRegistry(NamespaceRegistry nsReg, FileSystem ntStore)
             throws RepositoryException {
         this.nsReg = nsReg;
         this.ntStore = ntStore;
@@ -157,23 +159,17 @@ public class NodeTypeRegistry implements Constants {
 
         // load and register pre-defined (i.e. built-in) node types
         /**
-         * temporarily disable checking that auto-create properties have
+         * temporarily disable checking that auto-created properties have
          * default values
          */
         checkAutoCreatePropHasDefault = false;
         builtInNTDefs = new NodeTypeDefStore();
-        InputStream in = null;
         try {
-            in = getClass().getClassLoader().getResourceAsStream(
-                    BUILTIN_NODETYPES_RESOURCE_PATH);
-            builtInNTDefs.load(in);
+            // load built-in node type definitions
+            loadBuiltInNodeTypeDefs(builtInNTDefs);
+            
+            // validate & register built-in node types
             internalRegister(builtInNTDefs.all());
-        } catch (IOException ioe) {
-            String error =
-                    "internal error: failed to read built-in node type definitions stored in "
-                    + BUILTIN_NODETYPES_RESOURCE_PATH;
-            log.debug(error);
-            throw new RepositoryException(error, ioe);
         } catch (InvalidNodeTypeDefException intde) {
             String error =
                     "internal error: invalid built-in node type definition stored in "
@@ -182,57 +178,26 @@ public class NodeTypeRegistry implements Constants {
             throw new RepositoryException(error, intde);
         } finally {
             /**
-             * re-enable checking that auto-create properties have default values
+             * re-enable checking that auto-created properties have default values
              */
             checkAutoCreatePropHasDefault = true;
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
         }
 
         // load and register custom node types
         customNTDefs = new NodeTypeDefStore();
-        in = null;
+
+        // load custom node type definitions
+        loadCustomNodeTypeDefs(customNTDefs);
+
+        // validate & register custom node types
         try {
-            if (customNodeTypesResource.exists()) {
-                in = customNodeTypesResource.getInputStream();
-            }
-        } catch (FileSystemException fse) {
+            internalRegister(customNTDefs.all());
+        } catch (InvalidNodeTypeDefException intde) {
             String error =
-                    "internal error: failed to access custom node type definitions stored in "
+                    "internal error: invalid custom node type definition stored in "
                     + customNodeTypesResource.getPath();
             log.debug(error);
-            throw new RepositoryException(error, fse);
-        }
-        if (in == null) {
-            log.info("no custom node type definitions found");
-        } else {
-            try {
-                customNTDefs.load(in);
-                internalRegister(customNTDefs.all());
-            } catch (IOException ioe) {
-                String error =
-                        "internal error: failed to read custom node type definitions stored in "
-                        + customNodeTypesResource.getPath();
-                log.debug(error);
-                throw new RepositoryException(error, ioe);
-            } catch (InvalidNodeTypeDefException intde) {
-                String error =
-                        "internal error: invalid custom node type definition stored in "
-                        + customNodeTypesResource.getPath();
-                log.debug(error);
-                throw new RepositoryException(error, intde);
-            } finally {
-                try {
-                    in.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
+            throw new RepositoryException(error, intde);
         }
     }
 
@@ -256,7 +221,7 @@ public class NodeTypeRegistry implements Constants {
      * objects. An <code>InvalidNodeTypeDefException</code> is thrown if the
      * validation of any of the contained <code>NodeTypeDef</code> objects fails.
      * <p/>
-     * Note that in the case an exception is thrown, some node types might have
+     * Note that in the case an exception is thrown some node types might have
      * been nevertheless successfully registered.
      *
      * @param ntDefs collection of <code>NodeTypeDef</code> objects
@@ -376,34 +341,6 @@ public class NodeTypeRegistry implements Constants {
         NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
             nodeDefs.remove(nda[i].getId());
-        }
-    }
-
-    private void persistCustomNTDefs() throws RepositoryException {
-        OutputStream out = null;
-        try {
-            out = customNodeTypesResource.getOutputStream();
-            customNTDefs.store(out, nsReg);
-        } catch (IOException ioe) {
-            String error =
-                    "internal error: failed to persist custom node type definitions to "
-                    + customNodeTypesResource.getPath();
-            log.debug(error);
-            throw new RepositoryException(error, ioe);
-        } catch (FileSystemException fse) {
-            String error =
-                    "internal error: failed to persist custom node type definitions to "
-                    + customNodeTypesResource.getPath();
-            log.debug(error);
-            throw new RepositoryException(error, fse);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
         }
     }
 
@@ -1132,7 +1069,7 @@ public class NodeTypeRegistry implements Constants {
 
         // persist new node type definition
         customNTDefs.add(ntd);
-        persistCustomNTDefs();
+        persistCustomNodeTypeDefs(customNTDefs);
 
         // notify listeners
         notifyRegistered(ntd.getName());
@@ -1189,7 +1126,7 @@ public class NodeTypeRegistry implements Constants {
                 QName ntName = (QName) iter.next();
                 customNTDefs.add((NodeTypeDef) registeredNTDefs.get(ntName));
             }
-            persistCustomNTDefs();
+            persistCustomNodeTypeDefs(customNTDefs);
 
             // notify listeners
             for (Iterator iter = newNTNames.iterator(); iter.hasNext();) {
@@ -1207,17 +1144,17 @@ public class NodeTypeRegistry implements Constants {
     }
 
     /**
-     * @param name
+     * @param nodeTypeName
      * @throws NoSuchNodeTypeException
      * @throws RepositoryException
      */
-    public synchronized void unregisterNodeType(QName name)
+    public synchronized void unregisterNodeType(QName nodeTypeName)
             throws NoSuchNodeTypeException, RepositoryException {
-        if (!registeredNTDefs.containsKey(name)) {
-            throw new NoSuchNodeTypeException(name.toString());
+        if (!registeredNTDefs.containsKey(nodeTypeName)) {
+            throw new NoSuchNodeTypeException(nodeTypeName.toString());
         }
-        if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString()
+        if (builtInNTDefs.contains(nodeTypeName)) {
+            throw new RepositoryException(nodeTypeName.toString()
                     + ": can't unregister built-in node type.");
         }
 
@@ -1225,10 +1162,10 @@ public class NodeTypeRegistry implements Constants {
          * check if there are node types that have dependencies on the given
          * node type
          */
-        Set dependentNTs = getDependentNodeTypes(name);
+        Set dependentNTs = getDependentNodeTypes(nodeTypeName);
         if (dependentNTs.size() > 0) {
             StringBuffer msg = new StringBuffer();
-            msg.append(name
+            msg.append(nodeTypeName
                     + " could not be removed because the following node types are referencing it: ");
             Iterator iterator = dependentNTs.iterator();
             while (iterator.hasNext()) {
@@ -1238,33 +1175,17 @@ public class NodeTypeRegistry implements Constants {
             throw new RepositoryException(msg.toString());
         }
 
-        /**
-         * todo
-         * 1. apply deep locks on root nodes in every workspace or alternatively
-         *    put repository in 'single-user' mode
-         * 2. check if the given node type is currently referenced by nodes
-         *    in the repository.
-         * 3. remove the node type if it is not currently referenced, otherwise
-         *    throw exception
-         *
-         * the above checks are absolutely necessary in order to guarantee
-         * integrity of repository content.
-         *
-         * throw exception while this is not implemented properly yet
-         */
-        boolean isReferenced = true;
-        if (isReferenced) {
-            throw new RepositoryException("not yet implemented");
-        }
+        // make sure node type is not currently in use
+        checkForReferencesInContent(nodeTypeName);
 
-        internalUnregister(name);
+        internalUnregister(nodeTypeName);
 
         // persist removal of node type definition
-        customNTDefs.remove(name);
-        persistCustomNTDefs();
+        customNTDefs.remove(nodeTypeName);
+        persistCustomNodeTypeDefs(customNTDefs);
 
         // notify listeners
-        notifyUnregistered(name);
+        notifyUnregistered(nodeTypeName);
     }
 
     /**
@@ -1317,41 +1238,16 @@ public class NodeTypeRegistry implements Constants {
             // add new node type definition to store
             customNTDefs.add(ntd);
             // persist node type definitions
-            persistCustomNTDefs();
+            persistCustomNodeTypeDefs(customNTDefs);
 
             // notify listeners
             notifyReRegistered(name);
             return entNew;
         }
 
-        /**
-         * collect names of node types that have dependencies on the given
-         * node type
-         */
-        Set dependentNTs = getDependentNodeTypes(name);
-
-        /**
-         * non-trivial change of node type definition
-         * todo
-         * 1. apply deep locks on root nodes in every workspace or alternatively
-         *    put repository in 'exclusive' or 'single-user' mode
-         * 2. check if the given node type (or any node type that has
-         *    dependencies on this node type) is currently referenced by nodes
-         *    in the repository.
-         * 3. check if applying changes to affected nodes would violate
-         *    existing node type constraints
-         * 4. apply and persist changes to affected nodes (e.g. update
-         *    definition id's, etc.)
-         *
-         * the above checks/actions are absolutely necessary in order to
-         * guarantee integrity of repository content.
-         *
-         * throw exception while this is not implemented properly yet
-         */
-        boolean conflictingContent = true;
-        if (conflictingContent) {
-            throw new RepositoryException("not yet implemented");
-        }
+        // make sure existing content would not conflict
+        // with new node type definition
+        checkForConflictingContent(ntd);
 
         // unregister old node type definition
         internalUnregister(name);
@@ -1361,7 +1257,7 @@ public class NodeTypeRegistry implements Constants {
         // persist modified node type definitions
         customNTDefs.remove(name);
         customNTDefs.add(ntd);
-        persistCustomNTDefs();
+        persistCustomNodeTypeDefs(customNTDefs);
 
         // notify listeners
         notifyReRegistered(name);
@@ -1408,7 +1304,7 @@ public class NodeTypeRegistry implements Constants {
             throw new NoSuchNodeTypeException(nodeTypeName.toString());
         }
         NodeTypeDef def = (NodeTypeDef) registeredNTDefs.get(nodeTypeName);
-        // return clone to make sure nobody messes around with the 'real' definition
+        // return clone to make sure nobody messes around with the 'live' definition
         try {
             return (NodeTypeDef) def.clone();
         } catch (CloneNotSupportedException e) {
@@ -1424,6 +1320,15 @@ public class NodeTypeRegistry implements Constants {
      */
     public synchronized boolean isRegistered(QName nodeTypeName) {
         return registeredNTDefs.containsKey(nodeTypeName);
+    }
+
+
+    /**
+     * @param nodeTypeName
+     * @return
+     */
+    public synchronized boolean isBuiltIn(QName nodeTypeName) {
+        return builtInNTDefs.contains(nodeTypeName);
     }
 
     /**
@@ -1530,6 +1435,208 @@ public class NodeTypeRegistry implements Constants {
         ps.println();
 
         entCache.dump(ps);
+    }
+
+    //---------------------------------------------------------< overridables >
+    /**
+     * Loads the built-in node type definitions into the given <code>store</code>.
+     * <p/>
+     * This method may be overridden by extensions of this class; It must
+     * only be called once and only from within the constructor though.
+     *
+     * @param store The {@link NodeTypeDefStore} into which the node type
+     *              definitions are loaded.
+     * @throws RepositoryException If an error occurrs while loading the
+     *                             built-in node type definitions.
+     */
+    protected void loadBuiltInNodeTypeDefs(NodeTypeDefStore store)
+            throws RepositoryException {
+        InputStream in = null;
+        try {
+            in = getClass().getClassLoader().getResourceAsStream(BUILTIN_NODETYPES_RESOURCE_PATH);
+            store.load(in);
+        } catch (IOException ioe) {
+            String error =
+                    "internal error: failed to read built-in node type definitions stored in "
+                    + BUILTIN_NODETYPES_RESOURCE_PATH;
+            log.debug(error);
+            throw new RepositoryException(error, ioe);
+        } catch (InvalidNodeTypeDefException intde) {
+            String error =
+                    "internal error: invalid built-in node type definition stored in "
+                    + BUILTIN_NODETYPES_RESOURCE_PATH;
+            log.debug(error);
+            throw new RepositoryException(error, intde);
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+    /**
+     * Loads the custom node type definitions into the given <code>store</code>.
+     * <p/>
+     * This method may be overridden by extensions of this class; It must
+     * only be called once and only from within the constructor though.
+     *
+     * @param store The {@link NodeTypeDefStore} into which the node type
+     *              definitions are loaded.
+     * @throws RepositoryException If an error occurrs while loading the
+     *                             custom node type definitions.
+     */
+    protected void loadCustomNodeTypeDefs(NodeTypeDefStore store)
+            throws RepositoryException {
+
+        InputStream in = null;
+        try {
+            if (customNodeTypesResource.exists()) {
+                in = customNodeTypesResource.getInputStream();
+            }
+        } catch (FileSystemException fse) {
+            String error =
+                    "internal error: failed to access custom node type definitions stored in "
+                    + customNodeTypesResource.getPath();
+            log.debug(error);
+            throw new RepositoryException(error, fse);
+        }
+
+        if (in == null) {
+            log.info("no custom node type definitions found");
+        } else {
+            try {
+                store.load(in);
+            } catch (IOException ioe) {
+                String error =
+                        "internal error: failed to read custom node type definitions stored in "
+                        + customNodeTypesResource.getPath();
+                log.debug(error);
+                throw new RepositoryException(error, ioe);
+            } catch (InvalidNodeTypeDefException intde) {
+                String error =
+                        "internal error: invalid custom node type definition stored in "
+                        + customNodeTypesResource.getPath();
+                log.debug(error);
+                throw new RepositoryException(error, intde);
+            } finally {
+                try {
+                    in.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+    /**
+     * Persists the custom node type definitions contained in the given
+     * <code>store</code>.
+     *
+     * @param store The {@link NodeTypeDefStore} containing the definitons to
+     *              be persisted.
+     * @throws RepositoryException If an error occurrs while persisting the
+     *                             custom node type definitions.
+     */
+    protected void persistCustomNodeTypeDefs(NodeTypeDefStore store)
+            throws RepositoryException {
+        OutputStream out = null;
+        try {
+            out = customNodeTypesResource.getOutputStream();
+            customNTDefs.store(out, nsReg);
+        } catch (IOException ioe) {
+            String error =
+                    "internal error: failed to persist custom node type definitions to "
+                    + customNodeTypesResource.getPath();
+            log.debug(error);
+            throw new RepositoryException(error, ioe);
+        } catch (FileSystemException fse) {
+            String error =
+                    "internal error: failed to persist custom node type definitions to "
+                    + customNodeTypesResource.getPath();
+            log.debug(error);
+            throw new RepositoryException(error, fse);
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks whether there is existing content that would conflict with the
+     * given node type definition.
+     * <p/>
+     * This method is not implemented yet and always throws a
+     * <code>RepositoryException</code>.
+     * <p/>
+     * TODO
+     * <ol>
+     * <li>apply deep locks on root nodes in every workspace or alternatively
+     * put repository in 'exclusive' or 'single-user' mode
+     * <li>check if the given node type (or any node type that has
+     * dependencies on this node type) is currently referenced by nodes
+     * in the repository.
+     * <li>check if applying the changed definitions to the affected items would
+     * violate existing node type constraints
+     * <li>apply and persist changes to affected nodes (e.g. update
+     * definition id's, etc.)
+     * </ul>
+     * <p/>
+     * the above checks/actions are absolutely necessary in order to
+     * guarantee integrity of repository content.
+     *
+     * @param ntd The node type definition replacing the former node type
+     *            definition of the same name.
+     * @throws RepositoryException If there is conflicting content or if the
+     *                             check failed for some other reason.
+     */
+    protected void checkForConflictingContent(NodeTypeDef ntd)
+            throws RepositoryException {
+        /**
+         * collect names of node types that have dependencies on the given
+         * node type
+         */
+        //Set dependentNTs = getDependentNodeTypes(ntd.getName());
+
+        throw new RepositoryException("not yet implemented");
+    }
+
+    /**
+     * Checks whether there is existing content that directly or indirectly
+     * refers to the specified node type.
+     * <p/>
+     * This method is not implemented yet and always throws a
+     * <code>RepositoryException</code>.
+     * <p/>
+     * TODO:
+     * <ol>
+     * <li>apply deep locks on root nodes in every workspace or alternatively
+     * put repository in 'single-user' mode
+     * <li>check if the given node type is currently referenced by nodes
+     * in the repository.
+     * <li>remove the node type if it is not currently referenced, otherwise
+     * throw exception
+     * </ul>
+     * <p/>
+     * the above checks are absolutely necessary in order to guarantee
+     * integrity of repository content.
+     *
+     * @param nodeTypeName The name of the node type to be checked.
+     * @throws RepositoryException If the specified node type is currently
+     *                             being referenced or if the check failed for
+     *                             some other reason.
+     */
+    protected void checkForReferencesInContent(QName nodeTypeName)
+            throws RepositoryException {
+        throw new RepositoryException("not yet implemented");
     }
 
     //--------------------------------------------------------< inner classes >

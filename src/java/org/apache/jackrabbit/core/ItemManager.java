@@ -242,7 +242,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * @param path path to the item to be checked
      * @return true if the specified item exists
      */
-    boolean itemExists(Path path) {
+    public boolean itemExists(Path path) {
         try {
             // check sanity of session
             session.sanityCheck();
@@ -279,7 +279,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * @param id id of the item to be checked
      * @return true if the specified item exists
      */
-    boolean itemExists(ItemId id) {
+    public boolean itemExists(ItemId id) {
         try {
             // check sanity of session
             session.sanityCheck();
@@ -321,7 +321,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    synchronized ItemImpl getItem(Path path)
+    public synchronized ItemImpl getItem(Path path)
             throws PathNotFoundException, AccessDeniedException, RepositoryException {
         ItemId id = hierMgr.resolvePath(path);
         try {

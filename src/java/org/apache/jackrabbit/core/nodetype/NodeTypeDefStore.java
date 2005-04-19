@@ -33,7 +33,7 @@ import org.apache.jackrabbit.core.nodetype.xml.NodeTypeWriter;
 /**
  * <code>NodeTypeDefStore</code> ...
  */
-class NodeTypeDefStore {
+public class NodeTypeDefStore {
 
     /** Map of node type names to node type definitions. */
     private final HashMap ntDefs;
@@ -41,7 +41,7 @@ class NodeTypeDefStore {
     /**
      * Empty default constructor.
      */
-    NodeTypeDefStore() throws RepositoryException {
+    public NodeTypeDefStore() throws RepositoryException {
         ntDefs = new HashMap();
     }
 
@@ -50,7 +50,7 @@ class NodeTypeDefStore {
      * @throws IOException
      * @throws InvalidNodeTypeDefException
      */
-    void load(InputStream in)
+    public void load(InputStream in)
             throws IOException, InvalidNodeTypeDefException,
             RepositoryException {
         NodeTypeDef[] types = NodeTypeReader.read(in);
@@ -65,7 +65,7 @@ class NodeTypeDefStore {
      * @throws IOException
      * @throws RepositoryException
      */
-    void store(OutputStream out, NamespaceRegistry registry)
+    public void store(OutputStream out, NamespaceRegistry registry)
             throws IOException, RepositoryException {
         NodeTypeDef[] types = (NodeTypeDef[])
             ntDefs.values().toArray(new NodeTypeDef[ntDefs.size()]);
@@ -75,7 +75,7 @@ class NodeTypeDefStore {
     /**
      * @param ntd
      */
-    void add(NodeTypeDef ntd) {
+    public void add(NodeTypeDef ntd) {
         ntDefs.put(ntd.getName(), ntd);
     }
 
@@ -83,14 +83,14 @@ class NodeTypeDefStore {
      * @param name
      * @return
      */
-    boolean remove(QName name) {
+    public boolean remove(QName name) {
         return ntDefs.remove(name) != null ? true : false;
     }
 
     /**
      *
      */
-    void removeAll() {
+    public void removeAll() {
         ntDefs.clear();
     }
 
@@ -98,7 +98,7 @@ class NodeTypeDefStore {
      * @param name
      * @return
      */
-    boolean contains(QName name) {
+    public boolean contains(QName name) {
         return ntDefs.containsKey(name);
     }
 
@@ -106,14 +106,14 @@ class NodeTypeDefStore {
      * @param name
      * @return
      */
-    NodeTypeDef get(QName name) {
+    public NodeTypeDef get(QName name) {
         return (NodeTypeDef) ntDefs.get(name);
     }
 
     /**
      * @return
      */
-    Collection all() {
+    public Collection all() {
         return Collections.unmodifiableCollection(ntDefs.values());
     }
 }
