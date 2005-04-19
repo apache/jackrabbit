@@ -48,11 +48,13 @@ public class SessionImportContentHandler extends ImportContentHandler {
      *
      * @param session repository session
      * @param path import content path
+     * @param uuidBehaviour UUID behaviour mode
      */
-    public SessionImportContentHandler(Session session, String path, int mode) {
+    public SessionImportContentHandler(
+            Session session, String path, int uuidBehaviour) {
         this.session = session;
         this.path = path;
-        this.mode = mode;
+        this.mode = uuidBehaviour;
     }
 
     /**

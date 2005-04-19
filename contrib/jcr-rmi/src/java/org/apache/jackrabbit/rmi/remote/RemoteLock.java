@@ -74,6 +74,7 @@ public interface RemoteLock extends Remote {
      *
      * @return <code>true</code> if the lock is live,
      *         <code>false</code> otherwise
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     boolean isLive() throws RepositoryException, RemoteException;

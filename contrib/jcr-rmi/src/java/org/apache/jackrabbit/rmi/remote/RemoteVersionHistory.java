@@ -142,6 +142,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      *
      * @param label a version label
      * @return a <code>boolean</code>
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     boolean hasVersionLabel(String label) throws RepositoryException, RemoteException;
@@ -166,6 +167,7 @@ public interface RemoteVersionHistory extends RemoteNode {
      * method.
      *
      * @return a <code>String</code> array containing all the labels of the version history
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     String[] getVersionLabels() throws RepositoryException, RemoteException;

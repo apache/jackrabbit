@@ -81,7 +81,7 @@ public class ClientVersion extends ClientNode implements Version {
         }
     }
 
-    /** {@inheritDoc */
+    /** {@inheritDoc} */
     public VersionHistory getContainingHistory() throws RepositoryException {
         try {
             return getFactory().getVersionHistory(getSession(), remote.getContainingHistory());

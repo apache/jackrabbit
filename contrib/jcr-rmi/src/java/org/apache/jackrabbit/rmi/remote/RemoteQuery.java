@@ -20,7 +20,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Node;
 
 /**
  * Remote version of the JCR {@link javax.jcr.query.Query Query} interface.
@@ -75,6 +74,7 @@ public interface RemoteQuery extends Remote {
      * @see javax.jcr.query.Query#storeAsNode(String)
      *
      * @param absPath path at which to persist this query.
+     * @return stored node
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
