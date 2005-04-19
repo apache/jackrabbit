@@ -25,10 +25,15 @@ import java.io.Serializable;
  */
 public abstract class ItemId implements Serializable {
 
+    /** Serialization UID of this class. */
     static final long serialVersionUID = -9147603369595196078L;
 
+    /** Memorized hash code. */
     protected int hash;
 
+    /**
+     * Creates an empty item ID instance.
+     */
     protected ItemId() {
         hash = 0;
     }

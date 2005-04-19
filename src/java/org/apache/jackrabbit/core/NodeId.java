@@ -21,10 +21,17 @@ package org.apache.jackrabbit.core;
  */
 public class NodeId extends ItemId {
 
+    /** Serial version UID of this class. */
     static final long serialVersionUID = 7026219091360041109L;
 
+    /** UUID of the identified node */
     protected final String uuid;
 
+    /**
+     * Creates a node identifier instance for the identified node.
+     *
+     * @param uuid node UUID
+     */
     public NodeId(String uuid) {
         if (uuid == null) {
             throw new IllegalArgumentException("uuid can not be null");
@@ -33,14 +40,21 @@ public class NodeId extends ItemId {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns <code>true</code> as this class represents a node identifier,
+     * not a property identifier.
      *
      * @return always <code>true</code>
+     * @see ItemId#denotesNode()
      */
     public boolean denotesNode() {
         return true;
     }
 
+    /**
+     * Returns the UUID of the identified node.
+     *
+     * @return node UUID
+     */
     public String getUUID() {
         return uuid;
     }
@@ -57,7 +71,7 @@ public class NodeId extends ItemId {
      *                                  as a <code>NodeId</code>.
      * @see #toString()
      */
-    public static NodeId valueOf(String s) {
+    public static NodeId valueOf(String s) throws IllegalArgumentException {
         if (s == null) {
             throw new IllegalArgumentException("invalid NodeId literal");
         }
@@ -66,6 +80,15 @@ public class NodeId extends ItemId {
 
     //-------------------------------------------< java.lang.Object overrides >
 
+    /**
+     * Compares node identifiers for equality.
+     *
+     * @param obj other object
+     * @return <code>true</code> if the given object is a node identifier
+     *         instance that identifies the same node as this identifier,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -77,10 +100,23 @@ public class NodeId extends ItemId {
         return false;
     }
 
+    /**
+     * Returns the node UUID.
+     *
+     * @return node UUID
+     * @see Object#toString()
+     */
     public String toString() {
         return uuid;
     }
 
+    /**
+     * Returns the hash code of the node UUID. The computed hash code
+     * is memorized for better performance.
+     *
+     * @return hash code
+     * @see Object#hashCode()
+     */
     public int hashCode() {
         // NodeId is immutable, we can store the computed hash code value
         if (hash == 0) {

@@ -17,15 +17,27 @@
 package org.apache.jackrabbit.core;
 
 /**
- * <code>PropertyId</code> uniquely identifies a property in the repository.
+ * Property identifier. An instance of this class identifies a single
+ * property using the UUID of the parent node and the qualified name of
+ * the property. Once created a property identifier instance is immutable.
  */
 public class PropertyId extends ItemId {
 
+    /** Serial version UID of this class. */
     static final long serialVersionUID = -3726624437800567892L;
 
+    /** UUID of the parent node. */
     private final String parentUUID;
+
+    /** Qualified name of the property.  */
     private final QName propName;
 
+    /**
+     * Creates a property identifier instance for the identified property.
+     *
+     * @param parentUUID UUID of the parent node
+     * @param propName qualified name of the property
+     */
     public PropertyId(String parentUUID, QName propName) {
         if (parentUUID == null) {
             throw new IllegalArgumentException("parentUUID can not be null");
@@ -38,26 +50,38 @@ public class PropertyId extends ItemId {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns <code>false</code> as this class represents a property
+     * identifier, not a node identifier.
      *
      * @return always <code>false</code>
+     * @see ItemId#denotesNode()
      */
     public boolean denotesNode() {
         return false;
     }
 
+    /**
+     * Returns the UUID of the parent node.
+     *
+     * @return node UUID
+     */
     public String getParentUUID() {
         return parentUUID;
     }
 
+    /**
+     * Returns the qualified name of the property.
+     *
+     * @return qualified name
+     */
     public QName getName() {
         return propName;
     }
 
     /**
-     * Returns a <code>PropertyId</code> holding the value of the specified
-     * string. The string must be in the format returned by the
-     * <code>PropertyId.toString()</code> method.
+     * Returns a property identifier instance holding the value of the
+     * specified string. The string must be in the format returned by the
+     * {@link #toString() toString()} method of this class.
      *
      * @param s a <code>String</code> containing the <code>PropertyId</code>
      *          representation to be parsed.
@@ -66,7 +90,7 @@ public class PropertyId extends ItemId {
      *                                  as a <code>PropertyId</code>.
      * @see #toString()
      */
-    public static PropertyId valueOf(String s) {
+    public static PropertyId valueOf(String s) throws IllegalArgumentException {
         if (s == null) {
             throw new IllegalArgumentException("invalid PropertyId literal");
         }
@@ -82,6 +106,15 @@ public class PropertyId extends ItemId {
 
     //-------------------------------------------< java.lang.Object overrides >
 
+    /**
+     * Compares property identifiers for equality.
+     *
+     * @param obj other object
+     * @return <code>true</code> if the given object is a property identifier
+     *         instance that identifies the same property as this identifier,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
+     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -94,10 +127,24 @@ public class PropertyId extends ItemId {
         return false;
     }
 
+    /**
+     * Returns a string representation of this property identifier.
+     *
+     * @return property identifier string
+     * @see Object#toString()
+     */
     public String toString() {
         return parentUUID + "/" + propName.toString();
     }
 
+    /**
+     * Returns the hash code of this property identifier. The hash code
+     * is computed from the parent node UUID and the property name. The
+     * hash code is memorized for performance.
+     *
+     * @return hash code
+     * @see Object#hashCode()
+     */
     public int hashCode() {
         // PropertyId is immutable, we can store the computed hash code value
         int h = hash;
