@@ -36,3 +36,13 @@ ChildNodeDefinition
   OnParentVersion ABORT
   Protected true
   SameNameSiblings false
+PropertyDefinition
+  Name jcr:versionableUuid
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  Multiple false
