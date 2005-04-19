@@ -83,7 +83,7 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
          * @param length the number of characters to append
          * @throws IOException if an I/O error occurs
          */
-        public void append(char[] chars, int start, int length)
+        void append(char[] chars, int start, int length)
                 throws IOException;
 
         /**
@@ -92,7 +92,7 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
          *
          * @throws IOException if an I/O error occurs
          */
-        public void close() throws IOException;
+        void close() throws IOException;
 
         /**
          * Dispose this value, i.e. free all bound resources. Once a value has
@@ -101,7 +101,7 @@ abstract class TargetImportHandler extends DefaultHandler implements Constants {
          *
          * @throws IOException if an I/O error occurs
          */
-        public void dispose() throws IOException;
+        void dispose() throws IOException;
     }
 
     /**

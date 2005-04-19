@@ -8,6 +8,7 @@
     <!-- 
       Suppressions for generated JCRQL parser
     -->
-    <suppress checks=".*"
-              files=".*JCRQLParser.*|Token.java|SimpleCharStream.java|TokenMgrError.java|ParseException.java|SimpleNode.java" />
+    <suppress checks=".*" files="(JJT)?JCRSQL.*.java"/>
+    <!-- Suppressions for the generated XPath parser -->
+    <suppress checks=".*" files="(JJT)?XPath.*.java"/>
 </suppressions>

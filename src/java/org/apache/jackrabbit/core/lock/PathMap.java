@@ -352,6 +352,6 @@ public class PathMap {
          * Invoked for every child visited on a tree traversal
          * @param child child visited
          */
-        public void childVisited(Child child);
+        void childVisited(Child child);
     }
 }
