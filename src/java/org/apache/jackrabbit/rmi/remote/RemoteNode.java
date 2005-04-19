@@ -20,8 +20,6 @@ import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.NodeIterator;
-
 
 /**
  * Remote version of the JCR {@link javax.jcr.Node Node} interface.
@@ -401,6 +399,7 @@ public interface RemoteNode extends RemoteItem {
      *
      * @param workspace source workspace name
      * @param bestEffort best effort flag
+     * @return nodes that failed to merge
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
