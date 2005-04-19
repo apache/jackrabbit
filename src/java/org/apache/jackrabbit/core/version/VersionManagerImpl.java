@@ -35,9 +35,9 @@ import org.apache.log4j.Logger;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
-import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -260,12 +260,21 @@ public class VersionManagerImpl implements VersionManager, Constants {
 
     /**
      * Removes the specified version from the history
-     * @param history
-     * @param name
+     *
+     * @param history the version history from where to remove the version.
+     * @param name the name of the version to remove.
+     * @throws VersionException if the version <code>history</code> does
+     *  not have a version with <code>name</code>.
+     * @throws RepositoryException if any other error occurs.
      */
     public void removeVersion(VersionHistory history, QName name)
             throws RepositoryException {
+        if (!((VersionHistoryImpl) history).hasNode(name)) {
+            throw new VersionException("Version with name " + name.toString()
+                    + " does not exist in this VersionHistory");
+        }
         // generate observation events
+        SessionImpl session = (SessionImpl) history.getSession();
         VersionImpl version = (VersionImpl) ((VersionHistoryImpl) history).getNode(name);
         List events = new ArrayList();
         recursiveRemove(events, (NodeImpl) history, version);
@@ -274,7 +283,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
         vh.removeVersion(name);
 
         virtProvider.invalidateItem(new NodeId(vh.getId()));
-        obsMgr.dispatch(events, (SessionImpl) history.getSession());
+        obsMgr.dispatch(events, session);
     }
 
     /**

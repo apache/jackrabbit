@@ -21,6 +21,8 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Node;
+import javax.jcr.ReferenceValue;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
@@ -50,19 +52,13 @@ public class RemoveVersionTest extends AbstractVersionTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        vHistory = versionableNode.getVersionHistory();
-
-        if (vHistory == null) {
-            fail("VersionHistory must be created on persistent creation of a versionable node.");
-        }
-
         Version testV = versionableNode.checkin(); // create 1.0
         versionableNode.checkout();
         versionableNode.checkin(); // create 1.1
         versionableNode.checkout();
         versionableNode.checkin(); // create 1.2
         try {
-            vHistory.removeVersion(testV.getName());
+            versionableNode.getVersionHistory().removeVersion(testV.getName());
         } catch (UnsupportedRepositoryOperationException e) {
             throw new NotExecutableException("Removing version is not supported: " + e.getMessage());
         }
@@ -72,6 +68,8 @@ public class RemoveVersionTest extends AbstractVersionTest {
         // create a second version
         versionableNode.checkout();
         version2 = versionableNode.checkin();
+
+        vHistory = versionableNode.getVersionHistory();
 
         // build a second versionable node below the testroot
         try {
@@ -84,7 +82,6 @@ public class RemoveVersionTest extends AbstractVersionTest {
     protected void tearDown() throws Exception {
         try {
             versionableNode2.remove();
-            testRootNode.save();
         } finally {
             super.tearDown();
         }
@@ -169,4 +166,30 @@ public class RemoveVersionTest extends AbstractVersionTest {
             // success
         }
     }
-}
+
+    /**
+     * Checks if {@link javax.jcr.version.VersionHistory#removeVersion(String)}
+     * throws a {@link javax.jcr.ReferentialIntegrityException} if the named
+     * version is still referenced by another node.
+     * @tck.config nodetype name of a node type that supports a reference
+     *  property.
+     * @tck.config nodename2 name of the node created with <code>nodetype</code>.
+     * @tck.config propertyname1 a single value reference property available
+     *  in <code>nodetype</code>.
+     */
+    public void testReferentialIntegrityException() throws RepositoryException {
+        // create reference: n1.p1 -> versionableNode
+        Node n1 = testRootNode.addNode(nodeName2, testNodeType);
+        n1.setProperty(propertyName1, new ReferenceValue(version));
+        testRootNode.save();
+
+        try {
+            vHistory.removeVersion(version.getName());
+            fail("Method removeVersion() must throw a ReferentialIntegrityException " +
+                 "if the version is the target of a REFERENCE property and the current " +
+                 "Session has read access to that REFERENCE property");
+        }
+        catch (ReferentialIntegrityException e) {
+            // success
+        }
+    }}
