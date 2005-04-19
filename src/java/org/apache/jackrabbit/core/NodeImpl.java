@@ -2669,7 +2669,7 @@ public class NodeImpl extends ItemImpl implements Node {
         prop.save();
         prop = internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
         prop.save();
-        prop = internalSetProperty(JCR_PREDECESSORS, InternalValue.EMPTY, PropertyType.REFERENCE);
+        prop = internalSetProperty(JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
         prop.save();
         return v;
     }
@@ -3478,7 +3478,7 @@ public class NodeImpl extends ItemImpl implements Node {
         internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(version.getId())));
 
         // 4. N's jcr:predecessor property is set to null
-        internalSetProperty(JCR_PREDECESSORS, InternalValue.EMPTY, PropertyType.REFERENCE);
+        internalSetProperty(JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
 
         // also clear mergeFailed
         internalSetProperty(JCR_MERGEFAILED, (InternalValue[]) null);

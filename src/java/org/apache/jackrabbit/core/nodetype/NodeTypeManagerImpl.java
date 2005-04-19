@@ -87,7 +87,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         this.ntReg = ntReg;
         this.ntReg.addListener(this);
 
-        // setup item cache with soft references to node type instances
+        // setup caches with soft references to node type & item definition instances
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
@@ -180,6 +180,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         // flush cache
         ntCache.remove(ntName);
         // just clear all definitions from cache
+        // @todo do smart/selective flush of definition caches
         pdCache.clear();
         ndCache.clear();
     }
@@ -191,6 +192,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         // sync cache
         ntCache.remove(ntName);
         // just clear all definitions from cache
+        // @todo do smart/selective flush of definition caches
         pdCache.clear();
         ndCache.clear();
     }
@@ -296,4 +298,3 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         }
     }
 }
-

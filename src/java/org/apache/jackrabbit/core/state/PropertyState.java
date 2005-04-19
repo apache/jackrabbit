@@ -74,7 +74,7 @@ public class PropertyState extends ItemState {
         super(parentUUID, new PropertyId(parentUUID, name), initialStatus, isTransient);
         this.name = name;
         type = PropertyType.UNDEFINED;
-        values = InternalValue.EMPTY;
+        values = InternalValue.EMPTY_ARRAY;
         multiValued = false;
     }
 

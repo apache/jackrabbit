@@ -193,8 +193,8 @@ public class VersionItemStateProvider extends AbstractVISProvider {
                 state = new VersionNodeState(this, v, vi.getParent().getId());
                 state.setDefinitionId(NDEF_VERSION);
                 state.setPropertyValue(JCR_CREATED, InternalValue.create(v.getCreated()));
-                state.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY);
-                state.setPropertyValues(JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY);
+                state.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
+                state.setPropertyValues(JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
             } else if (vi instanceof InternalFrozenNode) {
                 InternalFrozenNode fn = (InternalFrozenNode) vi;
