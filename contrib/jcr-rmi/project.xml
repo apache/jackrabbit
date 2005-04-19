@@ -18,7 +18,7 @@
   -->
 
 <project>
-  <pomVersion>2</pomVersion>
+  <pomVersion>3</pomVersion>
   <id>jcr-rmi</id>
   <name>JCR-RMI</name>
   <currentVersion>0.16.4</currentVersion>
@@ -33,7 +33,7 @@
     Jackrabbit project, the JCR-RMI layer is independent of the underlying
     JCR repository implementation.
   </description>
-  <shortDescription>Transparent RMI layer for the JCR API.</shortDescription>
+  <shortDescription>Transparent RMI layer for the JCR API</shortDescription>
 
   <developers>
     <developer>
@@ -83,7 +83,7 @@
     <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
     <unitTest>
       <includes>
-        <include>**/*TestAll.java</include>
+        <include>**/*Test.java</include>
       </includes>
     </unitTest>
   </build>
