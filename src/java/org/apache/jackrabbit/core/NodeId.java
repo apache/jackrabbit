@@ -29,11 +29,13 @@ public class NodeId extends ItemId {
         if (uuid == null) {
             throw new IllegalArgumentException("uuid can not be null");
         }
-        this.uuid = uuid.intern();
+        this.uuid = uuid;
     }
 
     /**
-     * @see ItemId#denotesNode
+     * {@inheritDoc}
+     *
+     * @return always <code>true</code>
      */
     public boolean denotesNode() {
         return true;
@@ -41,17 +43,6 @@ public class NodeId extends ItemId {
 
     public String getUUID() {
         return uuid;
-    }
-
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof NodeId) {
-            NodeId other = (NodeId) obj;
-            return uuid == other.uuid;
-        }
-        return false;
     }
 
     /**
@@ -71,6 +62,19 @@ public class NodeId extends ItemId {
             throw new IllegalArgumentException("invalid NodeId literal");
         }
         return new NodeId(s);
+    }
+
+    //-------------------------------------------< java.lang.Object overrides >
+
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof NodeId) {
+            NodeId other = (NodeId) obj;
+            return uuid.equals(other.uuid);
+        }
+        return false;
     }
 
     public String toString() {

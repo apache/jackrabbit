@@ -26,25 +26,10 @@ public class NodeReferencesId extends NodeId {
     /**
      * Create a new instance of this class. Takes a UUID as parameter.
      *
-     * @param uuid uuid of node
+     * @param uuid uuid of target node
      */
     public NodeReferencesId(String uuid) {
         super(uuid);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof NodeReferencesId) {
-            NodeReferencesId other = (NodeReferencesId) obj;
-            return uuid == other.uuid;
-        }
-        return false;
     }
 
     /**
@@ -54,9 +39,9 @@ public class NodeReferencesId extends NodeId {
      *
      * @param s a <code>String</code> containing the <code>NodeReferencesId</code>
      *          representation to be parsed.
-     * @return the <code>NodeId</code> represented by the argument
+     * @return the <code>NodeReferencesId</code> represented by the argument
      * @throws IllegalArgumentException if the specified string can not be parsed
-     *                                  as a <code>NodeId</code>.
+     *                                  as a <code>NodeReferencesId</code>.
      * @see #toString()
      */
     public static NodeId valueOf(String s) {
@@ -64,5 +49,24 @@ public class NodeReferencesId extends NodeId {
             throw new IllegalArgumentException("invalid NodeReferencesId literal");
         }
         return new NodeReferencesId(s);
+    }
+
+    //-------------------------------------------< java.lang.Object overrides >
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof NodeReferencesId) {
+            return super.equals(obj);
+        }
+        return false;
+    }
+
+    public String toString() {
+        return uuid;
     }
 }

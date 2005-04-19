@@ -33,12 +33,14 @@ public class PropertyId extends ItemId {
         if (propName == null) {
             throw new IllegalArgumentException("propName can not be null");
         }
-        this.parentUUID = parentUUID.intern();
+        this.parentUUID = parentUUID;
         this.propName = propName;
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return always <code>false</code>
      */
     public boolean denotesNode() {
         return false;
@@ -50,18 +52,6 @@ public class PropertyId extends ItemId {
 
     public QName getName() {
         return propName;
-    }
-
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof PropertyId) {
-            PropertyId other = (PropertyId) obj;
-            return parentUUID == other.parentUUID
-                    && propName.equals(other.propName);
-        }
-        return false;
     }
 
     /**
@@ -88,6 +78,20 @@ public class PropertyId extends ItemId {
         QName name = QName.valueOf(s.substring(i + 1));
 
         return new PropertyId(uuid, name);
+    }
+
+    //-------------------------------------------< java.lang.Object overrides >
+
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof PropertyId) {
+            PropertyId other = (PropertyId) obj;
+            return parentUUID.equals(other.parentUUID)
+                    && propName.equals(other.propName);
+        }
+        return false;
     }
 
     public String toString() {
