@@ -66,7 +66,4 @@ public class NodeReferencesId extends NodeId {
         return false;
     }
 
-    public String toString() {
-        return uuid;
-    }
 }
