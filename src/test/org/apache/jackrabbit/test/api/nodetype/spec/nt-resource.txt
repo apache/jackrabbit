@@ -25,7 +25,7 @@ PropertyDefinition
   ValueConstraints []
   DefaultValues null
   AutoCreated false
-  Mandatory true
+  Mandatory false
   OnParentVersion COPY
   Protected false
   Multiple false
