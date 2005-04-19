@@ -32,7 +32,7 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * @throws ItemStateException if the manager is already inside
      *         edit mode.
      */
-    public void edit() throws ItemStateException;
+    void edit() throws ItemStateException;
 
     /**
      * Creates a {@link NodeState} instance representing new,
@@ -44,7 +44,7 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * @param parentUUID   parent node's UUID
      * @return a node state
      */
-    public NodeState createNew(String uuid, QName nodeTypeName,
+    NodeState createNew(String uuid, QName nodeTypeName,
                                String parentUUID);
 
     /**
@@ -56,31 +56,31 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * @param parentUUID parent node UUID
      * @return a property state
      */
-    public PropertyState createNew(QName propName, String parentUUID);
+    PropertyState createNew(QName propName, String parentUUID);
 
     /**
      * Store an item state.
      * @param state item state that should be stored
       */
-    public void store(ItemState state);
+    void store(ItemState state);
 
     /**
      * Store a node references object
      * @param refs node references object that should be stored
      */
-    public void store(NodeReferences refs);
+    void store(NodeReferences refs);
 
     /**
      * Destroy an item state.
      * @param state item state that should be destroyed
       */
-    public void destroy(ItemState state);
+    void destroy(ItemState state);
 
     /**
      * Cancel an update operation. This will undo all changes
      * made to objects inside this item state manager.
      */
-    public void cancel();
+    void cancel();
 
     /**
      * End an update operation. This will save all items
@@ -88,5 +88,5 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * If this operation fails, no item will have been saved.
      * @throws ItemStateException if the operation failed
      */
-    public void update() throws ItemStateException;
+    void update() throws ItemStateException;
 }

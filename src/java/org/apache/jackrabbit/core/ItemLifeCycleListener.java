@@ -29,7 +29,7 @@ public interface ItemLifeCycleListener {
      *
      * @param item the instance which has been created
      */
-    public void itemCreated(ItemImpl item);
+    void itemCreated(ItemImpl item);
 
     /**
      * Called when an <code>ItemImpl</code> instance has been invalidated
@@ -43,7 +43,7 @@ public interface ItemLifeCycleListener {
      * @param id   the id of the instance that has been discarded
      * @param item the instance which has been discarded
      */
-    public void itemInvalidated(ItemId id, ItemImpl item);
+    void itemInvalidated(ItemId id, ItemImpl item);
 
     /**
      * Called when an <code>ItemImpl</code> instance has been destroyed
@@ -57,5 +57,5 @@ public interface ItemLifeCycleListener {
      * @param id   the id of the instance that has been destroyed
      * @param item the instance which has been destroyed
      */
-    public void itemDestroyed(ItemId id, ItemImpl item);
+    void itemDestroyed(ItemId id, ItemImpl item);
 }

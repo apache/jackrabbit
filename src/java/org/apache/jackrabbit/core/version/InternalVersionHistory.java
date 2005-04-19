@@ -33,14 +33,14 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @see VersionHistory#getRootVersion()
      */
-    public InternalVersion getRootVersion();
+    InternalVersion getRootVersion();
 
     /**
      * Equivalalent to {@link VersionHistory#getVersion(java.lang.String)}.
      *
      * @see VersionHistory#getVersion(java.lang.String)
      */
-    public InternalVersion getVersion(QName versionName) throws VersionException;
+    InternalVersion getVersion(QName versionName) throws VersionException;
 
     /**
      * Checks if the version with the given name exists in this version history.
@@ -49,7 +49,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @return <code>true</code> if the version exists;
      *         <code>false</code> otherwise.
      */
-    public boolean hasVersion(QName versionName);
+    boolean hasVersion(QName versionName);
 
     /**
      * Checks if the version for the given uuid exists in this history.
@@ -58,7 +58,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @return <code>true</code> if the version exists;
      *         <code>false</code> otherwise.
      */
-    public boolean hasVersion(String uuid);
+    boolean hasVersion(String uuid);
 
     /**
      * Returns the version with the given uuid or <code>null</code> if the
@@ -67,7 +67,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @param uuid the uuid of the version
      * @return the internal version ot <code>null</code>
      */
-    public InternalVersion getVersion(String uuid);
+    InternalVersion getVersion(String uuid);
 
     /**
      * Equivalalent to {@link VersionHistory#getVersionByLabel(java.lang.String)}
@@ -75,7 +75,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @see VersionHistory#getVersionByLabel(java.lang.String)
      */
-    public InternalVersion getVersionByLabel(QName label);
+    InternalVersion getVersionByLabel(QName label);
 
     /**
      * Removes the indicated version from this VersionHistory. If the specified
@@ -89,7 +89,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @param versionName the name of the version to be removed
      * @throws RepositoryException if an error occurrs.
      */
-    public void removeVersion(QName versionName) throws RepositoryException;
+    void removeVersion(QName versionName) throws RepositoryException;
 
     /**
      * Sets the version <code>label</code> to the given <code>version</code>.
@@ -105,7 +105,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @return the version that was previously assigned by this label or <code>null</code>.
      * @throws VersionException
      */
-    public InternalVersion setVersionLabel(QName version, QName label, boolean move)
+    InternalVersion setVersionLabel(QName version, QName label, boolean move)
             throws VersionException;
 
     /**
@@ -114,21 +114,21 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @return an iterator over {@link InternalVersion} objects.
      */
-    public Iterator getVersions();
+    Iterator getVersions();
 
     /**
      * Returns the number of versions in this version history.
      *
      * @return the number of versions, including the root version.
      */
-    public int getNumVersions();
+    int getNumVersions();
 
     /**
      * Returns the UUID of the versionable node that this history belongs to.
      *
      * @return the UUID of the versionable node.
      */
-    public String getVersionableUUID();
+    String getVersionableUUID();
 
     /**
      * Returns a string  iterator over all version labels that exist in this
@@ -136,12 +136,12 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @return
      */
-    public QName[] getVersionLabels();
+    QName[] getVersionLabels();
 
     /**
      * Returns the UUID of the version labels node
      *
      * @return
      */
-    public String getVersionLabelsUUID();
+    String getVersionLabelsUUID();
 }

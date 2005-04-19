@@ -30,7 +30,7 @@ public interface ItemStateListener {
      *
      * @param created the <code>ItemState</code> that has been 'created'
      */
-    public void stateCreated(ItemState created);
+    void stateCreated(ItemState created);
 
     /**
      * Called when an <code>ItemState</code> has successfully
@@ -38,7 +38,7 @@ public interface ItemStateListener {
      *
      * @param modified the <code>ItemState</code> that has been 'modified'
      */
-    public void stateModified(ItemState modified);
+    void stateModified(ItemState modified);
 
     /**
      * Called when an <code>ItemState</code> has successfully been
@@ -46,7 +46,7 @@ public interface ItemStateListener {
      *
      * @param destroyed the <code>ItemState</code> that has been 'destroyed'
      */
-    public void stateDestroyed(ItemState destroyed);
+    void stateDestroyed(ItemState destroyed);
 
     /**
      * Called when an <code>ItemState</code> has been discarded (i.e. it has
@@ -55,5 +55,5 @@ public interface ItemStateListener {
      * @param discarded the <code>ItemState</code> that has been discarded
      * @see ItemState#discard
      */
-    public void stateDiscarded(ItemState discarded);
+    void stateDiscarded(ItemState discarded);
 }

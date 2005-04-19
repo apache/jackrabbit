@@ -31,7 +31,7 @@ public interface HierarchyManager {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    public ItemId resolvePath(Path path) throws PathNotFoundException, RepositoryException;
+    ItemId resolvePath(Path path) throws PathNotFoundException, RepositoryException;
 
     /**
      * @param id
@@ -39,7 +39,7 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public Path getPath(ItemId id) throws ItemNotFoundException, RepositoryException;
+    Path getPath(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param id
@@ -47,7 +47,7 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public QName getName(ItemId id) throws ItemNotFoundException, RepositoryException;
+    QName getName(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the depth of the specified item which is equivalent to
@@ -57,7 +57,7 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public int getDepth(ItemId id) throws ItemNotFoundException, RepositoryException;
+    int getDepth(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param id
@@ -65,7 +65,7 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException;
+    Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param id
@@ -74,7 +74,7 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public Path[] getAllPaths(ItemId id, boolean includeZombies)
+    Path[] getAllPaths(ItemId id, boolean includeZombies)
             throws ItemNotFoundException, RepositoryException;
 
     /**
@@ -83,7 +83,7 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public NodeId[] listParents(ItemId id) throws ItemNotFoundException, RepositoryException;
+    NodeId[] listParents(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param id
@@ -91,7 +91,7 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public ItemId[] listChildren(NodeId id) throws ItemNotFoundException, RepositoryException;
+    ItemId[] listChildren(NodeId id) throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param id
@@ -99,5 +99,5 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public ItemId[] listZombieChildren(NodeId id) throws ItemNotFoundException, RepositoryException;
+    ItemId[] listZombieChildren(NodeId id) throws ItemNotFoundException, RepositoryException;
 }

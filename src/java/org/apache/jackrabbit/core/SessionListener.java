@@ -31,7 +31,7 @@ public interface SessionListener {
      *
      * @param session the <code>Session</code> that is about to be 'closed'
      */
-    public void loggingOut(SessionImpl session);
+    void loggingOut(SessionImpl session);
 
     /**
      * Called when a <code>Session</code> has been 'closed' by
@@ -39,5 +39,5 @@ public interface SessionListener {
      *
      * @param session the <code>Session</code> that has been 'closed'
      */
-    public void loggedOut(SessionImpl session);
+    void loggedOut(SessionImpl session);
 }

@@ -40,5 +40,5 @@ public interface XASession extends Session {
      *
      * @return the <code>XAResource</code> object.
      */
-    public XAResource getXAResource();
+    XAResource getXAResource();
 }

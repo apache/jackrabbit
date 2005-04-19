@@ -39,7 +39,7 @@ public interface VersionManager {
      * @param base
      * @return
      */
-    public VirtualItemStateProvider getVirtualItemStateProvider(ItemStateManager base);
+    VirtualItemStateProvider getVirtualItemStateProvider(ItemStateManager base);
 
     /**
      * Creates a new version history. This action is needed either when creating
@@ -50,7 +50,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException;
+    VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException;
 
     /**
      * invokes the checkin() on the persistent version manager and remaps the
@@ -60,7 +60,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public Version checkin(NodeImpl node) throws RepositoryException;
+    Version checkin(NodeImpl node) throws RepositoryException;
 
     /**
      * Removes the specified version from the given version history.
@@ -68,7 +68,7 @@ public interface VersionManager {
      * @param versionName
      * @throws RepositoryException
      */
-    public void removeVersion(VersionHistory history, QName versionName)
+    void removeVersion(VersionHistory history, QName versionName)
             throws RepositoryException;
 
     /**
@@ -86,7 +86,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public Version setVersionLabel(VersionHistory history, QName version, QName label, boolean move)
+    Version setVersionLabel(VersionHistory history, QName version, QName label, boolean move)
             throws RepositoryException;
 
     //-----------------------------------------------------< internal stuff >---
@@ -97,7 +97,7 @@ public interface VersionManager {
      * @param id
      * @return
      */
-    public boolean hasVersionHistory(String id);
+    boolean hasVersionHistory(String id);
 
     /**
      * Returns the version history with the given id
@@ -106,7 +106,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public InternalVersionHistory getVersionHistory(String id) throws RepositoryException;
+    InternalVersionHistory getVersionHistory(String id) throws RepositoryException;
 
     /**
      * Returns the number of version histories
@@ -114,7 +114,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public int getNumVersionHistories() throws RepositoryException;
+    int getNumVersionHistories() throws RepositoryException;
 
     /**
      * Returns an iterator over all ids of {@link InternalVersionHistory}s.
@@ -122,7 +122,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public Iterator getVersionHistoryIds() throws RepositoryException;
+    Iterator getVersionHistoryIds() throws RepositoryException;
 
     /**
      * Checks if the version with the given id exists
@@ -148,7 +148,7 @@ public interface VersionManager {
      * @param id
      * @return
      */
-    public boolean hasItem(String id);
+    boolean hasItem(String id);
 
     /**
      * Returns the version item with the given id
@@ -158,7 +158,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public InternalVersionItem getItem(String id) throws RepositoryException;
+    InternalVersionItem getItem(String id) throws RepositoryException;
 
     /**
      * Returns the references that exist to this version item
@@ -167,7 +167,7 @@ public interface VersionManager {
      * @param item
      * @return a collection of property ids
      */
-    public List getItemReferences(InternalVersionItem item);
+    List getItemReferences(InternalVersionItem item);
 
     /**
      * Informs this version manager that the references to one of its
@@ -177,7 +177,7 @@ public interface VersionManager {
      * @param item the version item that is referenced
      * @param references the collection of PropertyIds that references the item
      */
-    public void setItemReferences(InternalVersionItem item, List references);
+    void setItemReferences(InternalVersionItem item, List references);
 
     /**
      * Close this version manager. After having closed a persistence
@@ -186,7 +186,7 @@ public interface VersionManager {
      *
      * @throws Exception if an error occurs
      */
-    public void close() throws Exception;
+    void close() throws Exception;
 
 
 }

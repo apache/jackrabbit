@@ -39,7 +39,7 @@ public interface QueryHandler {
      * @param context the context for this query handler.
      * @throws IOException if an error occurs during initialization.
      */
-    public void init(QueryHandlerContext context) throws IOException;
+    void init(QueryHandlerContext context) throws IOException;
 
     /**
      * Adds a <code>Node</code> to the search index.
@@ -47,20 +47,20 @@ public interface QueryHandler {
      * @throws RepositoryException if an error occurs while indexing the node.
      * @throws IOException if an error occurs while adding the node to the index.
      */
-    public void addNode(NodeState node) throws RepositoryException, IOException;
+    void addNode(NodeState node) throws RepositoryException, IOException;
 
     /**
      * Deletes the Node with <code>UUID</code> from the search index.
      * @param uuid the <code>UUID</code> of the node to delete.
      * @throws IOException if an error occurs while deleting the node.
      */
-    public void deleteNode(String uuid) throws IOException;
+    void deleteNode(String uuid) throws IOException;
 
     /**
      * Closes this <code>QueryHandler</code> and frees resources attached
      * to this handler.
      */
-    public void close() throws IOException;
+    void close() throws IOException;
 
     /**
      * Creates a new query by specifying the query statement itself and the
@@ -77,7 +77,7 @@ public interface QueryHandler {
      * @throws InvalidQueryException if statement is invalid or language is unsupported.
      * @return A <code>Query</code> object.
      */
-    public ExecutableQuery createExecutableQuery(SessionImpl session,
+    ExecutableQuery createExecutableQuery(SessionImpl session,
                              ItemManager itemMgr,
                              String statement,
                              String language) throws InvalidQueryException;

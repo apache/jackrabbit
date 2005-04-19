@@ -38,7 +38,7 @@ public interface PersistentVersionManager {
      * @return the newly created version history.
      * @throws RepositoryException
      */
-    public InternalVersionHistory createVersionHistory(NodeImpl node)
+    InternalVersionHistory createVersionHistory(NodeImpl node)
             throws RepositoryException;
 
     /**
@@ -48,7 +48,7 @@ public interface PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public InternalVersionHistory getVersionHistory(String histId)
+    InternalVersionHistory getVersionHistory(String histId)
             throws RepositoryException;
 
     /**
@@ -57,7 +57,7 @@ public interface PersistentVersionManager {
      * @param histId
      * @return
      */
-    public boolean hasVersionHistory(String histId);
+    boolean hasVersionHistory(String histId);
 
     /**
      * returns an iterator over the external ids of the version histories
@@ -65,7 +65,7 @@ public interface PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public Iterator getVersionHistoryIds() throws RepositoryException;
+    Iterator getVersionHistoryIds() throws RepositoryException;
 
     /**
      * returns the number of version histories
@@ -73,7 +73,7 @@ public interface PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public int getNumVersionHistories() throws RepositoryException;
+    int getNumVersionHistories() throws RepositoryException;
 
     /**
      * returns the internal version for the id
@@ -82,7 +82,7 @@ public interface PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public InternalVersion getVersion(String histId, String versionId)
+    InternalVersion getVersion(String histId, String versionId)
             throws RepositoryException;
 
     /**
@@ -92,7 +92,7 @@ public interface PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public InternalVersion getVersion(String versionId)
+    InternalVersion getVersion(String versionId)
             throws RepositoryException;
 
     /**
@@ -101,7 +101,7 @@ public interface PersistentVersionManager {
      * @param versionId
      * @return
      */
-    public boolean hasVersion(String versionId);
+    boolean hasVersion(String versionId);
 
     /**
      * checks, if the item with the given external id exists
@@ -109,7 +109,7 @@ public interface PersistentVersionManager {
      * @param id
      * @return
      */
-    public boolean hasItem(String id);
+    boolean hasItem(String id);
 
     /**
      * returns the item referred by the id
@@ -118,7 +118,7 @@ public interface PersistentVersionManager {
      * @return
      * @throws RepositoryException
      */
-    public InternalVersionItem getItem(String id)
+    InternalVersionItem getItem(String id)
             throws RepositoryException;
 
     /**
@@ -129,13 +129,13 @@ public interface PersistentVersionManager {
      * @throws RepositoryException
      * @see Node#checkin()
      */
-    public InternalVersion checkin(NodeImpl node) throws RepositoryException;
+    InternalVersion checkin(NodeImpl node) throws RepositoryException;
 
     /**
      * Return the item state manager of this version manager
      * @return item state manager
      */
-    public UpdatableItemStateManager getItemStateMgr();
+    UpdatableItemStateManager getItemStateMgr();
 
     /**
      * Returns the references that exist to this version item
@@ -143,7 +143,7 @@ public interface PersistentVersionManager {
      * @param item
      * @return a collection of property ids
      */
-    public List getItemReferences(InternalVersionItem item);
+    List getItemReferences(InternalVersionItem item);
 
     /**
      * Informs this version manager that the references to one of its
@@ -152,7 +152,7 @@ public interface PersistentVersionManager {
      * @param item the version item that is referenced
      * @param references the collection of PropertyIds that references the item
      */
-    public void setItemReferences(InternalVersionItem item, List references);
+    void setItemReferences(InternalVersionItem item, List references);
 
     /**
      * Close this persistence version manager. After having closed a persistence
@@ -160,5 +160,5 @@ public interface PersistentVersionManager {
      * and throw
      * @throws Exception if an error occurs
      */
-    public void close() throws Exception;
+    void close() throws Exception;
 }
