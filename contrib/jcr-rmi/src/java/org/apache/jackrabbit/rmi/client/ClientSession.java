@@ -207,7 +207,7 @@ public class ClientSession extends ClientObject implements Session {
 
     /** {@inheritDoc} */
     public void checkPermission(String path, String actions)
-            throws AccessControlException, RepositoryException{
+            throws AccessControlException, RepositoryException {
         try {
             remote.checkPermission(path, actions);
         } catch (RemoteException ex) {

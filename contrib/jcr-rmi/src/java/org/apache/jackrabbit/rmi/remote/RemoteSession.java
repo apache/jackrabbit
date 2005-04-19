@@ -137,6 +137,7 @@ public interface RemoteSession extends Remote {
      * @param path item path
      * @return <code>true</code> if the item exists,
      *         <code>false</code> otherwise
+     * @throws RepositoryException on repository exception
      * @throws RemoteException on RMI errors
      */
     boolean itemExists(String path) throws RepositoryException, RemoteException;
@@ -186,10 +187,11 @@ public interface RemoteSession extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.Session#isLive()} Session.isLive()}
+     * {@link javax.jcr.Session#isLive() Session.isLive()}
      * method.
-     * @return
      *
+     * @return <code>true</code> if the session is live,
+     *         <code>false</code> otherwise
      * @throws RemoteException on RMI errors
      */
     boolean isLive() throws RemoteException;
@@ -224,6 +226,7 @@ public interface RemoteSession extends Remote {
      * @param path item path
      * @param actions actions
      * @throws AccessControlException if permission is denied
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
     void checkPermission(String path, String actions)
@@ -239,12 +242,13 @@ public interface RemoteSession extends Remote {
      *
      * @param path node path
      * @param xml imported XML document
+     * @param uuidBehaviour UUID handling mode
      * @throws IOException on IO errors
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      * @see javax.jcr.Session#importXML(java.lang.String, java.io.InputStream, int)
      */
-    void importXML(String path, byte[] xml, int mode)
+    void importXML(String path, byte[] xml, int uuidBehaviour)
             throws IOException, RepositoryException, RemoteException;
 
     /**
@@ -336,15 +340,15 @@ public interface RemoteSession extends Remote {
      * the XML data written by the normal exportSysView method.
      *
      * @param path node path
-     * @param binaryAsLink TODO
-     * @param noRecurse TODO
+     * @param skipBinary binary skip flag
+     * @param noRecurse no recursion flag
      * @return exported XML document
      * @throws IOException on IO errors
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      * @see javax.jcr.Session#exportSystemView
      */
-    byte[] exportSystemView(String path, boolean binaryAsLink, boolean noRecurse)
+    byte[] exportSystemView(String path, boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException, RemoteException;
 
     /**
@@ -356,15 +360,15 @@ public interface RemoteSession extends Remote {
      * the XML data written by the normal exportDocView method.
      *
      * @param path node path
-     * @param binaryAsLink TODO
-     * @param noRecurse TODO
+     * @param skipBinary skip binary flag
+     * @param noRecurse no recursion flag
      * @return exported XML document
      * @throws IOException on IO errors
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      * @see javax.jcr.Session#exportDocumentView
      */
-    byte[] exportDocumentView(String path, boolean binaryAsLink, boolean noRecurse)
+    byte[] exportDocumentView(String path, boolean skipBinary, boolean noRecurse)
         throws IOException, RepositoryException, RemoteException;
 
 }

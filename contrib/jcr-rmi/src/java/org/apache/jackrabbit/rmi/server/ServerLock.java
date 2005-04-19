@@ -74,6 +74,7 @@ public class ServerLock extends UnicastRemoteObject implements RemoteLock {
         lock.refresh();
     }
 
+    /** {@inheritDoc} */
     public boolean isSessionScoped() throws RemoteException {
         return lock.isSessionScoped();
     }
