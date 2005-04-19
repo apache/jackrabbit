@@ -65,6 +65,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ReferenceableRootNodesTest.class);
 
         suite.addTestSuite(ExportSysViewTest.class);
+        suite.addTestSuite(ExportDocViewTest.class);
 
         // level 2 tests
         suite.addTestSuite(AddNodeTest.class);
