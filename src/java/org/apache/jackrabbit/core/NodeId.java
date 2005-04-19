@@ -25,7 +25,7 @@ public class NodeId extends ItemId {
     static final long serialVersionUID = 7026219091360041109L;
 
     /** UUID of the identified node */
-    protected final String uuid;
+    private final String uuid;
 
     /**
      * Creates a node identifier instance for the identified node.
