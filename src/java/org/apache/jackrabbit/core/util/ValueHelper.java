@@ -66,6 +66,25 @@ public class ValueHelper {
     }
 
     /**
+     * @param srcValues
+     * @param targetType
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     */
+    public static Value[] convert(String[] srcValues, int targetType)
+            throws ValueFormatException, IllegalArgumentException {
+        if (srcValues == null) {
+            return null;
+        }
+        Value[] newValues = new Value[srcValues.length];
+        for (int i = 0; i < srcValues.length; i++) {
+            newValues[i] = convert(srcValues[i], targetType);
+        }
+        return newValues;
+    }
+
+    /**
      * @param srcValue
      * @param targetType
      * @return
@@ -339,19 +358,19 @@ public class ValueHelper {
     }
 
     /**
-     * @param srcVal
+     * @param srcValues
      * @return
      * @throws IllegalStateException
      */
-    public static Value[] copy(Value[] srcVal) throws IllegalStateException {
-        if (srcVal == null) {
+    public static Value[] copy(Value[] srcValues) throws IllegalStateException {
+        if (srcValues == null) {
             return null;
         }
-        Value[] newVal = new Value[srcVal.length];
-        for (int i = 0; i < srcVal.length; i++) {
-            newVal[i] = copy(srcVal[i]);
+        Value[] newValues = new Value[srcValues.length];
+        for (int i = 0; i < srcValues.length; i++) {
+            newValues[i] = copy(srcValues[i]);
         }
-        return newVal;
+        return newValues;
     }
 
     /**
