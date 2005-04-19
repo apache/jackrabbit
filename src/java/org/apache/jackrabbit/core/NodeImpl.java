@@ -1890,7 +1890,11 @@ public class NodeImpl extends ItemImpl implements Node {
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
         try {
-            prop.setValue(ValueHelper.convert(values, type));
+            if (type == PropertyType.UNDEFINED) {
+                prop.setValue(values);
+            } else {
+                prop.setValue(ValueHelper.convert(values, type));
+            }
         } catch (RepositoryException re) {
             if (status.get(CREATED)) {
                 // setting value failed, get rid of newly created property
@@ -1937,7 +1941,11 @@ public class NodeImpl extends ItemImpl implements Node {
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
         try {
-            prop.setValue(ValueHelper.convert(value, type));
+            if (type == PropertyType.UNDEFINED) {
+                prop.setValue(value);
+            } else {
+                prop.setValue(ValueHelper.convert(value, type));
+            }
         } catch (RepositoryException re) {
             if (status.get(CREATED)) {
                 // setting value failed, get rid of newly created property
