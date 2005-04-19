@@ -215,8 +215,8 @@ public class RemoteAdapterTest extends TestCase {
         ignoreMethod("getRepository");           // implemented locally
         ignoreMethod("importXML");               // wrapped stream
         ignoreMethod("getImportContentHandler"); // implemented locally
-        ignoreMethod("exportSysView");           // multiple methods
-        ignoreMethod("exportDocView");           // multiple method
+        ignoreMethod("exportSystemView");        // multiple methods
+        ignoreMethod("exportDocumentView");      // multiple method
 
         Session session = (Session) mock;
         RemoteSession remote = remoteFactory.getRemoteSession(session);
@@ -502,6 +502,8 @@ public class RemoteAdapterTest extends TestCase {
      */
     public void testVersionHistory() throws Exception {
         prepareTests(VersionHistory.class);
+        ignoreMethod("getVersionLabels"); // UUID call
+        ignoreMethod("hasVersionLabel");  // UUID call
 
         VersionHistory history = (VersionHistory) mock;
         RemoteVersionHistory remote =
