@@ -3717,9 +3717,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        try {
-            checkLockable();
-        } catch (UnsupportedRepositoryOperationException  e) {
+        if (!isNodeType(MIX_LOCKABLE)) {
             // a node that is not lockable never holds a lock
             return false;
         }
