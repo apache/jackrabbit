@@ -140,10 +140,13 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public void removeVersionLabel(String label) throws RepositoryException {
         try {
-            session.getVersionManager().setVersionLabel(this,
+            Version existing = session.getVersionManager().setVersionLabel(this,
                     null,
                     QName.fromJCRName(label, session.getNamespaceResolver()),
                     true);
+            if (existing == null) {
+                throw new VersionException("No version with label '" + label + "' exists in this version history.");
+            }
         } catch (IllegalNameException e) {
             throw new RepositoryException(e);
         } catch (UnknownPrefixException e) {

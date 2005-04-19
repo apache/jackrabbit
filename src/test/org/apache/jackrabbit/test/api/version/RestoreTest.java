@@ -46,6 +46,7 @@ import javax.jcr.ItemExistsException;
 public class RestoreTest extends AbstractVersionTest {
 
     Version version;
+    Version version2;
     Version rootVersion;
 
     Node versionableNode2;
@@ -54,6 +55,8 @@ public class RestoreTest extends AbstractVersionTest {
         super.setUp();
 
         version = versionableNode.checkin();
+        versionableNode.checkout();
+        version2 = versionableNode.checkin();
         versionableNode.checkout();
         rootVersion = versionableNode.getVersionHistory().getRootVersion();
 

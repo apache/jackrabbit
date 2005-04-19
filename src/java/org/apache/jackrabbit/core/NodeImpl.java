@@ -3717,7 +3717,12 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        checkLockable();
+        try {
+            checkLockable();
+        } catch (UnsupportedRepositoryOperationException  e) {
+            // a node that is not lockable never holds a lock
+            return false;
+        }
 
         LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.holdsLock(this);

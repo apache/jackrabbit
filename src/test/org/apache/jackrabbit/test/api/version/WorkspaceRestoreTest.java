@@ -226,7 +226,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
         if (versionableNode.isCheckedOut()) {
             versionableNode.checkin();
         }
-        superuser.getWorkspace().restore(new Version[]{rootVersion}, true);
+        superuser.getWorkspace().restore(new Version[]{version}, true);
     }
 
     /**
@@ -236,7 +236,7 @@ public class WorkspaceRestoreTest extends RestoreTest {
         if (!versionableNode.isCheckedOut()) {
             versionableNode.checkout();
         }
-        superuser.getWorkspace().restore(new Version[]{rootVersion}, true);
+        superuser.getWorkspace().restore(new Version[]{version}, true);
     }
 
 }

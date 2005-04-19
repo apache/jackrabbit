@@ -283,7 +283,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
     public Version setVersionLabel(VersionHistory history, QName version,
                                    QName label, boolean move)
             throws RepositoryException {
-        Session session = history.getSession();
+        SessionImpl session = (SessionImpl) history.getSession();
 
         InternalVersionHistory vh = ((VersionHistoryImpl) history).getInternalVersionHistory();
         NodeImpl labelNode = ((VersionHistoryImpl) history).getNode(JCR_VERSIONLABELS);
@@ -320,7 +320,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
             ));
         }
         virtProvider.invalidateItem(new NodeId(vh.getId()));
-        obsMgr.dispatch(events, (SessionImpl) history.getSession());
+        obsMgr.dispatch(events, session);
         return v == null ? null : (VersionImpl) session.getNodeByUUID(v.getId());
     }
 
