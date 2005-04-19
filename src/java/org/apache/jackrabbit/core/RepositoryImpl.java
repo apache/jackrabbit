@@ -30,8 +30,8 @@ import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
-import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
+import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.security.CredentialsCallbackHandler;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PMContext;
@@ -63,12 +63,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.security.AccessControlContext;
+import java.security.AccessController;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
-import java.security.AccessControlContext;
-import java.security.AccessController;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -108,7 +108,7 @@ public class RepositoryImpl implements Repository, SessionListener,
     private final VirtualNodeTypeStateManager virtNTMgr;
 
     // configuration of the repository
-    private final RepositoryConfig repConfig;
+    protected final RepositoryConfig repConfig;
 
     // the master filesystem
     private final FileSystem repStore;
@@ -116,7 +116,9 @@ public class RepositoryImpl implements Repository, SessionListener,
     // sub file system where the repository stores meta data such as uuid of root node, etc.
     private final FileSystem metaDataStore;
 
-    /** the delegating observation dispatcher for all workspaces */
+    /**
+     * the delegating observation dispatcher for all workspaces
+     */
     private final DelegatingObservationDispatcher delegatingDispatcher =
             new DelegatingObservationDispatcher();
 
@@ -143,7 +145,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      *
      * @param repConfig
      */
-    private RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
+    protected RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
         this.repConfig = repConfig;
 
         // setup file systems
@@ -263,9 +265,9 @@ public class RepositoryImpl implements Repository, SessionListener,
             wspInfos.put(config.getName(), info);
         }
 
-        nsReg = new NamespaceRegistryImpl(new BasedFileSystem(repStore, "/namespaces"));
+        nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
 
-        ntReg = NodeTypeRegistry.create(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
+        ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
         // init version manager
         VersioningConfig vConfig = repConfig.getVersioningConfig();
@@ -303,6 +305,31 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
+     * Creates the <code>NamespaceRegistry</code> instance.
+     *
+     * @param fs
+     * @return
+     * @throws RepositoryException
+     */
+    protected NamespaceRegistryImpl createNamespaceRegistry(FileSystem fs)
+            throws RepositoryException {
+        return new NamespaceRegistryImpl(fs);
+    }
+
+    /**
+     * Creates the <code>NodeTypeRegistry</code> instance.
+     *
+     * @param fs
+     * @return
+     * @throws RepositoryException
+     */
+    protected NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsReg,
+                                                      FileSystem fs)
+            throws RepositoryException {
+        return NodeTypeRegistry.create(nsReg, fs);
+    }
+
+    /**
      * Creates a new <code>RepositoryImpl</code> instance.
      * <p/>
      * todo prevent multiple instantiation from same configuration as this could lead to data corruption/loss
@@ -314,6 +341,20 @@ public class RepositoryImpl implements Repository, SessionListener,
     public static RepositoryImpl create(RepositoryConfig config)
             throws RepositoryException {
         return new RepositoryImpl(config);
+    }
+
+    /**
+     * Performs a sanity check on this repository instance.
+     *
+     * @throws IllegalStateException if this repository has been rendered
+     *                               invalid for some reason (e.g. if it has
+     *                               been shut down)
+     */
+    protected void sanityCheck() throws IllegalStateException {
+        // check repository status
+        if (disposed) {
+            throw new IllegalStateException("repository instance has been shut down");
+        }
     }
 
     private void initWorkspace(String wspName) throws RepositoryException {
@@ -367,46 +408,36 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     RepositoryConfig getConfig() {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
         return repConfig;
     }
 
     NamespaceRegistryImpl getNamespaceRegistry() {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
         return nsReg;
     }
 
     NodeTypeRegistry getNodeTypeRegistry() {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
         return ntReg;
     }
 
     VersionManager getVersionManager() {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
         return vMgr;
     }
 
     String getRootNodeUUID() {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
         return rootNodeUUID;
     }
@@ -419,6 +450,30 @@ public class RepositoryImpl implements Repository, SessionListener,
      */
     String[] getWorkspaceNames() {
         return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
+    }
+
+    /**
+     * Returns the {@link WorkspaceInfo} for the named workspace.
+     *
+     * @param workspaceName The name of the workspace whose {@link WorkspaceInfo}
+     *                      is to be returned. This must not be <code>null</code>.
+     * @return The {@link WorkspaceInfo} for the named workspace. This will
+     *         never be <code>null</code>.
+     * @throws IllegalStateException    If this repository has already been
+     *                                  shut down.
+     * @throws NoSuchWorkspaceException If the named workspace does not exist.
+     */
+    protected WorkspaceInfo getWorkspaceInfo(String workspaceName)
+            throws NoSuchWorkspaceException {
+        // check sanity of this instance
+        sanityCheck();
+
+        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+        if (wspInfo == null) {
+            throw new NoSuchWorkspaceException(workspaceName);
+        }
+
+        return wspInfo;
     }
 
     /**
@@ -445,30 +500,18 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     SharedItemStateManager getWorkspaceStateManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        return wspInfo.getItemStateProvider();
+        return getWorkspaceInfo(workspaceName).getItemStateProvider();
     }
 
     ObservationManagerFactory getObservationManagerFactory(String workspaceName)
             throws NoSuchWorkspaceException {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        return wspInfo.getObservationManagerFactory();
+        return getWorkspaceInfo(workspaceName).getObservationManagerFactory();
     }
 
     /**
@@ -486,16 +529,10 @@ public class RepositoryImpl implements Repository, SessionListener,
      */
     SearchManager getSearchManager(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        return wspInfo.getSearchManager();
+        return getWorkspaceInfo(workspaceName).getSearchManager();
     }
 
     /**
@@ -509,16 +546,10 @@ public class RepositoryImpl implements Repository, SessionListener,
      */
     LockManager getLockManager(String workspaceName) throws
             NoSuchWorkspaceException, RepositoryException {
+        // check sanity of this instance
+        sanityCheck();
 
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
-
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        return wspInfo.getLockManager();
+        return getWorkspaceInfo(workspaceName).getLockManager();
     }
 
     /**
@@ -529,18 +560,11 @@ public class RepositoryImpl implements Repository, SessionListener,
      */
     SystemSession getSystemSession(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        return wspInfo.getSystemSession();
+        return getWorkspaceInfo(workspaceName).getSystemSession();
     }
-
 
     /**
      * Creates a new session on the specified workspace for the
@@ -555,14 +579,12 @@ public class RepositoryImpl implements Repository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    SessionImpl createSession(LoginContext loginContext, String workspaceName)
+    SessionImpl createSession(LoginContext loginContext,
+                              String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        XASessionImpl ses = new XASessionImpl(this, loginContext, wspInfo.getConfig());
+        WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
+        SessionImpl ses = createSessionInstance(loginContext, wspInfo.getConfig());
         activeSessions.put(ses, ses);
         return ses;
     }
@@ -583,11 +605,8 @@ public class RepositoryImpl implements Repository, SessionListener,
     SessionImpl createSession(Subject subject, String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-        XASessionImpl ses = new XASessionImpl(this, subject, wspInfo.getConfig());
+        WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
+        SessionImpl ses = createSessionInstance(subject, wspInfo.getConfig());
         activeSessions.put(ses, ses);
         return ses;
     }
@@ -599,7 +618,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      * @see Runtime#addShutdownHook(Thread)
      */
     public synchronized void shutdown() {
-        // check state
+        // check status of this instance
         if (disposed) {
             // there's nothing to do here because the repository has already been shut down
             return;
@@ -658,15 +677,38 @@ public class RepositoryImpl implements Repository, SessionListener,
         disposed = true;
     }
 
+    /**
+     * Returns an <code>InputStream</code> on a <code>Properties</code> resource
+     * which contains the default properties for the repository. This method is
+     * only called once during repository initialization.
+     * <p/>
+     * The <code>InputStream</code> returned is closed by the caller.
+     * <p/>
+     * This method returns an <code>InputStream</code> on the
+     * <code>org/apache/jackrabbit/core/repository.properties</code> resource
+     * found in the class path.
+     *
+     * @return <code>InputStream</code> on a <code>Properties</code> resource
+     *         or <code>null</code> if the resource does not exist.
+     */
+    protected InputStream getDefaultRepositoryProperties() {
+        return RepositoryImpl.class.getResourceAsStream("repository.properties");
+    }
+
     private void loadRepProps() throws RepositoryException {
         FileSystemResource propFile = new FileSystemResource(metaDataStore, PROPERTIES_RESOURCE);
         try {
             repProps.clear();
             if (!propFile.exists() || propFile.length() == 0) {
                 // initialize properties with pre-defined values
-                InputStream in = RepositoryImpl.class.getResourceAsStream("repository.properties");
-                repProps.load(in);
-                in.close();
+                InputStream in = getDefaultRepositoryProperties();
+                if (in != null) {
+                    try {
+                        repProps.load(in);
+                    } finally {
+                        in.close();
+                    }
+                }
 
                 // set counts
                 repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
@@ -719,9 +761,8 @@ public class RepositoryImpl implements Repository, SessionListener,
      * @throws RepositoryException if the persistence manager could
      *                             not be instantiated/initialized
      */
-    private static PersistenceManager createPersistenceManager(
-            File homeDir, FileSystem fs, PersistenceManagerConfig pmConfig,
-            String rootNodeUUID, NamespaceRegistry nsReg, NodeTypeRegistry ntReg)
+    private static PersistenceManager createPersistenceManager(File homeDir, FileSystem fs, PersistenceManagerConfig pmConfig,
+                                                               String rootNodeUUID, NamespaceRegistry nsReg, NodeTypeRegistry ntReg)
             throws RepositoryException {
         try {
             PersistenceManager pm = (PersistenceManager) pmConfig.newInstance();
@@ -741,18 +782,15 @@ public class RepositoryImpl implements Repository, SessionListener,
      */
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        // check state
-        if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
-        }
+        // check sanity of this instance
+        sanityCheck();
 
         if (workspaceName == null) {
             workspaceName = repConfig.getDefaultWorkspaceName();
         }
 
-        if (!wspInfos.containsKey(workspaceName)) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
+        // check if workspace exists (will throw NoSuchWorkspaceException if not)
+        getWorkspaceInfo(workspaceName);
 
         if (credentials == null) {
             // null credentials, obtain the identity of the already-authenticated
@@ -855,7 +893,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      * {@inheritDoc}
      */
     public void onEvent(EventIterator events) {
-        // check state
+        // check status of this instance
         if (disposed) {
             // ignore, repository instance has been shut down
             return;
@@ -883,6 +921,39 @@ public class RepositoryImpl implements Repository, SessionListener,
                 }
             }
         }
+    }
+
+    //-----------------------------------------< overrideable factory methods >
+    /**
+     * Creates an instance of the {@link SessionImpl} class representing a
+     * user authenticated by the <code>loginContext</code> instance attached
+     * to the workspace configured by the <code>wspConfig</code>.
+     *
+     * @throws AccessDeniedException when ??
+     * @throws RepositoryException   If any other error occurrs creating the
+     *                               session.
+     */
+    protected SessionImpl createSessionInstance(LoginContext loginContext,
+                                                WorkspaceConfig wspConfig)
+            throws AccessDeniedException, RepositoryException {
+
+        return new XASessionImpl(this, loginContext, wspConfig);
+    }
+
+    /**
+     * Creates an instance of the {@link SessionImpl} class representing a
+     * user represented by the <code>subject</code> instance attached
+     * to the workspace configured by the <code>wspConfig</code>.
+     *
+     * @throws AccessDeniedException when ??
+     * @throws RepositoryException   If any other error occurrs creating the
+     *                               session.
+     */
+    protected SessionImpl createSessionInstance(Subject subject,
+                                                WorkspaceConfig wspConfig)
+            throws AccessDeniedException, RepositoryException {
+
+        return new XASessionImpl(this, subject, wspConfig);
     }
 
     //--------------------------------------------------------< inner classes >
@@ -1041,7 +1112,7 @@ public class RepositoryImpl implements Repository, SessionListener,
          * Returns the search manager for this workspace
          *
          * @return the search manager for this workspace, or <code>null</code>
-         *  if no <code>SearchManager</code>
+         *         if no <code>SearchManager</code>
          * @throws RepositoryException if the search manager could not be created
          */
         synchronized SearchManager getSearchManager() throws RepositoryException {
