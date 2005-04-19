@@ -27,24 +27,24 @@ public interface NodeDef extends ItemDef {
      * Returns the id of this node definition.
      * @return the id of this node definition.
      */
-    public NodeDefId getId();
+    NodeDefId getId();
 
     /**
      * Returns the name of the default primary type.
      * @return the name of the default primary type.
      */
-    public QName getDefaultPrimaryType();
+    QName getDefaultPrimaryType();
 
     /**
      * Returns the array of names of the required primary types.
      * @return the array of names of the required primary types.
      */
-    public QName[] getRequiredPrimaryTypes();
+    QName[] getRequiredPrimaryTypes();
 
     /**
      * Returns the 'allowsSameNameSiblings' flag.
      * @return the 'allowsSameNameSiblings' flag.
      */
-    public boolean allowsSameNameSiblings();
+    boolean allowsSameNameSiblings();
 
 }

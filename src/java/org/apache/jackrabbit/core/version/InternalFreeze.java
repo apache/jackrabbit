@@ -29,6 +29,6 @@ public interface InternalFreeze extends InternalVersionItem {
      *
      * @return the name of the node.
      */
-    public QName getName();
+    QName getName();
 
 }

@@ -36,14 +36,14 @@ public interface VirtualItemStateProvider extends ItemStateManager, ItemStateLis
      * @param id
      * @return
      */
-    public boolean isVirtualRoot(ItemId id);
+    boolean isVirtualRoot(ItemId id);
 
     /**
      * Returns the id of the root node of the virtual tree.
      *
      * @return
      */
-    public NodeId getVirtualRootId();
+    NodeId getVirtualRootId();
 
     /**
      * Creats a new virtual property state
@@ -55,7 +55,7 @@ public interface VirtualItemStateProvider extends ItemStateManager, ItemStateLis
      * @return
      * @throws RepositoryException
      */
-    public VirtualPropertyState createPropertyState(VirtualNodeState parent,
+    VirtualPropertyState createPropertyState(VirtualNodeState parent,
                                                     QName name, int type,
                                                     boolean multiValued)
             throws RepositoryException;
@@ -70,7 +70,7 @@ public interface VirtualItemStateProvider extends ItemStateManager, ItemStateLis
      * @return
      * @throws RepositoryException
      */
-    public VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
+    VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
                                             String uuid, QName nodeTypeName)
             throws RepositoryException;
 
@@ -81,7 +81,7 @@ public interface VirtualItemStateProvider extends ItemStateManager, ItemStateLis
      * @param refs
      * @return <code>true</code> if the reference target is one of its items.
      */
-    public boolean setNodeReferences(NodeReferences refs);
+    boolean setNodeReferences(NodeReferences refs);
 
 
 }

@@ -30,7 +30,7 @@ public interface NamespaceResolver {
      * @return the namespace URI to which the given prefix is mapped.
      * @throws NamespaceException if the prefix is unknown.
      */
-    public String getURI(String prefix) throws NamespaceException;
+    String getURI(String prefix) throws NamespaceException;
 
     /**
      * Returns the prefix which is mapped to the given URI.
@@ -39,5 +39,5 @@ public interface NamespaceResolver {
      * @return the prefix mapped to the given URI.
      * @throws NamespaceException if the URI is unknown.
      */
-    public String getPrefix(String uri) throws NamespaceException;
+    String getPrefix(String uri) throws NamespaceException;
 }

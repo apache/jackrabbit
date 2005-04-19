@@ -33,19 +33,19 @@ public interface FileSystem {
     /**
      * File separator
      */
-    public static final String SEPARATOR = "/";
+    static final String SEPARATOR = "/";
 
     /**
      * File separator character
      */
-    public static final char SEPARATOR_CHAR = '/';
+    static final char SEPARATOR_CHAR = '/';
 
     /**
      * Initialize the file system
      *
      * @throws FileSystemException if the file system initialization fails
      */
-    public void init() throws FileSystemException;
+    void init() throws FileSystemException;
 
     /**
      * Close the file system. After calling this method, the file system is no
@@ -53,7 +53,7 @@ public interface FileSystem {
      *
      * @throws FileSystemException
      */
-    public void close() throws FileSystemException;
+    void close() throws FileSystemException;
 
     /**
      * Returns an input stream of the contents of the file denoted by this path.
@@ -63,7 +63,7 @@ public interface FileSystem {
      * @throws FileSystemException if the file does not exist
      *                             or if it cannot be read from
      */
-    public InputStream getInputStream(String filePath) throws FileSystemException;
+    InputStream getInputStream(String filePath) throws FileSystemException;
 
     /**
      * Returns an output stream for writing bytes to the file denoted by this path.
@@ -74,7 +74,7 @@ public interface FileSystem {
      * @return an output stream for writing bytes to the file.
      * @throws FileSystemException if the file cannot be written to or created
      */
-    public OutputStream getOutputStream(String filePath) throws FileSystemException;
+    OutputStream getOutputStream(String filePath) throws FileSystemException;
 
     /**
      * Returns an output stream for writing bytes to the file denoted by this path.
@@ -90,7 +90,7 @@ public interface FileSystem {
      *                                       not support file access through a
      *                                      {@link RandomAccessOutputStream}.
      */
-    public RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
+    RandomAccessOutputStream getRandomAccessOutputStream(String filePath)
             throws FileSystemException, UnsupportedOperationException;
 
     /**
@@ -102,7 +102,7 @@ public interface FileSystem {
      * @throws FileSystemException if a file system entry denoted by path
      *                             already exists or if another error occurs.
      */
-    public void createFolder(String folderPath) throws FileSystemException;
+    void createFolder(String folderPath) throws FileSystemException;
 
     /**
      * Tests whether the file system entry denoted by this path exists.
@@ -111,7 +111,7 @@ public interface FileSystem {
      * @return true if the file system entry at path is a file; false otherwise.
      * @throws FileSystemException
      */
-    public boolean exists(String path) throws FileSystemException;
+    boolean exists(String path) throws FileSystemException;
 
     /**
      * Tests whether the file system entry denoted by this path is a file.
@@ -120,7 +120,7 @@ public interface FileSystem {
      * @return true if the file system entry at path is a file; false otherwise.
      * @throws FileSystemException
      */
-    public boolean isFile(String path) throws FileSystemException;
+    boolean isFile(String path) throws FileSystemException;
 
     /**
      * Tests whether the file system entry denoted by this path is a folder.
@@ -129,7 +129,7 @@ public interface FileSystem {
      * @return true if the file system entry at path is a folder; false otherwise.
      * @throws FileSystemException
      */
-    public boolean isFolder(String path) throws FileSystemException;
+    boolean isFolder(String path) throws FileSystemException;
 
     /**
      * Tests whether the file system entry denoted by this path has child entries.
@@ -138,7 +138,7 @@ public interface FileSystem {
      * @return true if the file system entry at path has child entries; false otherwise.
      * @throws FileSystemException
      */
-    public boolean hasChildren(String path) throws FileSystemException;
+    boolean hasChildren(String path) throws FileSystemException;
 
     /**
      * Returns the length of the file denoted by this path.
@@ -148,7 +148,7 @@ public interface FileSystem {
      *         or -1L if the length can't be determined.
      * @throws FileSystemException if the path does not denote an existing file.
      */
-    public long length(String filePath) throws FileSystemException;
+    long length(String filePath) throws FileSystemException;
 
     /**
      * Returns the time that the file system entry denoted by this path
@@ -161,7 +161,7 @@ public interface FileSystem {
      *         time can't be determined.
      * @throws FileSystemException if the file system entry does not exist.
      */
-    public long lastModified(String path) throws FileSystemException;
+    long lastModified(String path) throws FileSystemException;
 
     /**
      * Set the modified time of an existing file to now.
@@ -169,7 +169,7 @@ public interface FileSystem {
      * @param filePath the path of the file.
      * @throws FileSystemException if the path does not denote an existing file.
      */
-    public void touch(String filePath) throws FileSystemException;
+    void touch(String filePath) throws FileSystemException;
 
     /**
      * Returns an array of strings naming the files and folders
@@ -181,7 +181,7 @@ public interface FileSystem {
      * @throws FileSystemException if this path does not denote a folder or if
      *                             another error occurs.
      */
-    public String[] list(String folderPath) throws FileSystemException;
+    String[] list(String folderPath) throws FileSystemException;
 
     /**
      * Returns an array of strings naming the files in the folder
@@ -193,7 +193,7 @@ public interface FileSystem {
      * @throws FileSystemException if this path does not denote a folder or if
      *                             another error occurs.
      */
-    public String[] listFiles(String folderPath) throws FileSystemException;
+    String[] listFiles(String folderPath) throws FileSystemException;
 
     /**
      * Returns an array of strings naming the folders in the folder
@@ -205,7 +205,7 @@ public interface FileSystem {
      * @throws FileSystemException if this path does not denote a folder or if
      *                             another error occurs.
      */
-    public String[] listFolders(String folderPath) throws FileSystemException;
+    String[] listFolders(String folderPath) throws FileSystemException;
 
     /**
      * Deletes the file denoted by this path.
@@ -214,7 +214,7 @@ public interface FileSystem {
      * @throws FileSystemException if this path does not denote a file or if
      *                             another error occurs.
      */
-    public void deleteFile(String filePath) throws FileSystemException;
+    void deleteFile(String filePath) throws FileSystemException;
 
     /**
      * Deletes the folder denoted by this path. Any contents of this folder
@@ -224,7 +224,7 @@ public interface FileSystem {
      * @throws FileSystemException if this path does not denote a folder or if
      *                             another error occurs.
      */
-    public void deleteFolder(String folderPath) throws FileSystemException;
+    void deleteFolder(String folderPath) throws FileSystemException;
 
     /**
      * Moves a file or folder to a new location.
@@ -233,7 +233,7 @@ public interface FileSystem {
      * @param destPath the destination path to which the file or folder is to be moved.
      * @throws FileSystemException if the move fails
      */
-    public void move(String srcPath, String destPath) throws FileSystemException;
+    void move(String srcPath, String destPath) throws FileSystemException;
 
     /**
      * Copies a file or folder to a new location.
@@ -242,6 +242,6 @@ public interface FileSystem {
      * @param destPath the destination path to which the file or folder is to be copied.
      * @throws FileSystemException if the copy fails
      */
-    public void copy(String srcPath, String destPath) throws FileSystemException;
+    void copy(String srcPath, String destPath) throws FileSystemException;
 
 }

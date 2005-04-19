@@ -22,79 +22,79 @@ package org.apache.jackrabbit.core.nodetype.xml;
 public interface Constants {
 
     /** Name of the node type definition root element. */
-    public static final String NODETYPES_ELEMENT = "nodeTypes";
+    static final String NODETYPES_ELEMENT = "nodeTypes";
 
     /** Name of the node type definition element. */
-    public static final String NODETYPE_ELEMENT = "nodeType";
+    static final String NODETYPE_ELEMENT = "nodeType";
 
     /** Name of the child node definition element. */
-    public static final String CHILDNODEDEFINITION_ELEMENT = "childNodeDefinition";
+    static final String CHILDNODEDEFINITION_ELEMENT = "childNodeDefinition";
 
     /** Name of the property definition element. */
-    public static final String PROPERTYDEFINITION_ELEMENT = "propertyDefinition";
+    static final String PROPERTYDEFINITION_ELEMENT = "propertyDefinition";
 
     /** Name of the <code>isMixin</code> attribute. */
-    public static final String ISMIXIN_ATTRIBUTE = "isMixin";
+    static final String ISMIXIN_ATTRIBUTE = "isMixin";
 
     /** Name of the <code>hasOrderableChildNodes</code> attribute. */
-    public static final String HASORDERABLECHILDNODES_ATTRIBUTE =
+    static final String HASORDERABLECHILDNODES_ATTRIBUTE =
         "hasOrderableChildNodes";
 
     /** Name of the primary item name attribute. */
-    public static final String PRIMARYITEMNAME_ATTRIBUTE = "primaryItemName";
+    static final String PRIMARYITEMNAME_ATTRIBUTE = "primaryItemName";
 
     /** Name of the supertypes element. */
-    public static final String SUPERTYPES_ELEMENT = "supertypes";
+    static final String SUPERTYPES_ELEMENT = "supertypes";
 
     /** Name of the supertype element. */
-    public static final String SUPERTYPE_ELEMENT = "supertype";
+    static final String SUPERTYPE_ELEMENT = "supertype";
 
     /** Name of the <code>name</code> attribute. */
-    public static final String NAME_ATTRIBUTE = "name";
+    static final String NAME_ATTRIBUTE = "name";
 
     /** Name of the <code>autoCreated</code> attribute. */
-    public static final String AUTOCREATED_ATTRIBUTE = "autoCreated";
+    static final String AUTOCREATED_ATTRIBUTE = "autoCreated";
 
     /** Name of the <code>mandatory</code> attribute. */
-    public static final String MANDATORY_ATTRIBUTE = "mandatory";
+    static final String MANDATORY_ATTRIBUTE = "mandatory";
 
     /** Name of the <code>onParentVersion</code> attribute. */
-    public static final String ONPARENTVERSION_ATTRIBUTE = "onParentVersion";
+    static final String ONPARENTVERSION_ATTRIBUTE = "onParentVersion";
 
     /** Name of the <code>protected</code> attribute. */
-    public static final String PROTECTED_ATTRIBUTE = "protected";
+    static final String PROTECTED_ATTRIBUTE = "protected";
 
     /** Name of the required type attribute. */
-    public static final String REQUIREDTYPE_ATTRIBUTE = "requiredType";
+    static final String REQUIREDTYPE_ATTRIBUTE = "requiredType";
 
     /** Name of the value constraints element. */
-    public static final String VALUECONSTRAINTS_ELEMENT = "valueConstraints";
+    static final String VALUECONSTRAINTS_ELEMENT = "valueConstraints";
 
     /** Name of the value constraint element. */
-    public static final String VALUECONSTRAINT_ELEMENT = "valueConstraint";
+    static final String VALUECONSTRAINT_ELEMENT = "valueConstraint";
 
     /** Name of the default values element. */
-    public static final String DEFAULTVALUES_ELEMENT = "defaultValues";
+    static final String DEFAULTVALUES_ELEMENT = "defaultValues";
 
     /** Name of the default value element. */
-    public static final String DEFAULTVALUE_ELEMENT = "defaultValue";
+    static final String DEFAULTVALUE_ELEMENT = "defaultValue";
 
     /** Name of the <code>multiple</code> attribute. */
-    public static final String MULTIPLE_ATTRIBUTE = "multiple";
+    static final String MULTIPLE_ATTRIBUTE = "multiple";
 
     /** Name of the required primary types element. */
-    public static final String REQUIREDPRIMARYTYPES_ELEMENT =
+    static final String REQUIREDPRIMARYTYPES_ELEMENT =
         "requiredPrimaryTypes";
 
     /** Name of the required primary type element. */
-    public static final String REQUIREDPRIMARYTYPE_ELEMENT =
+    static final String REQUIREDPRIMARYTYPE_ELEMENT =
         "requiredPrimaryType";
 
     /** Name of the default primary type attribute. */
-    public static final String DEFAULTPRIMARYTYPE_ATTRIBUTE =
+    static final String DEFAULTPRIMARYTYPE_ATTRIBUTE =
         "defaultPrimaryType";
 
     /** Name of the <code>sameNameSiblings</code> attribute. */
-    public static final String SAMENAMESIBLINGS_ATTRIBUTE = "sameNameSiblings";
+    static final String SAMENAMESIBLINGS_ATTRIBUTE = "sameNameSiblings";
 
 }

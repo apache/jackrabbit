@@ -32,5 +32,5 @@ public interface ExecutableQuery {
      * @return a <code>QueryResult</code>
      * @throws RepositoryException if an error occurs
      */
-    public QueryResult execute() throws RepositoryException;
+    QueryResult execute() throws RepositoryException;
 }

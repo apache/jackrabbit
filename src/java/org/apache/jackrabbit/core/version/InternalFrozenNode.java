@@ -35,41 +35,41 @@ public interface InternalFrozenNode extends InternalFreeze {
      * @return an array of internal freezes
      * @throws VersionException if the freezes cannot be retrieved
      */
-    public InternalFreeze[] getFrozenChildNodes() throws VersionException;
+    InternalFreeze[] getFrozenChildNodes() throws VersionException;
 
     /**
      * Returns the list of frozen properties.
      *
      * @return an array of property states
      */
-    public PropertyState[] getFrozenProperties();
+    PropertyState[] getFrozenProperties();
 
     /**
      * Returns the frozen UUID.
      *
      * @return the frozen uuid.
      */
-    public String getFrozenUUID();
+    String getFrozenUUID();
 
     /**
      * Returns the name of frozen primary type.
      *
      * @return the name of the frozen primary type.
      */
-    public QName getFrozenPrimaryType();
+    QName getFrozenPrimaryType();
 
     /**
      * Returns the list of names of the frozen mixin types.
      *
      * @return the list of names of the frozen mixin types.
      */
-    public QName[] getFrozenMixinTypes();
+    QName[] getFrozenMixinTypes();
 
     /**
      * Checks if this frozen node has the frozen version history
      * @param uuid
      * @return
      */
-    public boolean hasFrozenHistory(String uuid);
+    boolean hasFrozenHistory(String uuid);
 
 }

@@ -31,19 +31,19 @@ import java.util.List;
  */
 public interface Importer {
 
-    public static final int IMPORT_UUID_CREATE_NEW =
+    static final int IMPORT_UUID_CREATE_NEW =
             ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
-    public static final int IMPORT_UUID_COLLISION_REMOVE_EXISTING =
+    static final int IMPORT_UUID_COLLISION_REMOVE_EXISTING =
             ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING;
-    public static final int IMPORT_UUID_COLLISION_REPLACE_EXISTING =
+    static final int IMPORT_UUID_COLLISION_REPLACE_EXISTING =
             ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
-    public static final int IMPORT_UUID_COLLISION_THROW =
+    static final int IMPORT_UUID_COLLISION_THROW =
             ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW;
 
     /**
      * @throws RepositoryException
      */
-    public void start() throws RepositoryException;
+    void start() throws RepositoryException;
 
     /**
      * @param nodeInfo
@@ -51,22 +51,22 @@ public interface Importer {
      * @param nsContext prefix mappings of current context
      * @throws RepositoryException
      */
-    public void startNode(NodeInfo nodeInfo, List propInfos,
+    void startNode(NodeInfo nodeInfo, List propInfos,
                           NamespaceResolver nsContext) throws RepositoryException;
 
     /**
      * @param nodeInfo
      * @throws RepositoryException
      */
-    public void endNode(NodeInfo nodeInfo) throws RepositoryException;
+    void endNode(NodeInfo nodeInfo) throws RepositoryException;
 
     /**
      * @throws RepositoryException
      */
-    public void end() throws RepositoryException;
+    void end() throws RepositoryException;
 
     //--------------------------------------------------------< inner classes >
-    public static class NodeInfo {
+    static class NodeInfo {
         private QName name;
         private QName nodeTypeName;
         private QName[] mixinNames;
@@ -116,7 +116,7 @@ public interface Importer {
         }
     }
 
-    public static class PropInfo {
+    static class PropInfo {
         private QName name;
         private int type;
         private TextValue[] values;
@@ -159,7 +159,7 @@ public interface Importer {
      * <code>TextValue</code> represents a serialized property value read
      * from a System or Document View XML document.
      */
-    public interface TextValue {
+    interface TextValue {
         /**
          * Returns the length of the serialized value.
          *

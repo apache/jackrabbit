@@ -32,19 +32,19 @@ public interface NodeTypeRegistryListener {
      *
      * @param ntName name of the node type that has been registered
      */
-    public void nodeTypeRegistered(QName ntName);
+    void nodeTypeRegistered(QName ntName);
 
     /**
      * Called when a node type has been re-registered.
      *
      * @param ntName name of the node type that has been registered
      */
-    public void nodeTypeReRegistered(QName ntName);
+    void nodeTypeReRegistered(QName ntName);
 
     /**
      * Called when a node type has been deregistered.
      *
      * @param ntName name of the node type that has been unregistered
      */
-    public void nodeTypeUnregistered(QName ntName);
+    void nodeTypeUnregistered(QName ntName);
 }

@@ -37,7 +37,7 @@ public interface TextFilter {
      * @return whether this <code>TextFilter</code> can index content of
      *         <code>mimeType</code>.
      */
-    public boolean canFilter(String mimeType);
+    boolean canFilter(String mimeType);
 
     /**
      * Creates an text representation of a binary property <code>data</code>.
@@ -54,6 +54,6 @@ public interface TextFilter {
      * @throws RepositoryException if an error occurs while reading from the
      *                             node or if the data is malformed.
      */
-    public Map doFilter(PropertyState data, String encoding)
+    Map doFilter(PropertyState data, String encoding)
             throws RepositoryException;
 }

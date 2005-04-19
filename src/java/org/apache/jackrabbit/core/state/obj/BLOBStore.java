@@ -34,7 +34,7 @@ public interface BLOBStore {
      * @return a string identifying the blob data
      * @throws Exception
      */
-    public String put(PropertyId id, int index, InputStream in, long size) throws Exception;
+    String put(PropertyId id, int index, InputStream in, long size) throws Exception;
 
     /**
      *
@@ -42,7 +42,7 @@ public interface BLOBStore {
      * @return
      * @throws Exception
      */
-    public FileSystemResource get(String blobId) throws Exception;
+    FileSystemResource get(String blobId) throws Exception;
 
     /**
      *
@@ -50,5 +50,5 @@ public interface BLOBStore {
      * @return
      * @throws Exception
      */
-    public boolean remove(String blobId) throws Exception;
+    boolean remove(String blobId) throws Exception;
 }

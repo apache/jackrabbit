@@ -27,30 +27,30 @@ public interface PropDef extends ItemDef {
      * Returns the id of this property definition.
      * @return the id of this property definition.
      */
-    public PropDefId getId();
+    PropDefId getId();
 
     /**
      * Returns the required type.
      * @return the required type.
      */
-    public int getRequiredType();
+    int getRequiredType();
 
     /**
      * Returns the array of value constraints.
      * @return the array of value constraints.
      */
-    public ValueConstraint[] getValueConstraints();
+    ValueConstraint[] getValueConstraints();
 
     /**
      * Returns the array of default values.
      * @return the array of default values.
      */
-    public InternalValue[] getDefaultValues();
+    InternalValue[] getDefaultValues();
 
     /**
      * Returns the 'multiple' flag.
      * @return the 'multiple' flag.
      */
-    public boolean isMultiple();
+    boolean isMultiple();
 
 }

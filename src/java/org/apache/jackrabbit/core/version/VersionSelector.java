@@ -33,5 +33,5 @@ public interface VersionSelector {
      * @return A version or <code>null</code>.
      * @throws RepositoryException if an error occurrs.
      */
-    public Version select(VersionHistory versionHistory) throws RepositoryException;
+    Version select(VersionHistory versionHistory) throws RepositoryException;
 }

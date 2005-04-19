@@ -21,27 +21,27 @@ package org.apache.jackrabbit.core.query;
  */
 public interface QueryNodeVisitor {
 
-    public Object visit(QueryRootNode node, Object data);
+    Object visit(QueryRootNode node, Object data);
 
-    public Object visit(OrQueryNode node, Object data);
+    Object visit(OrQueryNode node, Object data);
 
-    public Object visit(AndQueryNode node, Object data);
+    Object visit(AndQueryNode node, Object data);
 
-    public Object visit(NotQueryNode node, Object data);
+    Object visit(NotQueryNode node, Object data);
 
-    public Object visit(ExactQueryNode node, Object data);
+    Object visit(ExactQueryNode node, Object data);
 
-    public Object visit(NodeTypeQueryNode node, Object data);
+    Object visit(NodeTypeQueryNode node, Object data);
 
-    public Object visit(TextsearchQueryNode node, Object data);
+    Object visit(TextsearchQueryNode node, Object data);
 
-    public Object visit(PathQueryNode node, Object data);
+    Object visit(PathQueryNode node, Object data);
 
-    public Object visit(LocationStepQueryNode node, Object data);
+    Object visit(LocationStepQueryNode node, Object data);
 
-    public Object visit(RelationQueryNode node, Object data);
+    Object visit(RelationQueryNode node, Object data);
 
-    public Object visit(OrderQueryNode node, Object data);
+    Object visit(OrderQueryNode node, Object data);
 
-    public Object visit(DerefQueryNode node, Object data);
+    Object visit(DerefQueryNode node, Object data);
 }

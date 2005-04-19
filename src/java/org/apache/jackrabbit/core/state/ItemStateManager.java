@@ -30,7 +30,7 @@ public interface ItemStateManager {
      * @throws NoSuchItemStateException if the item does not exist
      * @throws ItemStateException if an error occurs
      */
-    public ItemState getItemState(ItemId id)
+    ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
@@ -40,7 +40,7 @@ public interface ItemStateManager {
      * @return <code>true</code> if an item state exists,
      *         otherwise <code>false</code>
      */
-    public boolean hasItemState(ItemId id);
+    boolean hasItemState(ItemId id);
 
     /**
      * Return a node references object, given its target id
@@ -49,6 +49,6 @@ public interface ItemStateManager {
      * @throws NoSuchItemStateException if the item does not exist
      * @throws ItemStateException if an error occurs
      */
-    public NodeReferences getNodeReferences(NodeReferencesId id)
+    NodeReferences getNodeReferences(NodeReferencesId id)
         throws NoSuchItemStateException, ItemStateException;
 }

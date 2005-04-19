@@ -41,7 +41,7 @@ public interface LockManager {
      *         node is locked and <code>isDeep</code> is <code>true</code>
      * @see javax.jcr.Node#lock
      */
-    public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
+    Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException;
 
     /**
@@ -52,7 +52,7 @@ public interface LockManager {
      * @throws LockException if this node is not locked
      * @see javax.jcr.Node#getLock
      */
-    public Lock getLock(NodeImpl node) throws LockException, RepositoryException;
+    Lock getLock(NodeImpl node) throws LockException, RepositoryException;
 
     /**
      * Removes the lock on a node given by its path.
@@ -61,7 +61,7 @@ public interface LockManager {
      *         does not have the correct lock token
      * @see javax.jcr.Node#unlock
      */
-    public void unlock(NodeImpl node) throws LockException, RepositoryException;
+    void unlock(NodeImpl node) throws LockException, RepositoryException;
 
     /**
      * Returns <code>true</code> if the node given holds a lock;
@@ -71,7 +71,7 @@ public interface LockManager {
      *         otherwise returns <code>false</code>
      * @see javax.jcr.Node#holdsLock
      */
-    public boolean holdsLock(NodeImpl node) throws RepositoryException;
+    boolean holdsLock(NodeImpl node) throws RepositoryException;
 
     /**
      * Returns <code>true</code> if this node is locked either as a result
@@ -83,7 +83,7 @@ public interface LockManager {
      * node; otherwise returns <code>false</code>
      * @see javax.jcr.Node#isLocked
      */
-    public boolean isLocked(NodeImpl node) throws RepositoryException;
+    boolean isLocked(NodeImpl node) throws RepositoryException;
 
     /**
      * Check whether the node given is locked by somebody else than the
@@ -94,7 +94,7 @@ public interface LockManager {
      * @throws LockException if write access to the specified node is not allowed
      * @throws RepositoryException if some other error occurs
      */
-    public void checkLock(NodeImpl node)
+    void checkLock(NodeImpl node)
             throws LockException, RepositoryException;
 
     /**
@@ -107,7 +107,7 @@ public interface LockManager {
      * @throws LockException if write access to the specified path is not allowed
      * @throws RepositoryException if some other error occurs
      */
-    public void checkLock(Path path, Session session)
+    void checkLock(Path path, Session session)
             throws LockException, RepositoryException;
 
     /**
@@ -115,12 +115,12 @@ public interface LockManager {
      * @param session session that has a added lock token
      * @param lt added lock token
      */
-    public void lockTokenAdded(SessionImpl session, String lt);
+    void lockTokenAdded(SessionImpl session, String lt);
 
     /**
      * Invoked by a session to inform that a lock token has been removed.
      * @param session session that has a removed lock token
      * @param lt removed lock token
      */
-    public void lockTokenRemoved(SessionImpl session, String lt);
+    void lockTokenRemoved(SessionImpl session, String lt);
 }

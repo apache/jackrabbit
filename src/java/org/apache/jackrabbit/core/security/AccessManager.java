@@ -32,15 +32,15 @@ public interface AccessManager {
     /**
      * READ permission constant
      */
-    public static final int READ = 1;
+    static final int READ = 1;
     /**
      * WRITE permission constant
      */
-    public static final int WRITE = 2;
+    static final int WRITE = 2;
     /**
      * REMOVE permission constant
      */
-    public static final int REMOVE = 4;
+    static final int REMOVE = 4;
 
     /**
      * Initialize this access manager. An <code>AccessDeniedException</code> will
@@ -52,7 +52,7 @@ public interface AccessManager {
      *                               to the specified workspace.
      * @throws Exception             if another error occurs
      */
-    public void init(AMContext context) throws AccessDeniedException, Exception;
+    void init(AMContext context) throws AccessDeniedException, Exception;
 
     /**
      * Close this access manager. After having closed an access manager,
@@ -60,7 +60,7 @@ public interface AccessManager {
      *
      * @throws Exception if an error occurs
      */
-    public void close() throws Exception;
+    void close() throws Exception;
 
     /**
      * Determines whether the specified <code>permissions</code> are granted
@@ -78,7 +78,7 @@ public interface AccessManager {
      * @throws ItemNotFoundException if the target item does not exist
      * @throws RepositoryException   it an error occurs
      */
-    public void checkPermission(ItemId id, int permissions)
+    void checkPermission(ItemId id, int permissions)
             throws AccessDeniedException, ItemNotFoundException, RepositoryException;
 
     /**
@@ -97,7 +97,7 @@ public interface AccessManager {
      * @throws ItemNotFoundException if the target item does not exist
      * @throws RepositoryException   if another error occurs
      */
-    public boolean isGranted(ItemId id, int permissions)
+    boolean isGranted(ItemId id, int permissions)
             throws ItemNotFoundException, RepositoryException;
 
     /**
@@ -111,6 +111,6 @@ public interface AccessManager {
      *                                  does not exist.
      * @throws RepositoryException      if another error occurs
      */
-    public boolean canAccess(String workspaceName)
+    boolean canAccess(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException;
 }

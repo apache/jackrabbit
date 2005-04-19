@@ -29,12 +29,12 @@ public interface TransactionListener {
      *
      * @param tx transaction that was committed
      */
-    public void transactionCommitted(TransactionContext tx);
+    void transactionCommitted(TransactionContext tx);
 
     /**
      * Transaction was rolled back
      *
      * @param tx transaction that was rolled back
      */
-    public void transactionRolledBack(TransactionContext tx);
+    void transactionRolledBack(TransactionContext tx);
 }

@@ -30,7 +30,7 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
      *
      * @return the id of the version history
      */
-    public String getVersionHistoryId();
+    String getVersionHistoryId();
 
     /**
      * Returns the version history that was assigned to the node at
@@ -39,7 +39,7 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
      * @return the internal version history.
      * @throws VersionException if the history cannot be retrieved.
      */
-    public InternalVersionHistory getVersionHistory()
+    InternalVersionHistory getVersionHistory()
             throws VersionException;
 
     /**
@@ -48,7 +48,7 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
      *
      * @return the id of the base version
      */
-    public String getBaseVersionId();
+    String getBaseVersionId();
 
     /**
      * Returns the base version that was assigned to the node at
@@ -57,5 +57,5 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
      * @return the inernal base version
      * @throws VersionException if the version could not be retrieved
      */
-    public InternalVersion getBaseVesion() throws VersionException;
+    InternalVersion getBaseVesion() throws VersionException;
 }

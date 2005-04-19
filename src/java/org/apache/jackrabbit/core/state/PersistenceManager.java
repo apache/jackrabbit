@@ -68,7 +68,7 @@ public interface PersistenceManager {
      * @param context persistence manager context
      * @throws Exception if the persistence manager intialization failed
      */
-    public void init(PMContext context) throws Exception;
+    void init(PMContext context) throws Exception;
 
     /**
      * Closes the persistence manager. The consistency of the persistent
@@ -84,7 +84,7 @@ public interface PersistenceManager {
      *
      * @throws Exception if the persistence manager failed to close properly
      */
-    public void close() throws Exception;
+    void close() throws Exception;
 
     /**
      * Creates a new node state instance with the given id.
@@ -92,7 +92,7 @@ public interface PersistenceManager {
      * @param id node id
      * @return node state instance
      */
-    public NodeState createNew(NodeId id);
+    NodeState createNew(NodeId id);
 
     /**
      * Creates a new property state instance with the given id.
@@ -100,7 +100,7 @@ public interface PersistenceManager {
      * @param id property id
      * @return property state instance
      */
-    public PropertyState createNew(PropertyId id);
+    PropertyState createNew(PropertyId id);
 
     /**
      * Load the persistent members of a node state.
@@ -110,7 +110,7 @@ public interface PersistenceManager {
      * @throws NoSuchItemStateException if the node state does not exist
      * @throws ItemStateException if another error occurs
      */
-    public NodeState load(NodeId id)
+    NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
@@ -121,7 +121,7 @@ public interface PersistenceManager {
      * @throws NoSuchItemStateException if the property state does not exist
      * @throws ItemStateException if another error occurs
      */
-    public PropertyState load(PropertyId id)
+    PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
@@ -131,7 +131,7 @@ public interface PersistenceManager {
      * @throws NoSuchItemStateException if the target node does not exist
      * @throws ItemStateException if another error occurs
      */
-    public NodeReferences load(NodeReferencesId id)
+    NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
@@ -142,7 +142,7 @@ public interface PersistenceManager {
      *         <code>false</code> otherwise
      * @throws ItemStateException on persistence manager errors
      */
-    public boolean exists(NodeId id) throws ItemStateException;
+    boolean exists(NodeId id) throws ItemStateException;
 
     /**
      * Checks whether the identified property exists.
@@ -152,7 +152,7 @@ public interface PersistenceManager {
      *         <code>false</code> otherwise
      * @throws ItemStateException on persistence manager errors
      */
-    public boolean exists(PropertyId id) throws ItemStateException;
+    boolean exists(PropertyId id) throws ItemStateException;
 
     /**
      * Checks whether references of the identified target node exist.
@@ -162,7 +162,7 @@ public interface PersistenceManager {
      *         <code>false</code> otherwise
      * @throws ItemStateException on persistence manager errors
      */
-    public boolean exists(NodeReferencesId targetId) throws ItemStateException;
+    boolean exists(NodeReferencesId targetId) throws ItemStateException;
 
     /**
      * Atomically saves the given set of changes.
@@ -170,6 +170,6 @@ public interface PersistenceManager {
      * @param changeLog change log containing states that were changed
      * @throws ItemStateException if the changes could not be saved
      */
-    public void store(ChangeLog changeLog) throws ItemStateException;
+    void store(ChangeLog changeLog) throws ItemStateException;
 
 }

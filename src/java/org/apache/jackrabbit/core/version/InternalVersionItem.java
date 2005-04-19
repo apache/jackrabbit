@@ -29,13 +29,13 @@ public interface InternalVersionItem {
      *
      * @return
      */
-    public String getId();
+    String getId();
 
     /**
      * returns the parent version item or null
      *
      * @return
      */
-    public InternalVersionItem getParent();
+    InternalVersionItem getParent();
 
 }
