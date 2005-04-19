@@ -32,15 +32,17 @@ public interface AccessManager {
     /**
      * READ permission constant
      */
-    static final int READ = 1;
+    int READ = 1;
+
     /**
      * WRITE permission constant
      */
-    static final int WRITE = 2;
+    int WRITE = 2;
+
     /**
      * REMOVE permission constant
      */
-    static final int REMOVE = 4;
+    int REMOVE = 4;
 
     /**
      * Initialize this access manager. An <code>AccessDeniedException</code> will

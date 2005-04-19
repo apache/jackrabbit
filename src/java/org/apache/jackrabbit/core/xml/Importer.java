@@ -1,7 +1,7 @@
 /*
  * Copyright 2004-2005 The Apache Software Foundation or its licensors,
  *                     as applicable.
-  *
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,6 @@ import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Workspace;
 import javax.jcr.ImportUUIDBehavior;
 import java.io.IOException;
 import java.io.Reader;
@@ -31,13 +30,13 @@ import java.util.List;
  */
 public interface Importer {
 
-    static final int IMPORT_UUID_CREATE_NEW =
+    int IMPORT_UUID_CREATE_NEW =
             ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
-    static final int IMPORT_UUID_COLLISION_REMOVE_EXISTING =
+    int IMPORT_UUID_COLLISION_REMOVE_EXISTING =
             ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING;
-    static final int IMPORT_UUID_COLLISION_REPLACE_EXISTING =
+    int IMPORT_UUID_COLLISION_REPLACE_EXISTING =
             ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
-    static final int IMPORT_UUID_COLLISION_THROW =
+    int IMPORT_UUID_COLLISION_THROW =
             ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW;
 
     /**
@@ -166,7 +165,7 @@ public interface Importer {
          * @return the length of the serialized value
          * @throws IOException if an I/O error occurs
          */
-        public long length() throws IOException;
+        long length() throws IOException;
 
         /**
          * Retrieves the serialized value.
@@ -174,7 +173,7 @@ public interface Importer {
          * @return the serialized value
          * @throws IOException if an I/O error occurs
          */
-        public String retrieve() throws IOException;
+        String retrieve() throws IOException;
 
         /**
          * Returns a <code>Reader</code> for reading the serialized value.
@@ -182,6 +181,6 @@ public interface Importer {
          * @return a <code>Reader</code> for reading the serialized value.
          * @throws IOException if an I/O error occurs
          */
-        public Reader reader() throws IOException;
+        Reader reader() throws IOException;
     }
 }

@@ -27,7 +27,7 @@ public interface ItemDef  {
     /**
      * '*' denoting residual child item definition
      */
-    static final QName ANY_NAME = new QName(Constants.NS_DEFAULT_URI, "*");
+    QName ANY_NAME = new QName(Constants.NS_DEFAULT_URI, "*");
 
     /**
      * Returns the name of this item def.
