@@ -25,10 +25,11 @@ import java.io.PrintWriter;
  * are not derived from <code>javax.jcr.RepositoryException</code>.
  */
 public abstract class BaseException extends Exception {
+
     /**
      * Root failure cause
      */
-    protected Throwable rootCause;
+    private final Throwable rootCause;
 
     /**
      * Constructs a new instance of this class with <code>null</code> as its
@@ -36,6 +37,7 @@ public abstract class BaseException extends Exception {
      */
     public BaseException() {
         super();
+        rootCause = null;
     }
 
     /**
@@ -47,6 +49,7 @@ public abstract class BaseException extends Exception {
      */
     public BaseException(String message) {
         super(message);
+        rootCause = null;
     }
 
     /**
@@ -82,9 +85,10 @@ public abstract class BaseException extends Exception {
         String s = super.getMessage();
         if (rootCause == null) {
             return s;
+        } else if (s == null) {
+            return rootCause.getMessage();
         } else {
-            String s2 = rootCause.getMessage();
-            return s == null ? s2 : s + ": " + s2;
+            return s + ": " + rootCause.getMessage();
         }
     }
 
