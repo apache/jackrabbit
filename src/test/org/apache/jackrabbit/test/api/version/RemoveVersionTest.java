@@ -178,7 +178,7 @@ public class RemoveVersionTest extends AbstractVersionTest {
      *  in <code>nodetype</code>.
      */
     public void testReferentialIntegrityException() throws RepositoryException {
-        // create reference: n1.p1 -> versionableNode
+        // create reference: n1.p1 -> version
         Node n1 = testRootNode.addNode(nodeName2, testNodeType);
         n1.setProperty(propertyName1, new ReferenceValue(version));
         testRootNode.save();
