@@ -80,10 +80,10 @@ public class QName implements Cloneable, Comparable, Serializable {
     /** The memorized string representation of this qualified name. */
     private transient String string;
 
-    /** The namespace URI of this qualified name. */
+    /** The internalized namespace URI of this qualified name. */
     protected final String namespaceURI;
 
-    /** The local part of this qualified name. */
+    /** The internalized local part of this qualified name. */
     protected final String localName;
 
     /**
@@ -101,8 +101,10 @@ public class QName implements Cloneable, Comparable, Serializable {
         if (localName == null) {
             throw new IllegalArgumentException("invalid localName specified");
         }
-        this.namespaceURI = namespaceURI;
-        this.localName = localName;
+        // internalize both namespaceURI and localName to improve performance
+        // of QName comparisons
+        this.namespaceURI = namespaceURI.intern();
+        this.localName = localName.intern();
         hash = 0;
     }
 
@@ -322,8 +324,10 @@ public class QName implements Cloneable, Comparable, Serializable {
         }
         if (obj instanceof QName) {
             QName other = (QName) obj;
-            return localName.equals(other.localName)
-                    && namespaceURI.equals(other.namespaceURI);
+            // localName & namespaceURI are internalized,
+            // we only have to compare their references
+            return localName == other.localName
+                    && namespaceURI == other.namespaceURI;
         }
         return false;
     }
@@ -372,5 +376,4 @@ public class QName implements Cloneable, Comparable, Serializable {
     public int compareTo(Object o) throws ClassCastException {
         return toString().compareTo(((QName) o).toString());
     }
-
 }
