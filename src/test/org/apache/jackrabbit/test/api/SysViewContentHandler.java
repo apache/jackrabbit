@@ -43,6 +43,8 @@ import java.util.Stack;
 import java.util.Hashtable;
 import java.util.Enumeration;
 
+import junit.framework.Assert;
+
 /**
  * ContentHandler implementation which checks if the system view export of
  * a node tree is compliant to the specification.
@@ -357,9 +359,8 @@ class SysViewContentHandler extends DefaultHandler {
     }
 
     // helpers for test result forward
-    private void checkCondition(String str, boolean bool) throws SAXException {
-        if (!bool)
-            throw new SAXException(new ConditionException(str));
+    private void checkCondition(String str, boolean bool) {
+        Assert.assertTrue(str, bool);
     }
 
     public class ConditionException extends SAXException {
@@ -445,7 +446,7 @@ class SysViewContentHandler extends DefaultHandler {
         }
         else {
             // compare the propElems with the properties of the given node
-            for (int i = 0; i < propElems.size() -1; i++) {
+            for (int i = 0; i < propElems.size(); i++) {
                 correctVal = false;
                 PropElemData propElem = (PropElemData) propElems.get(i);
                 int propType = propElem.type;
@@ -485,7 +486,6 @@ class SysViewContentHandler extends DefaultHandler {
                                 else {
                                     str = prop.getString();
                                 }
-                                str = escapeString(str);
                                 String val = (String) propElem.values.get(0);
 
                                if (prop.getType() == PropertyType.BINARY) {
@@ -504,17 +504,16 @@ class SysViewContentHandler extends DefaultHandler {
                                 checkCondition("Number of exported values of property " +
                                         prop.getPath() + " does not match the number " +
                                         "its values", vals.length == size);
-                                for (int j = 0; j < size -1; j++) {
+                                for (int j = 0; j < size; j++) {
                                     // we know that the order of the values
                                     // of a mulitval prop is preserved during export
-                                    String val = (String)propElem.values.get(i);
+                                    String val = (String)propElem.values.get(j);
 
                                     if (prop.getType() == PropertyType.BINARY) {
                                         // decode value
                                         val = decodeBase64(val);
                                     }
                                     String str = vals[j].getString();
-                                    str = escapeString(str);
                                     correctVal = (val.equals(str));
                                     checkCondition("Property value of property " + propElem.name
                                             + " of node " + nodeElem.path +
@@ -618,33 +617,6 @@ class SysViewContentHandler extends DefaultHandler {
         Base64.decode(str, bos);
         String decoded = bos.toString("UTF-8");
         return decoded;
-    }
-
-    /**
-     * Escapes the predefined entity references in XML.
-     * @param str
-     * @return  the escaped string
-     */
-    private String escapeString (String str) {
-        String orig = str;
-        String amp = "&";
-        String less = "<";
-        String great = ">";
-        String apo = "'";
-        String quot = "\"";
-
-        String r_amp = "&amp;";
-        String r_less = "&lt;";
-        String r_great = "&gt;";
-        String r_apo = "&apos;";
-        String r_quot = "&quot;";
-
-        String repl = orig.replaceAll(amp, r_amp);
-        repl =  repl.replaceAll(less, r_less);
-        repl =  repl.replaceAll(great, r_great);
-        repl =  repl.replaceAll(apo, r_apo);
-        repl =  repl.replaceAll(quot, r_quot);
-        return repl;
     }
 
     /**
