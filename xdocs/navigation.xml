@@ -32,10 +32,11 @@
       </item>
       <item name="Core&#xA0;Operations"     href="/arch/operate/index.html"  collapse="true">
         <item name="Start-up,&#xA0;Initialize" href="/arch/operate/startup.html"/>
+        <item name="QueryManager&#xA0;Implementation" href="/arch/operate/query.html"/>
       </item>
     </item>
     <item name="First&#xA0;Steps"       href="/firststeps.html" />
-    <item name="JCR&#xA0;API&#xA0;Documentation (0.16.2)" href="http://www.day.com/maven/jsr170/javadocs/jcr-0.16.2/" target="_blank"/>
+    <item name="JCR&#xA0;API&#xA0;Documentation (0.16.4)" href="http://www.day.com/maven/jsr170/javadocs/jcr-0.16.4/" target="_blank"/>
     <item name="Layout"                 href="/layout.html"/>
     <item name="Downloads"              href="/downloads.html"/>
   </menu>
