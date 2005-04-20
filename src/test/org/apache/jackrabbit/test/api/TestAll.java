@@ -125,6 +125,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ImpersonateTest.class);
         suite.addTestSuite(CheckPermissionTest.class);
 
+        suite.addTestSuite(DocumentViewImportTest.class);
+
         return suite;
     }
 }
