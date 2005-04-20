@@ -501,7 +501,6 @@ public class WorkspaceImporter implements Importer, Constants {
             // destroy target state (pass overlayed state since target state
             // might have been modified during unlinking)
             stateMgr.destroy(target.getOverlayedState());
-            stateMgr.destroy(target);
         } else {
             // store target
             stateMgr.store(target);
