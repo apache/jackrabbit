@@ -317,7 +317,11 @@ public class PathMap {
          */
         private static int getOneBasedIndex(Path.PathElement element) {
             int index = element.getIndex();
-            return index == 0 ? 1 : index;
+            if (index == 0) {
+                return 1;
+            } else {
+                return index;
+            }
         }
 
         /**

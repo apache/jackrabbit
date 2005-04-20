@@ -1107,7 +1107,11 @@ public class WorkspaceImpl implements Workspace, Constants {
         if (values != null) {
             InternalValue[] newValues = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
-                newValues[i] = values[i] != null ? values[i].createCopy() : null;
+                if (values[i] != null) {
+                    newValues[i] = values[i].createCopy();
+                } else {
+                    newValues[i] = null;
+                }
             }
             newState.setValues(values);
             // FIXME delegate to 'node type instance handler'
@@ -1366,8 +1370,11 @@ public class WorkspaceImpl implements Workspace, Constants {
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
             // do cross-workspace copy
-            internalCopy(srcAbsPath, srcWsp, destAbsPath,
-                    removeExisting ? CLONE_REMOVE_EXISTING : CLONE);
+            int mode = CLONE;
+            if (removeExisting) {
+                mode = CLONE_REMOVE_EXISTING;
+            }
+            internalCopy(srcAbsPath, srcWsp, destAbsPath, mode);
         } finally {
             if (srcSession != null) {
                 // we don't need the other session anymore, logout
@@ -1528,7 +1535,10 @@ public class WorkspaceImpl implements Workspace, Constants {
                 targetState.removeParentUUID(srcParentState.getUUID());
             }
 
-            int srcNameIndex = srcName.getIndex() == 0 ? 1 : srcName.getIndex();
+            int srcNameIndex = srcName.getIndex();
+            if (srcNameIndex == 0) {
+                srcNameIndex = 1;
+            }
             srcParentState.removeChildNodeEntry(srcName.getName(), srcNameIndex);
 
             // store states

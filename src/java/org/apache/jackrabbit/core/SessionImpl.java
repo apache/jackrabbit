@@ -390,7 +390,13 @@ public class SessionImpl implements Session, Constants {
      * @throws RepositoryException
      */
     public void dump(PrintStream ps) throws RepositoryException {
-        ps.println("Session: " + (userId == null ? "unknown" : userId) + " (" + this + ")");
+        ps.print("Session: ");
+        if (userId == null) {
+            ps.print("unknown");
+        } else {
+            ps.print(userId);
+        }
+        ps.println(" (" + this + ")");
         ps.println();
         itemMgr.dump(ps);
         ps.println();
@@ -904,8 +910,11 @@ public class SessionImpl implements Session, Constants {
         // add target to new parent
         destParentNode.createChildNodeLink(destName.getName(), targetUUID);
         // remove target from old parent
-        srcParentNode.removeChildNode(srcName.getName(),
-                srcName.getIndex() == 0 ? 1 : srcName.getIndex());
+        int index = srcName.getIndex();
+        if (index == 0) {
+            index = 1;
+        }
+        srcParentNode.removeChildNode(srcName.getName(), index);
         // change definition of target if necessary
         NodeDefinitionImpl oldTargetDef = (NodeDefinitionImpl) targetNode.getDefinition();
         NodeDefId oldTargetDefId = oldTargetDef.unwrap().getId();

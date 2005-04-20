@@ -539,10 +539,12 @@ class PathConstraint extends ValueConstraint {
     public String getDefinition(NamespaceResolver nsResolver) {
         try {
             String p = path.toJCRPath(nsResolver);
-            if (deep) {
-                return (path.denotesRoot() ? p + "*" : p + "/*");
-            } else {
+            if (!deep) {
                 return p;
+            } else if (path.denotesRoot()) {
+                return p + "*";
+            } else {
+                return p + "/*";
             }
         } catch (NoPrefixDeclaredException npde) {
             // should never get here, return raw definition as fallback

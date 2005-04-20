@@ -306,7 +306,9 @@ public class ImportHandler extends DefaultHandler {
          * {@inheritDoc}
          */
         boolean declarePrefix(String prefix, String uri) {
-            uri = DEFAULT_URI.equals(uri) ? DUMMY_DEFAULT_URI : uri;
+            if (DEFAULT_URI.equals(uri)) {
+                uri = DUMMY_DEFAULT_URI;
+            }
             return nsContext.declarePrefix(prefix, uri);
         }
 
@@ -318,15 +320,20 @@ public class ImportHandler extends DefaultHandler {
             String uri = nsContext.getURI(prefix);
             if (uri == null) {
                 throw new NamespaceException("unknown prefix");
+            } else if (DUMMY_DEFAULT_URI.equals(uri)) {
+                return DEFAULT_URI;
+            } else {
+                return uri;
             }
-            return DUMMY_DEFAULT_URI.equals(uri) ? DEFAULT_URI : uri;
         }
 
         /**
          * {@inheritDoc}
          */
         public String getPrefix(String uri) throws NamespaceException {
-            uri = DEFAULT_URI.equals(uri) ? DUMMY_DEFAULT_URI : uri;
+            if (DEFAULT_URI.equals(uri)) {
+                uri = DUMMY_DEFAULT_URI;
+            }
             String prefix = nsContext.getPrefix(uri);
             if (prefix == null) {
                 /**

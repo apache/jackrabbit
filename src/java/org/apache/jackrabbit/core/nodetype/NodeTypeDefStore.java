@@ -84,7 +84,7 @@ public class NodeTypeDefStore {
      * @return
      */
     public boolean remove(QName name) {
-        return ntDefs.remove(name) != null ? true : false;
+        return (ntDefs.remove(name) != null);
     }
 
     /**
