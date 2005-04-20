@@ -67,6 +67,9 @@ public class ConfigurationParser {
     /** Name of the access manager configuration element. */
     private static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
 
+    /** Name of the login module configuration element. */
+    private static final String LOGIN_MODULE_ELEMENT = "LoginModule";
+
     /** Name of the general workspace configuration element. */
     private static final String WORKSPACES_ELEMENT = "Workspaces";
 
@@ -138,6 +141,7 @@ public class ConfigurationParser {
      *     &lt;FileSystem ...&gt;
      *     &lt;Security appName="..."&gt;
      *       &lt;AccessManager ...&gt;
+     *       &lt;LoginModule ... (optional)&gt;
      *     &lt;/Security&gt;
      *     &lt;Workspaces rootPath="..." defaultWorkspace="..."/&gt;
      *     &lt;Workspace ...&gt;
@@ -195,6 +199,14 @@ public class ConfigurationParser {
         AccessManagerConfig amc = new AccessManagerConfig(
                 parseBeanConfig(security, ACCESS_MANAGER_ELEMENT));
 
+        // Optional login module
+        Element loginModule = getElement(security, LOGIN_MODULE_ELEMENT, false);
+        
+        LoginModuleConfig lmc = null;
+        if (loginModule != null) {
+            lmc = new LoginModuleConfig(parseBeanConfig(security, LOGIN_MODULE_ELEMENT));
+        }
+        
         // General workspace configuration
         Element workspaces = getElement(root, WORKSPACES_ELEMENT);
         String workspaceDirectory = replaceVariables(
@@ -208,7 +220,7 @@ public class ConfigurationParser {
         // Versioning configuration
         VersioningConfig vc = parseVersioningConfig(root);
 
-        return new RepositoryConfig(home, appName, amc, fsc,
+        return new RepositoryConfig(home, appName, amc, lmc, fsc,
                 workspaceDirectory, defaultWorkspace, template, vc);
     }
 
@@ -526,9 +538,25 @@ public class ConfigurationParser {
      * @param parent parent element
      * @param name name of the child element
      * @return named child element
+     * @throws ConfigurationException 
      * @throws ConfigurationException if the child element is not found
      */
-    private Element getElement(Element parent, String name)
+    private Element getElement(Element parent, String name) throws ConfigurationException {
+        return getElement(parent, name, true);
+    }
+
+    /**
+     * Returns the named child of the given parent element.
+     *
+     * @param parent parent element
+     * @param name name of the child element
+     * @param required indicates if the child element is required
+     * @return named child element, or <code>null</code> if not found and
+     *         <code>required</code> is <code>false</code>.
+     * @throws ConfigurationException if the child element is not found and
+     *         <code>required</code> is <code>true</code>.
+     */
+    private Element getElement(Element parent, String name, boolean required)
             throws ConfigurationException {
         NodeList children = parent.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -538,9 +566,13 @@ public class ConfigurationParser {
                 return (Element) child;
             }
         }
-        throw new ConfigurationException(
-                "Configuration element " + name + " not found in "
-                + parent.getNodeName() + ".");
+        if (required) {
+            throw new ConfigurationException(
+                    "Configuration element " + name + " not found in "
+                    + parent.getNodeName() + ".");
+        } else {
+            return null;
+        }
     }
 
     /**

@@ -121,6 +121,11 @@ public class RepositoryConfig {
     private final AccessManagerConfig amc;
 
     /**
+     * Repository login module configuration. Optional, can be null
+     */
+    private final LoginModuleConfig lmc;
+
+    /**
      * Repository file system configuration.
      */
     private final FileSystemConfig fsc;
@@ -155,19 +160,21 @@ public class RepositoryConfig {
      * @param home repository home directory
      * @param name repository name for a JAAS app-entry configuration
      * @param amc access manager configuration
+     * @param lmc login module configuration (can be <code>null</code>)
      * @param fsc file system configuration
      * @param workspaceDirectory workspace root directory
      * @param defaultWorkspace name of the default workspace
      * @param vc versioning configuration
      */
     RepositoryConfig(String home, String name,
-            AccessManagerConfig amc, FileSystemConfig fsc,
+            AccessManagerConfig amc, LoginModuleConfig lmc, FileSystemConfig fsc,
             String workspaceDirectory, String defaultWorkspace,
             Element template, VersioningConfig vc) {
         this.workspaces = new HashMap();
         this.home = home;
         this.name = name;
         this.amc = amc;
+        this.lmc = lmc;
         this.fsc = fsc;
         this.workspaceDirectory = workspaceDirectory;
         this.defaultWorkspace = defaultWorkspace;
@@ -361,6 +368,16 @@ public class RepositoryConfig {
      */
     public AccessManagerConfig getAccessManagerConfig() {
         return amc;
+    }
+
+    /**
+     * Returns the repository login module configuration.
+     * 
+     * @return login module configuration, or <code>null</code> if standard
+     *         JAAS mechanism should be used.
+     */
+    public LoginModuleConfig getLoginModuleConfig() {
+        return lmc;
     }
 
     /**

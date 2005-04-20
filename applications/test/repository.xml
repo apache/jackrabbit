@@ -46,7 +46,7 @@
 
         it also specifies the access manager to be used (AccessManager element).
     -->
-    <!ELEMENT Security (AccessManager)>
+    <!ELEMENT Security (AccessManager, LoginModule?)>
     <!ATTLIST Security
       appName CDATA #REQUIRED>
 
@@ -67,7 +67,16 @@
       name CDATA #REQUIRED
       value CDATA #REQUIRED>
 
-    <!--
+     <!--
+        the LoginModule element optionally specifies a JAAS login module to
+        authenticate users. This feature allows the use of Jackrabbit in a
+        non-JAAS environment.
+    -->
+    <!ELEMENT LoginModule (param*)>
+    <!ATTLIST LoginModule
+      class CDATA #REQUIRED>
+
+   <!--
         the Workspaces element specifies the workspaces root directory
         (rootPath attribute) and the name of the default workspace
         (defaultWorkspace attribute).
@@ -137,6 +146,11 @@
         <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager">
             <!-- <param name="config" value="${rep.home}/access.xml"/> -->
         </AccessManager>
+
+        <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule">
+           <!-- anonymous user name ('anonymous' is the default value) -->
+           <param name="anonymousId" value="anonymous"/>
+        </LoginModule>
     </Security>
 
     <!--
