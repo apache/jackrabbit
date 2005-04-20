@@ -207,9 +207,12 @@ public class NodeImpl extends ItemImpl implements Node {
                 if (pe.denotesName()) {
                     // check if node entry exists
                     NodeState thisState = (NodeState) state;
+                    int index = pe.getIndex();
+                    if (index == 0) {
+                        index = 1;
+                    }
                     NodeState.ChildNodeEntry cne =
-                            thisState.getChildNodeEntry(pe.getName(),
-                                    pe.getIndex() == 0 ? 1 : pe.getIndex());
+                            thisState.getChildNodeEntry(pe.getName(), index);
                     if (cne != null) {
                         return new NodeId(cne.getUUID());
                     } else {
@@ -565,7 +568,9 @@ public class NodeImpl extends ItemImpl implements Node {
     protected void removeChildNode(QName nodeName, int index) throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        index = (index == 0) ? 1 : index;
+        if (index == 0) {
+            index = 1;
+        }
         NodeState.ChildNodeEntry entry = thisState.getChildNodeEntry(nodeName, index);
         if (entry == null) {
             String msg = "failed to remove child " + nodeName + " of " + safeGetJCRPath();
@@ -714,7 +719,11 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeDefinitionImpl def;
         try {
-            def = getApplicableChildNodeDefinition(nodeName, nodeType == null ? null : nodeType.getQName());
+            QName nodeTypeName = null;
+            if (nodeType != null) {
+                nodeTypeName = nodeType.getQName();
+            }
+            def = getApplicableChildNodeDefinition(nodeName, nodeTypeName);
         } catch (RepositoryException re) {
             String msg = "no definition found in parent node's node type for new node";
             log.debug(msg);
@@ -1453,8 +1462,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        NodeTypeImpl nt = (nodeTypeName == null) ?
-                null : session.getNodeTypeManager().getNodeType(nodeTypeName);
+        NodeTypeImpl nt = null;
+        if (nodeTypeName != null) {
+            nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
+        }
         return internalAddChildNode(nodeName, nt, uuid);
     }
 
@@ -1561,7 +1572,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
+        int type = PropertyType.UNDEFINED;
+        if (value != null) {
+            type = value.getType();
+        }
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
@@ -1997,7 +2011,10 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, Value value)
             throws ValueFormatException, VersionException, LockException,
             ConstraintViolationException, RepositoryException {
-        int type = (value == null) ? PropertyType.UNDEFINED : value.getType();
+        int type = PropertyType.UNDEFINED;
+        if (value != null) {
+            type = value.getType();
+        }
         return setProperty(name, value, type);
     }
 
@@ -2303,7 +2320,11 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         NodeId id = resolveRelativeNodePath(relPath);
-        return (id != null) ? itemMgr.itemExists(id) : false;
+        if (id != null) {
+            return itemMgr.itemExists(id);
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -2489,7 +2510,11 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         PropertyId id = resolveRelativePropertyPath(relPath);
-        return (id != null) ? itemMgr.itemExists(id) : false;
+        if (id != null) {
+            return itemMgr.itemExists(id);
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -2639,7 +2664,11 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // @todo optimize, no need to build entire path just to find this node's index
         int index = getPrimaryPath().getNameElement().getIndex();
-        return (index == 0) ? 1 : index;
+        if (index == 0) {
+            return 1;
+        } else {
+            return index;
+        }
     }
 
     //------------------------------< versioning support: public Node methods >

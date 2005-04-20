@@ -149,8 +149,16 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         while (iter.hasNext()) {
             ItemId id = (ItemId) iter.next();
             ItemImpl item = (ItemImpl) itemCache.get(id);
-            ps.print(item.isNode() ? "Node: " : "Prop: ");
-            ps.print(item.isTransient() ? "transient " : "          ");
+            if (item.isNode()) {
+                ps.print("Node: ");
+            } else {
+                ps.print("Property: ");
+            }
+            if (item.isTransient()) {
+                ps.print("transient ");
+            } else {
+                ps.print("          ");
+            }
             ps.println(id + "\t" + item.getPath() + " (" + item + ")");
         }
     }

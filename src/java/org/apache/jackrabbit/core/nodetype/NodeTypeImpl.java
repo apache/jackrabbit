@@ -308,7 +308,11 @@ public class NodeTypeImpl implements NodeType {
     public String getPrimaryItemName() {
         try {
             QName piName = ntd.getPrimaryItemName();
-            return piName == null ? null : piName.toJCRName(nsResolver);
+            if (piName != null) {
+                return piName.toJCRName(nsResolver);
+            } else {
+                return null;
+            }
         } catch (NoPrefixDeclaredException npde) {
             // should never get here
             log.error("encountered unregistered namespace in name of primary item", npde);

@@ -166,9 +166,12 @@ public final class Path {
     public static Path create(String jcrPath, NamespaceResolver resolver,
                               boolean normalize)
             throws MalformedPathException {
-        return normalize
-                ? parse(jcrPath, null, resolver).getNormalizedPath()
-                : parse(jcrPath, null, resolver);
+        Path path = parse(jcrPath, null, resolver);
+        if (normalize) {
+            return path.getNormalizedPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -186,9 +189,12 @@ public final class Path {
     public static Path create(Path parent, String relJCRPath,
                               NamespaceResolver resolver, boolean canonicalize)
             throws MalformedPathException {
-        return canonicalize
-                ? parse(relJCRPath, parent, resolver).getCanonicalPath()
-                : parse(relJCRPath, parent, resolver);
+        Path path = parse(relJCRPath, parent, resolver);
+        if (canonicalize) {
+            return path.getCanonicalPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -212,9 +218,12 @@ public final class Path {
         PathBuilder pb = new PathBuilder(parent.getElements());
         pb.addAll(relPath.getElements());
 
-        return normalize
-                ? pb.getPath().getNormalizedPath()
-                : pb.getPath();
+        Path path = pb.getPath();
+        if (normalize) {
+            return path.getNormalizedPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -234,9 +243,12 @@ public final class Path {
         PathBuilder pb = new PathBuilder(parent.getElements());
         pb.addLast(name);
 
-        return normalize
-                ? pb.getPath().getNormalizedPath()
-                : pb.getPath();
+        Path path = pb.getPath();
+        if (normalize) {
+            return path.getNormalizedPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -257,9 +269,12 @@ public final class Path {
         PathBuilder pb = new PathBuilder(parent.getElements());
         pb.addLast(name, index);
 
-        return normalize
-                ? pb.getPath().getNormalizedPath()
-                : pb.getPath();
+        Path path = pb.getPath();
+        if (normalize) {
+            return path.getNormalizedPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -407,9 +422,13 @@ public final class Path {
                 throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' is not a legal path element");
             }
         }
-        return resolver == null
-                ? null
-                : new Path((PathElement[]) list.toArray(new PathElement[list.size()]), isNormalized);
+        if (resolver != null) {
+            return new Path(
+                    (PathElement[]) list.toArray(new PathElement[list.size()]),
+                    isNormalized);
+        } else {
+            return null;
+        }
     }
 
     //------------------------------------------------------< utility methods >
@@ -502,7 +521,11 @@ public final class Path {
                     throw new MalformedPathException("Path can not be canonicalized: unresolvable '..' element");
                 }
                 queue.removeLast();
-                last = queue.isEmpty() ? null : (PathElement) queue.getLast();
+                if (queue.isEmpty()) {
+                    last = null;
+                } else {
+                    last = (PathElement) queue.getLast();
+                }
             } else {
                 queue.add(last = elem);
             }

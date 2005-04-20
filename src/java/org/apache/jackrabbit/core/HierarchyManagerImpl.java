@@ -223,9 +223,12 @@ public class HierarchyManagerImpl implements HierarchyManager {
             Path.PathElement elem = elems[i];
             QName name = elem.getName();
             int index = elem.getIndex();
-            if (parentState.hasChildNodeEntry(name, index == 0 ? 1 : index)) {
+            if (index == 0) {
+                index = 1;
+            }
+            if (parentState.hasChildNodeEntry(name, index)) {
                 // child node
-                NodeState.ChildNodeEntry nodeEntry = parentState.getChildNodeEntry(name, index == 0 ? 1 : index);
+                NodeState.ChildNodeEntry nodeEntry = parentState.getChildNodeEntry(name, index);
                 if (i == elems.length - 1) {
                     // last element in the path
                     return new NodeId(nodeEntry.getUUID());

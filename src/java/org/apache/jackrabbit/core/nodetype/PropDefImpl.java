@@ -74,8 +74,11 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
         if (id != null) {
             throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
-        this.valueConstraints =
-                (valueConstraints == null) ? ValueConstraint.EMPTY_ARRAY : valueConstraints;
+        if (valueConstraints != null) {
+            this.valueConstraints = valueConstraints;
+        } else {
+            this.valueConstraints = ValueConstraint.EMPTY_ARRAY;
+        }
     }
 
     /**
@@ -87,8 +90,11 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
         if (id != null) {
             throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }
-        this.defaultValues =
-                (defaultValues == null) ? InternalValue.EMPTY_ARRAY : defaultValues;
+        if (defaultValues != null) {
+            this.defaultValues = defaultValues;
+        } else {
+            this.defaultValues = InternalValue.EMPTY_ARRAY;
+        }
     }
 
     /**

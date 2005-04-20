@@ -364,7 +364,11 @@ public class XASessionImpl extends SessionImpl
      * is also considered to be equal.
      */
     private static boolean stringsEqual(String s1, String s2) {
-        return s1 == null ? s2 == null : s1.equals(s2);
+        if (s1 == null) {
+            return s2 == null;
+        } else {
+            return s1.equals(s2);
+        }
     }
 
     /**

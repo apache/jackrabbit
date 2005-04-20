@@ -1016,7 +1016,11 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
-            reqType = value != null ? value.getType() : PropertyType.STRING;
+            if (value != null) {
+                reqType = value.getType();
+            } else {
+                reqType = PropertyType.STRING;
+            }
         }
 
         if (value == null) {
