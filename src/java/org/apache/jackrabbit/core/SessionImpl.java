@@ -16,32 +16,19 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.config.AccessManagerConfig;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
-import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
-import org.apache.log4j.Logger;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.security.AccessControlException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -65,20 +52,34 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.security.AccessControlException;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+
+import org.apache.commons.collections.ReferenceMap;
+import org.apache.jackrabbit.core.config.AccessManagerConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.AuthContext;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
+import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
+import org.apache.log4j.Logger;
+import org.apache.xml.serialize.OutputFormat;
+import org.apache.xml.serialize.XMLSerializer;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -106,10 +107,10 @@ public class SessionImpl implements Session, Constants {
     protected final RepositoryImpl rep;
 
     /**
-     * the LoginContext of this session (can be null if this
+     * the AuthContext of this session (can be null if this
      * session was not instantiated through a login process)
      */
-    protected LoginContext loginContext;
+    protected AuthContext loginContext;
 
     /**
      * the Subject of this session
@@ -187,7 +188,7 @@ public class SessionImpl implements Session, Constants {
      *                               workspace
      * @throws RepositoryException   if another error occurs
      */
-    protected SessionImpl(RepositoryImpl rep, LoginContext loginContext,
+    protected SessionImpl(RepositoryImpl rep, AuthContext loginContext,
                           WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
         this(rep, loginContext.getSubject(), wspConfig);

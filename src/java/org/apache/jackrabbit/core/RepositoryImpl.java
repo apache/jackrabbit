@@ -16,7 +16,34 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Properties;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import javax.security.auth.Subject;
+
 import org.apache.commons.collections.ReferenceMap;
+import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
@@ -32,7 +59,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
-import org.apache.jackrabbit.core.security.CredentialsCallbackHandler;
+import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PersistenceManager;
@@ -43,32 +70,6 @@ import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.version.persistence.NativePVM;
 import org.apache.log4j.Logger;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Properties;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -579,7 +580,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    SessionImpl createSession(LoginContext loginContext,
+    SessionImpl createSession(AuthContext loginContext,
                               String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
@@ -814,20 +815,23 @@ public class RepositoryImpl implements Repository, SessionListener,
             }
         }
 
-        // login through JAAS login context
-        CredentialsCallbackHandler cbHandler =
-                new CredentialsCallbackHandler(credentials);
-        LoginContext lc;
+        // login either using JAAS or our own LoginModule
+        AuthContext authCtx;
         try {
-            lc = new LoginContext(repConfig.getAppName(), cbHandler);
-            lc.login();
+            LoginModuleConfig lmc = this.repConfig.getLoginModuleConfig();
+            if (lmc == null) {
+                authCtx = new AuthContext.JAAS(repConfig.getAppName(), credentials);
+            } else {
+                authCtx = new AuthContext.Local(lmc, credentials);
+            }
+            authCtx.login();
         } catch (javax.security.auth.login.LoginException le) {
             throw new LoginException(le.getMessage());
         }
 
         // create session
         try {
-            return createSession(lc, workspaceName);
+            return createSession(authCtx, workspaceName);
         } catch (AccessDeniedException ade) {
             // authenticated subject is not authorized for the specified workspace
             throw new LoginException(ade.getMessage());
@@ -933,7 +937,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      * @throws RepositoryException   If any other error occurrs creating the
      *                               session.
      */
-    protected SessionImpl createSessionInstance(LoginContext loginContext,
+    protected SessionImpl createSessionInstance(AuthContext loginContext,
                                                 WorkspaceConfig wspConfig)
             throws AccessDeniedException, RepositoryException {
 
