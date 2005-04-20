@@ -28,8 +28,8 @@ import javax.jcr.query.QueryResult;
  * query result.
  *
  * @test
- * @sources JcrPathTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.JcrPathTest
+ * @sources SQLJcrPathTest.java
+ * @executeClass org.apache.jackrabbit.test.api.query.SQLJcrPathTest
  * @keywords sql
  */
 public class SQLJcrPathTest extends AbstractQueryTest {
