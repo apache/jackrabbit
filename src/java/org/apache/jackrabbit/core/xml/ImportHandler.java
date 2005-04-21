@@ -98,7 +98,7 @@ public class ImportHandler extends DefaultHandler {
         // log exception and carry on...
         log.error("error encountered at line: " + e.getLineNumber()
                 + ", column: " + e.getColumnNumber()
-                + " while parsing XML stream", e);
+                + " while parsing XML stream: " + e.toString());
     }
 
     /**
@@ -108,7 +108,7 @@ public class ImportHandler extends DefaultHandler {
         // log and re-throw exception
         log.error("fatal error encountered at line: " + e.getLineNumber()
                 + ", column: " + e.getColumnNumber()
-                + " while parsing XML stream", e);
+                + " while parsing XML stream: " + e.toString());
         throw e;
     }
 
