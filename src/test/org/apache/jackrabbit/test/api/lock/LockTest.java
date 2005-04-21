@@ -334,6 +334,32 @@ public class LockTest extends AbstractJCRTest {
     }
 
     /**
+     * Test Lock.isSessionScoped()
+     */
+    public void testIsSessionScoped() throws RepositoryException {
+        // create two lockable nodes
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixLockable);
+        Node n2 = testRootNode.addNode(nodeName2, testNodeType);
+        n2.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock node 1 session-scoped
+        Lock lock1 = n1.lock(false, true);
+        assertTrue("Lock.isSessionScoped() must be true if the lock " +
+                "is session-scoped",
+                lock1.isSessionScoped());
+
+        // lock node 2 open-scoped
+        Lock lock2 = n2.lock(false, false);
+        assertFalse("Lock.isSessionScoped() must be false if the lock " +
+                "is open-scoped",
+                lock2.isSessionScoped());
+
+        n2.unlock();
+    }
+
+    /**
      * Test locks are released when session logs out
      */
     public void testLogout() throws Exception {
