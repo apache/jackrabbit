@@ -331,8 +331,31 @@ public class SharedItemStateManager extends ItemStateCache
                 // ignore
             }
         }
-        // create new one
-        return new NodeReferences(id);
+
+        // throw
+        throw new NoSuchItemStateException(id.toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasNodeReferences(NodeReferencesId id) {
+
+        // check persistence manager
+        try {
+            if (persistMgr.exists(id)) {
+                return true;
+            }
+        } catch (ItemStateException e) {
+            // ignore
+        }
+        // check virtual providers
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].hasNodeReferences(id)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //-------------------------------------------------------- other operations
@@ -404,6 +427,34 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
+     * Check targets of modified node references exist.
+     * @param log change log
+     * @throws ItemStateException if some target was not found
+     */
+    protected void checkTargetsExist(ChangeLog log) throws ItemStateException {
+        Iterator iter = log.modifiedRefs();
+        while (iter.hasNext()) {
+            NodeReferences refs = (NodeReferences) iter.next();
+            NodeId id = new NodeId(refs.getUUID());
+
+            for (int i = 0; i < virtualProviders.length; i++) {
+                VirtualItemStateProvider provider = virtualProviders[i];
+                if (provider.hasItemState(id)) {
+                    refs = null;
+                    break;
+                }
+            }
+            if (refs != null && refs.hasReferences()) {
+                if (!log.has(id) && !hasItemState(id)) {
+                    String msg = "Target node " + id
+                            + " of REFERENCE property does not exist";
+                    throw new ItemStateException(msg);
+                }
+            }
+        }
+    }
+
+    /**
      * Store modifications registered in a <code>ChangeLog</code>. The items
      * contained in the <tt>ChangeLog</tt> are not states returned by this
      * item state manager but rather must be reconnected to items provided
@@ -448,11 +499,7 @@ public class SharedItemStateManager extends ItemStateCache
             }
             if (refs != null) {
                 if (refs.hasReferences()) {
-                    try {
-                        if (local.get(id) == null && !hasItemState(id)) {
-                            throw new NoSuchItemStateException();
-                        }
-                    } catch (NoSuchItemStateException e) {
+                    if (!local.has(id) && !hasItemState(id)) {
                         String msg = "Target node " + id
                                 + " of REFERENCE property does not exist";
                         throw new ItemStateException(msg);

@@ -625,6 +625,21 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         }
     }
 
+    /**
+     * Get or create a node references object for a given target id.
+     * @param id target id
+     * @return node references object
+     * @throws ItemStateException if an error occurs
+     */
+    protected NodeReferences getOrCreateNodeReferences(NodeReferencesId id)
+            throws ItemStateException {
+
+        if (stateMgr.hasNodeReferences(id)) {
+            return stateMgr.getNodeReferences(id);
+        }
+        return new NodeReferences(id);
+    }
+
     private Collection checkReferences(Iterator iterDirty, Iterator iterRemoved)
             throws ReferentialIntegrityException, RepositoryException {
 
@@ -656,7 +671,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                                 refs = (NodeReferences) dirtyNodeRefs.get(id);
                             } else {
                                 try {
-                                    refs = stateMgr.getNodeReferences(id);
+                                    refs = getOrCreateNodeReferences(id);
                                 } catch (ItemStateException e) {
                                     String msg = itemMgr.safeGetJCRPath(id)
                                             + ": failed to load node references";
@@ -710,7 +725,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                             refs = (NodeReferences) dirtyNodeRefs.get(refsId);
                         } else {
                             try {
-                                refs = stateMgr.getNodeReferences(refsId);
+                                refs = getOrCreateNodeReferences(refsId);
                             } catch (ItemStateException e) {
                                 String msg = itemMgr.safeGetJCRPath(targetId)
                                         + ": failed to load node references";
@@ -750,7 +765,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                             refs = (NodeReferences) dirtyNodeRefs.get(id);
                         } else {
                             try {
-                                refs = stateMgr.getNodeReferences(id);
+                                refs = getOrCreateNodeReferences(id);
                             } catch (ItemStateException e) {
                                 String msg = itemMgr.safeGetJCRPath(id)
                                         + ": failed to load node references";
@@ -774,12 +789,14 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             NodeState nodeState = (NodeState) iter.next();
             // check if node is referenced
             NodeReferencesId id = new NodeReferencesId(nodeState.getUUID());
-            NodeReferences refs;
+            NodeReferences refs = null;
             if (dirtyNodeRefs.containsKey(id)) {
                 refs = (NodeReferences) dirtyNodeRefs.get(id);
             } else {
                 try {
-                    refs = stateMgr.getNodeReferences(id);
+                    if (stateMgr.hasNodeReferences(id)) {
+                        refs = stateMgr.getNodeReferences(id);
+                    }
                 } catch (ItemStateException e) {
                     String msg = itemMgr.safeGetJCRPath(id)
                             + ": failed to load node references";
@@ -787,7 +804,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     throw new RepositoryException(msg, e);
                 }
             }
-            if (refs.hasReferences()) {
+            if (refs != null && refs.hasReferences()) {
                 String msg = nodeState.getId()
                         + ": the node cannot be removed because it is being referenced.";
                 log.warn(msg);

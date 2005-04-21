@@ -623,18 +623,21 @@ public class WorkspaceImpl implements Workspace, Constants {
         if ((options & CHECK_REFERENCES) == CHECK_REFERENCES) {
             EffectiveNodeType ent = getEffectiveNodeType(targetState);
             if (ent.includesNodeType(MIX_REFERENCEABLE)) {
-                try {
-                    NodeReferencesId refsId = new NodeReferencesId(targetState.getUUID());
-                    NodeReferences refs = stateMgr.getNodeReferences(refsId);
-                    if (refs.hasReferences()) {
-                        throw new ReferentialIntegrityException(hierMgr.safeGetJCRPath(targetId)
-                                + ": cannot remove node with references");
+                NodeReferencesId refsId = new NodeReferencesId(targetState.getUUID());
+                if (stateMgr.hasNodeReferences(refsId)) {
+                    try {
+                        NodeReferences refs = stateMgr.getNodeReferences(refsId);
+                        if (refs.hasReferences()) {
+                            throw new ReferentialIntegrityException(
+                                    hierMgr.safeGetJCRPath(targetId) +
+                                    ": cannot remove node with references");
+                        }
+                    } catch (ItemStateException ise) {
+                        String msg = "internal error: failed to check references on "
+                                + hierMgr.safeGetJCRPath(targetId);
+                        log.error(msg, ise);
+                        throw new RepositoryException(msg, ise);
                     }
-                } catch (ItemStateException ise) {
-                    String msg = "internal error: failed to check references on "
-                            + hierMgr.safeGetJCRPath(targetId);
-                    log.error(msg, ise);
-                    throw new RepositoryException(msg, ise);
                 }
             }
         }

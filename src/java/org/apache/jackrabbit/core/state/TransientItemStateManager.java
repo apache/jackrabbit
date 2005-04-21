@@ -91,6 +91,13 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         throw new ItemStateException("getNodeReferences() not implemented");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasNodeReferences(NodeReferencesId id) {
+        return false;
+    }
+    
     //------------------< methods for listing & querying state of cache/attic >
 
     /**
@@ -355,6 +362,13 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
                 throws NoSuchItemStateException, ItemStateException {
 
             throw new ItemStateException("getNodeReferences() not implemented");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean hasNodeReferences(NodeReferencesId id) {
+            return false;
         }
     }
 }

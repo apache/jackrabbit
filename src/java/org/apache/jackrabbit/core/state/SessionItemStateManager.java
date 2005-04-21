@@ -199,6 +199,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         return persistentStateMgr.getNodeReferences(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasNodeReferences(NodeReferencesId id) {
+        return persistentStateMgr.hasNodeReferences(id);
+    }
+
     //--------------------------------------------< UpdatableItemStateManager >
     /**
      * {@inheritDoc}

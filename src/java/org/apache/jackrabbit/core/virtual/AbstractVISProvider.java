@@ -139,6 +139,13 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, C
         throw new NoSuchItemStateException(id.getUUID());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasNodeReferences(NodeReferencesId id) {
+        return false;
+    }
+
     //-------------------------------------------< VirtualItemStateProvider >---
 
     /**
