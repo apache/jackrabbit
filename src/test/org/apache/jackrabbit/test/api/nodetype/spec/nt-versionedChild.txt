@@ -9,7 +9,7 @@ HasOrderableChildNodes
 PrimaryItemName
   null
 PropertyDefinition
-  Name jcr:child
+  Name jcr:childVersionHistory
   RequiredType REFERENCE
   ValueConstraints [nt:versionHistory]
   DefaultValues null

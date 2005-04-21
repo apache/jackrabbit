@@ -215,8 +215,8 @@ public class VersionItemStateProvider extends AbstractVISProvider {
                         id.getUUID(),
                         NT_VERSIONEDCHILD);
                 // IMO, this should be exposed aswell
-                // state.setPropertyValue(JCR_BASE_VERSION, InternalValue.create(UUID.fromString(fn.getBaseVersionId())));
-                state.setPropertyValue(JCR_CHILD, InternalValue.create(UUID.fromString(fn.getVersionHistoryId())));
+                // state.setPropertyValue(JCR_BASEVERSION, InternalValue.create(UUID.fromString(fn.getBaseVersionId())));
+                state.setPropertyValue(JCR_CHILDVERSIONHISTORY, InternalValue.create(UUID.fromString(fn.getVersionHistoryId())));
             } else {
                 // not found, throw
                 throw new NoSuchItemStateException(id.toString());
