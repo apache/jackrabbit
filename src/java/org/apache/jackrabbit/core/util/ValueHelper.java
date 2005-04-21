@@ -89,6 +89,25 @@ public class ValueHelper {
     }
 
     /**
+     * @param srcValues
+     * @param targetType
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     */
+    public static Value[] convert(Value[] srcValues, int targetType)
+            throws ValueFormatException, IllegalArgumentException {
+        if (srcValues == null) {
+            return null;
+        }
+        Value[] newValues = new Value[srcValues.length];
+        for (int i = 0; i < srcValues.length; i++) {
+            newValues[i] = convert(srcValues[i], targetType);
+        }
+        return newValues;
+    }
+
+    /**
      * @param srcValue
      * @param targetType
      * @return
