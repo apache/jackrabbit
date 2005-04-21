@@ -92,7 +92,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
         // serialize node and subtree
         process(startNode, 0);
 
-        // clear namespace declarations and end document 
+        // clear namespace declarations and end document
         endNamespaceDeclarations();
         contentHandler.endDocument();
     }

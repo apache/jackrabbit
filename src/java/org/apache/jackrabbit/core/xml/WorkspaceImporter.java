@@ -1,7 +1,7 @@
 /*
  * Copyright 2004-2005 The Apache Software Foundation or its licensors,
  *                     as applicable.
-  *
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -351,20 +351,20 @@ public class WorkspaceImporter implements Importer, Constants {
 /*
         // FIXME delegate to NodeTypeInstanceHandler
         } else if (MIX_VERSIONABLE.equals(declaringNT)) {
-	    // mix:versionable node type
-	    if (JCR_VERSIONHISTORY.equals(name)) {
-		// jcr:versionHistory property
-		genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
-	    } else if (JCR_BASEVERSION.equals(name)) {
-		// jcr:baseVersion property
-		genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-	    } else if (JCR_ISCHECKEDOUT.equals(name)) {
-		// jcr:isCheckedOut property
-		genValues = new InternalValue[]{InternalValue.create(true)};
-	    } else if (JCR_PREDECESSORS.equals(name)) {
-		// jcr:predecessors property
-		genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-	    }
+        // mix:versionable node type
+        if (JCR_VERSIONHISTORY.equals(name)) {
+        // jcr:versionHistory property
+        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
+        } else if (JCR_BASEVERSION.equals(name)) {
+        // jcr:baseVersion property
+        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
+        } else if (JCR_ISCHECKEDOUT.equals(name)) {
+        // jcr:isCheckedOut property
+        genValues = new InternalValue[]{InternalValue.create(true)};
+        } else if (JCR_PREDECESSORS.equals(name)) {
+        // jcr:predecessors property
+        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
+        }
 */
         }
 

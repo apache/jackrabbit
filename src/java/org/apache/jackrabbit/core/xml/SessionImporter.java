@@ -1,7 +1,7 @@
 /*
  * Copyright 2004-2005 The Apache Software Foundation or its licensors,
  *                     as applicable.
-  *
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -276,8 +276,8 @@ public class SessionImporter implements Importer {
             for (int i = 0; i < tva.length; i++) {
                 TextValue tv = tva[i];
 
-                if (targetType == PropertyType.NAME ||
-                        targetType == PropertyType.PATH) {
+                if (targetType == PropertyType.NAME
+                        || targetType == PropertyType.PATH) {
                     // NAME and PATH require special treatment because
                     // they depend on the current namespace context
                     // of the xml document

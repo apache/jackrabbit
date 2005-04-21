@@ -54,7 +54,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -601,12 +600,12 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 }
 
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
-                writer.write("<" + PROPERTY_ELEMENT + " " +
-                        NAME_ATTRIBUTE + "=\"" + state.getName() + "\" " +
-                        PARENTUUID_ATTRIBUTE + "=\"" + state.getParentUUID() + "\" " +
-                        MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" " +
-                        DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" " +
-                        TYPE_ATTRIBUTE + "=\"" + typeName + "\">\n");
+                writer.write("<" + PROPERTY_ELEMENT + " "
+                        + NAME_ATTRIBUTE + "=\"" + state.getName() + "\" "
+                        + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentUUID() + "\" "
+                        + MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" "
+                        + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
+                        + TYPE_ATTRIBUTE + "=\"" + typeName + "\">\n");
                 // values
                 writer.write("\t<" + VALUES_ELEMENT + ">\n");
                 InternalValue[] values = state.getValues();
@@ -646,7 +645,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                 }
                             } else {
                                 // escape '<' and '&'
-                                char chars[] = val.toString().toCharArray();
+                                char[] chars = val.toString().toCharArray();
                                 int j = 0, last = 0;
                                 while (j < chars.length) {
                                     char c = chars[j];

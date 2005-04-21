@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -488,8 +487,8 @@ public class NodeTypeRegistry implements Constants {
             try {
                 EffectiveNodeType est = getEffectiveNodeType(supertypes);
                 // make sure that all primary types except nt:base extend from nt:base
-                if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName()) &&
-                        !est.includesNodeType(NT_BASE)) {
+                if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName())
+                        && !est.includesNodeType(NT_BASE)) {
                     String msg = "[" + name
                             + "] all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
                     log.debug(msg);

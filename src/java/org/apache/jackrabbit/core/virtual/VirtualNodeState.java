@@ -89,7 +89,11 @@ public class VirtualNodeState extends NodeState implements Constants {
      */
     public InternalValue[] getPropertyValues(QName name) throws NoSuchItemStateException {
         VirtualPropertyState ps = getProperty(name);
-        return ps == null ? null : ps.getValues();
+        if (ps == null) {
+            return null;
+        } else {
+            return ps.getValues();
+        }
     }
 
     /**
@@ -100,7 +104,11 @@ public class VirtualNodeState extends NodeState implements Constants {
      */
     public InternalValue getPropertyValue(QName name) throws NoSuchItemStateException {
         VirtualPropertyState ps = getProperty(name);
-        return ps == null || ps.getValues().length == 0 ? null : ps.getValues()[0];
+        if (ps == null || ps.getValues().length == 0) {
+            return null;
+        } else {
+            return ps.getValues()[0];
+        }
     }
 
     /**

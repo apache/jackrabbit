@@ -98,7 +98,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         this.locksFile = locksFile;
 
         ((WorkspaceImpl) session.getWorkspace()).getObservationManager().
-                addEventListener(this, Event.NODE_ADDED|Event.NODE_REMOVED,
+                addEventListener(this, Event.NODE_ADDED | Event.NODE_REMOVED,
                         "/", true, null, null, true);
 
         if (locksFile.exists()) {
@@ -106,8 +106,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                 load();
             } catch (IOException e) {
                 throw new RepositoryException(
-                        "I/O error while reading locks from '" +
-                        locksFile.getPath() + "'", e);
+                        "I/O error while reading locks from '"
+                        + locksFile.getPath() + "'", e);
             }
         }
     }
@@ -119,8 +119,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         try {
             save();
         } catch (IOException e) {
-            log.warn("I/O error while saving locks to '" +
-                    locksFile.getPath() + "': " + e.getMessage());
+            log.warn("I/O error while saving locks to '"
+                    + locksFile.getPath() + "': " + e.getMessage());
             log.debug("Root cause: ", e);
         }
     }
@@ -166,8 +166,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             info.setLive(true);
             lockMap.put(path, info);
         } catch (RepositoryException e) {
-            log.warn("Unable to recreate lock '" + lockToken +
-                    "': " + e.getMessage());
+            log.warn("Unable to recreate lock '" + lockToken
+                    + "': " + e.getMessage());
             log.debug("Root cause: ", e);
         }
     }
@@ -287,8 +287,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             node.save();
             
         } catch (RepositoryException e) {
-            log.warn("Unable to unlock session-scoped lock on node '" +
-                    info.lockToken + "': " + e.getMessage());
+            log.warn("Unable to unlock session-scoped lock on node '"
+                    + info.lockToken + "': " + e.getMessage());
             log.debug("Root cause: ", e);
         }
 
@@ -435,8 +435,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                     if (info.getLockHolder() == null) {
                         info.setLockHolder(session);
                     } else {
-                        log.warn("Adding lock token has no effect: " +
-                                "lock already held by other session.");
+                        log.warn("Adding lock token has no effect: "
+                                + "lock already held by other session.");
                     }
                 }
             }
@@ -464,8 +464,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                     if (session.equals(info.getLockHolder())) {
                         info.setLockHolder(null);
                     } else {
-                        log.warn("Removing lock token has no effect: " +
-                                "lock held by other session.");
+                        log.warn("Removing lock token has no effect: "
+                                + "lock held by other session.");
                     }
                 }
             }

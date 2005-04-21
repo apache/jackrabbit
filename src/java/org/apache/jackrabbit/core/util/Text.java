@@ -29,7 +29,7 @@ public class Text {
     /**
      * used for the md5
      */
-    public final static char[] hexTable = "0123456789abcdef".toCharArray();
+    public static final char[] hexTable = "0123456789abcdef".toCharArray();
 
     /**
      * Calculate an MD5 hash of the string given.

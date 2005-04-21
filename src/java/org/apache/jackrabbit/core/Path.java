@@ -527,7 +527,8 @@ public final class Path {
                     last = (PathElement) queue.getLast();
                 }
             } else {
-                queue.add(last = elem);
+                last = elem;
+                queue.add(elem);
             }
         }
         if (queue.isEmpty()) {

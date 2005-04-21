@@ -180,7 +180,7 @@ public class ValueHelper {
 
                     case PropertyType.BINARY:
                     case PropertyType.STRING:
-                    case PropertyType.NAME:	// a name is always also a relative path
+                    case PropertyType.NAME: // a name is always also a relative path
                         // try conversion via string
                         String path;
                         try {
@@ -225,7 +225,7 @@ public class ValueHelper {
 
                     case PropertyType.BINARY:
                     case PropertyType.STRING:
-                    case PropertyType.PATH:	// path might be a name (relative path of length 1)
+                    case PropertyType.PATH: // path might be a name (relative path of length 1)
                         // try conversion via string
                         String name;
                         try {

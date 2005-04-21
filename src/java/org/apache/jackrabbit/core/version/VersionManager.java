@@ -78,7 +78,7 @@ public interface VersionManager {
      * is <code>null</code>, the label is removed from the respective version.
      * In either case, the version the label was previously assigned is returned,
      * or <code>null</code> of the label was not moved.
-     * 
+     *
      * @param history
      * @param version
      * @param label

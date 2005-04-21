@@ -49,7 +49,7 @@ public class AMContext {
      * hierarchy manager for resolving ItemId-to-Path mapping
      */
     private final HierarchyManager hierMgr;
-    
+
     /**
      * name of the workspace
      */

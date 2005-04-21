@@ -186,7 +186,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     public boolean hasFrozenHistory(String uuid) {
         try {
             List entries = node.getState().getChildNodeEntries(uuid);
-            if (entries.size()>0) {
+            if (entries.size() > 0) {
                 return getVersionManager().getItem(uuid) instanceof InternalFrozenVersionHistory;
             }
         } catch (RepositoryException e) {
@@ -276,7 +276,12 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             PropertyIterator piter = src.getProperties();
             while (piter.hasNext()) {
                 PropertyImpl prop = (PropertyImpl) piter.nextProperty();
-                int opv = forceCopy ? OnParentVersionAction.COPY : prop.getDefinition().getOnParentVersion();
+                int opv;
+                if (forceCopy) {
+                    opv = OnParentVersionAction.COPY;
+                } else {
+                    opv = prop.getDefinition().getOnParentVersion();
+                }
                 switch (opv) {
                     case OnParentVersionAction.ABORT:
                         parent.reload();
@@ -297,7 +302,12 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             NodeIterator niter = src.getNodes();
             while (niter.hasNext()) {
                 NodeImpl child = (NodeImpl) niter.nextNode();
-                int opv = forceCopy ? OnParentVersionAction.COPY : child.getDefinition().getOnParentVersion();
+                int opv;
+                if (forceCopy) {
+                    opv = OnParentVersionAction.COPY;
+                } else {
+                    opv = child.getDefinition().getOnParentVersion();
+                }
                 switch (opv) {
                     case OnParentVersionAction.ABORT:
                         throw new VersionException("Checkin aborted due to OPV in " + child.safeGetJCRPath());

@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 
 import javax.jcr.RepositoryException;
@@ -62,7 +61,11 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
      * {@inheritDoc}
      */
     public synchronized boolean hasChildNodeEntry(QName name) {
-        return vh.hasVersion(name) ? true : super.hasChildNodeEntry(name);
+        if (vh.hasVersion(name)) {
+            return true;
+        } else {
+            return super.hasChildNodeEntry(name);
+        }
     }
 
     /**
@@ -70,7 +73,13 @@ public class VersionHistoryNodeState extends VirtualNodeState implements Constan
      */
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
         // no same name siblings
-        return index <= 1 ? (vh.hasVersion(name) ? true : super.hasChildNodeEntry(name, index)) : false;
+        if (index > 1) {
+            return false;
+        } else if (vh.hasVersion(name)) {
+            return true;
+        } else {
+            return super.hasChildNodeEntry(name, index);
+        }
     }
 
     /**

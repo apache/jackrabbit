@@ -70,7 +70,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      *
      * @param valueConstraints
      */
-    public void setValueConstraints(ValueConstraint valueConstraints[]) {
+    public void setValueConstraints(ValueConstraint[] valueConstraints) {
         if (id != null) {
             throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
         }

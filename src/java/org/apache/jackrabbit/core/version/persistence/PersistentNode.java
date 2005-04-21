@@ -357,7 +357,7 @@ public class PersistentNode {
         String parentUUID = nodeState.getUUID();
         // create a new node state
         if (uuid == null) {
-            uuid = UUID.randomUUID().toString();	// version 4 uuid
+            uuid = UUID.randomUUID().toString();    // version 4 uuid
         }
         NodeState state = stateMgr.createNew(uuid, nodeTypeName, parentUUID);
         state.setDefinitionId(NodeDefId.valueOf("0"));
@@ -490,7 +490,12 @@ public class PersistentNode {
     protected void copyFrom(PropertyImpl prop) throws RepositoryException {
         if (prop.getDefinition().isMultiple()) {
             InternalValue[] values = prop.internalGetValues();
-            int type = values.length > 0 ? values[0].getType() : prop.getDefinition().getRequiredType();
+            int type;
+            if (values.length > 0) {
+                type = values[0].getType();
+            } else {
+                type = prop.getDefinition().getRequiredType();
+            }
             setPropertyValues(prop.getQName(), type, values);
         } else {
             setPropertyValue(prop.getQName(), prop.internalGetValue());

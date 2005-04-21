@@ -213,7 +213,11 @@ public class NativePVM implements PersistentVersionManager, Constants {
     private InternalVersionHistoryImpl getHistoryByVersionableUUID(String uuid)
             throws RepositoryException {
         String id = (String) versionedUUIDs.get(uuid);
-        return id == null ? null : (InternalVersionHistoryImpl) getVersionHistory(id);
+        if (id == null) {
+            return null;
+        } else {
+            return (InternalVersionHistoryImpl) getVersionHistory(id);
+        }
     }
 
     /**
@@ -267,7 +271,9 @@ public class NativePVM implements PersistentVersionManager, Constants {
 
         versionedUUIDs.put(hist.getVersionableUUID(), hist.getId());
 
-        log.info("Created new version history " + hist.getId() + " for " + node.safeGetJCRPath() + ". NumHistories=" + versionedUUIDs.size());
+        log.info("Created new version history " + hist.getId()
+                + " for " + node.safeGetJCRPath()
+                + ". NumHistories=" + versionedUUIDs.size());
         return hist;
     }
 
@@ -378,7 +384,10 @@ public class NativePVM implements PersistentVersionManager, Constants {
             try {
                 NodeState state = (NodeState) stateMgr.getItemState(id);
                 PersistentNode pNode = new PersistentNode(stateMgr, state);
-                InternalVersionItem parent = pNode.getParentUUID() == null ? null : getItem(pNode.getParentUUID());
+                InternalVersionItem parent = null;
+                if (pNode.getParentUUID() != null) {
+                    parent = getItem(pNode.getParentUUID());
+                }
                 QName ntName = state.getNodeTypeName();
                 if (ntName.equals(NT_REP_FROZEN)) {
                     item = new InternalFrozenNodeImpl(this, pNode, parent);
@@ -441,7 +450,12 @@ public class NativePVM implements PersistentVersionManager, Constants {
                 }
                 if (numDots < maxDots) {
                     maxDots = numDots;
-                    versionName = pos < 0 ? "1.0" : versionName.substring(0, pos + 1) + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
+                    if (pos < 0) {
+                        versionName = "1.0";
+                    } else {
+                        versionName = versionName.substring(0, pos + 1)
+                            + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
+                    }
                 }
                 break;
             }

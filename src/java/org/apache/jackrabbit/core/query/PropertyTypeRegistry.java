@@ -79,7 +79,11 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
     public TypeMapping[] getPropertyTypes(QName propName) {
         synchronized (typeMapping) {
             TypeMapping[] types = (TypeMapping[]) typeMapping.get(propName);
-            return (types != null) ? types : EMPTY;
+            if (types != null) {
+                return types;
+            } else {
+                return EMPTY;
+            }
         }
     }
 

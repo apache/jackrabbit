@@ -125,7 +125,8 @@ class SysViewImportHandler extends TargetImportHandler {
             // node name (value of sv:name attribute)
             String name = atts.getValue(SysViewSAXEventGenerator.PREFIXED_NAME_ATTRIBUTE);
             if (name == null) {
-                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:name attribute of element sv:node"));
+                throw new SAXException(new InvalidSerializedDataException(
+                        "missing mandatory sv:name attribute of element sv:node"));
             }
 
             if (!stack.isEmpty()) {
@@ -157,7 +158,8 @@ class SysViewImportHandler extends TargetImportHandler {
             // property name (value of sv:name attribute)
             String name = atts.getValue(SysViewSAXEventGenerator.PREFIXED_NAME_ATTRIBUTE);
             if (name == null) {
-                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:name attribute of element sv:property"));
+                throw new SAXException(new InvalidSerializedDataException(
+                        "missing mandatory sv:name attribute of element sv:property"));
             }
             try {
                 currentPropName = QName.fromJCRName(name, nsContext);
@@ -169,7 +171,8 @@ class SysViewImportHandler extends TargetImportHandler {
             // property type (sv:type attribute)
             String type = atts.getValue(SysViewSAXEventGenerator.PREFIXED_TYPE_ATTRIBUTE);
             if (type == null) {
-                throw new SAXException(new InvalidSerializedDataException("missing mandatory sv:type attribute of element sv:property"));
+                throw new SAXException(new InvalidSerializedDataException(
+                        "missing mandatory sv:type attribute of element sv:property"));
             }
             currentPropType = PropertyType.valueFromName(type);
         } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(localName)) {
@@ -202,7 +205,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
-    public void ignorableWhitespace(char ch[], int start, int length)
+    public void ignorableWhitespace(char[] ch, int start, int length)
             throws SAXException {
         if (currentPropValue != null) {
             // property value

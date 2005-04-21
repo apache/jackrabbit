@@ -413,7 +413,7 @@ public class SessionImpl implements Session, Constants {
     protected String[] getWorkspaceNames() throws RepositoryException {
         // filter workspaces according to access rights
         ArrayList list = new ArrayList();
-        String names[] = rep.getWorkspaceNames();
+        String[] names = rep.getWorkspaceNames();
         for (int i = 0; i < names.length; i++) {
             try {
                 if (getAccessManager().canAccess(names[i])) {

@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
  * handler is running in.
  */
 public class QueryHandlerContext {
-    
+
     /**
      * A <code>FileSystem</code> to store the search index
      */
@@ -39,7 +39,7 @@ public class QueryHandlerContext {
 
     /**
      * The node type registry of the repository
-     */ 
+     */
     private final NodeTypeRegistry ntRegistry;
 
     /**
@@ -49,7 +49,7 @@ public class QueryHandlerContext {
 
     /**
      * PropertyType registry to look up the type of a property with a given name.
-     */ 
+     */
     private final PropertyTypeRegistry propRegistry;
 
     /**

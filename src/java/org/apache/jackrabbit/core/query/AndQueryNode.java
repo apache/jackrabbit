@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.util.Iterator;
-
 /**
  * Implements a query node that defines an AND operation between arbitrary
  * other {@link QueryNode}s.

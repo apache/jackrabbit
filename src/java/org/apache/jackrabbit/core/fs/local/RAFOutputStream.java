@@ -108,14 +108,14 @@ class RAFOutputStream extends RandomAccessOutputStream {
     /**
      * {@inheritDoc}
      */
-    public void write(byte b[]) throws IOException {
+    public void write(byte[] b) throws IOException {
         write(b, 0, b.length);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void write(byte b[], int off, int len) throws IOException {
+    public void write(byte[] b, int off, int len) throws IOException {
         if (len > buffer.length - bufferEnd) {
             flush();
             raf.write(b, off, len);

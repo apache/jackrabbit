@@ -168,15 +168,11 @@ public class ISO9075 {
      */
     private static boolean needsEscaping(String name, int location) {
         if (name.charAt(location) == '_' && name.length() >= location + 6) {
-            if (name.charAt(location + 1) == 'x'
-                    && HEX_DIGITS.indexOf(name.charAt(location + 2)) != -1
-                    && HEX_DIGITS.indexOf(name.charAt(location + 3)) != -1
-                    && HEX_DIGITS.indexOf(name.charAt(location + 4)) != -1
-                    && HEX_DIGITS.indexOf(name.charAt(location + 5)) != -1) {
-                return true;
-            } else {
-                return false;
-            }
+            return name.charAt(location + 1) == 'x'
+                && HEX_DIGITS.indexOf(name.charAt(location + 2)) != -1
+                && HEX_DIGITS.indexOf(name.charAt(location + 3)) != -1
+                && HEX_DIGITS.indexOf(name.charAt(location + 4)) != -1
+                && HEX_DIGITS.indexOf(name.charAt(location + 5)) != -1;
         } else {
             return false;
         }

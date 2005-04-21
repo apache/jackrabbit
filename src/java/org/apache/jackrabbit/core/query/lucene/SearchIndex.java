@@ -239,7 +239,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @param nsMappings the namespace mappings of the search index.
      * @return a lucene <code>Document</code> that contains all properties
      *  of <code>node</code>.
-     * @throws RepositoryException if an error occurs while indexing the 
+     * @throws RepositoryException if an error occurs while indexing the
      *  <code>node</code>.
      */
     protected Document createDocument(NodeState node, NamespaceMappings nsMappings)
@@ -247,7 +247,7 @@ public class SearchIndex extends AbstractQueryHandler {
         return NodeIndexer.createDocument(node, getContext().getItemStateManager(),
                 nsMappings);
     }
-    
+
     //--------------------------< properties >----------------------------------
 
     public void setUseCompoundFile(boolean b) {

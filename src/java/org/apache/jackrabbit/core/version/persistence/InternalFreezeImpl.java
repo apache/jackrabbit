@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.version.InternalVersionItem;
 import org.apache.jackrabbit.core.version.PersistentVersionManager;
 
 /**
- * 
+ *
  */
 abstract class InternalFreezeImpl extends InternalVersionItemImpl implements InternalFreeze {
 

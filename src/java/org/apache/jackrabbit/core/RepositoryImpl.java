@@ -398,9 +398,9 @@ public class RepositoryImpl implements Repository, SessionListener,
         SearchManager searchMgr = getSearchManager(wspName);
         if (searchMgr != null) {
             wsp.getObservationManager().addEventListener(searchMgr,
-                    Event.NODE_ADDED | Event.NODE_REMOVED |
-                    Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED |
-                    Event.PROPERTY_CHANGED,
+                    Event.NODE_ADDED | Event.NODE_REMOVED
+                    | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED
+                    | Event.PROPERTY_CHANGED,
                     "/", true, null, null, false);
         }
 
@@ -633,7 +633,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
         activeSessions.clear();
 
-        // shut down workspaces 
+        // shut down workspaces
         for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
             WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
             wspInfo.dispose();

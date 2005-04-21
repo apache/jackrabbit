@@ -503,7 +503,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
 
     public Object visit(RelationQueryNode node, Object data) {
         Query query;
-        String stringValues[] = new String[1];
+        String[] stringValues = new String[1];
         switch (node.getValueType()) {
             case 0:
                 // not set: either IS NULL or IS NOT NULL
@@ -547,7 +547,8 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             case QueryConstants.OPERATION_EQ_GENERAL:
                 BooleanQuery or = new BooleanQuery();
                 for (int i = 0; i < stringValues.length; i++) {
-                    or.add(new TermQuery(new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]))), false, false);
+                    or.add(new TermQuery(new Term(FieldNames.PROPERTIES,
+                            FieldNames.createNamedValue(field, stringValues[i]))), false, false);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE) {

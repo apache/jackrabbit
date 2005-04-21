@@ -16,15 +16,6 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.SessionImpl;
-
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 /**
  * Lock token
  */

@@ -18,12 +18,6 @@ package org.apache.jackrabbit.core.version.persistence;
 
 import org.apache.jackrabbit.core.version.InternalVersionItem;
 import org.apache.jackrabbit.core.version.PersistentVersionManager;
-import org.apache.jackrabbit.core.version.InternalVersionHistory;
-import org.apache.jackrabbit.core.version.InternalVersion;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Iterator;
 
 /**
  *

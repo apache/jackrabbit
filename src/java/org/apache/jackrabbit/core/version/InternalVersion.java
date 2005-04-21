@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.QName;
 
-import javax.jcr.version.Version;
 import java.util.Calendar;
 
 /**
@@ -44,21 +43,21 @@ public interface InternalVersion extends InternalVersionItem {
     /**
      * Equivalent to {@link Version#getCreated()}
      *
-     * @see Version#getCreated()
+     * @see javax.jcr.version.Version#getCreated()
      */
     Calendar getCreated();
 
     /**
      * Equivalent to {@link Version#getSuccessors()}}
      *
-     * @see Version#getSuccessors()
+     * @see javax.jcr.version.Version#getSuccessors()
      */
     InternalVersion[] getSuccessors();
 
     /**
      * Equivalent to {@link Version#getPredecessors()}}
      *
-     * @see Version#getPredecessors()
+     * @see javax.jcr.version.Version#getPredecessors()
      */
     InternalVersion[] getPredecessors();
 

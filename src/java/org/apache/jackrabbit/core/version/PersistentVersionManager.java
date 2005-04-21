@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
 import java.util.List;

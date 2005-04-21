@@ -54,9 +54,13 @@ class SharedFieldSortComparator extends SortComparator {
             public final int compare (final ScoreDoc i, final ScoreDoc j) {
               final int fi = index.order[i.doc];
               final int fj = index.order[j.doc];
-              if (fi < fj) return -1;
-              if (fi > fj) return 1;
-              return 0;
+              if (fi < fj) {
+                  return -1;
+              } else if  (fi > fj) {
+                  return 1;
+              } else {
+                  return 0;
+              }
             }
 
             public Comparable sortValue (final ScoreDoc i) {

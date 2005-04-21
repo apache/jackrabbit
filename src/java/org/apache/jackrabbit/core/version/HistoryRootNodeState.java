@@ -73,7 +73,11 @@ public class HistoryRootNodeState extends VirtualNodeState {
      * {@inheritDoc}
      */
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
-        return index <= 1 ? vm.hasVersionHistory(name.getLocalName()) : false;
+        if (index <= 1) {
+            return vm.hasVersionHistory(name.getLocalName());
+        } else {
+            return false;
+        }
     }
 
     /**

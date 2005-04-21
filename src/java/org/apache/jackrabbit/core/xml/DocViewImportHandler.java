@@ -68,7 +68,7 @@ class DocViewImportHandler extends TargetImportHandler {
      * @see #ignorableWhitespace(char[], int, int)
      * @see #processCharacters()
      */
-    private void appendCharacters(char ch[], int start, int length)
+    private void appendCharacters(char[] ch, int start, int length)
             throws SAXException {
         if (textHandler == null) {
             textHandler = new BufferedStringValue();
@@ -242,7 +242,7 @@ class DocViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
-    public void ignorableWhitespace(char ch[], int start, int length)
+    public void ignorableWhitespace(char[] ch, int start, int length)
             throws SAXException {
         /**
          * buffer data reported by the ignorableWhitespace event;
