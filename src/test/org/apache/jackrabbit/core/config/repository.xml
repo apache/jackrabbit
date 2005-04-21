@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!-- <!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "file://config.dtd"> -->
 <!DOCTYPE Repository [
     <!--
         the Repository element configures a repository instance;
