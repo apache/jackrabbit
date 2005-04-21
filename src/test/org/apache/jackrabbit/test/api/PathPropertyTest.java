@@ -35,6 +35,7 @@ public class PathPropertyTest extends AbstractPropertyTest {
 
     /**
      * Returns {@link javax.jcr.PropertyType#PATH}.
+     *
      * @return {@link javax.jcr.PropertyType#PATH}.
      */
     protected int getPropertyType() {
@@ -42,12 +43,12 @@ public class PathPropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Tests conversion from Path type to String type
-     * and if the resulting string has correct format.
+     * Tests conversion from Path type to String type and if the resulting
+     * string has correct format.
      */
     public void testGetString() throws RepositoryException {
         Value val = PropertyUtil.getValue(prop);
-        assertTrue("Not a valid Path property: "+prop.getName(),
+        assertTrue("Not a valid Path property: " + prop.getName(),
                 PropertyUtil.checkPathFormat(val.getString(), session));
     }
 
@@ -59,7 +60,7 @@ public class PathPropertyTest extends AbstractPropertyTest {
             Value val = PropertyUtil.getValue(prop);
             val.getBoolean();
             fail("Conversion from a Path value to a Boolean value " +
-                        "should throw a ValueFormatException.");
+                    "should throw a ValueFormatException.");
         } catch (ValueFormatException vfe) {
             //ok
         }
@@ -72,8 +73,8 @@ public class PathPropertyTest extends AbstractPropertyTest {
         try {
             Value val = PropertyUtil.getValue(prop);
             val.getDate();
-                fail("Conversion from a Path value to a Date value " +
-                        "should throw a ValueFormatException.");
+            fail("Conversion from a Path value to a Date value " +
+                    "should throw a ValueFormatException.");
         } catch (ValueFormatException vfe) {
             //ok
         }
@@ -86,8 +87,8 @@ public class PathPropertyTest extends AbstractPropertyTest {
         try {
             Value val = PropertyUtil.getValue(prop);
             val.getDouble();
-                   fail("Conversion from a Path value to a Double value " +
-                        "should throw a ValueFormatException.");
+            fail("Conversion from a Path value to a Double value " +
+                    "should throw a ValueFormatException.");
         } catch (ValueFormatException vfe) {
             //ok
         }
@@ -101,23 +102,23 @@ public class PathPropertyTest extends AbstractPropertyTest {
             Value val = PropertyUtil.getValue(prop);
             val.getLong();
             fail("Conversion from a Path value to a Long value " +
-                        "should throw a ValueFormatException.");
+                    "should throw a ValueFormatException.");
         } catch (ValueFormatException vfe) {
             //ok
         }
     }
 
     /**
-     * Tests if Value.getType() returns the same as Property.getType()
-     * and also tests that prop.getDefinition().getRequiredType() returns
-     * the same type in case it is not of Undefined type.
+     * Tests if Value.getType() returns the same as Property.getType() and also
+     * tests that prop.getDefinition().getRequiredType() returns the same type
+     * in case it is not of Undefined type.
      */
     public void testGetType() throws RepositoryException {
         assertTrue("Value.getType() returns wrong type.",
                 PropertyUtil.checkGetType(prop, PropertyType.PATH));
     }
 
-   /**
+    /**
      * Tests failure of conversion from Path type to Reference type.
      */
     public void testAsReference() throws RepositoryException {
@@ -129,8 +130,7 @@ public class PathPropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 //ok
             }
-        }
-        else {
+        } else {
             try {
                 prop.getNode();
                 fail("Property.getNode() called on a multivalue property " +

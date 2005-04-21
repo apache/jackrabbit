@@ -35,6 +35,7 @@ public class NamePropertyTest extends AbstractPropertyTest {
 
     /**
      * Returns {@link javax.jcr.PropertyType#NAME}.
+     *
      * @return {@link javax.jcr.PropertyType#NAME}.
      */
     protected int getPropertyType() {
@@ -43,16 +44,19 @@ public class NamePropertyTest extends AbstractPropertyTest {
 
     /**
      * Tests conversion from Name type to String type.
+     *
      * @throws RepositoryException
      */
     public void testGetString() throws RepositoryException {
         Value val = PropertyUtil.getValue(prop);
-        assertTrue("Not a valid Name property: "+prop.getName(),
-                PropertyUtil.checkNameFormat(val.getString(),session));
+        assertTrue("Not a valid Name property: " + prop.getName(),
+                PropertyUtil.checkNameFormat(val.getString(), session));
 
     }
+
     /**
      * Tests failure of conversion from Name type to Boolean type.
+     *
      * @throws RepositoryException
      */
     public void testGetBoolean() throws RepositoryException {
@@ -60,7 +64,7 @@ public class NamePropertyTest extends AbstractPropertyTest {
             Value val = PropertyUtil.getValue(prop);
             val.getBoolean();
             fail("Conversion from a Name value to a Boolean value " +
-                        "should throw a ValueFormatException.");
+                    "should throw a ValueFormatException.");
         } catch (ValueFormatException vfe) {
             //ok
         }
@@ -68,6 +72,7 @@ public class NamePropertyTest extends AbstractPropertyTest {
 
     /**
      * Tests failure of conversion from Name type to Date type.
+     *
      * @throws RepositoryException
      */
     public void testGetDate() throws RepositoryException {
@@ -75,7 +80,7 @@ public class NamePropertyTest extends AbstractPropertyTest {
             Value val = PropertyUtil.getValue(prop);
             val.getDate();
             fail("Conversion from a Name value to a Date value " +
-                        "should throw a ValueFormatException.");
+                    "should throw a ValueFormatException.");
         } catch (ValueFormatException vfe) {
             //ok
         }
@@ -83,6 +88,7 @@ public class NamePropertyTest extends AbstractPropertyTest {
 
     /**
      * Tests failure from Name type to Double type.
+     *
      * @throws RepositoryException
      */
     public void testGetDouble() throws RepositoryException {
@@ -90,7 +96,7 @@ public class NamePropertyTest extends AbstractPropertyTest {
             Value val = PropertyUtil.getValue(prop);
             val.getDouble();
             fail("Conversion from a Name value to a Double value " +
-                        "should throw a ValueFormatException.");
+                    "should throw a ValueFormatException.");
         } catch (ValueFormatException vfe) {
             //ok
         }
@@ -98,6 +104,7 @@ public class NamePropertyTest extends AbstractPropertyTest {
 
     /**
      * Tests failure of conversion from Name type to Long type.
+     *
      * @throws RepositoryException
      */
     public void testGetLong() throws RepositoryException {
@@ -105,16 +112,17 @@ public class NamePropertyTest extends AbstractPropertyTest {
             Value val = PropertyUtil.getValue(prop);
             val.getLong();
             fail("Conversion from a Name value to a Long value " +
-                        "should throw a ValueFormatException.");
+                    "should throw a ValueFormatException.");
         } catch (ValueFormatException vfe) {
             //ok
         }
     }
 
     /**
-     * Tests if Value.getType() returns the same as Property.getType()
-     * and also tests that prop.getDefinition().getRequiredType() returns
-     * the same type in case it is not of Undefined type.
+     * Tests if Value.getType() returns the same as Property.getType() and also
+     * tests that prop.getDefinition().getRequiredType() returns the same type
+     * in case it is not of Undefined type.
+     *
      * @throws RepositoryException
      */
     public void testGetType() throws RepositoryException {
@@ -122,8 +130,9 @@ public class NamePropertyTest extends AbstractPropertyTest {
                 PropertyUtil.checkGetType(prop, PropertyType.NAME));
     }
 
-   /**
+    /**
      * Tests failure of conversion from Name type to Reference type.
+     *
      * @throws RepositoryException
      */
     public void testAsReference() throws RepositoryException {
@@ -135,8 +144,7 @@ public class NamePropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 //ok
             }
-        }
-        else {
+        } else {
             try {
                 prop.getNode();
                 fail("Property.getNode() called on a multivalue property " +

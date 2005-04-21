@@ -89,9 +89,10 @@ public class StringPropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 // ok
             }
+        } else {
+            assertEquals("Value.getString() and Property.getString() return different values.",
+                    prop.getValue().getString(), prop.getString());
         }
-        assertEquals("Value.getString() and Property.getString() return different values.",
-                prop.getValue().getString(), prop.getString());
     }
 
     /**

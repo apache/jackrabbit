@@ -58,12 +58,12 @@ public class DatePropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 // ok
             }
+        } else {
+            Calendar calendar = prop.getValue().getDate();
+            Calendar calendar2 = prop.getDate();
+            assertEquals("Value.getDate() and Property.getDate() return different values.",
+                    calendar, calendar2);
         }
-        // Calendar returned?
-        Calendar calendar = prop.getValue().getDate();
-        Calendar calendar2 = prop.getDate();
-        assertTrue("Value.getDate() and Property.getDate() return different values.",
-                calendar.getTimeInMillis() == calendar2.getTimeInMillis());
     }
 
     /**
@@ -75,9 +75,9 @@ public class DatePropertyTest extends AbstractPropertyTest {
         // correct format:  YYYY-MM-DDThh:mm:ss.sssTZD
         // month(01-12), day(01-31), hours(00-23), minutes(00-59), seconds(00-59),
         // TZD(Z or +hh:mm or -hh:mm)
-        //String aDay="2005-01-19T15:34:15.917+01:00";
+        // String aDay="2005-01-19T15:34:15.917+01:00";
         String date = val.getString();
-        System.out.println("date str = " + date);
+        log.println("date str = " + date);
         boolean match = PropertyUtil.isDateFormat(prop.getString());
         assertTrue("Date not in correct String format.", match);
     }

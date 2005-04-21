@@ -26,9 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Tests a double property. If the workspace does not contain a node with a double
- * property a {@link org.apache.jackrabbit.test.NotExecutableException} is
- * thrown.
+ * Tests a double property. If the workspace does not contain a node with a
+ * double property a {@link org.apache.jackrabbit.test.NotExecutableException}
+ * is thrown.
  *
  * @test
  * @sources DoublePropertyTest.java
@@ -39,15 +39,17 @@ public class DoublePropertyTest extends AbstractPropertyTest {
 
     /**
      * Returns {@link javax.jcr.PropertyType#DOUBLE}.
+     *
      * @return {@link javax.jcr.PropertyType#DOUBLE}.
      */
     protected int getPropertyType() {
         return PropertyType.DOUBLE;
     }
 
-   /**
+    /**
      * tests that Property.getDouble() delivers the same as Value.getDouble()
-     * and if in case of a multivalue property a ValueFormatException is thrown.
+     * and if in case of a multivalue property a ValueFormatException is
+     * thrown.
      */
     public void testValue() throws RepositoryException {
         if (multiple) {
@@ -58,10 +60,11 @@ public class DoublePropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 // ok
             }
+        } else {
+            double d = prop.getValue().getDouble();
+            double dd = prop.getDouble();
+            assertTrue("Value.getDouble() and Property.getDouble() return different values.", d == dd);
         }
-        double d = prop.getValue().getDouble();
-        double dd = prop.getDouble();
-        assertTrue("Value.getDouble() and Property.getDouble() return different values.", d == dd) ;
     }
 
     /**
@@ -87,7 +90,8 @@ public class DoublePropertyTest extends AbstractPropertyTest {
         assertEquals("Conversion from Double value to Date value is not correct.",
                 calendar.getTimeInMillis(), new Double(val.getDouble()).longValue());
     }
-     /**
+
+    /**
      * tests the conversion from a Double to a Long Value
      */
     public void testGetLong() throws RepositoryException {
@@ -100,7 +104,7 @@ public class DoublePropertyTest extends AbstractPropertyTest {
     /**
      * tests conversion from Double type to Binary type
      */
-   public void testGetStream() throws RepositoryException, IOException {
+    public void testGetStream() throws RepositoryException, IOException {
         Value val = PropertyUtil.getValue(prop);
         BufferedInputStream in = new BufferedInputStream(val.getStream());
         Value otherVal = prop.getValue();
@@ -109,7 +113,7 @@ public class DoublePropertyTest extends AbstractPropertyTest {
         // if yet utf-8 encoded these bytes should be equal
         // to the ones received from the stream
         int i = 0;
-        byte b = b = (byte) in.read();
+        byte b = (byte) in.read();
         while (b != -1) {
             assertTrue("Double as a Stream is not utf-8 encoded.",
                     b == utf8bytes[i]);
@@ -128,11 +132,14 @@ public class DoublePropertyTest extends AbstractPropertyTest {
             fail("Stream method call after a non stream method call " +
                     "should throw an IllegalStateException.");
         } catch (IllegalStateException ise) {
-           // ok
-        }
-        finally {
-            if (in != null) in.close();
-            if (ins != null) ins.close();
+            // ok
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+            if (ins != null) {
+                ins.close();
+            }
         }
     }
 
@@ -146,17 +153,17 @@ public class DoublePropertyTest extends AbstractPropertyTest {
         assertEquals("Conversion from Double value to String value is not correct.", str, otherStr);
     }
 
-   /**
-     * Tests if Value.getType() returns the same as Property.getType()
-     * and also tests that prop.getDefinition().getRequiredType() returns
-     * the same type in case it is not of Undefined type.
+    /**
+     * Tests if Value.getType() returns the same as Property.getType() and also
+     * tests that prop.getDefinition().getRequiredType() returns the same type
+     * in case it is not of Undefined type.
      */
     public void testGetType() throws RepositoryException {
         assertTrue("Value.getType() returns wrong type.",
                 PropertyUtil.checkGetType(prop, PropertyType.DOUBLE));
     }
 
-   /**
+    /**
      * tests failure of conversion from Double type to Reference type
      */
     public void testAsReference() throws RepositoryException {
@@ -168,8 +175,7 @@ public class DoublePropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 //ok
             }
-        }
-        else {
+        } else {
             try {
                 prop.getNode();
                 fail("Property.getNode() called on a multivalue property " +
@@ -180,7 +186,7 @@ public class DoublePropertyTest extends AbstractPropertyTest {
         }
     }
 
-   /**
+    /**
      * Tests the Property.getLength() method. The length returned is either -1
      * or it is the length of the string received by conversion.
      */
@@ -194,8 +200,7 @@ public class DoublePropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 // ok
             }
-        }
-        else {
+        } else {
             long length = prop.getLength();
             if (length > -1) {
                 assertEquals("Property.getLength() returns wrong number of bytes.",
@@ -215,12 +220,11 @@ public class DoublePropertyTest extends AbstractPropertyTest {
             for (int i = 0; i < lengths.length; i++) {
                 if (lengths[i] > -1) {
                     assertEquals("Property.getLengths() returns " +
-                        "wrong array of the lengths of a multivalue property.",
-                        values[i].getString().length(), lengths[i]);
+                            "wrong array of the lengths of a multivalue property.",
+                            values[i].getString().length(), lengths[i]);
                 }
             }
-        }
-        else {
+        } else {
             try {
                 prop.getLengths();
                 fail("Property.getLengths() called on a sinlge value property " +
