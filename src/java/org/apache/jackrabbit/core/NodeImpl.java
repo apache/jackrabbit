@@ -2310,6 +2310,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws PathNotFoundException, RepositoryException {
         // check state of this instance
         sanityCheck();
+
         PropertyId id = resolveRelativePropertyPath(relPath);
         if (id == null) {
             throw new PathNotFoundException(relPath);
@@ -2387,6 +2388,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public NodeType getPrimaryNodeType() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         return nodeType;
     }
 
@@ -2394,6 +2398,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public NodeType[] getMixinNodeTypes() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         Set mixinNames = ((NodeState) state).getMixinTypeNames();
         if (mixinNames.isEmpty()) {
             return new NodeType[0];
@@ -2530,6 +2537,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public PropertyIterator getReferences() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         return getReferences(false);
     }
 
@@ -2537,6 +2547,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public NodeDefinition getDefinition() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         return definition;
     }
 
@@ -2556,7 +2569,8 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public PropertyIterator getProperties(String namePattern) throws RepositoryException {
+    public PropertyIterator getProperties(String namePattern)
+            throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2569,7 +2583,8 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public Item getPrimaryItem() throws ItemNotFoundException, RepositoryException {
+    public Item getPrimaryItem()
+            throws ItemNotFoundException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -2589,7 +2604,8 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
+    public String getUUID()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
