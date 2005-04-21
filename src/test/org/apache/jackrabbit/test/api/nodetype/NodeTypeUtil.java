@@ -47,19 +47,19 @@ public class NodeTypeUtil {
     /**
      * Locate a child node def parsing all node types
      *
-     * @param session:                  the session to access the node types
-     * @param regardDefaultPrimaryType: if true, the default primary type of the
-     *                                  returned <code>NodeDef</code> is
-     *                                  according to param <code>defaultPrimaryType</code>.
-     *                                  If false, the returned <code>NodeDef</code>
-     *                                  might have a default primary type or
-     *                                  not.
-     * @param defaultPrimaryType:       if <code>regardDefaultPrimaryType</code>
-     *                                  is true: if true, the returned
-     *                                  <code>NodeDef</code> has a default
-     *                                  primary type, else not
-     * @param residual:                 if true, the returned <code>NodeDef</code>
-     *                                  is of the residual name "*", else not
+     * @param session                  the session to access the node types
+     * @param regardDefaultPrimaryType if true, the default primary type of the
+     *                                 returned <code>NodeDef</code> is
+     *                                 according to param <code>defaultPrimaryType</code>.
+     *                                 If false, the returned <code>NodeDef</code>
+     *                                 might have a default primary type or
+     *                                 not.
+     * @param defaultPrimaryType       if <code>regardDefaultPrimaryType</code>
+     *                                 is true: if true, the returned
+     *                                 <code>NodeDef</code> has a default
+     *                                 primary type, else not
+     * @param residual                 if true, the returned <code>NodeDef</code>
+     *                                 is of the residual name "*", else not
      * @return
      * @throws RepositoryException
      */
@@ -128,11 +128,11 @@ public class NodeTypeUtil {
     /**
      * Locate a child node def parsing all node types
      *
-     * @param session:     the session to access the node types
-     * @param isProtected: if true, the returned <code>NodeDef</code> is
-     *                     protected, else not
-     * @param mandatory:   if true, the returned <code>NodeDef</code> is
-     *                     mandatory, else not
+     * @param session     the session to access the node types
+     * @param isProtected if true, the returned <code>NodeDef</code> is
+     *                    protected, else not
+     * @param mandatory   if true, the returned <code>NodeDef</code> is
+     *                    mandatory, else not
      * @return the first <code>NodeDef</code> found fitting the requirements
      */
     public static NodeDefinition locateChildNodeDef(Session session,
@@ -177,15 +177,15 @@ public class NodeTypeUtil {
     /**
      * Locate a property def parsing all node types
      *
-     * @param session:      the session to access the node types
-     * @param propertyType: the type of the returned property. <cod>PropertyType.UNDEFINED</code>
-     *                      returns a property of any type
-     * @param multiple:     if true, the returned <code>PropertyDef</code> is
-     *                      multiple, else not
-     * @param isProtected:  if true, the returned <code>PropertyDef</code> is
-     *                      protected, else not
-     * @param residual:     if true, the returned <code>PropertyDef</code> is of
-     *                      the residual name "*", else not
+     * @param session      the session to access the node types
+     * @param propertyType the type of the returned property. <cod>PropertyType.UNDEFINED</code>
+     *                     returns a property of any type
+     * @param multiple     if true, the returned <code>PropertyDef</code> is
+     *                     multiple, else not
+     * @param isProtected  if true, the returned <code>PropertyDef</code> is
+     *                     protected, else not
+     * @param residual     if true, the returned <code>PropertyDef</code> is of
+     *                     the residual name "*", else not
      * @return the first <code>PropertyDef</code> found fitting the
      *         requirements
      */
@@ -255,11 +255,11 @@ public class NodeTypeUtil {
     /**
      * Locate a property def parsing all node types
      *
-     * @param session:     the session to access the node types
-     * @param isProtected: if true, the returned <code>PropertyDef</code> is
-     *                     protected, else not
-     * @param mandatory:   if true, the returned <code>PropertyDef</code> is
-     *                     mandatory, else not
+     * @param session     the session to access the node types
+     * @param isProtected if true, the returned <code>PropertyDef</code> is
+     *                    protected, else not
+     * @param mandatory   if true, the returned <code>PropertyDef</code> is
+     *                    mandatory, else not
      * @return the first <code>PropertyDef</code> found fitting the
      *         requirements
      */
@@ -375,7 +375,7 @@ public class NodeTypeUtil {
      * Returns a value according to the value contraints of a
      * <code>PropertyDefinition</code>
      *
-     * @param propDef:  The <code>PropertyDefinition</code> whose constraints
+     * @param propDef   The <code>PropertyDefinition</code> whose constraints
      *                  will be regarded
      * @param satisfied If true, the returned <code>Value</code> will satisfying
      *                  the constraints - If false, the returned
