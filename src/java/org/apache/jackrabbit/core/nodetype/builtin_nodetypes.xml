@@ -248,7 +248,7 @@
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <propertyDefinition name="jcr:child" requiredType="Reference" autoCreated="true" mandatory="true" onParentVersion="ABORT" protected="true" multiple="false">
+        <propertyDefinition name="jcr:childVersionHistory" requiredType="Reference" autoCreated="true" mandatory="true" onParentVersion="ABORT" protected="true" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:versionHistory</valueConstraint>
             </valueConstraints>

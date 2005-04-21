@@ -182,9 +182,9 @@ public interface Constants {
     QName JCR_BASEVERSION = new QName(NS_JCR_URI, "baseVersion");
 
     /**
-     * jcr:child
+     * jcr:childVersionHistory
      */
-    QName JCR_CHILD = new QName(NS_JCR_URI, "child");
+    QName JCR_CHILDVERSIONHISTORY = new QName(NS_JCR_URI, "childVersionHistory");
 
     /**
      * jcr:rootVersion
