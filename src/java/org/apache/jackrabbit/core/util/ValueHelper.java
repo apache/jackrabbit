@@ -62,7 +62,11 @@ public class ValueHelper {
      */
     public static Value convert(String srcValue, int targetType)
             throws ValueFormatException, IllegalArgumentException {
-        return convert(new StringValue(srcValue), targetType);
+        if (srcValue == null) {
+            return null;
+        } else {
+            return convert(new StringValue(srcValue), targetType);
+        }
     }
 
     /**
@@ -95,6 +99,10 @@ public class ValueHelper {
     public static Value convert(Value srcValue, int targetType)
             throws ValueFormatException, IllegalStateException,
             IllegalArgumentException {
+        if (srcValue == null) {
+            return null;
+        }
+
         Value val;
         int srcType = srcValue.getType();
 
@@ -307,48 +315,52 @@ public class ValueHelper {
     }
 
     /**
-     * @param srcVal
+     * @param srcValue
      * @return
      * @throws IllegalStateException
      */
-    public static Value copy(Value srcVal) throws IllegalStateException {
+    public static Value copy(Value srcValue) throws IllegalStateException {
+        if (srcValue == null) {
+            return null;
+        }
+
         Value newVal = null;
         try {
-            switch (srcVal.getType()) {
+            switch (srcValue.getType()) {
                 case PropertyType.BINARY:
-                    newVal = new BinaryValue(srcVal.getStream());
+                    newVal = new BinaryValue(srcValue.getStream());
                     break;
 
                 case PropertyType.BOOLEAN:
-                    newVal = new BooleanValue(srcVal.getBoolean());
+                    newVal = new BooleanValue(srcValue.getBoolean());
                     break;
 
                 case PropertyType.DATE:
-                    newVal = new DateValue(srcVal.getDate());
+                    newVal = new DateValue(srcValue.getDate());
                     break;
 
                 case PropertyType.DOUBLE:
-                    newVal = new DoubleValue(srcVal.getDouble());
+                    newVal = new DoubleValue(srcValue.getDouble());
                     break;
 
                 case PropertyType.LONG:
-                    newVal = new LongValue(srcVal.getLong());
+                    newVal = new LongValue(srcValue.getLong());
                     break;
 
                 case PropertyType.PATH:
-                    newVal = PathValue.valueOf(srcVal.getString());
+                    newVal = PathValue.valueOf(srcValue.getString());
                     break;
 
                 case PropertyType.NAME:
-                    newVal = NameValue.valueOf(srcVal.getString());
+                    newVal = NameValue.valueOf(srcValue.getString());
                     break;
 
                 case PropertyType.REFERENCE:
-                    newVal = ReferenceValue.valueOf(srcVal.getString());
+                    newVal = ReferenceValue.valueOf(srcValue.getString());
                     break;
 
                 case PropertyType.STRING:
-                    newVal = new StringValue(srcVal.getString());
+                    newVal = new StringValue(srcValue.getString());
                     break;
             }
         } catch (RepositoryException re) {
@@ -366,6 +378,7 @@ public class ValueHelper {
         if (srcValues == null) {
             return null;
         }
+
         Value[] newValues = new Value[srcValues.length];
         for (int i = 0; i < srcValues.length; i++) {
             newValues[i] = copy(srcValues[i]);
