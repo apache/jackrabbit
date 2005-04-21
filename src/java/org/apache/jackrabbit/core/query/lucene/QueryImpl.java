@@ -198,7 +198,7 @@ class QueryImpl implements ExecutableQuery {
         selectProps.add(QueryConstants.JCR_PATH);
 
         // add jcr:score if necessary
-        if(hasTextsearchNode(root.getLocationNode())) {
+        if (hasTextsearchNode(root.getLocationNode())) {
             selectProps.add(QueryConstants.JCR_SCORE);
         }
 

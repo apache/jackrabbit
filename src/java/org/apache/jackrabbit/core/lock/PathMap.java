@@ -16,10 +16,14 @@
  */
 package org.apache.jackrabbit.core.lock;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.QName;
 
-import java.util.*;
 
 /**
  * Generic path map that associates information with the individual path elements

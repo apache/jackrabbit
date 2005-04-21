@@ -102,8 +102,8 @@ public class SimpleAccessManager implements AccessManager {
             return;
         } else if (anonymous) {
             // anonymous is always denied WRITE & REMOVE premissions
-            if ((permissions & WRITE) == WRITE ||
-                    (permissions & REMOVE) == REMOVE) {
+            if ((permissions & WRITE) == WRITE
+                    || (permissions & REMOVE) == REMOVE) {
                 throw new AccessDeniedException();
             }
         }
@@ -124,8 +124,8 @@ public class SimpleAccessManager implements AccessManager {
             return true;
         } else if (anonymous) {
             // anonymous is always denied WRITE & REMOVE premissions
-            if ((permissions & WRITE) == WRITE ||
-                    (permissions & REMOVE) == REMOVE) {
+            if ((permissions & WRITE) == WRITE
+                    || (permissions & REMOVE) == REMOVE) {
                 return false;
             }
         }

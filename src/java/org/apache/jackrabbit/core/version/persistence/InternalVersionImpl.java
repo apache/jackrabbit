@@ -325,7 +325,11 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @return
      */
     protected boolean internalHasLabel(QName label) {
-        return labelCache == null ? false : labelCache.contains(label);
+        if (labelCache == null) {
+            return false;
+        } else {
+            return labelCache.contains(label);
+        }
     }
 
     /**
@@ -341,7 +345,11 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @return
      */
     protected QName[] internalGetLabels() {
-        return labelCache == null ? new QName[0] : (QName[]) labelCache.toArray(new QName[labelCache.size()]);
+        if (labelCache == null) {
+            return new QName[0];
+        } else {
+            return (QName[]) labelCache.toArray(new QName[labelCache.size()]);
+        }
     }
 
     /**

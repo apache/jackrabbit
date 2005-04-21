@@ -1086,14 +1086,15 @@ public class NodeImpl extends ItemImpl implements Node {
          * it can only be removed if there no more references to this node
          */
         NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
-        if ((MIX_REFERENCEABLE.equals(mixinName) ||
-                mixin.isDerivedFrom(MIX_REFERENCEABLE)) &&
-                !entRemaining.includesNodeType(MIX_REFERENCEABLE)) {
+        if ((MIX_REFERENCEABLE.equals(mixinName)
+                || mixin.isDerivedFrom(MIX_REFERENCEABLE))
+                && !entRemaining.includesNodeType(MIX_REFERENCEABLE)) {
             // removing this mixin would effectively remove mix:referenceable:
             // make sure no references exist
             PropertyIterator iter = getReferences();
             if (iter.hasNext()) {
-                throw new ConstraintViolationException(mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
+                throw new ConstraintViolationException(
+                        mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
             }
         }
 

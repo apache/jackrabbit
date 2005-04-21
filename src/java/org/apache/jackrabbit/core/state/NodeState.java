@@ -488,7 +488,7 @@ public class NodeState extends ItemState {
     public synchronized void setNodeTypeName(QName nodeTypeName) {
         this.nodeTypeName = nodeTypeName;
     }
-    
+
     //---------------------------------------------------------< diff methods >
     /**
      * Returns a list of parent UUID's, that do not exist in the overlayed node

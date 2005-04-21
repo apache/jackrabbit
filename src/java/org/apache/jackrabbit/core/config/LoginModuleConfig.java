@@ -43,7 +43,7 @@ public class LoginModuleConfig extends BeanConfig {
     public LoginModule getLoginModule() throws ConfigurationException {
         Object result = newInstance();
         if (result instanceof LoginModule) {
-            return (LoginModule)result;
+            return (LoginModule) result;
         } else {
             throw new ConfigurationException("Invalid login module implementation class "
                     + getClassName() + ".");

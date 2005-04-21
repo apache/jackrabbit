@@ -109,7 +109,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
                 // sv:
                 prefixToURI.put(NS_SV_PREFIX, NS_SV_URI);
                 uriToPrefix.put(NS_SV_URI, NS_SV_PREFIX);
-                // xml: 
+                // xml:
                 prefixToURI.put(NS_XML_PREFIX, NS_XML_URI);
                 uriToPrefix.put(NS_XML_URI, NS_XML_PREFIX);
 

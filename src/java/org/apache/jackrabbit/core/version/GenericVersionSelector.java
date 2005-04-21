@@ -186,7 +186,11 @@ public class GenericVersionSelector implements VersionSelector {
      */
     public static Version selectByName(VersionHistory history, String name)
             throws RepositoryException {
-        return history.hasNode(name) ? history.getVersion(name) : null;
+        if (history.hasNode(name)) {
+            return history.getVersion(name);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -212,7 +216,10 @@ public class GenericVersionSelector implements VersionSelector {
      */
     public static Version selectByDate(VersionHistory history, Calendar date)
             throws RepositoryException {
-        long time = date == null ? Long.MAX_VALUE : date.getTimeInMillis();
+        long time = Long.MAX_VALUE;
+        if (date != null) {
+            time = date.getTimeInMillis();
+        }
         long latestDate = Long.MIN_VALUE;
         Version latestVersion = null;
         VersionIterator iter = history.getAllVersions();

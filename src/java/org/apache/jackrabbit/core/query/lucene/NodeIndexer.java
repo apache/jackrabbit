@@ -247,7 +247,7 @@ public class NodeIndexer {
      * and if that is the case, tries to extract text from the data atom using
      * {@link TextFilterService}add a {@link FieldNames#FULLTEXT} field
      * .
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
@@ -263,8 +263,10 @@ public class NodeIndexer {
             if (node.hasPropertyEntry(JCR_ENCODING)
                     && node.hasPropertyEntry(JCR_MIMETYPE)) {
                 PropertyState dataProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_DATA));
-                PropertyState mimeTypeProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_MIMETYPE));
-                PropertyState encodingProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
+                PropertyState mimeTypeProp =
+                    (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_MIMETYPE));
+                PropertyState encodingProp =
+                    (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
 
                 Map fields = TextFilterService.extractText(dataProp,
                         mimeTypeProp.getValues()[0].internalValue().toString(),
@@ -283,11 +285,11 @@ public class NodeIndexer {
             log.debug("Dump: ", e);
         }
     }
-    
+
     /**
      * Adds the string representation of the boolean value to the document as
      * the named field.
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
@@ -304,7 +306,7 @@ public class NodeIndexer {
      * Adds the calendar value to the document as the named field. The calendar
      * value is converted to an indexable string value using the {@link DateField}
      * class.
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
@@ -317,12 +319,12 @@ public class NodeIndexer {
                 true,
                 false));
     }
-    
+
     /**
      * Adds the double value to the document as the named field. The double
      * value is converted to an indexable string value using the
      * {@link DoubleField} class.
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
@@ -335,12 +337,12 @@ public class NodeIndexer {
                 true,
                 false));
     }
-    
+
     /**
      * Adds the long value to the document as the named field. The long
      * value is converted to an indexable string value using the {@link LongField}
      * class.
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
@@ -353,12 +355,12 @@ public class NodeIndexer {
                 true,
                 false));
     }
-    
+
     /**
      * Adds the reference value to the document as the named field. The value's
      * string representation is added as the reference data. Additionally the
      * reference data is stored in the index.
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
@@ -371,12 +373,12 @@ public class NodeIndexer {
                 true,
                 false));
     }
-    
+
     /**
      * Adds the path value to the document as the named field. The path
      * value is converted to an indexable string value using the name space
      * mappings with which this class has been created.
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
@@ -399,7 +401,7 @@ public class NodeIndexer {
     /**
      * Adds the string value to the document both as the named field and for
      * full text indexing.
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.
@@ -421,21 +423,20 @@ public class NodeIndexer {
                 true));
         // create fulltext index on property
         int idx = fieldName.indexOf(':');
-        fieldName = fieldName.substring(0, idx + 1) +
-                FieldNames.FULLTEXT_PREFIX +
-                fieldName.substring(idx + 1);
+        fieldName = fieldName.substring(0, idx + 1)
+            + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
         doc.add(new Field(fieldName, stringValue,
                 false,
                 true,
                 true));
     }
-    
+
     /**
      * Adds the name value to the document as the named field. The name
      * value is converted to an indexable string treating the internal value
      * as a qualified name and mapping the name space using the name space
      * mappings with which this class has been created.
-     * 
+     *
      * @param doc The document to which to add the field
      * @param fieldName The name of the field to add
      * @param internalValue The value for the field to add to the document.

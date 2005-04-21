@@ -46,7 +46,7 @@ import java.util.Map;
  * This Class implements a virtual item state provider, in order to expose the
  * versions to the version storage.
  */
-abstract public class AbstractVISProvider implements VirtualItemStateProvider, Constants {
+public abstract class AbstractVISProvider implements VirtualItemStateProvider, Constants {
     /**
      * the default logger
      */
@@ -89,7 +89,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
      * @return
      * @throws RepositoryException
      */
-    abstract protected VirtualNodeState createRootNodeState() throws RepositoryException;
+    protected abstract VirtualNodeState createRootNodeState() throws RepositoryException;
 
     //-----------------------------------------------------< ItemStateManager >
 
@@ -177,7 +177,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
      * @param id
      * @return
      */
-    abstract protected boolean internalHasNodeState(NodeId id);
+    protected abstract boolean internalHasNodeState(NodeId id);
 
     /**
      * Retrieves the node state with the given node id
@@ -187,7 +187,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
      * @throws NoSuchItemStateException
      * @throws ItemStateException
      */
-    abstract protected VirtualNodeState internalGetNodeState(NodeId id)
+    protected abstract VirtualNodeState internalGetNodeState(NodeId id)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
@@ -270,7 +270,7 @@ abstract public class AbstractVISProvider implements VirtualItemStateProvider, C
         // create a new node state
         VirtualNodeState state;
         if (uuid == null) {
-            uuid = UUID.randomUUID().toString();	// version 4 uuid
+            uuid = UUID.randomUUID().toString();    // version 4 uuid
         }
         state = new VirtualNodeState(this, parent.getUUID(), uuid, nodeTypeName, new QName[0]);
         state.setDefinitionId(def);

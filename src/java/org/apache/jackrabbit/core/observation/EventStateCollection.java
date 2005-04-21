@@ -320,7 +320,7 @@ public final class EventStateCollection {
                     NodeState n = (NodeState) changes.get(new NodeId(state.getParentUUID()));
                     // node state exists -> only property removed
                     NodeTypeImpl nodeType = getNodeType(n, session);
-                    Path paths[] = getAllPaths(state.getId(), hmgr);
+                    Path[] paths = getAllPaths(state.getId(), hmgr);
                     for (int i = 0; i < paths.length; i++) {
                         events.add(EventState.propertyRemoved(state.getParentUUID(),
                                 getParent(paths[i]),

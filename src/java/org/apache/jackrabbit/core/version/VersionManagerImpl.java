@@ -111,7 +111,8 @@ public class VersionManagerImpl implements VersionManager, Constants {
         if (virtProvider == null) {
             try {
                 // init the definition id mgr
-                virtProvider = new VersionItemStateProvider(this, ntReg, VERSION_STORAGE_NODE_UUID, VERSION_STORAGE_PARENT_NODE_UUID);
+                virtProvider = new VersionItemStateProvider(
+                        this, ntReg, VERSION_STORAGE_NODE_UUID, VERSION_STORAGE_PARENT_NODE_UUID);
             } catch (Exception e) {
                 // todo: better error handling
                 log.error("Error while initializing virtual items.", e);
@@ -330,7 +331,11 @@ public class VersionManagerImpl implements VersionManager, Constants {
         }
         virtProvider.invalidateItem(new NodeId(vh.getId()));
         obsMgr.dispatch(events, session);
-        return v == null ? null : (VersionImpl) session.getNodeByUUID(v.getId());
+        if (v == null) {
+            return null;
+        } else {
+            return (VersionImpl) session.getNodeByUUID(v.getId());
+        }
     }
 
     /**

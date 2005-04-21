@@ -341,11 +341,7 @@ public class NodeTypeImpl implements NodeType {
             log.warn("invalid node type name: " + nodeTypeName, upe);
             return false;
         }
-        if (getQName().equals(ntName) || isDerivedFrom(ntName)) {
-            return true;
-        } else {
-            return false;
-        }
+        return (getQName().equals(ntName) || isDerivedFrom(ntName));
     }
 
     /**
@@ -452,8 +448,8 @@ public class NodeTypeImpl implements NodeType {
                 return false;
             }
             int targetType;
-            if (def.getRequiredType() != PropertyType.UNDEFINED &&
-                    def.getRequiredType() != value.getType()) {
+            if (def.getRequiredType() != PropertyType.UNDEFINED
+                    && def.getRequiredType() != value.getType()) {
                 // type conversion required
                 targetType = def.getRequiredType();
             } else {
@@ -515,8 +511,8 @@ public class NodeTypeImpl implements NodeType {
             }
             // determine target type
             int targetType;
-            if (def.getRequiredType() != PropertyType.UNDEFINED &&
-                    def.getRequiredType() != type) {
+            if (def.getRequiredType() != PropertyType.UNDEFINED
+                    && def.getRequiredType() != type) {
                 // type conversion required
                 targetType = def.getRequiredType();
             } else {

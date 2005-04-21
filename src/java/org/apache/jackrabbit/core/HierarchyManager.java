@@ -51,7 +51,7 @@ public interface HierarchyManager {
 
     /**
      * Returns the depth of the specified item which is equivalent to
-     * <code>getPath(id).getAncestorCount()</code>.  
+     * <code>getPath(id).getAncestorCount()</code>.
      * @param id
      * @return
      * @throws ItemNotFoundException

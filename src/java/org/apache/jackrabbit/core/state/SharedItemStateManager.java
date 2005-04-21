@@ -453,8 +453,8 @@ public class SharedItemStateManager extends ItemStateCache
                             throw new NoSuchItemStateException();
                         }
                     } catch (NoSuchItemStateException e) {
-                        String msg = "Target node " + id +
-                                " of REFERENCE property does not exist";
+                        String msg = "Target node " + id
+                                + " of REFERENCE property does not exist";
                         throw new ItemStateException(msg);
                     }
                 }

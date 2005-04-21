@@ -201,12 +201,12 @@ public class ConfigurationParser {
 
         // Optional login module
         Element loginModule = getElement(security, LOGIN_MODULE_ELEMENT, false);
-        
+
         LoginModuleConfig lmc = null;
         if (loginModule != null) {
             lmc = new LoginModuleConfig(parseBeanConfig(security, LOGIN_MODULE_ELEMENT));
         }
-        
+
         // General workspace configuration
         Element workspaces = getElement(root, WORKSPACES_ELEMENT);
         String workspaceDirectory = replaceVariables(

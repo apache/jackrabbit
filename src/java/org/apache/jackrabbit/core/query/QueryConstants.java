@@ -28,143 +28,143 @@ public interface QueryConstants {
     /**
      * QName for jcr:score
      */
-    static final QName JCR_SCORE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "score");
+    QName JCR_SCORE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "score");
 
     /**
      * QName for jcr:path
      */
-    static final QName JCR_PATH = new QName(NamespaceRegistryImpl.NS_JCR_URI, "path");
+    QName JCR_PATH = new QName(NamespaceRegistryImpl.NS_JCR_URI, "path");
 
     /**
      * QName for jcr:statement
      */
-    static final QName JCR_STATEMENT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "statement");
+    QName JCR_STATEMENT = new QName(NamespaceRegistryImpl.NS_JCR_URI, "statement");
 
     /**
      * QName for jcr:language
      */
-    static final QName JCR_LANGUAGE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "language");
+    QName JCR_LANGUAGE = new QName(NamespaceRegistryImpl.NS_JCR_URI, "language");
 
     /**
      * long data type
      */
-    static int TYPE_LONG = 1;
+    int TYPE_LONG = 1;
 
     /**
      * double data type
      */
-    static int TYPE_DOUBLE = 2;
+    int TYPE_DOUBLE = 2;
 
     /**
      * string data type
      */
-    static int TYPE_STRING = 3;
+    int TYPE_STRING = 3;
 
     /**
      * date data type
      */
-    static int TYPE_DATE = 4;
+    int TYPE_DATE = 4;
 
     /**
      * timestamp data type
      */
-    static int TYPE_TIMESTAMP = 5;
+    int TYPE_TIMESTAMP = 5;
 
     /**
      * position index type
      */
-    static int TYPE_POSITION = 6;
+    int TYPE_POSITION = 6;
 
-    static int OPERATIONS = 10;
+    int OPERATIONS = 10;
 
     /**
      * equal operation: =
      */
-    static int OPERATION_EQ_VALUE = OPERATIONS + 1;
+    int OPERATION_EQ_VALUE = OPERATIONS + 1;
 
     /**
      * equal operation: =
      * general comparison
      */
-    static int OPERATION_EQ_GENERAL = OPERATION_EQ_VALUE + 1;
+    int OPERATION_EQ_GENERAL = OPERATION_EQ_VALUE + 1;
 
     /**
      * not equal operation: <>
      */
-    static int OPERATION_NE_VALUE = OPERATION_EQ_GENERAL + 1;
+    int OPERATION_NE_VALUE = OPERATION_EQ_GENERAL + 1;
 
     /**
      * not equal operation: <>
      * general comparision
      */
-    static int OPERATION_NE_GENERAL = OPERATION_NE_VALUE + 1;
+    int OPERATION_NE_GENERAL = OPERATION_NE_VALUE + 1;
 
     /**
      * less than operation: &lt;
      */
-    static int OPERATION_LT_VALUE = OPERATION_NE_GENERAL + 1;
+    int OPERATION_LT_VALUE = OPERATION_NE_GENERAL + 1;
 
     /**
      * less than operation: &lt;
      * general comparison
      */
-    static int OPERATION_LT_GENERAL = OPERATION_LT_VALUE + 1;
+    int OPERATION_LT_GENERAL = OPERATION_LT_VALUE + 1;
 
     /**
      * greater than operation: >
      */
-    static int OPERATION_GT_VALUE = OPERATION_LT_GENERAL + 1;
+    int OPERATION_GT_VALUE = OPERATION_LT_GENERAL + 1;
 
     /**
      * greater than operation: >
      * general comparision
      */
-    static int OPERATION_GT_GENERAL = OPERATION_GT_VALUE + 1;
+    int OPERATION_GT_GENERAL = OPERATION_GT_VALUE + 1;
 
     /**
      * greater or equal operation: >=
      */
-    static int OPERATION_GE_VALUE = OPERATION_GT_GENERAL + 1;
+    int OPERATION_GE_VALUE = OPERATION_GT_GENERAL + 1;
 
     /**
      * greater or equal operation: >=
      * general comparison
      */
-    static int OPERATION_GE_GENERAL = OPERATION_GE_VALUE + 1;
+    int OPERATION_GE_GENERAL = OPERATION_GE_VALUE + 1;
 
     /**
      * less than or equal operation: <=
      */
-    static int OPERATION_LE_VALUE = OPERATION_GE_GENERAL + 1;
+    int OPERATION_LE_VALUE = OPERATION_GE_GENERAL + 1;
 
     /**
      * less than or equal operation: <=
      * general comparison
      */
-    static int OPERATION_LE_GENERAL = OPERATION_LE_VALUE + 1;
+    int OPERATION_LE_GENERAL = OPERATION_LE_VALUE + 1;
 
     /**
      * like operation: identifier LIKE string_literal
      */
-    static int OPERATION_LIKE = OPERATION_LE_GENERAL + 1;
+    int OPERATION_LIKE = OPERATION_LE_GENERAL + 1;
 
     /**
      * between operation: identifier [ NOT ] BETWEEN literal AND literal
      */
-    static int OPERATION_BETWEEN = OPERATION_LIKE + 1;
+    int OPERATION_BETWEEN = OPERATION_LIKE + 1;
 
     /**
      * on operation: identifier [ NOT ] IN ( literal {, literal}* )
      */
-    static int OPERATION_IN = OPERATION_BETWEEN + 1;
+    int OPERATION_IN = OPERATION_BETWEEN + 1;
 
     /**
      * is null operation: identifier IS NULL
      */
-    static int OPERATION_NULL = OPERATION_IN + 1;
+    int OPERATION_NULL = OPERATION_IN + 1;
 
     /**
      * is not null operation: identifier IS NOT NULL
      */
-    static int OPERATION_NOT_NULL = OPERATION_NULL + 1;
+    int OPERATION_NOT_NULL = OPERATION_NULL + 1;
 }

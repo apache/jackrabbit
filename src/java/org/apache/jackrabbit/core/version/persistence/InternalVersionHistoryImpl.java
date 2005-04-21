@@ -135,7 +135,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
 
         // init label cache
-        PersistentNode labels[] = labelNode.getChildNodes();
+        PersistentNode[] labels = labelNode.getChildNodes();
         for (int i = 0; i < labels.length; i++) {
             PersistentNode lNode = labels[i];
             QName name = (QName) lNode.getPropertyValue(NativePVM.PROPNAME_NAME).internalValue();
@@ -295,8 +295,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     public InternalVersion setVersionLabel(QName versionName, QName label, boolean move)
             throws VersionException {
 
-        InternalVersion version = versionName == null ? null : getVersion(versionName);
-        if (versionName !=null && version == null) {
+        InternalVersion version = null;
+        if (versionName != null) {
+            version = getVersion(versionName);
+        }
+        if (versionName != null && version == null) {
             throw new VersionException("Version " + versionName + " does not exist in this version history.");
         }
         InternalVersionImpl prev = (InternalVersionImpl) labelCache.get(label);
@@ -451,7 +454,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @return
      * @throws RepositoryException
      */
-    protected static InternalVersionHistoryImpl create(PersistentVersionManager vMgr, PersistentNode parent, String historyId, QName name, NodeImpl src)
+    protected static InternalVersionHistoryImpl create(
+            PersistentVersionManager vMgr, PersistentNode parent,
+            String historyId, QName name, NodeImpl src)
             throws RepositoryException {
 
         // create history node

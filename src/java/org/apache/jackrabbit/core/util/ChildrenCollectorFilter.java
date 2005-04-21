@@ -49,7 +49,9 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
      * @param maxLevel          umber of hierarchy levels to traverse
      *                          (e.g. 1 for direct children only, 2 for children and their children, and so on)
      */
-    public ChildrenCollectorFilter(String namePattern, Collection children, boolean collectNodes, boolean collectProperties, int maxLevel) {
+    public ChildrenCollectorFilter(
+            String namePattern, Collection children,
+            boolean collectNodes, boolean collectProperties, int maxLevel) {
         super(false, maxLevel);
         this.namePattern = namePattern;
         this.children = children;

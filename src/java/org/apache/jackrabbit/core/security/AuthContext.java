@@ -42,16 +42,16 @@ import org.apache.jackrabbit.core.config.LoginModuleConfig;
  * @version $Id$
  */
 public abstract class AuthContext {
-    
+
     /**
      * Perform the authentication and, if successful, associate Principals and Credentials
      * with the authenticated<code>Subject</code>.
-     * 
+     *
      * @see LoginContext#login()
      * @throws LoginException if the authentication fails.
      */
     public abstract void login() throws LoginException;
-    
+
     /**
      * Return the authenticated Subject.
      *
@@ -67,17 +67,17 @@ public abstract class AuthContext {
      * @exception LoginException if the logout fails.
      */
     public abstract void logout() throws LoginException;
-    
+
     /**
      * An {@link AuthContext} implemented using a regular JAAS <code>LoginContext</code>.
      */
     public static class JAAS extends AuthContext {
-        
+
         private final LoginContext ctx;
-        
+
         /**
          * Creates an authentication context given a JAAS configuration name and some credentials.
-         * 
+         *
          * @param name the JAAS configuration index
          * @param creds the credentials
          * @throws LoginException if the JAAS context couldn't be created
@@ -106,9 +106,9 @@ public abstract class AuthContext {
         public void logout() throws LoginException {
             ctx.logout();
         }
-        
+
     }
-    
+
     /**
      * An {@link AuthContext} implemented using a particular <code>LoginModule</code>.
      */
@@ -117,10 +117,10 @@ public abstract class AuthContext {
         private final Map options;
         private Subject subject;
         private Credentials creds;
-        
+
         /**
          * Creates an authentication context given a login module configuration and some credentials.
-         * 
+         *
          * @param config the login module configuration
          * @param creds the credentials
          * @throws ConfigurationException if the login module couldn't be created
@@ -141,16 +141,16 @@ public abstract class AuthContext {
                     new CredentialsCallbackHandler(this.creds),
                     Collections.EMPTY_MAP,
                     this.options);
-            
+
             try {
                 if (this.module.login()) {
                     this.module.commit();
                 }
             }
-            catch(LoginException le) {
+            catch (LoginException le) {
                 try {
                     this.module.abort();
-                } catch(Exception e) {
+                } catch (Exception e) {
                     // Ignore
                 }
                 throw le;

@@ -41,7 +41,7 @@ import org.apache.jackrabbit.core.PropertyId;
  *   <li>Instantiation, where the instance is created and possible
  *       configuration properties are set using the JavaBean conventions.
  *       During this phase the persistence manager should not attempt to
- *       reference any external resources. 
+ *       reference any external resources.
  *   <li>Initialization, where the {@link #init(PMContext) init} method
  *       is invoked to bind the persistence manager with a given
  *       {@link PMContext context}.
