@@ -33,9 +33,9 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
+import javax.jcr.version.VersionException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -98,8 +98,8 @@ public class SerializationTest extends AbstractJCRTest {
         FileInputStream in = new FileInputStream(file);
         try {
             session.importXML(n.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-            fail("Importing to a checked-in node must throw a ConstraintViolationException.");
-        } catch (ConstraintViolationException e) {
+            fail("Importing to a checked-in node must throw a VersionException.");
+        } catch (VersionException e) {
             // success
         }
     }
@@ -115,8 +115,8 @@ public class SerializationTest extends AbstractJCRTest {
         FileInputStream in = new FileInputStream(file);
         try {
             session.importXML(n.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-            fail("Importing to a child of a checked-in node must throw a ConstraintViolationException.");
-        } catch (ConstraintViolationException e) {
+            fail("Importing to a child of a checked-in node must throw a VersionException.");
+        } catch (VersionException e) {
             // success
         }
     }
@@ -136,7 +136,8 @@ public class SerializationTest extends AbstractJCRTest {
         if (!vNode.isNodeType(mixVersionable)) {
             throw new NotExecutableException("NodeType: " + testNodeType + " is not versionable");
         }
-        Node vChild = vNode.addNode(nodeName2, testNodeType);
+        // add non-versionable child
+        Node vChild = vNode.addNode(nodeName2, ntBase);
         session.save();
         vNode.checkin();
 
@@ -178,7 +179,7 @@ public class SerializationTest extends AbstractJCRTest {
      * Tests whether importing an invalid XML file throws a SAX exception. The
      * file used here is more or less garbage.
      */
-    public void testInvalidXmlThrowsSaxException() {
+    public void testInvalidXmlThrowsSaxException() throws IOException {
         StringReader in = new StringReader("<this is not a <valid> <xml> file/>");
         ContentHandler ih = null;
         try {
@@ -189,6 +190,7 @@ public class SerializationTest extends AbstractJCRTest {
         }
         helpTestSaxException(ih, in, "session");
 
+        in = new StringReader("<this is not a <valid> <xml> file/>");
         try {
             ih = workspace.getImportContentHandler(treeComparator.targetFolder, 0);
         } catch (RepositoryException e) {
@@ -204,7 +206,7 @@ public class SerializationTest extends AbstractJCRTest {
      * @param in
      */
     private void helpTestSaxException(ContentHandler ih, Reader in, String mode) {
-        XMLReader parser = null;
+        XMLReader parser;
         try {
             parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
             parser.setContentHandler(ih);
@@ -270,26 +272,27 @@ public class SerializationTest extends AbstractJCRTest {
     }
 
     /**
-     * Tries to overwrite an existing node. This only works for nodes that do
-     * not allow same-name siblings.
+     * Tries to overwrite an existing node.
+     * @tck.config nodetype name of a node type, that does not allow same name
+     *  siblings. The node type must allow child nodes of its own type.
+     * @tck.config nodename1 name for a node of type <code>nodetype</code>.
+     * @tck.config nodename2 name for a node of type <code>nodetype</code>.
      */
     public void testSessionImportXmlOverwriteException() throws RepositoryException, IOException {
-        //If deserialization would overwrite an existing item, an ItemExistsException is thrown.
+        // If deserialization would overwrite an existing item, an ItemExistsException is thrown.
 
-        //create a folder node and a child node
-        Node folder = null, subfolder = null;
+        // create a folder node and a child node
+        Node folder;
+        Node subfolder;
         FileOutputStream out;
-        FileInputStream in = null;
-        folder = testRootNode.addNode("myFolder", "nt:folder");
-        subfolder = folder.addNode("mySubFolder", "nt:folder");
+        FileInputStream in;
+        folder = testRootNode.addNode(nodeName1, testNodeType);
+        subfolder = folder.addNode(nodeName1, testNodeType);
         session.save();
         out = new FileOutputStream(file);
         session.exportSystemView(subfolder.getPath(), out, true, true);
-        subfolder.addNode("mySubSubFolder", "nt:folder");
-        subfolder.remove();
-        session.save();
+        out.close();
         in = new FileInputStream(file);
-
         try {
             session.importXML(folder.getPath(), in,
                     ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
@@ -304,7 +307,7 @@ public class SerializationTest extends AbstractJCRTest {
      * Makes sure that importing into the session does not save anything if the
      * session is closed.
      */
-    public void testSessionImportXml() throws RepositoryException, IOException {
+    public void testSessionImportXml() throws Exception {
         FileInputStream in = new FileInputStream(file);
         exportRepository(SAVEBINARY, RECURSE);
         session.importXML(treeComparator.targetFolder, in,
@@ -312,10 +315,11 @@ public class SerializationTest extends AbstractJCRTest {
 
         // after logout/login, no nodes are in the session
         session.logout();
-        superuser = null; //so tearDown won't fail
+        superuser = null; // so tearDown won't fail
 
         session = helper.getReadWriteSession();
-        treeComparator.compare(treeComparator.CHECK_EMPTY);
+        Node targetFolder = (Node) session.getItem(treeComparator.targetFolder);
+        assertFalse("Session.importXML() must not save imported nodes.", targetFolder.hasNodes());
     }
 
     public void testExportSysView_stream_workspace_skipBinary_noRecurse() throws IOException, RepositoryException {

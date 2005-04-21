@@ -128,6 +128,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(CheckPermissionTest.class);
 
         suite.addTestSuite(DocumentViewImportTest.class);
+        suite.addTestSuite(SerializationTest.class);
 
         return suite;
     }

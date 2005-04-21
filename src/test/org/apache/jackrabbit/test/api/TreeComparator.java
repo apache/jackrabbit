@@ -408,6 +408,10 @@ class TreeComparator extends AbstractJCRTest {
                 fail("Cannot access property information: " + e);
             }
 
+            if (propertyValueMayChange(pName)) {
+                continue;
+            }
+
             Property pb = null;
             try {
                 pb = b.getProperty(pName);
