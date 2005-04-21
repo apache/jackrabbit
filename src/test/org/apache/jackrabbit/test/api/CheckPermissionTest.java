@@ -36,7 +36,7 @@ public class CheckPermissionTest extends AbstractJCRTest {
     /**
      * Tests if <code>Session.checkPermission(String, String)</code> works
      * properly: <ul> <li>Returns quietly if access is permitted.</li>
-     * <li>Throws an {@link java.security.AccessControlException) if access is
+     * <li>Throws an {@link java.security.AccessControlException} if access is
      * denied.</li> </ul>
      */
     public void testCheckPermission() throws Exception {
