@@ -144,48 +144,48 @@ public class CanSetPropertyBinaryTest extends AbstractJCRTest {
         Value binaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
 
         Value stringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
-        Value stringValues[] = {stringValue};
+        Value stringValues[] = new Value[] {stringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Binary and values are of type StringValue",
                 nodeType.canSetProperty(propDef.getName(), stringValues));
 
-        Value binaryValues[] = {binaryValue};
+        Value binaryValues[] = new Value[] {binaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Binary and values are of type BinaryValue",
                 nodeType.canSetProperty(propDef.getName(), binaryValues));
 
         Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
-        Value dateValues[] = {dateValue};
+        Value dateValues[] = new Value[] {dateValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Binary and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
         Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
-        Value doubleValues[] = {doubleValue};
+        Value doubleValues[] = new Value[] {doubleValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Binary and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
         Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
-        Value longValues[] = {longValue};
+        Value longValues[] = new Value[] {longValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Binary and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
         Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
-        Value booleanValues[] = {booleanValue};
+        Value booleanValues[] = new Value[] {booleanValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Binary and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
         Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
-        Value nameValues[] = {nameValue};
+        Value nameValues[] = new Value[] {nameValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Binary and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
         Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
-        Value pathValues[] = {pathValue};
+        Value pathValues[] = new Value[] {pathValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Binary and values are of type PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValues));
@@ -206,18 +206,14 @@ public class CanSetPropertyBinaryTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No binary property def with " +
                     "testable value constraints has been found");
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
 
-        // todo: canSetProperty does not return true if size in range
-        // ?: jackrabbit bug or does it not work like i did? (without stream)
-        // reported to sguggis 05-03-10
         assertFalse("canSetProperty(String propertyName, Value value) must " +
                 "return false if value does not match the value constraints.",
                 nodeType.canSetProperty(propDef.getName(), value));
@@ -238,15 +234,14 @@ public class CanSetPropertyBinaryTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No multiple binary property def with " +
                     "testable value constraints has been found");
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value values[] = {value};
+        Value values[] = new Value[] {value};
 
         assertFalse("canSetProperty(String propertyName, Value[] values) must " +
                 "return false if values do not match the value constraints.",

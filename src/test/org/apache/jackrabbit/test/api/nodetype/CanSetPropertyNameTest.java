@@ -168,71 +168,71 @@ public class CanSetPropertyNameTest extends AbstractJCRTest {
         Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
 
         Value nameStringValue = new StringValue("abc");
-        Value nameStringValues[] = {nameStringValue};
+        Value nameStringValues[] = new Value[] {nameStringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Name and values are of type StringValue " +
                 "that are convertible to NameValues",
                 nodeType.canSetProperty(propDef.getName(), nameStringValues));
 
         Value notNameStringValue = new StringValue("a:b:c");
-        Value notNameStringValues[] = {nameValue, notNameStringValue};
+        Value notNameStringValues[] = new Value[] {nameValue, notNameStringValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Name and values are of type StringValue " +
                 "that are not convertible to NameValues ",
                 nodeType.canSetProperty(propDef.getName(), notNameStringValues));
 
         Value nameBinaryValue = new BinaryValue("abc");
-        Value nameBinaryValues[] = {nameBinaryValue};
+        Value nameBinaryValues[] = new Value[] {nameBinaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Name and values are of type BinaryValue " +
                 "that are convertible to NameValues",
                 nodeType.canSetProperty(propDef.getName(), nameBinaryValues));
 
         Value notNameBinaryValue = new BinaryValue("a:b:c");
-        Value notNameBinaryValues[] = {nameValue, notNameBinaryValue};
+        Value notNameBinaryValues[] = new Value[] {nameValue, notNameBinaryValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Name and values are of type BinaryValue " +
                 "that are not convertible to NameValues",
                 nodeType.canSetProperty(propDef.getName(), notNameBinaryValues));
 
         Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
-        Value dateValues[] = {nameValue, dateValue};
+        Value dateValues[] = new Value[] {nameValue, dateValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Name and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
         Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
-        Value doubleValues[] = {nameValue, doubleValue};
+        Value doubleValues[] = new Value[] {nameValue, doubleValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Name and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
         Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
-        Value longValues[] = {nameValue, longValue};
+        Value longValues[] = new Value[] {nameValue, longValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Name and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
         Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
-        Value booleanValues[] = {booleanValue};
+        Value booleanValues[] = new Value[] {booleanValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Name and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
-        Value nameValues[] = {nameValue};
+        Value nameValues[] = new Value[] {nameValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Name and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
         Value namePathValue = PathValue.valueOf("abc");
-        Value namePathValues[] = {namePathValue};
+        Value namePathValues[] = new Value[] {namePathValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Name and values are of type PathValue " +
                 "if Path is relative, is one element long and has no index",
                 nodeType.canSetProperty(propDef.getName(), namePathValues));
 
         Value notNamePathValue = PathValue.valueOf("/abc");
-        Value notNamePathValues[] = {nameValue, notNamePathValue};
+        Value notNamePathValues[] = new Value[] {nameValue, notNamePathValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Name and values are of type PathValue " +
                 "if Path is not relative, is more than one element long or has an index",
@@ -254,9 +254,8 @@ public class CanSetPropertyNameTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No name property def with " +
                     "testable value constraints has been found");
         }
@@ -283,15 +282,14 @@ public class CanSetPropertyNameTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No multiple name property def with " +
                     "testable value constraints has been found");
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value values[] = {value};
+        Value values[] = new Value[] {value};
 
         assertFalse("canSetProperty(String propertyName, Value[] values) must " +
                 "return false if values do not match the value constraints.",

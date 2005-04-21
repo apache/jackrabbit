@@ -398,7 +398,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * @param testResult the test result.
      */
     public void run(TestResult testResult) {
-        super.run(new JCRTestResult(testResult));
+        super.run(new JCRTestResult(testResult, log));
     }
 
     /**

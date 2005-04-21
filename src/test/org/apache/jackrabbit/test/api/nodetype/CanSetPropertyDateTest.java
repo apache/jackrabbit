@@ -164,7 +164,7 @@ public class CanSetPropertyDateTest extends AbstractJCRTest {
         Value anyStringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
         // note: for assertFalse, use first value of requested type to check
         // if not only first value is checked
-        Value anyStringValues[] = {dateValue, anyStringValue};
+        Value anyStringValues[] = new Value[] {dateValue, anyStringValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Date and values are of type StringValue " +
                 "not in date format",
@@ -172,19 +172,19 @@ public class CanSetPropertyDateTest extends AbstractJCRTest {
 
         StringValue dateStringValue =
                 new StringValue(NodeTypeUtil.getValueOfType(PropertyType.DATE).getString());
-        Value dateStringValues[] = {dateStringValue};
+        Value dateStringValues[] = new Value[] {dateStringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Date and values are of type StringValue " +
                 "in date format",
                 nodeType.canSetProperty(propDef.getName(), dateStringValues));
 
-        Value dateValues[] = {dateValue};
+        Value dateValues[] = new Value[] {dateValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Date and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
         Value anyBinaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
-        Value anyBinaryValues[] = {dateValue, anyBinaryValue};
+        Value anyBinaryValues[] = new Value[] {dateValue, anyBinaryValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Date and values are of type BinaryValue" +
                 "in UTF-8 but not in date format",
@@ -192,38 +192,38 @@ public class CanSetPropertyDateTest extends AbstractJCRTest {
 
         BinaryValue dateBinaryValue =
                 new BinaryValue(NodeTypeUtil.getValueOfType(PropertyType.DATE).getString());
-        Value dateBinaryValues[] = {dateBinaryValue};
+        Value dateBinaryValues[] = new Value[] {dateBinaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Date and values are of type BinaryValue" +
                 "in UTF-8 and in date format",
                 nodeType.canSetProperty(propDef.getName(), dateBinaryValues));
 
         Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
-        Value doubleValues[] = {doubleValue};
+        Value doubleValues[] = new Value[] {doubleValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Date and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
         Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
-        Value longValues[] = {longValue};
+        Value longValues[] = new Value[] {longValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Date and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
         Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
-        Value booleanValues[] = {dateValue, booleanValue};
+        Value booleanValues[] = new Value[] {dateValue, booleanValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Date and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
         Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
-        Value nameValues[] = {dateValue, nameValue};
+        Value nameValues[] = new Value[] {dateValue, nameValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Date and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
         Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
-        Value pathValues[] = {dateValue, pathValue};
+        Value pathValues[] = new Value[] {dateValue, pathValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Date and values are of type PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValues));
@@ -244,9 +244,8 @@ public class CanSetPropertyDateTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No date property def with " +
                     "testable value constraints has been found");
         }
@@ -273,15 +272,14 @@ public class CanSetPropertyDateTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No multiple date property def with " +
                     "testable value constraints has been found");
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value values[] = {value};
+        Value values[] = new Value[] {value};
 
         assertFalse("canSetProperty(String propertyName, Value[] values) must " +
                 "return false if values do not match the value constraints.",

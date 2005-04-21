@@ -162,7 +162,7 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
         Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
 
         Value anyStringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
-        Value anyStringValues[] = {doubleValue, anyStringValue};
+        Value anyStringValues[] = new Value[] {doubleValue, anyStringValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type StringValue " +
                 "that are not convertible to DoubleValues",
@@ -170,14 +170,14 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
 
         Value doubleStringValue =
                 new StringValue(NodeTypeUtil.getValueOfType(PropertyType.DOUBLE).getString());
-        Value doubleStringValues[] = {doubleStringValue};
+        Value doubleStringValues[] = new Value[] {doubleStringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type StringValue " +
                 "that are convertible to DoubleValues",
                 nodeType.canSetProperty(propDef.getName(), doubleStringValues));
 
         Value anyBinaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
-        Value anyBinaryValues[] = {doubleValue, anyBinaryValue};
+        Value anyBinaryValues[] = new Value[] {doubleValue, anyBinaryValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type BinaryValue " +
                 "that are not convertible to DoubleValues",
@@ -185,43 +185,43 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
 
         Value doubleBinaryValue =
                 new BinaryValue(NodeTypeUtil.getValueOfType(PropertyType.DOUBLE).getString());
-        Value doubleBinaryValues[] = {doubleBinaryValue};
+        Value doubleBinaryValues[] = new Value[] {doubleBinaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type BinaryValue " +
                 "that are convertible to DoubleValues",
                 nodeType.canSetProperty(propDef.getName(), doubleBinaryValues));
 
         Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
-        Value dateValues[] = {dateValue};
+        Value dateValues[] = new Value[] {dateValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
-        Value doubleValues[] = {doubleValue};
+        Value doubleValues[] = new Value[] {doubleValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
         Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
-        Value longValues[] = {longValue};
+        Value longValues[] = new Value[] {longValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
         Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
-        Value booleanValues[] = {doubleValue, booleanValue};
+        Value booleanValues[] = new Value[] {doubleValue, booleanValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
         Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
-        Value nameValues[] = {doubleValue, nameValue};
+        Value nameValues[] = new Value[] {doubleValue, nameValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
         Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
-        Value pathValues[] = {doubleValue, pathValue};
+        Value pathValues[] = new Value[] {doubleValue, pathValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValues));
@@ -242,9 +242,8 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No double property def with " +
                     "testable value constraints has been found");
         }
@@ -271,15 +270,14 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No multiple double property def with " +
                     "testable value constraints has been found");
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value values[] = {value};
+        Value values[] = new Value[] {value};
 
         assertFalse("canSetProperty(String propertyName, Value[] values) must " +
                 "return false if values do not match the value constraints.",

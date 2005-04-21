@@ -35,7 +35,6 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.util.ISO8601;
-import java.text.ParseException;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,22 +42,24 @@ import java.util.regex.Pattern;
 /**
  * Utility class to locate item definitions in the NodeTyeManager.
  */
-class NodeTypeUtil {
+public class NodeTypeUtil {
 
     /**
      * Locate a child node def parsing all node types
      *
      * @param session:                  the session to access the node types
-     * @param regardDefaultPrimaryType: if true, the default primary type of the returned
-     *                                  <code>NodeDef</code> is according to param
-     *                                  <code>defaultPrimaryType</code>. If false, the returned
-     *                                  <code>NodeDef</code> might have a default primary type
-     *                                  or not.
-     * @param defaultPrimaryType:       if <code>regardDefaultPrimaryType</code> is true:
-     *                                  if true, the returned <code>NodeDef</code> has a
-     *                                  default primary type, else not
-     * @param residual:                 if true, the returned <code>NodeDef</code> is of
-     *                                  the residual name "*", else not
+     * @param regardDefaultPrimaryType: if true, the default primary type of the
+     *                                  returned <code>NodeDef</code> is
+     *                                  according to param <code>defaultPrimaryType</code>.
+     *                                  If false, the returned <code>NodeDef</code>
+     *                                  might have a default primary type or
+     *                                  not.
+     * @param defaultPrimaryType:       if <code>regardDefaultPrimaryType</code>
+     *                                  is true: if true, the returned
+     *                                  <code>NodeDef</code> has a default
+     *                                  primary type, else not
+     * @param residual:                 if true, the returned <code>NodeDef</code>
+     *                                  is of the residual name "*", else not
      * @return
      * @throws RepositoryException
      */
@@ -132,8 +133,7 @@ class NodeTypeUtil {
      *                     protected, else not
      * @param mandatory:   if true, the returned <code>NodeDef</code> is
      *                     mandatory, else not
-     * @return the first <code>NodeDef</code> found fitting the
-     *         requirements
+     * @return the first <code>NodeDef</code> found fitting the requirements
      */
     public static NodeDefinition locateChildNodeDef(Session session,
                                                     boolean isProtected,
@@ -234,12 +234,6 @@ class NodeTypeUtil {
                     // property def with constraints requested
                     if (vc == null || vc.length == 0) {
                         // property def has no constraints
-                        continue;
-                    }
-                    // check if a value out of constraint is buildable
-                    Value v = getValueOutOfContstraint(propDef);
-                    if (v == null) {
-                        // no value out of the constraint range available
                         continue;
                     }
                 }
@@ -378,9 +372,21 @@ class NodeTypeUtil {
     }
 
     /**
-     * Returns a value out of the value constraints
+     * Returns a value according to the value contraints of a
+     * <code>PropertyDefinition</code>
+     *
+     * @param propDef:  The <code>PropertyDefinition</code> whose constraints
+     *                  will be regarded
+     * @param satisfied If true, the returned <code>Value</code> will satisfying
+     *                  the constraints - If false, the returned
+     *                  <code>Value</code> will not satisfying the constraints.
+     * @return Depending on param <code>satisfied</code> a <code>Value</code>
+     *         satisfying or not satistying the constraints of
+     *         <code>propDef</code> will be returned. Null will be returned if
+     *         no accordant <code>Value</code> could be build.
      */
-    public static Value getValueOutOfContstraint(PropertyDefinition propDef)
+    public static Value getValueAccordingToValueConstraints(PropertyDefinition propDef,
+                                                            boolean satisfied)
             throws ValueFormatException, RepositoryException {
 
         int type = propDef.getRequiredType();
@@ -395,6 +401,11 @@ class NodeTypeUtil {
                 {
                     long absMin = 0;
                     long absMax = 0;
+
+                    // indicate if absMin and absMax are already set
+                    boolean absMinSet = false;
+                    boolean absMaxSet = false;
+
                     // boundless vars indicate min/max without bounds,
                     // if constraint is e.g.(min,) or [,max]
                     boolean maxBoundless = false;
@@ -408,7 +419,10 @@ class NodeTypeUtil {
                                 minBoundless = true;
                             } else {
                                 long min = Long.valueOf(minStr).longValue();
-                                if (min < absMin) {
+                                if (!absMinSet) {
+                                    absMin = min;
+                                    absMinSet = true;
+                                } else if (min < absMin) {
                                     absMin = min;
                                 }
                             }
@@ -419,23 +433,40 @@ class NodeTypeUtil {
                                 maxBoundless = true;
                             } else {
                                 long max = Long.valueOf(maxStr).longValue();
-                                if (max > absMax) {
+                                if (!absMaxSet) {
                                     absMax = max;
+                                    absMaxSet = true;
+                                } else if (max > absMax) {
+                                    absMin = max;
                                 }
                             }
                         }
                     }
-                    if (!minBoundless && absMin > 1) {
-                        return new BinaryValue("0");
-                    } else if (!maxBoundless) {
-                        // build a binary value of size > absMax
+                    if (satisfied) {
+                        // build a binary value absMin < size > absMax
                         StringBuffer content = new StringBuffer();
-                        for (int i = 0; i <= absMax; i = i + 10) {
-                            content.append("0123456789");
+                        for (int i = 0; i <= absMin + 1; i++) {
+                            content.append("X");
                         }
-                        return new BinaryValue(content.toString());
+                        if (!maxBoundless && content.length() >= absMax) {
+                            return null;
+                        } else {
+                            return new BinaryValue(content.toString());
+                        }
                     } else {
-                        return null;
+                        if (!minBoundless && absMin > 1) {
+                            // return a value of size < absMin
+                            return new BinaryValue("0");
+                        } else if (!maxBoundless) {
+                            // build a binary value of size > absMax
+                            StringBuffer content = new StringBuffer();
+                            for (int i = 0; i <= absMax; i = i + 10) {
+                                content.append("0123456789");
+                            }
+                            return new BinaryValue(content.toString());
+                        } else {
+                            return null;
+                        }
                     }
                 }
 
@@ -444,8 +475,12 @@ class NodeTypeUtil {
                     if (constraints.length > 1) {
                         return null; // silly constraint
                     }
-                    boolean value = !Boolean.valueOf(constraints[0]).booleanValue();
-                    return new BooleanValue(value);
+                    boolean value = Boolean.valueOf(constraints[0]).booleanValue();
+                    if (satisfied) {
+                        return new BooleanValue(value);
+                    } else {
+                        return new BooleanValue(!value);
+                    }
                 }
 
             case (PropertyType.DATE):
@@ -483,14 +518,33 @@ class NodeTypeUtil {
                             }
                         }
                     }
-                    if (!minBoundless) {
-                        absMin.setTimeInMillis(absMin.getTimeInMillis() - 1);
-                        return new DateValue(absMin);
-                    } else if (!maxBoundless) {
-                        absMax.setTimeInMillis(absMax.getTimeInMillis() + 1);
-                        return new DateValue(absMax);
+                    if (satisfied) {
+                        if (absMin != null) {
+                            absMin.setTimeInMillis(absMin.getTimeInMillis() + 1);
+                            if (absMin.after(absMax)) {
+                                return null;
+                            }
+                            return new DateValue(absMin);
+                        } else if (absMax != null) {
+                            absMax.setTimeInMillis(absMax.getTimeInMillis() - 1);
+                            if (absMax.before(absMin)) {
+                                return null;
+                            }
+                            return new DateValue(absMax);
+                        } else {
+                            // neither min nor max set: return "now"
+                            return new DateValue(Calendar.getInstance());
+                        }
                     } else {
-                        return null;
+                        if (!minBoundless) {
+                            absMin.setTimeInMillis(absMin.getTimeInMillis() - 1);
+                            return new DateValue(absMin);
+                        } else if (!maxBoundless) {
+                            absMax.setTimeInMillis(absMax.getTimeInMillis() + 1);
+                            return new DateValue(absMax);
+                        } else {
+                            return null;
+                        }
                     }
                 }
 
@@ -498,6 +552,10 @@ class NodeTypeUtil {
                 {
                     double absMin = 0;
                     double absMax = 0;
+
+                    // indicate if absMin and absMax are already set
+                    boolean absMinSet = false;
+                    boolean absMaxSet = false;
 
                     // boundless vars indicate min/max without bounds,
                     // if constraint is e.g.(min,) or [,max]
@@ -512,7 +570,10 @@ class NodeTypeUtil {
                                 minBoundless = true;
                             } else {
                                 double min = Double.valueOf(minStr).doubleValue();
-                                if (min < absMin) {
+                                if (!absMinSet) {
+                                    absMin = min;
+                                    absMinSet = true;
+                                } else if (min < absMin) {
                                     absMin = min;
                                 }
                             }
@@ -523,18 +584,34 @@ class NodeTypeUtil {
                                 maxBoundless = true;
                             } else {
                                 double max = Double.valueOf(maxStr).doubleValue();
-                                if (max > absMax) {
+                                if (!absMaxSet) {
+                                    absMax = max;
+                                    absMaxSet = true;
+                                } else if (max > absMax) {
                                     absMax = max;
                                 }
                             }
                         }
                     }
-                    if (!minBoundless) {
-                        return new DoubleValue(absMin - 1);
-                    } else if (!maxBoundless) {
-                        return new DoubleValue(absMax + 1);
+                    if (satisfied) {
+                        if (minBoundless) {
+                            return new DoubleValue(absMax - 1);
+                        } else if (maxBoundless) {
+                            return new DoubleValue(absMin + 1);
+                        } else if (absMin < absMax) {
+                            double d = (absMin + absMax) / 2;
+                            return new DoubleValue(d);
+                        } else {
+                            return null;
+                        }
                     } else {
-                        return null;
+                        if (!minBoundless) {
+                            return new DoubleValue(absMin - 1);
+                        } else if (!maxBoundless) {
+                            return new DoubleValue(absMax + 1);
+                        } else {
+                            return null;
+                        }
                     }
                 }
 
@@ -542,6 +619,10 @@ class NodeTypeUtil {
                 {
                     long absMin = 0;
                     long absMax = 0;
+
+                    // indicate if absMin and absMax are already set
+                    boolean absMinSet = false;
+                    boolean absMaxSet = false;
 
                     // boundless vars indicate min/max without bounds,
                     // if constraint is e.g.(min,) or [,max]
@@ -556,7 +637,10 @@ class NodeTypeUtil {
                                 minBoundless = true;
                             } else {
                                 long min = Long.valueOf(minStr).longValue();
-                                if (min < absMin) {
+                                if (!absMinSet) {
+                                    absMin = min;
+                                    absMinSet = true;
+                                } else if (min < absMin) {
                                     absMin = min;
                                 }
                             }
@@ -567,47 +651,73 @@ class NodeTypeUtil {
                                 maxBoundless = true;
                             } else {
                                 long max = Long.valueOf(maxStr).longValue();
-                                if (max > absMax) {
+                                if (!absMaxSet) {
+                                    absMax = max;
+                                    absMaxSet = true;
+                                } else if (max > absMax) {
                                     absMax = max;
                                 }
                             }
                         }
                     }
-                    if (!minBoundless) {
-                        return new LongValue(absMin - 1);
-                    } else if (!maxBoundless) {
-                        return new LongValue(absMax + 1);
+                    if (satisfied) {
+                        if (minBoundless) {
+                            return new LongValue(absMax - 1);
+                        } else if (maxBoundless) {
+                            return new LongValue(absMin + 1);
+                        } else if (absMin < absMax - 1) {
+                            long x = (absMin + absMax) / 2;
+                            return new LongValue(x);
+                        } else {
+                            return null;
+                        }
                     } else {
-                        return null;
+                        if (!minBoundless) {
+                            return new LongValue(absMin - 1);
+                        } else if (!maxBoundless) {
+                            return new LongValue(absMax + 1);
+                        } else {
+                            return null;
+                        }
                     }
                 }
 
             case (PropertyType.NAME):
                 {
-                    // build a name that is for sure not part of the constraints
-                    StringBuffer name = new StringBuffer("X");
-                    for (int i = 0; i < constraints.length; i++) {
-                        name.append(constraints[i].replaceAll(":", ""));
+                    if (satisfied) {
+                        // not in use so far
+                        return null;
+                    } else {
+                        // build a name that is for sure not part of the constraints
+                        StringBuffer name = new StringBuffer("X");
+                        for (int i = 0; i < constraints.length; i++) {
+                            name.append(constraints[i].replaceAll(":", ""));
+                        }
+                        return NameValue.valueOf(name.toString());
                     }
-                    return NameValue.valueOf(name.toString());
                 }
 
             case (PropertyType.PATH):
                 {
-                    // build a path that is for sure not part of the constraints
-                    StringBuffer path = new StringBuffer("X");
-                    for (int i = 0; i < constraints.length; i++) {
-                        path.append(constraints[i]);
+                    if (satisfied) {
+                        // not in use so far
+                        return null;
+                    } else {
+                        // build a path that is for sure not part of the constraints
+                        StringBuffer path = new StringBuffer("X");
+                        for (int i = 0; i < constraints.length; i++) {
+                            path.append(constraints[i]);
+                        }
+                        String pathStr = path.toString();
+
+                        // replace colon to avoid /a/x:b + y:c => /a/x:b:y:c
+                        // where x:b:y:c is not a legal path element
+                        pathStr = pathStr.replaceAll(":", "");
+                        pathStr = pathStr.replaceAll("\\*", "");
+                        pathStr = pathStr.replaceAll("//", "/");
+
+                        return PathValue.valueOf(pathStr);
                     }
-                    String pathStr = path.toString();
-
-                    // replace colon to avoid /a/x:b + y:c => /a/x:b:y:c
-                    // where x:b:y:c is not a legal path element
-                    pathStr = pathStr.replaceAll(":", "");
-                    pathStr = pathStr.replaceAll("\\*", "");
-                    pathStr = pathStr.replaceAll("//", "/");
-
-                    return PathValue.valueOf(pathStr);
                 }
 
             case (PropertyType.UNDEFINED):
@@ -617,21 +727,26 @@ class NodeTypeUtil {
 
             default:
                 {
-                    // build a string that will probably not be part of the constraints
-                    StringBuffer value = new StringBuffer("X");
-                    for (int i = 0; i < constraints.length; i++) {
-                        value.append(constraints[i]);
-                    }
-
-                    // test if value does not match any of the constraints
-                    for (int i = 0; i < constraints.length; i++) {
-                        Pattern pattern = Pattern.compile(constraints[i]);
-                        Matcher matcher = pattern.matcher(value);
-                        if (matcher.matches()) {
-                            return null;
+                    if (satisfied) {
+                        // not in use so far
+                        return null;
+                    } else {
+                        // build a string that will probably not satisfy the constraints
+                        StringBuffer value = new StringBuffer("X");
+                        for (int i = 0; i < constraints.length; i++) {
+                            value.append(constraints[i]);
                         }
+
+                        // test if value does not match any of the constraints
+                        for (int i = 0; i < constraints.length; i++) {
+                            Pattern pattern = Pattern.compile(constraints[i]);
+                            Matcher matcher = pattern.matcher(value);
+                            if (matcher.matches()) {
+                                return null;
+                            }
+                        }
+                        return new StringValue(value.toString());
                     }
-                    return new StringValue(value.toString());
                 }
         }
     }

@@ -146,48 +146,48 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
         Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
 
         Value stringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
-        Value stringValues[] = {stringValue};
+        Value stringValues[] = new Value[] {stringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Boolean and values are of type StringValue",
                 nodeType.canSetProperty(propDef.getName(), stringValues));
 
         Value binaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
-        Value binaryValues[] = {binaryValue};
+        Value binaryValues[] = new Value[] {binaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Boolean and values are of type BinaryValue",
                 nodeType.canSetProperty(propDef.getName(), binaryValues));
 
         Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
-        Value dateValues[] = {booleanValue, dateValue};
+        Value dateValues[] = new Value[] {booleanValue, dateValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
         Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
-        Value doubleValues[] = {booleanValue, doubleValue};
+        Value doubleValues[] = new Value[] {booleanValue, doubleValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
         Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
-        Value longValues[] = {booleanValue, longValue};
+        Value longValues[] = new Value[] {booleanValue, longValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
-        Value booleanValues[] = {booleanValue};
+        Value booleanValues[] = new Value[] {booleanValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Boolean and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
         Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
-        Value nameValues[] = {booleanValue, nameValue};
+        Value nameValues[] = new Value[] {booleanValue, nameValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
         Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
-        Value pathValues[] = {booleanValue, pathValue};
+        Value pathValues[] = new Value[] {booleanValue, pathValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValues));
@@ -208,10 +208,9 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         System.out.println(value.getString());
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No boolean property def with " +
                     "testable value constraints has been found");
         }
@@ -238,15 +237,14 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No multiple boolean property def with " +
                     "testable value constraints has been found");
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value values[] = {value};
+        Value values[] = new Value[] {value};
 
         assertFalse("canSetProperty(String propertyName, Value[] values) must " +
                 "return false if values do not match the value constraints.",

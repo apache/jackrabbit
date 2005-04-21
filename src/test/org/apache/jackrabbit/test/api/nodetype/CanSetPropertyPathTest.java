@@ -166,64 +166,64 @@ public class CanSetPropertyPathTest extends AbstractJCRTest {
         Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
 
         Value pathStringValue = new StringValue("abc");
-        Value pathStringValues[] = {pathStringValue};
+        Value pathStringValues[] = new Value[] {pathStringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Path and values are of type StringValue " +
                 "that are convertible to PathValues",
                 nodeType.canSetProperty(propDef.getName(), pathStringValues));
 
         Value notPathStringValue = new StringValue("a:b:c");
-        Value notPathStringValues[] = {pathValue, notPathStringValue};
+        Value notPathStringValues[] = new Value[] {pathValue, notPathStringValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Path and values are of type StringValue " +
                 "that are not convertible to PathValues ",
                 nodeType.canSetProperty(propDef.getName(), notPathStringValues));
 
         Value pathBinaryValue = new BinaryValue("abc");
-        Value pathBinaryValues[] = {pathBinaryValue};
+        Value pathBinaryValues[] = new Value[] {pathBinaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Path and values are of type BinaryValue " +
                 "that are convertible to PathValues",
                 nodeType.canSetProperty(propDef.getName(), pathBinaryValues));
 
         Value notPathBinaryValue = new BinaryValue("a:b:c");
-        Value notPathBinaryValues[] = {pathValue, notPathBinaryValue};
+        Value notPathBinaryValues[] = new Value[] {pathValue, notPathBinaryValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Path and values are of type BinaryValue " +
                 "that are not convertible to PathValues",
                 nodeType.canSetProperty(propDef.getName(), notPathBinaryValues));
 
         Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
-        Value dateValues[] = {pathValue, dateValue};
+        Value dateValues[] = new Value[] {pathValue, dateValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Path and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
         Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
-        Value doubleValues[] = {pathValue, doubleValue};
+        Value doubleValues[] = new Value[] {pathValue, doubleValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Path and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
         Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
-        Value longValues[] = {pathValue, longValue};
+        Value longValues[] = new Value[] {pathValue, longValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Path and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
         Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
-        Value booleanValues[] = {booleanValue};
+        Value booleanValues[] = new Value[] {booleanValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Path and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
         Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
-        Value nameValues[] = {nameValue};
+        Value nameValues[] = new Value[] {nameValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Path and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
-        Value pathValues[] = {pathValue, pathValue};
+        Value pathValues[] = new Value[] {pathValue, pathValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Path and values are of type PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValues));
@@ -244,9 +244,8 @@ public class CanSetPropertyPathTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No path property def with " +
                     "testable value constraints has been found");
         }
@@ -273,15 +272,14 @@ public class CanSetPropertyPathTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No multiple path property def with " +
                     "testable value constraints has been found");
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value values[] = {value};
+        Value values[] = new Value[] {value};
 
         assertFalse("canSetProperty(String propertyName, Value[] values) must " +
                 "return false if values do not match the value constraints.",
