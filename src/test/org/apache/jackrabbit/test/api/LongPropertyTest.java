@@ -59,10 +59,11 @@ public class LongPropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 // ok
             }
+        } else {
+            long l = prop.getValue().getLong();
+            long ll = prop.getLong();
+            assertEquals("Value.getLong() and Property.getLong() return different values.", l, ll);
         }
-        long l = prop.getValue().getLong();
-        long ll = prop.getLong();
-        assertEquals("Value.getLong() and Property.getLong() return different values.", l, ll);
     }
 
     /**

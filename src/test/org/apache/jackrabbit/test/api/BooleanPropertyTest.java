@@ -25,8 +25,8 @@ import java.io.BufferedInputStream;
 import java.io.InputStream;
 
 /**
- * Tests a boolean property. If the workspace does not contain a node with
- * a boolean property a {@link org.apache.jackrabbit.test.NotExecutableException}
+ * Tests a boolean property. If the workspace does not contain a node with a
+ * boolean property a {@link org.apache.jackrabbit.test.NotExecutableException}
  * is thrown.
  *
  * @test
@@ -38,6 +38,7 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
 
     /**
      * Returns {@link javax.jcr.PropertyType#BOOLEAN}.
+     *
      * @return {@link javax.jcr.PropertyType#BOOLEAN}.
      */
     protected int getPropertyType() {
@@ -46,8 +47,8 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
 
     /**
      * Tests that Property.getBoolean() delivers the same as Value.getBoolean()
-     * and that in case of a multivalue property Property.getBoolean()
-     * throws a ValueFormatException.
+     * and that in case of a multivalue property Property.getBoolean() throws a
+     * ValueFormatException.
      */
     public void testValue() throws RepositoryException {
         if (multiple) {
@@ -58,54 +59,55 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 // ok
             }
+        } else {
+            boolean bool = prop.getValue().getBoolean();
+            boolean otherBool = prop.getBoolean();
+            assertTrue("Value.getBoolean() and Property.getBoolean() " +
+                    "return different values.", bool == otherBool);
         }
-        boolean bool = prop.getValue().getBoolean();
-        boolean otherBool = prop.getBoolean();
-        assertTrue("Value.getBoolean() and Property.getBoolean() " +
-                "return different values.", bool == otherBool) ;
     }
 
     /**
-      * Tests failure of conversion from Boolean type to Date type.
-      */
-     public void testGetDate() throws RepositoryException {
-         try {
-             Value val = PropertyUtil.getValue(prop);
-             val.getDate();
-             fail("Conversion from a Boolean value to a Date value " +
-                     "should throw a ValueFormatException");
-         } catch (ValueFormatException vfe) {
-             //ok
-         }
-     }
+     * Tests failure of conversion from Boolean type to Date type.
+     */
+    public void testGetDate() throws RepositoryException {
+        try {
+            Value val = PropertyUtil.getValue(prop);
+            val.getDate();
+            fail("Conversion from a Boolean value to a Date value " +
+                    "should throw a ValueFormatException");
+        } catch (ValueFormatException vfe) {
+            //ok
+        }
+    }
 
-     /**
-      * Tests failure from Boolean type to Double type.
-      */
-     public void testGetDouble() throws RepositoryException {
-         try {
-             Value val = PropertyUtil.getValue(prop);
-             val.getDouble();
-             fail("Conversion from a Boolean value to a Double value " +
-                     "should throw a ValueFormatException");
-         } catch (ValueFormatException vfe) {
-             //ok
-         }
-     }
+    /**
+     * Tests failure from Boolean type to Double type.
+     */
+    public void testGetDouble() throws RepositoryException {
+        try {
+            Value val = PropertyUtil.getValue(prop);
+            val.getDouble();
+            fail("Conversion from a Boolean value to a Double value " +
+                    "should throw a ValueFormatException");
+        } catch (ValueFormatException vfe) {
+            //ok
+        }
+    }
 
-     /**
-      * Tests failure of conversion from Boolean type to Long type.
-      */
-     public void testGetLong() throws RepositoryException {
-         try {
-             Value val = PropertyUtil.getValue(prop);
-             val.getLong();
-             fail("Conversion from a Boolean value to a Long value " +
-                     "should throw a ValueFormatException");
-         } catch (ValueFormatException vfe) {
-             //ok
-         }
-     }
+    /**
+     * Tests failure of conversion from Boolean type to Long type.
+     */
+    public void testGetLong() throws RepositoryException {
+        try {
+            Value val = PropertyUtil.getValue(prop);
+            val.getLong();
+            fail("Conversion from a Boolean value to a Long value " +
+                    "should throw a ValueFormatException");
+        } catch (ValueFormatException vfe) {
+            //ok
+        }
+    }
 
     /**
      * Tests conversion from Boolean type to Binary type.
@@ -137,11 +139,14 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
             fail("Stream method call after a non stream method call " +
                     "should throw an IllegalStateException");
         } catch (IllegalStateException ise) {
-           // ok
-        }
-        finally {
-            if (in != null) in.close();
-            if (ins != null) ins.close();
+            // ok
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+            if (ins != null) {
+                ins.close();
+            }
         }
     }
 
@@ -157,16 +162,16 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Tests if Value.getType() returns the same as Property.getType()
-     * and also tests that prop.getDefinition().getRequiredType() returns
-     * the same type in case it is not of Undefined type.
+     * Tests if Value.getType() returns the same as Property.getType() and also
+     * tests that prop.getDefinition().getRequiredType() returns the same type
+     * in case it is not of Undefined type.
      */
     public void testGetType() throws RepositoryException {
         assertTrue("Value.getType() returns wrong type.",
                 PropertyUtil.checkGetType(prop, PropertyType.BOOLEAN));
     }
 
-   /**
+    /**
      * Tests failure of conversion from Boolean type to Reference type.
      */
     public void testAsReference() throws RepositoryException {
@@ -178,8 +183,7 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 //ok
             }
-        }
-        else {
+        } else {
             try {
                 prop.getNode();
                 fail("Property.getNode() called on a multivalue property " +
@@ -190,7 +194,7 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
         }
     }
 
-   /**
+    /**
      * Tests the Property.getLength() method. The length returned is either -1
      * or it is the length of the string received by conversion.
      */
@@ -204,8 +208,7 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
             } catch (ValueFormatException vfe) {
                 // ok
             }
-        }
-        else {
+        } else {
             long length = prop.getLength();
             if (length > -1) {
                 assertEquals("Property.getLength() returns wrong number of bytes.",
@@ -225,12 +228,11 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
             for (int i = 0; i < lengths.length; i++) {
                 if (lengths[i] > -1) {
                     assertEquals("Property.getLengths() returns " +
-                        "wrong array of the lengths of a multivalue property.",
-                        values[i].getString().length(), lengths[i]);
+                            "wrong array of the lengths of a multivalue property.",
+                            values[i].getString().length(), lengths[i]);
                 }
             }
-        }
-        else {
+        } else {
             try {
                 prop.getLengths();
                 fail("Property.getLengths() called on a sinlge value property " +

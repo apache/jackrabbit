@@ -209,7 +209,6 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
         }
 
         Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
-        System.out.println(value.getString());
         if (value == null) {
             throw new NotExecutableException("No boolean property def with " +
                     "testable value constraints has been found");
