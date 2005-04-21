@@ -1161,7 +1161,10 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * {@inheritDoc}
      */
-    public PropertyDefinition getDefinition() {
+    public PropertyDefinition getDefinition() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         return definition;
     }
 
