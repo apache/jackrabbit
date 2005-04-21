@@ -117,6 +117,18 @@ public class ChangeLog {
     }
 
     /**
+     * Return a flag indicating whether a given item state exists.
+     * @return <code>true</code> if item state exists within this
+     *         log; <code>false</code> otherwise
+     */
+    public boolean has(ItemId id) {
+        if (addedStates.containsKey(id) || modifiedStates.containsKey(id)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Return a node references object given its id. Returns
      * <code>null</code> if the node reference is not in the modified
      * section.

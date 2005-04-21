@@ -208,9 +208,20 @@ public class LocalItemStateManager extends ItemStateCache
         if (refs != null) {
             return refs;
         }
-
         return sharedStateMgr.getNodeReferences(id);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasNodeReferences(NodeReferencesId id) {
+        // check change log
+        if (changeLog.get(id) != null) {
+            return true;
+        }
+        return sharedStateMgr.hasNodeReferences(id);
+    }
+
 
     //--------------------------------------------< UpdatableItemStateManager >
     /**

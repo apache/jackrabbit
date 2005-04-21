@@ -140,6 +140,13 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
                 throws NoSuchItemStateException, ItemStateException {
             throw new UnsupportedOperationException();
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean hasNodeReferences(NodeReferencesId id) {
+            return false;
+        }
     }
 
     /**
@@ -202,6 +209,13 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
         public NodeReferences getNodeReferences(NodeReferencesId id)
                 throws NoSuchItemStateException, ItemStateException {
             throw new UnsupportedOperationException();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean hasNodeReferences(NodeReferencesId id) {
+            return false;
         }
     }
 }

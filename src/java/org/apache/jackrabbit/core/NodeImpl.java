@@ -905,7 +905,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws RepositoryException {
         try {
             NodeReferencesId targetId = new NodeReferencesId(((NodeId) id).getUUID());
-            NodeReferences refs = stateMgr.getNodeReferences(targetId);
+            NodeReferences refs = getOrCreateNodeReferences(targetId);
             // refs.getReferences returns a list of PropertyId's
             List idList = refs.getReferences();
             return new LazyItemIterator(itemMgr, idList, skipInexistent);
@@ -934,9 +934,6 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new VersionException(msg);
         }
-
-        // check lock status
-        checkLock();
 
         // check protected flag
         if (definition.isProtected()) {

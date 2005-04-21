@@ -156,6 +156,13 @@ public class VersionItemStateProvider extends AbstractVISProvider {
     /**
      * {@inheritDoc}
      */
+    public boolean hasNodeReferences(NodeReferencesId id) {
+        return vMgr.hasItem(id.getUUID());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     protected boolean internalHasNodeState(NodeId id) {
         return vMgr.hasItem(id.getUUID());
     }

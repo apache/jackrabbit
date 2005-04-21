@@ -79,6 +79,25 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     }
 
     /**
+     * Prepare a transaction
+     *
+     * @param tx transaction context
+     * @throws TransactionException if an error occurs
+     */
+    public void prepare(TransactionContext tx) throws TransactionException {
+        ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
+        if (changeLog != null) {
+            try {
+                sharedStateMgr.checkTargetsExist(changeLog);
+            } catch (ItemStateException e) {
+                log.error(e);
+                changeLog.undo(sharedStateMgr);
+                throw new TransactionException("Unable to prepare transaction.", e);
+            }
+        }
+    }
+
+    /**
      * Commit changes made within a transaction
      *
      * @param tx transaction context
@@ -94,7 +113,7 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
             } catch (ItemStateException e) {
                 log.error(e);
                 changeLog.undo(sharedStateMgr);
-                throw new TransactionException("Unable to end update.", e);
+                throw new TransactionException("Unable to commit transaction.", e);
             } finally {
                 ((CommitLog) commitLog.get()).setChanges(null);
             }
@@ -205,6 +224,30 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
             }
         }
         return super.getNodeReferences(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * If this state manager is committing changes, this method first
+     * checks the commitLog ThreadLocal. Else if associated to a transaction
+     * check the transactional change log. Fallback is always the call to
+     * the base class.
+     */
+    public boolean hasNodeReferences(NodeReferencesId id) {
+        ChangeLog changeLog = ((CommitLog) commitLog.get()).getChanges();
+        if (changeLog != null) {
+            // check commit log
+            if (changeLog.get(id) != null) {
+                return true;
+            }
+        } else if (txLog != null) {
+            // check change log
+            if (txLog.get(id) != null) {
+                return true;
+            }
+        }
+        return super.hasNodeReferences(id);
     }
 
     /**
