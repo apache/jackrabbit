@@ -27,8 +27,6 @@ import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
 
-import java.security.AccessControlException;
-
 /**
  * <code>SessionReadMethodsTest</code>...
  *
@@ -163,6 +161,22 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Tests if isLive() returns true if the <code>Session</code> is usable by
+     * the client and false if it is not usable
+     */
+    public void testIsLive() {
+        assertTrue("Method isLive() must return true if the session " +
+                "is usable by the client.",
+                session.isLive());
+
+        session.logout();
+        assertFalse("Method isLive() must return false if the session " +
+                "is not usable by the client, e.g. if the session is " +
+                "logged-out.",
+                session.isLive());
+    }
+
     //----------------------< internal >----------------------------------------
 
     /**
@@ -207,4 +221,5 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
         }
         return referenced;
     }
+
 }

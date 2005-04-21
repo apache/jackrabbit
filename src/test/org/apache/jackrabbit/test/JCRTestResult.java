@@ -32,12 +32,17 @@ public class JCRTestResult extends TestResult {
     /** The original TestResult we delegate to */
     private final TestResult orig;
 
+    /** The log writer of the test classes */
+    private final LogPrintWriter log;
+
     /**
      * Creates a new JCRTestResult that delegates to <code>orig</code>.
      * @param orig the original TestResult this result wraps.
+     * @param log the logger
      */
-    public JCRTestResult(TestResult orig) {
+    public JCRTestResult(TestResult orig, LogPrintWriter log) {
         this.orig = orig;
+        this.log = log;
     }
 
     /**
@@ -48,7 +53,7 @@ public class JCRTestResult extends TestResult {
      */
     public synchronized void addError(Test test, Throwable throwable) {
         if (throwable instanceof NotExecutableException) {
-            // ignore
+            log.println("Test case: " + test.toString() + " not executable");
         } else {
             orig.addError(test, throwable);
         }

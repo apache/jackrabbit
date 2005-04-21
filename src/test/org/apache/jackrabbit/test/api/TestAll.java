@@ -85,6 +85,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SetValueLongTest.class);
         suite.addTestSuite(SetValueReferenceTest.class);
         suite.addTestSuite(SetValueStringTest.class);
+        suite.addTestSuite(SetValueConstraintViolationExceptionTest.class);
 
         suite.addTestSuite(SetPropertyBooleanTest.class);
         suite.addTestSuite(SetPropertyCalendarTest.class);
@@ -94,6 +95,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SetPropertyNodeTest.class);
         suite.addTestSuite(SetPropertyStringTest.class);
         suite.addTestSuite(SetPropertyValueTest.class);
+        suite.addTestSuite(SetPropertyConstraintViolationExceptionTest.class);
 
         suite.addTestSuite(NodeItemIsModifiedTest.class);
         suite.addTestSuite(NodeItemIsNewTest.class);

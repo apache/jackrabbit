@@ -54,6 +54,7 @@ import java.io.InputStream;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.StringWriter;
 
 /**
  * <code>ExportDocViewTest</code> tests the two Session methods :
@@ -218,7 +219,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
      *
      * @throws RepositoryException
      */
-    private void compareTree() throws RepositoryException {
+    private void compareTree() throws RepositoryException, IOException {
         Element root = doc.getDocumentElement();
         textValuesStack = new Stack();
         // we assume the path is valid
@@ -284,7 +285,8 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @param elem
      * @throws RepositoryException
      */
-    private void checkChildNodes(Node node, Element elem) throws RepositoryException {
+    private void checkChildNodes(Node node, Element elem)
+            throws RepositoryException, IOException {
 
         NodeIterator nodeIter = node.getNodes();
         if (getSize(nodeIter) == 0) {
@@ -334,7 +336,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     private void compareChildTree(Node node, Element parentElem)
-            throws RepositoryException {
+            throws RepositoryException, IOException {
 
         Element nodeElem;
 
@@ -488,7 +490,8 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @param elem
      * @throws RepositoryException
      */
-    private void compareNode(Node node, Element elem) throws RepositoryException {
+    private void compareNode(Node node, Element elem)
+            throws RepositoryException, IOException {
         // count the child nodes and compare with the exported child elements
         compareChildNumber(node, elem);
         // count the properties and compare with attributes exported
@@ -515,7 +518,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     private void compareProperty(Property prop, Attr attr)
-            throws RepositoryException {
+            throws RepositoryException, IOException {
 
         boolean isMultiple = prop.getDefinition().isMultiple();
         boolean isBinary = (prop.getType() == PropertyType.BINARY);
@@ -906,6 +909,19 @@ public class ExportDocViewTest extends AbstractJCRTest {
     }
 
     /**
+     * Encodes a given stream to base64.
+     *
+     * @param in the stream to encode.
+     * @return the encoded string in base64.
+     * @throws IOException if an error occurs.
+     */
+    private static String encodeBase64(InputStream in) throws IOException {
+        StringWriter writer = new StringWriter();
+        Base64.encode(in, writer);
+        return writer.getBuffer().toString();
+    }
+
+    /**
      * Exports values of a multivalue property and concatenate the values
      * separated by a space. (chapter 6.4.4 of the JCR specification).
      *
@@ -914,7 +930,8 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @return
      * @throws RepositoryException
      */
-    private static String exportValues(Property prop, boolean isBinary) throws RepositoryException {
+    private static String exportValues(Property prop, boolean isBinary)
+            throws RepositoryException, IOException {
         Value[] vals = prop.getValues();
         // order of multi values is preserved.
         // multival with empty array is exported as empty string
@@ -922,7 +939,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
         if (isBinary) {
             for (int i = 0; i < vals.length; i++) {
-                exportedVal += vals[i];
+                exportedVal += encodeBase64(vals[i].getStream());
                 exportedVal += " ";
             }
         } else {

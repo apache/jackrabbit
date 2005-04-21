@@ -76,7 +76,7 @@
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
   </nodeType>
 
-  <!-- Defines a nodetype for testing NodeType.canSetProperty() -->
+  <!-- Defines a nodetype for tests of NodeType.canSetProperty(), Property.setValue() and Node.setProperty() -->
   <nodeType name="test:canSetProperty" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>nt:base</supertype>
@@ -179,6 +179,16 @@
     <propertyDefinition name="PathMultipleConstraints" requiredType="Path" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
       <valueConstraints>
         <valueConstraint>/abc</valueConstraint>
+      </valueConstraints>
+    </propertyDefinition>
+    <propertyDefinition name="ReferenceConstraints" requiredType="Reference" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>test:canSetProperty</valueConstraint>
+      </valueConstraints>
+    </propertyDefinition>
+    <propertyDefinition name="ReferenceMultipleConstraints" requiredType="Reference" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>test:canSetProperty</valueConstraint>
       </valueConstraints>
     </propertyDefinition>
   </nodeType>

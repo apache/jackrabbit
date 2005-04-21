@@ -162,7 +162,7 @@ public class CanSetPropertyLongTest extends AbstractJCRTest {
         Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
 
         Value anyStringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
-        Value anyStringValues[] = {longValue, anyStringValue};
+        Value anyStringValues[] = new Value[] {longValue, anyStringValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Long and values are of type StringValue " +
                 "that are not convertible to LongValues",
@@ -170,14 +170,14 @@ public class CanSetPropertyLongTest extends AbstractJCRTest {
 
         Value longStringValue =
                 new StringValue(NodeTypeUtil.getValueOfType(PropertyType.LONG).getString());
-        Value longStringValues[] = {longStringValue};
+        Value longStringValues[] = new Value[] {longStringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Long and values are of type StringValue " +
                 "that are convertible to LongValues",
                 nodeType.canSetProperty(propDef.getName(), longStringValues));
 
         Value anyBinaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
-        Value anyBinaryValues[] = {longValue, anyBinaryValue};
+        Value anyBinaryValues[] = new Value[] {longValue, anyBinaryValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Long and values are of type BinaryValue " +
                 "that are not convertible to LongValues",
@@ -185,43 +185,43 @@ public class CanSetPropertyLongTest extends AbstractJCRTest {
 
         Value longBinaryValue =
                 new BinaryValue(NodeTypeUtil.getValueOfType(PropertyType.LONG).getString());
-        Value longBinaryValues[] = {longBinaryValue};
+        Value longBinaryValues[] = new Value[] {longBinaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Long and values are of type BinaryValue " +
                 "that are convertible to LongValues",
                 nodeType.canSetProperty(propDef.getName(), longBinaryValues));
 
         Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
-        Value dateValues[] = {dateValue};
+        Value dateValues[] = new Value[] {dateValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Long and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
         Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
-        Value doubleValues[] = {doubleValue};
+        Value doubleValues[] = new Value[] {doubleValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Long and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
-        Value longValues[] = {longValue};
+        Value longValues[] = new Value[] {longValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Long and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
         Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
-        Value booleanValues[] = {longValue, booleanValue};
+        Value booleanValues[] = new Value[] {longValue, booleanValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Long and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
         Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
-        Value nameValues[] = {longValue, nameValue};
+        Value nameValues[] = new Value[] {longValue, nameValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Long and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
         Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
-        Value pathValues[] = {longValue, pathValue};
+        Value pathValues[] = new Value[] {longValue, pathValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Long and values are of type PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValues));
@@ -242,9 +242,8 @@ public class CanSetPropertyLongTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No long property def with " +
                     "testable value constraints has been found");
         }
@@ -271,15 +270,14 @@ public class CanSetPropertyLongTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueOutOfContstraint(propDef);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
         if (value == null) {
-            // value should never be null since this is catched already in locatePropertyDef
             throw new NotExecutableException("No multiple long property def with " +
                     "testable value constraints has been found");
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value values[] = {value};
+        Value values[] = new Value[] {value};
 
         assertFalse("canSetProperty(String propertyName, Value[] values) must " +
                 "return false if values do not match the value constraints.",

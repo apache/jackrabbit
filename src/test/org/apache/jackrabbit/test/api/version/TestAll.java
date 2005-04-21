@@ -54,6 +54,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(GetReferencesNodeTest.class);
         suite.addTestSuite(GetPredecessorsTest.class);
         suite.addTestSuite(GetCreatedTest.class);
+        suite.addTestSuite(GetContainingHistoryTest.class);
+        suite.addTestSuite(GetVersionableUUIDTest.class);
 
         return suite;
     }
