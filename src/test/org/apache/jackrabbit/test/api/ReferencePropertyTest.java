@@ -170,7 +170,7 @@ public class ReferencePropertyTest extends AbstractPropertyTest {
      * Tests equals method of Reference value.
      */
     public void testEquals() throws RepositoryException {
-        Property prop2 = referencedNode.getProperty("jcr:uuid");
+        Property prop2 = referencedNode.getProperty(jcrUUID);
         assertTrue("Incorrect equals method of Reference value.",
                 PropertyUtil.equalValues(prop2.getValue(), prop.getValue()));
     }

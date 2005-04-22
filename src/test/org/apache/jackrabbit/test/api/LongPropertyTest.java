@@ -106,7 +106,7 @@ public class LongPropertyTest extends AbstractPropertyTest {
     public void testGetStream() throws RepositoryException, IOException {
         Value val = PropertyUtil.getValue(prop);
         BufferedInputStream in = new BufferedInputStream(val.getStream());
-        Value otherVal = prop.getValue();
+        Value otherVal = PropertyUtil.getValue(prop);
         InputStream ins = null;
         byte[] utf8bytes = otherVal.getString().getBytes(UTF8);
         // if yet utf-8 encoded these bytes should be equal
