@@ -100,8 +100,23 @@ public class ValueHelper {
         if (srcValues == null) {
             return null;
         }
+
         Value[] newValues = new Value[srcValues.length];
+        int srcValueType = PropertyType.UNDEFINED;
         for (int i = 0; i < srcValues.length; i++) {
+            if (srcValues[i] == null) {
+                newValues[i] = null;
+                continue;
+            }
+            // check type of values
+            if (srcValueType == PropertyType.UNDEFINED) {
+                srcValueType = srcValues[i].getType();
+            } else if (srcValueType != srcValues[i].getType()) {
+                // inhomogeneous types
+                String msg = "inhomogeneous type of values";
+                throw new ValueFormatException(msg);
+            }
+
             newValues[i] = convert(srcValues[i], targetType);
         }
         return newValues;
