@@ -16,13 +16,10 @@
  */
 package org.apache.jackrabbit.test.api.query;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
-import javax.jcr.Repository;
 import javax.jcr.Value;
 
 /**

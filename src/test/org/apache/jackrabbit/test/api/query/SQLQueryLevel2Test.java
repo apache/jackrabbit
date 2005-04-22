@@ -16,13 +16,10 @@
  */
 package org.apache.jackrabbit.test.api.query;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
-import javax.jcr.Repository;
 import javax.jcr.Value;
 
 /**
@@ -137,8 +134,9 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         StringBuffer tmp = new StringBuffer("SELECT ");
         tmp.append(propertyName1);
         tmp.append(" FROM ").append(testNodeType);
-        tmp.append(" WHERE CONTAINS(*, ");
-        tmp.append("'''quick brown'' -cat')");
+        tmp.append(" WHERE CONTAINS(*, '''quick brown'' -cat')");
+        tmp.append(" AND ").append(jcrPath).append(" LIKE '");
+        tmp.append(testRoot).append("/%'");
         return new Statement(tmp.toString(), Query.SQL);
     }
 
@@ -154,6 +152,8 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(propertyName2);
         tmp.append(" AND 'existence' IN ");
         tmp.append(propertyName1);
+        tmp.append(" AND ").append(jcrPath).append(" LIKE '");
+        tmp.append(testRoot).append("/%'");
         return new Statement(tmp.toString(), Query.SQL);
     }
 
@@ -169,6 +169,8 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(" <= 'b' AND ");
         tmp.append(propertyName1);
         tmp.append(" > 'a'");
+        tmp.append(" AND ").append(jcrPath).append(" LIKE '");
+        tmp.append(testRoot).append("/%'");
         return new Statement(tmp.toString(), Query.SQL);
     }
 }
