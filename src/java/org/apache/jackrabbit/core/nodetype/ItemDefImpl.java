@@ -21,13 +21,14 @@ import org.apache.jackrabbit.core.QName;
 import javax.jcr.version.OnParentVersionAction;
 
 /**
- * This class is an abstract implementation for the <code>ItemDef</code>
- * interface and holds the generic item definition attributes.
+ * This abstract class implements the <code>ItemDef</code>
+ * interface and additionaly provides setter's for the
+ * various item definition attributes.
  */
 public abstract class ItemDefImpl implements ItemDef {
 
     /**
-     * The name of this item definition.
+     * The name of the child item.
      */
     private QName name = ANY_NAME;
 
@@ -47,7 +48,7 @@ public abstract class ItemDefImpl implements ItemDef {
     private int onParentVersion = OnParentVersionAction.COPY;
 
     /**
-     * The 'writeProtected' flag.
+     * The 'protected' flag.
      */
     private boolean writeProtected = false;
 
@@ -57,9 +58,10 @@ public abstract class ItemDefImpl implements ItemDef {
     private boolean mandatory = false;
 
     /**
-     * Sets the declaring node type.
+     * Sets the name of declaring node type.
      *
-     * @param declaringNodeType
+     * @param declaringNodeType name of the declaring node type (must not be
+     *                          <code>null</code>)
      */
     public void setDeclaringNodeType(QName declaringNodeType) {
         if (declaringNodeType == null) {
@@ -69,9 +71,9 @@ public abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * Sets the name.
+     * Sets the name of the child item.
      *
-     * @param name
+     * @param name name of child item (must not be  <code>null</code>)
      */
     public void setName(QName name) {
         if (name == null) {
@@ -81,41 +83,50 @@ public abstract class ItemDefImpl implements ItemDef {
     }
 
     /**
-     * Sets the auto create flag.
+     * Sets the 'autoCreated' flag.
      *
-     * @param autoCreated
+     * @param autoCreated a <code>boolean</code>
      */
     public void setAutoCreated(boolean autoCreated) {
         this.autoCreated = autoCreated;
     }
 
     /**
-     * Sets the on parent version.
+     * Sets the 'onParentVersion' attribute.
      *
-     * @param onParentVersion
+     * @param onParentVersion any of the following constants:
+     * <UL>
+     *    <LI><code>OnParentVersionAction.COPY</code>
+     *    <LI><code>OnParentVersionAction.VERSION</code>
+     *    <LI><code>OnParentVersionAction.INITIALIZE</code>
+     *    <LI><code>OnParentVersionAction.COMPUTE</code>
+     *    <LI><code>OnParentVersionAction.IGNORE</code>
+     *    <LI><code>OnParentVersionAction.ABORT</code>
+     * </UL>
      */
     public void setOnParentVersion(int onParentVersion) {
         this.onParentVersion = onParentVersion;
     }
 
     /**
-     * Sets the protected flag.
+     * Sets the 'protected' flag.
      *
-     * @param writeProtected
+     * @param writeProtected a <code>boolean</code>
      */
     public void setProtected(boolean writeProtected) {
         this.writeProtected = writeProtected;
     }
 
     /**
-     * Sets the mandatory flag.
+     * Sets the 'mandatory' flag.
      *
-     * @param mandatory
+     * @param mandatory a <code>boolean</code>
      */
     public void setMandatory(boolean mandatory) {
         this.mandatory = mandatory;
     }
 
+    //--------------------------------------------------------------< ItemDef >
     /**
      * {@inheritDoc}
      */
@@ -165,14 +176,16 @@ public abstract class ItemDefImpl implements ItemDef {
         return name.equals(ANY_NAME);
     }
 
+    //-------------------------------------------< java.lang.Object overrides >
     /**
-     * Checks if this item definition is equal to the given one. Two item
-     * definitions are equal if they are the same object or if all their
-     * attributes are equal.
+     * Compares two item definitions for equality. Returns <code>true</code>
+     * if the given object is an item defintion and has the same attributes
+     * as this item definition.
      *
-     * @param obj the object to compare to
-     * @return <code>true</code> if this item definition is equals to obj;
-     *         <code>false</code> otherwise.
+     * @param obj the object to compare this item definition with
+     * @return <code>true</code> if the object is equal to this item definition,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
      */
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -181,8 +194,8 @@ public abstract class ItemDefImpl implements ItemDef {
         if (obj instanceof ItemDefImpl) {
             ItemDefImpl other = (ItemDefImpl) obj;
             return (declaringNodeType == null
-                        ? other.declaringNodeType == null
-                        : declaringNodeType.equals(other.declaringNodeType))
+                    ? other.declaringNodeType == null
+                    : declaringNodeType.equals(other.declaringNodeType))
                     && (name == null ? other.name == null : name.equals(other.name))
                     && autoCreated == other.autoCreated
                     && onParentVersion == other.onParentVersion

@@ -19,26 +19,33 @@ package org.apache.jackrabbit.core.nodetype;
 import java.io.Serializable;
 
 /**
- * <code>PropDefId</code> uniquely identifies a <code>PropDef</code> in the
+ * <code>PropDefId</code> serves as identifier for a given <code>PropDef</code>.
+ *
+ *
+ * uniquely identifies a <code>PropDef</code> in the
  * node type registry.
  */
 public class PropDefId implements Serializable {
 
     /**
-     * Serial number
+     * Serialization UID of this class.
      */
     static final long serialVersionUID = 3675238890036653593L;
 
     /**
-     * The internal id
+     * The internal id is computed based on the characteristics of the
+     * <code>PropDef</code> that this <code>PropDefId</code> identifies.
      */
     private final int id;
 
     /**
-     * Creates a new PropDefId from the given PropDef
-     * @param def
+     * Creates a new <code>PropDefId</code> that serves as identifier for
+     * the given <code>PropDef</code>. An internal id is computed based on
+     * the characteristics of the <code>PropDef</code> that it identifies.
+     *
+     * @param def <code>PropDef</code> to create identifier for
      */
-    PropDefId(PropDefImpl def) {
+    PropDefId(PropDef def) {
         if (def == null) {
             throw new IllegalArgumentException("PropDef argument can not be null");
         }
@@ -61,8 +68,10 @@ public class PropDefId implements Serializable {
     }
 
     /**
-     * Creates a new PropDefId with the given internal id
-     * @param id
+     * Private constructor that creates a <code>PropDefId</code> using an
+     * internal id
+     *
+     * @param id internal id
      */
     private PropDefId(int id) {
         this.id = id;
@@ -87,6 +96,7 @@ public class PropDefId implements Serializable {
         return new PropDefId(Integer.parseInt(s));
     }
 
+    //-------------------------------------------< java.lang.Object overrides >
     /**
      * {@inheritDoc}
      */

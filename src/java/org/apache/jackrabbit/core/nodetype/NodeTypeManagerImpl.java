@@ -33,6 +33,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Iterator;
 
 /**
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
@@ -42,12 +43,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         NodeTypeRegistryListener {
 
     /**
-     * The default logger.
+     * Logger instance for this class
      */
     private static Logger log = Logger.getLogger(NodeTypeManagerImpl.class);
 
     /**
-     * The underlying node type registry.
+     * The wrapped node type registry.
      */
     private final NodeTypeRegistry ntReg;
 
@@ -80,14 +81,19 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
     private final Map ndCache;
 
     /**
-     * Constructor.
+     * Creates a new <code>NodeTypeManagerImpl</code> instance.
+     *
+     * @param ntReg      node type registry
+     * @param nsResolver namespace resolver
      */
-    public NodeTypeManagerImpl(NodeTypeRegistry ntReg, NamespaceResolver nsResolver) {
+    public NodeTypeManagerImpl(NodeTypeRegistry ntReg,
+                               NamespaceResolver nsResolver) {
         this.nsResolver = nsResolver;
         this.ntReg = ntReg;
         this.ntReg.addListener(this);
 
-        // setup caches with soft references to node type & item definition instances
+        // setup caches with soft references to node type
+        // & item definition instances
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
@@ -110,15 +116,15 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
      */
     public NodeDefinitionImpl getNodeDefinition(NodeDefId id) {
         synchronized (ndCache) {
-            NodeDefinitionImpl nd = (NodeDefinitionImpl) ndCache.get(id);
-            if (nd == null) {
-                NodeDef cnd = ntReg.getNodeDef(id);
-                if (cnd != null) {
-                    nd = new NodeDefinitionImpl(cnd, this, nsResolver);
-                    ndCache.put(id, nd);
+            NodeDefinitionImpl ndi = (NodeDefinitionImpl) ndCache.get(id);
+            if (ndi == null) {
+                NodeDef nd = ntReg.getNodeDef(id);
+                if (nd != null) {
+                    ndi = new NodeDefinitionImpl(nd, this, nsResolver);
+                    ndCache.put(id, ndi);
                 }
             }
-            return nd;
+            return ndi;
         }
     }
 
@@ -165,39 +171,67 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         return ntReg;
     }
 
-    //-------------------------------------------< NodeTypeRegistryListener >---
+    //---------------------------------------------< NodeTypeRegistryListener >
     /**
      * {@inheritDoc}
      */
     public void nodeTypeRegistered(QName ntName) {
-        // ignore
+        // not interested, ignore
     }
 
     /**
      * {@inheritDoc}
      */
     public void nodeTypeReRegistered(QName ntName) {
-        // flush cache
+        // flush all affected cache entries
         ntCache.remove(ntName);
-        // just clear all definitions from cache
-        // @todo do smart/selective flush of definition caches
-        pdCache.clear();
-        ndCache.clear();
+        synchronized(pdCache) {
+            Iterator iter = pdCache.values().iterator();
+            while (iter.hasNext()) {
+                PropDefImpl pd = (PropDefImpl) iter.next();
+                if (ntName.equals(pd.getDeclaringNodeType())) {
+                    iter.remove();
+                }
+            }
+        }
+        synchronized(ndCache) {
+            Iterator iter = ndCache.values().iterator();
+            while (iter.hasNext()) {
+                NodeDefImpl nd = (NodeDefImpl) iter.next();
+                if (ntName.equals(nd.getDeclaringNodeType())) {
+                    iter.remove();
+                }
+            }
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public void nodeTypeUnregistered(QName ntName) {
-        // sync cache
+        // flush all affected cache entries
         ntCache.remove(ntName);
-        // just clear all definitions from cache
-        // @todo do smart/selective flush of definition caches
-        pdCache.clear();
-        ndCache.clear();
+        synchronized(pdCache) {
+            Iterator iter = pdCache.values().iterator();
+            while (iter.hasNext()) {
+                PropDefImpl pd = (PropDefImpl) iter.next();
+                if (ntName.equals(pd.getDeclaringNodeType())) {
+                    iter.remove();
+                }
+            }
+        }
+        synchronized(ndCache) {
+            Iterator iter = ndCache.values().iterator();
+            while (iter.hasNext()) {
+                NodeDefImpl nd = (NodeDefImpl) iter.next();
+                if (ntName.equals(nd.getDeclaringNodeType())) {
+                    iter.remove();
+                }
+            }
+        }
     }
 
-    //----------------------------------------------------< NodeTypeManager >---
+    //------------------------------------------------------< NodeTypeManager >
     /**
      * {@inheritDoc}
      */
@@ -243,7 +277,8 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
     /**
      * {@inheritDoc}
      */
-    public NodeType getNodeType(String nodeTypeName) throws NoSuchNodeTypeException {
+    public NodeType getNodeType(String nodeTypeName)
+            throws NoSuchNodeTypeException {
         try {
             return getNodeType(QName.fromJCRName(nodeTypeName, nsResolver));
         } catch (UnknownPrefixException upe) {
@@ -253,9 +288,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         }
     }
 
-    //--------------------------------------------------------< diagnostics >---
+    //----------------------------------------------------------< diagnostics >
     /**
-     * Dumps the state of this <code>NodeTypeManager</code> instance.
+     * Dumps the state of this <code>NodeTypeManagerImpl</code> instance.
      *
      * @param ps
      * @throws RepositoryException
@@ -266,7 +301,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         ntReg.dump(ps);
     }
 
-    //------------------------------------------------------< inner classes >---
+    //--------------------------------------------------------< inner classes >
     /**
      * The <code>RootNodeDefinition</code> defines the characteristics of
      * the root node.

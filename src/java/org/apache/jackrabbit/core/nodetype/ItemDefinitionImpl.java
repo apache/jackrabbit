@@ -27,13 +27,16 @@ import javax.jcr.nodetype.ItemDefinition;
 
 /**
  * This class implements the <code>ItemDefinition</code> interface.
+ * All method calls are delegated to the wrapped {@link ItemDef},
+ * performing the translation from <code>QName</code>s to JCR names
+ * (and vice versa) where necessary.
  */
 abstract class ItemDefinitionImpl implements ItemDefinition {
 
     /**
-     * The default logger.
+     * Logger instance for this class
      */
-    private static Logger log = Logger.getLogger(ItemDefImpl.class);
+    private static Logger log = Logger.getLogger(ItemDefinitionImpl.class);
 
     /**
      * Literal for 'any name'.
@@ -51,7 +54,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     protected final NamespaceResolver nsResolver;
 
     /**
-     * The underlying child item definition.
+     * The wrapped item definition.
      */
     protected final ItemDef itemDef;
 
@@ -70,15 +73,16 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     }
 
     /**
-     * Returns the qualified name of this item definition.
+     * Gets the <code>QName</code> of the child item.
      *
-     * @return
+     * @return the <code>QName</code> of the child item.
+     * @see #getName()
      */
     public QName getQName() {
         return itemDef.getName();
     }
 
-    //-----------------------------------------------------< ItemDefinition >---
+    //-------------------------------------------------------< ItemDefinition >
     /**
      * {@inheritDoc}
      */
@@ -103,7 +107,8 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
                 return itemDef.getName().toJCRName(nsResolver);
             } catch (NoPrefixDeclaredException npde) {
                 // should never get here
-                log.error("encountered unregistered namespace in property name", npde);
+                log.error("encountered unregistered namespace in property name",
+                        npde);
                 // not correct, but an acceptable fallback
                 return itemDef.getName().toString();
             }

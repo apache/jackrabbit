@@ -28,20 +28,24 @@ import java.util.TreeSet;
 public class NodeDefId implements Serializable {
 
     /**
-     * the serial number.
+     * Serialization UID of this class.
      */
     static final long serialVersionUID = 7020286139887664713L;
 
     /**
-     * The internal id.
+     * The internal id is computed based on the characteristics of the
+     * <code>NodeDef</code> that this <code>NodeDefId</code> identifies.
      */
     private final int id;
 
     /**
-     * Creates a new NodeDefId from the given NodeDef
-     * @param def
+     * Creates a new <code>NodeDefId</code> that serves as identifier for
+     * the given <code>NodeDef</code>. An internal id is computed based on
+     * the characteristics of the <code>NodeDef</code> that it identifies.
+     *
+     * @param def <code>NodeDef</code> to create identifier for
      */
-    NodeDefId(NodeDefImpl def) {
+    NodeDefId(NodeDef def) {
         if (def == null) {
             throw new IllegalArgumentException("NodeDef argument can not be null");
         }
@@ -68,8 +72,10 @@ public class NodeDefId implements Serializable {
     }
 
     /**
-     * Private constructor that creates an NodeDefId using an internal id
-     * @param id
+     * Private constructor that creates a <code>NodeDefId</code> using an
+     * internal id
+     *
+     * @param id internal id
      */
     private NodeDefId(int id) {
         this.id = id;
@@ -94,6 +100,7 @@ public class NodeDefId implements Serializable {
         return new NodeDefId(Integer.parseInt(s));
     }
 
+    //-------------------------------------------< java.lang.Object overrides >
     /**
      * {@inheritDoc}
      */
