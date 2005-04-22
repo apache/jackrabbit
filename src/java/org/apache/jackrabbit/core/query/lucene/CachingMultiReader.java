@@ -85,6 +85,12 @@ class CachingMultiReader extends MultiReader {
                     return new OffsetTermDocs(docs, starts[i]);
                 }
             }
+        } else if (term.field() == FieldNames.PARENT) {
+            TermDocs[] termDocs = new TermDocs[subReaders.length];
+            for (int i = 0; i < subReaders.length; i++) {
+                termDocs[i] = subReaders[i].termDocs(term);
+            }
+            return new MultiTermDocs(termDocs, starts);
         }
         return super.termDocs(term);
     }
@@ -144,7 +150,7 @@ class CachingMultiReader extends MultiReader {
         }
 
         /**
-         * @throws UnsupportedOperationException always
+         * {@inheritDoc}
          */
         public boolean next() throws IOException {
             return base.next();
@@ -169,6 +175,118 @@ class CachingMultiReader extends MultiReader {
          */
         public void close() throws IOException {
             base.close();
+        }
+    }
+
+    /**
+     * Implements a <code>TermDocs</code> which spans multiple other
+     * <code>TermDocs</code>.
+     */
+    private static final class MultiTermDocs implements TermDocs {
+
+        /**
+         * The actual <code>TermDocs</code>.
+         */
+        private final TermDocs[] termDocs;
+
+        /**
+         * The document number offsets for each <code>TermDocs</code>.
+         */
+        private final int[] starts;
+
+        /**
+         * The current <code>TermDocs</code> instance. If <code>null</code>
+         * there are no more documents.
+         */
+        private TermDocs current;
+
+        /**
+         * The current index into {@link #termDocs} and {@link #starts}.
+         */
+        private int idx = 0;
+
+        /**
+         * Creates a new <code>MultiTermDocs</code> instance.
+         * @param termDocs the actual <code>TermDocs</code>.
+         * @param starts the document number offsets for each
+         *  <code>TermDocs</code>
+         */
+        MultiTermDocs(TermDocs[] termDocs, int[] starts) {
+            this.termDocs = termDocs;
+            this.starts = starts;
+            current = termDocs[idx];
+        }
+
+        /**
+         * @throws UnsupportedOperationException always
+         */
+        public void seek(Term term) {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * @throws UnsupportedOperationException always
+         */
+        public void seek(TermEnum termEnum) {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public int doc() {
+            return starts[idx] + current.doc();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public int freq() {
+            return current.freq();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean next() throws IOException {
+            while (current != null && !current.next()) {
+                if (++idx >= termDocs.length) {
+                    // no more TermDocs
+                    current = null;
+                } else {
+                    // move to next TermDocs
+                    current = termDocs[idx];
+                }
+            }
+            return current != null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public int read(int[] docs, int[] freqs) throws IOException {
+            int count = 0;
+            for (int i = 0; i < docs.length && next(); i++, count++) {
+                docs[i] = doc();
+                freqs[i] = freq();
+            }
+            return count;
+        }
+
+        /**
+         * @throws UnsupportedOperationException always
+         */
+        public boolean skipTo(int target) {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void close() throws IOException {
+            for (int i = 0; i < termDocs.length; i++) {
+                termDocs[i].close();
+            }
         }
     }
 }

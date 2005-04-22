@@ -165,13 +165,18 @@ abstract class AbstractIndex {
         }
 
         if (indexReader != null) {
-            indexReader.close();
-            log.debug("closing IndexReader.");
-            indexReader = null;
+            if (indexReader instanceof CachingIndexReader) {
+                // only commit changes, do not close
+                log.debug("committing IndexReader.");
+                ((CachingIndexReader) indexReader).commitDeleted();
+            } else {
+                indexReader.close();
+                indexReader = null;
+            }
         }
         if (indexWriter != null) {
+            log.debug("committing IndexWriter.");
             indexWriter.close();
-            log.debug("closing IndexWriter.");
             indexWriter = null;
         }
     }
