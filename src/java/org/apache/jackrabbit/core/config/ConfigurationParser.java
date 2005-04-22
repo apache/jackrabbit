@@ -113,7 +113,7 @@ public class ConfigurationParser {
 
     /** Name of the default search index implementation class. */
     private static final String DEFAULT_QUERY_HANDLER =
-            "org.apache.jackrabbit.core.search.lucene.SearchIndex";
+            "org.apache.jackrabbit.core.query.lucene.SearchIndex";
 
     /**
      * The configuration parser variables. These name-value pairs
