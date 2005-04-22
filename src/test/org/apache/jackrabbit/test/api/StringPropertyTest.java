@@ -174,7 +174,7 @@ public class StringPropertyTest extends AbstractPropertyTest {
     public void testGetStream() throws RepositoryException, IOException {
         Value val = PropertyUtil.getValue(prop);
         BufferedInputStream in = new BufferedInputStream(val.getStream());
-        Value otherVal = prop.getValue();
+        Value otherVal = PropertyUtil.getValue(prop);
         byte[] utf8bytes = otherVal.getString().getBytes(UTF8);
         // compare the bytearray with the bytes received from a Stream created with this String
         int i = 0;
