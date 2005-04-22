@@ -26,11 +26,15 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
+ * All method calls are delegated to the wrapped {@link PropDef},
+ * performing the translation from <code>QName</code>s to JCR names
+ * (and vice versa) where necessary.
  */
-public class PropertyDefinitionImpl extends ItemDefinitionImpl implements PropertyDefinition {
+public class PropertyDefinitionImpl extends ItemDefinitionImpl
+        implements PropertyDefinition {
 
     /**
-     * The default logger.
+     * Logger instance for this class
      */
     private static Logger log = Logger.getLogger(PropertyDefinitionImpl.class);
 
@@ -47,16 +51,15 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
     }
 
     /**
-     * Returns the underlying property definition.
+     * Returns the wrapped property definition.
      * 
-     * @return the underlying property definition.
+     * @return the wrapped property definition.
      */
     public PropDef unwrap() {
         return (PropDef) itemDef;
     }
 
-    //-------------------------------------------------< PropertyDefinition >---
-
+    //---------------------------------------------------< PropertyDefinition >
     /**
      * {@inheritDoc}
      */
@@ -72,7 +75,9 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
             } catch (RepositoryException re) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();
-                log.error("illegal default value specified for property " + propName + " in node type " + getDeclaringNodeType(), re);
+                log.error("illegal default value specified for property "
+                        + propName + " in node type " + getDeclaringNodeType(),
+                        re);
                 return null;
             }
         }

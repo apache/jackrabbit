@@ -1079,7 +1079,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                     valueType = values[i].getType();
                 } else if (valueType != values[i].getType()) {
                     // inhomogeneous types
-                    String msg = "inhomogeneous type of values";
+                        String msg = "inhomogeneous type of values";
                     log.debug(msg);
                     throw new ValueFormatException(msg);
                 }

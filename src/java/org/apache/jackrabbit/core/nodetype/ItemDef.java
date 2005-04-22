@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.QName;
 
 /**
- * This interface defines the base for item definitions.
+ * Superinterface of {@link NodeDef} and {@link PropDef}.
  */
-public interface ItemDef  {
+public interface ItemDef {
 
     /**
      * '*' denoting residual child item definition
@@ -30,52 +30,62 @@ public interface ItemDef  {
     QName ANY_NAME = new QName(Constants.NS_DEFAULT_URI, "*");
 
     /**
-     * Returns the name of this item def.
-     * @return the name of this item def.
+     * Gets the name of the child item.
+     *
+     * @return the name of the child item.
      */
     QName getName();
 
     /**
-     * Returns the name of the declaring node type.
+     * Gets the name of the declaring node type.
+     *
      * @return the name of the declaring node type.
      */
     QName getDeclaringNodeType();
 
     /**
-     * Returns the 'autoCreated' flag.
+     * Determines whether the item is 'autoCreated'.
+     *
      * @return the 'autoCreated' flag.
      */
     boolean isAutoCreated();
 
     /**
-     * Returns the 'onParentVersion' attribute.
+     * Gets the 'onParentVersion' attribute of the item.
+     *
      * @return the 'onParentVersion' attribute.
      */
     int getOnParentVersion();
 
     /**
-     * Returns the 'protected' flag.
+     * Determines whether the item is 'protected'.
+     *
      * @return the 'protected' flag.
      */
     boolean isProtected();
 
     /**
-     * Returns the 'mandatory' flag.
+     * Determines whether the item is 'mandatory'.
+     *
      * @return the 'mandatory' flag.
      */
     boolean isMandatory();
 
     /**
-     * Checks if this item definition is a residual definition.
-     * @return <code>true</code> if this is a residual definition;
+     * Determines whether this item definition defines a residual set of
+     * child items. This is equivalent to calling
+     * <code>getName().equals(ANY_NAME)</code>.
+     *
+     * @return <code>true</code> if this definition defines a residual set;
      *         <code>false</code> otherwise.
      */
     boolean definesResidual();
 
     /**
-     * Checks if this is a node definition.
+     * Determines whether this item definition defines a node.
+     *
      * @return <code>true</code> if this is a node definition;
-     *         <code>false</code> otherwise, i.e. this is a property definition.
+     *         <code>false</code> otherwise (i.e. it is a property definition).
      */
     boolean definesNode();
 }

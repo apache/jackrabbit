@@ -27,13 +27,16 @@ import javax.jcr.nodetype.NodeDefinition;
 
 /**
  * This class implements the <code>NodeDefinition</code> interface.
+ * All method calls are delegated to the wrapped {@link NodeDef},
+ * performing the translation from <code>QName</code>s to JCR names
+ * (and vice versa) where necessary.
  */
 public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefinition {
 
     /**
-     * The default logger.
+     * Logger instance for this class
      */
-    private static Logger log = Logger.getLogger(NodeDefImpl.class);
+    private static Logger log = Logger.getLogger(NodeDefinitionImpl.class);
 
     /**
      * Package private constructor.
@@ -48,16 +51,15 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
     }
 
     /**
-     * Returns the underlying node definition.
+     * Returns the wrapped node definition.
      *
-     * @return the underlying node definition.
+     * @return the wrapped node definition.
      */
     public NodeDef unwrap() {
         return (NodeDef) itemDef;
     }
 
-    //-----------------------------------------------------< NodeDefinition >---
-
+    //-------------------------------------------------------< NodeDefinition >
     /**
      * {@inheritDoc}
      */

@@ -913,7 +913,7 @@ public final class Path {
 
     //--------------------------------------------------------< inner classes >
     /**
-     * package protected inner class used to build a path from path elements;
+     * package private inner class used to build a path from path elements;
      * this class does not validate the format of the path elements!
      */
     static final class PathBuilder implements Cloneable {
