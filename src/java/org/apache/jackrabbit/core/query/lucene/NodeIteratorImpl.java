@@ -36,13 +36,13 @@ class NodeIteratorImpl implements NodeIterator {
     private static final Logger log = Logger.getLogger(NodeIteratorImpl.class);
 
     /** The UUIDs of the nodes in the result set */
-    private final String[] uuids;
+    protected final String[] uuids;
 
     /** The score values for the nodes in the result set */
-    private final Float[] scores;
+    protected final Float[] scores;
 
     /** ItemManager to turn UUIDs into Node instances */
-    private final ItemManager itemMgr;
+    protected final ItemManager itemMgr;
 
     /** Current position in the UUID array */
     private int pos = 0;

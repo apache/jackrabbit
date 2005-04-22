@@ -37,7 +37,7 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
     private static final Logger log = Logger.getLogger(DocOrderNodeIteratorImpl.class);
 
     /** A node iterator with ordered nodes */
-    private final NodeIteratorImpl orderedNodes;
+    private NodeIteratorImpl orderedNodes;
 
     /**
      * Creates a <code>DocOrderNodeIteratorImpl</code> that orders the nodes
@@ -48,83 +48,13 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
      */
     DocOrderNodeIteratorImpl(final ItemManager itemMgr, String[] uuids, Float[] scores) {
         super(itemMgr, uuids, scores);
-        long time = System.currentTimeMillis();
-        ScoreNode[] nodes = new ScoreNode[uuids.length];
-        for (int i = 0; i < uuids.length; i++) {
-            nodes[i] = new ScoreNode(uuids[i], scores[i]);
-        }
-
-        Arrays.sort(nodes, new Comparator() {
-            public int compare(Object o1, Object o2) {
-                ScoreNode n1 = (ScoreNode) o1;
-                ScoreNode n2 = (ScoreNode) o2;
-                try {
-                    NodeImpl node1 = (NodeImpl) itemMgr.getItem(new NodeId(n1.uuid));
-                    NodeImpl node2 = (NodeImpl) itemMgr.getItem(new NodeId(n2.uuid));
-                    Path.PathElement[] path1 = node1.getPrimaryPath().getElements();
-                    Path.PathElement[] path2 = node2.getPrimaryPath().getElements();
-
-                    // find nearest common ancestor
-                    int commonDepth = 0; // root
-                    while (path1.length > commonDepth && path2.length > commonDepth) {
-                        if (path1[commonDepth].equals(path2[commonDepth])) {
-                            commonDepth++;
-                        } else {
-                            break;
-                        }
-                    }
-                    // path elements at last depth were equal
-                    commonDepth--;
-
-                    // check if either path is an ancestor of the other
-                    if (path1.length - 1 == commonDepth) {
-                        // path1 itself is ancestor of path2
-                        return -1;
-                    }
-                    if (path2.length - 1 == commonDepth) {
-                        // path2 itself is ancestor of path1
-                        return 1;
-                    }
-                    // get common ancestor node
-                    NodeImpl commonNode = (NodeImpl) node1.getAncestor(commonDepth);
-                    // move node1/node2 to the commonDepth + 1
-                    // node1 and node2 then will be child nodes of commonNode
-                    node1 = (NodeImpl) node1.getAncestor(commonDepth + 1);
-                    node2 = (NodeImpl) node2.getAncestor(commonDepth + 1);
-                    for (NodeIterator it = commonNode.getNodes(); it.hasNext();) {
-                        Node child = it.nextNode();
-                        if (child.isSame(node1)) {
-                            return -1;
-                        } else if (child.isSame(node2)) {
-                            return 1;
-                        }
-                    }
-                    log.error("Internal error: unable to determine document order of nodes:");
-                    log.error("\tNode1: " + node1.getPath());
-                    log.error("\tNode2: " + node2.getPath());
-                    return 0;
-                } catch (RepositoryException e) {
-                    log.error("Exception while sorting nodes in document order: " + e.toString(), e);
-                    // todo ???
-                    return 0;
-                }
-            }
-        });
-
-        for (int i = 0; i < nodes.length; i++) {
-            uuids[i] = nodes[i].uuid;
-            scores[i] = nodes[i].score;
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("" + uuids.length + " node(s) ordered in " + (System.currentTimeMillis() - time) + " ms");
-        }
-        orderedNodes = new NodeIteratorImpl(itemMgr, uuids, scores);
     }
 
     /**
      * {@inheritDoc}
      */
     public Node nextNode() {
+        initOrderedIterator();
         return orderedNodes.nextNode();
     }
 
@@ -132,6 +62,7 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
      * {@inheritDoc}
      */
     public void skip(long skipNum) {
+        initOrderedIterator();
         orderedNodes.skip(skipNum);
     }
 
@@ -139,13 +70,14 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
      * {@inheritDoc}
      */
     public long getSize() {
-        return orderedNodes.getSize();
+        return uuids.length;
     }
 
     /**
      * {@inheritDoc}
      */
     public long getPosition() {
+        initOrderedIterator();
         return orderedNodes.getPosition();
     }
 
@@ -160,6 +92,7 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
      * {@inheritDoc}
      */
     public boolean hasNext() {
+        initOrderedIterator();
         return orderedNodes.hasNext();
     }
 
@@ -167,6 +100,7 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
      * {@inheritDoc}
      */
     public Object next() {
+        initOrderedIterator();
         return orderedNodes.next();
     }
 
@@ -174,6 +108,7 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
      * {@inheritDoc}
      */
     float getScore() {
+        initOrderedIterator();
         return orderedNodes.getScore();
     }
 
@@ -181,10 +116,90 @@ class DocOrderNodeIteratorImpl extends NodeIteratorImpl {
      * {@inheritDoc}
      */
     NodeImpl nextNodeImpl() {
+        initOrderedIterator();
         return orderedNodes.nextNodeImpl();
     }
 
     //------------------------< internal >--------------------------------------
+
+    /**
+     * Initializes the NodeIterator in document order, if needed.
+     */
+    private void initOrderedIterator() {
+        if (orderedNodes == null) {
+            long time = System.currentTimeMillis();
+            ScoreNode[] nodes = new ScoreNode[uuids.length];
+            for (int i = 0; i < uuids.length; i++) {
+                nodes[i] = new ScoreNode(uuids[i], scores[i]);
+            }
+
+            Arrays.sort(nodes, new Comparator() {
+                public int compare(Object o1, Object o2) {
+                    ScoreNode n1 = (ScoreNode) o1;
+                    ScoreNode n2 = (ScoreNode) o2;
+                    try {
+                        NodeImpl node1 = (NodeImpl) itemMgr.getItem(new NodeId(n1.uuid));
+                        NodeImpl node2 = (NodeImpl) itemMgr.getItem(new NodeId(n2.uuid));
+                        Path.PathElement[] path1 = node1.getPrimaryPath().getElements();
+                        Path.PathElement[] path2 = node2.getPrimaryPath().getElements();
+
+                        // find nearest common ancestor
+                        int commonDepth = 0; // root
+                        while (path1.length > commonDepth && path2.length > commonDepth) {
+                            if (path1[commonDepth].equals(path2[commonDepth])) {
+                                commonDepth++;
+                            } else {
+                                break;
+                            }
+                        }
+                        // path elements at last depth were equal
+                        commonDepth--;
+
+                        // check if either path is an ancestor of the other
+                        if (path1.length - 1 == commonDepth) {
+                            // path1 itself is ancestor of path2
+                            return -1;
+                        }
+                        if (path2.length - 1 == commonDepth) {
+                            // path2 itself is ancestor of path1
+                            return 1;
+                        }
+                        // get common ancestor node
+                        NodeImpl commonNode = (NodeImpl) node1.getAncestor(commonDepth);
+                        // move node1/node2 to the commonDepth + 1
+                        // node1 and node2 then will be child nodes of commonNode
+                        node1 = (NodeImpl) node1.getAncestor(commonDepth + 1);
+                        node2 = (NodeImpl) node2.getAncestor(commonDepth + 1);
+                        for (NodeIterator it = commonNode.getNodes(); it.hasNext();) {
+                            Node child = it.nextNode();
+                            if (child.isSame(node1)) {
+                                return -1;
+                            } else if (child.isSame(node2)) {
+                                return 1;
+                            }
+                        }
+                        log.error("Internal error: unable to determine document order of nodes:");
+                        log.error("\tNode1: " + node1.getPath());
+                        log.error("\tNode2: " + node2.getPath());
+                        return 0;
+                    } catch (RepositoryException e) {
+                        log.error("Exception while sorting nodes in document order: " + e.toString(), e);
+                        // todo ???
+                        return 0;
+                    }
+                }
+            });
+
+            for (int i = 0; i < nodes.length; i++) {
+                uuids[i] = nodes[i].uuid;
+                scores[i] = nodes[i].score;
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("" + uuids.length + " node(s) ordered in " + (System.currentTimeMillis() - time) + " ms");
+            }
+            orderedNodes = new NodeIteratorImpl(itemMgr, uuids, scores);
+        }
+    }
 
     private static final class ScoreNode {
 
