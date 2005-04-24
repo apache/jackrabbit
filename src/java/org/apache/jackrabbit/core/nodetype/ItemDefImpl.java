@@ -22,7 +22,7 @@ import javax.jcr.version.OnParentVersionAction;
 
 /**
  * This abstract class implements the <code>ItemDef</code>
- * interface and additionaly provides setter's for the
+ * interface and additionally provides setter's for the
  * various item definition attributes.
  */
 public abstract class ItemDefImpl implements ItemDef {

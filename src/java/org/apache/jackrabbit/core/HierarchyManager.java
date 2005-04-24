@@ -51,13 +51,34 @@ public interface HierarchyManager {
 
     /**
      * Returns the depth of the specified item which is equivalent to
-     * <code>getPath(id).getAncestorCount()</code>.
-     * @param id
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
+     * <code>getPath(id).getAncestorCount()</code>. The depth reflects the
+     * absolute hierarchy level.
+     *
+     * @param id item id
+     * @return the depth of the specified item
+     * @throws ItemNotFoundException if the specified <code>id</code> does not
+     *                               denote an existing item.
+     * @throws RepositoryException   if another error occurs
      */
     int getDepth(ItemId id) throws ItemNotFoundException, RepositoryException;
+
+    /**
+     * Determines whether the node with the specified <code>nodeId</code>
+     * is an ancestor of the item denoted by the given <code>itemId</code>.
+     * This is equivalent to
+     * <code>getPath(nodeId).isAncestorOf(getPath(itemId))</code>.
+     *
+     * @param nodeId node id
+     * @param itemId item id
+     * @return <code>true</code> if the node with the specified
+     *         <code>nodeId</code> is an ancestor of the item denoted by the
+     *         given <code>itemId</code; <code>false</code> otherwise
+     * @throws ItemNotFoundException if any of the specified id's does not
+     *                               denote an existing item.
+     * @throws RepositoryException   if another error occurs
+     */
+    boolean isAncestor(NodeId nodeId, ItemId itemId)
+            throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param id
