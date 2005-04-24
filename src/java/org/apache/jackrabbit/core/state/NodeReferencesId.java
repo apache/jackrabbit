@@ -52,7 +52,6 @@ public class NodeReferencesId extends NodeId {
     }
 
     //-------------------------------------------< java.lang.Object overrides >
-
     /**
      * {@inheritDoc}
      */
@@ -65,5 +64,4 @@ public class NodeReferencesId extends NodeId {
         }
         return false;
     }
-
 }

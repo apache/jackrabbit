@@ -19,32 +19,39 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.core.QName;
 
 /**
- * This interface defines a node definition.
+ * <code>NodeDef</code> is the internal representation of
+ * a node definition. It refers to <code>QName</code>s only
+ * and is thus isolated from session-specific namespace mappings.
+ *
+ * @see javax.jcr.nodetype.NodeDefinition
  */
 public interface NodeDef extends ItemDef {
 
     /**
-     * Returns the id of this node definition.
-     * @return the id of this node definition.
+     * Returns an identifier for this node definition.
+     *
+     * @return an identifier for this node definition.
      */
     NodeDefId getId();
 
     /**
      * Returns the name of the default primary type.
+     *
      * @return the name of the default primary type.
      */
     QName getDefaultPrimaryType();
 
     /**
      * Returns the array of names of the required primary types.
+     *
      * @return the array of names of the required primary types.
      */
     QName[] getRequiredPrimaryTypes();
 
     /**
-     * Returns the 'allowsSameNameSiblings' flag.
+     * Reports whether this node can have same-name siblings.
+     *
      * @return the 'allowsSameNameSiblings' flag.
      */
     boolean allowsSameNameSiblings();
-
 }

@@ -22,7 +22,7 @@ import javax.jcr.version.OnParentVersionAction;
 
 /**
  * This abstract class implements the <code>ItemDef</code>
- * interface and additionally provides setter's for the
+ * interface and additionally provides setter methods for the
  * various item definition attributes.
  */
 public abstract class ItemDefImpl implements ItemDef {
@@ -56,6 +56,12 @@ public abstract class ItemDefImpl implements ItemDef {
      * The 'mandatory' flag.
      */
     private boolean mandatory = false;
+
+    /**
+     * Default constructor.
+     */
+    public ItemDefImpl() {
+    }
 
     /**
      * Sets the name of declaring node type.

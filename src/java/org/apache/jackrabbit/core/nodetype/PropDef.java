@@ -19,38 +19,46 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.core.InternalValue;
 
 /**
- * This interface defines a property definition.
+ * <code>PropDef</code> is the internal representation of
+ * a property definition. It refers to <code>QName</code>s only
+ * and is thus isolated from session-specific namespace mappings.
+ *
+ * @see javax.jcr.nodetype.PropertyDefinition
  */
 public interface PropDef extends ItemDef {
 
     /**
-     * Returns the id of this property definition.
-     * @return the id of this property definition.
+     * Returns an identifier for this property definition.
+     *
+     * @return an identifier for this property definition.
      */
     PropDefId getId();
 
     /**
      * Returns the required type.
+     *
      * @return the required type.
      */
     int getRequiredType();
 
     /**
      * Returns the array of value constraints.
+     *
      * @return the array of value constraints.
      */
     ValueConstraint[] getValueConstraints();
 
     /**
      * Returns the array of default values.
+     *
      * @return the array of default values.
      */
     InternalValue[] getDefaultValues();
 
     /**
-     * Returns the 'multiple' flag.
+     * Reports whether this property can have multiple values.
+     *
      * @return the 'multiple' flag.
      */
     boolean isMultiple();
-
 }
