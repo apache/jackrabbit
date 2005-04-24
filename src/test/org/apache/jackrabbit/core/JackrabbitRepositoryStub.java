@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
 import javax.jcr.Repository;
-import javax.jcr.Credentials;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.util.Hashtable;

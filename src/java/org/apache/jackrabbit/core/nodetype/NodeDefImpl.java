@@ -22,8 +22,8 @@ import org.apache.jackrabbit.core.QName;
 import java.util.Arrays;
 
 /**
- * This class implements the <code>NodeDef</code> interface and holds the node
- * definition specific attributes.
+ * This class implements the <code>NodeDef</code> interface and additionally
+ * provides setter methods for the various node definition attributes.
  */
 public class NodeDefImpl extends ItemDefImpl implements NodeDef {
 
@@ -43,68 +43,16 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     private boolean allowsSameNameSiblings = false;
 
     /**
-     * The id of the node definition.
+     * The identifier of this node definition. The identifier is lazily computed
+     * based on the characteristics of this node definition and reset on every
+     * attribute change.
      */
-    private NodeDefId id;
+    private NodeDefId id = null;
 
     /**
-     * {@inheritDoc}
+     * Default constructor.
      */
-    public void setDeclaringNodeType(QName declaringNodeType) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
-        super.setDeclaringNodeType(declaringNodeType);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setName(QName name) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
-        super.setName(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setAutoCreated(boolean autoCreated) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
-        super.setAutoCreated(autoCreated);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setOnParentVersion(int onParentVersion) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
-        super.setOnParentVersion(onParentVersion);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setProtected(boolean writeProtected) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
-        super.setProtected(writeProtected);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setMandatory(boolean mandatory) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
-        super.setMandatory(mandatory);
+    public NodeDefImpl() {
     }
 
     /**
@@ -113,9 +61,8 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      * @param defaultNodeType
      */
     public void setDefaultPrimaryType(QName defaultNodeType) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         this.defaultPrimaryType = defaultNodeType;
     }
 
@@ -125,9 +72,8 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      * @param requiredPrimaryTypes
      */
     public void setRequiredPrimaryTypes(QName[] requiredPrimaryTypes) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         if (requiredPrimaryTypes == null) {
             throw new IllegalArgumentException("requiredPrimaryTypes can not be null");
         }
@@ -140,10 +86,80 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      * @param allowsSameNameSiblings
      */
     public void setAllowsSameNameSiblings(boolean allowsSameNameSiblings) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Node definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         this.allowsSameNameSiblings = allowsSameNameSiblings;
+    }
+
+    //------------------------------------------------< ItemDefImpl overrides >
+    /**
+     * {@inheritDoc}
+     */
+    public void setDeclaringNodeType(QName declaringNodeType) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        super.setDeclaringNodeType(declaringNodeType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setName(QName name) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        super.setName(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setAutoCreated(boolean autoCreated) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        super.setAutoCreated(autoCreated);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setOnParentVersion(int onParentVersion) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        super.setOnParentVersion(onParentVersion);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setProtected(boolean writeProtected) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        super.setProtected(writeProtected);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setMandatory(boolean mandatory) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        super.setMandatory(mandatory);
+    }
+
+    //--------------------------------------------------------------< NodeDef >
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * The identifier is computed based on the characteristics of this property
+     * definition, i.e. modifying attributes of this property definition will
+     * have impact on the identifier returned by this method.
+     */
+    public NodeDefId getId() {
+        if (id == null) {
+            // generate new identifier based on this node definition
+            id = new NodeDefId(this);
+        }
+        return id;
     }
 
     /**
@@ -169,29 +185,23 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
 
     /**
      * {@inheritDoc}
-     */
-    public NodeDefId getId() {
-        if (id == null) {
-            id = new NodeDefId(this);
-        }
-        return id;
-    }
-
-    /**
-     * {@inheritDoc}
+     *
+     * @return always <code>true</code>
      */
     public boolean definesNode() {
         return true;
     }
 
+    //-------------------------------------------< java.lang.Object overrides >
     /**
-     * Checks if this node definition is equal to the given one. Two node
-     * definitions are equal if they are the same object or if all their
-     * attributes are equal.
+     * Compares two node definitions for equality. Returns <code>true</code>
+     * if the given object is a node defintion and has the same attributes
+     * as this node definition.
      *
-     * @param obj the other object to compare to.
-     * @return <code>true</code> if this item definition is equals to obj;
-     *         <code>false</code> otherwise.
+     * @param obj the object to compare this node definition with
+     * @return <code>true</code> if the object is equal to this node definition,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
      */
     public boolean equals(Object obj) {
         if (this == obj) {

@@ -29,7 +29,7 @@ public class PropertyId extends ItemId {
     /** UUID of the parent node. */
     private final String parentUUID;
 
-    /** Qualified name of the property.  */
+    /** Qualified name of the property. */
     private final QName propName;
 
     /**

@@ -23,8 +23,8 @@ import javax.jcr.PropertyType;
 import java.util.Arrays;
 
 /**
- * This class implements the <code>PropDef</code> interface and holds the
- * property definition specific attributes.
+ * This class implements the <code>PropDef</code> interface and additionally
+ * provides setter methods for the various property definition attributes.
  */
 public class PropDefImpl extends ItemDefImpl implements PropDef {
 
@@ -34,7 +34,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     private int requiredType = PropertyType.UNDEFINED;
 
     /**
-     * The value constrsints.
+     * The value constraints.
      */
     private ValueConstraint[] valueConstraints = ValueConstraint.EMPTY_ARRAY;
 
@@ -49,9 +49,17 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     private boolean multiple = false;
 
     /**
-     * The id of this property definition.
+     * The identifier of this property definition. The identifier is lazily 
+     * computed based on the characteristics of this property definition and
+     * reset on every attribute change.
      */
-    private PropDefId id;
+    private PropDefId id = null;
+
+    /**
+     * Default constructor.
+     */
+    public PropDefImpl() {
+    }
 
     /**
      * Sets the required type
@@ -59,9 +67,8 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * @param requiredType
      */
     public void setRequiredType(int requiredType) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         this.requiredType = requiredType;
     }
 
@@ -71,9 +78,8 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * @param valueConstraints
      */
     public void setValueConstraints(ValueConstraint[] valueConstraints) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         if (valueConstraints != null) {
             this.valueConstraints = valueConstraints;
         } else {
@@ -87,9 +93,8 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * @param defaultValues
      */
     public void setDefaultValues(InternalValue[] defaultValues) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         if (defaultValues != null) {
             this.defaultValues = defaultValues;
         } else {
@@ -103,19 +108,18 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * @param multiple
      */
     public void setMultiple(boolean multiple) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         this.multiple = multiple;
     }
 
+    //------------------------------------------------< ItemDefImpl overrides >
     /**
      * {@inheritDoc}
      */
     public void setDeclaringNodeType(QName declaringNodeType) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         super.setDeclaringNodeType(declaringNodeType);
     }
 
@@ -123,9 +127,8 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * {@inheritDoc}
      */
     public void setName(QName name) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         super.setName(name);
     }
 
@@ -133,9 +136,8 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * {@inheritDoc}
      */
     public void setAutoCreated(boolean autoCreated) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         super.setAutoCreated(autoCreated);
     }
 
@@ -143,9 +145,8 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * {@inheritDoc}
      */
     public void setOnParentVersion(int onParentVersion) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         super.setOnParentVersion(onParentVersion);
     }
 
@@ -153,9 +154,8 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * {@inheritDoc}
      */
     public void setProtected(boolean writeProtected) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         super.setProtected(writeProtected);
     }
 
@@ -163,17 +163,22 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * {@inheritDoc}
      */
     public void setMandatory(boolean mandatory) {
-        if (id != null) {
-            throw new IllegalStateException("Unable to set attribute. Property definition already compiled.");
-        }
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
         super.setMandatory(mandatory);
     }
 
+    //--------------------------------------------------------------< PropDef >
     /**
      * {@inheritDoc}
+     * <p/>
+     * The identifier is computed based on the characteristics of this property
+     * definition, i.e. modifying attributes of this property definition will
+     * have impact on the identifier returned by this method.
      */
     public PropDefId getId() {
         if (id == null) {
+            // generate new identifier based on this property definition
             id = new PropDefId(this);
         }
         return id;
@@ -209,19 +214,23 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
 
     /**
      * {@inheritDoc}
+     *
+     * @return always <code>false</code>
      */
     public boolean definesNode() {
         return false;
     }
 
+    //-------------------------------------------< java.lang.Object overrides >
     /**
-     * Checks if this property definition is equal to the given one. Two
-     * property definitions are equal if they are the same object or if all
-     * their attributes are equal.
+     * Compares two property definitions for equality. Returns <code>true</code>
+     * if the given object is a property defintion and has the same attributes
+     * as this property definition.
      *
-     * @param obj the object to compare to
-     * @return <code>true</code> if this property definition is equals to obj;
-     *         <code>false</code> otherwise.
+     * @param obj the object to compare this property definition with
+     * @return <code>true</code> if the object is equal to this property definition,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
      */
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -237,5 +246,4 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
         }
         return false;
     }
-
 }

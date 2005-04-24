@@ -20,7 +20,11 @@ import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.QName;
 
 /**
- * Superinterface of {@link NodeDef} and {@link PropDef}.
+ * <code>ItemDef</code> is the internal representation of
+ * an item definition. It refers to <code>QName</code>s only
+ * and is thus isolated from session-specific namespace mappings.  
+ *
+ * @see javax.jcr.nodetype.ItemDefinition
  */
 public interface ItemDef {
 
