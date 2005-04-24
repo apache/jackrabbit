@@ -440,7 +440,9 @@ public class NodeImpl extends ItemImpl implements Node {
         // create a new property state
         PropertyState propState;
         try {
-            propState = stateMgr.createTransientPropertyState(parentUUID, name, ItemState.STATUS_NEW);
+            propState =
+                    stateMgr.createTransientPropertyState(parentUUID, name,
+                            ItemState.STATUS_NEW);
             propState.setType(type);
             propState.setMultiValued(def.isMultiple());
             propState.setDefinitionId(def.unwrap().getId());
@@ -454,7 +456,8 @@ public class NodeImpl extends ItemImpl implements Node {
                 propState.setValues(defValues);
             }
         } catch (ItemStateException ise) {
-            String msg = "failed to add property " + name + " to " + safeGetJCRPath();
+            String msg = "failed to add property " + name + " to "
+                    + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
@@ -470,8 +473,10 @@ public class NodeImpl extends ItemImpl implements Node {
         return prop;
     }
 
-    protected synchronized NodeImpl createChildNode(QName name, NodeDefinitionImpl def,
-                                                    NodeTypeImpl nodeType, String uuid)
+    protected synchronized NodeImpl createChildNode(QName name,
+                                                    NodeDefinitionImpl def,
+                                                    NodeTypeImpl nodeType,
+                                                    String uuid)
             throws RepositoryException {
         String parentUUID = ((NodeState) state).getUUID();
         // create a new node state
@@ -480,10 +485,13 @@ public class NodeImpl extends ItemImpl implements Node {
             if (uuid == null) {
                 uuid = UUID.randomUUID().toString();	// version 4 uuid
             }
-            nodeState = stateMgr.createTransientNodeState(uuid, nodeType.getQName(), parentUUID, ItemState.STATUS_NEW);
+            nodeState =
+                    stateMgr.createTransientNodeState(uuid, nodeType.getQName(),
+                            parentUUID, ItemState.STATUS_NEW);
             nodeState.setDefinitionId(def.unwrap().getId());
         } catch (ItemStateException ise) {
-            String msg = "failed to add child node " + name + " to " + safeGetJCRPath();
+            String msg = "failed to add child node " + name + " to "
+                    + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
@@ -515,7 +523,8 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeDefinition[] nda = nodeType.getAutoCreatedNodeDefinitions();
         for (int i = 0; i < nda.length; i++) {
             NodeDefinitionImpl nd = (NodeDefinitionImpl) nda[i];
-            node.createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+            node.createChildNode(nd.getQName(), nd,
+                    (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
         }
 
         return node;
@@ -542,9 +551,11 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             qName = QName.fromJCRName(propName, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid property name: " + propName, ine);
+            throw new RepositoryException("invalid property name: "
+                    + propName, ine);
         } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid property name: " + propName, upe);
+            throw new RepositoryException("invalid property name: "
+                    + propName, upe);
         }
         removeChildProperty(qName);
     }
@@ -555,7 +566,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // remove the property entry
         if (!thisState.removePropertyEntry(propName)) {
-            String msg = "failed to remove property " + propName + " of " + safeGetJCRPath();
+            String msg = "failed to remove property " + propName + " of "
+                    + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -565,15 +577,18 @@ public class NodeImpl extends ItemImpl implements Node {
         itemMgr.getItem(propId).setRemoved();
     }
 
-    protected void removeChildNode(QName nodeName, int index) throws RepositoryException {
+    protected void removeChildNode(QName nodeName, int index)
+            throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         if (index == 0) {
             index = 1;
         }
-        NodeState.ChildNodeEntry entry = thisState.getChildNodeEntry(nodeName, index);
+        NodeState.ChildNodeEntry entry =
+                thisState.getChildNodeEntry(nodeName, index);
         if (entry == null) {
-            String msg = "failed to remove child " + nodeName + " of " + safeGetJCRPath();
+            String msg = "failed to remove child " + nodeName + " of "
+                    + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -585,14 +600,16 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // remove child entry
         if (!thisState.removeChildNodeEntry(nodeName, index)) {
-            String msg = "failed to remove child " + nodeName + " of " + safeGetJCRPath();
+            String msg = "failed to remove child " + nodeName + " of "
+                    + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg);
         }
     }
 
     protected void onRedefine(NodeDefId defId) throws RepositoryException {
-        NodeDefinitionImpl newDef = session.getNodeTypeManager().getNodeDefinition(defId);
+        NodeDefinitionImpl newDef =
+                session.getNodeTypeManager().getNodeDefinition(defId);
         // modify the state of 'this', i.e. the target node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         // set id of new definition
@@ -622,7 +639,8 @@ public class NodeImpl extends ItemImpl implements Node {
             ArrayList tmp = new ArrayList(thisState.getChildNodeEntries());
             // remove from tail to avoid problems with same-name siblings
             for (int i = tmp.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
+                NodeState.ChildNodeEntry entry =
+                        (NodeState.ChildNodeEntry) tmp.get(i);
                 removeChildNode(entry.getName(), entry.getIndex());
             }
 
@@ -630,7 +648,8 @@ public class NodeImpl extends ItemImpl implements Node {
             // use temp array to avoid ConcurrentModificationException
             tmp = new ArrayList(thisState.getPropertyEntries());
             for (int i = 0; i < tmp.size(); i++) {
-                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) tmp.get(i);
+                NodeState.PropertyEntry entry =
+                        (NodeState.PropertyEntry) tmp.get(i);
                 removeChildProperty(entry.getName());
             }
         }
@@ -659,7 +678,9 @@ public class NodeImpl extends ItemImpl implements Node {
         QName nodeName;
         Path parentPath;
         try {
-            nodePath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
+            nodePath =
+                    Path.create(getPrimaryPath(), relPath,
+                            session.getNamespaceResolver(), true);
             if (nodePath.getNameElement().getIndex() != 0) {
                 String msg = "illegal subscript specified: " + nodePath;
                 log.debug(msg);
@@ -668,7 +689,8 @@ public class NodeImpl extends ItemImpl implements Node {
             nodeName = nodePath.getNameElement().getName();
             parentPath = nodePath.getAncestor(1);
         } catch (MalformedPathException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
+            String msg = "failed to resolve path " + relPath + " relative to "
+                    + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
@@ -688,7 +710,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // make sure that parent node is checked-out
         if (!parentNode.internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot add a child to a checked-in node";
+            String msg = safeGetJCRPath()
+                    + ": cannot add a child to a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -700,13 +723,17 @@ public class NodeImpl extends ItemImpl implements Node {
         return parentNode.internalAddChildNode(nodeName, nodeType, uuid);
     }
 
-    protected NodeImpl internalAddChildNode(QName nodeName, NodeTypeImpl nodeType)
-            throws ItemExistsException, ConstraintViolationException, RepositoryException {
+    protected NodeImpl internalAddChildNode(QName nodeName,
+                                            NodeTypeImpl nodeType)
+            throws ItemExistsException, ConstraintViolationException,
+            RepositoryException {
         return internalAddChildNode(nodeName, nodeType, null);
     }
 
-    protected NodeImpl internalAddChildNode(QName nodeName, NodeTypeImpl nodeType, String uuid)
-            throws ItemExistsException, ConstraintViolationException, RepositoryException {
+    protected NodeImpl internalAddChildNode(QName nodeName,
+                                            NodeTypeImpl nodeType, String uuid)
+            throws ItemExistsException, ConstraintViolationException,
+            RepositoryException {
         Path nodePath;
         try {
             nodePath = Path.create(getPrimaryPath(), nodeName, true);
@@ -1191,6 +1218,36 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Checks various pre-conditions that are common to all
+     * <code>setProperty()</code> methods. The checks performed are:
+     * <ul>
+     * <li>this node must be checked-out</li>
+     * <li>this node must not be locked by somebody else</li>
+     * </ul>
+     * Note that certain checks are performed by the respective
+     * <code>Property.setValue()</code> methods. 
+     *
+     * @throws VersionException if this node is not checked-out
+     * @throws LockException if this node is locked by somebody else
+     * @throws RepositoryException if another error occurs
+     *
+     * @see javax.jcr.Node#setProperty
+     */
+    protected void checkSetProperty()
+            throws VersionException, LockException, RepositoryException {
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath()
+                    + ": cannot set property of a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
+        // check lock status
+        checkLock();
+    }
+
+    /**
      * Sets the internal value of a property without checking any constraints.
      * <p/>
      * Note that no type conversion is being performed, i.e. it's the caller's
@@ -1478,11 +1535,12 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
+     * @throws ConstraintViolationException
      * @throws RepositoryException
      */
     public PropertyImpl setProperty(QName name, Value[] values)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
 
         int type;
         if (values == null || values.length == 0
@@ -1506,24 +1564,17 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
+     * @throws ConstraintViolationException
      * @throws RepositoryException
      */
     public PropertyImpl setProperty(QName name, Value[] values, int type)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
@@ -1551,24 +1602,17 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
+     * @throws ConstraintViolationException
      * @throws RepositoryException
      */
     public PropertyImpl setProperty(QName name, Value value)
             throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            ConstraintViolationException, RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         int type = PropertyType.UNDEFINED;
         if (value != null) {
@@ -1842,15 +1886,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
@@ -1893,15 +1930,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, status);
@@ -1944,15 +1974,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
@@ -1982,15 +2005,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, false, status);
@@ -2033,15 +2049,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.BINARY, false, status);
@@ -2067,15 +2076,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.BOOLEAN, false, status);
@@ -2101,15 +2103,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.DOUBLE, false, status);
@@ -2135,15 +2130,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.LONG, false, status);
@@ -2169,15 +2157,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.DATE, false, status);
@@ -2203,15 +2184,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // check pre-conditions for setting property
+        checkSetProperty();
 
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, PropertyType.REFERENCE, false, status);

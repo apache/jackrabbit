@@ -172,6 +172,63 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
+     * Checks various pre-conditions that are common to all
+     * <code>setValue()</code> methods. The checks performed are:
+     * <ul>
+     * <li>parent node must be checked-out</li>
+     * <li>property must not be protected</li>
+     * <li>parent node must not be locked by somebody else</li>
+     * <li>property must be multi-valued when set to an array of values
+     * (and vice versa)</li>
+     * </ul>
+     *
+     * @param multipleValues flag indicating whether the property is about to
+     *                       be set to an array of values
+     * @throws ValueFormatException if a single-valued property is set to an
+     *                              array of values (and vice versa)
+     * @throws VersionException if the parent node is not checked-out
+     * @throws LockException if the parent node is locked by somebody else
+     * @throws ConstraintViolationException if the property is protected
+     * @throws RepositoryException if another error occurs
+     *
+     * @see javax.jcr.Property#setValue
+     */
+    protected void checkSetValue(boolean multipleValues)
+            throws ValueFormatException, VersionException,
+            LockException, ConstraintViolationException,
+            RepositoryException {
+        // verify that parent node is checked-out
+        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
+            throw new VersionException(
+                    "cannot set the value of a property of a checked-in node "
+                    + safeGetJCRPath());
+        }
+
+        // check protected flag
+        if (definition.isProtected()) {
+            throw new ConstraintViolationException(
+                    "cannot set the value of a protected property "
+                    + safeGetJCRPath());
+        }
+
+        // check multi-value flag
+        if (multipleValues) {
+            if (!definition.isMultiple()) {
+                throw new ValueFormatException(safeGetJCRPath()
+                        + " is not multi-valued");
+            }
+        } else {
+            if (definition.isMultiple()) {
+                throw new ValueFormatException(safeGetJCRPath()
+                        + " is multi-valued and can therefore only be set to an array of values");
+            }
+        }
+
+        // check lock status
+        ((NodeImpl) getParent()).checkLock();
+    }
+
+    /**
      * @param values
      * @param type
      * @throws ConstraintViolationException
@@ -231,26 +288,20 @@ public class PropertyImpl extends ItemImpl implements Property {
      *
      * @param name
      * @throws ValueFormatException
+     * @throws VersionException
+     * @throws LockException
+     * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    public void setValue(QName name) throws ValueFormatException, RepositoryException {
+    public void setValue(QName name)
+            throws ValueFormatException, VersionException,
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
-        }
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -284,26 +335,20 @@ public class PropertyImpl extends ItemImpl implements Property {
      *
      * @param names
      * @throws ValueFormatException
+     * @throws VersionException
+     * @throws LockException
+     * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    public void setValue(QName[] names) throws ValueFormatException, RepositoryException {
+    public void setValue(QName[] names)
+            throws ValueFormatException, VersionException,
+            LockException, ConstraintViolationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (!definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
-        }
+        // check pre-conditions for setting property value
+        checkSetValue(true);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -376,7 +421,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         PropertyState state = (PropertyState) getItemState();
@@ -393,7 +439,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (!definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is not multi-valued");
         }
 
         PropertyState state = (PropertyState) getItemState();
@@ -414,7 +461,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         PropertyState state = (PropertyState) getItemState();
@@ -438,7 +486,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         return getValue().getString();
@@ -453,7 +502,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         return getValue().getStream();
@@ -468,7 +518,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         PropertyState state = (PropertyState) getItemState();
@@ -490,7 +541,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         // avoid unnecessary object creation if possible
@@ -513,7 +565,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         // avoid unnecessary object creation if possible
@@ -536,7 +589,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         // avoid unnecessary object creation if possible
@@ -559,7 +613,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(safeGetJCRPath()
+                    + " is multi-valued and can therefore only be retrieved as an array of values");
         }
 
         PropertyState state = (PropertyState) getItemState();
@@ -583,23 +638,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
-        }
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -634,23 +674,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -680,23 +705,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -737,23 +747,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -787,23 +782,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (!definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(true);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -844,23 +824,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -890,23 +855,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -947,23 +897,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -993,25 +928,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            String msg = "cannot set the value of a property of a checked-in node " + safeGetJCRPath();
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be set to an array of values");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(false);
 
         // check type according to definition of this property
         int reqType = definition.getRequiredType();
@@ -1049,23 +967,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node " + safeGetJCRPath());
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property " + safeGetJCRPath());
-        }
-
-        // check multi-value flag
-        if (!definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
-        }
-
-        // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        // check pre-conditions for setting property value
+        checkSetValue(true);
 
         if (values != null) {
             // check type of values
