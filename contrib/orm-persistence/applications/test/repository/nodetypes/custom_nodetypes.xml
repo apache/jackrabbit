@@ -212,12 +212,12 @@
   </nodeType>
   
   <!-- Defines a nodetype with a childNodeDefinition that does not allow same name siblings -->
-  <nodeType name="test:sameNameSiblingsFalsechildNodeDefinition" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+  <nodeType name="test:sameNameSibsFalseChildNodeDefinition" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
-    <childNodeDefinition name="*" defaultPrimaryType="test:sameNameSiblingsFalsechildNodeDefinition" autoCreated="false" mandatory="false" onParentVersion="COMPUTE" protected="false" sameNameSiblings="false">
+    <childNodeDefinition name="*" defaultPrimaryType="test:sameNameSibsFalseChildNodeDefinition" autoCreated="false" mandatory="false" onParentVersion="COMPUTE" protected="false" sameNameSiblings="false">
       <requiredPrimaryTypes>
         <requiredPrimaryType>nt:base</requiredPrimaryType>
       </requiredPrimaryTypes>

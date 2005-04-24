@@ -29,6 +29,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import javax.jcr.ImportUUIDBehavior;
 
 /**
  * Test suite for XML import speed benchmarking.
@@ -85,7 +86,7 @@ public class XMLImportSpeedTest extends AbstractJCRTest {
                 Node nl = rn.addNode("importxml" + i, "nt:unstructured");
                 superuser.importXML("/importxml" + i,
                                     new FileInputStream(
-                                        XML_IMPORT_FILENAME));
+                                        XML_IMPORT_FILENAME), ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                 log.println("Saving...");
                 superuser.save();
             }
