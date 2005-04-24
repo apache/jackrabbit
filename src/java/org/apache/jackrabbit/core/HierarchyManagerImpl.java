@@ -101,7 +101,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public NodeId[] listParents(ItemId id) throws ItemNotFoundException, RepositoryException {
+    public NodeId[] listParents(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
         ArrayList list = new ArrayList();
         try {
             if (id.denotesNode()) {
@@ -129,7 +130,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public ItemId[] listChildren(NodeId id) throws ItemNotFoundException, RepositoryException {
+    public ItemId[] listChildren(NodeId id)
+            throws ItemNotFoundException, RepositoryException {
         NodeState parentState;
         try {
             parentState = (NodeState) getItemState(id);
@@ -228,13 +230,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
             if (parentState.hasChildNodeEntry(name, index)) {
                 // child node
-                NodeState.ChildNodeEntry nodeEntry = parentState.getChildNodeEntry(name, index);
+                NodeState.ChildNodeEntry nodeEntry =
+                        parentState.getChildNodeEntry(name, index);
                 if (i == elems.length - 1) {
                     // last element in the path
                     return new NodeId(nodeEntry.getUUID());
                 }
                 try {
-                    parentState = (NodeState) getItemState(new NodeId(nodeEntry.getUUID()));
+                    parentState =
+                            (NodeState) getItemState(new NodeId(nodeEntry.getUUID()));
                 } catch (ItemStateException e) {
                     String msg = "failed to retrieve state of intermediary node";
                     log.debug(msg);
@@ -265,7 +269,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized Path getPath(ItemId id) throws ItemNotFoundException, RepositoryException {
+    public synchronized Path getPath(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
         try {
             Path.PathBuilder builder = new Path.PathBuilder();
 
@@ -284,13 +289,16 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     String uuid = nodeState.getUUID();
                     List entries = parent.getChildNodeEntries(uuid);
                     if (entries.isEmpty()) {
-                        String msg = "failed to build path of " + id + ": " + parent.getUUID() + " has no child entry for " + uuid;
+                        String msg = "failed to build path of " + id + ": "
+                                + parent.getUUID() + " has no child entry for "
+                                + uuid;
                         log.debug(msg);
                         throw new RepositoryException(msg);
                     }
                     // if the parent has more than one child node entries pointing
                     // to the same child node, always use the first one
-                    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
+                    NodeState.ChildNodeEntry entry =
+                            (NodeState.ChildNodeEntry) entries.get(0);
                     // add to path
                     if (entry.getIndex() == 1) {
                         builder.addFirst(entry.getName());
@@ -334,7 +342,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public QName getName(ItemId itemId) throws ItemNotFoundException, RepositoryException {
+    public QName getName(ItemId itemId)
+            throws ItemNotFoundException, RepositoryException {
         if (itemId.denotesNode()) {
             NodeId nodeId = (NodeId) itemId;
             NodeState parentState;
@@ -364,7 +373,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(0);
+            NodeState.ChildNodeEntry entry =
+                    (NodeState.ChildNodeEntry) entries.get(0);
             return entry.getName();
         } else {
             PropertyId propId = (PropertyId) itemId;
@@ -401,7 +411,37 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException {
+    public boolean isAncestor(NodeId nodeId, ItemId itemId)
+            throws ItemNotFoundException, RepositoryException {
+        try {
+            ItemState state = getItemState(itemId, true);
+            String parentUUID = state.getParentUUID();
+            while (parentUUID != null) {
+                if (parentUUID.equals(nodeId.getUUID())) {
+                    return true;
+                }
+                state = getItemState(new NodeId(parentUUID), true);
+                parentUUID = state.getParentUUID();
+            }
+            return false;
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "failed to determine degree of relationship of "
+                    + nodeId + " and " + itemId;
+            log.debug(msg);
+            throw new ItemNotFoundException(msg, nsise);
+        } catch (ItemStateException ise) {
+            String msg = "failed to determine degree of relationship of "
+                    + nodeId + " and " + itemId;
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public synchronized Path[] getAllPaths(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
         return getAllPaths(id, false);
     }
 
@@ -417,7 +457,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
         NodeId nodeId;
         if (!id.denotesNode()) {
             try {
-                PropertyState propState = (PropertyState) getItemState(id, includeZombies);
+                PropertyState propState =
+                        (PropertyState) getItemState(id, includeZombies);
                 QName name = propState.getName();
                 // add to path
                 builder.addFirst(name);
@@ -537,12 +578,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
             Iterator iter = parentUUIDs.iterator();
             while (iter.hasNext()) {
                 String parentUUID = (String) iter.next();
-                NodeState parent = (NodeState) getItemState(new NodeId(parentUUID), includeZombies);
+                NodeState parent =
+                        (NodeState) getItemState(new NodeId(parentUUID), includeZombies);
                 ArrayList entries = new ArrayList(parent.getChildNodeEntries(uuid));
                 if (includeZombies) {
                     Iterator riter = parent.getRemovedChildNodeEntries().iterator();
                     while (riter.hasNext()) {
-                        NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) riter.next();
+                        NodeState.ChildNodeEntry entry =
+                                (NodeState.ChildNodeEntry) riter.next();
                         if (entry.getUUID().equals(uuid)) {
                             entries.add(entry);
                         }
@@ -569,7 +612,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     builders.add(clone);
                 }
                 for (int i = 0; i < entries.size(); i++) {
-                    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(i);
+                    NodeState.ChildNodeEntry entry =
+                            (NodeState.ChildNodeEntry) entries.get(i);
 
                     // get a path builder clone from the tail of the queue
                     Path.PathBuilder pb = (Path.PathBuilder) queue.removeLast();
