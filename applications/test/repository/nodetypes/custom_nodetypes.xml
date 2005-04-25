@@ -221,6 +221,16 @@
     <childNodeDefinition name="*" defaultPrimaryType="test:setProperty" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false" />
   </nodeType>
   
+  <!-- Defines a nodetype to test assuming the PropertyType at Node.setProperty(). -->
+  <nodeType name="test:setPropertyAssumingType" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="test:singleProperty" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="test:multiProperty" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true" />
+    <childNodeDefinition name="*" defaultPrimaryType="test:setPropertyAssumingType" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false" />
+  </nodeType>
+
   <!-- Defines a nodetype with a childNodeDefinition that does not allow same name siblings -->
   <nodeType name="test:sameNameSibsFalseChildNodeDefinition" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
