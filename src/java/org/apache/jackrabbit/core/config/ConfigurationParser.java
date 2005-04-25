@@ -538,7 +538,7 @@ public class ConfigurationParser {
      * @param parent parent element
      * @param name name of the child element
      * @return named child element
-     * @throws ConfigurationException 
+     * @throws ConfigurationException
      * @throws ConfigurationException if the child element is not found
      */
     private Element getElement(Element parent, String name) throws ConfigurationException {

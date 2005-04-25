@@ -273,8 +273,8 @@ class NumericConstraint extends ValueConstraint {
                 s = matcher.group(4);
                 upperInclusive = s.equals("]");
                 if (lowerLimit == null && upperLimit == null) {
-                    String msg = "'" + definition
-                            + "' is not a valid value constraint format for numeric types: neither lower- nor upper-limit specified";
+                    String msg = "'" + definition + "' is not a valid value constraint"
+                         + " format for numeric types: neither lower- nor upper-limit specified";
                     log.debug(msg);
                     throw new InvalidConstraintException(msg);
                 }

@@ -93,7 +93,7 @@ public class NodeDefId implements Serializable {
      *                                  as a <code>NodeDefId</code>.
      * @see #toString()
      */
-    public static NodeDefId valueOf(String s) {
+    public static NodeDefId valueOf(String s) throws IllegalArgumentException {
         if (s == null) {
             throw new IllegalArgumentException("invalid NodeDefId literal");
         }

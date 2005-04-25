@@ -24,7 +24,7 @@ import javax.security.auth.spi.LoginModule;
  * <p>
  * Login module is an optional configuration that allows to use JackRabbit
  * in a non-JAAS environment.
- * 
+ *
  * @see RepositoryConfig#getLoginModuleConfig()
  * @version $Id$
  */
@@ -39,7 +39,7 @@ public class LoginModuleConfig extends BeanConfig {
     LoginModuleConfig(BeanConfig config) {
         super(config);
     }
-    
+
     public LoginModule getLoginModule() throws ConfigurationException {
         Object result = newInstance();
         if (result instanceof LoginModule) {

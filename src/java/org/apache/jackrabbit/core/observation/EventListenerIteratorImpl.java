@@ -59,7 +59,8 @@ class EventListenerIteratorImpl implements EventListenerIterator {
      * @throws NullPointerException if <code>ticket</code> or <code>consumer</code>
      *                              is <code>null</code>.
      */
-    EventListenerIteratorImpl(Session session, Collection sConsumers, Collection aConsumers) {
+    EventListenerIteratorImpl(Session session, Collection sConsumers, Collection aConsumers)
+            throws NullPointerException {
         if (session == null) {
             throw new NullPointerException("session");
         }

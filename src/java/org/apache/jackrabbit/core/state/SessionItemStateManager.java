@@ -447,9 +447,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
                                      * appending a random integer in order to
                                      * avoid potential conflicts
                                      */
-                                    Path dummy = Path.create(p0,
-                                            Path.create(new QName(Constants.NS_DEFAULT_URI, Integer.toString(new Random().nextInt())), 0),
-                                            true);
+                                    QName dummyName = new QName(Constants.NS_DEFAULT_URI, Integer.toString(new Random().nextInt()));
+                                    Path dummy = Path.create(p0, Path.create(dummyName, 0), true);
                                     descendants.put(dummy, state);
                                     isDescendant = true;
                                     break;

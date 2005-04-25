@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
@@ -629,8 +630,8 @@ public class WorkspaceImpl implements Workspace, Constants {
                         NodeReferences refs = stateMgr.getNodeReferences(refsId);
                         if (refs.hasReferences()) {
                             throw new ReferentialIntegrityException(
-                                    hierMgr.safeGetJCRPath(targetId) +
-                                    ": cannot remove node with references");
+                                    hierMgr.safeGetJCRPath(targetId)
+                                    + ": cannot remove node with references");
                         }
                     } catch (ItemStateException ise) {
                         String msg = "internal error: failed to check references on "
@@ -1099,7 +1100,8 @@ public class WorkspaceImpl implements Workspace, Constants {
                                             QName propName)
             throws RepositoryException {
 
-        // @todo special handling required for properties with special semantics (e.g. those defined by mix:versionable, mix:lockable, et.al.)
+        // @todo special handling required for properties with special semantics
+        // (e.g. those defined by mix:versionable, mix:lockable, et.al.)
         PropertyState newState = stateMgr.createNew(propName, parentUUID);
         PropDefId defId = srcState.getDefinitionId();
         newState.setDefinitionId(defId);
@@ -1577,7 +1579,9 @@ public class WorkspaceImpl implements Workspace, Constants {
 
         if (obsMgr == null) {
             try {
-                obsMgr = rep.getObservationManagerFactory(wspConfig.getName()).createObservationManager(session, session.getItemManager());
+                ObservationManagerFactory factory =
+                    rep.getObservationManagerFactory(wspConfig.getName());
+                obsMgr = factory.createObservationManager(session, session.getItemManager());
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";
@@ -1684,9 +1688,13 @@ public class WorkspaceImpl implements Workspace, Constants {
                 }
                 if (restored == null) {
                     if (numRestored == 0) {
-                        throw new VersionException("Unable to restore. At least one version needs existing versionable node in workspace.");
+                        throw new VersionException(
+                                "Unable to restore. At least one version needs"
+                                + " existing versionable node in workspace.");
                     } else {
-                        throw new VersionException("Unable to restore. All versions with non existing versionable nodes need parent.");
+                        throw new VersionException(
+                                "Unable to restore. All versions with non"
+                                + " existing versionable nodes need parent.");
                     }
                 }
             }

@@ -162,13 +162,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         session.sanityCheck();
 
         // check status of this item for read operation
-        switch (status) {
-            case STATUS_NORMAL:
-            case STATUS_MODIFIED:
-                return;
-
-            case STATUS_DESTROYED:
-            case STATUS_INVALIDATED:
+        if (status == STATUS_DESTROYED || status == STATUS_INVALIDATED) {
                 throw new InvalidItemStateException(id + ": the item does not exist anymore");
         }
     }
@@ -383,14 +377,16 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
                     case ItemState.STATUS_STALE_MODIFIED:
                         {
-                            String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
+                            String msg = transientState.getId()
+                                + ": the item cannot be saved because it has been modified externally.";
                             log.debug(msg);
                             throw new InvalidItemStateException(msg);
                         }
 
                     case ItemState.STATUS_STALE_DESTROYED:
                         {
-                            String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
+                            String msg = transientState.getId()
+                                + ": the item cannot be saved because it has been deleted externally.";
                             log.debug(msg);
                             throw new InvalidItemStateException(msg);
                         }
@@ -430,7 +426,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                     throw new InvalidItemStateException(msg);
                 }
                 if (transientState.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
-                    String msg = transientState.getId() + ": the item cannot be removed because it has already been deleted externally.";
+                    String msg = transientState.getId()
+                        + ": the item cannot be removed because it has already been deleted externally.";
                     log.debug(msg);
                     throw new InvalidItemStateException(msg);
                 }
@@ -708,7 +705,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                             try {
                                 if (!target.getPrimaryPath().isDescendantOf(getPrimaryPath())) {
                                     String msg = itemMgr.safeGetJCRPath(propState.getId())
-                                            + ": target node of REFERENCE property is a new node and must therefore either be saved first or be within the scope of the current save operation.";
+                                            + ": target node of REFERENCE property is a new node and must"
+                                            + " therefore either be saved first or be within the scope of"
+                                            + " the current save operation.";
                                     log.warn(msg);
                                     throw new ReferentialIntegrityException(msg);
                                 }
@@ -870,7 +869,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                         node.internalSetProperty(JCR_VERSIONHISTORY, InternalValue.create(new UUID(hist.getUUID())));
                         node.internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
                         node.internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));
-                        node.internalSetProperty(JCR_PREDECESSORS, new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+                        node.internalSetProperty(JCR_PREDECESSORS,
+                                new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
                         createdTransientState = true;
                     }
                 }

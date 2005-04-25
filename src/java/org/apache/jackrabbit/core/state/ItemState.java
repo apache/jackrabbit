@@ -362,10 +362,11 @@ public abstract class ItemState implements ItemStateListener, Serializable {
             case STATUS_UNDEFINED:
                 status = newStatus;
                 return;
+            default:
+                String msg = "illegal status: " + newStatus;
+                log.debug(msg);
+                throw new IllegalArgumentException(msg);
         }
-        String msg = "illegal status: " + newStatus;
-        log.debug(msg);
-        throw new IllegalArgumentException(msg);
     }
 
     /**

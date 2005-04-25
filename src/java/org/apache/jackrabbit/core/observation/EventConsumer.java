@@ -89,7 +89,8 @@ class EventConsumer {
      * @throws NullPointerException if <code>session</code>, <code>listener</code>
      *                              or <code>filter</code> is<code>null</code>.
      */
-    EventConsumer(SessionImpl session, EventListener listener, EventFilter filter) {
+    EventConsumer(SessionImpl session, EventListener listener, EventFilter filter)
+            throws NullPointerException {
         if (session == null) {
             throw new NullPointerException("session");
         }

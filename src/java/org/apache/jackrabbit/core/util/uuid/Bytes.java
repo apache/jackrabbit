@@ -141,8 +141,11 @@ public final class Bytes {
         if (rhs == null) {
             return +1;
         }
-        if (lhs.length != rhs.length) {
-            return ((lhs.length < rhs.length) ? -1 : +1);
+        if (lhs.length < rhs.length) {
+            return -1;
+        }
+        if (lhs.length > rhs.length) {
+            return +1;
         }
         for (int i = 0; i < lhs.length; i++) {
             if (lhs[i] < rhs[i]) {

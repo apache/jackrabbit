@@ -184,7 +184,8 @@ class EventFilter {
         if (nodeTypes != null) {
             boolean match = false;
             for (int i = 0; i < nodeTypes.length && !match; i++) {
-                match |= eventState.getNodeType().getQName().equals(nodeTypes[i].getQName()) || eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
+                match |= eventState.getNodeType().getQName().equals(nodeTypes[i].getQName())
+                    || eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
             }
             if (!match) {
                 return true;

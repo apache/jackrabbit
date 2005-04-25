@@ -166,7 +166,7 @@ public class NodeTypeRegistry implements Constants {
         try {
             // load built-in node type definitions
             loadBuiltInNodeTypeDefs(builtInNTDefs);
-            
+
             // validate & register built-in node types
             internalRegister(builtInNTDefs.all());
         } catch (InvalidNodeTypeDefException intde) {
@@ -489,8 +489,8 @@ public class NodeTypeRegistry implements Constants {
                 // make sure that all primary types except nt:base extend from nt:base
                 if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName())
                         && !est.includesNodeType(NT_BASE)) {
-                    String msg = "[" + name
-                            + "] all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
+                    String msg = "[" + name + "] all primary node types except"
+                        + " nt:base itself must be (directly or indirectly) derived from nt:base";
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
@@ -1778,8 +1778,11 @@ public class NodeTypeRegistry implements Constants {
             // ignore weight
             Iterator i = set.iterator();
             while (i.hasNext()) {
+                h *= 37;
                 Object obj = i.next();
-                h = 37 * h + (obj != null ? obj.hashCode() : 0);
+                if (obj != null) {
+                    h += obj.hashCode();
+                }
             }
             return h;
         }

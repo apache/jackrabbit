@@ -285,7 +285,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             node.internalSetProperty(Constants.JCR_LOCKOWNER, null);
             node.internalSetProperty(Constants.JCR_LOCKISDEEP, null);
             node.save();
-            
+
         } catch (RepositoryException e) {
             log.warn("Unable to unlock session-scoped lock on node '"
                     + info.lockToken + "': " + e.getMessage());

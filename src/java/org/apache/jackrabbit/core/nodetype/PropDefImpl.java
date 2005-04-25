@@ -49,7 +49,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     private boolean multiple = false;
 
     /**
-     * The identifier of this property definition. The identifier is lazily 
+     * The identifier of this property definition. The identifier is lazily
      * computed based on the characteristics of this property definition and
      * reset on every attribute change.
      */

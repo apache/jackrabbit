@@ -32,7 +32,7 @@ public class UserPrincipal implements Principal, Serializable {
      * @param name the name of this principal
      * @throws IllegalArgumentException if <code>name</code> is <code>null</code>.
      */
-    public UserPrincipal(String name) {
+    public UserPrincipal(String name) throws IllegalArgumentException {
         if (name == null) {
             throw new IllegalArgumentException("name can not be null");
         }

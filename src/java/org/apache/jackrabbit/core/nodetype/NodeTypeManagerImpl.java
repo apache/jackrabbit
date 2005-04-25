@@ -185,7 +185,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
     public void nodeTypeReRegistered(QName ntName) {
         // flush all affected cache entries
         ntCache.remove(ntName);
-        synchronized(pdCache) {
+        synchronized (pdCache) {
             Iterator iter = pdCache.values().iterator();
             while (iter.hasNext()) {
                 PropDefImpl pd = (PropDefImpl) iter.next();
@@ -194,7 +194,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
                 }
             }
         }
-        synchronized(ndCache) {
+        synchronized (ndCache) {
             Iterator iter = ndCache.values().iterator();
             while (iter.hasNext()) {
                 NodeDefImpl nd = (NodeDefImpl) iter.next();
@@ -211,7 +211,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
     public void nodeTypeUnregistered(QName ntName) {
         // flush all affected cache entries
         ntCache.remove(ntName);
-        synchronized(pdCache) {
+        synchronized (pdCache) {
             Iterator iter = pdCache.values().iterator();
             while (iter.hasNext()) {
                 PropDefImpl pd = (PropDefImpl) iter.next();
@@ -220,7 +220,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
                 }
             }
         }
-        synchronized(ndCache) {
+        synchronized (ndCache) {
             Iterator iter = ndCache.values().iterator();
             while (iter.hasNext()) {
                 NodeDefImpl nd = (NodeDefImpl) iter.next();

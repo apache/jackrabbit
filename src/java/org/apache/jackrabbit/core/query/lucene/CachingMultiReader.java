@@ -55,7 +55,8 @@ class CachingMultiReader extends MultiReader {
      * @exception IllegalArgumentException if <code>subReaders</code> does
      * not comply to the above type requirements.
      */
-    public CachingMultiReader(IndexReader[] subReaders) throws IOException {
+    public CachingMultiReader(IndexReader[] subReaders)
+            throws IOException, IllegalArgumentException {
         super(subReaders);
         // check readers, all but last must be a CachingIndexReader
         for (int i = 0; i < subReaders.length - 1; i++) {

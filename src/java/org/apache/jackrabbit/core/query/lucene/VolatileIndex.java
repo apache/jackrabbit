@@ -36,7 +36,7 @@ class VolatileIndex extends AbstractIndex {
     /**
      * Default value for {@link #bufferSize}.
      */
-    private final int DEFAULT_BUFFER_SIZE = 10;
+    private static final int DEFAULT_BUFFER_SIZE = 10;
 
     /** The redo log */
     private final RedoLog redoLog;

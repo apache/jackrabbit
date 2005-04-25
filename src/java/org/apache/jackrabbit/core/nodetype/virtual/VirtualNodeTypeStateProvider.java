@@ -195,7 +195,8 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         }
         pState.setPropertyValue(JCR_AUTOCREATED, InternalValue.create(propDef.isAutoCreated()));
         pState.setPropertyValue(JCR_MANDATORY, InternalValue.create(propDef.isMandatory()));
-        pState.setPropertyValue(JCR_ONPARENTVERSION, InternalValue.create(OnParentVersionAction.nameFromValue(propDef.getOnParentVersion())));
+        pState.setPropertyValue(JCR_ONPARENTVERSION,
+                InternalValue.create(OnParentVersionAction.nameFromValue(propDef.getOnParentVersion())));
         pState.setPropertyValue(JCR_PROTECTED, InternalValue.create(propDef.isProtected()));
         pState.setPropertyValue(JCR_MULTIPLE, InternalValue.create(propDef.isMultiple()));
         pState.setPropertyValue(JCR_REQUIREDTYPE, InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType())));
@@ -229,9 +230,11 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         }
         pState.setPropertyValue(JCR_AUTOCREATED, InternalValue.create(cnDef.isAutoCreated()));
         pState.setPropertyValue(JCR_MANDATORY, InternalValue.create(cnDef.isMandatory()));
-        pState.setPropertyValue(JCR_ONPARENTVERSION, InternalValue.create(OnParentVersionAction.nameFromValue(cnDef.getOnParentVersion())));
+        pState.setPropertyValue(JCR_ONPARENTVERSION,
+                InternalValue.create(OnParentVersionAction.nameFromValue(cnDef.getOnParentVersion())));
         pState.setPropertyValue(JCR_PROTECTED, InternalValue.create(cnDef.isProtected()));
-        pState.setPropertyValues(JCR_REQUIREDPRIMARYTYPES, PropertyType.NAME, InternalValue.create(cnDef.getRequiredPrimaryTypes()));
+        pState.setPropertyValues(JCR_REQUIREDPRIMARYTYPES,
+                PropertyType.NAME, InternalValue.create(cnDef.getRequiredPrimaryTypes()));
         if (cnDef.getDefaultPrimaryType() != null) {
             pState.setPropertyValue(JCR_DEFAULTPRIMARYTYPE, InternalValue.create(cnDef.getDefaultPrimaryType()));
         }

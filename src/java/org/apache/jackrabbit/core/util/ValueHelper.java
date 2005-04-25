@@ -506,7 +506,7 @@ public class ValueHelper {
      */
     public static Value deserialize(String value, int type,
                                     boolean decodeBlanks)
-            throws RepositoryException {
+            throws ValueFormatException, RepositoryException {
         if (type == PropertyType.BINARY) {
             // base64 encoded binary value;
             // the encodeBlanks flag can be ignored since base64-encoded

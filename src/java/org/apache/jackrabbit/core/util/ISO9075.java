@@ -34,6 +34,9 @@ import java.util.regex.Matcher;
  */
 public class ISO9075 {
 
+    /** Hidden constructor. */
+    private ISO9075() { }
+
     /** Pattern on an encoded character */
     private static final Pattern ENCODE_PATTERN = Pattern.compile("_x\\p{XDigit}{4}_");
 
@@ -166,7 +169,8 @@ public class ISO9075 {
      * @param location the location to look at.
      * @throws ArrayIndexOutOfBoundsException if location > name.length()
      */
-    private static boolean needsEscaping(String name, int location) {
+    private static boolean needsEscaping(String name, int location)
+            throws ArrayIndexOutOfBoundsException {
         if (name.charAt(location) == '_' && name.length() >= location + 6) {
             return name.charAt(location + 1) == 'x'
                 && HEX_DIGITS.indexOf(name.charAt(location + 2)) != -1

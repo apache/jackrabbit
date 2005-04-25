@@ -44,7 +44,7 @@ public class NodeReferencesId extends NodeId {
      *                                  as a <code>NodeReferencesId</code>.
      * @see #toString()
      */
-    public static NodeId valueOf(String s) {
+    public static NodeId valueOf(String s) throws IllegalArgumentException {
         if (s == null) {
             throw new IllegalArgumentException("invalid NodeReferencesId literal");
         }

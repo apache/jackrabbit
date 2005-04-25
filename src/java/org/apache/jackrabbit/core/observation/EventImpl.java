@@ -83,7 +83,8 @@ public final class EventImpl implements Event {
         try {
             Path p;
             if (eventState.getChildRelPath().getIndex() > 0) {
-                p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), eventState.getChildRelPath().getIndex(), false);
+                p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(),
+                        eventState.getChildRelPath().getIndex(), false);
             } else {
                 p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), false);
             }

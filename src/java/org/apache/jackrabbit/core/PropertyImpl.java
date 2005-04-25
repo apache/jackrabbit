@@ -166,9 +166,10 @@ public class PropertyImpl extends ItemImpl implements Property {
             case PropertyType.BINARY:
                 BLOBFileValue blob = (BLOBFileValue) value.internalValue();
                 return blob.getLength();
-        }
 
-        return -1;
+            default:
+                return -1;
+        }
     }
 
     /**
@@ -259,14 +260,10 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (oldValues != null) {
             for (int i = 0; i < oldValues.length; i++) {
                 InternalValue old = oldValues[i];
-                if (old != null) {
-                    switch (old.getType()) {
-                        case PropertyType.BINARY:
-                            // BINARY value
-                            BLOBFileValue blob = (BLOBFileValue) old.internalValue();
-                            blob.delete();
-                            break;
-                    }
+                if (old != null && old.getType() == PropertyType.BINARY) {
+                    // BINARY value
+                    BLOBFileValue blob = (BLOBFileValue) old.internalValue();
+                    blob.delete();
                 }
             }
         }
