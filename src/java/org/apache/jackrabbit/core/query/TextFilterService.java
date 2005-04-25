@@ -50,6 +50,9 @@ import sun.misc.Service;
  */
 public class TextFilterService {
 
+    /** Hidden constructor. */
+    private TextFilterService() { }
+
     /**
      * Logger instance for this class.
      */

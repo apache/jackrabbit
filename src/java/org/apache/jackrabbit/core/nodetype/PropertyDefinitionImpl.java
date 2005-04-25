@@ -52,7 +52,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
 
     /**
      * Returns the wrapped property definition.
-     * 
+     *
      * @return the wrapped property definition.
      */
     public PropDef unwrap() {

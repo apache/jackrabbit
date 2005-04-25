@@ -28,7 +28,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiReader;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;

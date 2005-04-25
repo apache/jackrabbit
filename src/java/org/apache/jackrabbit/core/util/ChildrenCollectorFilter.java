@@ -126,7 +126,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
         int pLen = pattern.length();
         int sLen = s.length();
 
-        for (; ;) {
+        while (true) {
             if (pOff >= pLen) {
                 if (sOff >= sLen) {
                     return true;
@@ -152,7 +152,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
                     return true;
                 }
 
-                for (; ;) {
+                while (true) {
                     if (internalMatches(s, pattern, sOff, pOff)) {
                         return true;
                     }

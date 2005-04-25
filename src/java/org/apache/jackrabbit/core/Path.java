@@ -109,7 +109,12 @@ public final class Path {
      * <li>group 7 is index excl. brackets
      * </ul>
      */
-    private static final Pattern PATH_ELEMENT_PATTERN = Pattern.compile("(\\.)|(\\.\\.)|(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)(\\[([1-9]\\d*)\\])?");
+    private static final Pattern PATH_ELEMENT_PATTERN =
+        Pattern.compile("(\\.)|"
+                + "(\\.\\.)|"
+                + "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
+                + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)"
+                + "(\\[([1-9]\\d*)\\])?");
 
     /**
      * the elements of this path
@@ -285,7 +290,8 @@ public final class Path {
      * @return the relative path created from <code>name</code>.
      * @throws IllegalArgumentException if <code>index</code> is negative.
      */
-    public static Path create(QName name, int index) {
+    public static Path create(QName name, int index)
+            throws IllegalArgumentException {
         if (index < 0) {
             throw new IllegalArgumentException("index must not be negative: " + index);
         }
@@ -380,7 +386,9 @@ public final class Path {
                         // check if the prefix is a valid XML prefix
                         if (!XMLChar.isValidNCName(prefix)) {
                             // illegal syntax for prefix
-                            throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' specifies an illegal namespace prefix");
+                            throw new MalformedPathException(
+                                    "'" + jcrPath + "' is not a valid path: '"
+                                    + elem + "' specifies an illegal namespace prefix");
                         }
                     } else {
                         // no prefix specified
@@ -405,7 +413,9 @@ public final class Path {
                         nsURI = resolver.getURI(prefix);
                     } catch (NamespaceException nse) {
                         // unknown prefix
-                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' specifies an unmapped namespace prefix");
+                        throw new MalformedPathException(
+                                "'" + jcrPath + "' is not a valid path: '"
+                                + elem + "' specifies an unmapped namespace prefix");
                     }
 
                     PathElement element;
@@ -419,7 +429,9 @@ public final class Path {
                 }
             } else {
                 // illegal syntax for path element
-                throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '" + elem + "' is not a legal path element");
+                throw new MalformedPathException(
+                        "'" + jcrPath + "' is not a valid path: '"
+                        + elem + "' is not a legal path element");
             }
         }
         if (resolver != null) {
@@ -639,7 +651,8 @@ public final class Path {
      *                                  degree
      * @throws IllegalArgumentException if <code>degree</code> is negative
      */
-    public Path getAncestor(int degree) throws PathNotFoundException {
+    public Path getAncestor(int degree)
+            throws IllegalArgumentException, PathNotFoundException {
         if (degree < 0) {
             throw new IllegalArgumentException("degree must be >= 0");
         } else if (degree == 0) {
@@ -853,7 +866,7 @@ public final class Path {
      *                                  as a <code>Path</code>.
      * @see #toString()
      */
-    public static Path valueOf(String s) {
+    public static Path valueOf(String s) throws IllegalArgumentException {
         if ("".equals(s) || s == null) {
             throw new IllegalArgumentException("invalid Path literal");
         }
@@ -1220,7 +1233,7 @@ public final class Path {
          * @param name qualified name
          * @throws IllegalArgumentException if the name is <code>null</code>
          */
-        private PathElement(QName name) {
+        private PathElement(QName name) throws IllegalArgumentException {
             if (name == null) {
                 throw new IllegalArgumentException("name must not be null");
             }
@@ -1235,7 +1248,7 @@ public final class Path {
          * @param index index
          * @throws IllegalArgumentException if the name is <code>null</code>
          */
-        private PathElement(QName name, int index) {
+        private PathElement(QName name, int index) throws IllegalArgumentException {
             if (name == null) {
                 throw new IllegalArgumentException("name must not be null");
             }
@@ -1370,7 +1383,7 @@ public final class Path {
          *                                  is <code>null</code> or if its
          *                                  format is invalid
          */
-        public static PathElement fromString(String s) {
+        public static PathElement fromString(String s) throws IllegalArgumentException {
             if (s == null) {
                 throw new IllegalArgumentException("null PathElement literal");
             }

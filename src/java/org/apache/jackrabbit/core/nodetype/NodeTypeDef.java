@@ -83,7 +83,7 @@ public class NodeTypeDef implements Cloneable {
      * value constraints in property definitions).
      * <p/>
      * Note that self-references (e.g. a child node definition that specifies
-     * the declaring node type as the default primary type) are not considered 
+     * the declaring node type as the default primary type) are not considered
      * dependencies.
      *
      * @return a collection of node type <code>QName</code>s

@@ -372,7 +372,7 @@ public class RepositoryConfig {
 
     /**
      * Returns the repository login module configuration.
-     * 
+     *
      * @return login module configuration, or <code>null</code> if standard
      *         JAAS mechanism should be used.
      */

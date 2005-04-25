@@ -66,7 +66,7 @@ public class ObservationManagerImpl implements ObservationManager {
      */
     ObservationManagerImpl(ObservationManagerFactory obsMgrFactory,
                            SessionImpl session,
-                           ItemManager itemMgr) {
+                           ItemManager itemMgr) throws NullPointerException {
         if (session == null) {
             throw new NullPointerException("session");
         }

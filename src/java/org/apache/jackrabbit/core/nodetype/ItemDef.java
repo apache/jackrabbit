@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.QName;
 /**
  * <code>ItemDef</code> is the internal representation of
  * an item definition. It refers to <code>QName</code>s only
- * and is thus isolated from session-specific namespace mappings.  
+ * and is thus isolated from session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.ItemDefinition
  */

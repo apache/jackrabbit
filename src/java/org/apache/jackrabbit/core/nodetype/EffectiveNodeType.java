@@ -126,7 +126,8 @@ public class EffectiveNodeType implements Cloneable {
                         ItemDef def = (ItemDef) defs.get(j);
                         if (cnda[i].isAutoCreated() || def.isAutoCreated()) {
                             // conflict
-                            String msg = "There are more than one 'auto-create' item definitions for '" + name + "' in node type '" + ntName + "'";
+                            String msg = "There are more than one 'auto-create' item definitions for '"
+                                + name + "' in node type '" + ntName + "'";
                             log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }
@@ -157,7 +158,8 @@ public class EffectiveNodeType implements Cloneable {
                         ItemDef def = (ItemDef) defs.get(j);
                         if (pda[i].isAutoCreated() || def.isAutoCreated()) {
                             // conflict
-                            String msg = "There are more than one 'auto-create' item definitions for '" + name + "' in node type '" + ntName + "'";
+                            String msg = "There are more than one 'auto-create' item definitions for '"
+                                + name + "' in node type '" + ntName + "'";
                             log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }

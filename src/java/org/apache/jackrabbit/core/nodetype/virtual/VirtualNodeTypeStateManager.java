@@ -87,7 +87,9 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
      * @param rootNodeId
      * @param parentId
      */
-    public VirtualNodeTypeStateManager(NodeTypeRegistry ntReg, DelegatingObservationDispatcher obs, String rootNodeId, String parentId) {
+    public VirtualNodeTypeStateManager(
+            NodeTypeRegistry ntReg, DelegatingObservationDispatcher obs,
+            String rootNodeId, String parentId) {
         this.ntReg = ntReg;
         this.obsDispatcher = obs;
         this.rootNodeId = rootNodeId;

@@ -97,7 +97,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
     public boolean hasNodeReferences(NodeReferencesId id) {
         return false;
     }
-    
+
     //------------------< methods for listing & querying state of cache/attic >
 
     /**

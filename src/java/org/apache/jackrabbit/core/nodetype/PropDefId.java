@@ -89,7 +89,7 @@ public class PropDefId implements Serializable {
      *                                  as a <code>PropDefId</code>.
      * @see #toString()
      */
-    public static PropDefId valueOf(String s) {
+    public static PropDefId valueOf(String s) throws IllegalArgumentException {
         if (s == null) {
             throw new IllegalArgumentException("invalid PropDefId literal");
         }

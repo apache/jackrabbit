@@ -35,6 +35,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.StringValue;
 import javax.jcr.Property;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -72,10 +73,10 @@ class RowIteratorImpl implements RowIterator {
      * Returns the next <code>Row</code> in the iteration.
      *
      * @return the next <code>Row</code> in the iteration.
-     * @throws java.util.NoSuchElementException if iteration has no more
-     *   <code>Row</code>s.
+     * @throws NoSuchElementException if iteration has no more
+     *                                <code>Row</code>s.
     */
-    public Row nextRow() {
+    public Row nextRow() throws NoSuchElementException {
         return new RowImpl(nodes.getScore(), nodes.nextNodeImpl());
     }
 
@@ -83,10 +84,10 @@ class RowIteratorImpl implements RowIterator {
      * Skip a number of <code>Row</code>s in this iterator.
      *
      * @param skipNum the non-negative number of <code>Row</code>s to skip
-     * @throws java.util.NoSuchElementException
-     *          if skipped past the last <code>Row</code> in this iterator.
+     * @throws NoSuchElementException if skipped past the last
+     *                                <code>Row</code> in this iterator.
      */
-    public void skip(long skipNum) {
+    public void skip(long skipNum) throws NoSuchElementException {
         nodes.skip(skipNum);
     }
 
@@ -134,10 +135,9 @@ class RowIteratorImpl implements RowIterator {
      * Returns the next <code>Row</code> in the iteration.
      *
      * @return the next <code>Row</code> in the iteration.
-     * @throws java.util.NoSuchElementException if iteration has no more
-     *   <code>Row</code>s.
+     * @throws NoSuchElementException if iteration has no more <code>Row</code>s.
     */
-    public Object next() {
+    public Object next() throws NoSuchElementException {
         return nextRow();
     }
 

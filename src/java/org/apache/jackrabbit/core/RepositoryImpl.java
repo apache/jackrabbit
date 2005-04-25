@@ -170,18 +170,18 @@ public class RepositoryImpl implements Repository, SessionListener,
                     // load uuid of the repository's root node
                     InputStream in = uuidFile.getInputStream();
 /*
-		    // uuid is stored in binary format (16 bytes)
-		    byte[] bytes = new byte[16];
-		    try {
-			in.read(bytes);
-		    } finally {
-			try {
-			    in.close();
-			} catch (IOException ioe) {
-			    // ignore
-			}
-		    }
-		    rootNodeUUID = new UUID(bytes).toString();
+            // uuid is stored in binary format (16 bytes)
+            byte[] bytes = new byte[16];
+            try {
+            in.read(bytes);
+            } finally {
+            try {
+                in.close();
+            } catch (IOException ioe) {
+                // ignore
+            }
+            }
+            rootNodeUUID = new UUID(bytes).toString();
 */
                     // uuid is stored in text format (36 characters) for better readability
                     char[] chars = new char[36];
@@ -465,7 +465,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      * @throws NoSuchWorkspaceException If the named workspace does not exist.
      */
     protected WorkspaceInfo getWorkspaceInfo(String workspaceName)
-            throws NoSuchWorkspaceException {
+            throws IllegalStateException, NoSuchWorkspaceException {
         // check sanity of this instance
         sanityCheck();
 
@@ -1084,7 +1084,9 @@ public class RepositoryImpl implements Repository, SessionListener,
             if (itemStateMgr == null) {
                 // create item state manager
                 try {
-                    itemStateMgr = new SharedItemStateManager(getPersistenceManager(config.getPersistenceManagerConfig()), rootNodeUUID, ntReg);
+                    itemStateMgr = new SharedItemStateManager(
+                            getPersistenceManager(config.getPersistenceManagerConfig()),
+                            rootNodeUUID, ntReg);
                     try {
                         itemStateMgr.addVirtualItemStateProvider(vMgr.getVirtualItemStateProvider(itemStateMgr));
                         itemStateMgr.addVirtualItemStateProvider(virtNTMgr.getVirtualItemStateProvider());

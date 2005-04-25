@@ -269,7 +269,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
      * @throws RepositoryException if any other error occurs.
      */
     public void removeVersion(VersionHistory history, QName name)
-            throws RepositoryException {
+            throws VersionException, RepositoryException {
         if (!((VersionHistoryImpl) history).hasNode(name)) {
             throw new VersionException("Version with name " + name.toString()
                     + " does not exist in this VersionHistory");

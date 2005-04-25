@@ -87,7 +87,7 @@ public class OrderQueryNode extends QueryNode {
      * @throws IndexOutOfBoundsException if there is no property with
      *                                   index <code>i</code>.
      */
-    public boolean isAscending(int i) {
+    public boolean isAscending(int i) throws IndexOutOfBoundsException {
         return ((OrderSpec) specs.get(i)).ascending;
     }
 

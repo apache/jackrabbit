@@ -127,7 +127,7 @@ class CachingIndexReader extends FilterIndexReader {
      * @throws IllegalArgumentException if the document with number
      *                                  <code>n</code> is deleted.
      */
-    public Document document(int n) throws IOException {
+    public Document document(int n) throws IOException, IllegalArgumentException {
         if (isDeleted(n)) {
             throw new IllegalArgumentException("attempt to access a deleted document");
         }

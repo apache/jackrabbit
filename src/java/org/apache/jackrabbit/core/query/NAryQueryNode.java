@@ -125,7 +125,7 @@ public abstract class NAryQueryNode extends QueryNode {
         if (operands == null) {
             return EMPTY;
         }
-        
+
         List result = new ArrayList(operands.size());
         for (int i = 0; i < operands.size(); i++) {
             Object r = ((QueryNode) operands.get(i)).accept(visitor, data);

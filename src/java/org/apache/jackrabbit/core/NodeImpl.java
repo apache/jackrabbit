@@ -1,7 +1,7 @@
 /*
  * Copyright 2004-2005 The Apache Software Foundation or its licensors,
-  *                     as applicable.
-  *
+ *                     as applicable.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -311,23 +311,23 @@ public class NodeImpl extends ItemImpl implements Node {
                 genValues = new InternalValue[]{InternalValue.create(thisState.getUUID())};
             }
 /*
-	todo consolidate version history creation code (currently in ItemImpl.initVersionHistories)
-	} else if (nt.getQName().equals(MIX_VERSIONABLE)) {
-	    // mix:versionable node type
-	    VersionHistory hist = session.getVersionManager().getOrCreateVersionHistory(this);
-	    if (name.equals(JCR_VERSIONHISTORY)) {
-		// jcr:versionHistory property
-		genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
-	    } else if (name.equals(JCR_BASEVERSION)) {
-		// jcr:baseVersion property
-		genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-	    } else if (name.equals(JCR_ISCHECKEDOUT)) {
-		// jcr:isCheckedOut property
-		genValues = new InternalValue[]{InternalValue.create(true)};
-	    } else if (name.equals(JCR_PREDECESSORS)) {
-		// jcr:predecessors property
-		genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-	    }
+    todo consolidate version history creation code (currently in ItemImpl.initVersionHistories)
+    } else if (nt.getQName().equals(MIX_VERSIONABLE)) {
+        // mix:versionable node type
+        VersionHistory hist = session.getVersionManager().getOrCreateVersionHistory(this);
+        if (name.equals(JCR_VERSIONHISTORY)) {
+        // jcr:versionHistory property
+        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
+        } else if (name.equals(JCR_BASEVERSION)) {
+        // jcr:baseVersion property
+        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
+        } else if (name.equals(JCR_ISCHECKEDOUT)) {
+        // jcr:isCheckedOut property
+        genValues = new InternalValue[]{InternalValue.create(true)};
+        } else if (name.equals(JCR_PREDECESSORS)) {
+        // jcr:predecessors property
+        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
+        }
 */
         } else if (nt.getQName().equals(NT_HIERARCHYNODE)) {
             // nt:hierarchyNode node type
@@ -483,7 +483,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState nodeState;
         try {
             if (uuid == null) {
-                uuid = UUID.randomUUID().toString();	// version 4 uuid
+                uuid = UUID.randomUUID().toString();    // version 4 uuid
             }
             nodeState =
                     stateMgr.createTransientNodeState(uuid, nodeType.getQName(),
@@ -1118,7 +1118,8 @@ public class NodeImpl extends ItemImpl implements Node {
             PropertyIterator iter = getReferences();
             if (iter.hasNext()) {
                 throw new ConstraintViolationException(
-                        mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
+                        mixinName + " can not be removed: the node is being referenced"
+                        + " through at least one property of type REFERENCE");
             }
         }
 
@@ -1225,7 +1226,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * <li>this node must not be locked by somebody else</li>
      * </ul>
      * Note that certain checks are performed by the respective
-     * <code>Property.setValue()</code> methods. 
+     * <code>Property.setValue()</code> methods.
      *
      * @throws VersionException if this node is not checked-out
      * @throws LockException if this node is locked by somebody else
@@ -2943,7 +2944,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws InvalidItemStateException if this nodes session has pending changes
      * @throws RepositoryException
      */
-    private void checkSessionHasPending() throws RepositoryException {
+    private void checkSessionHasPending()
+            throws InvalidItemStateException, RepositoryException {
         // check for pending changes
         if (session.hasPendingChanges()) {
             String msg = "Unable to perform operation. Session has pending changes.";
@@ -3188,7 +3190,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     protected boolean internalIsCheckedOut() throws RepositoryException {
         /**
-         * try shortcut first: 
+         * try shortcut first:
          * if current node is 'new' we can safely consider it checked-out
          * since otherwise it would had been impossible to add it in the first
          * place
@@ -3357,7 +3359,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws LockException
      * @throws RepositoryException
      */
-    private void internalMerge(SessionImpl srcSession, List failedIds, boolean bestEffort, boolean removeExisting, boolean replaceExisting)
+    private void internalMerge(
+            SessionImpl srcSession, List failedIds,
+            boolean bestEffort, boolean removeExisting, boolean replaceExisting)
             throws LockException, RepositoryException {
 
         NodeImpl srcNode = doMergeTest(srcSession, failedIds, bestEffort);
@@ -3619,7 +3623,9 @@ public class NodeImpl extends ItemImpl implements Node {
                         } else {
                             // since we delete the OPV=Copy children beforehand, all
                             // found nodes must be outside of this tree
-                            throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: " + existing.safeGetJCRPath());
+                            throw new ItemExistsException(
+                                    "Unable to restore node, item already exists outside of restored tree: "
+                                    + existing.safeGetJCRPath());
                         }
                     } catch (ItemNotFoundException e) {
                         // ignore, item with uuid does not exist
@@ -3644,7 +3650,9 @@ public class NodeImpl extends ItemImpl implements Node {
                     } else {
                         // since we delete the OPV=Copy children beforehand, all
                         // found nodes must be outside of this tree
-                        throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: " + n.safeGetJCRPath());
+                        throw new ItemExistsException(
+                                "Unable to restore node, item already exists outside of restored tree: "
+                                + n.safeGetJCRPath());
                     }
                 } else {
                     // get desired version from version selector

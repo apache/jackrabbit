@@ -56,7 +56,7 @@ public class DelegatingObservationDispatcher {
      * Dispatchers a list of events to all registered dispatchers. A new
      * {@link EventStateCollection} is created for every dispatcher, fille with
      * the given event list and then dispatched.
-     * 
+     *
      * @param eventList
      * @param session
      * @throws RepositoryException

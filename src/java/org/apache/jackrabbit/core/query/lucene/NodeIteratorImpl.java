@@ -65,30 +65,30 @@ class NodeIteratorImpl implements NodeIterator {
     /**
      * Returns the next <code>Node</code> in the result set.
      * @return the next <code>Node</code> in the result set.
-     * @throws java.util.NoSuchElementException if iteration has no more
+     * @throws NoSuchElementException if iteration has no more
      *   <code>Node</code>s.
      */
-    public Node nextNode() {
+    public Node nextNode() throws NoSuchElementException {
         return nextNodeImpl();
     }
 
     /**
      * Returns the next <code>Node</code> in the result set.
      * @return the next <code>Node</code> in the result set.
-     * @throws java.util.NoSuchElementException if iteration has no more
+     * @throws NoSuchElementException if iteration has no more
      *   <code>Node</code>s.
      */
-    public Object next() {
+    public Object next() throws NoSuchElementException {
         return nextNode();
     }
 
     /**
      * Skip a number of <code>Node</code>s in this iterator.
      * @param skipNum the non-negative number of <code>Node</code>s to skip
-     * @throws java.util.NoSuchElementException
+     * @throws NoSuchElementException
      *          if skipped past the last <code>Node</code> in this iterator.
      */
-    public void skip(long skipNum) {
+    public void skip(long skipNum) throws NoSuchElementException {
         if (skipNum < 0) {
             throw new IllegalArgumentException("skipNum must not be negative");
         }
@@ -139,7 +139,7 @@ class NodeIteratorImpl implements NodeIterator {
      * @return the score of the node returned by {@link #nextNode()}.
      * @throws NoSuchElementException if there is no next node.
      */
-    float getScore() {
+    float getScore() throws NoSuchElementException {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
@@ -152,7 +152,7 @@ class NodeIteratorImpl implements NodeIterator {
      * @throws NoSuchElementException if iteration has no more
      *   <code>Node</code>s.
      */
-    NodeImpl nextNodeImpl() {
+    NodeImpl nextNodeImpl() throws NoSuchElementException {
         if (pos >= uuids.length) {
             throw new NoSuchElementException();
         }

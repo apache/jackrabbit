@@ -89,9 +89,12 @@ public class VersionItemStateProvider extends AbstractVISProvider {
         this.vMgr = vMgr;
         this.parentId = parentId;
         NDEF_VERSION = ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSION).getId();
-        NDEF_VERSION_HISTORY = ntReg.getEffectiveNodeType(REP_VERSIONSTORAGE).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSIONHISTORY).getId();
-        NDEF_VERSION_HISTORY_ROOT = ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicableChildNodeDef(JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE).getId();
-        NDEF_VERSION_LABELS = ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_VERSIONLABELS, NT_VERSIONLABELS).getId();
+        NDEF_VERSION_HISTORY =
+            ntReg.getEffectiveNodeType(REP_VERSIONSTORAGE).getApplicableChildNodeDef(JCR_ROOTVERSION, NT_VERSIONHISTORY).getId();
+        NDEF_VERSION_HISTORY_ROOT =
+            ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicableChildNodeDef(JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE).getId();
+        NDEF_VERSION_LABELS =
+            ntReg.getEffectiveNodeType(NT_VERSIONHISTORY).getApplicableChildNodeDef(JCR_VERSIONLABELS, NT_VERSIONLABELS).getId();
     }
 
     /**
@@ -210,8 +213,7 @@ public class VersionItemStateProvider extends AbstractVISProvider {
                 state = createNodeState(parent,
                         JCR_FROZENNODE,
                         id.getUUID(),
-                        mimicFrozen ? fn.getFrozenPrimaryType() :
-                        NT_FROZENNODE);
+                        mimicFrozen ? fn.getFrozenPrimaryType() : NT_FROZENNODE);
                 mapFrozenNode(state, fn, mimicFrozen);
 
             } else if (vi instanceof InternalFrozenVersionHistory) {

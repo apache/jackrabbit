@@ -26,6 +26,9 @@ import java.util.ArrayList;
  */
 public class Text {
 
+    /** Hidden constructor. */
+    private Text() { }
+
     /**
      * used for the md5
      */

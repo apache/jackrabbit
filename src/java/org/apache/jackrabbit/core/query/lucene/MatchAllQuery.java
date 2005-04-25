@@ -35,7 +35,7 @@ class MatchAllQuery extends Query {
      * @param field the field name.
      * @throws NullPointerException if <code>field</code> is null.
      */
-    MatchAllQuery(String field) {
+    MatchAllQuery(String field) throws NullPointerException {
         if (field == null) {
             throw new NullPointerException("field");
         }

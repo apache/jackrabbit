@@ -344,7 +344,8 @@ class ChildAxisQuery extends Query {
                                     // only select last
                                     List childNodes = state.getChildNodeEntries();
                                     if (childNodes.size() == 0
-                                            || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1)).getUUID().equals(uuid)) {
+                                            || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
+                                                .getUUID().equals(uuid)) {
                                         hits.flip(i);
                                     }
                                 } else {
@@ -369,7 +370,8 @@ class ChildAxisQuery extends Query {
                                         QName name = ((NodeState.ChildNodeEntry) childNodes.get(0)).getName();
                                         childNodes = state.getChildNodeEntries(name);
                                         if (childNodes.size() == 0
-                                                || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1)).getUUID().equals(uuid)) {
+                                                || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
+                                                    .getUUID().equals(uuid)) {
                                             hits.flip(i);
                                         }
                                     }
