@@ -23,7 +23,6 @@ import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
 import javax.jcr.Value;
 
 /**
@@ -71,7 +70,7 @@ public class CanSetPropertyMultipleTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, true, true, false, false);
+                NodeTypeUtil.locatePropertyDef(session, NodeTypeUtil.ANY_PROPERTY_TYPE, true, true, false, false);
 
         // will never happen since at least jcr:mixinTypes of nt:base accomplish the request
         if (propDef == null) {
@@ -96,7 +95,7 @@ public class CanSetPropertyMultipleTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, false, false, false, false);
+                NodeTypeUtil.locatePropertyDef(session, NodeTypeUtil.ANY_PROPERTY_TYPE, false, false, false, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No not multiple, not protected property def found");
@@ -119,7 +118,7 @@ public class CanSetPropertyMultipleTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.UNDEFINED, true, false, false, false);
+                NodeTypeUtil.locatePropertyDef(session, NodeTypeUtil.ANY_PROPERTY_TYPE, true, false, false, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No not protected, multiple property def found");

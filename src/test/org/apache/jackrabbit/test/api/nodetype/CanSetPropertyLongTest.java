@@ -32,7 +32,7 @@ import java.text.ParseException;
 /**
  * Test of <code>NodeType.canSetProperty(String propertyName, Value
  * value)</code> and <code>NodeType.canSetProperty(String propertyName, Value[]
- * values)</code> where property is of type Double.
+ * values)</code> where property is of type Long.
  *
  * @test
  * @sources CanSetPropertyLongTest.java
@@ -74,7 +74,7 @@ public class CanSetPropertyLongTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.DOUBLE, false, false, false, false);
+                NodeTypeUtil.locatePropertyDef(session, PropertyType.LONG, false, false, false, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No long property def that meets the " +
@@ -149,7 +149,7 @@ public class CanSetPropertyLongTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.DOUBLE, true, false, false, false);
+                NodeTypeUtil.locatePropertyDef(session, PropertyType.LONG, true, false, false, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No multiple long property def that meets the " +

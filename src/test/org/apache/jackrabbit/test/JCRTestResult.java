@@ -53,7 +53,7 @@ public class JCRTestResult extends TestResult {
      */
     public synchronized void addError(Test test, Throwable throwable) {
         if (throwable instanceof NotExecutableException) {
-            log.println("Test case: " + test.toString() + " not executable");
+            log.println("Test case: " + test.toString() + " not executable: " + throwable.getMessage());
         } else {
             orig.addError(test, throwable);
         }
