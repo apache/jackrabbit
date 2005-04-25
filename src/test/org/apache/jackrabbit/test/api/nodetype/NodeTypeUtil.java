@@ -44,6 +44,8 @@ import java.util.regex.Pattern;
  */
 public class NodeTypeUtil {
 
+    public static final int ANY_PROPERTY_TYPE = -1;
+
     /**
      * Locate a child node def parsing all node types
      *
@@ -178,8 +180,8 @@ public class NodeTypeUtil {
      * Locate a property def parsing all node types
      *
      * @param session      the session to access the node types
-     * @param propertyType the type of the returned property. <cod>PropertyType.UNDEFINED</code>
-     *                     returns a property of any type
+     * @param propertyType the type of the returned property. -1 indicates to
+     *                     return a property of any type but not UNDEFIEND
      * @param multiple     if true, the returned <code>PropertyDef</code> is
      *                     multiple, else not
      * @param isProtected  if true, the returned <code>PropertyDef</code> is
@@ -206,9 +208,13 @@ public class NodeTypeUtil {
             for (int i = 0; i < propDefs.length; i++) {
                 PropertyDefinition propDef = propDefs[i];
 
-                // PropertyType.UNDEFINED is in use to get a property of any type
-                if (propertyType != PropertyType.UNDEFINED &&
+                if (propertyType != ANY_PROPERTY_TYPE &&
                         propDef.getRequiredType() != propertyType) {
+                    continue;
+                }
+
+                if (propertyType == ANY_PROPERTY_TYPE &&
+                        propDef.getRequiredType() == PropertyType.UNDEFINED) {
                     continue;
                 }
 

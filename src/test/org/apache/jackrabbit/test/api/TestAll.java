@@ -96,6 +96,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SetPropertyStringTest.class);
         suite.addTestSuite(SetPropertyValueTest.class);
         suite.addTestSuite(SetPropertyConstraintViolationExceptionTest.class);
+        suite.addTestSuite(SetPropertyAssumeTypeTest.class);
 
         suite.addTestSuite(NodeItemIsModifiedTest.class);
         suite.addTestSuite(NodeItemIsNewTest.class);

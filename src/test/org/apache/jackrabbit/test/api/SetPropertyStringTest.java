@@ -76,6 +76,9 @@ public class SetPropertyStringTest extends AbstractJCRTest {
         vArray2[2] = new StringValue("z");
     }
 
+
+    // String
+
     /**
      * Tests if adding a property with <code>Node.setProperty(String,
      * String)</code> works with <code>Session.save()</code>
@@ -155,6 +158,92 @@ public class SetPropertyStringTest extends AbstractJCRTest {
         assertFalse("Removing property with Node.setProperty(String, (String)null) and parentNode.save() not working",
                 testNode.hasProperty(propertyName1));
     }
+
+
+    // String with PropertyType
+
+    /**
+     * Tests if adding a property with <code>Node.setProperty(String,
+     * String, int)</code> works with <code>Session.save()</code>
+     */
+    public void testNewStringPropertySessionWithPropertyType() throws Exception {
+        testNode.setProperty(propertyName1, s1, PropertyType.STRING);
+        superuser.save();
+        assertEquals("Setting property with Node.setProperty(String, String, int) and Session.save() not working",
+                s1,
+                testNode.getProperty(propertyName1).getString());
+    }
+
+    /**
+     * Tests if modifying a property with <code>Node.setProperty(String,
+     * String, int)</code> works with <code>Session.save()</code>
+     */
+    public void testModifyStringPropertySessionWithPropertyType() throws Exception {
+        testNode.setProperty(propertyName1, s1, PropertyType.STRING);
+        superuser.save();
+        testNode.setProperty(propertyName1, s2, PropertyType.STRING);
+        superuser.save();
+        assertEquals("Modifying property with Node.setProperty(String, String, int) and Session.save() not working",
+                s2,
+                testNode.getProperty(propertyName1).getString());
+    }
+
+    /**
+     * Tests if adding a property with <code>Node.setProperty(String,
+     * String, int)</code> works with <code>parentNode.save()</code>
+     */
+    public void testNewStringPropertyParentWithPropertyType() throws Exception {
+        testNode.setProperty(propertyName1, s1, PropertyType.STRING);
+        testRootNode.save();
+        assertEquals("Setting property with Node.setProperty(String, String, int) and parentNode.save() not working",
+                s1,
+                testNode.getProperty(propertyName1).getString());
+    }
+
+    /**
+     * Tests if modifying a property with <code>Node.setProperty(String,
+     * String, int)</code> works with <code>parentNode.save()</code>
+     */
+    public void testModifyStringPropertyParentWithPropertyType() throws Exception {
+        testNode.setProperty(propertyName1, s1, PropertyType.STRING);
+        testRootNode.save();
+        testNode.setProperty(propertyName1, s2, PropertyType.STRING);
+        testRootNode.save();
+        assertEquals("Modifying property with Node.setProperty(String, String, int) and parentNode.save() not working",
+                s2,
+                testNode.getProperty(propertyName1).getString());
+    }
+
+    /**
+     * Tests if removing a <code>String</code> property with
+     * <code>Node.setProperty(String, null, int)</code> works with
+     * <code>Session.save()</code>
+     */
+    public void testRemoveStringPropertySessionWithPropertyType() throws Exception {
+        testNode.setProperty(propertyName1, s1, PropertyType.STRING);
+        superuser.save();
+        testNode.setProperty(propertyName1, (String) null, PropertyType.STRING);
+        superuser.save();
+        assertFalse("Removing property with Node.setProperty(String, (String)null, int) and Session.save() not working",
+                testNode.hasProperty(propertyName1));
+    }
+
+    /**
+     * Tests if removing a <code>String</code> property with
+     * <code>Node.setProperty(String, null, int)</code> works with
+     * <code>parentNode.save()</code>
+     */
+    public void testRemoveStringPropertyParentWithPropertyType() throws Exception {
+        testNode.setProperty(propertyName1, s1, PropertyType.STRING);
+        testRootNode.save();
+        testNode.setProperty(propertyName1, (String) null, PropertyType.STRING);
+        testRootNode.save();
+        assertFalse("Removing property with Node.setProperty(String, (String)null, int) and parentNode.save() not working",
+                testNode.hasProperty(propertyName1));
+    }
+
+
+    // String[]
 
     /**
      * Tests if adding properties with <code>Node.setProperty(String,
@@ -266,6 +355,9 @@ public class SetPropertyStringTest extends AbstractJCRTest {
                 Arrays.asList(new Value[0]),
                 Arrays.asList(testNode.getProperty(propertyName2).getValues()));
     }
+
+
+    // String[] with PropertyType
 
     /**
      * Tests if adding properties with <code>Node.setProperty(String, String[],
