@@ -156,6 +156,7 @@
                 <includes>
                     <include>**/api/**/*.java</include>
                     <include>**/*.xml</include>
+                    <include>**/*.txt</include>
                     <include>**/*.xsd</include>
                     <include>**/*.properties</include>
                     <include>**/*.dtd</include>
