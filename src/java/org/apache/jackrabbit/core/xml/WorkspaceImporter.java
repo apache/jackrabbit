@@ -628,7 +628,7 @@ public class WorkspaceImporter implements Importer, Constants {
         try {
             // start update operation
             stateMgr.edit();
-        } catch (ItemStateException ise) {
+        } catch (IllegalStateException ise) {
             aborted = true;
             String msg = "internal error: failed to start update operation";
             log.debug(msg);
