@@ -102,7 +102,9 @@ public abstract class ItemStateCache {
         if (cache.containsKey(id)) {
             log.warn("overwriting cached entry " + id);
         }
-        log.debug("caching " + id);
+        if (log.isDebugEnabled()) {
+            log.debug("caching " + id);
+        }
         cache.put(id, state);
     }
 
@@ -113,7 +115,9 @@ public abstract class ItemStateCache {
      *           reference should be removed from the cache.
      */
     protected void evict(ItemId id) {
-        log.debug("removing entry " + id + " from cache");
+        if (log.isDebugEnabled()) {
+            log.debug("removing entry " + id + " from cache");
+        }
         cache.remove(id);
     }
 
@@ -121,7 +125,9 @@ public abstract class ItemStateCache {
      * Clears all entries from the cache.
      */
     protected void evictAll() {
-        log.debug("removing all entries from cache");
+        if (log.isDebugEnabled()) {
+            log.debug("removing all entries from cache");
+        }
         cache.clear();
     }
 
