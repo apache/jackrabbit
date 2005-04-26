@@ -56,6 +56,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(GetCreatedTest.class);
         suite.addTestSuite(GetContainingHistoryTest.class);
         suite.addTestSuite(GetVersionableUUIDTest.class);
+        suite.addTestSuite(SessionMoveVersionExceptionTest.class);
+        suite.addTestSuite(WorkspaceMoveVersionExceptionTest.class);
 
         return suite;
     }
