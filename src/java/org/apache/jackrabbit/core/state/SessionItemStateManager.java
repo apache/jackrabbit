@@ -210,56 +210,66 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     /**
      * {@inheritDoc}
      */
-    public void edit() throws ItemStateException {
+    public void edit() throws IllegalStateException {
         persistentStateMgr.edit();
     }
 
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(String uuid, QName nodeTypeName, String parentUUID) {
+    public boolean inEditMode() throws IllegalStateException {
+        return persistentStateMgr.inEditMode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeState createNew(String uuid, QName nodeTypeName,
+                               String parentUUID)
+            throws IllegalStateException {
         return persistentStateMgr.createNew(uuid, nodeTypeName, parentUUID);
     }
 
     /**
      * {@inheritDoc}
      */
-    public PropertyState createNew(QName propName, String parentUUID) {
+    public PropertyState createNew(QName propName, String parentUUID)
+            throws IllegalStateException {
         return persistentStateMgr.createNew(propName, parentUUID);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void store(ItemState state) {
+    public void store(ItemState state) throws IllegalStateException {
         persistentStateMgr.store(state);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void store(NodeReferences refs) {
+    public void store(NodeReferences refs) throws IllegalStateException {
         persistentStateMgr.store(refs);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void destroy(ItemState state) {
+    public void destroy(ItemState state) throws IllegalStateException {
         persistentStateMgr.destroy(state);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void cancel() {
+    public void cancel() throws IllegalStateException {
         persistentStateMgr.cancel();
     }
 
     /**
      * {@inheritDoc}
      */
-    public void update() throws ItemStateException {
+    public void update() throws ItemStateException, IllegalStateException {
         persistentStateMgr.update();
     }
 
@@ -298,7 +308,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
      *                                   deleted externally
      * @throws RepositoryException       if another error occurs
      */
-    public Iterator getDescendantTransientItemStates(ItemId parentId)
+    public Iterator getDescendantTransientItemStates(NodeId parentId)
             throws InvalidItemStateException, RepositoryException {
         // @todo need a more efficient way to find descendents in cache (e.g. using hierarchical index)
         if (!transientStateMgr.hasAnyItemStates()) {
@@ -475,14 +485,14 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     }
 
     /**
-     * Same as <code>{@link #getDescendantTransientItemStates(ItemId)}</code>
+     * Same as <code>{@link #getDescendantTransientItemStates(NodeId)}</code>
      * except that item state instances in the attic are returned.
      *
      * @param parentId the id of the common parent of the transient item state
      *                 instances to be returned.
      * @return an iterator over descendant transient item state instances in the attic
      */
-    public Iterator getDescendantTransientItemStatesInAttic(ItemId parentId) {
+    public Iterator getDescendantTransientItemStatesInAttic(NodeId parentId) {
         // @todo need a more efficient way to find descendents in attic (e.g. using hierarchical index)
         if (!transientStateMgr.hasAnyItemStatesInAttic()) {
             return Collections.EMPTY_LIST.iterator();
