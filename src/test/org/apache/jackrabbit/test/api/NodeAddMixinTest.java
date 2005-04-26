@@ -26,6 +26,7 @@ import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.Value;
 import javax.jcr.Repository;
+import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
@@ -206,4 +207,48 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Tests if adding mix:referenceable automatically populates the jcr:uuid
+     * value.
+     */
+    public void testAddMixinReferencable()
+            throws NotExecutableException, RepositoryException {
+
+        // check if repository supports references
+        checkMixReferenceable();
+
+        // get session an create default node
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+
+        node.addMixin(mixReferenceable);
+
+        // test if jcr:uuid is not null, empty or throws a exception
+        // (format of value is not defined so we can only test if not empty)
+        try {
+            String uuid = node.getProperty(jcrUUID).getValue().getString();
+            // default value is null so check for null
+            assertNotNull("Acessing jcr:uuid after assginment of mix:referencable returned null", uuid);
+            // check if it was not set to an empty string
+            assertTrue("Acessing jcr:uuid after assginment of mix:referencable returned an empty String!", uuid.length() > 0);
+        } catch (ValueFormatException e) {
+            // trying to access the uuid caused an exception
+            fail("Acessing jcr:uuid after assginment of mix:referencable caused an ValueFormatException!");
+        }
+    }
+
+
+    /**
+     * Checks if the repository supports the mixin mix:Referenceable otherwise a
+     * {@link NotExecutableException} is thrown.
+     *
+     * @throws NotExecutableException if the repository does not support the
+     *                                mixin mix:referenceable.
+     */
+    private void checkMixReferenceable() throws RepositoryException, NotExecutableException {
+        try {
+            superuser.getWorkspace().getNodeTypeManager().getNodeType(mixReferenceable);
+        } catch (NoSuchNodeTypeException e) {
+            throw new NotExecutableException("Repository does not support mix:referenceable");
+        }
+    }
 }
