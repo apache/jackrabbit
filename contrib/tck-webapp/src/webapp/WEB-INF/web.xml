@@ -37,12 +37,6 @@
         </init-param>
 
         <init-param>
-            <param-name>jaas-config-file</param-name>
-            <param-value>etc/jaas.config</param-value>
-            <description>Path of the jaas config file</description>
-        </init-param>
-
-        <init-param>
             <param-name>jcr-userid</param-name>
             <param-value>superuser</param-value>
             <description>User to read/write from the repository where test results and config is stored</description>
@@ -52,6 +46,24 @@
             <param-name>jcr-password</param-name>
             <param-value>superuser</param-value>
             <description>User password</description>
+        </init-param>
+
+        <init-param>
+            <param-name>submit-url</param-name>
+            <param-value>http://www.day.com</param-value>
+            <description>Url pointing to test result submit receiver</description>
+        </init-param>
+
+        <init-param>
+            <param-name>tck-webapp-jar-path</param-name>
+            <param-value>/WEB-INF/lib/tck-webapp-0.16.4.jar</param-value>
+            <description>Path to the tck webapp jar, where the test sources reside</description>
+        </init-param>
+
+        <init-param>
+            <param-name>exclude-list-url</param-name>
+            <param-value>excludelisttest.jsp</param-value>
+            <description>Url pointing to exclude list provider</description>
         </init-param>
 
         <load-on-startup>1</load-on-startup>

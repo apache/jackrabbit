@@ -27,11 +27,10 @@ import javax.servlet.ServletException;
 import javax.jcr.*;
 import java.io.*;
 import java.util.Properties;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * The RepositoryServlet connects (starts) to a jsr170 repository and
- * puts the reference into the application context
+ * puts the reference into a class variable.
  */
 public class RepositoryServlet extends HttpServlet {
 
@@ -47,14 +46,20 @@ public class RepositoryServlet extends HttpServlet {
     /** repository name */
     public final static String INIT_PARAM_REPOSITORY_NAME = "repository-name";
 
-    /** jaas configuration file path */
-    public static final String JAAS_CONFIG_FILE = "jaas-config-file";
-
     /** user id name */
     public static final String USER_ID = "jcr-userid";
 
     /** user password name */
     public static final String  USER_PASSWORD = "jcr-password";
+
+    /** submit url name */
+    public static final String  SUBMIT_URL = "submit-url";
+
+    /** exclude list url name */
+    public static final String  EXCLUDE_LIST_URL = "exclude-list-url";
+
+    /** tck webapp jar path name */
+    public static final String  TCK_WEBAPP_JAR_PATH = "tck-webapp-jar-path";
 
     /** log4j config */
     public final static String PARAM_LOG4J_CONFIG = "log4j-config";
@@ -67,6 +72,15 @@ public class RepositoryServlet extends HttpServlet {
 
     /** the password */
     private static String pw;
+
+    /** the submit url */
+    private static String submitUrl;
+
+    /** the tck webapp jar path */
+    private static String tckWebappJarPath;
+
+    /** the exclude list url */
+    private static String excludeListUrl;
 
     /**
      * The init method starts the repository to read/write test results and configuration,
@@ -143,19 +157,18 @@ public class RepositoryServlet extends HttpServlet {
 
             log_info("JSR170 RI Repository initialized.");
 
-            // set jaas config file path
-            String jaasConfigFile = getServletConfig().getInitParameter(JAAS_CONFIG_FILE);
-            if (jaasConfigFile != null && !"".equals(jaasConfigFile)) {
-                System.setProperty("java.security.auth.login.config", jaasConfigFile);
-                log_info("JAAS config path set by the tck webapp. java.security.auth.login.config = " + jaasConfigFile);
-            } else {
-                log_info("No JAAS config path set by the tck webapp.");
-            }
-
-
             // set user id and password to read/write test results and configuration
             uid = getServletConfig().getInitParameter(USER_ID);
             pw = getServletConfig().getInitParameter(USER_PASSWORD);
+
+            // set submit url
+            submitUrl = getServletConfig().getInitParameter(SUBMIT_URL);
+
+            // set tck webapp jar path
+            tckWebappJarPath = getServletConfig().getInitParameter(TCK_WEBAPP_JAR_PATH);
+
+            // set exclude list url
+            excludeListUrl = getServletConfig().getInitParameter(EXCLUDE_LIST_URL);
 
         } catch (RepositoryException e) {
             log_info("Unable to initialize repository: " + e.toString(), e);
@@ -218,4 +231,25 @@ public class RepositoryServlet extends HttpServlet {
         return repSession;
     }
 
+    /**
+     * Returns the url where the test result have to be submitted
+     *
+     * @return submit url
+     */
+    public static String getSubmitUrl() {
+        return submitUrl;
+    }
+
+    /**
+     * Returns the path where the tck webapp jar file is placed
+     *
+     * @return path to jar
+     */
+    public static String getTckWebappJarPath() {
+        return tckWebappJarPath;
+    }
+
+    public static String getExcludeListUrl() {
+        return excludeListUrl;
+    }
 }

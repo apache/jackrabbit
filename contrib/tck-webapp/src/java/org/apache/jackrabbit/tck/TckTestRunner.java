@@ -146,7 +146,7 @@ public class TckTestRunner extends BaseTestRunner {
     private void write(String msg, boolean newTestClass) {
         if (writer != null) {
             try {
-                String html = "";
+                String html;
                 if (logString!= null && !"".equals(logString)) {
                     html = MessageFormat.format(logString, new String[]{msg, TckHelper.getStatus(state)});
                     writer.write(html);

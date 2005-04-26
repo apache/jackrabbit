@@ -18,12 +18,20 @@ package org.apache.jackrabbit.tck;
 
 import junit.framework.TestSuite;
 import junit.framework.TestResult;
-import javax.jcr.*;
+import junit.framework.TestCase;
+
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.AccessDeniedException;
 import javax.servlet.jsp.JspWriter;
-import java.util.*;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Enumeration;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.RepositoryHelper;
@@ -48,16 +56,20 @@ public class Tester {
     /** The string to be writen after finishing a suite */
     String finishedSuiteString;
 
+    /** the exclude list */
+    Map excludeList;
+
     /**
      * The constructor...
      *
      * @param tests All tests found using <code>TestFinder</code>
      */
-    public Tester(TestFinder tests, TckTestRunner runner, JspWriter writer) {
+    public Tester(TestFinder tests, TckTestRunner runner, JspWriter writer, Map excludeList) {
         this.tests = tests;
         results = new HashMap();
         this.runner = runner;
         this.writer = writer;
+        this.excludeList = excludeList;
 
         // set the configuration for the to be tested repository
         AbstractJCRTest.helper = new RepositoryHelper(WebAppTestConfig.getCurrentConfig());
@@ -79,15 +91,70 @@ public class Tester {
 
             TestResult result = new TestResult();
             result.addListener(runner);
+
+            TestSuite updatedTS = applyExcludeList(suite);
+
             try {
-                suite.run(result);
+                updatedTS.run(result);
                 results.putAll(runner.getResults());
-                write(suite);
+                write(updatedTS);
             } catch (Exception e) {
                 // ignore
             }
         }
         return results;
+    }
+
+    /**
+     * This method goes through the exclude list and removes tests in the test suites
+     * which should NOT be performed.
+     *
+     * @param suite Test suite
+     * @return false if the whole test suite has to be skipped
+     */
+    private TestSuite applyExcludeList(TestSuite suite) {
+        TestSuite updatedTS = new TestSuite();
+        updatedTS.setName(suite.getName());
+        Enumeration suiteMemberClasses = suite.tests();
+
+        while (suiteMemberClasses.hasMoreElements()) {
+            TestSuite testClass = (TestSuite) suiteMemberClasses.nextElement();
+            String testClassName = testClass.toString();
+
+            if (excludeList.containsKey(testClassName)) {
+                continue;
+            } else {
+                TestSuite ts = new TestSuite();
+                ts.setName(testClassName);
+                Map testcases = new HashMap();
+                boolean recreate = false;
+
+                Enumeration testMethods = testClass.tests();
+                while (testMethods.hasMoreElements()) {
+                    TestCase tc = (TestCase) testMethods.nextElement();
+                    String methodname = tc.getName();
+                    if (excludeList.containsKey(testClassName + "#" + methodname)) {
+                        recreate = true;
+                    } else {
+                        testcases.put(methodname, tc);
+                    }
+                }
+                if (recreate) {
+                    TestSuite recreatedTS = new TestSuite(ts.toString());
+                    Iterator itr = testcases.keySet().iterator();
+
+                    while (itr.hasNext()) {
+                        String key = (String) itr.next();
+                        recreatedTS.addTest((TestCase) testcases.get(key));
+                    }
+                    updatedTS.addTest(recreatedTS);
+                } else {
+                    updatedTS.addTest(testClass);
+                }
+
+            }
+        }
+        return updatedTS;
     }
 
 
@@ -119,10 +186,10 @@ public class Tester {
      *  ....
      * </pre>
      * @param node parent <code>Node</code> for storage
-     * @throws RepositoryException
+     * @throws javax.jcr.RepositoryException
      * @throws ConstraintViolationException
-     * @throws InvalidItemStateException
-     * @throws AccessDeniedException
+     * @throws javax.jcr.InvalidItemStateException
+     * @throws javax.jcr.AccessDeniedException
      */
     public void storeResults(Node node) throws RepositoryException, ConstraintViolationException, InvalidItemStateException, AccessDeniedException {
         // create categories: level1, level2....
