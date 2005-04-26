@@ -54,6 +54,16 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
     }
 
     /**
+     * Releases the session aquired in {@link #setUp()}.
+     */
+    protected void tearDown() throws Exception {
+        if (session != null) {
+            session.logout();
+        }
+        super.tearDown();
+    }
+
+    /**
      * Tests that session.getItem() throws a PathNotFoundException with a given
      * path to nowhere.
      */

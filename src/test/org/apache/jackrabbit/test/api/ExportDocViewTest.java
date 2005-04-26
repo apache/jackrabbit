@@ -132,6 +132,9 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
     protected void tearDown() throws Exception {
         file.delete();
+        if (session != null) {
+            session.logout();
+        }
         super.tearDown();
     }
 
