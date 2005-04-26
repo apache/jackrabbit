@@ -532,6 +532,10 @@ public class SessionImpl implements Session, Constants {
                 String msg = "invalid path: " + absPath;
                 log.warn(msg, mpe);
                 throw new RepositoryException(msg);
+            } catch (AccessDeniedException re) {
+                // otherwise the RepositoryException catch clause will
+                // log a warn message, which is not appropriate in this case.
+                throw new AccessControlException(READ_ACTION);
             }
         }
 
