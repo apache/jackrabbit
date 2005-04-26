@@ -65,17 +65,21 @@ public class VersionStorageTest extends AbstractVersionTest {
         // The superuser session for the second workspace
         Session superuserW2 = helper.getSuperuserSession(workspaceName);
 
-        // check path to version storage
-        assertTrue("Version strorage must be reflected as a subtree below the node '" + versionStoragePath + "'", superuserW2.getRootNode().hasNode(versionStoragePath));
-
-        // check if subnodes in versionStorage are protected
         try {
-            // try to create a version node
-            Node versionStorageNodeW2 = superuserW2.getRootNode().getNode(versionStoragePath);
-            versionStorageNodeW2.addNode(nodeName1, ntVersion);
-            fail("It should not be possible to add a subnode/version in version storage.");
-        } catch (ConstraintViolationException e) {
-            // success
+            // check path to version storage
+            assertTrue("Version strorage must be reflected as a subtree below the node '" + versionStoragePath + "'", superuserW2.getRootNode().hasNode(versionStoragePath));
+
+            // check if subnodes in versionStorage are protected
+            try {
+                // try to create a version node
+                Node versionStorageNodeW2 = superuserW2.getRootNode().getNode(versionStoragePath);
+                versionStorageNodeW2.addNode(nodeName1, ntVersion);
+                fail("It should not be possible to add a subnode/version in version storage.");
+            } catch (ConstraintViolationException e) {
+                // success
+            }
+        } finally {
+            superuserW2.logout();
         }
     }
 

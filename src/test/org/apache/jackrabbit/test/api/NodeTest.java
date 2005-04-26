@@ -545,20 +545,23 @@ public class NodeTest extends AbstractJCRTest {
 
         // get the node with session 2
         Session testSession = helper.getReadWriteSession();
-        Node defaultTestNodeSession2 = (Node) testSession.getItem(defaultTestNode.getPath());
-
-        // remove node with session 1
-        defaultTestNode.remove();
-        superuser.save();
-
-        // try to remove already deleted node with session 2
         try {
-            defaultTestNodeSession2.remove();
-            fail("Removing a node already deleted by other session should throw an InvalidItemStateException!");
-        } catch (InvalidItemStateException e) {
-            //ok, works as expected
+            Node defaultTestNodeSession2 = (Node) testSession.getItem(defaultTestNode.getPath());
+
+            // remove node with session 1
+            defaultTestNode.remove();
+            superuser.save();
+
+            // try to remove already deleted node with session 2
+            try {
+                defaultTestNodeSession2.remove();
+                fail("Removing a node already deleted by other session should throw an InvalidItemStateException!");
+            } catch (InvalidItemStateException e) {
+                //ok, works as expected
+            }
+        } finally {
+            testSession.logout();
         }
-        testSession.logout();
     }
 
     /**
@@ -654,13 +657,16 @@ public class NodeTest extends AbstractJCRTest {
 
         // access node through another session to lock it
         Session session2 = helper.getSuperuserSession();
-        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
-        node2.lock(true, true);
+        try {
+            Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+            node2.lock(true, true);
 
-        // test fails if a LockException is thrown when removing the node
-        // (remove must be possible since the parent is not locked)
-        node.remove();
-        session2.logout();
+            // test fails if a LockException is thrown when removing the node
+            // (remove must be possible since the parent is not locked)
+            node.remove();
+        } finally {
+            session2.logout();
+        }
     }
 
     /**
@@ -701,20 +707,23 @@ public class NodeTest extends AbstractJCRTest {
         String pathRelToRoot = node.getPath().substring(1);
         // access node through another session to lock it
         Session session2 = helper.getSuperuserSession();
-        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
-        node2.lock(true, true);
-
         try {
-            subNode.remove();
-            fail("Node.remove() must throw a LockException if the parent " +
-                    "of the node is locked");
-        } catch (LockException e) {
-            // success
-        }
+            Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+            node2.lock(true, true);
 
-        // unlock to remove node at tearDown()
-        node2.unlock();
-        session2.logout();
+            try {
+                subNode.remove();
+                fail("Node.remove() must throw a LockException if the parent " +
+                        "of the node is locked");
+            } catch (LockException e) {
+                // success
+            }
+
+            // unlock to remove node at tearDown()
+            node2.unlock();
+        } finally {
+            session2.logout();
+        }
     }
 
     /**
@@ -889,26 +898,30 @@ public class NodeTest extends AbstractJCRTest {
         // get session 2
         Session session2 = helper.getReadWriteSession();
 
-        // get the second node
-        Node testNode2Session2 = (Node) session2.getItem(testNode2Session1.getPath());
+        try {
+            // get the second node
+            Node testNode2Session2 = (Node) session2.getItem(testNode2Session1.getPath());
 
-        // adds a child node
-        testNode2Session2.addNode(nodeName3, testNodeType);
+            // adds a child node
+            testNode2Session2.addNode(nodeName3, testNodeType);
 
-        // save the changes
-        session2.save();
+            // save the changes
+            session2.save();
 
-        // call refresh on session 1
-        defaultRootNode.refresh(false);
+            // call refresh on session 1
+            defaultRootNode.refresh(false);
 
-        // check if session 1 flag has been cleared
-        assertFalse("Session should have no pending changes recorded after Node.refresh(false)!", superuser.hasPendingChanges());
+            // check if session 1 flag has been cleared
+            assertFalse("Session should have no pending changes recorded after Node.refresh(false)!", superuser.hasPendingChanges());
 
-        // check if added child node for node 1 by session 1 has been removed
-        assertFalse("Node Modifications have not been flushed after Node.refresh(false)", testNode1Session1.hasNodes());
+            // check if added child node for node 1 by session 1 has been removed
+            assertFalse("Node Modifications have not been flushed after Node.refresh(false)", testNode1Session1.hasNodes());
 
-        // check if added child node for node 2 by session 2 has become visible in session 1
-        assertTrue("Node modified by a different session has not been updated after Node.refresh(false)", testNode2Session1.hasNodes());
+            // check if added child node for node 2 by session 2 has become visible in session 1
+            assertTrue("Node modified by a different session has not been updated after Node.refresh(false)", testNode2Session1.hasNodes());
+        } finally {
+            session2.logout();
+        }
     }
 
     /**
@@ -942,26 +955,30 @@ public class NodeTest extends AbstractJCRTest {
         // get session 2
         Session session2 = helper.getReadWriteSession();
 
-        // get the second node
-        Node testNode2Session2 = (Node) session2.getItem(testNode2Session1.getPath());
+        try {
+            // get the second node
+            Node testNode2Session2 = (Node) session2.getItem(testNode2Session1.getPath());
 
-        // adds a child node
-        testNode2Session2.addNode(nodeName3, testNodeType);
+            // adds a child node
+            testNode2Session2.addNode(nodeName3, testNodeType);
 
-        // save the changes
-        session2.save();
+            // save the changes
+            session2.save();
 
-        // call refresh on session 1
-        defaultRootNode.refresh(true);
+            // call refresh on session 1
+            defaultRootNode.refresh(true);
 
-        // check if session 1 flag has been cleared
-        assertTrue("Session should still have pending changes recorded after Node.refresh(true)!", superuser.hasPendingChanges());
+            // check if session 1 flag has been cleared
+            assertTrue("Session should still have pending changes recorded after Node.refresh(true)!", superuser.hasPendingChanges());
 
-        // check if added child node for node 1 by session 1 is still there
-        assertTrue("Node Modifications are lost after Node.refresh(true)", testNode1Session1.hasNodes());
+            // check if added child node for node 1 by session 1 is still there
+            assertTrue("Node Modifications are lost after Node.refresh(true)", testNode1Session1.hasNodes());
 
-        // check if added child node for node 2 by session 2 has become visible in session 1
-        assertTrue("Node modified by a different session has not been updated after Node.refresh(true)", testNode2Session1.hasNodes());
+            // check if added child node for node 2 by session 2 has become visible in session 1
+            assertTrue("Node modified by a different session has not been updated after Node.refresh(true)", testNode2Session1.hasNodes());
+        } finally {
+            session2.logout();
+        }
     }
 
     /**
@@ -989,20 +1006,24 @@ public class NodeTest extends AbstractJCRTest {
 
         // get the new node with a different session
         Session testSession = helper.getReadWriteSession();
-        Node nodeSession2 = (Node) testSession.getItem(nodeSession1.getPath());
-
-        // delete the node with the new session
-        nodeSession2.remove();
-
-        // make node removal persistent
-        testSession.save();
-
-        // save changes made wit superuser session
         try {
-            defaultRootNode.save();
-            fail("Saving a modified Node using Node.save() already deleted by an other session should throw InvalidItemStateException");
-        } catch (InvalidItemStateException e) {
-            // ok, works as expected
+            Node nodeSession2 = (Node) testSession.getItem(nodeSession1.getPath());
+
+            // delete the node with the new session
+            nodeSession2.remove();
+
+            // make node removal persistent
+            testSession.save();
+
+            // save changes made wit superuser session
+            try {
+                defaultRootNode.save();
+                fail("Saving a modified Node using Node.save() already deleted by an other session should throw InvalidItemStateException");
+            } catch (InvalidItemStateException e) {
+                // ok, works as expected
+            }
+        } finally {
+            testSession.logout();
         }
     }
 
@@ -1046,8 +1067,11 @@ public class NodeTest extends AbstractJCRTest {
 
         // get the new node with a different session
         Session testSession = helper.getReadOnlySession();
-        testSession.getItem(testNode.getPath());
-        testSession.logout();
+        try {
+            testSession.getItem(testNode.getPath());
+        } finally {
+            testSession.logout();
+        }
     }
 
     /**

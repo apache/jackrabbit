@@ -182,8 +182,8 @@ public class SaveTest extends AbstractJCRTest {
         lockable.lock(false, true);
 
         Session readWrite = helper.getReadWriteSession();
-        Query query = readWrite.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
+            Query query = readWrite.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
             fail("Query.storeAsNode() must throw LockException, parent node is locked.");
         } catch (LockException e) {

@@ -91,13 +91,16 @@ public class WorkspaceCopyTest extends AbstractWorkspaceCopyTest {
      */
     public void testCopyNodesAccessDenied() throws RepositoryException {
         Session readOnlySuperuser = helper.getReadOnlySession();
-
-        String dstAbsPath = node2.getPath() + "/" + node1.getName();
         try {
-            readOnlySuperuser.getWorkspace().copy(node1.getPath(), dstAbsPath);
-            fail("Copy in a read-only session should throw an AccessDeniedException.");
-        } catch (AccessDeniedException e) {
-            // successful
+            String dstAbsPath = node2.getPath() + "/" + node1.getName();
+            try {
+                readOnlySuperuser.getWorkspace().copy(node1.getPath(), dstAbsPath);
+                fail("Copy in a read-only session should throw an AccessDeniedException.");
+            } catch (AccessDeniedException e) {
+                // successful
+            }
+        } finally {
+            readOnlySuperuser.logout();
         }
     }
 
@@ -139,25 +142,29 @@ public class WorkspaceCopyTest extends AbstractWorkspaceCopyTest {
         // get other session
         Session otherSession = helper.getReadWriteSession();
 
-        // get lock target node in destination wsp through other session
-        Node lockTarget = (Node) otherSession.getItem(node2.getPath());
-
-        // add mixin "lockable" to be able to lock the node
-        if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
-            lockTarget.addMixin(mixLockable);
-            lockTarget.getParent().save();
-        }
-
-        // lock dst parent node using other session
-        lockTarget.lock(true, true);
-
         try {
-            workspace.copy(node1.getPath(), dstAbsPath);
-            fail("LockException was expected.");
-        } catch (LockException e) {
-            // successful
+            // get lock target node in destination wsp through other session
+            Node lockTarget = (Node) otherSession.getItem(node2.getPath());
+
+            // add mixin "lockable" to be able to lock the node
+            if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
+                lockTarget.addMixin(mixLockable);
+                lockTarget.getParent().save();
+            }
+
+            // lock dst parent node using other session
+            lockTarget.lock(true, true);
+
+            try {
+                workspace.copy(node1.getPath(), dstAbsPath);
+                fail("LockException was expected.");
+            } catch (LockException e) {
+                // successful
+            } finally {
+                lockTarget.unlock();
+            }
         } finally {
-            lockTarget.unlock();
+            otherSession.logout();
         }
     }
 }

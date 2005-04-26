@@ -22,7 +22,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.Session;
-import javax.jcr.InvalidItemStateException;
 
 /**
  * <code>SessionUUIDTest</code> contains all tests for the {@link javax.jcr.Session}
@@ -114,20 +113,24 @@ public class SessionUUIDTest extends AbstractJCRTest {
         // get the moving node with session 2
         Session testSession = helper.getReadWriteSession();
 
-        Node refTargetNodeSession2 = (Node) testSession.getItem(refTargetNode.getPath());
+        try {
+            Node refTargetNodeSession2 = (Node) testSession.getItem(refTargetNode.getPath());
 
-        // move the node with session 1
-        superuser.move(refTargetNode.getPath(), newParentNode.getPath() + "/" + nodeName2);
+            // move the node with session 1
+            superuser.move(refTargetNode.getPath(), newParentNode.getPath() + "/" + nodeName2);
 
-        // make the move persistent with session 1
-        superuser.save();
+            // make the move persistent with session 1
+            superuser.save();
 
-        // modify some prop of the moved node with session 2
-        refTargetNodeSession2.setProperty(propertyName1, "test");
+            // modify some prop of the moved node with session 2
+            refTargetNodeSession2.setProperty(propertyName1, "test");
 
-        // save it
-        testSession.save();
+            // save it
+            testSession.save();
 
-        // ok, works as expected
+            // ok, works as expected
+        } finally {
+            testSession.logout();
+        }
     }
 }

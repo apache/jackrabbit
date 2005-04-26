@@ -110,13 +110,16 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
      */
     public void testCopyNodesAccessDenied() throws RepositoryException {
         Session readOnlySuperuser = helper.getReadOnlySession();
-
-        String dstAbsPath = node2.getPath() + "/" + node1.getName();
         try {
-            readOnlySuperuser.getWorkspace().copy(workspaceW2.getName(), node1W2.getPath(), dstAbsPath);
-            fail("Copy in a read-only session should throw an AccessDeniedException.");
-        } catch (AccessDeniedException e) {
-            // successful
+            String dstAbsPath = node2.getPath() + "/" + node1.getName();
+            try {
+                readOnlySuperuser.getWorkspace().copy(workspaceW2.getName(), node1W2.getPath(), dstAbsPath);
+                fail("Copy in a read-only session should throw an AccessDeniedException.");
+            } catch (AccessDeniedException e) {
+                // successful
+            }
+        } finally {
+            readOnlySuperuser.logout();
         }
     }
 

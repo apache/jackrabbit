@@ -115,6 +115,9 @@ public class WorkspaceRestoreTest extends RestoreTest {
             wVersionableNode.remove();
             wVersionableNode2.remove();
             wTestRoot.save();
+            if (wSuperuser != null) {
+                wSuperuser.logout();
+            }
         } finally {
             super.tearDown();
         }
