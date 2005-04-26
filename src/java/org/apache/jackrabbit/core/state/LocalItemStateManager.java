@@ -227,9 +227,9 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public void edit() throws ItemStateException {
+    public void edit() throws IllegalStateException {
         if (editMode) {
-            throw new ItemStateException("Already in edit mode");
+            throw new IllegalStateException("Already in edit mode");
         }
         changeLog.reset();
 
@@ -239,7 +239,16 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(String uuid, QName nodeTypeName, String parentUUID) {
+    public boolean inEditMode() {
+        return editMode;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeState createNew(String uuid, QName nodeTypeName,
+                               String parentUUID)
+            throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
@@ -253,7 +262,8 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public PropertyState createNew(QName propName, String parentUUID) {
+    public PropertyState createNew(QName propName, String parentUUID)
+            throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
@@ -266,7 +276,7 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public void store(ItemState state) {
+    public void store(ItemState state) throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
@@ -276,7 +286,7 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public void store(NodeReferences refs) {
+    public void store(NodeReferences refs) throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
@@ -286,7 +296,7 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public void destroy(ItemState state) {
+    public void destroy(ItemState state) throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
@@ -296,7 +306,7 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public void cancel() {
+    public void cancel() throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
@@ -308,7 +318,7 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public void update() throws ItemStateException {
+    public void update() throws ItemStateException, IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }

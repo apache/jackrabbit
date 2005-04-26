@@ -29,10 +29,21 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * allows calling the operations defined below. At the end of
      * this operation, either {@link #update} or {@link #cancel}
      * must be invoked.
-     * @throws ItemStateException if the manager is already inside
-     *         edit mode.
+     *
+     * @throws IllegalStateException if the manager is already in edit mode.
      */
-    void edit() throws ItemStateException;
+    void edit() throws IllegalStateException;
+
+    /**
+     * Returns <code>true</code> if this manager is in edit mode i.e.
+     * if an edit operation has been started by invoking {@link #edit},
+     * otherwise returns <code>false</code>.
+     *
+     * @return <code>true</code> if this manager is in edit mode, otherwise
+     *         <code>false</code>
+     * @throws IllegalStateException if the manager is not in edit mode.
+     */
+    boolean inEditMode();
 
     /**
      * Creates a {@link NodeState} instance representing new,
@@ -43,9 +54,10 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * @param nodeTypeName qualified node type name
      * @param parentUUID   parent node's UUID
      * @return a node state
+     * @throws IllegalStateException if the manager is not in edit mode.
      */
     NodeState createNew(String uuid, QName nodeTypeName,
-                               String parentUUID);
+                        String parentUUID) throws IllegalStateException;
 
     /**
      * Creates a {@link PropertyState} instance representing new,
@@ -55,38 +67,50 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * @param propName   qualified property name
      * @param parentUUID parent node UUID
      * @return a property state
+     * @throws IllegalStateException if the manager is not in edit mode.
      */
-    PropertyState createNew(QName propName, String parentUUID);
+    PropertyState createNew(QName propName, String parentUUID)
+            throws IllegalStateException;
 
     /**
      * Store an item state.
+     *
      * @param state item state that should be stored
-      */
-    void store(ItemState state);
+     * @throws IllegalStateException if the manager is not in edit mode.
+     */
+    void store(ItemState state) throws IllegalStateException;
 
     /**
      * Store a node references object
+     *
      * @param refs node references object that should be stored
+     * @throws IllegalStateException if the manager is not in edit mode.
      */
-    void store(NodeReferences refs);
+    void store(NodeReferences refs) throws IllegalStateException;
 
     /**
      * Destroy an item state.
+     *
      * @param state item state that should be destroyed
-      */
-    void destroy(ItemState state);
+     * @throws IllegalStateException if the manager is not in edit mode.
+     */
+    void destroy(ItemState state) throws IllegalStateException;
 
     /**
      * Cancel an update operation. This will undo all changes
      * made to objects inside this item state manager.
+     *
+     * @throws IllegalStateException if the manager is not in edit mode.
      */
-    void cancel();
+    void cancel() throws IllegalStateException;
 
     /**
      * End an update operation. This will save all items
      * added to this update operation in a single step.
      * If this operation fails, no item will have been saved.
-     * @throws ItemStateException if the operation failed
+     *
+     * @throws ItemStateException    if the operation failed
+     * @throws IllegalStateException if the manager is not in edit mode.
      */
-    void update() throws ItemStateException;
+    void update() throws ItemStateException, IllegalStateException;
 }
