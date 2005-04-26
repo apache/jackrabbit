@@ -276,19 +276,22 @@ public class MergeNodeTest extends AbstractMergeTest {
         String pathRelToRoot = nodeToMerge.getPath().substring(1);
         // access node through another session to lock it
         Session session2 = helper.getSuperuserSession();
-        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
-        node2.lock(false, false);
-
         try {
-            nodeToMerge.merge(workspace.getName(), false);
-            fail("merge must throw a LockException if applied on a " +
-                    "locked node");
-        } catch (LockException e) {
-            // success
-        }
+            Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+            node2.lock(false, false);
 
-        node2.unlock();
-        session2.logout();
+            try {
+                nodeToMerge.merge(workspace.getName(), false);
+                fail("merge must throw a LockException if applied on a " +
+                        "locked node");
+            } catch (LockException e) {
+                // success
+            }
+
+            node2.unlock();
+        } finally {
+            session2.logout();
+        }
     }
 
     /**

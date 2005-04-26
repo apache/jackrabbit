@@ -46,10 +46,13 @@ public class WorkspaceReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetSession() throws RepositoryException {
         Session session = helper.getReadOnlySession();
-        Session otherSession = session.getWorkspace().getSession();
-        assertSame("Workspace.getSession() returns not the same session object.",
-                session, otherSession);
-        session.logout();
+        try {
+            Session otherSession = session.getWorkspace().getSession();
+            assertSame("Workspace.getSession() returns not the same session object.",
+                    session, otherSession);
+        } finally {
+            session.logout();
+        }
     }
 
     /**
@@ -58,12 +61,15 @@ public class WorkspaceReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetName() throws RepositoryException {
         Session session = helper.getReadOnlySession(workspaceName);
-        String name = session.getWorkspace().getName();
-        if (workspaceName != null) {
-            assertEquals("Workspace.getName() returns wrong name.",
-                    workspaceName, name);
+        try {
+            String name = session.getWorkspace().getName();
+            if (workspaceName != null) {
+                assertEquals("Workspace.getName() returns wrong name.",
+                        workspaceName, name);
+            }
+        } finally {
+            session.logout();
         }
-        session.logout();
     }
 
     /**
@@ -72,8 +78,11 @@ public class WorkspaceReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetQueryManager() throws RepositoryException {
         Workspace ws = helper.getReadOnlySession().getWorkspace();
-        assertNotNull("Workspace does not return a QueryManager object.", ws.getQueryManager());
-        ws.getSession().logout();
+        try {
+            assertNotNull("Workspace does not return a QueryManager object.", ws.getQueryManager());
+        } finally {
+            ws.getSession().logout();
+        }
     }
 
     /**
@@ -83,12 +92,15 @@ public class WorkspaceReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetAccessibleWorkspaceNames() throws RepositoryException {
         Session session = helper.getReadOnlySession();
-        String[] wsNames = session.getWorkspace().getAccessibleWorkspaceNames();
-        for (int i = 0; i < wsNames.length; i++) {
-            // login
-            Session s = helper.getReadOnlySession(wsNames[i]);
-            s.logout();
+        try {
+            String[] wsNames = session.getWorkspace().getAccessibleWorkspaceNames();
+            for (int i = 0; i < wsNames.length; i++) {
+                // login
+                Session s = helper.getReadOnlySession(wsNames[i]);
+                s.logout();
+            }
+        } finally {
+            session.logout();
         }
-        session.logout();
     }
 }

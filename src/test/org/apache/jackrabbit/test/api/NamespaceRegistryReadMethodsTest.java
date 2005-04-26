@@ -49,12 +49,25 @@ public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
     /** The NamespaceRegistry of the repository */
     private NamespaceRegistry nsr;
 
+    /** A read-only session */
+    private Session session;
+
     public void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        Session session = helper.getReadOnlySession();
+        session = helper.getReadOnlySession();
         Workspace ws = session.getWorkspace();
         nsr = ws.getNamespaceRegistry();
+    }
+
+    /**
+     * Releases the session aquired in {@link #setUp()}.
+     */
+    protected void tearDown() throws Exception {
+        if (session != null) {
+            session.logout();
+        }
+        super.tearDown();
     }
 
     /**

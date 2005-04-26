@@ -73,15 +73,18 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
 
         // access node through another session to lock it
         Session session2 = helper.getSuperuserSession();
-        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
-        node2.lock(true, true);
+        try {
+            Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+            node2.lock(true, true);
 
-        assertFalse("Node.canAddMixin(String mixinName) must return false " +
-                "if the node is locked.",
-                node.canAddMixin(mixinName));
+            assertFalse("Node.canAddMixin(String mixinName) must return false " +
+                    "if the node is locked.",
+                    node.canAddMixin(mixinName));
 
-        node2.unlock();
-        session2.logout();
+            node2.unlock();
+        } finally {
+            session2.logout();
+        }
     }
 
     /**

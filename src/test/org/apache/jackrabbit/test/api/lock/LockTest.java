@@ -116,23 +116,24 @@ public class LockTest extends AbstractJCRTest {
         // create new session
         Session otherSuperuser = helper.getSuperuserSession();
 
-        // get same node
-        Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
-
-        // assert: lock token must be null for other session
-        assertNull("Lock token must be null for other session",
-                n2.getLock().getLockToken());
-
-        // assert: modifying same node in other session must fail
         try {
-            n2.addNode(nodeName2, testNodeType);
-            fail("modifying same node in other session must fail");
-        } catch (LockException e) {
-            // expected
-        }
+            // get same node
+            Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
-        // logout
-        otherSuperuser.logout();
+            // assert: lock token must be null for other session
+            assertNull("Lock token must be null for other session",
+                    n2.getLock().getLockToken());
+
+            // assert: modifying same node in other session must fail
+            try {
+                n2.addNode(nodeName2, testNodeType);
+                fail("modifying same node in other session must fail");
+            } catch (LockException e) {
+                // expected
+            }
+        } finally {
+            otherSuperuser.logout();
+        }
     }
 
     /**
@@ -371,20 +372,24 @@ public class LockTest extends AbstractJCRTest {
         // create new session
         Session otherSuperuser = helper.getSuperuserSession();
 
-        // get node created above
-        Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
+        Lock lock;
+        try {
+            // get node created above
+            Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
-        // lock node
-        Lock lock = n2.lock(false, true);
+            // lock node
+            lock = n2.lock(false, true);
 
-        // assert: lock must be alive
-        assertTrue("lock must be alive", lock.isLive());
+            // assert: lock must be alive
+            assertTrue("lock must be alive", lock.isLive());
 
-        // assert: node must be locked
-        assertTrue("node must be locked", n1.isLocked());
+            // assert: node must be locked
+            assertTrue("node must be locked", n1.isLocked());
+        } finally {
+            // log out
+            otherSuperuser.logout();
+        }
 
-        // log out
-        otherSuperuser.logout();
 
         // assert: lock must not be alive
         assertFalse("lock must not be alive", lock.isLive());
@@ -405,29 +410,31 @@ public class LockTest extends AbstractJCRTest {
         // create new session
         Session otherSuperuser = helper.getSuperuserSession();
 
-        // get node created above
-        Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
+        try {
+            // get node created above
+            Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
-        // lock node
-        Lock lock = n2.lock(false, true);
+            // lock node
+            Lock lock = n2.lock(false, true);
 
-        // assert: user must get non-null token
-        assertNotNull("user must get non-null token", lock.getLockToken());
+            // assert: user must get non-null token
+            assertNotNull("user must get non-null token", lock.getLockToken());
 
-        // transfer to standard session
-        String lockToken = lock.getLockToken();
-        otherSuperuser.removeLockToken(lockToken);
-        superuser.addLockToken(lockToken);
+            // transfer to standard session
+            String lockToken = lock.getLockToken();
+            otherSuperuser.removeLockToken(lockToken);
+            superuser.addLockToken(lockToken);
 
-        // assert: user must get null token
-        assertNull("user must get null token", lock.getLockToken());
+            // assert: user must get null token
+            assertNull("user must get null token", lock.getLockToken());
 
-        // assert: user must get non-null token
-        assertNotNull("user must get non-null token",
-                n1.getLock().getLockToken());
-
-        // log out
-        otherSuperuser.logout();
+            // assert: user must get non-null token
+            assertNotNull("user must get non-null token",
+                    n1.getLock().getLockToken());
+        } finally {
+            // log out
+            otherSuperuser.logout();
+        }
     }
 
     /**
@@ -442,19 +449,21 @@ public class LockTest extends AbstractJCRTest {
         // create new session
         Session otherSuperuser = helper.getSuperuserSession();
 
-        // get node created above
-        Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
+        try {
+            // get node created above
+            Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
-        // lock node
-        Lock lock = n2.lock(false, false);
+            // lock node
+            Lock lock = n2.lock(false, false);
 
-        // transfer to standard session
-        String lockToken = lock.getLockToken();
-        otherSuperuser.removeLockToken(lockToken);
-        superuser.addLockToken(lockToken);
-
-        // log out
-        otherSuperuser.logout();
+            // transfer to standard session
+            String lockToken = lock.getLockToken();
+            otherSuperuser.removeLockToken(lockToken);
+            superuser.addLockToken(lockToken);
+        } finally {
+            // log out
+            otherSuperuser.logout();
+        }
 
         // assert: node still locked
         assertTrue(n1.isLocked());

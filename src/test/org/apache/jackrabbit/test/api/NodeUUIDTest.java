@@ -113,21 +113,24 @@ public class NodeUUIDTest extends AbstractJCRTest {
 
         // get the moving node with session 2
         Session testSession = helper.getReadWriteSession();
-        Node refTargetNodeSession2 = (Node) testSession.getItem(refTargetNode.getPath());
+        try {
+            Node refTargetNodeSession2 = (Node) testSession.getItem(refTargetNode.getPath());
 
-        //move the node with session 1
-        superuser.move(refTargetNode.getPath(), newParentNode.getPath() + "/" + nodeName3);
+            //move the node with session 1
+            superuser.move(refTargetNode.getPath(), newParentNode.getPath() + "/" + nodeName3);
 
-        // make the move persistent with session 1
-        superuser.save();
+            // make the move persistent with session 1
+            superuser.save();
 
-        // modify some prop of the moved node with session 2
-        refTargetNodeSession2.setProperty(propertyName1, "test");
+            // modify some prop of the moved node with session 2
+            refTargetNodeSession2.setProperty(propertyName1, "test");
 
-        // save it
-        refTargetNodeSession2.save();
-        // ok, works as expected
-        testSession.logout();
+            // save it
+            refTargetNodeSession2.save();
+            // ok, works as expected
+        } finally {
+            testSession.logout();
+        }
     }
 
     /**

@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.Node;
@@ -54,9 +53,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.BINARY, false, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.BINARY, false, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No binary property def with " +
@@ -123,9 +121,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.BOOLEAN, false, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.BOOLEAN, false, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No boolean property def with " +
@@ -191,9 +188,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.DATE, false, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.DATE, false, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No date property def with " +
@@ -259,9 +255,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.DOUBLE, false, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.DOUBLE, false, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No double property def with " +
@@ -327,9 +322,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.LONG, false, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.LONG, false, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No long property def with " +
@@ -396,9 +390,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.REFERENCE, false, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.REFERENCE, false, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No reference property def with " +
@@ -409,7 +402,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         String nodeTypeSatisfied = constraints[0];
         String nodeTypeNotSatisfied = null;
 
-        NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
+        NodeTypeManager manager = superuser.getWorkspace().getNodeTypeManager();
         NodeTypeIterator types = manager.getAllNodeTypes();
 
         // find a NodeType which is not satisfying the constraints
@@ -488,9 +481,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.BINARY, true, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.BINARY, true, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No multiple binary property def with " +
@@ -544,9 +536,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.BOOLEAN, true, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.BOOLEAN, true, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No multiple boolean property def with " +
@@ -601,9 +592,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.DATE, true, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.DATE, true, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No multiple date property def with " +
@@ -657,9 +647,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.DOUBLE, true, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.DOUBLE, true, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No multiple double property def with " +
@@ -714,9 +703,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.LONG, true, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.LONG, true, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No multiple long property def with " +
@@ -771,9 +759,8 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throws NotExecutableException, RepositoryException {
 
         // locate a PropertyDefinition with ValueConstraints
-        Session session = helper.getReadWriteSession();
         PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.REFERENCE, true, false, true, false);
+                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.REFERENCE, true, false, true, false);
 
         if (propDef == null) {
             throw new NotExecutableException("No multiple reference property def with " +
@@ -784,7 +771,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         String nodeTypeSatisfied = constraints[0];
         String nodeTypeNotSatisfied = null;
 
-        NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
+        NodeTypeManager manager = superuser.getWorkspace().getNodeTypeManager();
         NodeTypeIterator types = manager.getAllNodeTypes();
 
         // find a NodeType which is not satisfying the constraints
