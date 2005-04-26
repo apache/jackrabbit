@@ -444,7 +444,8 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
             testNode.setProperty(testPropName, stringValue, PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
-                 "ConstraintViolationExcpetion if" );
+                 "ConstraintViolationExcpetion if the type parameter and the " +
+                 "type of the property do not match." );
         }
         catch (ConstraintViolationException e) {
             // success
@@ -477,7 +478,8 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
             testNode.setProperty(testPropName, "abc", PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
-                 "ConstraintViolationExcpetion if" );
+                 "ConstraintViolationExcpetion if the type parameter and the " +
+                 "type of the property do not match." );
         }
         catch (ConstraintViolationException e) {
             // success
@@ -510,7 +512,8 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
             testNode.setProperty(testPropName, stringValues, PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
-                 "ConstraintViolationExcpetion if" );
+                 "ConstraintViolationExcpetion if the type parameter and the " +
+                 "type of the property do not match." );
         }
         catch (ConstraintViolationException e) {
             // success
