@@ -42,11 +42,11 @@
 
     <!--
         the Security element specifies the name (appName attribute)
-        of the JAAS configuration app-entry for this repository. 
+        of the JAAS configuration app-entry for this repository.
 
         it also specifies the access manager to be used (AccessManager element).
     -->
-    <!ELEMENT Security (AccessManager)>
+    <!ELEMENT Security (AccessManager, LoginModule?)>
     <!ATTLIST Security
       appName CDATA #REQUIRED>
 
@@ -67,7 +67,16 @@
       name CDATA #REQUIRED
       value CDATA #REQUIRED>
 
-    <!--
+     <!--
+        the LoginModule element optionally specifies a JAAS login module to
+        authenticate users. This feature allows the use of Jackrabbit in a
+        non-JAAS environment.
+    -->
+    <!ELEMENT LoginModule (param*)>
+    <!ATTLIST LoginModule
+      class CDATA #REQUIRED>
+
+   <!--
         the Workspaces element specifies the workspaces root directory
         (rootPath attribute) and the name of the default workspace
         (defaultWorkspace attribute).
@@ -137,6 +146,11 @@
         <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager">
             <!-- <param name="config" value="${rep.home}/access.xml"/> -->
         </AccessManager>
+
+        <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule">
+           <!-- anonymous user name ('anonymous' is the default value) -->
+           <param name="anonymousId" value="anonymous"/>
+        </LoginModule>
     </Security>
 
     <!--
@@ -191,7 +205,7 @@
         <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
             <param name="useCompoundFile" value="true"/>
             <param name="minMergeDocs" value="1000"/>
-            <param name="maxMergeDocs" value="10000"/>
+            <param name="maxMergeDocs" value="100000"/>
             <param name="mergeFactor" value="10"/>
             <param name="bufferSize" value="10"/>
 
@@ -215,13 +229,13 @@
             <param name="blockSize" value="128"/>
             <param name="autoSync" value="false"/>
         </FileSystem>
-    
+
         <!--
             <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
                 <param name="path" value="${rep.home}/version"/>
             </FileSystem>
         -->
-        
+
         <!--
             Configures the perisistence manager to be used for persisting version state.
             Please note that the current versioning implementation is based on

@@ -18,10 +18,16 @@ package org.apache.jackrabbit.tck;
 
 import junit.framework.TestSuite;
 import junit.framework.Test;
-import java.io.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.File;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 
 /**
  * The <code>TestFinder</code> class is responsible to find all <code>TestCase</code>s which are
@@ -39,10 +45,8 @@ public class TestFinder {
 
     /**
      * The path where the jar containing the test classes and its sources is residing is passed here.
-     *
-     * @throws IOException
      */
-    public TestFinder() throws IOException {
+    public TestFinder() {
         allTests = new HashMap();
         suites = new HashMap();
     }
@@ -154,7 +158,7 @@ public class TestFinder {
         BufferedReader reader = new BufferedReader(isr);
         String line;
         while ((line = reader.readLine()) != null) {
-            String keyword = null;
+            String keyword;
             if ((keyword = parseLine(line)) != null) {
                 return keyword;
             }

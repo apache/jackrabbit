@@ -22,9 +22,13 @@ import org.apache.jackrabbit.test.RepositoryStub;
 
 import javax.jcr.*;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.Iterator;
+import java.util.Enumeration;
 
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
