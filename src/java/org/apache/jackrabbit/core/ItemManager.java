@@ -613,7 +613,9 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         if (itemCache.containsKey(id)) {
             log.warn("overwriting cached item " + id);
         }
-        log.debug("caching item " + id);
+        if (log.isDebugEnabled()) {
+            log.debug("caching item " + id);
+        }
         itemCache.put(id, item);
     }
 
@@ -623,7 +625,9 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * @param id id of the item to remove from the cache
      */
     private void evictItem(ItemId id) {
-        log.debug("removing item " + id + " from cache");
+        if (log.isDebugEnabled()) {
+            log.debug("removing item " + id + " from cache");
+        }
         itemCache.remove(id);
     }
 
@@ -667,7 +671,9 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * {@inheritDoc}
      */
     public void itemCreated(ItemImpl item) {
-        log.debug("created item " + item.getId());
+        if (log.isDebugEnabled()) {
+            log.debug("created item " + item.getId());
+        }
         // add instance to cache
         cacheItem(item);
     }
@@ -676,7 +682,9 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * {@inheritDoc}
      */
     public void itemInvalidated(ItemId id, ItemImpl item) {
-        log.debug("invalidated item " + id);
+        if (log.isDebugEnabled()) {
+            log.debug("invalidated item " + id);
+        }
         // remove instance from cache
         evictItem(id);
     }
@@ -685,7 +693,9 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
      * {@inheritDoc}
      */
     public void itemDestroyed(ItemId id, ItemImpl item) {
-        log.debug("destroyed item " + id);
+        if (log.isDebugEnabled()) {
+            log.debug("destroyed item " + id);
+        }
         // we're no longer interested in this item
         item.removeLifeCycleListener(this);
         // remove instance from cache

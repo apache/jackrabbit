@@ -365,7 +365,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
         if (isNode()) {
             // build list of 'new' or 'modified' descendents
-            Iterator iter = stateMgr.getDescendantTransientItemStates(id);
+            Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 switch (transientState.getStatus()) {
@@ -416,7 +416,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         ItemState transientState;
 
         if (isNode()) {
-            Iterator iter = stateMgr.getDescendantTransientItemStatesInAttic(id);
+            Iterator iter = stateMgr.getDescendantTransientItemStatesInAttic((NodeId) id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 // check if stale
@@ -1375,7 +1375,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
         if (isNode()) {
             // build list of 'new', 'modified' or 'stale' descendents
-            Iterator iter = stateMgr.getDescendantTransientItemStates(id);
+            Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 switch (transientState.getStatus()) {
@@ -1405,14 +1405,16 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             stateMgr.disposeTransientItemState(transientState);
         }
 
-        // discard all transient descendents in the attic (i.e. those marked
-        // as 'removed'); this will resurrect the removed items
-        iter = stateMgr.getDescendantTransientItemStatesInAttic(id);
-        while (iter.hasNext()) {
-            transientState = (ItemState) iter.next();
-            // dispose the transient state; this will indirectly (through
-            // stateDiscarded listener method) resurrect the wrapping Item instances
-            stateMgr.disposeTransientItemStateInAttic(transientState);
+        if (isNode()) {
+            // discard all transient descendents in the attic (i.e. those marked
+            // as 'removed'); this will resurrect the removed items
+            iter = stateMgr.getDescendantTransientItemStatesInAttic((NodeId) id);
+            while (iter.hasNext()) {
+                transientState = (ItemState) iter.next();
+                // dispose the transient state; this will indirectly (through
+                // stateDiscarded listener method) resurrect the wrapping Item instances
+                stateMgr.disposeTransientItemStateInAttic(transientState);
+            }
         }
     }
 

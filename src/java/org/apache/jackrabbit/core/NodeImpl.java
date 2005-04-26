@@ -255,7 +255,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (isTransient()) {
             return true;
         }
-        Iterator iter = stateMgr.getDescendantTransientItemStates(id);
+        Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
         return iter.hasNext();
     }
 

@@ -389,10 +389,10 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throws ItemNotFoundException, RepositoryException {
         try {
             int depth = 0;
-            ItemState state = getItemState(id);
+            ItemState state = getItemState(id, true);
             String parentUUID = state.getParentUUID();
             while (parentUUID != null) {
-                state = (NodeState) getItemState(new NodeId(parentUUID));
+                state = getItemState(new NodeId(parentUUID), true);
                 parentUUID = state.getParentUUID();
                 depth++;
             }
@@ -517,18 +517,12 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     private ItemState getItemState(ItemId id, boolean includeZombies)
             throws NoSuchItemStateException, ItemStateException {
-        if (!includeZombies || attic == null) {
-            // get transient/persistent state
-            return provider.getItemState(id);
-        }
-
-        try {
+        if (includeZombies && attic != null && attic.hasItemState(id)) {
             // try attic first
             return attic.getItemState(id);
-        } catch (NoSuchItemStateException e) {
-            // fallback: get transient/persistent state
-            return provider.getItemState(id);
         }
+        // fallback: get transient/persistent state
+        return provider.getItemState(id);
     }
 
     /**

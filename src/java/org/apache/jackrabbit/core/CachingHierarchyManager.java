@@ -148,19 +148,8 @@ public class CachingHierarchyManager implements HierarchyManager {
      */
     public boolean isAncestor(NodeId nodeId, ItemId itemId)
             throws ItemNotFoundException, RepositoryException {
-        if (pathCache.containsKey(nodeId) && pathCache.containsKey(itemId)) {
-            // use cached Path objects rather than calling delegatee
-            try {
-                return getPath(nodeId).isAncestorOf(getPath(itemId));
-            } catch (MalformedPathException mpe) {
-                // should never get here...
-                String msg = "failed to determine degree of relationship of "
-                        + nodeId + " and " + itemId;
-                throw new ItemNotFoundException(msg, mpe);
-            }
-        } else {
-            return delegatee.isAncestor(nodeId, itemId);
-        }
+        // do not used cached paths. calculating paths is more expesive
+        return delegatee.isAncestor(nodeId, itemId);
     }
 
     /**
