@@ -70,5 +70,13 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
         }
     }
 
-
+    /**
+     * Releases the session aquired in {@link #setUp()}.
+     */
+    protected void tearDown() throws Exception {
+        if (session != null) {
+            session.logout();
+        }
+        super.tearDown();
+    }
 }
