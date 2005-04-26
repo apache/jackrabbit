@@ -311,23 +311,23 @@ public class NodeImpl extends ItemImpl implements Node {
                 genValues = new InternalValue[]{InternalValue.create(thisState.getUUID())};
             }
 /*
-    todo consolidate version history creation code (currently in ItemImpl.initVersionHistories)
-    } else if (nt.getQName().equals(MIX_VERSIONABLE)) {
-        // mix:versionable node type
-        VersionHistory hist = session.getVersionManager().getOrCreateVersionHistory(this);
-        if (name.equals(JCR_VERSIONHISTORY)) {
-        // jcr:versionHistory property
-        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
-        } else if (name.equals(JCR_BASEVERSION)) {
-        // jcr:baseVersion property
-        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-        } else if (name.equals(JCR_ISCHECKEDOUT)) {
-        // jcr:isCheckedOut property
-        genValues = new InternalValue[]{InternalValue.create(true)};
-        } else if (name.equals(JCR_PREDECESSORS)) {
-        // jcr:predecessors property
-        genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-        }
+       todo consolidate version history creation code (currently in ItemImpl.initVersionHistories)
+       } else if (nt.getQName().equals(MIX_VERSIONABLE)) {
+           // mix:versionable node type
+           VersionHistory hist = session.getVersionManager().getOrCreateVersionHistory(this);
+           if (name.equals(JCR_VERSIONHISTORY)) {
+               // jcr:versionHistory property
+               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
+           } else if (name.equals(JCR_BASEVERSION)) {
+               // jcr:baseVersion property
+               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
+           } else if (name.equals(JCR_ISCHECKEDOUT)) {
+               // jcr:isCheckedOut property
+               genValues = new InternalValue[]{InternalValue.create(true)};
+           } else if (name.equals(JCR_PREDECESSORS)) {
+               // jcr:predecessors property
+               genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
+           }
 */
         } else if (nt.getQName().equals(NT_HIERARCHYNODE)) {
             // nt:hierarchyNode node type
