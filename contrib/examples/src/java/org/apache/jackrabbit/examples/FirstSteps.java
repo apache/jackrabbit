@@ -18,6 +18,7 @@ package org.apache.jackrabbit.examples;
 
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
 
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -64,7 +65,8 @@ public class FirstSteps {
                 System.out.println("importing xml");
                 Node node = root.addNode("importxml", "nt:unstructured");
                 InputStream xml = new FileInputStream("repotest/test.xml");
-                session.importXML("/importxml", xml);
+                session.importXML(
+                        "/importxml", xml, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                 session.save();
             }
 
