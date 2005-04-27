@@ -21,7 +21,7 @@
   <pomVersion>3</pomVersion>
   <id>jackrabbit-examples</id>
   <name>Jackrabbit Examples</name>
-  <currentVersion>0.16.2-dev</currentVersion>
+  <currentVersion>0.16.4</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
     <url>http://incubator.apache.org/projects/jackrabbit.html</url>

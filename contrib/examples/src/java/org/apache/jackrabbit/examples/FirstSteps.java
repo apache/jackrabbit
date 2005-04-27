@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.examples;
 
-import org.apache.jackrabbit.core.jndi.RegistryHelper;
+import java.io.InputStream;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
@@ -29,26 +29,27 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.StringValue;
 import javax.jcr.Value;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Hashtable;
 
 /**
  * The First Steps example class.
  */
 public class FirstSteps {
 
+    private final Repository repository;
+
+    public FirstSteps(Repository repository) {
+        this.repository = repository;
+    }
+
     /**
      * Run the First Steps example.
      *
      * @param args command line arguments (ignored)
      */
-    public static void main(String[] args) {
+    public void run() {
         try {
-            Repository repository = getRepository();
-            SimpleCredentials creds = new SimpleCredentials("username", "password".toCharArray());
+            SimpleCredentials creds =
+                new SimpleCredentials("username", "password".toCharArray());
             Session session = repository.login(creds);
             Node root = session.getRootNode();
 
@@ -64,7 +65,9 @@ public class FirstSteps {
             if (!root.hasNode("importxml")) {
                 System.out.println("importing xml");
                 Node node = root.addNode("importxml", "nt:unstructured");
-                InputStream xml = new FileInputStream("repotest/test.xml");
+                InputStream xml =
+                    getClass().getClassLoader().getResourceAsStream(
+                            "org/apache/jackrabbit/examples/firststeps.xml");
                 session.importXML(
                         "/importxml", xml, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                 session.save();
@@ -74,26 +77,6 @@ public class FirstSteps {
         } catch (Exception e) {
             System.err.println(e);
         }
-    }
-
-    /**
-     * Creates a Repository instance to be used by the example class.
-     *
-     * @return repository instance
-     * @throws Exception on errors
-     */
-    private static Repository getRepository() throws Exception {
-        String configFile = "repotest/repository.xml";
-        String repHomeDir = "repotest";
-
-        Hashtable env = new Hashtable();
-        env.put(Context.INITIAL_CONTEXT_FACTORY,
-                "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
-        env.put(Context.PROVIDER_URL, "localhost");
-        InitialContext ctx = new InitialContext(env);
-
-        RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
-        return (Repository) ctx.lookup("repo");
     }
 
     /**
