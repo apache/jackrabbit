@@ -28,18 +28,9 @@ import java.util.List;
 
 /**
  * The history root node state represents the root node of all version histories.
- * the version histories are dynamically exposed. since there could be very many,
- * it does not return all the child nodes by the {@link #getChildNodeEntries()}}
- * method. this implies, that the version storage is not browsable, but the
- * nodes are nevertheless correctly exposed (this behaviour can be changed, by
- * modifying the compile-time constant {@link #LIST_ALL_HISTORIES}.
+ * the version histories are dynamically exposed.
  */
 public class HistoryRootNodeState extends VirtualNodeState {
-
-    /**
-     * flag for listing all histories
-     */
-    private static final boolean LIST_ALL_HISTORIES = true;
 
     /**
      * the version manager
@@ -99,19 +90,17 @@ public class HistoryRootNodeState extends VirtualNodeState {
      * {@inheritDoc}
      */
     public synchronized List getChildNodeEntries() {
-        if (LIST_ALL_HISTORIES) {
-            try {
-                ArrayList list = new ArrayList(vm.getNumVersionHistories());
-                Iterator iter = vm.getVersionHistoryIds();
-                while (iter.hasNext()) {
-                    String id = (String) iter.next();
-                    QName name = new QName(NS_DEFAULT_URI, id);
-                    list.add(createChildNodeEntry(name, id, 1));
-                }
-                return list;
-            } catch (RepositoryException e) {
-                // ignore
+        try {
+            ArrayList list = new ArrayList(vm.getNumVersionHistories());
+            Iterator iter = vm.getVersionHistoryIds();
+            while (iter.hasNext()) {
+                String id = (String) iter.next();
+                QName name = new QName(NS_DEFAULT_URI, id);
+                list.add(createChildNodeEntry(name, id, 1));
             }
+            return list;
+        } catch (RepositoryException e) {
+            // ignore
         }
         return Collections.EMPTY_LIST;
     }

@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -66,6 +67,8 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      */
     protected VirtualNodeState createRootNodeState() throws RepositoryException {
         VirtualNodeState root = new VirtualNodeState(this, parentId, rootNodeId.getUUID(), REP_NODETYPES, null);
+        NodeDefId id = ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicableChildNodeDef(JCR_NODETYPES, REP_NODETYPES).getId();
+        root.setDefinitionId(id);
         QName[] ntNames = ntReg.getRegisteredNodeTypes();
         for (int i = 0; i < ntNames.length; i++) {
             NodeTypeDef ntDef = ntReg.getNodeTypeDef(ntNames[i]);
