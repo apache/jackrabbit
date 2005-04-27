@@ -143,7 +143,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
      */
     public VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException {
         InternalVersionHistory history = vMgr.createVersionHistory(node);
-        virtProvider.invalidateItem(new NodeId(VERSION_STORAGE_NODE_UUID));
+        virtProvider.invalidateItem(new NodeId(VERSION_STORAGE_NODE_UUID), false);
         VersionHistoryImpl vh = (VersionHistoryImpl) node.getSession().getNodeByUUID(history.getId());
 
         // generate observation events
@@ -248,7 +248,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
     public Version checkin(NodeImpl node) throws RepositoryException {
         SessionImpl session = (SessionImpl) node.getSession();
         InternalVersion version = vMgr.checkin(node);
-        virtProvider.invalidateItem(new NodeId(version.getVersionHistory().getId()));
+        virtProvider.invalidateItem(new NodeId(version.getVersionHistory().getId()), true);
         VersionImpl v = (VersionImpl) session.getNodeByUUID(version.getId());
 
         // generate observation events
@@ -283,7 +283,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
         InternalVersionHistory vh = ((VersionHistoryImpl) history).getInternalVersionHistory();
         vh.removeVersion(name);
 
-        virtProvider.invalidateItem(new NodeId(vh.getId()));
+        virtProvider.invalidateItem(new NodeId(vh.getId()), true);
         obsMgr.dispatch(events, session);
     }
 
@@ -329,7 +329,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
                     labelNode.getSession()
             ));
         }
-        virtProvider.invalidateItem(new NodeId(vh.getId()));
+        virtProvider.invalidateItem(new NodeId(labelNode.internalGetUUID()), false);
         obsMgr.dispatch(events, session);
         if (v == null) {
             return null;

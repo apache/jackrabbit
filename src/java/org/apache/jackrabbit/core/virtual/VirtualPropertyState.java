@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.virtual;
 
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.PropertyState;
 
@@ -26,11 +27,45 @@ import org.apache.jackrabbit.core.state.PropertyState;
 public class VirtualPropertyState extends PropertyState {
 
     /**
+     * a virtual value provider, if needed.
+     */
+    private VirtualValueProvider valueProvider;
+
+    /**
      * Creates a new virtual property state
      * @param name
      * @param parentUUID
      */
     public VirtualPropertyState(QName name, String parentUUID) {
         super(name, parentUUID, ItemState.STATUS_EXISTING, false);
+    }
+
+    /**
+     * Returns the virtual value provider, if registered.
+     * @return
+     */
+    public VirtualValueProvider getValueProvider() {
+        return valueProvider;
+    }
+
+    /**
+     * Sets a virtual value provider for this property
+     * @param valueProvider
+     */
+    public void setValueProvider(VirtualValueProvider valueProvider) {
+        this.valueProvider = valueProvider;
+    }
+
+    /**
+     * Returns the value of this state evt. by using the registered virtual
+     * value provider.
+     * @return
+     */
+    public InternalValue[] getValues() {
+        InternalValue[] values = null;
+        if (valueProvider != null) {
+            values = valueProvider.getVirtualValues(name);
+        }
+        return valueProvider == null ? super.getValues() : values;
     }
 }

@@ -319,33 +319,25 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, C
     }
 
     /**
-     * Removes the item and all hard refernces from the cache and discards the
-     * states.
+     * invalidates the item
      *
      * @param id
      */
-    public void invalidateItem(ItemId id) {
-        if (id.equals(rootNodeId)) {
-            if (root != null) {
-                root.discard();
-                try {
-                    root = createRootNodeState();
-                } catch (RepositoryException e) {
-                    // ignore
-                }
-            }
-            return;
-        }
-        VirtualNodeState state = (VirtualNodeState) nodes.remove(id);
+    public void invalidateItem(ItemId id, boolean recursive) {
+        VirtualNodeState state = id.equals(rootNodeId) ? root : (VirtualNodeState) nodes.get(id);
         if (state != null) {
-            HashSet set = state.removeAllStateReferences();
-            if (set != null) {
-                Iterator iter = set.iterator();
+            if (recursive) {
+                VirtualPropertyState[] props = state.getProperties();
+                for (int i=0; i<props.length; i++) {
+                    props[i].notifyStateUpdated();
+                }
+                Iterator iter = state.getChildNodeEntries().iterator();
                 while (iter.hasNext()) {
-                    invalidateItem(((NodeState) iter.next()).getId());
+                    NodeState.ChildNodeEntry pe = (NodeState.ChildNodeEntry) iter.next();
+                    invalidateItem(new NodeId(pe.getUUID()), true);
                 }
             }
-            state.discard();
+            state.notifyStateUpdated();
         }
     }
 

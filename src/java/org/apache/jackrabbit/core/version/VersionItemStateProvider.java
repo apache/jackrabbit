@@ -185,18 +185,12 @@ public class VersionItemStateProvider extends AbstractVISProvider {
                 state.setDefinitionId(NDEF_VERSION_HISTORY);
                 // add version labels node state
                 String uuid = vh.getVersionLabelsUUID();
-                VersionLabelsNodeState vlns = new VersionLabelsNodeState(this, vh, state.getUUID(), uuid);
-                vlns.setDefinitionId(NDEF_VERSION_LABELS);
                 state.addChildNodeEntry(JCR_VERSIONLABELS, uuid);
-                // need to add as hard reference to version history, so that it does not get fluhed.
-                state.addStateReference(vlns);
-                cache(vlns);
 
             } else if (vi instanceof InternalVersionLabels) {
-                // load parent, that must be a version history
-                getItemState(new NodeId(vi.getParent().getId()));
-                // this is a bit dangerous
-                state = (VirtualNodeState) getItemState(id);
+                InternalVersionLabels vl = (InternalVersionLabels) vi;
+                state = new VersionLabelsNodeState(this, (InternalVersionHistory) vl.getParent(), vl.getParent().getId(), vi.getId());
+                state.setDefinitionId(NDEF_VERSION_LABELS);
 
             } else if (vi instanceof InternalVersion) {
                 InternalVersion v = (InternalVersion) vi;

@@ -18,10 +18,10 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
+import org.apache.jackrabbit.core.virtual.VirtualValueProvider;
 
 import javax.jcr.RepositoryException;
 
@@ -30,7 +30,7 @@ import javax.jcr.RepositoryException;
  * since some properties like 'jcr:versionLabels', 'jcr:predecessors' etc. can
  * change over time, we treat them specially.
  */
-public class VersionNodeState extends VirtualNodeState {
+public class VersionNodeState extends VirtualNodeState implements VirtualValueProvider {
 
     /**
      * the internal version
@@ -62,29 +62,40 @@ public class VersionNodeState extends VirtualNodeState {
 
     /**
      * {@inheritDoc}
+     *
+     * Additionally set this as virtual value provider for the 'predecessors'
+     * and 'successors' properties.
      */
-    public VirtualPropertyState getProperty(QName name)
-            throws NoSuchItemStateException {
-        VirtualPropertyState state = super.getProperty(name);
-        if (state != null) {
-            if (name.equals(JCR_VERSIONLABELS)) {
-                state.setValues(InternalValue.create(v.getLabels()));
-            } else if (name.equals(JCR_PREDECESSORS)) {
-                InternalVersion[] preds = v.getPredecessors();
-                InternalValue[] predV = new InternalValue[preds.length];
-                for (int i = 0; i < preds.length; i++) {
-                    predV[i] = InternalValue.create(new UUID(preds[i].getId()));
-                }
-                state.setValues(predV);
-            } else if (name.equals(JCR_SUCCESSORS)) {
-                InternalVersion[] succs = v.getSuccessors();
-                InternalValue[] succV = new InternalValue[succs.length];
-                for (int i = 0; i < succs.length; i++) {
-                    succV[i] = InternalValue.create(new UUID(succs[i].getId()));
-                }
-                state.setValues(succV);
-            }
+    protected VirtualPropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued) throws RepositoryException {
+        VirtualPropertyState prop =
+                super.getOrCreatePropertyState(name, type, multiValued);
+        // attach us as value provider
+        if (name.equals(JCR_PREDECESSORS) || name.equals(JCR_SUCCESSORS)) {
+            prop.setValueProvider(this);
         }
-        return state;
+        return prop;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalValue[] getVirtualValues(QName name) {
+        if (name.equals(JCR_PREDECESSORS)) {
+            InternalVersion[] preds = v.getPredecessors();
+            InternalValue[] predV = new InternalValue[preds.length];
+            for (int i = 0; i < preds.length; i++) {
+                predV[i] = InternalValue.create(new UUID(preds[i].getId()));
+            }
+            return predV;
+        } else if (name.equals(JCR_SUCCESSORS)) {
+            InternalVersion[] succs = v.getSuccessors();
+            InternalValue[] succV = new InternalValue[succs.length];
+            for (int i = 0; i < succs.length; i++) {
+                succV[i] = InternalValue.create(new UUID(succs[i].getId()));
+            }
+            return succV;
+        } else {
+            return null;
+        }
     }
 }
