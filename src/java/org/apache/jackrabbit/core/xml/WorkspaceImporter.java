@@ -16,48 +16,43 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.InternalValue;
-import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.log4j.Logger;
 
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Stack;
 
 /**
@@ -71,7 +66,7 @@ public class WorkspaceImporter implements Importer, Constants {
     private final WorkspaceImpl wsp;
     private final NodeTypeRegistry ntReg;
     private final HierarchyManager hierMgr;
-    private final UpdatableItemStateManager stateMgr;
+    private final BatchedItemOperations itemOps;
 
     private final int uuidBehavior;
 
@@ -87,23 +82,42 @@ public class WorkspaceImporter implements Importer, Constants {
     /**
      * Creates a new <code>WorkspaceImporter</code> instance.
      *
-     * @param importTarget
+     * @param parentPath   target path where to add the imported subtree
      * @param wsp
      * @param ntReg
-     * @param uuidBehavior     any of the constants declared by
-     *                         {@link ImportUUIDBehavior}
+     * @param uuidBehavior flag that governs how incoming UUIDs are handled
+     * @throws PathNotFoundException        if no node exists at
+     *                                      <code>parentPath</code> or if the
+     *                                      current session is not granted read
+     *                                      access.
+     * @throws ConstraintViolationException if the node at
+     *                                      <code>parentPath</code> is protected
+     * @throws VersionException             if the node at
+     *                                      <code>parentPath</code> is not
+     *                                      checked-out
+     * @throws LockException                if a lock prevents the addition of
+     *                                      the subtree
+     * @throws RepositoryException          if another error occurs
      */
-    public WorkspaceImporter(NodeState importTarget,
+    public WorkspaceImporter(Path parentPath,
                              WorkspaceImpl wsp,
                              NodeTypeRegistry ntReg,
-                             int uuidBehavior) {
-        this.importTarget = importTarget;
+                             int uuidBehavior)
+            throws PathNotFoundException, ConstraintViolationException,
+            VersionException, LockException, RepositoryException {
+
+        SessionImpl ses = (SessionImpl) wsp.getSession();
+        itemOps = new BatchedItemOperations(wsp.getItemStateManager(),
+                ntReg, wsp.getLockManager(), ses, wsp.getHierarchyManager(),
+                ses.getNamespaceResolver());
+        hierMgr = wsp.getHierarchyManager();
+
+        // perform preliminary checks
+        itemOps.verifyCanWrite(parentPath);
+        this.importTarget = itemOps.getNodeState(parentPath);
+
         this.wsp = wsp;
         this.ntReg = ntReg;
-
-        hierMgr = wsp.getHierarchyManager();
-        stateMgr = wsp.getItemStateManager();
-
         this.uuidBehavior = uuidBehavior;
 
         aborted = false;
@@ -115,398 +129,12 @@ public class WorkspaceImporter implements Importer, Constants {
     }
 
     /**
-     * Failsafe translation of internal <code>ItemId</code> to JCR path for
-     * use in error messages etc.
-     *
-     * @param id id to translate
-     * @return JCR path
-     */
-    private String resolveJCRPath(ItemId id) {
-        Path path;
-        try {
-            path = hierMgr.getPath(id);
-        } catch (RepositoryException re) {
-            log.error(id + ": failed to determine path to");
-            // return string representation if id as a fallback
-            return id.toString();
-        }
-        try {
-            return path.toJCRPath(((SessionImpl) wsp.getSession()).getNamespaceResolver());
-        } catch (NoPrefixDeclaredException npde) {
-            log.error("failed to convert " + path.toString() + " to JCR path.");
-            // return string representation of internal path as a fallback
-            return path.toString();
-        }
-    }
-
-    protected NodeState createNode(NodeState parent,
-                                   QName nodeName,
-                                   QName nodeTypeName,
-                                   QName[] mixinNames,
-                                   String uuid)
-            throws RepositoryException {
-        NodeDef def =
-                wsp.findApplicableNodeDefinition(nodeName, nodeTypeName, parent);
-        return createNode(parent, nodeName, nodeTypeName, mixinNames, uuid, def);
-    }
-
-    protected NodeState createNode(NodeState parent,
-                                   QName nodeName,
-                                   QName nodeTypeName,
-                                   QName[] mixinNames,
-                                   String uuid,
-                                   NodeDef def)
-            throws RepositoryException {
-        // check for name collisions with existing properties
-        if (parent.hasPropertyEntry(nodeName)) {
-            String msg = "there's already a property with name " + nodeName;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-        // check for name collisions with existing nodes
-        if (!def.allowsSameNameSiblings() && parent.hasChildNodeEntry(nodeName)) {
-            NodeId id = new NodeId(parent.getChildNodeEntry(nodeName, 1).getUUID());
-            throw new ItemExistsException(resolveJCRPath(id));
-        }
-        if (uuid == null) {
-            // create new uuid
-            uuid = UUID.randomUUID().toString();    // create new version 4 uuid
-        }
-        if (nodeTypeName == null) {
-            // no primary node type specified,
-            // try default primary type from definition
-            nodeTypeName = def.getDefaultPrimaryType();
-            if (nodeTypeName == null) {
-                String msg = "an applicable node type could not be determined for "
-                        + nodeName;
-                log.debug(msg);
-                throw new ConstraintViolationException(msg);
-            }
-        }
-        NodeState node = stateMgr.createNew(uuid, nodeTypeName, parent.getUUID());
-        if (mixinNames != null && mixinNames.length > 0) {
-            node.setMixinTypeNames(new HashSet(Arrays.asList(mixinNames)));
-        }
-        node.setDefinitionId(def.getId());
-
-        // now add new child node entry to parent
-        parent.addChildNodeEntry(nodeName, node.getUUID());
-
-        EffectiveNodeType ent = wsp.getEffectiveNodeType(node);
-
-        if (!node.getMixinTypeNames().isEmpty()) {
-            // create jcr:mixinTypes property
-            PropDef pd = ent.getApplicablePropertyDef(JCR_MIXINTYPES,
-                    PropertyType.NAME, true);
-            createProperty(node, pd.getName(), pd.getRequiredType(), pd);
-        }
-
-        // add 'auto-create' properties defined in node type
-        PropDef[] pda = ent.getAutoCreatePropDefs();
-        for (int i = 0; i < pda.length; i++) {
-            PropDef pd = pda[i];
-            createProperty(node, pd.getName(), pd.getRequiredType(), pd);
-        }
-
-        // recursively add 'auto-create' child nodes defined in node type
-        NodeDef[] nda = ent.getAutoCreateNodeDefs();
-        for (int i = 0; i < nda.length; i++) {
-            NodeDef nd = nda[i];
-            createNode(node, nd.getName(), nd.getDefaultPrimaryType(),
-                    null, null, nd);
-        }
-
-        return node;
-    }
-
-    protected PropertyState createProperty(NodeState parent,
-                                           QName propName,
-                                           int type,
-                                           int numValues)
-            throws RepositoryException {
-        // find applicable definition
-        PropDef def;
-        // multi- or single-valued property?
-        if (numValues == 1) {
-            // could be single- or multi-valued (n == 1)
-            try {
-                // try single-valued
-                def = wsp.findApplicablePropertyDefinition(propName,
-                        type, false, parent);
-            } catch (ConstraintViolationException cve) {
-                // try multi-valued
-                def = wsp.findApplicablePropertyDefinition(propName,
-                        type, true, parent);
-            }
-        } else {
-            // can only be multi-valued (n == 0 || n > 1)
-            def = wsp.findApplicablePropertyDefinition(propName,
-                    type, true, parent);
-        }
-        return createProperty(parent, propName, type, def);
-    }
-
-    protected PropertyState createProperty(NodeState parent,
-                                           QName propName,
-                                           int type,
-                                           PropDef def)
-            throws RepositoryException {
-        // check for name collisions with existing child nodes
-        if (parent.hasChildNodeEntry(propName)) {
-            String msg = "there's already a child node with name " + propName;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        // create property
-        PropertyState prop = stateMgr.createNew(propName, parent.getUUID());
-
-        prop.setDefinitionId(def.getId());
-        if (def.getRequiredType() != PropertyType.UNDEFINED) {
-            prop.setType(def.getRequiredType());
-        } else if (type != PropertyType.UNDEFINED) {
-            prop.setType(type);
-        } else {
-            prop.setType(PropertyType.STRING);
-        }
-        prop.setMultiValued(def.isMultiple());
-
-        // compute system generated values if necessary
-        InternalValue[] genValues =
-                computeSystemGeneratedPropertyValues(parent, propName, def);
-        if (genValues != null) {
-            prop.setValues(genValues);
-        } else if (def.getDefaultValues() != null) {
-            prop.setValues(def.getDefaultValues());
-        }
-
-        // now add new property entry to parent
-        parent.addPropertyEntry(propName);
-
-        return prop;
-    }
-
-    /**
-     * Computes the values of well-known system (i.e. protected) properties.
-     * todo: duplicate code in NodeImpl: consolidate and delegate to NodeTypeInstanceHandler
-     *
      * @param parent
-     * @param name
-     * @param def
+     * @param conflicting
+     * @param nodeInfo
      * @return
      * @throws RepositoryException
      */
-    protected InternalValue[] computeSystemGeneratedPropertyValues(NodeState parent,
-                                                                   QName name,
-                                                                   PropDef def)
-            throws RepositoryException {
-        InternalValue[] genValues = null;
-
-        /**
-         * todo: need to come up with some callback mechanism for applying system generated values
-         * (e.g. using a NodeTypeInstanceHandler interface)
-         */
-
-        // compute system generated values
-        QName declaringNT = def.getDeclaringNodeType();
-        if (MIX_REFERENCEABLE.equals(declaringNT)) {
-            // mix:referenceable node type
-            if (JCR_UUID.equals(name)) {
-                // jcr:uuid property
-                genValues = new InternalValue[]{InternalValue.create(parent.getUUID())};
-            }
-        } else if (NT_BASE.equals(declaringNT)) {
-            // nt:base node type
-            if (JCR_PRIMARYTYPE.equals(name)) {
-                // jcr:primaryType property
-                genValues = new InternalValue[]{InternalValue.create(parent.getNodeTypeName())};
-            } else if (JCR_MIXINTYPES.equals(name)) {
-                // jcr:mixinTypes property
-                Set mixins = parent.getMixinTypeNames();
-                ArrayList values = new ArrayList(mixins.size());
-                Iterator iter = mixins.iterator();
-                while (iter.hasNext()) {
-                    values.add(InternalValue.create((QName) iter.next()));
-                }
-                genValues = (InternalValue[]) values.toArray(new InternalValue[values.size()]);
-            }
-        } else if (NT_HIERARCHYNODE.equals(declaringNT)) {
-            // nt:hierarchyNode node type
-            if (JCR_CREATED.equals(name)) {
-                // jcr:created property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (NT_RESOURCE.equals(declaringNT)) {
-            // nt:resource node type
-            if (JCR_LASTMODIFIED.equals(name)) {
-                // jcr:lastModified property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-        } else if (NT_VERSION.equals(declaringNT)) {
-            // nt:version node type
-            if (JCR_CREATED.equals(name)) {
-                // jcr:created property
-                genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
-            }
-/*
-        // FIXME delegate to NodeTypeInstanceHandler
-        } else if (MIX_VERSIONABLE.equals(declaringNT)) {
-            // mix:versionable node type
-            if (JCR_VERSIONHISTORY.equals(name)) {
-                // jcr:versionHistory property
-                genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))};
-            } else if (JCR_BASEVERSION.equals(name)) {
-                // jcr:baseVersion property
-                genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-            } else if (JCR_ISCHECKEDOUT.equals(name)) {
-                // jcr:isCheckedOut property
-                genValues = new InternalValue[]{InternalValue.create(true)};
-            } else if (JCR_PREDECESSORS.equals(name)) {
-                // jcr:predecessors property
-                genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
-            }
-*/
-        }
-
-        return genValues;
-    }
-
-    /**
-     * Unlinks the specified target node from all its parents and recursively
-     * removes it including its properties and child nodes.
-     * <p/>
-     * <b>Precondition:</b> the state manager of this workspace needs to be in
-     * edit mode.
-     * todo duplicate code in WorkspaceImporter; consolidate in WorkspaceOperations class
-     *
-     * @param target
-     * @throws RepositoryException if an error occurs
-     */
-    protected void removeNode(NodeState target)
-            throws RepositoryException {
-
-        // copy list to avoid ConcurrentModificationException
-        ArrayList parentUUIDs = new ArrayList(target.getParentUUIDs());
-        Iterator iter = parentUUIDs.iterator();
-        while (iter.hasNext()) {
-            String parentUUID = (String) iter.next();
-            NodeId parentId = new NodeId(parentUUID);
-
-            // unlink target node from this parent
-            unlinkNode(target, parentUUID);
-
-            // remove child node entries
-            NodeState parent;
-            try {
-                parent = (NodeState) stateMgr.getItemState(parentId);
-            } catch (ItemStateException ise) {
-                // should never get here...
-                String msg = "internal error: failed to retrieve parent state";
-                log.error(msg, ise);
-                throw new RepositoryException(msg, ise);
-            }
-            // use temp array to avoid ConcurrentModificationException
-            ArrayList tmp =
-                    new ArrayList(parent.getChildNodeEntries(target.getUUID()));
-            // remove from tail to avoid problems with same-name siblings
-            for (int i = tmp.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
-                parent.removeChildNodeEntry(entry.getName(), entry.getIndex());
-            }
-            // store parent
-            stateMgr.store(parent);
-        }
-    }
-
-    /**
-     * Unlinks the given target node from the specified parent i.e. removes
-     * <code>parentUUID</code> from its list of parents. If as a result
-     * the target node would be orphaned it will be recursively removed
-     * including its properties and child nodes.
-     * <p/>
-     * Note that the child node entry refering to <code>target</code> is
-     * <b><i>not</i></b> automatically removed from <code>target</code>'s
-     * parent denoted by <code>parentUUID</code>.
-     * <p/>
-     * <b>Precondition:</b> the state manager of this workspace needs to be in
-     * edit mode.
-     * todo duplicate code in WorkspaceImporter; consolidate in WorkspaceOperations class
-     *
-     * @param target
-     * @param parentUUID
-     * @throws RepositoryException if an error occurs
-     */
-    private void unlinkNode(NodeState target, String parentUUID)
-            throws RepositoryException {
-
-        // check if this node state would be orphaned after unlinking it from parent
-        ArrayList parentUUIDs = new ArrayList(target.getParentUUIDs());
-        parentUUIDs.remove(parentUUID);
-        boolean orphaned = parentUUIDs.isEmpty();
-
-        if (orphaned) {
-            // remove child nodes
-            // use temp array to avoid ConcurrentModificationException
-            ArrayList tmp = new ArrayList(target.getChildNodeEntries());
-            // remove from tail to avoid problems with same-name siblings
-            for (int i = tmp.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
-                NodeId nodeId = new NodeId(entry.getUUID());
-                try {
-                    NodeState node = (NodeState) stateMgr.getItemState(nodeId);
-                    // check if child node can be removed
-                    // (access rights, locking & versioning status)
-                    wsp.checkRemoveNode(node, (NodeId) target.getId(),
-                            WorkspaceImpl.CHECK_ACCESS | WorkspaceImpl.CHECK_LOCK
-                            | WorkspaceImpl.CHECK_VERSIONING);
-                    // unlink child node (recursive)
-                    unlinkNode(node, target.getUUID());
-                } catch (ItemStateException ise) {
-                    String msg = "internal error: failed to retrieve state of "
-                            + nodeId;
-                    log.debug(msg);
-                    throw new RepositoryException(msg, ise);
-                }
-                // remove child node entry
-                target.removeChildNodeEntry(entry.getName(), entry.getIndex());
-            }
-
-            // remove properties
-            // use temp array to avoid ConcurrentModificationException
-            tmp = new ArrayList(target.getPropertyEntries());
-            for (int i = 0; i < tmp.size(); i++) {
-                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) tmp.get(i);
-                PropertyId propId =
-                        new PropertyId(target.getUUID(), entry.getName());
-                try {
-                    PropertyState prop = (PropertyState) stateMgr.getItemState(propId);
-                    // remove property entry
-                    target.removePropertyEntry(propId.getName());
-                    // destroy property state
-                    stateMgr.destroy(prop);
-                } catch (ItemStateException ise) {
-                    String msg = "internal error: failed to retrieve state of "
-                            + propId;
-                    log.debug(msg);
-                    throw new RepositoryException(msg, ise);
-                }
-            }
-        }
-
-        // now actually do unlink target state from specified parent state
-        // (i.e. remove uuid of parent state from target state's parent list)
-        target.removeParentUUID(parentUUID);
-
-        if (orphaned) {
-            // destroy target state (pass overlayed state since target state
-            // might have been modified during unlinking)
-            stateMgr.destroy(target.getOverlayedState());
-        } else {
-            // store target
-            stateMgr.store(target);
-        }
-    }
-
     protected NodeState resolveUUIDConflict(NodeState parent,
                                             NodeState conflicting,
                                             NodeInfo nodeInfo)
@@ -518,14 +146,14 @@ public class WorkspaceImporter implements Importer, Constants {
             // check if new node can be added (check access rights &
             // node type constraints only, assume locking & versioning status
             // has already been checked on ancestor)
-            wsp.checkAddNode(parent, nodeInfo.getName(),
+            itemOps.checkAddNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(),
-                    WorkspaceImpl.CHECK_ACCESS
-                    | WorkspaceImpl.CHECK_CONSTRAINTS);
-            node = createNode(parent, nodeInfo.getName(),
+                    BatchedItemOperations.CHECK_ACCESS
+                    | BatchedItemOperations.CHECK_CONSTRAINTS);
+            node = itemOps.createNodeState(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
-            EffectiveNodeType ent = wsp.getEffectiveNodeType(node);
+            EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
             if (ent.includesNodeType(MIX_REFERENCEABLE)) {
                 refTracker.mappedUUID(nodeInfo.getUUID(), node.getUUID());
             }
@@ -553,24 +181,24 @@ public class WorkspaceImporter implements Importer, Constants {
             // remove conflicting:
             // check if conflicting can be removed
             // (access rights, node type constraints, locking & versioning status)
-            wsp.checkRemoveNode(conflicting,
-                    WorkspaceImpl.CHECK_ACCESS
-                    | WorkspaceImpl.CHECK_LOCK
-                    | WorkspaceImpl.CHECK_VERSIONING
-                    | WorkspaceImpl.CHECK_CONSTRAINTS);
+            itemOps.checkRemoveNode(conflicting,
+                    BatchedItemOperations.CHECK_ACCESS
+                    | BatchedItemOperations.CHECK_LOCK
+                    | BatchedItemOperations.CHECK_VERSIONING
+                    | BatchedItemOperations.CHECK_CONSTRAINTS);
             // do remove conflicting (recursive)
-            removeNode(conflicting);
+            itemOps.removeNodeState(conflicting);
 
             // create new with given uuid:
             // check if new node can be added (check access rights &
             // node type constraints only, assume locking & versioning status
             // has already been checked on ancestor)
-            wsp.checkAddNode(parent, nodeInfo.getName(),
+            itemOps.checkAddNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(),
-                    WorkspaceImpl.CHECK_ACCESS
-                    | WorkspaceImpl.CHECK_CONSTRAINTS);
+                    BatchedItemOperations.CHECK_ACCESS
+                    | BatchedItemOperations.CHECK_CONSTRAINTS);
             // do create new node
-            node = createNode(parent, nodeInfo.getName(),
+            node = itemOps.createNodeState(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
                     nodeInfo.getUUID());
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
@@ -582,33 +210,33 @@ public class WorkspaceImporter implements Importer, Constants {
             // 'replace' current parent with parent of conflicting
             NodeId parentId = new NodeId(conflicting.getParentUUID());
             try {
-                parent = (NodeState) stateMgr.getItemState(parentId);
-            } catch (ItemStateException ise) {
+                parent = itemOps.getNodeState(parentId);
+            } catch (ItemNotFoundException infe) {
                 // should never get here...
                 String msg = "internal error: failed to retrieve parent state";
-                log.error(msg, ise);
-                throw new RepositoryException(msg, ise);
+                log.error(msg, infe);
+                throw new RepositoryException(msg, infe);
             }
             // remove conflicting:
             // check if conflicting can be removed
-            wsp.checkRemoveNode(conflicting,
-                    WorkspaceImpl.CHECK_ACCESS
-                    | WorkspaceImpl.CHECK_LOCK
-                    | WorkspaceImpl.CHECK_VERSIONING
-                    | WorkspaceImpl.CHECK_CONSTRAINTS);
+            itemOps.checkRemoveNode(conflicting,
+                    BatchedItemOperations.CHECK_ACCESS
+                    | BatchedItemOperations.CHECK_LOCK
+                    | BatchedItemOperations.CHECK_VERSIONING
+                    | BatchedItemOperations.CHECK_CONSTRAINTS);
             // do remove conflicting (recursive)
-            removeNode(conflicting);
+            itemOps.removeNodeState(conflicting);
             // create new with given uuid at same location as conflicting:
             // check if new node can be added at other location
             // (access rights, node type constraints, locking & versioning status)
-            wsp.checkAddNode(parent, nodeInfo.getName(),
+            itemOps.checkAddNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(),
-                    WorkspaceImpl.CHECK_ACCESS
-                    | WorkspaceImpl.CHECK_LOCK
-                    | WorkspaceImpl.CHECK_VERSIONING
-                    | WorkspaceImpl.CHECK_CONSTRAINTS);
+                    BatchedItemOperations.CHECK_ACCESS
+                    | BatchedItemOperations.CHECK_LOCK
+                    | BatchedItemOperations.CHECK_VERSIONING
+                    | BatchedItemOperations.CHECK_CONSTRAINTS);
             // do create new node
-            node = createNode(parent, nodeInfo.getName(),
+            node = itemOps.createNodeState(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
                     nodeInfo.getUUID());
         } else {
@@ -627,7 +255,7 @@ public class WorkspaceImporter implements Importer, Constants {
     public void start() throws RepositoryException {
         try {
             // start update operation
-            stateMgr.edit();
+            itemOps.edit();
         } catch (IllegalStateException ise) {
             aborted = true;
             String msg = "internal error: failed to start update operation";
@@ -648,7 +276,7 @@ public class WorkspaceImporter implements Importer, Constants {
         }
 
         boolean succeeded = false;
-        NodeState parent = null;
+        NodeState parent;
         try {
             // check sanity of workspace/session first
             wsp.sanityCheck();
@@ -675,20 +303,20 @@ public class WorkspaceImporter implements Importer, Constants {
                 NodeState.ChildNodeEntry entry =
                         parent.getChildNodeEntry(nodeName, 1);
                 NodeId idExisting = new NodeId(entry.getUUID());
-                NodeState existing = (NodeState) stateMgr.getItemState(idExisting);
+                NodeState existing = (NodeState) itemOps.getItemState(idExisting);
                 NodeDef def = ntReg.getNodeDef(existing.getDefinitionId());
 
                 if (!def.allowsSameNameSiblings()) {
                     // existing doesn't allow same-name siblings,
                     // check for potential conflicts
                     EffectiveNodeType entExisting =
-                            wsp.getEffectiveNodeType(existing);
+                            itemOps.getEffectiveNodeType(existing);
                     if (def.isProtected() && entExisting.includesNodeType(ntName)) {
                         // skip protected node
                         parents.push(null); // push null onto stack for skipped node
                         succeeded = true;
                         log.debug("skipping protected node "
-                                + resolveJCRPath(existing.getId()));
+                                + itemOps.safeGetJCRPath(existing.getId()));
                         return;
                     }
                     if (def.isAutoCreated() && entExisting.includesNodeType(ntName)) {
@@ -696,7 +324,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         // no need to create it
                         node = existing;
                     } else {
-                        throw new ItemExistsException(resolveJCRPath(existing.getId()));
+                        throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getId()));
                     }
                 }
             }
@@ -707,7 +335,7 @@ public class WorkspaceImporter implements Importer, Constants {
                     // no potential uuid conflict, always create new node
 
                     NodeDef def =
-                            wsp.findApplicableNodeDefinition(nodeName, ntName, parent);
+                            itemOps.findApplicableNodeDefinition(nodeName, ntName, parent);
                     if (def.isProtected()) {
                         // skip protected node
                         parents.push(null); // push null onto stack for skipped node
@@ -719,19 +347,18 @@ public class WorkspaceImporter implements Importer, Constants {
                     // check if new node can be added (check access rights &
                     // node type constraints only, assume locking & versioning status
                     // has already been checked on ancestor)
-                    wsp.checkAddNode(parent, nodeName, ntName,
-                            WorkspaceImpl.CHECK_ACCESS
-                            | WorkspaceImpl.CHECK_CONSTRAINTS);
+                    itemOps.checkAddNode(parent, nodeName, ntName,
+                            BatchedItemOperations.CHECK_ACCESS
+                            | BatchedItemOperations.CHECK_CONSTRAINTS);
                     // do create new node
-                    node = createNode(parent, nodeName, ntName, mixins, null, def);
+                    node = itemOps.createNodeState(parent, nodeName, ntName, mixins, null, def);
                 } else {
                     // potential uuid conflict
                     NodeState conflicting;
 
                     try {
-                        conflicting =
-                                (NodeState) stateMgr.getItemState(new NodeId(uuid));
-                    } catch (NoSuchItemStateException nsise) {
+                        conflicting = itemOps.getNodeState(new NodeId(uuid));
+                    } catch (ItemNotFoundException infe) {
                         conflicting = null;
                     }
                     if (conflicting != null) {
@@ -741,7 +368,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         // create new with given uuid
 
                         NodeDef def =
-                                wsp.findApplicableNodeDefinition(nodeName, ntName, parent);
+                                itemOps.findApplicableNodeDefinition(nodeName, ntName, parent);
                         if (def.isProtected()) {
                             // skip protected node
                             parents.push(null); // push null onto stack for skipped node
@@ -753,11 +380,11 @@ public class WorkspaceImporter implements Importer, Constants {
                         // check if new node can be added (check access rights &
                         // node type constraints only, assume locking & versioning status
                         // has already been checked on ancestor)
-                        wsp.checkAddNode(parent, nodeName, ntName,
-                                WorkspaceImpl.CHECK_ACCESS
-                                | WorkspaceImpl.CHECK_CONSTRAINTS);
+                        itemOps.checkAddNode(parent, nodeName, ntName,
+                                BatchedItemOperations.CHECK_ACCESS
+                                | BatchedItemOperations.CHECK_CONSTRAINTS);
                         // do create new node
-                        node = createNode(parent, nodeName, ntName, mixins, uuid, def);
+                        node = itemOps.createNodeState(parent, nodeName, ntName, mixins, uuid, def);
                     }
                 }
             }
@@ -778,12 +405,12 @@ public class WorkspaceImporter implements Importer, Constants {
                     // a property with that name already exists...
                     PropertyId idExisting = new PropertyId(node.getUUID(), propName);
                     PropertyState existing =
-                            (PropertyState) stateMgr.getItemState(idExisting);
+                            (PropertyState) itemOps.getItemState(idExisting);
                     def = ntReg.getPropDef(existing.getDefinitionId());
                     if (def.isProtected()) {
                         // skip protected property
                         log.debug("skipping protected property "
-                                + resolveJCRPath(idExisting));
+                                + itemOps.safeGetJCRPath(idExisting));
                         continue;
                     }
                     if (def.isAutoCreated() && (existing.getType() == type
@@ -793,7 +420,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         // no need to create it
                         prop = existing;
                     } else {
-                        throw new ItemExistsException(resolveJCRPath(existing.getId()));
+                        throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getId()));
                     }
                 }
                 if (prop == null) {
@@ -805,16 +432,16 @@ public class WorkspaceImporter implements Importer, Constants {
                         // could be single- or multi-valued (n == 1)
                         try {
                             // try single-valued
-                            def = wsp.findApplicablePropertyDefinition(propName,
+                            def = itemOps.findApplicablePropertyDefinition(propName,
                                     type, false, node);
                         } catch (ConstraintViolationException cve) {
                             // try multi-valued
-                            def = wsp.findApplicablePropertyDefinition(propName,
+                            def = itemOps.findApplicablePropertyDefinition(propName,
                                     type, true, node);
                         }
                     } else {
                         // can only be multi-valued (n == 0 || n > 1)
-                        def = wsp.findApplicablePropertyDefinition(propName,
+                        def = itemOps.findApplicablePropertyDefinition(propName,
                                 type, true, node);
                     }
 
@@ -825,12 +452,12 @@ public class WorkspaceImporter implements Importer, Constants {
                     }
 
                     // create new property
-                    prop = createProperty(node, propName, type, def);
+                    prop = itemOps.createPropertyState(node, propName, type, def);
                 }
 
                 // check multi-valued characteristic
                 if ((tva.length == 0 || tva.length > 1) && !def.isMultiple()) {
-                    throw new ConstraintViolationException(resolveJCRPath(prop.getId())
+                    throw new ConstraintViolationException(itemOps.safeGetJCRPath(prop.getId())
                             + " is not multi-valued");
                 }
 
@@ -898,14 +525,13 @@ public class WorkspaceImporter implements Importer, Constants {
                         iva[i] = InternalValue.create(serValue, targetType,
                                 nsContext);
                     }
-
                 }
 
                 // set values
                 prop.setValues(iva);
 
-                // make sure node is valid according to its definition
-                wsp.validate(prop);
+                // make sure property is valid according to its definition
+                itemOps.validate(prop);
 
                 if (prop.getType() == PropertyType.REFERENCE) {
                     // store reference for later resolution
@@ -913,27 +539,22 @@ public class WorkspaceImporter implements Importer, Constants {
                 }
 
                 // store property
-                stateMgr.store(prop);
+                itemOps.store(prop);
             }
 
             // store affected nodes
-            stateMgr.store(node);
-            stateMgr.store(parent);
+            itemOps.store(node);
+            itemOps.store(parent);
 
             // push current node onto stack of parents
             parents.push(node);
 
             succeeded = true;
-        } catch (ItemStateException ise) {
-            String msg = "internal error: failed to store state of "
-                    + resolveJCRPath(parent.getId());
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
         } finally {
             if (!succeeded) {
                 // update operation failed, cancel all modifications
                 aborted = true;
-                stateMgr.cancel();
+                itemOps.cancel();
             }
         }
     }
@@ -957,16 +578,16 @@ public class WorkspaceImporter implements Importer, Constants {
             wsp.sanityCheck();
 
             // make sure node is valid according to its definition
-            wsp.validate(node);
+            itemOps.validate(node);
 
             // we're done with that node, now store its state
-            stateMgr.store(node);
+            itemOps.store(node);
             succeeded = true;
         } finally {
             if (!succeeded) {
                 // update operation failed, cancel all modifications
                 aborted = true;
-                stateMgr.cancel();
+                itemOps.cancel();
             }
         }
     }
@@ -1013,36 +634,29 @@ public class WorkspaceImporter implements Importer, Constants {
                 }
                 if (modified) {
                     prop.setValues(newVals);
-                    stateMgr.store(prop);
+                    itemOps.store(prop);
                 }
             }
             refTracker.clear();
 
             // make sure import target is valid according to its definition
-            wsp.validate(importTarget);
+            itemOps.validate(importTarget);
 
             // finally store the state of the import target
             // (the parent of the imported subtree)
-            stateMgr.store(importTarget);
+            itemOps.store(importTarget);
             succeeded = true;
         } finally {
             if (!succeeded) {
                 // update operation failed, cancel all modifications
                 aborted = true;
-                stateMgr.cancel();
+                itemOps.cancel();
             }
         }
 
         if (!aborted) {
-            try {
-                // finish update
-                stateMgr.update();
-            } catch (ItemStateException ise) {
-                aborted = true;
-                String msg = "internal error: failed to finish update operation";
-                log.debug(msg);
-                throw new RepositoryException(msg, ise);
-            }
+            // finish update
+            itemOps.update();
         }
     }
 }
