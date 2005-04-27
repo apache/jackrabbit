@@ -170,7 +170,7 @@ public class VirtualNodeState extends NodeState implements Constants {
      * @return
      * @throws RepositoryException
      */
-    private VirtualPropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued)
+    protected VirtualPropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued)
             throws RepositoryException {
 
         VirtualPropertyState prop = (VirtualPropertyState) properties.get(name);
@@ -254,24 +254,4 @@ public class VirtualNodeState extends NodeState implements Constants {
         }
         stateRefs.add(state);
     }
-
-    /**
-     * Removes a hard reference to another state
-     * @param state
-     */
-    public void removeStateReferences(NodeState state) {
-        if (stateRefs != null) {
-            stateRefs.remove(state);
-        }
-    }
-
-    /**
-     * Returns the hard references of this state
-     */
-    public HashSet removeAllStateReferences() {
-        HashSet set = stateRefs;
-        stateRefs = null;
-        return set;
-    }
-
 }
