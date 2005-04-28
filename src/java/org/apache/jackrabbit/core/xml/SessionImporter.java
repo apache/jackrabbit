@@ -125,7 +125,7 @@ public class SessionImporter implements Importer {
             if (importTargetNode.getPath().startsWith(conflicting.getPath())) {
                 String msg = "cannot remove ancestor node";
                 log.debug(msg);
-                throw new RepositoryException(msg);
+                throw new ConstraintViolationException (msg);
             }
             // remove conflicting
             conflicting.remove();

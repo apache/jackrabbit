@@ -30,15 +30,6 @@ import java.util.List;
  */
 public interface Importer {
 
-    int IMPORT_UUID_CREATE_NEW =
-            ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
-    int IMPORT_UUID_COLLISION_REMOVE_EXISTING =
-            ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING;
-    int IMPORT_UUID_COLLISION_REPLACE_EXISTING =
-            ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING;
-    int IMPORT_UUID_COLLISION_THROW =
-            ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW;
-
     /**
      * @throws RepositoryException
      */
