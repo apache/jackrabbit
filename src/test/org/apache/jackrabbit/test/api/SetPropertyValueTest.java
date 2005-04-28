@@ -21,9 +21,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Value;
 import javax.jcr.Node;
 
-import javax.jcr.StringValue;
-import javax.jcr.BooleanValue;
-import javax.jcr.LongValue;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
 
@@ -43,8 +40,8 @@ public class SetPropertyValueTest extends AbstractJCRTest {
 
     private Node testNode;
 
-    private Value v1 = new StringValue("abc");
-    private Value v2 = new StringValue("xyz");
+    private Value v1;
+    private Value v2;
 
     private Value[] vArray1 = new Value[3];
     private Value[] vArray2 = new Value[3];
@@ -56,20 +53,23 @@ public class SetPropertyValueTest extends AbstractJCRTest {
         super.setUp();
         testNode = testRootNode.addNode(nodeName1, testNodeType);
 
-        vArray1[0] = new StringValue("a");
-        vArray1[1] = new StringValue("b");
-        vArray1[2] = new StringValue("c");
+        v1 = superuser.getValueFactory().createValue("abc");
+        v2 = superuser.getValueFactory().createValue("xyz");
 
-        vArray2[0] = new StringValue("x");
-        vArray2[1] = new StringValue("y");
-        vArray2[2] = new StringValue("z");
+        vArray1[0] = superuser.getValueFactory().createValue("a");
+        vArray1[1] = superuser.getValueFactory().createValue("b");
+        vArray1[2] = superuser.getValueFactory().createValue("c");
 
-        vArrayMixed[0] = new StringValue("abc");
-        vArrayMixed[1] = new BooleanValue(true);
-        vArrayMixed[2] = new LongValue(2147483650L);
+        vArray2[0] = superuser.getValueFactory().createValue("x");
+        vArray2[1] = superuser.getValueFactory().createValue("y");
+        vArray2[2] = superuser.getValueFactory().createValue("z");
 
-        vArrayWithNulls[1] = new StringValue("a");
-        vArrayWithNulls[3] = new StringValue("z");
+        vArrayMixed[0] = superuser.getValueFactory().createValue("abc");
+        vArrayMixed[1] = superuser.getValueFactory().createValue(true);
+        vArrayMixed[2] = superuser.getValueFactory().createValue(2147483650L);
+
+        vArrayWithNulls[1] = superuser.getValueFactory().createValue("a");
+        vArrayWithNulls[3] = superuser.getValueFactory().createValue("z");
     }
 
 

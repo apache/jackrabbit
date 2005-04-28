@@ -77,7 +77,7 @@ public class CanSetPropertyTest extends AbstractJCRTest {
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value value = NodeTypeUtil.getValueOfType(propDef.getRequiredType());
+        Value value = NodeTypeUtil.getValueOfType(superuser, propDef.getRequiredType());
 
         assertFalse("canSetProperty(String propertyName, Value value) must " +
                 "return false if the property is protected.",
@@ -100,7 +100,7 @@ public class CanSetPropertyTest extends AbstractJCRTest {
         }
 
         NodeType nodeType = propDef.getDeclaringNodeType();
-        Value value = NodeTypeUtil.getValueOfType(propDef.getRequiredType());
+        Value value = NodeTypeUtil.getValueOfType(superuser, propDef.getRequiredType());
 
         assertFalse("canSetProperty(String propertyName, Value value) must " +
                 "return false if the property is multiple.",

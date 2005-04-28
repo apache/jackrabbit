@@ -24,8 +24,6 @@ import javax.jcr.Workspace;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.NameValue;
-import javax.jcr.PathValue;
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Property;
@@ -230,9 +228,9 @@ class TreeComparator extends AbstractJCRTest {
             // Boolean
             pt.setProperty(sc.booleanTestProperty, true);
             // Name
-            pt.setProperty(sc.nameTestProperty, NameValue.valueOf(jcrPrimaryType));
+            pt.setProperty(sc.nameTestProperty, superuser.getValueFactory().createValue(jcrPrimaryType, PropertyType.NAME));
             // Path
-            pt.setProperty(sc.pathTestProperty, PathValue.valueOf("paths/dont/have/to/point/anywhere"));
+            pt.setProperty(sc.pathTestProperty, superuser.getValueFactory().createValue("paths/dont/have/to/point/anywhere", PropertyType.PATH));
             // Reference: Note that I only check if the node exists. We do not specify what happens with
             // the UUID during serialization.
             if (!referenceable.isNodeType(mixReferenceable)) {

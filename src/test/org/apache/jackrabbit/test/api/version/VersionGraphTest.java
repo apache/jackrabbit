@@ -20,7 +20,6 @@ import javax.jcr.version.Version;
 import javax.jcr.RepositoryException;
 import javax.jcr.Property;
 import javax.jcr.Value;
-import javax.jcr.ReferenceValue;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
 /**
@@ -64,9 +63,9 @@ public class VersionGraphTest extends AbstractVersionTest {
             fail("The jcr:predecessors property of a versionable node must be initialized to contain a single value");
         }
 
-        ReferenceValue initialVal = (ReferenceValue) values[0];
+        Value initialVal = values[0];
 
-        assertTrue("The jcr:predecessors property of a versionable node is initialized to contain a single UUID, that of the root version", initialVal.equals(new ReferenceValue(rV)));
+        assertTrue("The jcr:predecessors property of a versionable node is initialized to contain a single UUID, that of the root version", initialVal.equals(superuser.getValueFactory().createValue(rV)));
     }
 
     /**

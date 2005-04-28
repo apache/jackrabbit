@@ -26,10 +26,8 @@ import javax.jcr.Property;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyIterator;
-import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
-import javax.jcr.ReferenceValue;
 
 import java.util.GregorianCalendar;
 import java.util.Calendar;
@@ -403,7 +401,7 @@ public class VersionTest extends AbstractVersionTest {
      */
     public void testGetUUID() throws Exception {
         List successorValues = Arrays.asList(versionableNode.getVersionHistory().getRootVersion().getProperty(jcrSuccessors).getValues());
-        assertTrue("Version.getUUID() did not return the right UUID", successorValues.contains(new ReferenceValue(version)));
+        assertTrue("Version.getUUID() did not return the right UUID", successorValues.contains(superuser.getValueFactory().createValue(version)));
     }
 
     /**
@@ -636,9 +634,9 @@ public class VersionTest extends AbstractVersionTest {
 
         // create Value[] object
         Value[] vArray = new Value[3];
-        vArray[0] = new StringValue("abc");
-        vArray[1] = new StringValue("xyz");
-        vArray[2] = new StringValue("123");
+        vArray[0] = superuser.getValueFactory().createValue("abc");
+        vArray[1] = superuser.getValueFactory().createValue("xyz");
+        vArray[2] = superuser.getValueFactory().createValue("123");
 
         // create String array
         String[] s = {"abc", "xyz", "123"};
@@ -707,7 +705,7 @@ public class VersionTest extends AbstractVersionTest {
         } catch (ConstraintViolationException success) {
         }
         try {
-            Value v = new StringValue("abc");
+            Value v = superuser.getValueFactory().createValue("abc");
             version.setProperty(propertyName1, v);
             version.save();
             fail("Version should be read-only: Version.setProperty(String,Value) did not throw a ConstraintViolationException");

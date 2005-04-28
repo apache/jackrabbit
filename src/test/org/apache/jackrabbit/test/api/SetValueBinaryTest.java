@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
-import javax.jcr.BinaryValue;
 import javax.jcr.Node;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -45,7 +44,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
     /**
      * The binary value
      */
-    private BinaryValue value;
+    private Value value;
 
     /**
      * The binary data
@@ -67,13 +66,13 @@ public class SetValueBinaryTest extends AbstractJCRTest {
 
         // initialize some binary value
         data = createRandomString(10).getBytes();
-        value = new BinaryValue(new ByteArrayInputStream(data));
+        value = superuser.getValueFactory().createValue(new ByteArrayInputStream(data));
 
         // create a new node under the testRootNode
         node = testRootNode.addNode(nodeName1, testNodeType);
 
         // create a new single-value property and save it
-        property1 = node.setProperty(propertyName1, new BinaryValue(new ByteArrayInputStream(new byte[0])));
+        property1 = node.setProperty(propertyName1, superuser.getValueFactory().createValue(new ByteArrayInputStream(new byte[0])));
         superuser.save();
     }
 
@@ -118,7 +117,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
      * the parent Node
      */
     public void testRemoveBooleanParent() throws RepositoryException {
-        property1.setValue((BinaryValue) null);
+        property1.setValue((Value) null);
         node.save();
 
         try {

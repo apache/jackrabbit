@@ -82,44 +82,44 @@ public class CanSetPropertyStringTest extends AbstractJCRTest {
         NodeType nodeType = propDef.getDeclaringNodeType();
 
 
-        Value stringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
+        Value stringValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING);
 
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type String and value is a StringValue",
                 nodeType.canSetProperty(propDef.getName(), stringValue));
 
-        Value binaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
+        Value binaryValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.BINARY);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type String and value is a BinaryValue " +
                 "and is UTF-8",
                 nodeType.canSetProperty(propDef.getName(), binaryValue));
 
-        Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
+        Value dateValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.DATE);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type String and value is a DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValue));
 
-        Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
+        Value doubleValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.DOUBLE);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type String and value is a DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValue));
 
-        Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
+        Value longValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.LONG);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type String and value is a LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValue));
 
-        Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
+        Value booleanValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.BOOLEAN);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type String and value is a BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValue));
 
-        Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
+        Value nameValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.NAME);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type String and value is a NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValue));
 
-        Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
+        Value pathValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.PATH);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type String and value is a PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValue));
@@ -143,50 +143,50 @@ public class CanSetPropertyStringTest extends AbstractJCRTest {
         NodeType nodeType = propDef.getDeclaringNodeType();
 
 
-        Value stringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
+        Value stringValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING);
         Value stringValues[] = new Value[] {stringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type String and values are of type StringValue",
                 nodeType.canSetProperty(propDef.getName(), stringValues));
 
-        Value binaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
+        Value binaryValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.BINARY);
         Value binaryValues[] = new Value[] {binaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type String and values are of type BinaryValue " +
                 "and is UTF-8",
                 nodeType.canSetProperty(propDef.getName(), binaryValues));
 
-        Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
+        Value dateValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.DATE);
         Value dateValues[] = new Value[] {dateValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type String and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
-        Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
+        Value doubleValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.DOUBLE);
         Value doubleValues[] = new Value[] {doubleValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type String and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
-        Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
+        Value longValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.LONG);
         Value longValues[] = new Value[] {longValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type String and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
-        Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
+        Value booleanValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.BOOLEAN);
         Value booleanValues[] = new Value[] {booleanValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type String and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
-        Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
+        Value nameValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.NAME);
         Value nameValues[] = new Value[] {nameValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type String and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
-        Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
+        Value pathValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.PATH);
         Value pathValues[] = new Value[] {pathValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type String and values are of type PathValue",
@@ -208,7 +208,7 @@ public class CanSetPropertyStringTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (value == null) {
             throw new NotExecutableException("No string property def with " +
                     "testable value constraints has been found");
@@ -236,7 +236,7 @@ public class CanSetPropertyStringTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (value == null) {
             throw new NotExecutableException("No multiple string property def with " +
                     "testable value constraints has been found");

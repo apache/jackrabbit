@@ -82,43 +82,43 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
         NodeType nodeType = propDef.getDeclaringNodeType();
 
 
-        Value stringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
+        Value stringValue = NodeTypeUtil.getValueOfType(session, PropertyType.STRING);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type Boolean and value is a StringValue",
                 nodeType.canSetProperty(propDef.getName(), stringValue));
 
-        Value binaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
+        Value binaryValue = NodeTypeUtil.getValueOfType(session, PropertyType.BINARY);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type Boolean and value is a BinaryValue" +
                 "in UTF-8",
                 nodeType.canSetProperty(propDef.getName(), binaryValue));
 
-        Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
+        Value dateValue = NodeTypeUtil.getValueOfType(session, PropertyType.DATE);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Boolean and value is a DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValue));
 
-        Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
+        Value doubleValue = NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Boolean and value is a DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValue));
 
-        Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
+        Value longValue = NodeTypeUtil.getValueOfType(session, PropertyType.LONG);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Boolean and value is a LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValue));
 
-        Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
+        Value booleanValue = NodeTypeUtil.getValueOfType(session, PropertyType.BOOLEAN);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type Boolean and value is a BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValue));
 
-        Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
+        Value nameValue = NodeTypeUtil.getValueOfType(session, PropertyType.NAME);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Boolean and value is a NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValue));
 
-        Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
+        Value pathValue = NodeTypeUtil.getValueOfType(session, PropertyType.PATH);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Boolean and value is a PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValue));
@@ -143,33 +143,33 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
         NodeType nodeType = propDef.getDeclaringNodeType();
 
 
-        Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
+        Value booleanValue = NodeTypeUtil.getValueOfType(session, PropertyType.BOOLEAN);
 
-        Value stringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
+        Value stringValue = NodeTypeUtil.getValueOfType(session, PropertyType.STRING);
         Value stringValues[] = new Value[] {stringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Boolean and values are of type StringValue",
                 nodeType.canSetProperty(propDef.getName(), stringValues));
 
-        Value binaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
+        Value binaryValue = NodeTypeUtil.getValueOfType(session, PropertyType.BINARY);
         Value binaryValues[] = new Value[] {binaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Boolean and values are of type BinaryValue",
                 nodeType.canSetProperty(propDef.getName(), binaryValues));
 
-        Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
+        Value dateValue = NodeTypeUtil.getValueOfType(session, PropertyType.DATE);
         Value dateValues[] = new Value[] {booleanValue, dateValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValues));
 
-        Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
+        Value doubleValue = NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE);
         Value doubleValues[] = new Value[] {booleanValue, doubleValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
-        Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
+        Value longValue = NodeTypeUtil.getValueOfType(session, PropertyType.LONG);
         Value longValues[] = new Value[] {booleanValue, longValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type LongValue",
@@ -180,13 +180,13 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
                 "true if the property is of type Boolean and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
-        Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
+        Value nameValue = NodeTypeUtil.getValueOfType(session, PropertyType.NAME);
         Value nameValues[] = new Value[] {booleanValue, nameValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
-        Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
+        Value pathValue = NodeTypeUtil.getValueOfType(session, PropertyType.PATH);
         Value pathValues[] = new Value[] {booleanValue, pathValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Boolean and values are of type PathValue",
@@ -208,7 +208,7 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(session, propDef, false);
         if (value == null) {
             throw new NotExecutableException("No boolean property def with " +
                     "testable value constraints has been found");
@@ -236,7 +236,7 @@ public class CanSetPropertyBooleanTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(session, propDef, false);
         if (value == null) {
             throw new NotExecutableException("No multiple boolean property def with " +
                     "testable value constraints has been found");

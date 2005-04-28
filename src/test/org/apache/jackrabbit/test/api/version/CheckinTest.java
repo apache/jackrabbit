@@ -19,7 +19,6 @@ package org.apache.jackrabbit.test.api.version;
 import javax.jcr.version.Version;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ReferenceValue;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import java.util.Arrays;
@@ -105,9 +104,9 @@ public class CheckinTest extends AbstractVersionTest {
      */
     public void testBaseVersionAfterCheckin() throws RepositoryException {
         Version v = versionableNode.checkin();
-        ReferenceValue baseVersionRef = (ReferenceValue) versionableNode.getProperty(jcrBaseVersion).getValue();
+        Value baseVersionRef = versionableNode.getProperty(jcrBaseVersion).getValue();
 
-        assertEquals("Checked-in node's jcr:baseVersion property is set to refer to the version created on checkin.", new ReferenceValue(v), baseVersionRef);
+        assertEquals("Checked-in node's jcr:baseVersion property is set to refer to the version created on checkin.", superuser.getValueFactory().createValue(v), baseVersionRef);
     }
 
     /**

@@ -38,7 +38,7 @@ public class ReferencesTest extends AbstractJCRTest {
 	n1.addMixin(mixReferenceable);
 	// create references: n2.p1 -> n1
 	Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-	Property p1 = n2.setProperty(propertyName1, new Value[]{new ReferenceValue(n1)});
+	Property p1 = n2.setProperty(propertyName1, new Value[]{superuser.getValueFactory().createValue(n1)});
 	testRootNode.save();
 	PropertyIterator iter = n1.getReferences();
 	if (iter.hasNext()) {

@@ -24,7 +24,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.Node;
-import javax.jcr.ReferenceValue;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -62,7 +61,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No boolean property def with " +
                     "testable value constraints has been found");
@@ -121,7 +120,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No date property def with " +
                     "testable value constraints has been found");
@@ -180,7 +179,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No double property def with " +
                     "testable value constraints has been found");
@@ -239,8 +238,8 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied1 = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
-        Value valueNotSatisfied2 = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied1 = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
+        Value valueNotSatisfied2 = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied1 == null || valueNotSatisfied2 == null) {
             throw new NotExecutableException("No binary property def with " +
                     "testable value constraints has been found");
@@ -299,7 +298,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No long property def with " +
                     "testable value constraints has been found");
@@ -412,7 +411,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
 
         // test of signature setProperty(String name, Value value)
         try {
-            node.setProperty(propDef.getName(), new ReferenceValue(nodeNotSatisfied));
+            node.setProperty(propDef.getName(), superuser.getValueFactory().createValue(nodeNotSatisfied));
             node.save();
             fail("setProperty(String name, Value value) must throw a " +
                     "ConstraintViolationException if the change would violate a " +
