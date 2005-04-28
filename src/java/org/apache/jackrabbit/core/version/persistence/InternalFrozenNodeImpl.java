@@ -49,6 +49,28 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         implements InternalFrozenNode, Constants {
 
     /**
+     * checkin mode init. specifies, that node is only initialized
+     */
+    public static final int MODE_INIT = 0;
+
+    /**
+     * checkin mode version. specifies, that the OPV value should be used to
+     * determine the checkin behaviour.
+     */
+    public static final int MODE_VERSION = 1;
+
+    /**
+     * checkin mode copy. specifies, that the items are always copied.
+     */
+    private static final int MODE_COPY = 2;
+
+    /**
+     * mode flag specifies, that the mode should be recursed. otherwise i
+     * will be redetermined by the opv.
+     */
+    private static final int MODE_COPY_RECURSIVE = 6;
+
+    /**
      * the underlying persistance node
      */
     private PersistentNode node;
@@ -245,8 +267,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @throws RepositoryException
      */
     protected static PersistentNode checkin(PersistentNode parent, QName name,
-                                            NodeImpl src, boolean initOnly,
-                                            boolean forceCopy)
+                                            NodeImpl src, int mode)
             throws RepositoryException {
 
         PersistentNode node;
@@ -270,14 +291,13 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             }
             node.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
         }
-
-        if (!initOnly) {
+        if (mode != MODE_INIT) {
             // add the properties
             PropertyIterator piter = src.getProperties();
             while (piter.hasNext()) {
                 PropertyImpl prop = (PropertyImpl) piter.nextProperty();
                 int opv;
-                if (forceCopy) {
+                if ((mode & MODE_COPY) > 0) {
                     opv = OnParentVersionAction.COPY;
                 } else {
                     opv = prop.getDefinition().getOnParentVersion();
@@ -303,7 +323,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             while (niter.hasNext()) {
                 NodeImpl child = (NodeImpl) niter.nextNode();
                 int opv;
-                if (forceCopy) {
+                if ((mode & MODE_COPY_RECURSIVE) > 0) {
                     opv = OnParentVersionAction.COPY;
                 } else {
                     opv = child.getDefinition().getOnParentVersion();
@@ -325,9 +345,11 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                                     InternalValue.create(child.getBaseVersion().getUUID()));
                             break;
                         }
-                        // else copy
+                        // else copy but do not recurse
+                        checkin(node, child.getQName(), child, MODE_COPY);
+                        break;
                     case OnParentVersionAction.COPY:
-                        checkin(node, child.getQName(), child, false, true);
+                        checkin(node, child.getQName(), child, MODE_COPY_RECURSIVE);
                         break;
                 }
             }

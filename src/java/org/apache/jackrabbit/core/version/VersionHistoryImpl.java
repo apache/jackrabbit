@@ -94,9 +94,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             }
             return (Version) session.getNodeByUUID(v.getId());
         } catch (IllegalNameException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         } catch (UnknownPrefixException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         }
     }
 
@@ -112,9 +112,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             }
             return (Version) session.getNodeByUUID(v.getId());
         } catch (IllegalNameException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         } catch (UnknownPrefixException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         }
     }
 
@@ -129,9 +129,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                     QName.fromJCRName(label, session.getNamespaceResolver()),
                     move);
         } catch (IllegalNameException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         } catch (UnknownPrefixException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         }
     }
 
@@ -148,9 +148,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
         } catch (IllegalNameException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         } catch (UnknownPrefixException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         }
     }
 
@@ -213,9 +213,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
             return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
         } catch (IllegalNameException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         } catch (UnknownPrefixException e) {
-            throw new RepositoryException(e);
+            throw new VersionException(e);
         }
     }
 
