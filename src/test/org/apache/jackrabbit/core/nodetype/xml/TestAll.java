@@ -31,9 +31,10 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;

@@ -23,8 +23,8 @@ import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.query.AndQueryNode;
+import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.ExactQueryNode;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.NodeTypeQueryNode;
@@ -34,12 +34,13 @@ import org.apache.jackrabbit.core.query.OrderQueryNode;
 import org.apache.jackrabbit.core.query.PathQueryNode;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryConstants;
+import org.apache.jackrabbit.core.query.QueryNode;
 import org.apache.jackrabbit.core.query.QueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
-import org.apache.jackrabbit.core.query.QueryNode;
-import org.apache.jackrabbit.core.query.DerefQueryNode;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.util.ISO8601;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
@@ -56,7 +57,6 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.util.ISO8601;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -124,12 +124,12 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * Creates a new <code>LuceneQueryBuilder</code> instance.
      *
-     * @param root       the root node of the abstract query tree.
-     * @param session    of the user executing this query.
+     * @param root          the root node of the abstract query tree.
+     * @param session       of the user executing this query.
      * @param sharedItemMgr the shared item state manager of the workspace.
-     * @param nsMappings namespace resolver for internal prefixes.
-     * @param analyzer   for parsing the query statement of the contains function.
-     * @param propReg    the property type registry.
+     * @param nsMappings    namespace resolver for internal prefixes.
+     * @param analyzer      for parsing the query statement of the contains function.
+     * @param propReg       the property type registry.
      */
     private LuceneQueryBuilder(QueryRootNode root,
                                SessionImpl session,
@@ -149,12 +149,12 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      * Creates a lucene {@link org.apache.lucene.search.Query} tree from an
      * abstract query tree.
      *
-     * @param root       the root node of the abstract query tree.
-     * @param session    of the user executing the query.
+     * @param root          the root node of the abstract query tree.
+     * @param session       of the user executing the query.
      * @param sharedItemMgr the shared item state manager of the workspace.
-     * @param nsMappings namespace resolver for internal prefixes.
-     * @param analyzer   for parsing the query statement of the contains function.
-     * @param propReg    the property type registry to lookup type information.
+     * @param nsMappings    namespace resolver for internal prefixes.
+     * @param analyzer      for parsing the query statement of the contains function.
+     * @param propReg       the property type registry to lookup type information.
      * @return the lucene query tree.
      * @throws RepositoryException if an error occurs during the translation.
      */
@@ -675,7 +675,8 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
      * Wraps a constraint query around <code>q</code> that limits the nodes to
      * those where <code>propName</code> is the name of a single value property
      * on the node instance.
-     * @param q the query to wrap.
+     *
+     * @param q        the query to wrap.
      * @param propName the name of a property that only has one value.
      * @return the wrapped query <code>q</code>.
      */

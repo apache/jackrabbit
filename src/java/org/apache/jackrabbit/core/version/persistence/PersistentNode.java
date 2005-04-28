@@ -15,11 +15,12 @@
  */
 package org.apache.jackrabbit.core.version.persistence;
 
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.state.ItemState;

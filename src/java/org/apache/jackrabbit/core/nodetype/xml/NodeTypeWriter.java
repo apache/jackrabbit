@@ -25,7 +25,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;

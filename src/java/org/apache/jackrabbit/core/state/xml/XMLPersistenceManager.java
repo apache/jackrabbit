@@ -16,11 +16,13 @@
  */
 package org.apache.jackrabbit.core.state.xml;
 
-import org.apache.jackrabbit.core.BLOBFileValue;
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;

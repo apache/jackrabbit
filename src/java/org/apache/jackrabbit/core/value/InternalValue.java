@@ -14,26 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core;
+package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.util.ValueHelper;
+import org.apache.jackrabbit.core.util.ISO8601;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 
-import javax.jcr.BinaryValue;
-import javax.jcr.BooleanValue;
-import javax.jcr.DateValue;
-import javax.jcr.DoubleValue;
-import javax.jcr.LongValue;
-import javax.jcr.NameValue;
-import javax.jcr.PathValue;
 import javax.jcr.PropertyType;
-import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
-import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.util.ISO8601;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

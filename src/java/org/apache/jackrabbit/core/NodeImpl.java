@@ -35,7 +35,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.core.util.IteratorHelper;
-import org.apache.jackrabbit.core.util.ValueHelper;
+import org.apache.jackrabbit.core.value.ValueHelper;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.version.GenericVersionSelector;
 import org.apache.jackrabbit.core.version.InternalFreeze;
@@ -45,6 +45,8 @@ import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.ValueHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;

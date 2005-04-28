@@ -26,10 +26,11 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.query.TextFilterService;
 import org.apache.log4j.Logger;
 

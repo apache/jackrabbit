@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.util.ValueHelper;
+import org.apache.jackrabbit.core.value.ValueHelper;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;

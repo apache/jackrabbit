@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype.virtual;
 
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.ItemDef;

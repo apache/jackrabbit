@@ -17,8 +17,9 @@
 package org.apache.jackrabbit.core.virtual;
 
 import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;

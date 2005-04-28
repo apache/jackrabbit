@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
