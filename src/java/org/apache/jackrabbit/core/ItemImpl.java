@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
@@ -1225,9 +1226,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                         while (depIt.hasNext()) {
                             NodeId id = new NodeId((String) depIt.next());
                             if (!affectedIds.contains(id)) {
-                                // need to save the parent also
+                                // need to save the parent as well
                                 String msg = itemMgr.safeGetJCRPath(id)
-                                        + " needs to be saved also.";
+                                        + " needs to be saved as well.";
                                 log.debug(msg);
                                 throw new ConstraintViolationException(msg);
                             }

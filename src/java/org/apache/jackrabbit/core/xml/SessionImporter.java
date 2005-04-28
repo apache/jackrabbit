@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
@@ -25,7 +24,9 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.core.util.ValueHelper;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.ReferenceValue;
+import org.apache.jackrabbit.core.value.ValueHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ImportUUIDBehavior;
@@ -33,7 +34,6 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
-import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;

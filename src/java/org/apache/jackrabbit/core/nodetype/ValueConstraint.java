@@ -16,18 +16,20 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.BLOBFileValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.core.value.DateValue;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.log4j.Logger;
 
-import javax.jcr.DateValue;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -274,7 +276,7 @@ class NumericConstraint extends ValueConstraint {
                 upperInclusive = s.equals("]");
                 if (lowerLimit == null && upperLimit == null) {
                     String msg = "'" + definition + "' is not a valid value constraint"
-                         + " format for numeric types: neither lower- nor upper-limit specified";
+                            + " format for numeric types: neither lower- nor upper-limit specified";
                     log.debug(msg);
                     throw new InvalidConstraintException(msg);
                 }

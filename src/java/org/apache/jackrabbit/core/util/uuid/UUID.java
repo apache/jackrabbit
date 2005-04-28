@@ -173,11 +173,11 @@ public class UUID implements Constants, Serializable, Comparable {
      * @param uuidString the UUID formatted String to parse.
      *                   XXX begin modification by stefan@apache.org
      * @return Returns a UUID or null if the formatted string could not be parsed.
-     * @throws UUIDFormatException the String must be a properly formatted UUID String.
+     * @throws IllegalArgumentException the String must be a properly formatted UUID String.
      *                             XXX end modification by stefan@apache.org
      */
     //public static UUID fromString(String uuidString) throws UUIDFormatException {
-    public static UUID fromString(String uuidString) {
+    public static UUID fromString(String uuidString) throws IllegalArgumentException {
         String leanString = uuidString.toLowerCase();
         UUID tmpUUID = null;
 

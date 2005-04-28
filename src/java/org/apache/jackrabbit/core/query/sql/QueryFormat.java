@@ -16,49 +16,57 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.core.query.QueryNodeVisitor;
-import org.apache.jackrabbit.core.query.QueryRootNode;
-import org.apache.jackrabbit.core.query.OrQueryNode;
-import org.apache.jackrabbit.core.query.AndQueryNode;
-import org.apache.jackrabbit.core.query.NotQueryNode;
-import org.apache.jackrabbit.core.query.ExactQueryNode;
-import org.apache.jackrabbit.core.query.NodeTypeQueryNode;
-import org.apache.jackrabbit.core.query.TextsearchQueryNode;
-import org.apache.jackrabbit.core.query.PathQueryNode;
-import org.apache.jackrabbit.core.query.LocationStepQueryNode;
-import org.apache.jackrabbit.core.query.RelationQueryNode;
-import org.apache.jackrabbit.core.query.OrderQueryNode;
-import org.apache.jackrabbit.core.query.QueryNode;
-import org.apache.jackrabbit.core.query.QueryConstants;
-import org.apache.jackrabbit.core.query.DerefQueryNode;
+import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.query.AndQueryNode;
+import org.apache.jackrabbit.core.query.DerefQueryNode;
+import org.apache.jackrabbit.core.query.ExactQueryNode;
+import org.apache.jackrabbit.core.query.LocationStepQueryNode;
+import org.apache.jackrabbit.core.query.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.query.NotQueryNode;
+import org.apache.jackrabbit.core.query.OrQueryNode;
+import org.apache.jackrabbit.core.query.OrderQueryNode;
+import org.apache.jackrabbit.core.query.PathQueryNode;
+import org.apache.jackrabbit.core.query.QueryConstants;
+import org.apache.jackrabbit.core.query.QueryNode;
+import org.apache.jackrabbit.core.query.QueryNodeVisitor;
+import org.apache.jackrabbit.core.query.QueryRootNode;
+import org.apache.jackrabbit.core.query.RelationQueryNode;
+import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.util.ISO8601;
 
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.util.ISO8601;
-import java.util.Calendar;
-import java.util.TimeZone;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Calendar;
 import java.util.Iterator;
+import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Implements the query node tree serialization into a String.
  */
 class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
-    /** Will be used to resolve QNames */
+    /**
+     * Will be used to resolve QNames
+     */
     private final NamespaceResolver resolver;
 
-    /** The String representation of the query node tree */
+    /**
+     * The String representation of the query node tree
+     */
     private String statement;
 
-    /** List of exception objects created while creating the SQL string */
+    /**
+     * List of exception objects created while creating the SQL string
+     */
     private List exceptions = new ArrayList();
 
-    /** List of node types */
+    /**
+     * List of node types
+     */
     private List nodeTypes = new ArrayList();
 
     private QueryFormat(QueryRootNode root, NamespaceResolver resolver)
@@ -74,11 +82,12 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     /**
      * Creates a SQL <code>String</code> representation of the QueryNode tree
      * argument <code>root</code>.
-     * @param root the query node tree.
+     *
+     * @param root     the query node tree.
      * @param resolver to resolve QNames.
      * @return the SQL string representation of the QueryNode tree.
      * @throws InvalidQueryException the query node tree cannot be represented
-     *   as a SQL <code>String</code>.
+     *                               as a SQL <code>String</code>.
      */
     public static String toString(QueryRootNode root, NamespaceResolver resolver)
             throws InvalidQueryException {
@@ -87,6 +96,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
     /**
      * Returns the string representation.
+     *
      * @return the string representation.
      */
     public String toString() {
@@ -228,8 +238,8 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         QueryNode[] operands = node.getOperands();
         if (operands.length > 0) {
-                sb.append("NOT ");
-                operands[0].accept(this, sb);
+            sb.append("NOT ");
+            operands[0].accept(this, sb);
         }
         return sb;
     }
@@ -450,11 +460,12 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
      * <code>b</code> using the <code>NamespaceResolver</code>
      * <code>resolver</code>. The <code>name</code> is put in double quotes
      * if the local part of <code>name</code> contains a space character.
-     * @param name the <code>QName</code> to print.
+     *
+     * @param name     the <code>QName</code> to print.
      * @param resolver to resolve <code>name</code>.
-     * @param b where to output the <code>name</code>.
+     * @param b        where to output the <code>name</code>.
      * @throws NoPrefixDeclaredException if <code>name</code> contains a uri
-     *   that is not declared in <code>resolver</code>.
+     *                                   that is not declared in <code>resolver</code>.
      */
     private static void appendName(QName name,
                                    NamespaceResolver resolver,
@@ -491,9 +502,10 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
      * Returns <code>true</code> if <code>path</code> contains exactly one
      * step with a descendant-or-self axis and an explicit name test; returns
      * <code>false</code> otherwise.
+     *
      * @param path the path node.
      * @return <code>true</code> if <code>path</code> contains exactly one
-     * step with a descendant-or-self axis.
+     *         step with a descendant-or-self axis.
      */
     private static boolean containsDescendantOrSelf(PathQueryNode path) {
         LocationStepQueryNode[] steps = path.getPathSteps();
@@ -511,6 +523,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
      * location step which matches all node names. That is, matches any children
      * of a given node. That location step must be the last one in the sequence
      * of location steps.
+     *
      * @param path the path node.
      * @return <code>true</code> if the last step matches any node name.
      */

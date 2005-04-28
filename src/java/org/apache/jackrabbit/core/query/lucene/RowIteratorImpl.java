@@ -16,28 +16,28 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.IllegalNameException;
+import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.query.QueryConstants;
+import org.apache.jackrabbit.core.value.LongValue;
+import org.apache.jackrabbit.core.value.PathValue;
+import org.apache.jackrabbit.core.value.StringValue;
 
-import javax.jcr.query.RowIterator;
-import javax.jcr.query.Row;
-import javax.jcr.Value;
-import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathValue;
-import javax.jcr.LongValue;
-import javax.jcr.PropertyType;
-import javax.jcr.StringValue;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.HashSet;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
@@ -45,23 +45,30 @@ import java.util.HashSet;
  */
 class RowIteratorImpl implements RowIterator {
 
-    /** Iterator over nodes, that constitute the result set. */
+    /**
+     * Iterator over nodes, that constitute the result set.
+     */
     private final NodeIteratorImpl nodes;
 
-    /** Array of select property names */
+    /**
+     * Array of select property names
+     */
     private final QName[] properties;
 
-    /** The <code>NamespaceResolver</code> of the user <code>Session</code>. */
+    /**
+     * The <code>NamespaceResolver</code> of the user <code>Session</code>.
+     */
     private final NamespaceResolver resolver;
 
     /**
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
      * nodes.
-     * @param nodes a <code>NodeIteratorImpl</code> that contains the nodes of
-     * the query result.
+     *
+     * @param nodes      a <code>NodeIteratorImpl</code> that contains the nodes of
+     *                   the query result.
      * @param properties <code>QName</code> of the select properties.
-     * @param resolver <code>NamespaceResolver</code> of the user
-     *   <code>Session</code>.
+     * @param resolver   <code>NamespaceResolver</code> of the user
+     *                   <code>Session</code>.
      */
     RowIteratorImpl(NodeIteratorImpl nodes, QName[] properties, NamespaceResolver resolver) {
         this.nodes = nodes;
@@ -75,7 +82,7 @@ class RowIteratorImpl implements RowIterator {
      * @return the next <code>Row</code> in the iteration.
      * @throws NoSuchElementException if iteration has no more
      *                                <code>Row</code>s.
-    */
+     */
     public Row nextRow() throws NoSuchElementException {
         return new RowImpl(nodes.getScore(), nodes.nextNodeImpl());
     }
@@ -93,6 +100,7 @@ class RowIteratorImpl implements RowIterator {
 
     /**
      * Returns the number of <code>Row</code>s in this iterator.
+     *
      * @return the number of <code>Row</code>s in this iterator.
      */
     public long getSize() {
@@ -136,7 +144,7 @@ class RowIteratorImpl implements RowIterator {
      *
      * @return the next <code>Row</code> in the iteration.
      * @throws NoSuchElementException if iteration has no more <code>Row</code>s.
-    */
+     */
     public Object next() throws NoSuchElementException {
         return nextRow();
     }
@@ -149,22 +157,31 @@ class RowIteratorImpl implements RowIterator {
      */
     class RowImpl implements Row {
 
-        /** The score for this result row */
+        /**
+         * The score for this result row
+         */
         private final float score;
 
-        /** The underlying <code>Node</code> of this result row. */
+        /**
+         * The underlying <code>Node</code> of this result row.
+         */
         private final NodeImpl node;
 
-        /** Cached value array for returned by {@link #getValues()}. */
+        /**
+         * Cached value array for returned by {@link #getValues()}.
+         */
         private Value[] values;
 
-        /** Set of select property <code>QName</code>s. */
+        /**
+         * Set of select property <code>QName</code>s.
+         */
         private Set propertySet;
 
         /**
          * Creates a new <code>RowImpl</code> instance based on <code>node</code>.
+         *
          * @param score the score value for this result row
-         * @param node the underlying <code>Node</code> for this <code>Row</code>.
+         * @param node  the underlying <code>Node</code> for this <code>Row</code>.
          */
         RowImpl(float score, NodeImpl node) {
             this.score = score;
@@ -178,7 +195,7 @@ class RowIteratorImpl implements RowIterator {
          *
          * @return a <code>Value</code> array.
          * @throws RepositoryException if an error occurs while retrieving the
-         *  values from the <code>Node</code>.
+         *                             values from the <code>Node</code>.
          */
         public Value[] getValues() throws RepositoryException {
             if (values == null) {
@@ -223,9 +240,9 @@ class RowIteratorImpl implements RowIterator {
          *
          * @return a <code>Value</code>
          * @throws ItemNotFoundException if <code>propertyName</code> is not
-         * among the column names of the query result table.
-         * @throws RepositoryException if <code>propertyName</code> is not a
-         *  valid property name.
+         *                               among the column names of the query result table.
+         * @throws RepositoryException   if <code>propertyName</code> is not a
+         *                               valid property name.
          */
         public Value getValue(String propertyName) throws ItemNotFoundException, RepositoryException {
             if (propertySet == null) {

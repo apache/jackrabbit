@@ -16,43 +16,45 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.core.query.QueryRootNode;
-import org.apache.jackrabbit.core.query.AndQueryNode;
-import org.apache.jackrabbit.core.query.NodeTypeQueryNode;
-import org.apache.jackrabbit.core.query.NAryQueryNode;
-import org.apache.jackrabbit.core.query.OrQueryNode;
-import org.apache.jackrabbit.core.query.NotQueryNode;
-import org.apache.jackrabbit.core.query.OrderQueryNode;
-import org.apache.jackrabbit.core.query.RelationQueryNode;
-import org.apache.jackrabbit.core.query.QueryConstants;
-import org.apache.jackrabbit.core.query.QueryNode;
-import org.apache.jackrabbit.core.query.TextsearchQueryNode;
-import org.apache.jackrabbit.core.query.PathQueryNode;
-import org.apache.jackrabbit.core.query.LocationStepQueryNode;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.query.AndQueryNode;
+import org.apache.jackrabbit.core.query.LocationStepQueryNode;
+import org.apache.jackrabbit.core.query.NAryQueryNode;
+import org.apache.jackrabbit.core.query.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.query.NotQueryNode;
+import org.apache.jackrabbit.core.query.OrQueryNode;
+import org.apache.jackrabbit.core.query.OrderQueryNode;
+import org.apache.jackrabbit.core.query.PathQueryNode;
+import org.apache.jackrabbit.core.query.QueryConstants;
+import org.apache.jackrabbit.core.query.QueryNode;
+import org.apache.jackrabbit.core.query.QueryRootNode;
+import org.apache.jackrabbit.core.query.RelationQueryNode;
+import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.util.ISO8601;
 import org.apache.log4j.Logger;
 
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.util.ISO8601;
-import java.util.Date;
-import java.util.Calendar;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Arrays;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Implements the query builder for the JCR SQL syntax.
  */
 public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
-    /** logger instance for this class */
+    /**
+     * logger instance for this class
+     */
     private static final Logger log = Logger.getLogger(JCRSQLQueryBuilder.class);
 
     /**
@@ -61,26 +63,37 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      */
     private static final String DATE_PATTERN = "yyyy-MM-dd";
 
-    /** The root node of the sql query syntax tree */
+    /**
+     * The root node of the sql query syntax tree
+     */
     private final ASTQuery stmt;
 
-    /** The root query node */
+    /**
+     * The root query node
+     */
     private QueryRootNode root;
 
-    /** To resolve QNames */
+    /**
+     * To resolve QNames
+     */
     private NamespaceResolver resolver;
 
-    /** Query node to gather the constraints defined in the WHERE clause */
+    /**
+     * Query node to gather the constraints defined in the WHERE clause
+     */
     private final AndQueryNode constraintNode = new AndQueryNode(null);
 
-    /** List of PathQueryNode constraints that need to be merged */
+    /**
+     * List of PathQueryNode constraints that need to be merged
+     */
     private final List pathConstraints = new ArrayList();
 
     /**
      * Creates a new <code>JCRSQLQueryBuilder</code>.
+     *
      * @param statement the root node of the SQL syntax tree.
-     * @param resolver a namespace resolver to use for names in the
-     *   <code>statement</code>.
+     * @param resolver  a namespace resolver to use for names in the
+     *                  <code>statement</code>.
      */
     private JCRSQLQueryBuilder(ASTQuery statement, NamespaceResolver resolver) {
         this.stmt = statement;
@@ -89,8 +102,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /**
      * Creates a <code>QueryNode</code> tree from a SQL <code>statement</code>.
+     *
      * @param statement the SQL statement.
-     * @param resolver the namespace resolver to use.
+     * @param resolver  the namespace resolver to use.
      * @return the <code>QueryNode</code> tree.
      * @throws InvalidQueryException if <code>statement</code> is malformed.
      */
@@ -108,11 +122,12 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /**
      * Creates a String representation of the query node tree in SQL syntax.
-     * @param root the root of the query node tree.
+     *
+     * @param root     the root of the query node tree.
      * @param resolver to resolve QNames.
      * @return a String representation of the query node tree.
      * @throws InvalidQueryException if the query node tree cannot be converted
-     *   into a String representation due to restrictions in SQL.
+     *                               into a String representation due to restrictions in SQL.
      */
     public static String toString(QueryRootNode root, NamespaceResolver resolver)
             throws InvalidQueryException {
@@ -122,6 +137,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     /**
      * Parses the statement and returns the root node of the <code>QueryNode</code>
      * tree.
+     *
      * @return the root node of the <code>QueryNode</code> tree.
      */
     private QueryRootNode getRootNode() {
@@ -428,13 +444,14 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /**
      * Creates a new {@link org.apache.jackrabbit.core.query.RelationQueryNode}.
-     * @param parent the parent node for the created <code>RelationQueryNode</code>.
-     * @param propertyName the property name for the relation.
+     *
+     * @param parent        the parent node for the created <code>RelationQueryNode</code>.
+     * @param propertyName  the property name for the relation.
      * @param operationType the operation type.
-     * @param literal the literal value for the relation.
+     * @param literal       the literal value for the relation.
      * @return a <code>RelationQueryNode</code>.
      * @throws IllegalArgumentException if the literal value does not conform
-     * to its type. E.g. a malformed String representation of a date.
+     *                                  to its type. E.g. a malformed String representation of a date.
      */
     private RelationQueryNode createRelationQueryNode(QueryNode parent,
                                                       QName propertyName,
@@ -476,7 +493,8 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /**
      * Creates <code>LocationStepQueryNode</code>s from a <code>path</code>.
-     * @param path the path pattern
+     *
+     * @param path      the path pattern
      * @param operation the type of the parent node
      */
     private void createPathQuery(String path, int operation) {
@@ -555,9 +573,10 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     /**
      * Translates a pattern using the escape character <code>from</code> into
      * a pattern using the escape character <code>to</code>.
+     *
      * @param pattern the pattern to translate
-     * @param from the currently used escape character.
-     * @param to the new escape character to use.
+     * @param from    the currently used escape character.
+     * @param to      the new escape character to use.
      * @return the new pattern using the escape character <code>to</code>.
      */
     private static String translateEscaping(String pattern, char from, char to) {
@@ -621,7 +640,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      */
     private static class MergingPathQueryNode extends PathQueryNode {
 
-        /** The operation type of the parent node */
+        /**
+         * The operation type of the parent node
+         */
         private int operation;
 
         /**
@@ -630,6 +651,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
          * {@link org.apache.jackrabbit.core.query.QueryNode#TYPE_OR},
          * {@link org.apache.jackrabbit.core.query.QueryNode#TYPE_AND} or
          * {@link org.apache.jackrabbit.core.query.QueryNode#TYPE_NOT}.
+         *
          * @param operation the operation type of the parent node.
          */
         MergingPathQueryNode(int operation) {
@@ -643,6 +665,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         /**
          * Merges this node with a node from <code>nodes</code>. If a merge
          * is not possible an NoSuchElementException is thrown.
+         *
          * @param nodes the nodes to try to merge with.
          * @return the merged array containing a merged version of this node.
          */
@@ -782,8 +805,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         /**
          * Returns <code>true</code> if this node needs merging; <code>false</code>
          * otherwise.
+         *
          * @return <code>true</code> if this node needs merging; <code>false</code>
-         * otherwise.
+         *         otherwise.
          */
         boolean needsMerge() {
             for (Iterator it = operands.iterator(); it.hasNext();) {

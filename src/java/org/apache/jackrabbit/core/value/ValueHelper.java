@@ -14,24 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.util;
+package org.apache.jackrabbit.core.value;
 
 import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.util.Base64;
+import org.apache.jackrabbit.core.util.Text;
 
-import javax.jcr.BinaryValue;
-import javax.jcr.BooleanValue;
-import javax.jcr.DateValue;
-import javax.jcr.DoubleValue;
-import javax.jcr.LongValue;
-import javax.jcr.NameValue;
-import javax.jcr.PathValue;
 import javax.jcr.PropertyType;
-import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
-import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import java.io.ByteArrayOutputStream;

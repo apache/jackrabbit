@@ -17,12 +17,12 @@
 package org.apache.jackrabbit.core.version.persistence;
 
 import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.InternalValue;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.InternalVersionItem;
@@ -30,9 +30,9 @@ import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.VersionException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -439,6 +439,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
     /**
      * Returns the persistent node of this version history
+     *
      * @return
      */
     protected PersistentNode getNode() {
@@ -454,9 +455,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @return
      * @throws RepositoryException
      */
-    protected static InternalVersionHistoryImpl create(
-            PersistentVersionManager vMgr, PersistentNode parent,
-            String historyId, QName name, NodeImpl src)
+    protected static InternalVersionHistoryImpl create(PersistentVersionManager vMgr, PersistentNode parent,
+                                                       String historyId, QName name, NodeImpl src)
             throws RepositoryException {
 
         // create history node

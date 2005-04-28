@@ -20,15 +20,17 @@ import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.value.BooleanValue;
+import org.apache.jackrabbit.core.value.DateValue;
+import org.apache.jackrabbit.core.value.DoubleValue;
+import org.apache.jackrabbit.core.value.LongValue;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.BooleanValue;
-import javax.jcr.DateValue;
-import javax.jcr.DoubleValue;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
-import javax.jcr.LongValue;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
@@ -185,13 +187,12 @@ public class PropertyImpl extends ItemImpl implements Property {
      *
      * @param multipleValues flag indicating whether the property is about to
      *                       be set to an array of values
-     * @throws ValueFormatException if a single-valued property is set to an
-     *                              array of values (and vice versa)
-     * @throws VersionException if the parent node is not checked-out
-     * @throws LockException if the parent node is locked by somebody else
+     * @throws ValueFormatException         if a single-valued property is set to an
+     *                                      array of values (and vice versa)
+     * @throws VersionException             if the parent node is not checked-out
+     * @throws LockException                if the parent node is locked by somebody else
      * @throws ConstraintViolationException if the property is protected
-     * @throws RepositoryException if another error occurs
-     *
+     * @throws RepositoryException          if another error occurs
      * @see javax.jcr.Property#setValue
      */
     protected void checkSetValue(boolean multipleValues)
@@ -200,15 +201,13 @@ public class PropertyImpl extends ItemImpl implements Property {
             RepositoryException {
         // verify that parent node is checked-out
         if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
-            throw new VersionException(
-                    "cannot set the value of a property of a checked-in node "
+            throw new VersionException("cannot set the value of a property of a checked-in node "
                     + safeGetJCRPath());
         }
 
         // check protected flag
         if (definition.isProtected()) {
-            throw new ConstraintViolationException(
-                    "cannot set the value of a protected property "
+            throw new ConstraintViolationException("cannot set the value of a protected property "
                     + safeGetJCRPath());
         }
 
@@ -979,7 +978,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                     valueType = values[i].getType();
                 } else if (valueType != values[i].getType()) {
                     // inhomogeneous types
-                        String msg = "inhomogeneous type of values";
+                    String msg = "inhomogeneous type of values";
                     log.debug(msg);
                     throw new ValueFormatException(msg);
                 }
