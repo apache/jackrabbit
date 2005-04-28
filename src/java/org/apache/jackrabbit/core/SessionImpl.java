@@ -47,6 +47,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Workspace;
+import javax.jcr.ValueFactory;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -1137,6 +1139,14 @@ public class SessionImpl implements Session, Constants {
      */
     public Repository getRepository() {
         return rep;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ValueFactory getValueFactory() 
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        return null;  // @todo implement
     }
 
     /**

@@ -21,7 +21,7 @@
   <pomVersion>3</pomVersion>
   <id>jackrabbit</id>
   <name>Jackrabbit</name>
-  <currentVersion>0.16.4-dev</currentVersion>
+  <currentVersion>0.16.4.1-dev</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
     <url>http://incubator.apache.org/projects/jackrabbit.html</url>
@@ -288,8 +288,8 @@
     <dependency>
       <groupId>jsr170</groupId>
       <artifactId>jcr</artifactId>
-      <version>0.16.4</version>
-      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.jar</url>
+      <version>0.16.4.1</version>
+      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
     </dependency>
     <dependency>
       <id>log4j</id>

@@ -131,9 +131,6 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
             Iterator iter = props.iterator();
             while (iter.hasNext()) {
                 PropertyImpl prop = (PropertyImpl) iter.next();
-                if (prop.getType() == PropertyType.BINARY && skipBinary) {
-                    continue;
-                }
                 QName propName = prop.getQName();
                 // encode property name to make sure it's a valid xml name
                 propName = ISO9075.encode(propName);
@@ -149,25 +146,31 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                     throw new RepositoryException(msg, npde);
                 }
                 // attribute value
-                StringBuffer attrValue = new StringBuffer();
-                // process property value(s)
-                boolean multiValued = prop.getDefinition().isMultiple();
-                Value[] vals;
-                if (multiValued) {
-                    vals = prop.getValues();
+                if (prop.getType() == PropertyType.BINARY && skipBinary) {
+                    // add empty attribute
+                    attrs.addAttribute(propName.getNamespaceURI(),
+                            propName.getLocalName(), attrName, CDATA_TYPE, "");
                 } else {
-                    vals = new Value[]{prop.getValue()};
-                }
-                for (int i = 0; i < vals.length; i++) {
-                    if (i > 0) {
-                        // use space as delimiter for multi-valued properties
-                        attrValue.append(" ");
+                    StringBuffer attrValue = new StringBuffer();
+                    // process property value(s)
+                    boolean multiValued = prop.getDefinition().isMultiple();
+                    Value[] vals;
+                    if (multiValued) {
+                        vals = prop.getValues();
+                    } else {
+                        vals = new Value[]{prop.getValue()};
                     }
-                    attrValue.append(ValueHelper.serialize(vals[i], true));
+                    for (int i = 0; i < vals.length; i++) {
+                        if (i > 0) {
+                            // use space as delimiter for multi-valued properties
+                            attrValue.append(" ");
+                        }
+                        attrValue.append(ValueHelper.serialize(vals[i], true));
+                    }
+                    attrs.addAttribute(propName.getNamespaceURI(),
+                            propName.getLocalName(), attrName, CDATA_TYPE,
+                            attrValue.toString());
                 }
-                attrs.addAttribute(propName.getNamespaceURI(),
-                        propName.getLocalName(), attrName, CDATA_TYPE,
-                        attrValue.toString());
             }
             // start element (node)
             contentHandler.startElement(name.getNamespaceURI(),

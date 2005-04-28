@@ -25,6 +25,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.AccessDeniedException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -200,7 +201,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
      */
     public void registerNamespace(String prefix, String uri)
             throws NamespaceException, UnsupportedRepositoryOperationException,
-            RepositoryException {
+            AccessDeniedException, RepositoryException {
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
         }
@@ -261,7 +262,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
      */
     public void unregisterNamespace(String prefix)
             throws NamespaceException, UnsupportedRepositoryOperationException,
-            RepositoryException {
+            AccessDeniedException, RepositoryException {
         if (reservedPrefixes.contains(prefix)) {
             throw new NamespaceException("reserved prefix: " + prefix);
         }

@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.core.state.obj;
 
-import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
@@ -39,6 +36,8 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PersistenceManager;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;

@@ -386,8 +386,7 @@ public class BLOBFileValue implements Value {
      * {@inheritDoc}
      */
     public InputStream getStream()
-            throws ValueFormatException, IllegalStateException,
-            RepositoryException {
+            throws IllegalStateException, RepositoryException {
         // always return a 'fresh' stream
         if (file != null) {
             // this instance is backed by a 'real' file

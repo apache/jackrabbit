@@ -128,7 +128,7 @@
             <supertype>nt:base</supertype>
         </supertypes>
         <propertyDefinition name="jcr:nodeTypeName" requiredType="Name" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
-        <propertyDefinition name="jcr:supertypes" requiredType="Name" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="true"/>
+        <propertyDefinition name="jcr:supertypes" requiredType="Name" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
         <propertyDefinition name="jcr:isMixin" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:hasOrderableChildNodes" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:primaryItemName" requiredType="Name" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
@@ -150,9 +150,30 @@
         <propertyDefinition name="jcr:name" requiredType="Name" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:autoCreated" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:mandatory" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
-        <propertyDefinition name="jcr:onParentVersion" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
+        <propertyDefinition name="jcr:onParentVersion" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false">
+            <valueConstraints>
+                <valueConstraint>COPY</valueConstraint>
+                <valueConstraint>VERSION</valueConstraint>
+                <valueConstraint>INITIALIZE</valueConstraint>
+                <valueConstraint>COMPUTE</valueConstraint>
+                <valueConstraint>IGNORE</valueConstraint>
+            </valueConstraints>
+        </propertyDefinition>
         <propertyDefinition name="jcr:protected" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
-        <propertyDefinition name="jcr:requiredType" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
+        <propertyDefinition name="jcr:requiredType" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false">
+            <valueConstraints>
+                <valueConstraint>STRING</valueConstraint>
+                <valueConstraint>BINARY</valueConstraint>
+                <valueConstraint>LONG</valueConstraint>
+                <valueConstraint>DOUBLE</valueConstraint>
+                <valueConstraint>BOOLEAN</valueConstraint>
+                <valueConstraint>DATE</valueConstraint>
+                <valueConstraint>NAME</valueConstraint>
+                <valueConstraint>PATH</valueConstraint>
+                <valueConstraint>REFERENCE</valueConstraint>
+                <valueConstraint>UNDEFINED</valueConstraint>
+            </valueConstraints>
+        </propertyDefinition>
         <propertyDefinition name="jcr:valueConstraints" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
         <propertyDefinition name="jcr:defaultValues" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true"/>
         <propertyDefinition name="jcr:multiple" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
@@ -164,7 +185,15 @@
         <propertyDefinition name="jcr:name" requiredType="Name" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:autoCreated" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:mandatory" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
-        <propertyDefinition name="jcr:onParentVersion" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
+        <propertyDefinition name="jcr:onParentVersion" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false">
+            <valueConstraints>
+                <valueConstraint>COPY</valueConstraint>
+                <valueConstraint>VERSION</valueConstraint>
+                <valueConstraint>INITIALIZE</valueConstraint>
+                <valueConstraint>COMPUTE</valueConstraint>
+                <valueConstraint>IGNORE</valueConstraint>
+            </valueConstraints>
+        </propertyDefinition>
         <propertyDefinition name="jcr:protected" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
         <propertyDefinition name="jcr:requiredPrimaryTypes" requiredType="Name" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="true">
             <defaultValues>
@@ -274,26 +303,22 @@
         <supertypes>
             <supertype>mix:referenceable</supertype>
         </supertypes>
-        <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
-        <propertyDefinition name="jcr:versionHistory" requiredType="Reference" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false">
+        <propertyDefinition name="jcr:versionHistory" requiredType="Reference" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:versionHistory</valueConstraint>
             </valueConstraints>
         </propertyDefinition>
-        <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
-        <propertyDefinition name="jcr:baseVersion" requiredType="Reference" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="false">
+        <propertyDefinition name="jcr:baseVersion" requiredType="Reference" autoCreated="false" mandatory="true" onParentVersion="IGNORE" protected="true" multiple="false">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>
         </propertyDefinition>
-        <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
-        <propertyDefinition name="jcr:isCheckedOut" requiredType="Boolean" autoCreated="true" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="false">
+        <propertyDefinition name="jcr:isCheckedOut" requiredType="Boolean" autoCreated="true" mandatory="true" onParentVersion="IGNORE" protected="true" multiple="false">
             <defaultValues>
                 <defaultValue>true</defaultValue>
             </defaultValues>
         </propertyDefinition>
-        <!-- FIXME jsr-170 defines this property as being mandatory; currently set to non-mandatory as workaround for initialization issue -->
-        <propertyDefinition name="jcr:predecessors" requiredType="Reference" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="true">
+        <propertyDefinition name="jcr:predecessors" requiredType="Reference" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="true">
             <valueConstraints>
                 <valueConstraint>nt:version</valueConstraint>
             </valueConstraints>

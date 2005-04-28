@@ -61,7 +61,7 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:onParentVersion
   RequiredType STRING
-  ValueConstraints []
+  ValueConstraints [COPY,VERSION,INITIALIZE,COMPUTE,IGNORE]
   DefaultValues null
   AutoCreated false
   Mandatory true
@@ -81,7 +81,7 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:requiredType
   RequiredType STRING
-  ValueConstraints []
+  ValueConstraints [STRING,BINARY,LONG,DOUBLE,BOOLEAN,DATE,NAME,PATH,REFERENCE,UNDEFINED]
   DefaultValues null
   AutoCreated false
   Mandatory true

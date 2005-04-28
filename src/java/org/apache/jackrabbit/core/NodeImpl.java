@@ -35,8 +35,9 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.core.util.IteratorHelper;
-import org.apache.jackrabbit.core.value.ValueHelper;
 import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.ValueHelper;
 import org.apache.jackrabbit.core.version.GenericVersionSelector;
 import org.apache.jackrabbit.core.version.InternalFreeze;
 import org.apache.jackrabbit.core.version.InternalFrozenNode;
@@ -45,8 +46,6 @@ import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.ValueHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
@@ -1119,8 +1118,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // make sure no references exist
             PropertyIterator iter = getReferences();
             if (iter.hasNext()) {
-                throw new ConstraintViolationException(
-                        mixinName + " can not be removed: the node is being referenced"
+                throw new ConstraintViolationException(mixinName + " can not be removed: the node is being referenced"
                         + " through at least one property of type REFERENCE");
             }
         }
@@ -1230,10 +1228,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * Note that certain checks are performed by the respective
      * <code>Property.setValue()</code> methods.
      *
-     * @throws VersionException if this node is not checked-out
-     * @throws LockException if this node is locked by somebody else
+     * @throws VersionException    if this node is not checked-out
+     * @throws LockException       if this node is locked by somebody else
      * @throws RepositoryException if another error occurs
-     *
      * @see javax.jcr.Node#setProperty
      */
     protected void checkSetProperty()
@@ -1740,6 +1737,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throws UnsupportedRepositoryOperationException, VersionException,
             ConstraintViolationException, ItemNotFoundException, LockException,
             RepositoryException {
+        // check state of this instance
+        sanityCheck();
 
         if (!nodeType.hasOrderableChildNodes()) {
             throw new UnsupportedRepositoryOperationException("child node ordering not supported on node " + safeGetJCRPath());
@@ -1747,7 +1746,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check arguments
         if (srcName.equals(destName)) {
-            throw new ConstraintViolationException("source and destination have to be different");
+            // there's nothing to do
+            return;
         }
 
         Path.PathElement insertName;
@@ -1784,22 +1784,26 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check existence
         if (!hasNode(srcName)) {
-            throw new ItemNotFoundException(safeGetJCRPath() + " has no child node with name " + srcName);
+            throw new ItemNotFoundException(safeGetJCRPath()
+                    + " has no child node with name " + srcName);
         }
         if (destName != null && !hasNode(destName)) {
-            throw new ItemNotFoundException(safeGetJCRPath() + " has no child node with name " + destName);
+            throw new ItemNotFoundException(safeGetJCRPath()
+                    + " has no child node with name " + destName);
         }
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot change child node ordering of a checked-in node";
+            String msg = safeGetJCRPath()
+                    + ": cannot change child node ordering of a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag
         if (definition.isProtected()) {
-            String msg = safeGetJCRPath() + ": cannot change child node ordering of a protected node";
+            String msg = safeGetJCRPath()
+                    + ": cannot change child node ordering of a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
@@ -3361,9 +3365,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws LockException
      * @throws RepositoryException
      */
-    private void internalMerge(
-            SessionImpl srcSession, List failedIds,
-            boolean bestEffort, boolean removeExisting, boolean replaceExisting)
+    private void internalMerge(SessionImpl srcSession, List failedIds,
+                               boolean bestEffort, boolean removeExisting, boolean replaceExisting)
             throws LockException, RepositoryException {
 
         NodeImpl srcNode = doMergeTest(srcSession, failedIds, bestEffort);
@@ -3625,8 +3628,7 @@ public class NodeImpl extends ItemImpl implements Node {
                         } else {
                             // since we delete the OPV=Copy children beforehand, all
                             // found nodes must be outside of this tree
-                            throw new ItemExistsException(
-                                    "Unable to restore node, item already exists outside of restored tree: "
+                            throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: "
                                     + existing.safeGetJCRPath());
                         }
                     } catch (ItemNotFoundException e) {
@@ -3652,8 +3654,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     } else {
                         // since we delete the OPV=Copy children beforehand, all
                         // found nodes must be outside of this tree
-                        throw new ItemExistsException(
-                                "Unable to restore node, item already exists outside of restored tree: "
+                        throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: "
                                 + n.safeGetJCRPath());
                     }
                 } else {

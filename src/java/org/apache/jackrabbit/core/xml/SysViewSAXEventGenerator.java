@@ -146,10 +146,6 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      */
     protected void entering(PropertyImpl prop, int level)
             throws RepositoryException, SAXException {
-        if (prop.getType() == PropertyType.BINARY && skipBinary) {
-            return;
-        }
-
         QName name = prop.getQName();
         String propName;
         try {
@@ -181,54 +177,62 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 PREFIXED_PROPERTY_ELEMENT, attrs);
 
         // values
-        boolean multiValued = prop.getDefinition().isMultiple();
-        Value[] vals;
-        if (multiValued) {
-            vals = prop.getValues();
-        } else {
-            vals = new Value[]{prop.getValue()};
-        }
-        for (int i = 0; i < vals.length; i++) {
-            Value val = vals[i];
-
-            // start value element
+        if (prop.getType() == PropertyType.BINARY && skipBinary) {
+            // empty value element
             contentHandler.startElement(NS_SV_URI, VALUE_ELEMENT,
                     PREFIXED_VALUE_ELEMENT, new AttributesImpl());
-
-            // characters
-            Writer writer = new Writer() {
-                public void close() /*throws IOException*/ {
-                }
-
-                public void flush() /*throws IOException*/ {
-                }
-
-                public void write(char[] cbuf, int off, int len) throws IOException {
-                    try {
-                        contentHandler.characters(cbuf, off, len);
-                    } catch (SAXException se) {
-                        throw new IOException(se.toString());
-                    }
-                }
-            };
-            try {
-                ValueHelper.serialize(val, false, writer);
-                // no need to close our Writer implementation
-                //writer.close();
-            } catch (IOException ioe) {
-                // check if the exception wraps a SAXException
-                // (see Writer.write(char[], int, int) above)
-                Throwable t = ioe.getCause();
-                if (t != null && t instanceof SAXException) {
-                    throw (SAXException) t;
-                } else {
-                    throw new SAXException(ioe);
-                }
-            }
-
-            // end value element
             contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT,
                     PREFIXED_VALUE_ELEMENT);
+        } else {
+            boolean multiValued = prop.getDefinition().isMultiple();
+            Value[] vals;
+            if (multiValued) {
+                vals = prop.getValues();
+            } else {
+                vals = new Value[]{prop.getValue()};
+            }
+            for (int i = 0; i < vals.length; i++) {
+                Value val = vals[i];
+
+                // start value element
+                contentHandler.startElement(NS_SV_URI, VALUE_ELEMENT,
+                        PREFIXED_VALUE_ELEMENT, new AttributesImpl());
+
+                // characters
+                Writer writer = new Writer() {
+                    public void close() /*throws IOException*/ {
+                    }
+
+                    public void flush() /*throws IOException*/ {
+                    }
+
+                    public void write(char[] cbuf, int off, int len) throws IOException {
+                        try {
+                            contentHandler.characters(cbuf, off, len);
+                        } catch (SAXException se) {
+                            throw new IOException(se.toString());
+                        }
+                    }
+                };
+                try {
+                    ValueHelper.serialize(val, false, writer);
+                    // no need to close our Writer implementation
+                    //writer.close();
+                } catch (IOException ioe) {
+                    // check if the exception wraps a SAXException
+                    // (see Writer.write(char[], int, int) above)
+                    Throwable t = ioe.getCause();
+                    if (t != null && t instanceof SAXException) {
+                        throw (SAXException) t;
+                    } else {
+                        throw new SAXException(ioe);
+                    }
+                }
+
+                // end value element
+                contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT,
+                        PREFIXED_VALUE_ELEMENT);
+            }
         }
     }
 
@@ -237,9 +241,6 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      */
     protected void leaving(PropertyImpl prop, int level)
             throws RepositoryException, SAXException {
-        if (prop.getType() == PropertyType.BINARY && skipBinary) {
-            return;
-        }
         contentHandler.endElement(NS_SV_URI, PROPERTY_ELEMENT,
                 PREFIXED_PROPERTY_ELEMENT);
     }

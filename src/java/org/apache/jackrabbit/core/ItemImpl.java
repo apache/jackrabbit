@@ -473,7 +473,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 // check WRITE permission
                 ItemId id = itemState.getId();
                 if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
-                    String msg = itemMgr.safeGetJCRPath(id) + ": not allowed to modify item";
+                    String msg = itemMgr.safeGetJCRPath(id)
+                            + ": not allowed to modify item";
                     log.debug(msg);
                     throw new AccessDeniedException(msg);
                 }
@@ -504,7 +505,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                              * the transient node's primary node type does not
                              * satisfy the 'required primary types' constraint
                              */
-                            String msg = node.safeGetJCRPath() + " must be of node type " + ntReq.getName();
+                            String msg = node.safeGetJCRPath()
+                                    + " must be of node type " + ntReq.getName();
                             log.debug(msg);
                             throw new ConstraintViolationException(msg);
                         }
@@ -515,8 +517,18 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 PropDef[] pda = ent.getMandatoryPropDefs();
                 for (int i = 0; i < pda.length; i++) {
                     PropDef pd = pda[i];
+                    if (pd.getDeclaringNodeType().equals(MIX_VERSIONABLE)) {
+                        /**
+                         * todo FIXME workaround for mix:versionable:
+                         * the mandatory properties are initialized at a
+                         * later stage and might not exist yet
+                         */
+                        continue;
+                    }
                     if (!nodeState.hasPropertyEntry(pd.getName())) {
-                        String msg = node.safeGetJCRPath() + ": mandatory property " + pd.getName() + " does not exist";
+                        String msg = node.safeGetJCRPath()
+                                + ": mandatory property " + pd.getName()
+                                + " does not exist";
                         log.debug(msg);
                         throw new ConstraintViolationException(msg);
                     }
@@ -526,7 +538,9 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 for (int i = 0; i < cnda.length; i++) {
                     NodeDef cnd = cnda[i];
                     if (!nodeState.hasChildNodeEntry(cnd.getName())) {
-                        String msg = node.safeGetJCRPath() + ": mandatory child node " + cnd.getName() + " does not exist";
+                        String msg = node.safeGetJCRPath()
+                                + ": mandatory child node " + cnd.getName()
+                                + " does not exist";
                         log.debug(msg);
                         throw new ConstraintViolationException(msg);
                     }
@@ -536,7 +550,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 PropertyState propState = (PropertyState) itemState;
                 ItemId propId = propState.getId();
                 PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propId);
-                PropertyDefinitionImpl def = (PropertyDefinitionImpl) prop.getDefinition();
+                PropertyDefinitionImpl def =
+                        (PropertyDefinitionImpl) prop.getDefinition();
 
                 /**
                  * check value constraints
@@ -616,7 +631,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             ItemId id = itemState.getId();
             // check WRITE permission
             if (!accessMgr.isGranted(id, AccessManager.REMOVE)) {
-                String msg = itemMgr.safeGetJCRPath(id) + ": not allowed to remove item";
+                String msg = itemMgr.safeGetJCRPath(id)
+                        + ": not allowed to remove item";
                 log.debug(msg);
                 throw new AccessDeniedException(msg);
             }
