@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.log4j.Level;
 
 import javax.jcr.Session;
 import javax.jcr.Workspace;
@@ -72,6 +73,10 @@ class TreeComparator extends AbstractJCRTest {
         init();
     }
 
+    public void setSession(Session session) {
+        this.session = session;
+    }
+    
     /**
      * Makes sure that the source and target folder exist, and are empty
      */
@@ -395,6 +400,14 @@ class TreeComparator extends AbstractJCRTest {
         while (ai.hasNext()) {
             Property pa = (Property) ai.next();
             String pName = null;
+            // todo
+            String pPath = null;
+            try {
+                pPath = pa.getPath();
+            } catch (RepositoryException e) {
+
+            }
+
             int pType = 0;
 
             try {
@@ -413,27 +426,31 @@ class TreeComparator extends AbstractJCRTest {
             }
 
             Property pb = null;
-            try {
-                pb = b.getProperty(pName);
-                //fail if the property is there but should not be
-                if (skipBinary && pType == PropertyType.BINARY) {
-                    fail("Property '" + pName + "' must not be available if skipBinary=true.");
+            // avoid skipped properties
+            if (!propertySkipped(pName)) {
+                try {
+                    pb = b.getProperty(pName);
+                    //fail if the property is there but should not be
+                    if (skipBinary && pType == PropertyType.BINARY) {
+                        // todo
+                        fail("Property '" + pPath + "' must not be available if skipBinary=true.");
+                    }
+
+                } catch (RepositoryException e) {
+                    //fail if the property is not there but should
+                    if (!(skipBinary && pType == PropertyType.BINARY)) {
+                        // todo
+                        fail("Property '" + pPath + "' not available: " + e);
+                        fail("Property '" + pPath + "' not available: " + e);
+                    }
                 }
 
-            } catch (RepositoryException e) {
-                //fail if the property is not there but should
+                //if the property should be available and is available, then compare source and target value
                 if (!(skipBinary && pType == PropertyType.BINARY)) {
-                    fail("Property '" + pName + "' not available: " + e);
+                    compareProperties(pa, pb);
                 }
             }
-
-            //if the property should be available and is available, then compare source and target value
-            if (!(skipBinary && pType == PropertyType.BINARY)) {
-                compareProperties(pa, pb);
-            }
-
         }
-
     }
 
     /**
@@ -572,6 +589,20 @@ class TreeComparator extends AbstractJCRTest {
         NodeIterator ni = n.getNodes();
         while (ni.hasNext()) {
             showTree((Node) ni.next(), level + 1);
+        }
+    }
+
+    /**
+     * Checks if a given property should be skipped during xml import.
+     *  
+     * @param propertyName
+     * @return
+     */
+   public boolean propertySkipped(String propertyName) {
+        if (sc.propertySkipped.indexOf(" " + propertyName + " ") < 0) {
+            return false;
+        } else {
+            return true;
         }
     }
 }

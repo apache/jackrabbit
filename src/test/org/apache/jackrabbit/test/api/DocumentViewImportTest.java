@@ -28,7 +28,14 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.NamespaceException;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>DocumentViewImportTest</code> Tests importXML and
@@ -275,7 +282,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
 
         String uuid = createReferenceableNode(referenced);
         // import a document with a element having the same uuid as the node referenced
-        importRefNodeDocument(uuid, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, withWorkspace, withHandler);
+        importRefNodeDocument(refTarget, uuid, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, withWorkspace, withHandler);
 
         // different uuid?
         Node node = refTargetNode.getNode(rootElem);
@@ -293,7 +300,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
 
         String uuid = createReferenceableNode(referenced);
         // import a document with a element having the same uuid as the node referenced
-        importRefNodeDocument(uuid, ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING,
+        importRefNodeDocument(refTarget, uuid, ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING,
                 withWorkspace, withHandler);
 
         try {
@@ -323,7 +330,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
 
         String uuid = createReferenceableNode(referenced);
         // import a document with a element having the same uuid as the node referenced
-        importRefNodeDocument(uuid, ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING,
+        importRefNodeDocument(refTarget, uuid, ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING,
                 withWorkspace, withHandler);
 
         // should be replaced i.e should be modified, in case Workspace method is used
@@ -348,7 +355,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
 
         String uuid = createReferenceableNode(referenced);
         try {
-            importRefNodeDocument(uuid, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW,
+            importRefNodeDocument(refTarget, uuid, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW,
                     withWorkspace, withHandler);
             fail("UUID behavior IMPORT_UUID_COLLISION_THROW test is failed: " +
                     "should throw an Exception.");
@@ -365,5 +372,60 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
                 throw e;
             }
         }
+    }
+  //-------------------------------< exception tests >--------------------------------------
+    /**
+     * Tests correct failure of importing a element wit the same UUID as the target node or
+     * an ancestor of it in case of uuidBehavior IMPORT_UUID_COLLISION_REMOVE_EXISTING.
+     *
+     * The imported document contains a element with jcr:uuid attribute the same as the
+     * parent of the import target.
+     */
+    public void doTestSameUUIDAtAncestor(boolean withWorkspace, boolean withHandler)
+            throws RepositoryException, IOException, SAXException {
+
+        String uuid = createReferenceableNode(referenced);
+        Node node = testRootNode.getNode(referenced);
+        Node node2 = node.addNode("newParent");
+        session.save();
+        // import a document with a element having the same uuid as the node referenced
+        try {
+            importRefNodeDocument(node2.getPath(), uuid,
+                ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING,
+                    withWorkspace, withHandler);
+            fail("UUID collision with an ancestor of the target node hould throw a " +
+                    "SAXException or a ConstraintViolationException in case of " +
+                    "uuidBehavior IMPORT_UUID_COLLISION_REMOVE_EXISTING.");
+        } catch(SAXException se) {
+            if (!withHandler) {
+                throw se;
+            }
+            // ok
+        } catch (ConstraintViolationException cve) {
+            if (withHandler) {
+                throw cve;
+            }
+            // ok
+        }
+    }
+
+    public void testSameUUIDAtAncestorWorkspaceHandler()
+            throws RepositoryException, IOException, SAXException {
+        doTestSameUUIDAtAncestor(WORKSPACE, CONTENTHANDLER);
+    }
+
+    public void testSameUUIDAtAncestorWorkspace()
+            throws RepositoryException, IOException, SAXException {
+        doTestSameUUIDAtAncestor(WORKSPACE, STREAM);
+    }
+
+    public void testSameUUIDAtAncestorSessionHandler()
+            throws RepositoryException, IOException, SAXException  {
+        doTestSameUUIDAtAncestor(SESSION, CONTENTHANDLER);
+    }
+
+    public void testSameUUIDAtAncestorSession()
+            throws RepositoryException, IOException, SAXException{
+        doTestSameUUIDAtAncestor(SESSION, STREAM);
     }
 }
