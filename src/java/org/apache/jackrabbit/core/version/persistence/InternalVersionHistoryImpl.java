@@ -383,7 +383,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.STRING, predecessors);
 
         // checkin source node
-        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, false, false);
+        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, InternalFrozenNodeImpl.MODE_VERSION);
 
         // and store
         node.store();
@@ -478,7 +478,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
         // add also an empty frozen node to the root version
-        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, true, false);
+        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, InternalFrozenNodeImpl.MODE_INIT);
 
         parent.store();
         return new InternalVersionHistoryImpl(vMgr, pNode);

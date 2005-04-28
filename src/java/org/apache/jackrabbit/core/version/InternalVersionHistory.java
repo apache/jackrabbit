@@ -28,16 +28,16 @@ import java.util.Iterator;
 public interface InternalVersionHistory extends InternalVersionItem {
 
     /**
-     * Equivalalent to {@link VersionHistory#getRootVersion()}.
+     * Equivalalent to {@link javax.jcr.version.VersionHistory#getRootVersion()}.
      *
-     * @see VersionHistory#getRootVersion()
+     * @see javax.jcr.version.VersionHistory#getRootVersion()
      */
     InternalVersion getRootVersion();
 
     /**
-     * Equivalalent to {@link VersionHistory#getVersion(java.lang.String)}.
+     * Equivalalent to {@link javax.jcr.version.VersionHistory#getVersion(java.lang.String)}.
      *
-     * @see VersionHistory#getVersion(java.lang.String)
+     * @see javax.jcr.version.VersionHistory#getVersion(java.lang.String)
      */
     InternalVersion getVersion(QName versionName) throws VersionException;
 
@@ -69,10 +69,10 @@ public interface InternalVersionHistory extends InternalVersionItem {
     InternalVersion getVersion(String uuid);
 
     /**
-     * Equivalalent to {@link VersionHistory#getVersionByLabel(java.lang.String)}
+     * Equivalalent to {@link javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)}
      * but returns <code>null</code> if the version does not exists.
      *
-     * @see VersionHistory#getVersionByLabel(java.lang.String)
+     * @see javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)
      */
     InternalVersion getVersionByLabel(QName label);
 
