@@ -389,10 +389,10 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throws ItemNotFoundException, RepositoryException {
         try {
             int depth = 0;
-            ItemState state = getItemState(id, true);
+            ItemState state = getItemState(id, false);
             String parentUUID = state.getParentUUID();
             while (parentUUID != null) {
-                state = getItemState(new NodeId(parentUUID), true);
+                state = getItemState(new NodeId(parentUUID), false);
                 parentUUID = state.getParentUUID();
                 depth++;
             }
@@ -414,13 +414,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
     public boolean isAncestor(NodeId nodeId, ItemId itemId)
             throws ItemNotFoundException, RepositoryException {
         try {
-            ItemState state = getItemState(itemId, true);
+            ItemState state = getItemState(itemId, false);
             String parentUUID = state.getParentUUID();
             while (parentUUID != null) {
                 if (parentUUID.equals(nodeId.getUUID())) {
                     return true;
                 }
-                state = getItemState(new NodeId(parentUUID), true);
+                state = getItemState(new NodeId(parentUUID), false);
                 parentUUID = state.getParentUUID();
             }
             return false;
