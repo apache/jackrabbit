@@ -21,8 +21,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import javax.jcr.StringValue;
-import javax.jcr.LongValue;
+import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.observation.Event;
 
@@ -116,8 +115,8 @@ public class PropertyChangedTest extends AbstractObservationTest {
             throws RepositoryException, NotExecutableException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         NodeType nt = superuser.getWorkspace().getNodeTypeManager().getNodeType(testNodeType);
-        StringValue v1 = new StringValue("foo");
-        LongValue v2 = new LongValue(System.currentTimeMillis());
+        Value v1 = superuser.getValueFactory().createValue("foo");
+        Value v2 = superuser.getValueFactory().createValue(System.currentTimeMillis());
         if (!nt.canSetProperty(propertyName1, v1) || !nt.canSetProperty(propertyName1, v2)) {
             throw new NotExecutableException("Property " + propertyName1 + " is not of type UNDEFINED");
         }

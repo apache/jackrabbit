@@ -27,7 +27,6 @@ import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Property;
-import javax.jcr.PathValue;
 
 /**
  * <code>SetPropertyAssumeTypeTest</code> tests if when setting a property
@@ -66,14 +65,14 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
     public void setUp() throws Exception {
         super.setUp();
 
-        binaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
-        booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
-        dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
-        doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
-        longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
-        nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
-        pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
-        stringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
+        binaryValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.BINARY);
+        booleanValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.BOOLEAN);
+        dateValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.DATE);
+        doubleValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.DOUBLE);
+        longValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.LONG);
+        nameValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.NAME);
+        pathValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.PATH);
+        stringValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING);
 
         binaryValues = new Value[] {binaryValue};
         booleanValues = new Value[] {booleanValue};
@@ -97,7 +96,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
         Property prop;
 
         // create an extra value for BINARY property to avoid IllegalStateException
-        Value stringValueForBinary = NodeTypeUtil.getValueOfType(PropertyType.STRING);
+        Value stringValueForBinary = NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING);
         prop = testNode.setProperty(testPropName, stringValueForBinary, PropertyType.BINARY);
         assertEquals("setProperty(String, Value, int) of a property of type undefined " +
                      "must assume the property type of the type parameter.",
@@ -129,7 +128,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
                      prop.getType());
 
         // create a PathValue that is convertible to the value of name property
-        Value valueConvertibleToName = PathValue.valueOf(nameValue.getString());
+        Value valueConvertibleToName = superuser.getValueFactory().createValue(nameValue.getString(), PropertyType.PATH);
         prop = testNode.setProperty(testPropName, valueConvertibleToName, PropertyType.NAME);
         assertEquals("setProperty(String, Value, int) of a property of type undefined " +
                      "must assume the property type of the type parameter.",
@@ -162,7 +161,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
         // create an extra value for BINARY property to avoid IllegalStateException
         Value stringValuesForBinary[] =
-            new Value[] {NodeTypeUtil.getValueOfType(PropertyType.STRING)};
+            new Value[] {NodeTypeUtil.getValueOfType(superuser, PropertyType.STRING)};
         prop = testNode.setProperty(testPropName, stringValuesForBinary, PropertyType.BINARY);
         assertEquals("setProperty(String, Value, int) of a property of type undefined " +
                      "must assume the property type of the type parameter.",
@@ -195,7 +194,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
         // create a PathValue that is convertible to the value of name property
         Value valuesConvertibleToName[] =
-            new Value[] {PathValue.valueOf(nameValue.getString())};
+            new Value[] {superuser.getValueFactory().createValue(nameValue.getString(), PropertyType.PATH)};
         prop = testNode.setProperty(testPropName, valuesConvertibleToName, PropertyType.NAME);
         assertEquals("setProperty(String, Value, int) of a property of type undefined " +
                      "must assume the property type of the type parameter.",

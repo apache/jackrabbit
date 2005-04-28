@@ -23,7 +23,6 @@ import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.ReferenceValue;
 import javax.jcr.PathNotFoundException;
 
 /**
@@ -46,7 +45,7 @@ public class SetValueReferenceTest extends AbstractJCRTest {
     /**
      * The reference value
      */
-    private ReferenceValue value;
+    private Value value;
 
     /**
      * The node with the reference property
@@ -70,7 +69,7 @@ public class SetValueReferenceTest extends AbstractJCRTest {
         ensureReferenceable(node);
 
         // initialize some reference value
-        value = new ReferenceValue(node);
+        value = superuser.getValueFactory().createValue(node);
 
         // create a new single-value property and save it
         property1 = node.setProperty(propertyName1, value);
@@ -102,7 +101,7 @@ public class SetValueReferenceTest extends AbstractJCRTest {
      * the Session
      */
     public void testRemoveNodeSession() throws RepositoryException {
-        property1.setValue((ReferenceValue) null);
+        property1.setValue((Value) null);
         superuser.save();
 
         try {

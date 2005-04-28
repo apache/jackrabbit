@@ -19,7 +19,6 @@ package org.apache.jackrabbit.init;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Value;
-import javax.jcr.ReferenceValue;
 import java.util.StringTokenizer;
 import java.util.Calendar;
 import java.io.ByteArrayOutputStream;
@@ -108,8 +107,8 @@ public class NodeTestData extends AbstractJCRTest {
 
         Node multiReference = dataRoot.addNode("multiReference");
         Value[] refs = new Value[2];
-        refs[0] = new ReferenceValue(resource);
-        refs[1] = new ReferenceValue(resReference);
+        refs[0] = superuser.getValueFactory().createValue(resource);
+        refs[1] = superuser.getValueFactory().createValue(resReference);
         multiReference.setProperty("ref", refs);
         log.println("Adding node: " + multiReference.getPath());
 

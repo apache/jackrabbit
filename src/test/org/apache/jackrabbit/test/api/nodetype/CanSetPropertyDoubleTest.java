@@ -19,11 +19,9 @@ package org.apache.jackrabbit.test.api.nodetype;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.BinaryValue;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
@@ -84,58 +82,58 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
         NodeType nodeType = propDef.getDeclaringNodeType();
 
 
-        Value anyStringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
+        Value anyStringValue = NodeTypeUtil.getValueOfType(session, PropertyType.STRING);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Double and value is a StringValue " +
                 "that is not convertible to a DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), anyStringValue));
 
         Value doubleStringValue =
-                new StringValue(NodeTypeUtil.getValueOfType(PropertyType.DOUBLE).getString());
+                superuser.getValueFactory().createValue(NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE).getString());
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type Double and value is a StringValue " +
                 "that is convertible to a DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleStringValue));
 
-        Value anyBinaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
+        Value anyBinaryValue = NodeTypeUtil.getValueOfType(session, PropertyType.BINARY);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Double and value is a UTF-8 " +
                 "BinaryValue that is not convertible to a DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), anyBinaryValue));
 
         Value doubleBinaryValue =
-                new BinaryValue(NodeTypeUtil.getValueOfType(PropertyType.DOUBLE).getString());
+                superuser.getValueFactory().createValue(NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE).getString(), PropertyType.BINARY);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type Double and value is a UTF-8 " +
                 "BinaryValue that is convertible to a DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleBinaryValue));
 
-        Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
+        Value dateValue = NodeTypeUtil.getValueOfType(session, PropertyType.DATE);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type Double and value is a DateValue",
                 nodeType.canSetProperty(propDef.getName(), dateValue));
 
-        Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
+        Value doubleValue = NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type Double and value is a DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValue));
 
-        Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
+        Value longValue = NodeTypeUtil.getValueOfType(session, PropertyType.LONG);
         assertTrue("canSetProperty(String propertyName, Value value) must return " +
                 "true if the property is of type Double and value is a LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValue));
 
-        Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
+        Value booleanValue = NodeTypeUtil.getValueOfType(session, PropertyType.BOOLEAN);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Double and value is a BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValue));
 
-        Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
+        Value nameValue = NodeTypeUtil.getValueOfType(session, PropertyType.NAME);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Double and value is a NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValue));
 
-        Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
+        Value pathValue = NodeTypeUtil.getValueOfType(session, PropertyType.PATH);
         assertFalse("canSetProperty(String propertyName, Value value) must return " +
                 "false if the property is of type Double and value is a PathValue",
                 nodeType.canSetProperty(propDef.getName(), pathValue));
@@ -159,9 +157,9 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
         NodeType nodeType = propDef.getDeclaringNodeType();
 
 
-        Value doubleValue = NodeTypeUtil.getValueOfType(PropertyType.DOUBLE);
+        Value doubleValue = NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE);
 
-        Value anyStringValue = NodeTypeUtil.getValueOfType(PropertyType.STRING);
+        Value anyStringValue = NodeTypeUtil.getValueOfType(session, PropertyType.STRING);
         Value anyStringValues[] = new Value[] {doubleValue, anyStringValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type StringValue " +
@@ -169,14 +167,14 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
                 nodeType.canSetProperty(propDef.getName(), anyStringValues));
 
         Value doubleStringValue =
-                new StringValue(NodeTypeUtil.getValueOfType(PropertyType.DOUBLE).getString());
+                superuser.getValueFactory().createValue(NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE).getString());
         Value doubleStringValues[] = new Value[] {doubleStringValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type StringValue " +
                 "that are convertible to DoubleValues",
                 nodeType.canSetProperty(propDef.getName(), doubleStringValues));
 
-        Value anyBinaryValue = NodeTypeUtil.getValueOfType(PropertyType.BINARY);
+        Value anyBinaryValue = NodeTypeUtil.getValueOfType(session, PropertyType.BINARY);
         Value anyBinaryValues[] = new Value[] {doubleValue, anyBinaryValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type BinaryValue " +
@@ -184,14 +182,14 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
                 nodeType.canSetProperty(propDef.getName(), anyBinaryValues));
 
         Value doubleBinaryValue =
-                new BinaryValue(NodeTypeUtil.getValueOfType(PropertyType.DOUBLE).getString());
+                superuser.getValueFactory().createValue(NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE).getString(), PropertyType.BINARY);
         Value doubleBinaryValues[] = new Value[] {doubleBinaryValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type BinaryValue " +
                 "that are convertible to DoubleValues",
                 nodeType.canSetProperty(propDef.getName(), doubleBinaryValues));
 
-        Value dateValue = NodeTypeUtil.getValueOfType(PropertyType.DATE);
+        Value dateValue = NodeTypeUtil.getValueOfType(session, PropertyType.DATE);
         Value dateValues[] = new Value[] {dateValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type DateValue",
@@ -202,25 +200,25 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
                 "true if the property is of type Double and values are of type DoubleValue",
                 nodeType.canSetProperty(propDef.getName(), doubleValues));
 
-        Value longValue = NodeTypeUtil.getValueOfType(PropertyType.LONG);
+        Value longValue = NodeTypeUtil.getValueOfType(session, PropertyType.LONG);
         Value longValues[] = new Value[] {longValue};
         assertTrue("canSetProperty(String propertyName, Value[] values) must return " +
                 "true if the property is of type Double and values are of type LongValue",
                 nodeType.canSetProperty(propDef.getName(), longValues));
 
-        Value booleanValue = NodeTypeUtil.getValueOfType(PropertyType.BOOLEAN);
+        Value booleanValue = NodeTypeUtil.getValueOfType(session, PropertyType.BOOLEAN);
         Value booleanValues[] = new Value[] {doubleValue, booleanValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type BooleanValue",
                 nodeType.canSetProperty(propDef.getName(), booleanValues));
 
-        Value nameValue = NodeTypeUtil.getValueOfType(PropertyType.NAME);
+        Value nameValue = NodeTypeUtil.getValueOfType(session, PropertyType.NAME);
         Value nameValues[] = new Value[] {doubleValue, nameValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type NameValue",
                 nodeType.canSetProperty(propDef.getName(), nameValues));
 
-        Value pathValue = NodeTypeUtil.getValueOfType(PropertyType.PATH);
+        Value pathValue = NodeTypeUtil.getValueOfType(session, PropertyType.PATH);
         Value pathValues[] = new Value[] {doubleValue, pathValue};
         assertFalse("canSetProperty(String propertyName, Value[] values) must return " +
                 "false if the property is of type Double and values are of type PathValue",
@@ -242,7 +240,7 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(session, propDef, false);
         if (value == null) {
             throw new NotExecutableException("No double property def with " +
                     "testable value constraints has been found");
@@ -270,7 +268,7 @@ public class CanSetPropertyDoubleTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value value = NodeTypeUtil.getValueAccordingToValueConstraints(session, propDef, false);
         if (value == null) {
             throw new NotExecutableException("No multiple double property def with " +
                     "testable value constraints has been found");

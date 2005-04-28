@@ -24,7 +24,6 @@ import javax.jcr.query.Row;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.StringValue;
 
 /**
  * Implements common setup methods for level 2 queries.
@@ -76,7 +75,7 @@ public abstract class AbstractQueryLevel2Test extends AbstractQueryTest {
     protected void setUpMultiValueTest() throws RepositoryException, NotExecutableException {
         // check if NodeType supports mvp
         NodeType nt = superuser.getWorkspace().getNodeTypeManager().getNodeType(testNodeType);
-        Value[] testValue = new Value[]{new StringValue("one"), new StringValue("two"), new StringValue("three")};
+        Value[] testValue = new Value[]{superuser.getValueFactory().createValue("one"), superuser.getValueFactory().createValue("two"), superuser.getValueFactory().createValue("three")};
         if (!nt.canSetProperty(propertyName2, testValue)) {
             throw new NotExecutableException("Property " + propertyName2 + " of NodeType " + testNodeType + " does not allow multi values");
         }

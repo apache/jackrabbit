@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Value;
 import javax.jcr.Node;
 
-import javax.jcr.StringValue;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
 
@@ -67,13 +66,13 @@ public class SetPropertyStringTest extends AbstractJCRTest {
         sArrayNull[1] = null;
         sArrayNull[2] = null;
 
-        vArray1[0] = new StringValue("a");
-        vArray1[1] = new StringValue("b");
-        vArray1[2] = new StringValue("c");
+        vArray1[0] = superuser.getValueFactory().createValue("a");
+        vArray1[1] = superuser.getValueFactory().createValue("b");
+        vArray1[2] = superuser.getValueFactory().createValue("c");
 
-        vArray2[0] = new StringValue("x");
-        vArray2[1] = new StringValue("y");
-        vArray2[2] = new StringValue("z");
+        vArray2[0] = superuser.getValueFactory().createValue("x");
+        vArray2[1] = superuser.getValueFactory().createValue("y");
+        vArray2[2] = superuser.getValueFactory().createValue("z");
     }
 
 

@@ -27,7 +27,6 @@ import javax.jcr.Property;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyIterator;
-import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.PathNotFoundException;
@@ -731,9 +730,9 @@ public class VersionHistoryTest extends AbstractVersionTest {
 
         // create Value[] object
         Value[] vArray = new Value[3];
-        vArray[0] = new StringValue("abc");
-        vArray[1] = new StringValue("xyz");
-        vArray[2] = new StringValue("123");
+        vArray[0] = superuser.getValueFactory().createValue("abc");
+        vArray[1] = superuser.getValueFactory().createValue("xyz");
+        vArray[2] = superuser.getValueFactory().createValue("123");
 
         // create String array
         String[] s = {"abc", "xyz", "123"};
@@ -802,7 +801,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
         } catch (ConstraintViolationException success) {
         }
         try {
-            Value v = new StringValue("abc");
+            Value v = superuser.getValueFactory().createValue("abc");
             vHistory.setProperty(propertyName1, v);
             vHistory.save();
             fail("VersionHistory should be read-only: VersionHistory.setProperty(String,Value) did not throw a ConstraintViolationException");

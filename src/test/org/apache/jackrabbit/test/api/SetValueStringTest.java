@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.Node;
-import javax.jcr.StringValue;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PathNotFoundException;
@@ -59,8 +58,8 @@ public class SetValueStringTest extends AbstractJCRTest {
         super.setUp();
 
         // initialize some multi-value properties
-        sv1 = new StringValue(PROP_VALUE_1);
-        sv2 = new StringValue(PROP_VALUE_2);
+        sv1 = superuser.getValueFactory().createValue(PROP_VALUE_1);
+        sv2 = superuser.getValueFactory().createValue(PROP_VALUE_2);
         mv1 = new Value[]{sv1};
         mv2 = new Value[]{sv1, sv2};
 

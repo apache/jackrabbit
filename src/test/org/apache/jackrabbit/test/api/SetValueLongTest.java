@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
-import javax.jcr.LongValue;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 
@@ -43,7 +42,7 @@ public class SetValueLongTest extends AbstractJCRTest {
     /**
      * The long value
      */
-    private LongValue value;
+    private Value value;
 
     /**
      * The node with the long property
@@ -59,7 +58,7 @@ public class SetValueLongTest extends AbstractJCRTest {
         super.setUp();
 
         // initialize some long value
-        value = new LongValue(73057230);
+        value = superuser.getValueFactory().createValue(73057230);
 
         // create a new node under the testRootNode
         node = testRootNode.addNode(nodeName1, testNodeType);
@@ -94,7 +93,7 @@ public class SetValueLongTest extends AbstractJCRTest {
      * the parent Node
      */
     public void testRemoveLongParent() throws RepositoryException {
-        property1.setValue((LongValue) null);
+        property1.setValue((Value) null);
         node.save();
 
         try {
@@ -110,7 +109,7 @@ public class SetValueLongTest extends AbstractJCRTest {
      * the Session
      */
     public void testRemoveLongSession() throws RepositoryException {
-        property1.setValue((LongValue) null);
+        property1.setValue((Value) null);
         superuser.save();
 
         try {

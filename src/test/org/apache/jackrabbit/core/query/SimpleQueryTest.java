@@ -91,12 +91,12 @@ public class SimpleQueryTest extends AbstractQueryTest {
         Node n = testRootNode.addNode("marcel");
         Calendar marcel = Calendar.getInstance();
         marcel.set(1976, 4, 20, 15, 40);
-        n.setProperty("birth", new Value[]{new DateValue(marcel)});
+        n.setProperty("birth", new Value[]{superuser.getValueFactory().createValue(marcel)});
 
         n = testRootNode.addNode("vanessa");
         Calendar vanessa = Calendar.getInstance();
         vanessa.set(1975, 4, 10, 13, 30);
-        n.setProperty("birth", new Value[]{new DateValue(vanessa)});
+        n.setProperty("birth", new Value[]{superuser.getValueFactory().createValue(vanessa)});
 
         testRootNode.save();
 
@@ -113,11 +113,11 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
     public void testDoubleField() throws Exception {
         Node n = testRootNode.addNode("node1");
-        n.setProperty("value", new Value[]{new DoubleValue(1.9928375d)});
+        n.setProperty("value", new Value[]{superuser.getValueFactory().createValue(1.9928375d)});
         n = testRootNode.addNode("node2");
-        n.setProperty("value", new Value[]{new DoubleValue(0.0d)});
+        n.setProperty("value", new Value[]{superuser.getValueFactory().createValue(0.0d)});
         n = testRootNode.addNode("node3");
-        n.setProperty("value", new Value[]{new DoubleValue(-1.42982475d)});
+        n.setProperty("value", new Value[]{superuser.getValueFactory().createValue(-1.42982475d)});
 
         testRootNode.save();
 
@@ -139,11 +139,11 @@ public class SimpleQueryTest extends AbstractQueryTest {
 
     public void testLongField() throws Exception {
         Node n = testRootNode.addNode("node1");
-        n.setProperty("value", new Value[]{new LongValue(1)});
+        n.setProperty("value", new Value[]{superuser.getValueFactory().createValue(1)});
         n = testRootNode.addNode("node2");
-        n.setProperty("value", new Value[]{new LongValue(0)});
+        n.setProperty("value", new Value[]{superuser.getValueFactory().createValue(0)});
         n = testRootNode.addNode("node3");
-        n.setProperty("value", new Value[]{new LongValue(-1)});
+        n.setProperty("value", new Value[]{superuser.getValueFactory().createValue(-1)});
 
         testRootNode.save();
 

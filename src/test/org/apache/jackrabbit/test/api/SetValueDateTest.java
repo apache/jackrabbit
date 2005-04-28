@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
-import javax.jcr.DateValue;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import java.util.GregorianCalendar;
@@ -45,7 +44,7 @@ public class SetValueDateTest extends AbstractJCRTest {
     /**
      * The date value
      */
-    private DateValue value;
+    private Value value;
 
     /**
      * The node with the date property
@@ -61,7 +60,7 @@ public class SetValueDateTest extends AbstractJCRTest {
         super.setUp();
 
         // initialize some date value
-        value = new DateValue(GregorianCalendar.getInstance());
+        value = superuser.getValueFactory().createValue(GregorianCalendar.getInstance());
 
         // create a new node under the testRootNode
         node = testRootNode.addNode(nodeName1, testNodeType);
@@ -98,7 +97,7 @@ public class SetValueDateTest extends AbstractJCRTest {
      * the parent Node
      */
     public void testRemoveDateParent() throws RepositoryException {
-        property1.setValue((DateValue) null);
+        property1.setValue((Value) null);
         node.save();
 
         try {

@@ -25,7 +25,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.ReferenceValue;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -62,15 +61,15 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied1 = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
-        Value valueNotSatisfied2 = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied1 = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
+        Value valueNotSatisfied2 = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied1 == null || valueNotSatisfied2 == null) {
             throw new NotExecutableException("No binary property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -130,14 +129,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No boolean property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -197,14 +196,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No date property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -264,14 +263,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No double property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -331,14 +330,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No long property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -462,7 +461,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
 
         // test of signature setValue(Value value)
         try {
-            prop.setValue(new ReferenceValue(nodeNotSatisfied));
+            prop.setValue(superuser.getValueFactory().createValue(nodeNotSatisfied));
             node.save();
             fail("setValue(Value value) must throw a ConstraintViolationException " +
                     "if the change would violate a node type constraint " +
@@ -490,14 +489,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No multiple binary property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -545,14 +544,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No multiple boolean property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -601,14 +600,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No multiple date property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -656,14 +655,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No multiple double property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -712,14 +711,14 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // find a Value that does not satisfy the ValueConstraints of propDef
-        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, false);
+        Value valueNotSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, false);
         if (valueNotSatisfied == null) {
             throw new NotExecutableException("No multiple long property def with " +
                     "testable value constraints has been found");
         }
 
         // find a Value that does satisfy the ValueConstraints of propDef
-        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(propDef, true);
+        Value valueSatisfied = NodeTypeUtil.getValueAccordingToValueConstraints(superuser, propDef, true);
         if (valueSatisfied == null) {
             throw new NotExecutableException("The value constraints do not allow any value.");
         }
@@ -806,7 +805,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             // create a referenceable node satisfying the constraint
             nodeSatisfied = testRootNode.addNode(nodeName3, nodeTypeSatisfied);
             nodeSatisfied.addMixin(mixReferenceable);
-            Value valueSatisfied = new ReferenceValue(nodeSatisfied);
+            Value valueSatisfied = superuser.getValueFactory().createValue(nodeSatisfied);
 
             // create a referenceable node not satisfying the constraint
             nodeNotSatisfied = testRootNode.addNode(nodeName4, nodeTypeNotSatisfied);
@@ -821,7 +820,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
 
         // test of signature setValue(Value value)
         try {
-            Value valueNotSatisfied = new ReferenceValue(nodeNotSatisfied);
+            Value valueNotSatisfied = superuser.getValueFactory().createValue(nodeNotSatisfied);
             prop.setValue(new Value[]{valueNotSatisfied});
             node.save();
             fail("setValue(Value[] values) must throw a ConstraintViolationException " +

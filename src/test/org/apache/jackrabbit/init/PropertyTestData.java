@@ -20,7 +20,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.PathValue;
+import javax.jcr.PropertyType;
 import java.io.IOException;
 import java.util.StringTokenizer;
 import java.util.Calendar;
@@ -61,7 +61,7 @@ public class PropertyTestData extends AbstractJCRTest {
         Calendar c = Calendar.getInstance();
         c.set(2005, 6, 18, 17, 30);
         dataRoot.setProperty("calendar", c);
-        dataRoot.setProperty("path", PathValue.valueOf("/"));
+        dataRoot.setProperty("path", superuser.getValueFactory().createValue("/", PropertyType.PATH));
         dataRoot.setProperty("multi", new String[]{"one", "two", "three"});
         superuser.save();
     }

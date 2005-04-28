@@ -16,17 +16,11 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
-import javax.jcr.BinaryValue;
-import javax.jcr.BooleanValue;
-import javax.jcr.DateValue;
-import javax.jcr.DoubleValue;
-import javax.jcr.LongValue;
-import javax.jcr.NameValue;
-import javax.jcr.PathValue;
+import org.apache.jackrabbit.core.util.ISO8601;
+
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -34,7 +28,6 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.util.ISO8601;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -353,27 +346,28 @@ public class NodeTypeUtil {
     /**
      * Returns any value of the requested type
      */
-    public static Value getValueOfType(int type) throws ValueFormatException {
+    public static Value getValueOfType(Session session, int type)
+            throws ValueFormatException, UnsupportedOperationException, RepositoryException {
         switch (type) {
             case (PropertyType.BINARY):
                 // note: If binary is not UTF-8 behavior is implementation-specific
-                return new BinaryValue("abc");
+                return session.getValueFactory().createValue("abc", PropertyType.BINARY);
             case (PropertyType.BOOLEAN):
-                return new BooleanValue(true);
+                return session.getValueFactory().createValue(true);
             case (PropertyType.DATE):
-                return new DateValue(Calendar.getInstance());
+                return session.getValueFactory().createValue(Calendar.getInstance());
             case (PropertyType.DOUBLE):
-                return new DoubleValue(1.0);
+                return session.getValueFactory().createValue(1.0);
             case (PropertyType.LONG):
-                return new LongValue(1);
+                return session.getValueFactory().createValue(1);
             case (PropertyType.NAME):
-                return NameValue.valueOf("abc");
+                return session.getValueFactory().createValue("abc", PropertyType.NAME);
             case (PropertyType.PATH):
-                return PathValue.valueOf("/abc");
+                return session.getValueFactory().createValue("/abc", PropertyType.PATH);
             default:
                 // STRING and UNDEFINED
                 // note: REFERENCE is not testable since its format is implementation-specific
-                return new StringValue("abc");
+                return session.getValueFactory().createValue("abc");
         }
     }
 
@@ -391,7 +385,8 @@ public class NodeTypeUtil {
      *         <code>propDef</code> will be returned. Null will be returned if
      *         no accordant <code>Value</code> could be build.
      */
-    public static Value getValueAccordingToValueConstraints(PropertyDefinition propDef,
+    public static Value getValueAccordingToValueConstraints(Session session,
+                                                            PropertyDefinition propDef,
                                                             boolean satisfied)
             throws ValueFormatException, RepositoryException {
 
@@ -457,19 +452,19 @@ public class NodeTypeUtil {
                         if (!maxBoundless && content.length() >= absMax) {
                             return null;
                         } else {
-                            return new BinaryValue(content.toString());
+                            return session.getValueFactory().createValue(content.toString(), PropertyType.BINARY);
                         }
                     } else {
                         if (!minBoundless && absMin > 1) {
                             // return a value of size < absMin
-                            return new BinaryValue("0");
+                            return session.getValueFactory().createValue("0", PropertyType.BINARY);
                         } else if (!maxBoundless) {
                             // build a binary value of size > absMax
                             StringBuffer content = new StringBuffer();
                             for (int i = 0; i <= absMax; i = i + 10) {
                                 content.append("0123456789");
                             }
-                            return new BinaryValue(content.toString());
+                            return session.getValueFactory().createValue(content.toString(), PropertyType.BINARY);
                         } else {
                             return null;
                         }
@@ -483,9 +478,9 @@ public class NodeTypeUtil {
                     }
                     boolean value = Boolean.valueOf(constraints[0]).booleanValue();
                     if (satisfied) {
-                        return new BooleanValue(value);
+                        return session.getValueFactory().createValue(value);
                     } else {
-                        return new BooleanValue(!value);
+                        return session.getValueFactory().createValue(!value);
                     }
                 }
 
@@ -530,24 +525,24 @@ public class NodeTypeUtil {
                             if (absMin.after(absMax)) {
                                 return null;
                             }
-                            return new DateValue(absMin);
+                            return session.getValueFactory().createValue(absMin);
                         } else if (absMax != null) {
                             absMax.setTimeInMillis(absMax.getTimeInMillis() - 1);
                             if (absMax.before(absMin)) {
                                 return null;
                             }
-                            return new DateValue(absMax);
+                            return session.getValueFactory().createValue(absMax);
                         } else {
                             // neither min nor max set: return "now"
-                            return new DateValue(Calendar.getInstance());
+                            return session.getValueFactory().createValue(Calendar.getInstance());
                         }
                     } else {
                         if (!minBoundless) {
                             absMin.setTimeInMillis(absMin.getTimeInMillis() - 1);
-                            return new DateValue(absMin);
+                            return session.getValueFactory().createValue(absMin);
                         } else if (!maxBoundless) {
                             absMax.setTimeInMillis(absMax.getTimeInMillis() + 1);
-                            return new DateValue(absMax);
+                            return session.getValueFactory().createValue(absMax);
                         } else {
                             return null;
                         }
@@ -601,20 +596,20 @@ public class NodeTypeUtil {
                     }
                     if (satisfied) {
                         if (minBoundless) {
-                            return new DoubleValue(absMax - 1);
+                            return session.getValueFactory().createValue(absMax - 1.0);
                         } else if (maxBoundless) {
-                            return new DoubleValue(absMin + 1);
+                            return session.getValueFactory().createValue(absMin + 1.0);
                         } else if (absMin < absMax) {
                             double d = (absMin + absMax) / 2;
-                            return new DoubleValue(d);
+                            return session.getValueFactory().createValue(d);
                         } else {
                             return null;
                         }
                     } else {
                         if (!minBoundless) {
-                            return new DoubleValue(absMin - 1);
+                            return session.getValueFactory().createValue(absMin - 1.0);
                         } else if (!maxBoundless) {
-                            return new DoubleValue(absMax + 1);
+                            return session.getValueFactory().createValue(absMax + 1.0);
                         } else {
                             return null;
                         }
@@ -668,20 +663,20 @@ public class NodeTypeUtil {
                     }
                     if (satisfied) {
                         if (minBoundless) {
-                            return new LongValue(absMax - 1);
+                            return session.getValueFactory().createValue(absMax - 1);
                         } else if (maxBoundless) {
-                            return new LongValue(absMin + 1);
+                            return session.getValueFactory().createValue(absMin + 1);
                         } else if (absMin < absMax - 1) {
                             long x = (absMin + absMax) / 2;
-                            return new LongValue(x);
+                            return session.getValueFactory().createValue(x);
                         } else {
                             return null;
                         }
                     } else {
                         if (!minBoundless) {
-                            return new LongValue(absMin - 1);
+                            return session.getValueFactory().createValue(absMin - 1);
                         } else if (!maxBoundless) {
-                            return new LongValue(absMax + 1);
+                            return session.getValueFactory().createValue(absMax + 1);
                         } else {
                             return null;
                         }
@@ -699,7 +694,7 @@ public class NodeTypeUtil {
                         for (int i = 0; i < constraints.length; i++) {
                             name.append(constraints[i].replaceAll(":", ""));
                         }
-                        return NameValue.valueOf(name.toString());
+                        return session.getValueFactory().createValue(name.toString(), PropertyType.NAME);
                     }
                 }
 
@@ -722,7 +717,7 @@ public class NodeTypeUtil {
                         pathStr = pathStr.replaceAll("\\*", "");
                         pathStr = pathStr.replaceAll("//", "/");
 
-                        return PathValue.valueOf(pathStr);
+                        return session.getValueFactory().createValue(pathStr, PropertyType.PATH);
                     }
                 }
 
@@ -751,7 +746,7 @@ public class NodeTypeUtil {
                                 return null;
                             }
                         }
-                        return new StringValue(value.toString());
+                        return session.getValueFactory().createValue(value.toString());
                     }
                 }
         }

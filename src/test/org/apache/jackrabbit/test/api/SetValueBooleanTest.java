@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
-import javax.jcr.BooleanValue;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 
@@ -43,7 +42,7 @@ public class SetValueBooleanTest extends AbstractJCRTest {
     /**
      * The boolean value
      */
-    private BooleanValue value;
+    private Value value;
 
     /**
      * The node with the boolean property
@@ -59,7 +58,7 @@ public class SetValueBooleanTest extends AbstractJCRTest {
         super.setUp();
 
         // initialize some boolean value
-        value = new BooleanValue(true);
+        value = superuser.getValueFactory().createValue(true);
 
         // create a new node under the testRootNode
         node = testRootNode.addNode(nodeName1, testNodeType);
@@ -94,7 +93,7 @@ public class SetValueBooleanTest extends AbstractJCRTest {
      * the Session
      */
     public void testRemoveBooleanSession() throws RepositoryException {
-        property1.setValue((BooleanValue) null);
+        property1.setValue((Value) null);
         superuser.save();
 
         try {
@@ -110,7 +109,7 @@ public class SetValueBooleanTest extends AbstractJCRTest {
      * the parent Node
      */
     public void testRemoveBooleanParent() throws RepositoryException {
-        property1.setValue((BooleanValue) null);
+        property1.setValue((Value) null);
         node.save();
 
         try {

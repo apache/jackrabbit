@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Node;
-import javax.jcr.ReferenceValue;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -180,7 +179,7 @@ public class RemoveVersionTest extends AbstractVersionTest {
     public void testReferentialIntegrityException() throws RepositoryException {
         // create reference: n1.p1 -> version
         Node n1 = testRootNode.addNode(nodeName2, testNodeType);
-        n1.setProperty(propertyName1, new ReferenceValue(version));
+        n1.setProperty(propertyName1, superuser.getValueFactory().createValue(version));
         testRootNode.save();
 
         try {

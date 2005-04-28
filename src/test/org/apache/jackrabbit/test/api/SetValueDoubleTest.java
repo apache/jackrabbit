@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
-import javax.jcr.DoubleValue;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 
@@ -43,7 +42,7 @@ public class SetValueDoubleTest extends AbstractJCRTest {
     /**
      * The double value
      */
-    private DoubleValue value;
+    private Value value;
 
     /**
      * The node with the double property
@@ -59,7 +58,7 @@ public class SetValueDoubleTest extends AbstractJCRTest {
         super.setUp();
 
         // initialize some double value
-        value = new DoubleValue(93845.94d);
+        value = superuser.getValueFactory().createValue(93845.94d);
 
         // create a new node under the testRootNode
         node = testRootNode.addNode(nodeName1, testNodeType);
@@ -94,7 +93,7 @@ public class SetValueDoubleTest extends AbstractJCRTest {
      * the Session
      */
     public void testRemoveDoubleSession() throws RepositoryException {
-        property1.setValue((DoubleValue) null);
+        property1.setValue((Value) null);
         superuser.save();
 
         try {
@@ -110,7 +109,7 @@ public class SetValueDoubleTest extends AbstractJCRTest {
      * the parent Node
      */
     public void testRemoveDoubleParent() throws RepositoryException {
-        property1.setValue((DoubleValue) null);
+        property1.setValue((Value) null);
         node.save();
 
         try {
