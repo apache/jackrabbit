@@ -106,25 +106,6 @@ public class NodeOrderableChildNodesTest extends AbstractJCRTest {
     }
 
     /**
-     * Tries to reorder child nodes using {@link Node#orderBefore(String,
-            * String)}  using same source and destination reference. <br/><br/> This
-     * should throw an {@link ConstraintViolationException}.
-     */
-    public void testOrderBeforeConstraintViolationException()
-            throws RepositoryException, NotExecutableException {
-        checkOrderableNodeType(getProperty("nodetype2"));
-        prepareTest();
-        // ok lets try to reorder
-        try {
-            parentNode.orderBefore(initialFirstNode.getName(), initialFirstNode.getName());
-            fail("Trying to reorder child nodes using Node.orderBefore() where source and target are same " +
-                    "hould throw ConstraintViolationException!");
-        } catch (ConstraintViolationException e) {
-            // ok
-        }
-    }
-
-    /**
      * Tries to reorder on a node using {@link Node#orderBefore(String, String)}
      * that does not support child reordering. <br/><br/> This should throw and
      * {@link UnsupportedRepositoryOperationException}. Prequisites: <ul>
