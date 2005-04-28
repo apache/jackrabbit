@@ -74,6 +74,7 @@ import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
+import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.log4j.Logger;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
@@ -178,6 +179,11 @@ public class SessionImpl implements Session, Constants {
      * Lock tokens
      */
     protected final Set lockTokens = new HashSet();
+
+    /**
+     * value factory
+     */
+    protected ValueFactory valueFactory;
 
     /**
      * Protected constructor.
@@ -1146,7 +1152,10 @@ public class SessionImpl implements Session, Constants {
      */
     public ValueFactory getValueFactory() 
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return null;  // @todo implement
+        if (valueFactory == null) {
+            valueFactory = new ValueFactoryImpl();
+        }
+        return valueFactory;
     }
 
     /**
