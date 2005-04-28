@@ -295,6 +295,9 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         NodeType[] types = node.getRequiredPrimaryTypes();
         Arrays.sort(types, NODE_TYPE_COMPARATOR);
         for (int j = 0; j < types.length; j++) {
+            if (j > 0) {
+                writer.print(',');
+            }
             writer.print(types[j].getName());
         }
         writer.println("]");
@@ -338,17 +341,20 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         writer.println("  RequiredType " + type.toUpperCase());
         writer.print("  ValueConstraints [");
         String[] constraints = property.getValueConstraints();
-        String delim = "";
         for (int i = 0; i < constraints.length; i++) {
-            writer.print(delim);
+            if (i > 0) {
+                writer.print(',');
+            }
             writer.print(constraints[i]);
-            delim=",";
         }
         writer.println("]");
         Value[] values = property.getDefaultValues();
         if (values != null && values.length > 0) {
             writer.print("  DefaultValues [");
             for (int j = 0; j < values.length; j++) {
+                if (j > 0) {
+                    writer.print(',');
+                }
                 writer.print(values[j].getString());
             }
             writer.println("]");
