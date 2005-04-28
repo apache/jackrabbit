@@ -99,7 +99,7 @@ public class QueryManagerImpl implements QueryManager {
     /**
      * {@inheritDoc}
      */
-    public String[] getSupportedQueryLanguages() {
+    public String[] getSupportedQueryLanguages() throws RepositoryException {
         return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
     }
 }
