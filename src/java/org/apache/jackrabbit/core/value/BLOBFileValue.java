@@ -39,7 +39,7 @@ import java.util.Calendar;
 
 /**
  * <code>BLOBFileValue</code> represents a binary <code>Value</code> that
- * is backed by a file. Unlike <code>javax.jcr.BinaryValue</code> it has no
+ * is backed by a file. Unlike <code>BinaryValue</code> it has no
  * state, i.e. the <code>getStream()</code> method always returns a fresh
  * <code>InputStream</code> instance.
  */
