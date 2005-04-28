@@ -34,6 +34,7 @@ class SerializationContext {
     public String rootNodeName;
 
     public String propertyValueMayChange;
+    public String propertySkipped;
 
     public String nodeTypesTestNode;
     public String mixinTypeTestNode;
@@ -43,6 +44,8 @@ class SerializationContext {
     public String referenceableNodeTestNode;
     public String orderChildrenTestNode;
     public String namespaceTestNode;
+    public String sameNameSibsFalseChildNodeDefinition;
+
 
     public String stringTestProperty;
     public String binaryTestProperty;
@@ -66,6 +69,7 @@ class SerializationContext {
         rootNodeName = get("rootNodeName");
 
         propertyValueMayChange = " " + get("propertyValueMayChange") + " ";
+        propertySkipped = " " + get("propertySkipped") + " ";
 
         nodeTypesTestNode = get("nodeTypesTestNode");
         mixinTypeTestNode = get("mixinTypeTestNode");
@@ -75,6 +79,7 @@ class SerializationContext {
         referenceableNodeTestNode = get("referenceableNodeTestNode");
         orderChildrenTestNode = get("orderChildrenTestNode");
         namespaceTestNode = get("namespaceTestNode");
+        sameNameSibsFalseChildNodeDefinition = get("sameNameSibsFalseChildNodeDefinition");
 
         stringTestProperty = get("stringTestProperty");
         binaryTestProperty = get("binaryTestProperty");

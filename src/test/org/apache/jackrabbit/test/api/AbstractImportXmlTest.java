@@ -59,6 +59,8 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
 
     protected final boolean WORKSPACE = true;
     protected final boolean SESSION = false;
+    protected boolean CONTENTHANDLER = true;
+    protected boolean STREAM = false;
 
     // the absolute path to the target nodes for the imports
     protected String target;
@@ -321,7 +323,8 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
     /**
      * Creates a document with a element rootElem containing a jcr:uuid
      * attribute with the given uuid as value. This document is imported below
-     * the refTargetNode. If there is yet a node rootElem then this node is
+     * the node with path absPath. If nod node at absPth it is created.
+     * If there is yet a node rootElem below the then this node is
      * romoved in advance.
      *
      * @param uuid
@@ -331,7 +334,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
      * @throws RepositoryException
      * @throws IOException
      */
-    public void importRefNodeDocument(String uuid, int uuidBehaviour,
+    public void importRefNodeDocument(String absPath, String uuid, int uuidBehaviour,
                                       boolean withWorkspace, boolean withHandler)
             throws RepositoryException, IOException, SAXException {
 
@@ -343,19 +346,26 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
         root.setAttribute(propertyName1, "some text");
         document.appendChild(root);
 
-        // remove a yet existing node at the target
+        Node targetNode = null;
         try {
-            Node node = refTargetNode.getNode(rootElem);
-            node.remove();
-            session.save();
+            targetNode = (Node) session.getItem(absPath);
+            // remove a yet existing node at the target
+            try {
+                Node node = targetNode.getNode(rootElem);
+                node.remove();
+                session.save();
+            } catch (PathNotFoundException pnfe) {
+                // ok
+            }
         } catch (PathNotFoundException pnfe) {
-            // ok
+            // create the node
+            targetNode = createAncestors(absPath);
         }
 
         if (withHandler) {
-            importWithHandler(refTargetNode.getPath(), document, uuidBehaviour, withWorkspace);
+            importWithHandler(targetNode.getPath(), document, uuidBehaviour, withWorkspace);
         } else {
-            importXML(refTargetNode.getPath(), document, uuidBehaviour, withWorkspace);
+            importXML(targetNode.getPath(), document, uuidBehaviour, withWorkspace);
         }
         session.save();
     }
