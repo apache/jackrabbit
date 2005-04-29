@@ -434,8 +434,9 @@ public class ExportDocViewTest extends AbstractJCRTest {
         boolean isBinary = (prop.getType() == PropertyType.BINARY);
         if (skipBinary) {
             if (isBinary) {
-                assertEquals("Binary property " + prop.getPath() +
-                        " exported although skipBinary is true", attribute, null);
+                assertEquals("Value of binary property " + prop.getPath() +
+                        " exported although skipBinary is true",
+                        attribute.getValue().length(), 0);
             }
             // check the flags
             else {
@@ -553,8 +554,16 @@ public class ExportDocViewTest extends AbstractJCRTest {
                 }
             }
         }
-        assertEquals("Value of property " + prop.getPath() +
-                " is not exported correctly: ", val, attrVal);
+        if (isBinary && skipBinary) {
+            assertEquals("Value of binary property " + prop.getPath() +
+                    " is not exported correctly: ", "", attrVal);
+            assertEquals("Value of binary property " + prop.getPath() +
+                    " exported although skipBinary is true",
+                    "", attrVal);
+        } else {
+            assertEquals("Value of property " + prop.getPath() +
+                    " is not exported correctly: ", val, attrVal);
+        }
     }
 
     /**
@@ -631,15 +640,12 @@ public class ExportDocViewTest extends AbstractJCRTest {
         while (iter.hasNext()) {
             Property prop = iter.nextProperty();
             String name = prop.getName();
-            boolean isBinary = prop.getType() == PropertyType.BINARY;
             boolean isMultiple = prop.getDefinition().isMultiple();
 
             // props not exported so we decrease the expected size.
             if (!exportInvalidXmlNames && !XMLChar.isValidName(name)) {
                 size--;
             } else if (!exportMultivalProps && isMultiple) {
-                size--;
-            } else if (skipBinary && isBinary) {
                 size--;
             }
         }

@@ -428,23 +428,14 @@ class TreeComparator extends AbstractJCRTest {
             if (!propertySkipped(pName)) {
                 try {
                     pb = b.getProperty(pName);
-                    //fail if the property is there but should not be
-                    if (skipBinary && pType == PropertyType.BINARY) {
-                        // todo
-                        fail("Property '" + pPath + "' must not be available if skipBinary=true.");
-                    }
-
                 } catch (RepositoryException e) {
                     //fail if the property is not there but should
-                    if (!(skipBinary && pType == PropertyType.BINARY)) {
-                        // todo
-                        fail("Property '" + pPath + "' not available: " + e);
-                        fail("Property '" + pPath + "' not available: " + e);
-                    }
+                    fail("Property '" + pPath + "' not available: " + e);
                 }
 
-                //if the property should be available and is available, then compare source and target value
                 if (!(skipBinary && pType == PropertyType.BINARY)) {
+                    // todo
+                    // compare source and target value
                     compareProperties(pa, pb);
                 }
             }
