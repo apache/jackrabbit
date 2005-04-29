@@ -16,18 +16,17 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.util.ISO9075;
 import org.apache.jackrabbit.core.value.ValueHelper;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.BaseException;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
+import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -57,23 +56,33 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
      *                       starting with <code>node</code> will be serialized.
      * @param skipBinary     flag governing whether binary properties are to be
      *                       serialized.
-     * @param session        the session to be used for resolving namespace
-     *                       mappings
      * @param contentHandler the content handler to feed the SAX events to
+     * @throws RepositoryException if an error occurs
      */
-    public DocViewSAXEventGenerator(NodeImpl node, boolean noRecurse,
+    public DocViewSAXEventGenerator(Node node, boolean noRecurse,
                                     boolean skipBinary,
-                                    SessionImpl session,
-                                    ContentHandler contentHandler) {
-        super(node, noRecurse, skipBinary, session, contentHandler);
+                                    ContentHandler contentHandler)
+            throws RepositoryException {
+        super(node, noRecurse, skipBinary, contentHandler);
 
         props = new ArrayList();
+    }
+
+    private QName getQName(String rawName) throws RepositoryException {
+        try {
+            return QName.fromJCRName(rawName, nsResolver);
+        } catch (BaseException e) {
+            // should never get here...
+            String msg = "internal error: failed to resolve namespace mappings";
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void entering(NodeImpl node, int level)
+    protected void entering(Node node, int level)
             throws RepositoryException, SAXException {
         // nop
     }
@@ -81,7 +90,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * {@inheritDoc}
      */
-    protected void enteringProperties(NodeImpl node, int level)
+    protected void enteringProperties(Node node, int level)
             throws RepositoryException, SAXException {
         // reset list of properties
         props.clear();
@@ -90,16 +99,16 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * {@inheritDoc}
      */
-    protected void leavingProperties(NodeImpl node, int level)
+    protected void leavingProperties(Node node, int level)
             throws RepositoryException, SAXException {
-        QName name = node.getQName();
-        if (name.equals(JCR_XMLTEXT)) {
+        String name = node.getName();
+        if (name.equals(jcrXMLText)) {
             // the node represents xml character data
             Iterator iter = props.iterator();
             while (iter.hasNext()) {
-                PropertyImpl prop = (PropertyImpl) iter.next();
-                QName propName = prop.getQName();
-                if (propName.equals(JCR_XMLCHARACTERS)) {
+                Property prop = (Property) iter.next();
+                String propName = prop.getName();
+                if (propName.equals(jcrXMLCharacters)) {
                     // assume jcr:xmlcharacters is single-valued
                     char[] chars = prop.getValue().getString().toCharArray();
                     contentHandler.characters(chars, 0, chars.length);
@@ -108,48 +117,31 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
         } else {
             // regular node
 
-            // encode node name to make sure it's a valid xml name
-            name = ISO9075.encode(name);
             // element name
             String elemName;
-            try {
-                if (node.getDepth() == 0) {
-                    // root node needs a name
-                    elemName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
-                } else {
-                    elemName = name.toJCRName(session.getNamespaceResolver());
-                }
-            } catch (NoPrefixDeclaredException npde) {
-                // should never get here...
-                String msg = "internal error: encountered unregistered namespace";
-                log.debug(msg);
-                throw new RepositoryException(msg, npde);
+            if (node.getDepth() == 0) {
+                // root node needs a name
+                elemName = jcrRoot;
+            } else {
+                // encode node name to make sure it's a valid xml name
+                elemName = ISO9075.encode(name);
             }
 
             // attributes (properties)
             AttributesImpl attrs = new AttributesImpl();
             Iterator iter = props.iterator();
             while (iter.hasNext()) {
-                PropertyImpl prop = (PropertyImpl) iter.next();
-                QName propName = prop.getQName();
-                // encode property name to make sure it's a valid xml name
-                propName = ISO9075.encode(propName);
-                // attribute name
-                String attrName;
-                try {
-                    attrName = propName.toJCRName(session.getNamespaceResolver());
-                } catch (NoPrefixDeclaredException npde) {
-                    // should never get here...
-                    String msg =
-                            "internal error: encountered unregistered namespace";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, npde);
-                }
+                Property prop = (Property) iter.next();
+                String propName = prop.getName();
+                // attribute name (encode property name to make sure it's a valid xml name)
+                String attrName = ISO9075.encode(propName);
+                QName qName = getQName(attrName);
+
                 // attribute value
                 if (prop.getType() == PropertyType.BINARY && skipBinary) {
                     // add empty attribute
-                    attrs.addAttribute(propName.getNamespaceURI(),
-                            propName.getLocalName(), attrName, CDATA_TYPE, "");
+                    attrs.addAttribute(qName.getNamespaceURI(),
+                            qName.getLocalName(), attrName, CDATA_TYPE, "");
                 } else {
                     StringBuffer attrValue = new StringBuffer();
                     // process property value(s)
@@ -167,53 +159,51 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                         }
                         attrValue.append(ValueHelper.serialize(vals[i], true));
                     }
-                    attrs.addAttribute(propName.getNamespaceURI(),
-                            propName.getLocalName(), attrName, CDATA_TYPE,
+                    attrs.addAttribute(qName.getNamespaceURI(),
+                            qName.getLocalName(), attrName, CDATA_TYPE,
                             attrValue.toString());
                 }
             }
             // start element (node)
-            contentHandler.startElement(name.getNamespaceURI(),
-                    name.getLocalName(), elemName, attrs);
+            QName qName = getQName(elemName);
+            contentHandler.startElement(qName.getNamespaceURI(),
+                    qName.getLocalName(), elemName, attrs);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void leaving(NodeImpl node, int level)
+    protected void leaving(Node node, int level)
             throws RepositoryException, SAXException {
-        QName name = node.getQName();
-        if (name.equals(JCR_XMLTEXT)) {
+        String name = node.getName();
+        if (name.equals(jcrXMLText)) {
             // the node represents xml character data
             // (already processed in leavingProperties(NodeImpl, int)
             return;
         }
+        // encode node name to make sure it's a valid xml name
+        name = ISO9075.encode(name);
         // element name
         String elemName;
-        try {
-            if (node.getDepth() == 0) {
-                // root node needs a name
-                elemName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
-            } else {
-                elemName = name.toJCRName(session.getNamespaceResolver());
-            }
-        } catch (NoPrefixDeclaredException npde) {
-            // should never get here...
-            String msg = "internal error: encountered unregistered namespace";
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
+        if (node.getDepth() == 0) {
+            // root node needs a name
+            elemName = jcrRoot;
+        } else {
+            // encode node name to make sure it's a valid xml name
+            elemName = ISO9075.encode(name);
         }
 
         // end element (node)
-        contentHandler.endElement(name.getNamespaceURI(), name.getLocalName(),
+        QName qName = getQName(elemName);
+        contentHandler.endElement(qName.getNamespaceURI(), qName.getLocalName(),
                 elemName);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void entering(PropertyImpl prop, int level)
+    protected void entering(Property prop, int level)
             throws RepositoryException, SAXException {
         props.add(prop);
     }
@@ -221,7 +211,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * {@inheritDoc}
      */
-    protected void leaving(PropertyImpl prop, int level)
+    protected void leaving(Property prop, int level)
             throws RepositoryException, SAXException {
         // nop
     }

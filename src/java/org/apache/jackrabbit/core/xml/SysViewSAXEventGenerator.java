@@ -16,17 +16,13 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.value.ValueHelper;
-import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
+import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -38,8 +34,6 @@ import java.io.Writer;
  * representing the serialized form of an item in System View XML.
  */
 public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
-
-    private static Logger log = Logger.getLogger(SysViewSAXEventGenerator.class);
 
     /**
      * The XML elements and attributes used in serialization
@@ -75,38 +69,30 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      *                       be serialized; otherwise the entire hierarchy starting with
      *                       <code>node</code> will be serialized.
      * @param skipBinary     flag governing whether binary properties are to be serialized.
-     * @param session        the session to be used for resolving namespace mappings
      * @param contentHandler the content handler to feed the SAX events to
+     * @throws RepositoryException if an error occurs
      */
-    public SysViewSAXEventGenerator(NodeImpl node, boolean noRecurse,
+    public SysViewSAXEventGenerator(Node node, boolean noRecurse,
                                     boolean skipBinary,
-                                    SessionImpl session,
-                                    ContentHandler contentHandler) {
-        super(node, noRecurse, skipBinary, session, contentHandler);
+                                    ContentHandler contentHandler)
+            throws RepositoryException {
+        super(node, noRecurse, skipBinary, contentHandler);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void entering(NodeImpl node, int level)
+    protected void entering(Node node, int level)
             throws RepositoryException, SAXException {
-        QName name = node.getQName();
-
         AttributesImpl attrs = new AttributesImpl();
         // name attribute
         String nodeName;
-        try {
-            if (node.getDepth() == 0) {
-                // root node needs a name
-                nodeName = JCR_ROOT.toJCRName(session.getNamespaceResolver());
-            } else {
-                nodeName = name.toJCRName(session.getNamespaceResolver());
-            }
-        } catch (NoPrefixDeclaredException npde) {
-            // should never get here...
-            String msg = "internal error: encountered unregistered namespace";
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
+        if (node.getDepth() == 0) {
+            // root node needs a name
+            nodeName = jcrRoot;
+        } else {
+            // encode node name to make sure it's a valid xml name
+            nodeName = node.getName();
         }
 
         attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
@@ -119,7 +105,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * {@inheritDoc}
      */
-    protected void enteringProperties(NodeImpl node, int level)
+    protected void enteringProperties(Node node, int level)
             throws RepositoryException, SAXException {
         // nop
     }
@@ -127,7 +113,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * {@inheritDoc}
      */
-    protected void leavingProperties(NodeImpl node, int level)
+    protected void leavingProperties(Node node, int level)
             throws RepositoryException, SAXException {
         // nop
     }
@@ -135,7 +121,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * {@inheritDoc}
      */
-    protected void leaving(NodeImpl node, int level)
+    protected void leaving(Node node, int level)
             throws RepositoryException, SAXException {
         // end node element
         contentHandler.endElement(NS_SV_URI, NODE_ELEMENT, PREFIXED_NODE_ELEMENT);
@@ -144,18 +130,9 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * {@inheritDoc}
      */
-    protected void entering(PropertyImpl prop, int level)
+    protected void entering(Property prop, int level)
             throws RepositoryException, SAXException {
-        QName name = prop.getQName();
-        String propName;
-        try {
-            propName = name.toJCRName(session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException npde) {
-            // should never get here...
-            String msg = "internal error: encountered unregistered namespace";
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
-        }
+        String propName = prop.getName();
         AttributesImpl attrs = new AttributesImpl();
         // name attribute
         attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
@@ -167,7 +144,8 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             typeName = PropertyType.nameFromValue(type);
         } catch (IllegalArgumentException iae) {
             // should never be getting here
-            throw new RepositoryException("unexpected property-type ordinal: " + type, iae);
+            throw new RepositoryException("unexpected property-type ordinal: "
+                    + type, iae);
         }
         attrs.addAttribute(NS_SV_URI, TYPE_ATTRIBUTE, PREFIXED_TYPE_ATTRIBUTE,
                 ENUMERATION_TYPE, typeName);
@@ -239,7 +217,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     /**
      * {@inheritDoc}
      */
-    protected void leaving(PropertyImpl prop, int level)
+    protected void leaving(Property prop, int level)
             throws RepositoryException, SAXException {
         contentHandler.endElement(NS_SV_URI, PROPERTY_ELEMENT,
                 PREFIXED_PROPERTY_ELEMENT);

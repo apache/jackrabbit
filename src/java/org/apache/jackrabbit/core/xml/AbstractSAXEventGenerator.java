@@ -16,18 +16,20 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.core.BaseException;
 import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
+import javax.jcr.NamespaceException;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 /**
  * <code>AbstractSAXEventGenerator</code> serves as the base class for
@@ -36,12 +38,12 @@ import javax.jcr.RepositoryException;
  * It traverses a tree of <code>Node</code> & <code>Property</code>
  * instances, and calls the abstract methods
  * <ul>
- * <li><code>{@link #entering(NodeImpl, int)}</code></li>
- * <li><code>{@link #enteringProperties(NodeImpl, int)}</code></li>
- * <li><code>{@link #leavingProperties(NodeImpl, int)}</code></li>
- * <li><code>{@link #leaving(NodeImpl, int)}</code></li>
- * <li><code>{@link #entering(PropertyImpl, int)}</code></li>
- * <li><code>{@link #leaving(PropertyImpl, int)}</code></li>
+ * <li><code>{@link #entering(Node, int)}</code></li>
+ * <li><code>{@link #enteringProperties(Node, int)}</code></li>
+ * <li><code>{@link #leavingProperties(Node, int)}</code></li>
+ * <li><code>{@link #leaving(Node, int)}</code></li>
+ * <li><code>{@link #entering(Property, int)}</code></li>
+ * <li><code>{@link #leaving(Property, int)}</code></li>
  * </ul>
  * for every item it encounters.
  */
@@ -49,11 +51,48 @@ abstract class AbstractSAXEventGenerator implements Constants {
 
     private static Logger log = Logger.getLogger(AbstractSAXEventGenerator.class);
 
-    protected final SessionImpl session;
+    /**
+     * the session to be used for resolving namespace mappings
+     */
+    protected final Session session;
+    /**
+     * the session's namespace resolver
+     */
+    protected final NamespaceResolver nsResolver;
+
+    /**
+     * the content handler to feed the SAX events to
+     */
     protected final ContentHandler contentHandler;
-    protected final NodeImpl startNode;
+
+    protected final Node startNode;
     protected final boolean skipBinary;
     protected final boolean noRecurse;
+
+    /**
+     * The jcr:primaryType property name (allowed for session-local prefix mappings)
+     */
+    protected final String jcrPrimaryType;
+    /**
+     * The jcr:mixinTypes property name (allowed for session-local prefix mappings)
+     */
+    protected final String jcrMixinTypes;
+    /**
+     * The jcr:uuid property name (allowed for session-local prefix mappings)
+     */
+    protected final String jcrUUID;
+    /**
+     * The jcr:root node name (allowed for session-local prefix mappings)
+     */
+    protected final String jcrRoot;
+    /**
+     * The jcr:xmltext node name (allowed for session-local prefix mappings)
+     */
+    protected final String jcrXMLText;
+    /**
+     * The jcr:xmlCharacters property name (allowed for session-local prefix mappings)
+     */
+    protected final String jcrXMLCharacters;
 
     /**
      * Constructor
@@ -63,18 +102,36 @@ abstract class AbstractSAXEventGenerator implements Constants {
      *                       be serialized; otherwise the entire hierarchy starting with
      *                       <code>node</code> will be serialized.
      * @param skipBinary     flag governing whether binary properties are to be serialized.
-     * @param session        the session to be used for resolving namespace mappings
      * @param contentHandler the content handler to feed the SAX events to
+     * @throws RepositoryException if an error occurs
      */
-    protected AbstractSAXEventGenerator(NodeImpl node, boolean noRecurse,
+    protected AbstractSAXEventGenerator(Node node, boolean noRecurse,
                                         boolean skipBinary,
-                                        SessionImpl session,
-                                        ContentHandler contentHandler) {
-        this.session = session;
+                                        ContentHandler contentHandler)
+            throws RepositoryException {
         startNode = node;
+        session = node.getSession();
+        nsResolver = new SessionNamespaceResolver();
+
         this.contentHandler = contentHandler;
         this.skipBinary = skipBinary;
         this.noRecurse = noRecurse;
+
+        // resolve the names of some wellknown properties
+        // allowing for session-local prefix mappings
+        try {
+            jcrPrimaryType = JCR_PRIMARYTYPE.toJCRName(nsResolver);
+            jcrMixinTypes = JCR_MIXINTYPES.toJCRName(nsResolver);
+            jcrUUID = JCR_UUID.toJCRName(nsResolver);
+            jcrRoot = JCR_ROOT.toJCRName(nsResolver);
+            jcrXMLText = JCR_XMLTEXT.toJCRName(nsResolver);
+            jcrXMLCharacters = JCR_XMLCHARACTERS.toJCRName(nsResolver);
+        } catch (BaseException e) {
+            // should never get here...
+            String msg = "internal error: failed to resolve namespace mappings";
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
@@ -140,7 +197,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
      * @throws RepositoryException
      * @throws SAXException
      */
-    protected void process(NodeImpl node, int level)
+    protected void process(Node node, int level)
             throws RepositoryException, SAXException {
         // enter node
         entering(node, level);
@@ -150,30 +207,31 @@ abstract class AbstractSAXEventGenerator implements Constants {
 
         // serialize jcr:primaryType, jcr:mixinTypes & jcr:uuid first:
         // jcr:primaryType
-        if (node.hasProperty(JCR_PRIMARYTYPE)) {
-            process(node.getProperty(JCR_PRIMARYTYPE), level + 1);
+        if (node.hasProperty(jcrPrimaryType)) {
+            process(node.getProperty(jcrPrimaryType), level + 1);
         } else {
-            String msg = "internal error: missing jcr:primaryType property on node " + node.safeGetJCRPath();
+            String msg = "internal error: missing jcr:primaryType property on node "
+                    + node.getPath();
             log.debug(msg);
             throw new RepositoryException(msg);
         }
         // jcr:mixinTypes
-        if (node.hasProperty(JCR_MIXINTYPES)) {
-            process(node.getProperty(JCR_MIXINTYPES), level + 1);
+        if (node.hasProperty(jcrMixinTypes)) {
+            process(node.getProperty(jcrMixinTypes), level + 1);
         }
         // jcr:uuid
-        if (node.hasProperty(JCR_UUID)) {
-            process(node.getProperty(JCR_UUID), level + 1);
+        if (node.hasProperty(jcrUUID)) {
+            process(node.getProperty(jcrUUID), level + 1);
         }
 
         // serialize remaining properties
         PropertyIterator propIter = node.getProperties();
         while (propIter.hasNext()) {
-            PropertyImpl prop = (PropertyImpl) propIter.nextProperty();
-            QName name = prop.getQName();
-            if (JCR_PRIMARYTYPE.equals(name)
-                    || JCR_MIXINTYPES.equals(name)
-                    || JCR_UUID.equals(name)) {
+            Property prop = propIter.nextProperty();
+            String name = prop.getName();
+            if (jcrPrimaryType.equals(name)
+                    || jcrMixinTypes.equals(name)
+                    || jcrUUID.equals(name)) {
                 continue;
             }
             // serialize property
@@ -187,7 +245,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
             // child nodes
             NodeIterator nodeIter = node.getNodes();
             while (nodeIter.hasNext()) {
-                NodeImpl childNode = (NodeImpl) nodeIter.nextNode();
+                Node childNode = nodeIter.nextNode();
                 // recurse
                 process(childNode, level + 1);
             }
@@ -203,7 +261,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
      * @throws RepositoryException
      * @throws SAXException
      */
-    protected void process(PropertyImpl prop, int level)
+    protected void process(Property prop, int level)
             throws RepositoryException, SAXException {
         // serialize property
         entering(prop, level);
@@ -216,7 +274,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
      * @throws RepositoryException
      * @throws SAXException
      */
-    protected abstract void entering(NodeImpl node, int level)
+    protected abstract void entering(Node node, int level)
             throws RepositoryException, SAXException;
 
     /**
@@ -225,7 +283,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
      * @throws RepositoryException
      * @throws SAXException
      */
-    protected abstract void enteringProperties(NodeImpl node, int level)
+    protected abstract void enteringProperties(Node node, int level)
             throws RepositoryException, SAXException;
 
     /**
@@ -234,7 +292,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
      * @throws RepositoryException
      * @throws SAXException
      */
-    protected abstract void leavingProperties(NodeImpl node, int level)
+    protected abstract void leavingProperties(Node node, int level)
             throws RepositoryException, SAXException;
 
     /**
@@ -243,7 +301,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
      * @throws RepositoryException
      * @throws SAXException
      */
-    protected abstract void leaving(NodeImpl node, int level)
+    protected abstract void leaving(Node node, int level)
             throws RepositoryException, SAXException;
 
     /**
@@ -252,7 +310,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
      * @throws RepositoryException
      * @throws SAXException
      */
-    protected abstract void entering(PropertyImpl prop, int level)
+    protected abstract void entering(Property prop, int level)
             throws RepositoryException, SAXException;
 
     /**
@@ -261,6 +319,42 @@ abstract class AbstractSAXEventGenerator implements Constants {
      * @throws RepositoryException
      * @throws SAXException
      */
-    protected abstract void leaving(PropertyImpl prop, int level)
+    protected abstract void leaving(Property prop, int level)
             throws RepositoryException, SAXException;
+
+    //--------------------------------------------------------< inner classes >
+    /**
+     * internal helper class that exposes the <code>NamespaceResolver</code>
+     * interface on a <code>Session</code>
+     */
+    private class SessionNamespaceResolver implements NamespaceResolver {
+
+        /**
+         * {@inheritDoc}
+         */
+        public String getPrefix(String uri) throws NamespaceException {
+            try {
+                return session.getNamespacePrefix(uri);
+            } catch (RepositoryException re) {
+                // should never get here...
+                String msg = "internal error: failed to resolve namespace uri";
+                log.error(msg, re);
+                throw new NamespaceException(msg, re);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public String getURI(String prefix) throws NamespaceException {
+            try {
+                return session.getNamespaceURI(prefix);
+            } catch (RepositoryException re) {
+                // should never get here...
+                String msg = "internal error: failed to resolve namespace prefix";
+                log.error(msg, re);
+                throw new NamespaceException(msg, re);
+            }
+        }
+    }
 }
