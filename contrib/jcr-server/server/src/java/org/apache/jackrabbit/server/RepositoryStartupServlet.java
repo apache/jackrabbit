@@ -63,7 +63,7 @@ public class RepositoryStartupServlet extends HttpServlet {
     public final static String INIT_PARAM_LOG4J_CONFIG = "log4j-config";
 
     /** the registered repository */
-    private static RepositoryImpl repository;
+    private static Repository repository;
 
     /** the name of the repository as configured */
     private static String repositoryName;
@@ -173,12 +173,24 @@ public class RepositoryStartupServlet extends HttpServlet {
 	log.info("  repository-name = " + repositoryName);
 
 	try {
-	    InputSource is = new InputSource(in);
-	    RepositoryConfig config = RepositoryConfig.create(is, repositoryHome.getAbsolutePath());
-	    repository = RepositoryImpl.create(config);
+	    repository = createRepository(new InputSource(in), repositoryHome);
 	} catch (RepositoryException e) {
 	    throw new ServletException("Error while creating repository", e);
 	}
+    }
+
+    /**
+     * Creates the repository for the given config and homedir.
+     *
+     * @param is
+     * @param homedir
+     * @return
+     * @throws RepositoryException
+     */
+    protected Repository createRepository(InputSource is, File homedir)
+            throws RepositoryException {
+        RepositoryConfig config = RepositoryConfig.create(is, homedir.getAbsolutePath());
+        return RepositoryImpl.create(config);
     }
 
     /**
@@ -237,7 +249,7 @@ public class RepositoryStartupServlet extends HttpServlet {
 	    }
 
 	    // try to create remote repository
-	    Remote remote = null;
+	    Remote remote;
 	    try {
 		Class clazz = Class.forName("org.apache.jackrabbit.server.RMIRemoteFactoryDelegater");
 		RemoteFactoryDelegater rmf = (RemoteFactoryDelegater) clazz.newInstance();
