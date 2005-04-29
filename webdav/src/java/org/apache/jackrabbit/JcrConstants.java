@@ -124,6 +124,10 @@ public interface JcrConstants {
      */
     public static final String JCR_ONPARENTVERSION = "jcr:onParentVersion";
     /**
+     * jcr:path
+     */
+    public static final String JCR_PATH = "jcr:path";
+    /**
      * jcr:predecessors
      */
     public static final String JCR_PREDECESSORS = "jcr:predecessors";

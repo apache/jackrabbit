@@ -468,7 +468,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                         // never occurs, because merging without bestEffort flag
                         // being set results in an exception on failure.
                         if (n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
-                            ReferenceValue[] mergeFailed = (ReferenceValue[]) n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
+                            Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
                             addHrefProperty(AUTO_MERGE_SET, mergeFailed, false);
                         }
                         // todo: checkout-fork, checkin-fork
@@ -487,7 +487,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * Add a {@link org.apache.jackrabbit.webdav.property.HrefProperty} with the specified property name and values.
      *
      * @param name
-     * @param values Array of {@link ReferenceValue}s.
+     * @param values Array of {@link Value}s.
      * @param isProtected
      * @throws javax.jcr.ValueFormatException
      * @throws IllegalStateException
