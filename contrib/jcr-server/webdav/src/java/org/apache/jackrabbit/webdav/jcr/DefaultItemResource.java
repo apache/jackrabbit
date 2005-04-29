@@ -21,7 +21,7 @@ import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.jcr.property.LengthsProperty;
 import org.apache.jackrabbit.webdav.lock.*;
-import org.apache.jackrabbit.core.util.ValueHelper;
+import org.apache.jackrabbit.core.value.ValueHelper;
 
 import javax.jcr.*;
 import java.io.*;
