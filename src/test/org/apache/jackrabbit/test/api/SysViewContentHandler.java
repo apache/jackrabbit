@@ -421,7 +421,6 @@ class SysViewContentHandler extends DefaultHandler {
         boolean correctVal = false;
         Node node = nodeElem.node;
         ArrayList propElems = nodeElem.propElems;
-        long binaryCounter = 0;
 
         // no props exported
         if (propElems.size() == 0) {
@@ -528,8 +527,9 @@ class SysViewContentHandler extends DefaultHandler {
                     }
                     // skipBinary true and propType is Binary, should be skipped
                     else {
-                        checkCondition("Binary property "+ prop.getPath()
-                                + " exported although skipBinary flag is true.", false);
+                        checkCondition("Value of binary property "+ prop.getPath()
+                                + " exported although skipBinary flag is true.",
+                                propElem.values.isEmpty());
                     }
                 }
                 // given node has no property with the name given by the prop element
@@ -540,17 +540,8 @@ class SysViewContentHandler extends DefaultHandler {
                 }
             }
             // compare the sizes here
-            if (skipBinary) {
-                PropertyIterator propIter = node.getProperties();
-                while (propIter.hasNext()) {
-                    if (propIter.nextProperty().getType() == PropertyType.BINARY) {
-                        binaryCounter++;
-                    }
-                }
-            }
-
             long otherSize = getSize(node.getProperties());
-            allFound = (propElems.size() + binaryCounter == otherSize);
+            allFound = propElems.size() == otherSize;
             checkCondition("Not all properties of node " +
                     nodeElem.path + " are exported.", allFound);
         }
