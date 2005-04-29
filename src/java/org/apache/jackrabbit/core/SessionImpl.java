@@ -16,19 +16,34 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.security.AccessControlException;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import org.apache.commons.collections.ReferenceMap;
+import org.apache.jackrabbit.core.config.AccessManagerConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.AuthContext;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.value.ValueFactoryImpl;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
+import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
+import org.apache.log4j.Logger;
+import org.apache.xml.serialize.OutputFormat;
+import org.apache.xml.serialize.XMLSerializer;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -46,43 +61,27 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.Workspace;
-import javax.jcr.ValueFactory;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFactory;
+import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
-
-import org.apache.commons.collections.ReferenceMap;
-import org.apache.jackrabbit.core.config.AccessManagerConfig;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.AuthContext;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
-import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
-import org.apache.jackrabbit.core.value.ValueFactoryImpl;
-import org.apache.log4j.Logger;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.security.AccessControlException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -126,7 +125,7 @@ public class SessionImpl implements Session, Constants {
     protected final String userId;
 
     /**
-     * the attibutes of this session
+     * the attributes of this session
      */
     protected final HashMap attributes = new HashMap();
 
@@ -1033,8 +1032,8 @@ public class SessionImpl implements Session, Constants {
             // there's a property, though not a node at the specified path
             throw new PathNotFoundException(absPath);
         }
-        new DocViewSAXEventGenerator((NodeImpl) item, noRecurse, skipBinary,
-                this, contentHandler).serialize();
+        new DocViewSAXEventGenerator((Node) item, noRecurse, skipBinary,
+                contentHandler).serialize();
     }
 
     /**
@@ -1068,8 +1067,8 @@ public class SessionImpl implements Session, Constants {
             // there's a property, though not a node at the specified path
             throw new PathNotFoundException(absPath);
         }
-        new SysViewSAXEventGenerator((NodeImpl) item, noRecurse, skipBinary,
-                this, contentHandler).serialize();
+        new SysViewSAXEventGenerator((Node) item, noRecurse, skipBinary,
+                contentHandler).serialize();
     }
 
     /**
@@ -1150,7 +1149,7 @@ public class SessionImpl implements Session, Constants {
     /**
      * {@inheritDoc}
      */
-    public ValueFactory getValueFactory() 
+    public ValueFactory getValueFactory()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         if (valueFactory == null) {
             valueFactory = new ValueFactoryImpl();

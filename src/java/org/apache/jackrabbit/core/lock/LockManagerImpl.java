@@ -98,7 +98,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         this.nsResolver = session.getNamespaceResolver();
         this.locksFile = locksFile;
 
-        ((WorkspaceImpl) session.getWorkspace()).getObservationManager().
+        session.getWorkspace().getObservationManager().
                 addEventListener(this, Event.NODE_ADDED | Event.NODE_REMOVED,
                         "/", true, null, null, true);
 

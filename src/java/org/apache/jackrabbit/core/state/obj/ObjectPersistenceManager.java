@@ -425,16 +425,17 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
 
     //------------------------------------------------------------< BLOBStore >
     /**
-     * @see BLOBStore#get
+     * {@inheritDoc}
      */
     public FileSystemResource get(String blobId) throws Exception {
         return new FileSystemResource(blobFS, blobId);
     }
 
     /**
-     * @see BLOBStore#put
+     * {@inheritDoc}
      */
-    public String put(PropertyId id, int index, InputStream in, long size) throws Exception {
+    public String put(PropertyId id, int index, InputStream in, long size)
+            throws Exception {
         String path = buildBlobFilePath(id.getParentUUID(), id.getName(), index);
         OutputStream out = null;
         FileSystemResource internalBlobFile = new FileSystemResource(blobFS, path);
@@ -453,7 +454,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see BLOBStore#remove
+     * {@inheritDoc}
      */
     public boolean remove(String blobId) throws Exception {
         FileSystemResource res = new FileSystemResource(blobFS, blobId);
@@ -467,7 +468,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
 
     //---------------------------------------------------< PersistenceManager >
     /**
-     * @see PersistenceManager#init
+     * {@inheritDoc}
      */
     public void init(PMContext context) throws Exception {
         if (initialized) {
@@ -490,7 +491,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#close
+     * {@inheritDoc}
      */
     public synchronized void close() throws Exception {
         if (!initialized) {
@@ -512,7 +513,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -554,7 +555,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -592,7 +593,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#load
+     * {@inheritDoc}
      */
     public synchronized NodeReferences load(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -631,7 +632,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(NodeState state) throws ItemStateException {
         if (!initialized) {
@@ -659,7 +660,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(PropertyState state) throws ItemStateException {
         if (!initialized) {
@@ -686,7 +687,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#store
+     * {@inheritDoc}
      */
     protected void store(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
@@ -712,7 +713,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(NodeState state) throws ItemStateException {
         if (!initialized) {
@@ -735,7 +736,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(PropertyState state) throws ItemStateException {
         if (!initialized) {
@@ -772,7 +773,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see AbstractPersistenceManager#destroy
+     * {@inheritDoc}
      */
     protected void destroy(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
@@ -795,7 +796,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#exists(PropertyId id)
+     * {@inheritDoc}
      */
     public synchronized boolean exists(PropertyId id) throws ItemStateException {
         if (!initialized) {
@@ -814,7 +815,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#exists(NodeId)
+     * {@inheritDoc}
      */
     public synchronized boolean exists(NodeId id) throws ItemStateException {
         if (!initialized) {
@@ -833,7 +834,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
     }
 
     /**
-     * @see PersistenceManager#exists(NodeReferencesId)
+     * {@inheritDoc}
      */
     public synchronized boolean exists(NodeReferencesId id)
             throws ItemStateException {
