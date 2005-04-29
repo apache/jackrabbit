@@ -1632,8 +1632,6 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
             }
             newState = stateMgr.createNew(uuid, srcState.getNodeTypeName(), destParentUUID);
             // copy node state
-            // @todo special handling required for nodes with special semantics (e.g. those defined by mix:versionable, et.al.)
-            // FIXME delegate to 'node type instance handler'
             newState.setMixinTypeNames(srcState.getMixinTypeNames());
             newState.setDefinitionId(srcState.getDefinitionId());
             // copy child nodes
@@ -1645,6 +1643,14 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                     continue;
                 }
                 NodeState srcChildState = (NodeState) srcStateMgr.getItemState(nodeId);
+
+                /**
+                 * special handling required for child nodes with special semantics
+                 * (e.g. those defined by nt:version,  et.al.)
+                 *
+                 * todo FIXME delegate to 'node type instance handler'
+                 */
+
                 // recursive copying of child node
                 NodeState newChildState = copyNodeState(srcChildState,
                         srcStateMgr, srcAccessMgr, uuid, flag, refTracker);
@@ -1663,6 +1669,21 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                 }
                 PropertyState srcChildState =
                         (PropertyState) srcStateMgr.getItemState(propId);
+
+                /**
+                 * special handling required for properties with special semantics
+                 * (e.g. those defined by mix:referenceable, mix:versionable,
+                 * mix:lockable, et.al.)
+                 *
+                 * todo FIXME delegate to 'node type instance handler'
+                 */
+                PropDefId defId = srcChildState.getDefinitionId();
+                PropDef def = ntReg.getPropDef(defId);
+                if (def.getDeclaringNodeType().equals(MIX_LOCKABLE)) {
+                    // skip properties defined by mix:lockable
+                    continue;
+                }
+
                 PropertyState newChildState =
                         copyPropertyState(srcChildState, uuid, entry.getName());
                 if (newChildState.getType() == PropertyType.REFERENCE) {
@@ -1695,34 +1716,34 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                                             QName propName)
             throws RepositoryException {
 
-        // @todo special handling required for properties with special semantics
-        // (e.g. those defined by mix:versionable, mix:lockable, et.al.)
-        PropertyState newState = stateMgr.createNew(propName, parentUUID);
         PropDefId defId = srcState.getDefinitionId();
+        PropDef def = ntReg.getPropDef(defId);
+
+        PropertyState newState = stateMgr.createNew(propName, parentUUID);
+
         newState.setDefinitionId(defId);
         newState.setType(srcState.getType());
         newState.setMultiValued(srcState.isMultiValued());
         InternalValue[] values = srcState.getValues();
         if (values != null) {
-            InternalValue[] newValues = new InternalValue[values.length];
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] != null) {
+            /**
+             * special handling required for properties with special semantics
+             * (e.g. those defined by mix:referenceable, mix:versionable,
+             * mix:lockable, et.al.)
+             *
+             * todo FIXME delegate to 'node type instance handler'
+             */
+            if (def.getDeclaringNodeType().equals(MIX_REFERENCEABLE)
+                    && propName.equals(JCR_UUID)) {
+                // set correct value of jcr:uuid property
+                newState.setValues(new InternalValue[]{InternalValue.create(parentUUID)});
+            } else {
+                InternalValue[] newValues = new InternalValue[values.length];
+                for (int i = 0; i < values.length; i++) {
                     newValues[i] = values[i].createCopy();
-                } else {
-                    newValues[i] = null;
                 }
             }
             newState.setValues(values);
-            // FIXME delegate to 'node type instance handler'
-            if (defId != null) {
-                PropDef def = ntReg.getPropDef(defId);
-                if (def.getDeclaringNodeType().equals(MIX_REFERENCEABLE)) {
-                    if (propName.equals(JCR_UUID)) {
-                        // set correct value of jcr:uuid property
-                        newState.setValues(new InternalValue[]{InternalValue.create(parentUUID)});
-                    }
-                }
-            }
         }
         return newState;
     }

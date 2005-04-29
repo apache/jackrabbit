@@ -43,7 +43,7 @@ public interface VersionManager {
 
     /**
      * Creates a new version history. This action is needed either when creating
-     * a new 'mix:versionable' node or when adding the 'mix:versionalbe' mixin
+     * a new 'mix:versionable' node or when adding the 'mix:versionable' mixin
      * to a node.
      *
      * @param node
