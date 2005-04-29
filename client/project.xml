@@ -46,7 +46,8 @@
         </dependency>
         <dependency>
             <id>jcr-rmi</id>
-            <version>0.16.4.1</version>
+<!-- TODO: change to 0.16.4.1 as soon as available -->
+            <version>0.16.4</version>
         </dependency>
         <dependency>
             <id>jdom</id>

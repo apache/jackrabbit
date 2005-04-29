@@ -18,7 +18,7 @@ package org.apache.jackrabbit.webdav.jcr.property;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.core.util.ValueHelper;
+import org.apache.jackrabbit.core.value.ValueHelper;
 import org.jdom.Element;
 
 import javax.jcr.Value;
