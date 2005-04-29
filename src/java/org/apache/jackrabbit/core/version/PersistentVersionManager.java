@@ -25,8 +25,8 @@ import java.util.List;
 
 /**
  * This interface defines the access to the persistence layer of the
- * versioning. The way how the versions are stored may totaly differ from
- * the way they are exposed to the client.
+ * versioning. The way how the versions are stored may be totally different
+ * from the way they are exposed to the client.
  */
 public interface PersistentVersionManager {
 
@@ -126,7 +126,7 @@ public interface PersistentVersionManager {
      * @param node
      * @return
      * @throws RepositoryException
-     * @see Node#checkin()
+     * @see javax.jcr.Node#checkin()
      */
     InternalVersion checkin(NodeImpl node) throws RepositoryException;
 

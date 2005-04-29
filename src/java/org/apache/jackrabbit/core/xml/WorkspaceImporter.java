@@ -248,6 +248,68 @@ public class WorkspaceImporter implements Importer, Constants {
         return node;
     }
 
+    /**
+     * Post-process imported node (initialize properties with special
+     * semantics etc.)
+     *
+     * @param node
+     * @throws RepositoryException
+     */
+    protected void postProcessNode(NodeState node) throws RepositoryException {
+        /**
+         * special handling required for properties with special semantics
+         * (e.g. those defined by mix:referenceable, mix:versionable,
+         * mix:lockable, et.al.)
+         *
+         * todo FIXME delegate to 'node type instance handler'
+         */
+        EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
+        if (ent.includesNodeType(MIX_VERSIONABLE)) {
+            PropDef def;
+            PropertyState prop;
+
+            // @todo FIXME initialize version history
+            String dummyUUID = "00000000-0000-0000-0000-000000000000";
+
+            // jcr:versionHistory
+            if (!node.hasPropertyEntry(JCR_VERSIONHISTORY)) {
+                def = itemOps.findApplicablePropertyDefinition(JCR_VERSIONHISTORY,
+                        PropertyType.REFERENCE, false, node);
+                prop = itemOps.createPropertyState(node, JCR_VERSIONHISTORY,
+                        PropertyType.REFERENCE, def);
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(dummyUUID))});
+            }
+
+            // jcr:baseVersion
+            if (!node.hasPropertyEntry(JCR_BASEVERSION)) {
+                def = itemOps.findApplicablePropertyDefinition(JCR_BASEVERSION,
+                        PropertyType.REFERENCE, false, node);
+                prop = itemOps.createPropertyState(node, JCR_BASEVERSION,
+                        PropertyType.REFERENCE, def);
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(dummyUUID))});
+            }
+
+            // jcr:predecessors
+            if (!node.hasPropertyEntry(JCR_PREDECESSORS)) {
+                def = itemOps.findApplicablePropertyDefinition(JCR_PREDECESSORS,
+                        PropertyType.REFERENCE, true, node);
+                prop = itemOps.createPropertyState(node, JCR_PREDECESSORS,
+                        PropertyType.REFERENCE, def);
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(dummyUUID))});
+            }
+
+            // jcr:isCheckedOut
+            if (!node.hasPropertyEntry(JCR_ISCHECKEDOUT)) {
+                def = itemOps.findApplicablePropertyDefinition(JCR_ISCHECKEDOUT,
+                        PropertyType.BOOLEAN, false, node);
+                prop = itemOps.createPropertyState(node, JCR_ISCHECKEDOUT,
+                        PropertyType.BOOLEAN, def);
+                prop.setValues(new InternalValue[]{InternalValue.create(true)});
+            }
+
+        }
+    }
+
     //-------------------------------------------------------------< Importer >
     /**
      * {@inheritDoc}
@@ -576,6 +638,9 @@ public class WorkspaceImporter implements Importer, Constants {
         try {
             // check sanity of workspace/session first
             wsp.sanityCheck();
+
+            // post-process node (initialize properties with special semantics etc.)
+            postProcessNode(node);
 
             // make sure node is valid according to its definition
             itemOps.validate(node);
