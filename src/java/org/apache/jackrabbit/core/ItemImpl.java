@@ -882,7 +882,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
                 if (node.isNodeType(MIX_VERSIONABLE)) {
                     if (!node.hasProperty(JCR_VERSIONHISTORY)) {
-                        VersionHistory hist = session.getVersionManager().createVersionHistory(node);
+                        VersionHistory hist = session.getVersionManager().createVersionHistory(session, (NodeState) itemState);
                         node.internalSetProperty(JCR_VERSIONHISTORY, InternalValue.create(new UUID(hist.getUUID())));
                         node.internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
                         node.internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));

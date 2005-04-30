@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
@@ -37,7 +38,7 @@ public interface PersistentVersionManager {
      * @return the newly created version history.
      * @throws RepositoryException
      */
-    InternalVersionHistory createVersionHistory(NodeImpl node)
+    InternalVersionHistory createVersionHistory(NodeState node)
             throws RepositoryException;
 
     /**

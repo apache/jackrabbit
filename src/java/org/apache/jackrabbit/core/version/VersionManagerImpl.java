@@ -29,12 +29,14 @@ import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
+import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionException;
@@ -141,15 +143,15 @@ public class VersionManagerImpl implements VersionManager, Constants {
      * @return
      * @throws javax.jcr.RepositoryException
      */
-    public VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException {
+    public VersionHistory createVersionHistory(Session session, NodeState node) throws RepositoryException {
         InternalVersionHistory history = vMgr.createVersionHistory(node);
         virtProvider.invalidateItem(new NodeId(VERSION_STORAGE_NODE_UUID), false);
-        VersionHistoryImpl vh = (VersionHistoryImpl) node.getSession().getNodeByUUID(history.getId());
+        VersionHistoryImpl vh = (VersionHistoryImpl) session.getNodeByUUID(history.getId());
 
         // generate observation events
         List events = new ArrayList();
         recursiveAdd(events, (NodeImpl) vh.getParent(), vh);
-        obsMgr.dispatch(events, (SessionImpl) node.getSession());
+        obsMgr.dispatch(events, (SessionImpl) session);
 
         return vh;
     }

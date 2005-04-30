@@ -19,9 +19,11 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.Iterator;
@@ -50,7 +52,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    VersionHistory createVersionHistory(NodeImpl node) throws RepositoryException;
+    VersionHistory createVersionHistory(Session session, NodeState node) throws RepositoryException;
 
     /**
      * invokes the checkin() on the persistent version manager and remaps the

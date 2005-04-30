@@ -48,6 +48,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -267,9 +268,8 @@ public class WorkspaceImporter implements Importer, Constants {
         if (ent.includesNodeType(MIX_VERSIONABLE)) {
             PropDef def;
             PropertyState prop;
-
-            // @todo FIXME initialize version history
-            String dummyUUID = "00000000-0000-0000-0000-000000000000";
+            SessionImpl session = (SessionImpl) wsp.getSession();
+            VersionHistory hist = session.getVersionManager().createVersionHistory(session, node);
 
             // jcr:versionHistory
             if (!node.hasPropertyEntry(JCR_VERSIONHISTORY)) {
@@ -277,7 +277,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         PropertyType.REFERENCE, false, node);
                 prop = itemOps.createPropertyState(node, JCR_VERSIONHISTORY,
                         PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(dummyUUID))});
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))});
             }
 
             // jcr:baseVersion
@@ -286,7 +286,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         PropertyType.REFERENCE, false, node);
                 prop = itemOps.createPropertyState(node, JCR_BASEVERSION,
                         PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(dummyUUID))});
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
             }
 
             // jcr:predecessors
@@ -295,7 +295,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         PropertyType.REFERENCE, true, node);
                 prop = itemOps.createPropertyState(node, JCR_PREDECESSORS,
                         PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(dummyUUID))});
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
             }
 
             // jcr:isCheckedOut

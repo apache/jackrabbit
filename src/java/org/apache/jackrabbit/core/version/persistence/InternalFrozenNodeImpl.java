@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -50,26 +49,20 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         implements InternalFrozenNode, Constants {
 
     /**
-     * checkin mode init. specifies, that node is only initialized
+     * checkin mode version.
      */
-    public static final int MODE_INIT = 0;
-
-    /**
-     * checkin mode version. specifies, that the OPV value should be used to
-     * determine the checkin behaviour.
-     */
-    public static final int MODE_VERSION = 1;
+    private static final int MODE_VERSION = 0;
 
     /**
      * checkin mode copy. specifies, that the items are always copied.
      */
-    private static final int MODE_COPY = 2;
+    private static final int MODE_COPY = 1;
 
     /**
      * mode flag specifies, that the mode should be recursed. otherwise i
      * will be redetermined by the opv.
      */
-    private static final int MODE_COPY_RECURSIVE = 6;
+    private static final int MODE_COPY_RECURSIVE = 3;
 
     /**
      * the underlying persistance node
@@ -268,22 +261,37 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @throws RepositoryException
      */
     protected static PersistentNode checkin(PersistentNode parent, QName name,
+                                            NodeImpl src)
+            throws RepositoryException {
+        return checkin(parent, name, src, MODE_VERSION);
+    }
+
+    /**
+     * Checks-in a <code>src</code> node. It creates a new child node of
+     * <code>parent</code> with the given <code>name</code> and adds the
+     * source nodes properties according to their OPV value to the
+     * list of frozen properties. It creates frozen child nodes for each child
+     * node of <code>src</code> according to its OPV value.
+     *
+     * @param parent
+     * @param name
+     * @param src
+     * @return
+     * @throws RepositoryException
+     */
+    private static PersistentNode checkin(PersistentNode parent, QName name,
                                             NodeImpl src, int mode)
             throws RepositoryException {
 
-        PersistentNode node;
-
         // create new node
-        node = parent.addNode(name, NativePVM.NT_REP_FROZEN, null);
+        PersistentNode node = parent.addNode(name, NativePVM.NT_REP_FROZEN, null);
 
         // initialize the internal properties
         if (src.isNodeType(MIX_REFERENCEABLE)) {
             node.setPropertyValue(JCR_FROZENUUID, InternalValue.create(src.getUUID()));
         }
-
         node.setPropertyValue(JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
-
         if (src.hasProperty(NodeImpl.JCR_MIXINTYPES)) {
             NodeType[] mixins = src.getMixinNodeTypes();
             InternalValue[] ivalues = new InternalValue[mixins.length];
@@ -292,67 +300,65 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             }
             node.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
         }
-        if (mode != MODE_INIT) {
-            // add the properties
-            PropertyIterator piter = src.getProperties();
-            while (piter.hasNext()) {
-                PropertyImpl prop = (PropertyImpl) piter.nextProperty();
-                int opv;
-                if ((mode & MODE_COPY) > 0) {
-                    opv = OnParentVersionAction.COPY;
-                } else {
-                    opv = prop.getDefinition().getOnParentVersion();
-                }
-                switch (opv) {
-                    case OnParentVersionAction.ABORT:
-                        parent.reload();
-                        throw new VersionException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
-                    case OnParentVersionAction.COMPUTE:
-                    case OnParentVersionAction.IGNORE:
-                    case OnParentVersionAction.INITIALIZE:
-                        break;
-                    case OnParentVersionAction.VERSION:
-                    case OnParentVersionAction.COPY:
-                        node.copyFrom(prop);
-                        break;
-                }
+
+        // add the properties
+        PropertyIterator piter = src.getProperties();
+        while (piter.hasNext()) {
+            PropertyImpl prop = (PropertyImpl) piter.nextProperty();
+            int opv;
+            if ((mode & MODE_COPY) > 0) {
+                opv = OnParentVersionAction.COPY;
+            } else {
+                opv = prop.getDefinition().getOnParentVersion();
             }
+            switch (opv) {
+                case OnParentVersionAction.ABORT:
+                    parent.reload();
+                    throw new VersionException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
+                case OnParentVersionAction.COMPUTE:
+                case OnParentVersionAction.IGNORE:
+                case OnParentVersionAction.INITIALIZE:
+                    break;
+                case OnParentVersionAction.VERSION:
+                case OnParentVersionAction.COPY:
+                    node.copyFrom(prop);
+                    break;
+            }
+        }
 
-
-            // add the frozen children and vistories
-            NodeIterator niter = src.getNodes();
-            while (niter.hasNext()) {
-                NodeImpl child = (NodeImpl) niter.nextNode();
-                int opv;
-                if ((mode & MODE_COPY_RECURSIVE) > 0) {
-                    opv = OnParentVersionAction.COPY;
-                } else {
-                    opv = child.getDefinition().getOnParentVersion();
-                }
-                switch (opv) {
-                    case OnParentVersionAction.ABORT:
-                        throw new VersionException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
-                    case OnParentVersionAction.COMPUTE:
-                    case OnParentVersionAction.IGNORE:
-                    case OnParentVersionAction.INITIALIZE:
+        // add the frozen children and vistories
+        NodeIterator niter = src.getNodes();
+        while (niter.hasNext()) {
+            NodeImpl child = (NodeImpl) niter.nextNode();
+            int opv;
+            if ((mode & MODE_COPY_RECURSIVE) > 0) {
+                opv = OnParentVersionAction.COPY;
+            } else {
+                opv = child.getDefinition().getOnParentVersion();
+            }
+            switch (opv) {
+                case OnParentVersionAction.ABORT:
+                    throw new VersionException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
+                case OnParentVersionAction.COMPUTE:
+                case OnParentVersionAction.IGNORE:
+                case OnParentVersionAction.INITIALIZE:
+                    break;
+                case OnParentVersionAction.VERSION:
+                    if (child.isNodeType(MIX_VERSIONABLE)) {
+                        // create frozen versionable child
+                        PersistentNode newChild = node.addNode(child.getQName(), NativePVM.NT_REP_FROZEN_HISTORY, null);
+                        newChild.setPropertyValue(JCR_VERSIONHISTORY,
+                                InternalValue.create(child.getVersionHistory().getUUID()));
+                        newChild.setPropertyValue(JCR_BASEVERSION,
+                                InternalValue.create(child.getBaseVersion().getUUID()));
                         break;
-                    case OnParentVersionAction.VERSION:
-                        if (child.isNodeType(MIX_VERSIONABLE)) {
-                            // create frozen versionable child
-                            PersistentNode newChild = node.addNode(child.getQName(), NativePVM.NT_REP_FROZEN_HISTORY, null);
-                            newChild.setPropertyValue(JCR_VERSIONHISTORY,
-                                    InternalValue.create(child.getVersionHistory().getUUID()));
-                            newChild.setPropertyValue(JCR_BASEVERSION,
-                                    InternalValue.create(child.getBaseVersion().getUUID()));
-                            break;
-                        }
-                        // else copy but do not recurse
-                        checkin(node, child.getQName(), child, MODE_COPY);
-                        break;
-                    case OnParentVersionAction.COPY:
-                        checkin(node, child.getQName(), child, MODE_COPY_RECURSIVE);
-                        break;
-                }
+                    }
+                    // else copy but do not recurse
+                    checkin(node, child.getQName(), child, MODE_COPY);
+                    break;
+                case OnParentVersionAction.COPY:
+                    checkin(node, child.getQName(), child, MODE_COPY_RECURSIVE);
+                    break;
             }
         }
         return node;

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
