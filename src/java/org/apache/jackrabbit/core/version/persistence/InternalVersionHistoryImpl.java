@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.InternalVersion;
@@ -38,6 +39,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -383,7 +385,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.STRING, predecessors);
 
         // checkin source node
-        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, InternalFrozenNodeImpl.MODE_VERSION);
+        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src);
 
         // and store
         node.store();
@@ -456,14 +458,14 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @throws RepositoryException
      */
     protected static InternalVersionHistoryImpl create(PersistentVersionManager vMgr, PersistentNode parent,
-                                                       String historyId, QName name, NodeImpl src)
+                                                       String historyId, QName name, NodeState nodeState)
             throws RepositoryException {
 
         // create history node
         PersistentNode pNode = parent.addNode(name, NativePVM.NT_REP_VERSION_HISTORY, historyId);
 
         // set the versionable uuid
-        pNode.setPropertyValue(NativePVM.PROPNAME_VERSIONABLE_ID, InternalValue.create(src.internalGetUUID()));
+        pNode.setPropertyValue(NativePVM.PROPNAME_VERSIONABLE_ID, InternalValue.create(nodeState.getUUID()));
 
         // create label node
         pNode.addNode(NativePVM.NODENAME_VERSION_LABELS, NativePVM.NT_REP_VERSION_LABELS, null);
@@ -478,7 +480,22 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
         // add also an empty frozen node to the root version
-        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src, InternalFrozenNodeImpl.MODE_INIT);
+        PersistentNode node = vNode.addNode(JCR_FROZENNODE, NativePVM.NT_REP_FROZEN, null);
+
+        // initialize the internal properties
+        node.setPropertyValue(JCR_FROZENUUID, InternalValue.create(nodeState.getUUID()));
+        node.setPropertyValue(JCR_FROZENPRIMARYTYPE,
+                InternalValue.create(nodeState.getNodeTypeName()));
+
+        Set mixins = nodeState.getMixinTypeNames();
+        if (mixins.size()>0) {
+            InternalValue[] ivalues = new InternalValue[mixins.size()];
+            Iterator iter=mixins.iterator();
+            for (int i = 0; i < mixins.size(); i++) {
+                ivalues[i] = InternalValue.create((QName) iter.next());
+            }
+            node.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
+        }
 
         parent.store();
         return new InternalVersionHistoryImpl(vMgr, pNode);

@@ -227,11 +227,11 @@ public class NativePVM implements PersistentVersionManager, Constants {
      * @return the newly created version history.
      * @throws RepositoryException
      */
-    public InternalVersionHistory createVersionHistory(NodeImpl node)
+    public InternalVersionHistory createVersionHistory(NodeState node)
             throws RepositoryException {
 
         // check if version history for that node already exists
-        InternalVersionHistoryImpl hist = getHistoryByVersionableUUID(node.internalGetUUID());
+        InternalVersionHistoryImpl hist = getHistoryByVersionableUUID(node.getUUID());
         if (hist != null) {
             return hist;
         }
@@ -272,7 +272,7 @@ public class NativePVM implements PersistentVersionManager, Constants {
         versionedUUIDs.put(hist.getVersionableUUID(), hist.getId());
 
         log.info("Created new version history " + hist.getId()
-                + " for " + node.safeGetJCRPath()
+                + " for " + node
                 + ". NumHistories=" + versionedUUIDs.size());
         return hist;
     }
