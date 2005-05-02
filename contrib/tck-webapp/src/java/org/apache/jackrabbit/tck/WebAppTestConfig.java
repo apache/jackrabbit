@@ -219,6 +219,16 @@ public class WebAppTestConfig {
     public static Map getCurrentConfig() {
         Map conf = getOriConfig();
         conf.putAll(getConfig());
+
+        // fill all empty (== null) values with an empty string
+        Iterator itr = conf.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String) itr.next();
+            String val = (String) conf.get(key);
+            if (val == null) {
+                conf.put(key, "");
+            }
+        }
         return conf;
     }
 
