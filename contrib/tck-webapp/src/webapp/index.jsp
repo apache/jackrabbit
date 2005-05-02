@@ -38,6 +38,10 @@ if (!repSession.getRootNode().hasNode("licNode")) {
     if (is != null) {
         try {
             props.load(is);
+            String did = props.getProperty("download.id");
+            Node licNode = repSession.getRootNode().addNode("licNode", "nt:unstructured");
+            licNode.setProperty("key", did);
+            repSession.getRootNode().save();
         } catch (IOException e) {
             throw new RepositoryStubException("Exception reading "
                     + "/download.id" + ": " + e.toString());
