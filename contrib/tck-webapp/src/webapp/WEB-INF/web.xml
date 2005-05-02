@@ -56,7 +56,7 @@
 
         <init-param>
             <param-name>tck-webapp-jar-path</param-name>
-            <param-value>/WEB-INF/lib/tck-webapp-0.16.4.jar</param-value>
+            <param-value>/WEB-INF/lib/tck-webapp-0.16.4.1.jar</param-value>
             <description>Path to the tck webapp jar, where the test sources reside</description>
         </init-param>
 
