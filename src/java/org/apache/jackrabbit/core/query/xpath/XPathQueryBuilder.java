@@ -127,6 +127,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     static final QName JCR_ROOT = new QName(Constants.NS_JCR_URI, "root");
 
     /**
+     * QName for jcr:score
+     */
+    static final QName JCR_SCORE = new QName(Constants.NS_JCR_URI, "score");
+
+    /**
      * String constant for operator 'eq'
      */
     private static final String OP_EQ = "eq";
@@ -817,6 +822,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     } else {
                         exceptions.add(new InvalidQueryException("Unsupported location for jcr:deref()"));
                     }
+                }
+            } else if (JCR_SCORE.toJCRName(resolver).equals(fName)) {
+                if (queryNode.getType() == QueryNode.TYPE_ORDER) {
+                    createOrderSpec(node, (OrderQueryNode) queryNode);
+                } else {
+                    exceptions.add(new InvalidQueryException("Unsupported location for jcr:score()"));
                 }
             } else {
                 exceptions.add(new InvalidQueryException("Unsupported function: " + fName));

@@ -46,7 +46,7 @@ public class OrderByTest extends AbstractQueryTest {
         QueryResult result = q.execute();
         checkResult(result, 3);
 
-        String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by @jcr:score, @value";
+        String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by jcr:score(), @value";
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResult(result, 3);
