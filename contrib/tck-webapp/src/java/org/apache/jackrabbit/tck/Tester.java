@@ -59,6 +59,9 @@ public class Tester {
     /** the exclude list */
     Map excludeList;
 
+    /** the numberf of executed tests */
+    int numOfTests;
+
     /**
      * The constructor...
      *
@@ -70,6 +73,7 @@ public class Tester {
         this.runner = runner;
         this.writer = writer;
         this.excludeList = excludeList;
+        numOfTests = 0;
 
         // set the configuration for the to be tested repository
         AbstractJCRTest.helper = new RepositoryHelper(WebAppTestConfig.getCurrentConfig());
@@ -95,9 +99,11 @@ public class Tester {
             TestSuite updatedTS = applyExcludeList(suite);
 
             try {
+                runner.resetNumberOfTests();
                 updatedTS.run(result);
                 results.putAll(runner.getResults());
                 write(updatedTS);
+                numOfTests += runner.getNumberOfTests();
             } catch (Exception e) {
                 // ignore
             }
@@ -217,5 +223,14 @@ public class Tester {
             }
         }
         node.save();
+    }
+
+    /**
+     * Returns the number of executed tests
+     *
+     * @return number of executed tests
+     */
+    public int getNumberOfExecutedTests() {
+        return numOfTests;
     }
 }
