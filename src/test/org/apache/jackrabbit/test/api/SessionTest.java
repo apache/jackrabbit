@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.RepositoryException;
@@ -26,6 +27,13 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Session;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Value;
+import javax.jcr.Repository;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.lock.LockException;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Hashtable;
 
 /**
  * <code>SessionTest</code> contains all test cases for the
@@ -224,6 +232,58 @@ public class SessionTest extends AbstractJCRTest {
         } catch (ConstraintViolationException e) {
             // ok try to save the source
         }
+    }
+
+    /**
+     * Calls <code>{@link javax.jcr.Session#move(String src, String dest)} where
+     * the parent node of src is locked.<br/> <br/> Should throw a <code>{@link
+     * javax.jcr.LockException} immediately or on save.
+     */
+    public void testMoveLockException()
+        throws NotExecutableException, RepositoryException {
+
+        Session session = superuser;
+
+        if (session.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+            throw new NotExecutableException("Locking is not supported.");
+        }
+
+        // create a node that is lockable
+        Node lockableNode = testRootNode.addNode(nodeName1, testNodeType);
+        // or try to make it lockable if it is not
+        if (!lockableNode.isNodeType(mixLockable)) {
+            if (lockableNode.canAddMixin(mixLockable)) {
+                lockableNode.addMixin(mixLockable);
+            } else {
+                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not " +
+                        "allow to add mix:lockable");
+            }
+        }
+
+        // add a sub node (the one that is tried to move later on)
+        Node srcNode = lockableNode.addNode(nodeName1, testNodeType);
+
+        testRootNode.save();
+
+        // remove first slash of path to get rel path to root
+        String pathRelToRoot = lockableNode.getPath().substring(1);
+
+        // access node through another session to lock it
+        Session session2 = helper.getSuperuserSession();
+        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+        node2.lock(true, true);
+
+        try {
+            String destPath = testRoot + "/" + nodeName2;
+            session.move(srcNode.getPath(), destPath);
+            testRootNode.save();
+            fail("A LockException is thrown either immediately or on save  if a lock prevents the move.");
+        }
+        catch (LockException e){
+            // success
+        }
+
+        session2.logout();
     }
 
     /**
