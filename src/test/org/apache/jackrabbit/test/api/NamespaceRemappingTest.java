@@ -174,6 +174,40 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
     }
 
     /**
+     * Tests if {@link javax.jcr.Session#getNamespacePrefixes()} returns
+     * all prefixes currently set for this session, including all those
+     * registered in the NamespaceRegistry but not over-ridden by a
+     * Session.setNamespacePrefix, plus those currently set locally by
+     * Session.setNamespacePrefix.
+     */
+    public void testGetNamespacePrefixes() throws RepositoryException {
+        String testPrefix = getUnusedPrefix();
+
+        // remap the jcr uri
+        session.setNamespacePrefix(testPrefix, NS_JCR_URI);
+
+        String prefixes[] = session.getNamespacePrefixes();
+
+        assertEquals("Session.getNamespacePrefixes() must return all prefixes " +
+                "currently set for this session.",
+                nsr.getPrefixes().length,
+                session.getNamespacePrefixes().length);
+
+        // the prefix of the jcr uri as set in the namespace registry
+        String prefixNSR = nsr.getPrefix(NS_JCR_URI);
+
+        // test if the "NSR prefix" (and over-ridden by the session) is not
+        // returned by Session.getNamespacePrefixes()
+        for (int i = 0; i < prefixes.length; i++) {
+            if (prefixes[i].equals(prefixNSR)) {
+                fail("Session.getNamespacePrefixes() must not return the " +
+                     "prefixes over-ridden by Session.setNamespacePrefix");
+            }
+        }
+    }
+
+
+    /**
      * Returns a namespace prefix that is not in use.
      *
      * @return a namespace prefix that is not in use.
