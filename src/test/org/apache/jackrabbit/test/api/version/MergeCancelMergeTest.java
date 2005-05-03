@@ -20,6 +20,7 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.NodeIterator;
 import javax.jcr.version.Version;
 
 /**
@@ -73,17 +74,21 @@ public class MergeCancelMergeTest extends AbstractMergeTest {
         Property mergeFailedProperty = nodeToMerge.getProperty(jcrMergeFailed);
         Value[] mergeFailedReferences = mergeFailedProperty.getValues();
 
-        Version bv = nodeToMerge.getBaseVersion();
-        nodeToMerge.cancelMerge(bv);
+        for (int i = 0; i < mergeFailedReferences.length; i++) {
+            String uuid = mergeFailedReferences[i].getString();
+            nodeToMerge.cancelMerge((Version) superuser.getNodeByUUID(uuid));
+        }
 
         // check predecessors - unchanged
         Version[] predecessorsAfterCancel = nodeToMerge.getBaseVersion().getPredecessors();
         assertTrue(predecessors.length == predecessorsAfterCancel.length);
 
         // check mergeFailed property - reference removed
-        Property mergeFailedPropertyAfterCancelMerge = nodeToMerge.getProperty(jcrMergeFailed);
-        Value[] mergeFailedReferencesAfterCancelMerge = mergeFailedPropertyAfterCancelMerge.getValues();
-        assertTrue(mergeFailedReferences.length > mergeFailedReferencesAfterCancelMerge.length);
+        if (nodeToMerge.hasProperty(jcrMergeFailed)) {
+            Property mergeFailedPropertyAfterCancelMerge = nodeToMerge.getProperty(jcrMergeFailed);
+            Value[] mergeFailedReferencesAfterCancelMerge = mergeFailedPropertyAfterCancelMerge.getValues();
+            assertTrue(mergeFailedReferences.length > mergeFailedReferencesAfterCancelMerge.length);
+        }
     }
 
     /**
