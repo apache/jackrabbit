@@ -50,15 +50,15 @@ public class MergeCheckedoutSubNodeTest extends AbstractMergeTest {
      * calling merge must fail.
      */
     public void testFailIfCorrespondingNodeIsSuccessor() throws RepositoryException {
+        // make V' of a subnode N' in source workspace be a successor version of
+        // the base version of the corresponding subnode.
+        Node n = testRootNode.getNode(nodeName1 + "/" + nodeName2);
+        n.checkout();
+        n.checkin();
+
+        n.checkout();
+
         try {
-            // make V' of a subnode N' in source workspace be a successor version of
-            // the base version of the corresponding subnode.
-            Node n = nodeToMerge.getNode(nodeName2);
-            n.checkout();
-            n.checkin();
-
-            n.checkout();
-
             // merge, besteffort set to false to stop at the first failure
             nodeToMerge.merge(workspace.getName(), false);
             fail("Merging a checkedout node if the version V' of the corresponding node is a successor of this node's base version must fail.");
@@ -76,10 +76,10 @@ public class MergeCheckedoutSubNodeTest extends AbstractMergeTest {
     public void testLeaveIfCorrespondingNodeIsPredeccessor() throws RepositoryException {
         // make V' of a subnode N' in source workspace be a predeccessor version of
         // the base version of the corresponding subnode.
-        Node n = testRootNode.getNode(nodeName1 + "/" + nodeName2);
+        Node n = testRootNodeW2.getNode(nodeName1 + "/" + nodeName2);
         n.checkout();
         n.setProperty(propertyName1, CHANGED_STRING);
-        testRootNode.save();
+        testRootNodeW2.save();
         n.checkin();
 
         n.checkout();

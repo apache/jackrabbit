@@ -73,17 +73,17 @@ public class MergeDoneMergeTest extends AbstractMergeTest {
         Property mergeFailedProperty = nodeToMerge.getProperty(jcrMergeFailed);
         Value[] mergeFailedReferences = mergeFailedProperty.getValues();
 
-        Version bv = nodeToMerge.getBaseVersion();
-        nodeToMerge.doneMerge(bv);
-
-        // check predecessors - added new predecessor
-        Version[] predecessorsAfterCancel = nodeToMerge.getBaseVersion().getPredecessors();
-        assertTrue(predecessors.length < predecessorsAfterCancel.length);
+        for (int i = 0; i < mergeFailedReferences.length; i++) {
+            String uuid = mergeFailedReferences[i].getString();
+            nodeToMerge.doneMerge((Version) superuser.getNodeByUUID(uuid));
+        }
 
         // check mergeFailed property - reference moved to predecessor
-        Property mergeFailedPropertyAfterCancelMerge = nodeToMerge.getProperty(jcrMergeFailed);
-        Value[] mergeFailedReferencesAfterCancelMerge = mergeFailedPropertyAfterCancelMerge.getValues();
-        assertTrue(mergeFailedReferences.length > mergeFailedReferencesAfterCancelMerge.length);
+        if (nodeToMerge.hasProperty(jcrMergeFailed)) {
+            Property mergeFailedPropertyAfterCancelMerge = nodeToMerge.getProperty(jcrMergeFailed);
+            Value[] mergeFailedReferencesAfterCancelMerge = mergeFailedPropertyAfterCancelMerge.getValues();
+            assertTrue(mergeFailedReferences.length > mergeFailedReferencesAfterCancelMerge.length);
+        }
     }
 
     /**
