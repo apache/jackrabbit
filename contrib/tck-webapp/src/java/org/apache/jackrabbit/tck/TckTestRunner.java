@@ -64,6 +64,9 @@ public class TckTestRunner extends BaseTestRunner {
     /** new test identifier string */
     private String newTestString;
 
+    /** test counter */
+    private int tCount = 0;
+
     /**
      * The constructor inits the result map and sets the writer
      *
@@ -86,6 +89,7 @@ public class TckTestRunner extends BaseTestRunner {
         result = new TestResult();
         state = TestResult.SUCCESS;
         startTime = System.currentTimeMillis();
+        tCount++;
     }
 
     /**
@@ -208,6 +212,14 @@ public class TckTestRunner extends BaseTestRunner {
     }
 
     public void testEnded(String testName) {
+    }
+
+    public int getNumberOfTests() {
+        return tCount;
+    }
+
+    public void resetNumberOfTests() {
+        tCount = 0;
     }
 }
 

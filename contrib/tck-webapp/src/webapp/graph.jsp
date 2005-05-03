@@ -151,11 +151,17 @@ String mode = request.getParameter("mode");
         t.setfinishedSuiteString("<script>parent.statuswin.document.write(\"finished {0} tests<br>\");window.scrollBy(0,40);</script>");
         long startMillies = System.currentTimeMillis();
         t.run();
+
+        // saving test results
+        out.write("<script>parent.statuswin.document.write('" + String.valueOf(t.getNumberOfExecutedTests()) + " tests got executed<br>')</script>'");
+        out.write("<script>parent.statuswin.document.write('Saving test results...<br>')</script>");
         Node results = testResNode.addNode(String.valueOf(startMillies));
         testResNode.save();
         t.storeResults(results);
 
         // test summary
+        out.write("<script>parent.statuswin.document.write('Generating test summary...<br>')</script>'");
+        out.write("<script>parent.statuswin.scrollBy(0,30);</script>");
         Map summary = buildSummary(results, repSession);
 
         out.write("<table width=\"100%\">");
@@ -187,7 +193,7 @@ String mode = request.getParameter("mode");
 
         out.write("<script>parent.statuswin.document.write(\"...finished. Test took " +
                 String.valueOf(System.currentTimeMillis() - startMillies) + "ms<br>\");</script>");
-        out.write("<script>parent.statuswin.scrollBy(0,30);</script>");
+        out.write("<script>parent.statuswin.scrollBy(0,50);</script>");
         out.write("<script>parent.statuswin.document.write(\"</body></html>\");</script>");
         out.write("<script>window.scrollBy(0,200);</script>");
     } else if (mode != null && mode.equals("view")) {
