@@ -278,4 +278,56 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Tests if <code>Property.getNodes()</code> returns an array that is a copy
+     * of the stored values, so changes to it are not reflected in internal storage.
+     */
+    public void testGetValueCopyStoredValues()
+        throws NotExecutableException, RepositoryException {
+
+        Property prop = PropertyUtil.searchMultivalProp(testRootNode, PropertyType.STRING);
+        if (prop == null) {
+            throw new NotExecutableException("No testable propery found.");
+        }
+
+        // acquire the values of the property and change the zeroth value
+        Value[] values = prop.getValues();
+        if (values.length == 0) {
+            throw new NotExecutableException("No testable propery found.");
+        }
+        values[0] = session.getValueFactory().createValue(values[0].getString() + "abc");
+        prop.getParent().save();
+
+        // re-acquire the values and compare the zeroth values
+        Value[] values2 = prop.getValues();
+        String s1 = values[0].getString();
+        String s2 = values2[0].getString();
+        assertFalse("Changes on the array returned by Property.getNodes() must " +
+                "not be reflected in the internal storage.",
+                s1.equals(s2));
+    }
+
+    /**
+     * Tests that a ValueFormatExcdption is thrown in case Property.getNode is called
+     * on a multivalued exception.
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     */
+    public void testGetNode() throws RepositoryException, NotExecutableException {
+        Property prop = PropertyUtil.searchMultivalProp(testRootNode);
+        if (prop == null) {
+            throw new NotExecutableException("Test Property.getNode is throwing a "
+                    + "ValueFormaException not executable in case of a multivalued property.");
+        }
+        else {
+            try {
+                prop.getNode();
+                fail("Property.getNode should throw a ValueFormatException in case of "
+                        + "a multivalued porerty.");
+            } catch (ValueFormatException vfe) {
+                // ok
+            }
+        }
+    }
+
 }
