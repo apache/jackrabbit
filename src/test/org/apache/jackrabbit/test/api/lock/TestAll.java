@@ -37,6 +37,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("javax.jcr.lock tests");
 
         suite.addTestSuite(LockTest.class);
+	suite.addTestSuite(SetValueLockExceptionTest.class);
 
         return suite;
     }

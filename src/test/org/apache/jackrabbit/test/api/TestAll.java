@@ -86,6 +86,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SetValueReferenceTest.class);
         suite.addTestSuite(SetValueStringTest.class);
         suite.addTestSuite(SetValueConstraintViolationExceptionTest.class);
+        suite.addTestSuite(SetValueValueFormatExceptionTest.class);
+        suite.addTestSuite(SetValueVersionExceptionTest.class);
 
         suite.addTestSuite(SetPropertyBooleanTest.class);
         suite.addTestSuite(SetPropertyCalendarTest.class);
@@ -130,6 +132,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(DocumentViewImportTest.class);
         suite.addTestSuite(SerializationTest.class);
+
+        suite.addTestSuite(ValueFactoryTest.class);
 
         return suite;
     }
