@@ -17,6 +17,13 @@
  * limitations under the License.
  */
  -->
+<!--
+Note: The following inline DTD is included as an informal description of
+the node type configuration file format. It can however not be used for
+formal validation because of the namespace declarations. The DTD is therefore
+commented out by default.
+-->
+<!--
 <!DOCTYPE nodeTypes [
 	<!ELEMENT nodeTypes (nodeType)*>
 		<!ELEMENT nodeType (supertypes?|propertyDefinition*|childNodeDefinition*)>
@@ -58,6 +65,7 @@
 		<!ELEMENT requiredPrimaryTypes (requiredPrimaryType+)>
 		<!ELEMENT requiredPrimaryType (CDATA)>
 ]>
+-->
 <nodeTypes
     xmlns:rep="internal"
     xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
