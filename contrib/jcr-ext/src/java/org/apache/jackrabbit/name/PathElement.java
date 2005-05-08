@@ -17,14 +17,28 @@
 package org.apache.jackrabbit.name;
 
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
- * TODO
+ * Path element. This interface is used by the {@link Path Path} class
+ * to manage the various types of JCR path elements.
+ * <p>
+ * Each path element knows how to resolve itself in the context of a given
+ * content item. The {@link #resolve(Item) resolve(Item)} method is used
+ * to access this logic.
  */
 interface PathElement {
 
-    Item step(Item item) throws ItemNotFoundException, RepositoryException;
+    /**
+     * Resolves this path element within the context of the given content
+     * item. Retuns the result of the path element resolution.
+     *
+     * @param item the context from which to resolve this path element
+     * @return the resolved content item
+     * @throws PathNotFoundException if the path element could not be resolved
+     * @throws RepositoryException   if another error occurred
+     */
+    Item resolve(Item item) throws PathNotFoundException, RepositoryException;
 
 }

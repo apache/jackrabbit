@@ -16,102 +16,36 @@
  */
 package org.apache.jackrabbit.name;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.NamespaceException;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-/**
- * TODO
- */
-public class Path {
+public final class Path {
 
-    /**
-     * Pattern used to validate and parse path elements:<p>
-     * <ul>
-     * <li>group 1 is .
-     * <li>group 2 is ..
-     * <li>group 3 is namespace prefix incl. delimiter (colon)
-     * <li>group 4 is namespace prefix excl. delimiter (colon)
-     * <li>group 5 is localName
-     * <li>group 6 is index incl. brackets
-     * <li>group 7 is index excl. brackets
-     * </ul>
-     */
-    private static final Pattern PATH_ELEMENT_PATTERN = Pattern.compile(
-            "(\\.?)" + "|" + "(\\.\\.)" + "|" + "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)(\\[([1-9]\\d*)\\])?");
+    private final PathElement[] elements;
 
-    public static Path parseJCRPath(Session session, String path)
-            throws IllegalArgumentException, RepositoryException {
-        Vector elements = new Vector();
-
-        int p = path.indexOf('/');
-        if (p == 0) {
-            elements.add(RootElement.getInstance());
-            path = path.substring(1);
-            p = path.indexOf('/');
-        }
-
-        while (p != -1) {
-            elements.add(parseJCRPathElement(session, path.substring(0, p)));
-            path = path.substring(p + 1);
-            p = path.indexOf('/');
-        }
-
-        elements.add(parseJCRPathElement(session, path));
-
-        return new Path(elements); 
-    }
-    
-    private static PathElement parseJCRPathElement(
-            Session session, String element)
-            throws IllegalArgumentException, RepositoryException {
-        Matcher matcher = PATH_ELEMENT_PATTERN.matcher(element);
-        if (matcher.matches()) {
-            try {
-                if (matcher.group(1) != null) {
-                    return ThisElement.getInstance();
-                } else if (matcher.group(2) != null) {
-                    return ParentElement.getInstance();
-                } else if (matcher.group(3) != null) {
-                    return new NamedElement(
-                            Name.parseJCRName(session, element));
-                } else {
-                    return new IndexedElement(
-                            Name.parseJCRName(session, matcher.group(5)),
-                            Integer.parseInt(matcher.group(6)));
-                }
-            } catch (NamespaceException e) {
-                throw new IllegalArgumentException(
-                        "Invalid path element " + element);
-            }
-        } else {
-            throw new IllegalArgumentException(
-                    "Invalid path element " + element);
-        }
-    }
-
-    private final List elements;
-
-    private Path(List elements) {
+    Path(PathElement[] elements) {
         this.elements = elements;
     }
 
-    public Item walk(Item item)
-            throws ItemNotFoundException, RepositoryException {
-        Iterator iterator = elements.iterator();
-        while (iterator.hasNext()) {
-            PathElement element = (PathElement) iterator.next();
-            item = element.step(item);
+    public Item resolve(Item item)
+            throws PathNotFoundException, RepositoryException {
+        for (int i = 0; i < elements.length; i++) {
+            item = elements[i].resolve(item);
         }
         return item;
+    }
+
+    public static Path parse(Session session, String path)
+            throws IllegalArgumentException, RepositoryException {
+        return new PathParser(session).parsePath(path);
+    }
+
+    public static Item resolve(Item item, String path)
+            throws IllegalArgumentException, PathNotFoundException,
+            RepositoryException {
+        return parse(item.getSession(), path).resolve(item);
     }
 
 }

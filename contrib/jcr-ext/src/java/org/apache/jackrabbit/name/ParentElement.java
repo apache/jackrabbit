@@ -17,32 +17,34 @@
 package org.apache.jackrabbit.name;
 
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
- * TODO
+ * The ".." path element.
  */
 class ParentElement implements PathElement {
 
-    /** Singleton instance. */
-    private static final PathElement instance = new ParentElement();
-
-    public static PathElement getInstance() {
-        return instance;
-    }
-
-    private ParentElement() {
-    }
-
-    /** {@inheritDoc} */
-    public Item step(Item item) throws ItemNotFoundException,
-            RepositoryException {
+    /**
+     * Resolves the given item to its parent.
+     *
+     * @param item context item
+     * @return parent node
+     * @throws RepositoryException if the parent node can not be retrieved
+     * @see PathElement#resolve(Item)
+     * @see Item#getParent()
+     */
+    public Item resolve(Item item) throws RepositoryException {
         return item.getParent();
     }
 
-    public boolean equals(Object other) {
-        return other == instance;
+    /**
+     * Returns the string representation of this path element.
+     *
+     * @return the string ".."
+     * @see Object#toString()
+     */
+    public String toString() {
+        return "..";
     }
 
 }

@@ -19,27 +19,29 @@ package org.apache.jackrabbit.name;
 import javax.jcr.Item;
 
 /**
- * TODO
+ * The "." path element.
  */
-class ThisElement implements PathElement {
+final class ThisElement implements PathElement {
 
-    /** Singleton instance. */
-    private static final PathElement instance = new ThisElement();
-
-    public static PathElement getInstance() {
-        return instance;
-    }
-
-    private ThisElement() {
-    }
-
-    /** {@inheritDoc} */
-    public Item step(Item item) {
+    /**
+     * Resolves the given item to itself.
+     *
+     * @param item context item
+     * @return the same item
+     * @see PathElement#resolve(Item)
+     */
+    public Item resolve(Item item) {
         return item;
     }
 
-    public boolean equals(Object other) {
-        return other == instance;
+    /**
+     * Returns the string representation of this path element.
+     *
+     * @return the string "."
+     * @see Object#toString()
+     */
+    public String toString() {
+        return ".";
     }
 
 }

@@ -21,9 +21,90 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
- * TODO
+ * Qualified name. Instance of this immutable class are used to
+ * represent qualified names. A qualified name consists of a
+ * namespace URI and a local part.
  */
-public class Name {
+public final class Name {
+
+    /** Namespace URI of the qualified name. */
+    private final String namespaceURI;
+
+    /** Local part of the qualified name. */
+    private final String localPart;
+
+    /**
+     * Creates a qualified name instance.
+     *
+     * @param namespace namespace URI
+     * @param name      local part
+     */
+    public Name(String namespace, String name) {
+        this.namespaceURI = namespace;
+        this.localPart = name;
+    }
+
+    /**
+     * Returns the namespace URI of the qualified name.
+     *
+     * @return namespace URI
+     */
+    public String getNamespaceURI() {
+        return namespaceURI;
+    }
+
+    /**
+     * Returns the local part of the qualified name.
+     *
+     * @return local part
+     */
+    public String getLocalPart() {
+        return localPart;
+    }
+
+    /**
+     * Compares for equality. Two qualified names are equal if they have
+     * the same namespace URI and the same local part.
+     *
+     * @param object the object to compare to
+     * @return <code>true</code> if the given object is equal to this one,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
+     */
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        } else if (object instanceof Name) {
+            Name that = (Name) object;
+            return namespaceURI.equals(that.namespaceURI)
+                && localPart.equals(that.localPart);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Calculates the hash code of the qualified name.
+     *
+     * @return hash code
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        int code = 17;
+        code = 37 * code + namespaceURI.hashCode();
+        code = 37 * code + localPart.hashCode();
+        return code;
+    }
+
+    /**
+     * Returns a string representation of the qualified name.
+     *
+     * @return string representation
+     * @see Object#toString()
+     */
+    public String toString() {
+        return "{" + namespaceURI + "}" + localPart;
+    }
 
     public static Name parseJCRName(Session session, String name)
             throws NamespaceException, RepositoryException {
@@ -37,36 +118,10 @@ public class Name {
         }
     }
 
-    private final String namespace;
-
-    private final String name;
-
-    public Name(String namespace, String name) {
-        this.namespace = namespace;
-        this.name = name;
-    }
-
-    public String getNamespaceURI() {
-        return namespace;
-    }
-
-    public String getLocalPart() {
-        return name;
-    }
-
     public String toJCRName(Session session)
             throws NamespaceException, RepositoryException {
-        String prefix = session.getNamespacePrefix(namespace);
-        return prefix + ":" + name;
-    }
-
-    public boolean equals(Object object) {
-        if (object instanceof Name) {
-            Name qname = (Name) object;
-            return namespace.equals(qname.namespace) && name.equals(qname.name);
-        } else {
-            return false;
-        }
+        String prefix = session.getNamespacePrefix(namespaceURI);
+        return prefix + ":" + localPart;
     }
 
 }
