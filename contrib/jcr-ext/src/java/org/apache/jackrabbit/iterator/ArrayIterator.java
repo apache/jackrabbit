@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.iterator;
 
+import java.util.NoSuchElementException;
+
 import javax.jcr.RangeIterator;
 
 /**
@@ -24,54 +26,92 @@ import javax.jcr.RangeIterator;
  * implements the RangeIterator functionality for an underlying array
  * of objects. Used as the base class for the type-specific iterator
  * classes defined in this package.
- * 
- * @author Jukka Zitting
  */
-public class ArrayIterator implements RangeIterator {
+class ArrayIterator implements RangeIterator {
 
     /** The current iterator position. */
     private int position;
-    
+
     /** The underlying array of objects. */
-    private Object[] array;
-    
+    private final Object[] array;
+
     /**
      * Creates an iterator for the given array of objects.
-     * 
+     *
      * @param array the objects to iterate
      */
-    public ArrayIterator(Object[] array) {
+    protected ArrayIterator(Object[] array) {
         this.position = 0;
         this.array = array;
     }
-    
-    /** {@inheritDoc} */
+
+    /**
+     * Checks whether there are more elements in the array.
+     *
+     * @return <code>true</code> if more elements are available,
+     *         <code>false</code> otherwise
+     * @see Iterator#hasNext()
+     */
     public boolean hasNext() {
         return (position < array.length);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Returns the next array element and advances the array position.
+     *
+     * @return next element
+     * @see Iterator#next()
+     */
     public Object next() {
         return array[position++];
     }
 
-    /** {@inheritDoc} */
-    public void remove() {
+    /**
+     * Element removal is not supported.
+     *
+     * @throws UnsupportedOperationException always thrown
+     * @see Iterator#remove()
+     */
+    public void remove() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
 
-    /** {@inheritDoc} */
-    public void skip(long items) {
-        position += items;
+    /**
+     * Advances the array position the given number of elements.
+     *
+     * @param items number of items to skip
+     * @throws IllegalArgumentException if the given number of items is negative
+     * @throws NoSuchElementException if skipping past the end of the array
+     * @see RangeIterator#skip(long)
+     */
+    public void skip(long items)
+            throws IllegalArgumentException, NoSuchElementException {
+        if (items < 0) {
+            throw new IllegalArgumentException("Negative number of items");
+        } else if (position + items < array.length) {
+            position += items;
+        } else {
+            throw new NoSuchElementException("No more elements in the array");
+        }
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Returns the length of the array.
+     *
+     * @return array length
+     * @see RangeIterator#getSize()
+     */
     public long getSize() {
         return array.length;
     }
 
-    /** {@inheritDoc} */
-    public long getPos() {
+    /**
+     * Returns the current array position
+     *
+     * @return array position
+     * @see RangeIterator#getPosition()
+     */
+    public long getPosition() {
         return position;
     }
 

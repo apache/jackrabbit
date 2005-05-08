@@ -16,29 +16,41 @@
  */
 package org.apache.jackrabbit.iterator;
 
+import java.util.Collection;
+
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
 /**
  * Array implementation of the JCR
  * {@link javax.jcr.NodeIterator NodeIterator} interface.
- * This class is used by the JCR-RMI client adapters to convert
- * node arrays to iterators.
- * 
- * @author Jukka Zitting
  */
 public class ArrayNodeIterator extends ArrayIterator implements NodeIterator {
-    
+
     /**
      * Creates an iterator for the given array of nodes.
-     * 
+     *
      * @param nodes the nodes to iterate
      */
     public ArrayNodeIterator(Node[] nodes) {
         super(nodes);
     }
-    
-    /** {@inheritDoc} */
+
+    /**
+     * Creates an iterator for the given collection of nodes.
+     *
+     * @param nodes the nodes to iterate
+     */
+    public ArrayNodeIterator(Collection nodes) {
+        this((Node[]) nodes.toArray(new Node[nodes.size()]));
+    }
+
+    /**
+     * Returns the next node in the array.
+     *
+     * @return next node
+     * @see NodeIterator#nextNode()
+     */
     public Node nextNode() {
         return (Node) next();
     }
