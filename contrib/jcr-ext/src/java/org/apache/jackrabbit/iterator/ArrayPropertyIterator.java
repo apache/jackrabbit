@@ -16,30 +16,42 @@
  */
 package org.apache.jackrabbit.iterator;
 
+import java.util.Collection;
+
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 
 /**
  * Array implementation of the JCR
  * {@link javax.jcr.PropertyIterator PropertyIterator} interface.
- * This class is used by the JCR-RMI client adapters to convert
- * property arrays to iterators.
- * 
- * @author Jukka Zitting
  */
 public class ArrayPropertyIterator extends ArrayIterator
         implements PropertyIterator {
-    
+
     /**
      * Creates an iterator for the given array of properties.
-     * 
+     *
      * @param properties the properties to iterate
      */
     public ArrayPropertyIterator(Property[] properties) {
         super(properties);
     }
-    
-    /** {@inheritDoc} */
+
+    /**
+     * Creates an iterator for the given collection of properties.
+     *
+     * @param properties the properties to iterate
+     */
+    public ArrayPropertyIterator(Collection properties) {
+        this((Property[]) properties.toArray(new Property[properties.size()]));
+    }
+
+    /**
+     * Returns the next property in the array.
+     *
+     * @return next property
+     * @see PropertyIterator#nextProperty()
+     */
     public Property nextProperty() {
         return (Property) next();
     }
