@@ -123,7 +123,7 @@
 
         <!-- Checks for common coding problems               -->
         <!-- See http://checkstyle.sf.net/config_coding.html -->
-        <module name="AvoidInlineConditionals"/>
+        <!-- <module name="AvoidInlineConditionals"/> -->      <!-- DISABLED-->
         <module name="DoubleCheckedLocking"/>
         <module name="EqualsHashCode"/>
         <module name="IllegalInstantiation"/>
