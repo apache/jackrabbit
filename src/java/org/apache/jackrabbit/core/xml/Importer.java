@@ -20,7 +20,6 @@ import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.ImportUUIDBehavior;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;

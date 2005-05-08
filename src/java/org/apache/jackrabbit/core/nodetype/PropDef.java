@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.InternalValue;
 
 /**
  * <code>PropDef</code> is the internal representation of

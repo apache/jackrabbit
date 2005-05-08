@@ -18,14 +18,12 @@ package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.log4j.Logger;

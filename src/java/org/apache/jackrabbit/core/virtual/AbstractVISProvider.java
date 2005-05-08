@@ -328,7 +328,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, C
         if (state != null) {
             if (recursive) {
                 VirtualPropertyState[] props = state.getProperties();
-                for (int i=0; i<props.length; i++) {
+                for (int i = 0; i < props.length; i++) {
                     props[i].notifyStateUpdated();
                 }
                 Iterator iter = state.getChildNodeEntries().iterator();

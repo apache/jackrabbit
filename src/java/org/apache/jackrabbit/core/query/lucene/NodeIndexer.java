@@ -30,7 +30,6 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.query.TextFilterService;
 import org.apache.log4j.Logger;
 

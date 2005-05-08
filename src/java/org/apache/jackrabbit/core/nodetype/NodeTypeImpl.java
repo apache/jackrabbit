@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.BaseException;
 import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.QName;

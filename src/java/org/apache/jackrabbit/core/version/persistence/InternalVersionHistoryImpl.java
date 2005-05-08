@@ -486,9 +486,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 InternalValue.create(nodeState.getNodeTypeName()));
 
         Set mixins = nodeState.getMixinTypeNames();
-        if (mixins.size()>0) {
+        if (mixins.size() > 0) {
             InternalValue[] ivalues = new InternalValue[mixins.size()];
-            Iterator iter=mixins.iterator();
+            Iterator iter = mixins.iterator();
             for (int i = 0; i < mixins.size(); i++) {
                 ivalues[i] = InternalValue.create((QName) iter.next());
             }

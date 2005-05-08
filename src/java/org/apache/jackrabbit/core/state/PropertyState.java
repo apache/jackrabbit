@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.value.InternalValue;
