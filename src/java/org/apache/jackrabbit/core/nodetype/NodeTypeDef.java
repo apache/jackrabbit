@@ -77,6 +77,17 @@ public class NodeTypeDef implements Cloneable {
     }
 
     /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 0;
+    }
+
+    /**
      * Returns a collection of node type <code>QName</code>s that are being
      * referenced by <i>this</i> node type definition (e.g. as supertypes, as
      * required/default primary types in child node definitions, as REFERENCE

@@ -218,4 +218,16 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
         }
         return false;
     }
+
+    /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 0;
+    }
+
 }
