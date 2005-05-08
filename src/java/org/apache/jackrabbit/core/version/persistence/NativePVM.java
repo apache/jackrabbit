@@ -384,10 +384,9 @@ public class NativePVM implements PersistentVersionManager, Constants {
             try {
                 NodeState state = (NodeState) stateMgr.getItemState(id);
                 PersistentNode pNode = new PersistentNode(stateMgr, state);
-                InternalVersionItem parent = null;
-                if (pNode.getParentUUID() != null) {
-                    parent = getItem(pNode.getParentUUID());
-                }
+                String parentUUID = pNode.getParentUUID();
+                InternalVersionItem parent =
+                    (parentUUID != null) ? getItem(parentUUID) : null;
                 QName ntName = state.getNodeTypeName();
                 if (ntName.equals(NT_REP_FROZEN)) {
                     item = new InternalFrozenNodeImpl(this, pNode, parent);

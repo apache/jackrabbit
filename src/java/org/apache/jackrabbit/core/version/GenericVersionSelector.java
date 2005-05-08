@@ -216,10 +216,7 @@ public class GenericVersionSelector implements VersionSelector {
      */
     public static Version selectByDate(VersionHistory history, Calendar date)
             throws RepositoryException {
-        long time = Long.MAX_VALUE;
-        if (date != null) {
-            time = date.getTimeInMillis();
-        }
+        long time = (date != null) ? date.getTimeInMillis() : Long.MAX_VALUE;
         long latestDate = Long.MIN_VALUE;
         Version latestVersion = null;
         VersionIterator iter = history.getAllVersions();

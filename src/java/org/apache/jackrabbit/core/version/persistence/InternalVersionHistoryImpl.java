@@ -297,10 +297,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     public InternalVersion setVersionLabel(QName versionName, QName label, boolean move)
             throws VersionException {
 
-        InternalVersion version = null;
-        if (versionName != null) {
-            version = getVersion(versionName);
-        }
+        InternalVersion version =
+            (versionName != null) ? version = getVersion(versionName) : null;
         if (versionName != null && version == null) {
             throw new VersionException("Version " + versionName + " does not exist in this version history.");
         }
