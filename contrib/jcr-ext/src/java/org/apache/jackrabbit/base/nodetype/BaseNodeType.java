@@ -21,55 +21,70 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.jcr.Value;
-import javax.jcr.nodetype.ItemDef;
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
 /**
- * TODO
+ * Node type base class.
  */
 public class BaseNodeType implements NodeType {
 
-    /** {@inheritDoc} */
-    public String getName() {
-        return null;
+    /** Protected constructor. This class is only useful when extended. */
+    protected BaseNodeType() {
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
+    public String getName() {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Always returns <code>false</code>. {@inheritDoc} */
     public boolean isMixin() {
         return false;
     }
 
-    /** {@inheritDoc} */
+    /** Always returns <code>false</code>. {@inheritDoc} */
     public boolean hasOrderableChildNodes() {
         return false;
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String getPrimaryItemName() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
-    /** {@inheritDoc} */
-    public NodeType[] getSupertypes() {
-        Set defs = new HashSet();
-
-        NodeType[] types = getDeclaredSupertypes();
-        for (int i = 0; i < types.length; i++) {
-            defs.addAll(Arrays.asList(types[i].getSupertypes()));
-        }
-        defs.addAll(Arrays.asList(types));
-
-        return (NodeType[]) defs.toArray(new NodeType[0]);
-    }
-
-    /** {@inheritDoc} */
+    /** Always returns an empty supertype array. {@inheritDoc} */
     public NodeType[] getDeclaredSupertypes() {
         return new NodeType[0];
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getDeclaredSupertypes()</code> and
+     * recursively collecting all supertypes. The collected supertype
+     * set is returned as a node type array.
+     * {@inheritDoc}
+     */
+    public NodeType[] getSupertypes() {
+        Set supertypes = new HashSet();
+
+        NodeType[] declared = getDeclaredSupertypes();
+        for (int i = 0; i < declared.length; i++) {
+            supertypes.addAll(Arrays.asList(declared[i].getSupertypes()));
+        }
+        supertypes.addAll(Arrays.asList(declared));
+
+        return (NodeType[]) supertypes.toArray(new NodeType[supertypes.size()]);
+    }
+
+    /**
+     * Implemented by calling <code>getName()</code> on this node type and
+     * all supertypes returned by <code>getSupertypes()</code>. Returns
+     * <code>true</code> if any of the names equals the given node type name.
+     * Returns <code>false</code> otherwise.
+     * {@inheritDoc}
+     */
     public boolean isNodeType(String nodeTypeName) {
         if (nodeTypeName.equals(getName())) {
             return true;
@@ -84,70 +99,112 @@ public class BaseNodeType implements NodeType {
         }
     }
 
-    /** {@inheritDoc} */
-    public PropertyDef[] getPropertyDefs() {
+    /** Always returns an empty property definition array. {@inheritDoc} */
+    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
+        return new PropertyDefinition[0];
+    }
+
+    /**
+     * Implemented by calling <code>getDeclaredPropertyDefinitions()</code>
+     * this node type and all supertypes returned by
+     * <code>getSupertypes()</code>. The collected property definition set
+     * is returned as a property definition array.
+     * {@inheritDoc}
+     */
+    public PropertyDefinition[] getPropertyDefinitions() {
+        Set definitions = new HashSet();
+
+        NodeType[] supertypes = getSupertypes();
+        for (int i = 0; i < supertypes.length; i++) {
+            definitions.addAll(
+                    Arrays.asList(supertypes[i].getPropertyDefinitions()));
+        }
+        definitions.addAll(Arrays.asList(getDeclaredPropertyDefinitions()));
+
+        return (PropertyDefinition[])
+            definitions.toArray(new PropertyDefinition[definitions.size()]);
+    }
+
+    /** Always returns an empty node definition array. {@inheritDoc} */
+    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
+        return new NodeDefinition[0];
+    }
+
+    /**
+     * Implemented by calling <code>getDeclaredChildNodeDefinitions()</code>
+     * on this node type and all supertypes returned by
+     * <code>getSupertypes()</code>. The collected node definition set
+     * is returned as a node definition array.
+     * {@inheritDoc}
+     */
+    public NodeDefinition[] getChildNodeDefinitions() {
         Set defs = new HashSet();
 
         NodeType[] types = getSupertypes();
         for (int i = 0; i < types.length; i++) {
-            defs.addAll(Arrays.asList(types[i].getPropertyDefs()));
+            defs.addAll(Arrays.asList(types[i].getChildNodeDefinitions()));
         }
-        defs.addAll(Arrays.asList(getDeclaredPropertyDefs()));
+        defs.addAll(Arrays.asList(getDeclaredChildNodeDefinitions()));
 
-        return (PropertyDef[]) defs.toArray(new PropertyDef[0]);
+        return (NodeDefinition[]) defs.toArray(new NodeDefinition[0]);
     }
 
-    /** {@inheritDoc} */
-    public PropertyDef[] getDeclaredPropertyDefs() {
-        return new PropertyDef[0];
-    }
 
-    /** {@inheritDoc} */
-    public NodeDef[] getChildNodeDefs() {
-        Set defs = new HashSet();
-
-        NodeType[] types = getSupertypes();
-        for (int i = 0; i < types.length; i++) {
-            defs.addAll(Arrays.asList(types[i].getChildNodeDefs()));
-        }
-        defs.addAll(Arrays.asList(getDeclaredChildNodeDefs()));
-
-        return (NodeDef[]) defs.toArray(new NodeDef[0]);
-    }
-
-    /** {@inheritDoc} */
-    public NodeDef[] getDeclaredChildNodeDefs() {
-        return new NodeDef[0];
-    }
-
-    protected PropertyDef getPropertyDef(String propertyName) {
-        PropertyDef[] defs = getPropertyDefs();
-        for (int i = 0; i < defs.length; i++) {
-            if (propertyName.equals(defs[i].getName())) {
-                return defs[i];
+    /**
+     * Returns the definition of the named property.
+     * <p>
+     * This internal utility method is used by the predicate methods
+     * in this class.
+     *
+     * @param propertyName property name
+     * @return property definition, or <code>null</code> if not found
+     */
+    private PropertyDefinition getPropertyDefinition(String propertyName) {
+        PropertyDefinition[] definitions = getPropertyDefinitions();
+        for (int i = 0; i < definitions.length; i++) {
+            if (propertyName.equals(definitions[i].getName())) {
+                return definitions[i];
             }
         }
         return null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by finding the definition of the named property (or the
+     * wildcard property definition if the named property definition is not
+     * found) and checking whether the defined property is single-valued.
+     * More detailed value constraints are not implemented, but this method
+     * will simply return <code>true</code> instead of throwing an
+     * {@link UnsupportedOperationException UnsupportedOperationException}
+     * for all value constraint comparisons.
+     * {@inheritDoc}
+     */
     public boolean canSetProperty(String propertyName, Value value) {
-        PropertyDef def = getPropertyDef(propertyName);
-        if (def == null) {
-            def = getPropertyDef("*");
+        PropertyDefinition definition = getPropertyDefinition(propertyName);
+        if (definition == null) {
+            definition = getPropertyDefinition("*");
         }
-        if (def == null || def.isMultiple()) {
+        if (definition == null || definition.isMultiple()) {
             return false;
         } else {
             return true; // TODO check constraints!
         }
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by finding the definition of the named property (or the
+     * wildcard property definition if the named property definition is not
+     * found) and checking whether the defined property is multi-valued.
+     * More detailed value constraints are not implemented, but this method
+     * will simply return <code>true</code> instead of throwing an
+     * {@link UnsupportedOperationException UnsupportedOperationException}
+     * for all value constraint comparisons.
+     * {@inheritDoc}
+     */
     public boolean canSetProperty(String propertyName, Value[] values) {
-        PropertyDef def = getPropertyDef(propertyName);
+        PropertyDefinition def = getPropertyDefinition(propertyName);
         if (def == null) {
-            def = getPropertyDef("*");
+            def = getPropertyDefinition("*");
         }
         if (def == null || !def.isMultiple()) {
             return false;
@@ -156,54 +213,63 @@ public class BaseNodeType implements NodeType {
         }
     }
 
-    protected NodeDef getChildNodeDef(String childNodeName) {
-        NodeDef[] defs = getChildNodeDefs();
-        for (int i = 0; i < defs.length; i++) {
-            if (childNodeName.equals(defs[i].getName())) {
-                return defs[i];
+    /**
+     * Returns the definition of the named child node.
+     * <p>
+     * This internal utility method is used by the predicate methods
+     * in this class.
+     *
+     * @param childNodeName child node name
+     * @return node definition, or <code>null</code> if not found
+     */
+    private NodeDefinition getChildNodeDefinition(String childNodeName) {
+        NodeDefinition[] definitions = getChildNodeDefinitions();
+        for (int i = 0; i < definitions.length; i++) {
+            if (childNodeName.equals(definitions[i].getName())) {
+                return definitions[i];
             }
         }
         return null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by finding the definition of the named child node (or the
+     * wildcard child node definition if the named child node definition is
+     * not found). Returns <code>true</code> if a node definition is found,
+     * <code>false</code> otherwise.
+     * {@inheritDoc}
+     */
     public boolean canAddChildNode(String childNodeName) {
-        NodeDef def = getChildNodeDef(childNodeName);
-        if (def == null) {
-            def = getChildNodeDef("*");
+        NodeDefinition definition = getChildNodeDefinition(childNodeName);
+        if (definition == null) {
+            definition = getChildNodeDefinition("*");
         }
-        return def != null;
+        return definition != null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Not implemented. Implementing this method requires access to the
+     * node type manager in order to resolve the given node type name.
+     * {@inheritDoc}
+     */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
-        NodeDef def = getChildNodeDef(childNodeName);
-        if (def == null) {
-            def = getChildNodeDef("*");
-        }
-        if (def == null) {
-            return false;
-        }
-
-        NodeType[] types = def.getRequiredPrimaryTypes();
-        for (int i = 0; i < types.length; i++) {
-            if (types[i].isNodeType(nodeTypeName)) {
-                return true;
-            }
-        }
-        return types.length == 0;
+        throw new UnsupportedOperationException();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by finding the definition of the named item (property or
+     * child node) and checking that the defined item is not mandatory.
+     * {@inheritDoc}
+     */
     public boolean canRemoveItem(String itemName) {
-        ItemDef def = getPropertyDef(itemName);
-        if (def == null) {
-            def = getChildNodeDef(itemName);
+        ItemDefinition definition = getPropertyDefinition(itemName);
+        if (definition == null) {
+            definition = getChildNodeDefinition(itemName);
         }
-        if (def == null) {
+        if (definition == null) {
             return true;
         } else {
-            return def.isMandatory();
+            return definition.isMandatory();
         }
     }
 

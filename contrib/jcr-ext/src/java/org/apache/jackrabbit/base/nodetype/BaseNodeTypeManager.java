@@ -19,6 +19,7 @@ package org.apache.jackrabbit.base.nodetype;
 import java.util.Vector;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
@@ -27,40 +28,23 @@ import javax.jcr.nodetype.NodeTypeManager;
 import org.apache.jackrabbit.iterator.ArrayNodeTypeIterator;
 
 /**
- * TODO
+ * Node type manager base class.
  */
 public class BaseNodeTypeManager implements NodeTypeManager {
 
-    /**
-     * Static empty node type array instance. Used to avoid
-     * instantiating the empty array more than once.
-     */
-    private static final NodeType[] EMPTY_NODETYPE_ARRAY = new NodeType[0];
+    /** Protected constructor. This class is only useful when extended. */
+    protected BaseNodeTypeManager() {
+    }
 
-    /**
-     * Returns an empty iterator. Subclasses should override this method
-     * to return all the available node types.
-     *
-     * @return all node types (empty array)
-     * @throws RepositoryException on repository errors (not thrown)
-     */
+    /** Not implemented. {@inheritDoc} */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
-        return new ArrayNodeTypeIterator(EMPTY_NODETYPE_ARRAY);
+        throw new UnsupportedRepositoryOperationException();
     }
 
     /**
-     * Returns the named node type. Implemented by searching through
-     * the iterator returned by <code>getAllNodeTypes()</code> looking
-     * for a match for <code>nodeTypeName.equals(type.getName())</code>.
-     * <p>
-     * Note that names are compared using normal string comparison, which
-     * means that both the given name and the internal node type names must
-     * use the same namespace mappings.
-     *
-     * @param nodeTypeName node type name
-     * @return named node type
-     * @throws NoSuchNodeTypeException if the named node type does not exist
-     * @throws RepositoryException on repository errors
+     * Implemented by calling <code>getAllNodeTypes()</code> and iterating
+     * through the returned node types to find the named node type.
+     * {@inheritDoc}
      */
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException, RepositoryException {
@@ -71,18 +55,13 @@ public class BaseNodeTypeManager implements NodeTypeManager {
                 return type;
             }
         }
-
-        throw new NoSuchNodeTypeException(
-                "Node type " + nodeTypeName + " not found");
+        throw new NoSuchNodeTypeException("Type not found: " + nodeTypeName);
     }
 
     /**
-     * Returns all primary node types. Implemented by filtering the iterator
-     * returned by <code>getAllNodeTypes()</code> with
-     * <code>!type.isMixin()</code>.
-     *
-     * @return primary node types
-     * @throws RepositoryException on repository errors
+     * Implemented by calling <code>getAllNodeTypes()</code> and iterating
+     * through the returned node types to select all primary node types.
+     * {@inheritDoc}
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
         Vector primaryTypes = new Vector();
@@ -95,17 +74,14 @@ public class BaseNodeTypeManager implements NodeTypeManager {
             }
         }
 
-        return new ArrayNodeTypeIterator(
-                (NodeType[]) primaryTypes.toArray(EMPTY_NODETYPE_ARRAY));
+        return new ArrayNodeTypeIterator((NodeType[])
+                primaryTypes.toArray(new NodeType[primaryTypes.size()]));
     }
 
     /**
-     * Returns all mixin node types. Implemented by filtering the iterator
-     * returned by <code>getAllNodeTypes()</code> with
-     * <code>type.isMixin()</code>.
-     *
-     * @return mixin node types
-     * @throws RepositoryException on repository errors
+     * Implemented by calling <code>getAllNodeTypes()</code> and iterating
+     * through the returned node types to select all mixin node types.
+     * {@inheritDoc}
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
         Vector mixinTypes = new Vector();
@@ -118,8 +94,8 @@ public class BaseNodeTypeManager implements NodeTypeManager {
             }
         }
 
-        return new ArrayNodeTypeIterator(
-                (NodeType[]) mixinTypes.toArray(EMPTY_NODETYPE_ARRAY));
+        return new ArrayNodeTypeIterator((NodeType[])
+                mixinTypes.toArray(new NodeType[mixinTypes.size()]));
     }
 
 }

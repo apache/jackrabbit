@@ -16,41 +16,48 @@
  */
 package org.apache.jackrabbit.base.nodetype;
 
-import javax.jcr.nodetype.ItemDef;
+import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.OnParentVersionAction;
 
 /**
- * TODO
+ * Item definition base class.
  */
-public class BaseItemDef implements ItemDef {
+public class BaseItemDefinition implements ItemDefinition {
 
-    /** {@inheritDoc} */
+    /** Protected constructor. This class is only useful when extended. */
+    protected BaseItemDefinition() {
+    }
+
+    /** Not implemented. {@inheritDoc} */
     public NodeType getDeclaringNodeType() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String getName() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
-    /** {@inheritDoc} */
-    public boolean isAutoCreate() {
+    /** Always returns <code>false</code>. {@inheritDoc} */
+    public boolean isAutoCreated() {
         return false;
     }
 
-    /** {@inheritDoc} */
+    /** Always returns <code>false</code>. {@inheritDoc} */
     public boolean isMandatory() {
         return false;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Always returns <code>OnParentVersionAction.IGNORE</code>.
+     * {@inheritDoc}
+     */
     public int getOnParentVersion() {
         return OnParentVersionAction.IGNORE;
     }
 
-    /** {@inheritDoc} */
+    /** Always returns <code>false</code>. {@inheritDoc} */
     public boolean isProtected() {
         return false;
     }

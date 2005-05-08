@@ -16,26 +16,30 @@
  */
 package org.apache.jackrabbit.base.nodetype;
 
-import javax.jcr.nodetype.NodeDef;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
 /**
- * TODO
+ * Node definition base class.
  */
-public class BaseNodeDef extends BaseItemDef implements NodeDef {
+public class BaseNodeDefinition extends BaseItemDefinition implements NodeDefinition {
 
-    /** {@inheritDoc} */
+    /** Protected constructor. This class is only useful when extended. */
+    protected BaseNodeDefinition() {
+    }
+
+    /** Always returns an empty node type array. {@inheritDoc} */
     public NodeType[] getRequiredPrimaryTypes() {
         return new NodeType[0];
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public NodeType getDefaultPrimaryType() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
-    /** {@inheritDoc} */
-    public boolean allowSameNameSibs() {
+    /** Always returns <code>false</code>. {@inheritDoc} */
+    public boolean allowsSameNameSiblings() {
         return false;
     }
 
