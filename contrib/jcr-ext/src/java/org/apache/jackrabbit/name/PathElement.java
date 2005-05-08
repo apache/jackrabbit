@@ -34,8 +34,8 @@ interface PathElement {
      * Resolves this path element within the context of the given content
      * item. Retuns the result of the path element resolution.
      *
-     * @param item the context from which to resolve this path element
-     * @return the resolved content item
+     * @param item the context item from which to resolve this path element
+     * @return the resolved target item
      * @throws PathNotFoundException if the path element could not be resolved
      * @throws RepositoryException   if another error occurred
      */
