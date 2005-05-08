@@ -19,18 +19,39 @@ package org.apache.jackrabbit.name;
 import java.util.List;
 import java.util.Vector;
 
+/**
+ * Content path builder. This utility class uses the Builder design
+ * pattern (GoF) to provide a simple mechanism for converting a sequence
+ * of path elements into a path instance.
+ *
+ * @see PathParser
+ */
 final class PathBuilder {
 
+    /** Path element list. Grows as more elements are added. */
     private final List elements;
 
+    /**
+     * Creates a path builder instance.
+     */
     public PathBuilder() {
         elements = new Vector();
     }
 
+    /**
+     * Adds an element to the path being built.
+     *
+     * @param element path element
+     */
     public void addElement(PathElement element) {
         elements.add(element);
     }
 
+    /**
+     * Creates a path instance from the collected sequence of path elements.
+     *
+     * @return path instance
+     */
     public Path getPath() {
         return new Path((PathElement[])
                 elements.toArray(new PathElement[elements.size()]));

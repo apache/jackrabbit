@@ -23,16 +23,22 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-final class PathParser {
+/**
+ * JCR content path parser. Instances of this class are used to parse
+ * JCR content path strings into resolvable path instances. A path parser
+ * instance is always associated with a given session that is used to
+ * resolve namespace prefixes within the parsed paths.
+ */
+public final class PathParser {
 
     /**
-     * Pattern used to validate and parse path elements:<p>
+     * Pattern used to validate and parse path elements.
      * <ul>
-     * <li>group 1 is .
-     * <li>group 2 is ..
-     * <li>group 3 is namespace prefix excl. delimiter (colon)
-     * <li>group 4 is localName
-     * <li>group 5 is index excl. brackets
+     * <li>group 1 is . (matches the full string)
+     * <li>group 2 is .. (matches the full string)
+     * <li>group 3 is the optional namespace prefix (without the colon)
+     * <li>group 4 is the local part of the JCR name
+     * <li>group 5 is the optional index (without the brackets)
      * </ul>
      */
     private static final Pattern PATH_ELEMENT_PATTERN = Pattern.compile(
@@ -41,38 +47,60 @@ final class PathParser {
             + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)"
             + "(?:\\[([1-9]\\d*)\\])?");
 
+    /** Current session. Used to resolve namespace prefixes. */
     private final Session session;
 
+    /**
+     * Creates a path parser for the given session.
+     *
+     * @param session current session
+     */
     public PathParser(Session session) {
         this.session = session;
     }
 
+    /**
+     * Parses the given JCR content path.
+     *
+     * @param path JCR content path
+     * @return path instance
+     * @throws IllegalArgumentException if the given path is invalid
+     * @throws RepositoryException      if another error occurs
+     */
     public Path parsePath(String path)
             throws IllegalArgumentException, RepositoryException {
         PathBuilder builder = new PathBuilder();
-
         int p = path.indexOf('/');
-        if (p == 0) {
+
+        if (p == 0) { // Check for an absolute path with a leading slash
             builder.addElement(new RootElement());
             path = path.substring(1);
             p = path.indexOf('/');
         }
 
         while (p != -1) {
-            if (p > 0) {
+            if (p > 0) { // Ignore empty path elements
                 builder.addElement(parsePathElement(path.substring(0, p)));
             }
             path = path.substring(p + 1);
             p = path.indexOf('/');
         }
 
-        if (path.length() > 0) {
+        if (path.length() > 0) { // Ignore empty trailing path elements
             builder.addElement(parsePathElement(path));
         }
 
         return builder.getPath();
     }
 
+    /**
+     * Parses the given path element.
+     *
+     * @param element path element
+     * @return path element instance
+     * @throws IllegalArgumentException if the given path element is invalid
+     * @throws RepositoryException      if another error occurs
+     */
     private PathElement parsePathElement(String element)
             throws IllegalArgumentException, RepositoryException {
         Matcher matcher = PATH_ELEMENT_PATTERN.matcher(element);

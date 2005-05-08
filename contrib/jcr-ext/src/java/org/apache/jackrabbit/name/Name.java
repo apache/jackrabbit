@@ -106,7 +106,17 @@ public final class Name {
         return "{" + namespaceURI + "}" + localPart;
     }
 
-    public static Name parseJCRName(Session session, String name)
+    /**
+     * Parses the given prefixed JCR name into a qualified name instance.
+     * The namespace prefix is resolved using the current session.
+     *
+     * @param session current session
+     * @param name    prefixed JCR name
+     * @return qualified name
+     * @throws NamespaceException  if the namespace prefix is not registered
+     * @throws RepositoryException if another error occurs
+     */
+    public static Name fromJCRName(Session session, String name)
             throws NamespaceException, RepositoryException {
         int p = name.indexOf(':');
         if (p != -1) {
@@ -118,6 +128,15 @@ public final class Name {
         }
     }
 
+    /**
+     * Returns the prefixed JCR name representation of the qualified name.
+     * The namespace prefix is retrieved from the current session.
+     *
+     * @param session current session
+     * @return prefixed JCR name
+     * @throws NamespaceException  if the namespace URI is not registered
+     * @throws RepositoryException if another error occurs
+     */
     public String toJCRName(Session session)
             throws NamespaceException, RepositoryException {
         String prefix = session.getNamespacePrefix(namespaceURI);
