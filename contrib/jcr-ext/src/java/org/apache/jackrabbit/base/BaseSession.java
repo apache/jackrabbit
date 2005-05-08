@@ -36,6 +36,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -53,44 +54,41 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
- * General base class for implementing the JCR Session interface.
+ * Session base class.
  */
 public class BaseSession implements Session {
 
-    /**
-     * The default constructor is protected to signify that this
-     * class needs to be subclassed to be of any real use.
-     */
+    /** Protected constructor. This class is only useful when extended. */
     protected BaseSession() {
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Repository getRepository() {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
-    public String getUserId() {
+    /** Not implemented. {@inheritDoc} */
+    public String getUserID() {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Object getAttribute(String name) {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String[] getAttributeNames() {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Workspace getWorkspace() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Calls
+     * Implemented by calling
      * <code>getRepository().login(credentials, getWorkspace().getName())</code>.
      * {@inheritDoc}
      */
@@ -99,80 +97,89 @@ public class BaseSession implements Session {
         return getRepository().login(credentials, getWorkspace().getName());
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Node getRootNode() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException,
             RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getRootNode()</code> or
+     * <code>getRootNode().getNode(absPath.substring(1))</code> depending
+     * on the given absolute path.
+     * {@inheritDoc}
+     */
     public Item getItem(String absPath) throws PathNotFoundException,
             RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        if (absPath == null || !absPath.startsWith("/")) {
+            throw new IllegalArgumentException("Invalid path: " + absPath);
+        } else if (absPath.equals("/")) {
+            return getRootNode();
+        } else {
+            return getRootNode().getNode(absPath.substring(1));
+        }
     }
 
     /**
-     * Calls <code>getItem(absPath)</code> and returns <code>true</code>
-     * if a {@link PathNotFoundException PathNotFoundException} is not thrown.
-     * Throws a {@link RuntimeException RuntimeException} if a general
-     * {@link RepositoryException RepositoryException} is thrown by getItem().
+     * Implemented by calling <code>getItem(absPath)</code> and returning
+     * <code>true</code> unless a
+     * {@link PathNotFoundException PathNotFoundException} is thrown.
      * {@inheritDoc}
      */
-    public boolean itemExists(String absPath) {
+    public boolean itemExists(String absPath) throws RepositoryException {
         try {
             getItem(absPath);
             return true;
         } catch (PathNotFoundException e) {
             return false;
-        } catch (RepositoryException e) {
-            throw new RuntimeException(e);
         }
     }
 
-    /** Unsupported repository operation.{@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void move(String srcAbsPath, String destAbsPath)
             throws ItemExistsException, PathNotFoundException,
             VersionException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void save() throws AccessDeniedException,
             ConstraintViolationException, InvalidItemStateException,
             VersionException, LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void refresh(boolean keepChanges) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public boolean hasPendingChanges() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void checkPermission(String absPath, String actions)
             throws AccessControlException {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
-    public ContentHandler getImportContentHandler(String parentAbsPath)
+    /** Not implemented. {@inheritDoc} */
+    public ContentHandler getImportContentHandler(
+            String parentAbsPath, int uuidBehaviour)
             throws PathNotFoundException, ConstraintViolationException,
             VersionException, LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
     /**
-     * Calls
+     * Implemented by calling
      * <code>transformer.transform(new StreamSource(in), new SAXResult(handler))</code>
      * with an identity {@link Transformer Transformer} and a
      * {@link ContentHandler ContentHandler} instance created by calling
@@ -182,34 +189,37 @@ public class BaseSession implements Session {
      * are converted to {@link IOException IOExceptions}.
      * {@inheritDoc}
      */
-    public void importXML(String parentAbsPath, InputStream in)
+    public void importXML(
+            String parentAbsPath, InputStream in, int uuidBehaviour)
             throws IOException, PathNotFoundException, ItemExistsException,
             ConstraintViolationException, VersionException,
             InvalidSerializedDataException, LockException, RepositoryException {
         try {
-            ContentHandler handler = getImportContentHandler(parentAbsPath);
+            ContentHandler handler =
+                getImportContentHandler(parentAbsPath, uuidBehaviour);
 
             TransformerFactory factory = TransformerFactory.newInstance();
             Transformer transformer = factory.newTransformer();
             transformer.transform(new StreamSource(in), new SAXResult(handler));
         } catch (TransformerConfigurationException e) {
             throw new IOException(
-                    "Unable to deserialize a SAX stream: " + e.getMessage());
+                    "Unable to configure a SAX transformer: " + e.getMessage());
         } catch (TransformerException e) {
             throw new IOException(
                     "Unable to deserialize a SAX stream: " + e.getMessage());
         }
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
-    public void exportSysView(String absPath, ContentHandler contentHandler,
+    /** Not implemented. {@inheritDoc} */
+    public void exportSystemView(
+            String absPath, ContentHandler contentHandler,
             boolean skipBinary, boolean noRecurse)
             throws PathNotFoundException, SAXException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
     /**
-     * Calls
+     * Implemented by calling
      * <code>exportSysView(absPath, handler, binaryAsLink, noRecurse)</code>
      * with a content handler instance <code>handler</code> created on
      * top fo the given output stream using the Xerces
@@ -218,23 +228,24 @@ public class BaseSession implements Session {
      * {@link IOException IOExceptions}.
      * {@inheritDoc}
      */
-    public void exportSysView(String absPath, OutputStream out,
+    public void exportSystemView(String absPath, OutputStream out,
             boolean skipBinary, boolean noRecurse) throws IOException,
             PathNotFoundException, RepositoryException {
         try {
             XMLSerializer serializer =
                 new XMLSerializer(out, new OutputFormat());
-            exportDocView(absPath, serializer.asContentHandler(),
+            exportSystemView(
+                    absPath, serializer.asContentHandler(),
                     skipBinary, noRecurse);
         } catch (SAXException e) {
             throw new IOException(
-                    "Unable to serialize a system view SAX stream: "
-                    + e.getMessage());
+                    "Unable to serialize a SAX stream: " + e.getMessage());
         }
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
-    public void exportDocView(String absPath, ContentHandler contentHandler,
+    /** Not implemented. {@inheritDoc} */
+    public void exportDocumentView(
+            String absPath, ContentHandler contentHandler,
             boolean skipBinary, boolean noRecurse)
             throws InvalidSerializedDataException, PathNotFoundException,
             SAXException, RepositoryException {
@@ -242,7 +253,7 @@ public class BaseSession implements Session {
     }
 
     /**
-     * Calls
+     * Implemented by calling
      * <code>exportDocView(absPath, handler, binaryAsLink, noRecurse)</code>
      * with a content handler instance <code>handler</code> created on
      * top fo the given output stream using the Xerces
@@ -251,34 +262,35 @@ public class BaseSession implements Session {
      * {@link IOException IOExceptions}.
      * {@inheritDoc}
      */
-    public void exportDocView(String absPath, OutputStream out,
+    public void exportDocumentView(
+            String absPath, OutputStream out,
             boolean skipBinary, boolean noRecurse)
             throws InvalidSerializedDataException, IOException,
             PathNotFoundException, RepositoryException {
         try {
             XMLSerializer serializer =
                 new XMLSerializer(out, new OutputFormat("xml", "UTF-8", true));
-            exportDocView(absPath, serializer.asContentHandler(),
+            exportDocumentView(
+                    absPath, serializer.asContentHandler(),
                     skipBinary, noRecurse);
         } catch (SAXException e) {
             throw new IOException(
-                    "Unable to serialize a document view SAX stream: "
-                    + e.getMessage());
+                    "Unable to serialize a SAX stream: " + e.getMessage());
         }
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void setNamespacePrefix(String prefix, String uri)
             throws NamespaceException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String[] getNamespacePrefixes() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String getNamespaceURI(String prefix) throws NamespaceException,
             RepositoryException {
         throw new UnsupportedRepositoryOperationException();
@@ -306,19 +318,29 @@ public class BaseSession implements Session {
     public void logout() {
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void addLockToken(String lt) {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String[] getLockTokens() {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void removeLockToken(String lt) {
         throw new UnsupportedOperationException();
     }
 
+    /** Not implemented. {@inheritDoc} */
+    public ValueFactory getValueFactory()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /** Always returns <code>true</code>. {@inheritDoc} */
+    public boolean isLive() {
+        return true;
+    }
 }

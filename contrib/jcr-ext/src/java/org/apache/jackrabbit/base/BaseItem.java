@@ -31,183 +31,130 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
 /**
- * TODO
+ * Item base class.
  */
 public class BaseItem implements Item {
-    
-    private Item item;
 
+    /** Protected constructor. This class is only useful when extended. */
     protected BaseItem() {
-        this.item = null;
     }
 
-    protected BaseItem(Item item) {
-        this.item = item;
-    }
-
-    protected void setProxyItem(Item item) {
-        this.item = item;
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getParent().getPath()</code> and
+     * appending <code>getName()</code> to the returned parent path.
+     * Returns the root path <code>/</code> if an
+     * {@link ItemNotFoundException ItemNotFoundException} is thrown by
+     * <code>getParent()</code> (indicating that this is the root node).
+     * {@inheritDoc}
+     */
     public String getPath() throws RepositoryException {
-        if (item != null) {
-            return item.getPath();
-        } else {
-            try {
-                Node parent = getParent();
-                String path = parent.getPath();
-                if (path.equals("/")) {
-                    return path + getName();
-                } else {
-                    return path + "/" + getName();
-                }
-            } catch (ItemNotFoundException e) {
-                return "/";
+        try {
+            String path = getParent().getPath();
+            if (path.equals("/")) {
+                return path + getName();
+            } else {
+                return path + "/" + getName();
             }
+        } catch (ItemNotFoundException e) {
+            return "/";
         }
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String getName() throws RepositoryException {
-        if (item != null) {
-            return item.getName();
-        } else {
-            throw new UnsupportedRepositoryOperationException();
-        }
+        throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getDepth()</code> and returning either
+     * this item, <code>getSession().getRootNode()</code>, or
+     * <code>getParent().getAncestor()</code>, or throwing an
+     * {@link ItemNotFoundException ItemNotFoundException} depending on the
+     * given depth.
+     * {@inheritDoc}
+     */
     public Item getAncestor(int depth) throws ItemNotFoundException,
             AccessDeniedException, RepositoryException {
-        if (item != null) {
-            return item.getAncestor(depth);
+        int thisDepth = getDepth();
+        if (thisDepth == depth) {
+            return this;
+        } else if (depth == 0) {
+            return getSession().getRootNode();
+        } else if (depth > 0 && depth < thisDepth) {
+            return getParent().getAncestor(depth);
         } else {
-            int thisDepth = getDepth();
-            if (depth >= 0 || depth < thisDepth) {
-                return getParent().getAncestor(depth);
-            } else if (thisDepth == depth) {
-                return this;
-            } else {
-                throw new ItemNotFoundException(
-                        "Invalid ancestor depth " + depth);
-            }
+            throw new ItemNotFoundException("Invalid ancestor depth " + depth);
         }
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Node getParent() throws ItemNotFoundException,
             AccessDeniedException, RepositoryException {
-        if (item != null) {
-            return item.getParent();
-        } else {
-            throw new UnsupportedRepositoryOperationException();
-        }
+        throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getParent().getDepth() + 1</code> and
+     * returning <code>0</code> if an
+     * {@link ItemNotFoundException ItemNotFoundException} is thrown by
+     * <code>getParent()</code> (indicating that this is the root node).
+     * {@inheritDoc}
+     */
     public int getDepth() throws RepositoryException {
-        if (item != null) {
-            return item.getDepth();
-        } else {
-            try {
-                return getParent().getDepth() + 1;
-            } catch (ItemNotFoundException e) {
-                return 0;
-            }
-        }
-    }
-
-    /** {@inheritDoc} */
-    public Session getSession() throws RepositoryException {
-        if (item != null) {
-            return item.getSession();
-        } else {
-            throw new UnsupportedRepositoryOperationException();
-        }
-    }
-
-    /** {@inheritDoc} */
-    public boolean isNode() {
-        if (item != null) {
-            return item.isNode();
-        } else {
-            return this instanceof Node;
-        }
-    }
-
-    /** {@inheritDoc} */
-    public boolean isNew() {
-        if (item != null) {
-            return item.isNew();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    /** {@inheritDoc} */
-    public boolean isModified() {
-        if (item != null) {
-            return item.isModified();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    /** {@inheritDoc} */
-    public boolean isSame(Item otherItem) {
         try {
-            if (item != null) {
-                return item.isSame(otherItem);
-            } else if (otherItem == this) {
-                return true;
-            } else {
-                return getPath().equals(otherItem.getPath());
-            }
-        } catch (RepositoryException e) {
-            throw new RuntimeException(e);
+            return getParent().getDepth() + 1;
+        } catch (ItemNotFoundException e) {
+            return 0;
         }
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
+    public Session getSession() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /** Always returns <code>false</code>. {@inheritDoc} */
+    public boolean isNode() {
+        return false;
+    }
+
+    /** Not implemented. {@inheritDoc} */
+    public boolean isNew() {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Not implemented. {@inheritDoc} */
+    public boolean isModified() {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Not implemented. {@inheritDoc} */
+    public boolean isSame(Item otherItem) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** Does nothing. {@inheritDoc} */
     public void accept(ItemVisitor visitor) throws RepositoryException {
-        if (item != null) {
-            item.accept(visitor);
-        } else {
-            throw new UnsupportedRepositoryOperationException();
-        }
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void save() throws AccessDeniedException,
             ConstraintViolationException, InvalidItemStateException,
             ReferentialIntegrityException, VersionException, LockException,
             RepositoryException {
-        if (item != null) {
-            item.save();
-        } else {
-            throw new UnsupportedRepositoryOperationException();
-        }
+        throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void refresh(boolean keepChanges) throws InvalidItemStateException,
             RepositoryException {
-        if (item != null) {
-            item.refresh(keepChanges);
-        } else {
-            throw new UnsupportedRepositoryOperationException();
-        }
+        throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void remove() throws VersionException, LockException,
             RepositoryException {
-        if (item != null) {
-            item.remove();
-        } else {
-            throw new UnsupportedRepositoryOperationException();
-        }
+        throw new UnsupportedRepositoryOperationException();
     }
 
 }

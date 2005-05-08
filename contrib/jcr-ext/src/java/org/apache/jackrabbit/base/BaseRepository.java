@@ -25,47 +25,59 @@ import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
 /**
- * General base class for implementing the JCR Repository interface.
+ * Repository base class.
  */
 public class BaseRepository implements Repository {
 
-    /**
-     * The default constructor is protected to signify that this
-     * class needs to be subclassed to be of any real use.
-     */
+    /** Protected constructor. This class is only useful when extended. */
     protected BaseRepository() {
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String[] getDescriptorKeys() {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String getDescriptor(String key) {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Calls <code>login(credentials, null)</code>. {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>login(credentials, null)</code>
+     * as suggested by the JCR specification.
+     * {@inheritDoc}
+     */
     public Session login(Credentials credentials) throws LoginException,
             NoSuchWorkspaceException, RepositoryException {
         return login(credentials, null);
     }
 
-    /** Calls <code>login(null, workspaceName)</code>. {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>login(null, workspaceName)</code>
+     * as suggested by the JCR specification.
+     * {@inheritDoc}
+     */
     public Session login(String workspaceName) throws LoginException,
             NoSuchWorkspaceException, RepositoryException {
         return login(null, workspaceName);
     }
 
-    /** Calls <code>login(null, null)</code>. {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>login(null, null)</code>
+     * as suggested by the JCR specification.
+     * {@inheritDoc}
+     */
     public Session login() throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
         return login(null, null);

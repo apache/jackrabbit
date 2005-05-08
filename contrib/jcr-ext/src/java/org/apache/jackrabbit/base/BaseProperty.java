@@ -19,160 +19,220 @@ package org.apache.jackrabbit.base;
 import java.io.InputStream;
 import java.util.Calendar;
 
-import javax.jcr.BinaryValue;
-import javax.jcr.BooleanValue;
-import javax.jcr.DateValue;
-import javax.jcr.DoubleValue;
-import javax.jcr.Item;
 import javax.jcr.ItemVisitor;
-import javax.jcr.LongValue;
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.ReferenceValue;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.StringValue;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
 
 /**
- * TODO
+ * Property base class.
  */
 public class BaseProperty extends BaseItem implements Property {
 
-    protected BaseProperty(Item item) {
-        super(item);
+    /** Protected constructor. This class is only useful when extended. */
+    protected BaseProperty() {
     }
 
+    /**
+     * Implemented by calling <code>visitor.visit(this)</code>.
+     * {@inheritDoc}
+     */
     public void accept(ItemVisitor visitor) throws RepositoryException {
         visitor.visit(this);
     }
 
+    /** Always returns <code>false</code>. {@inheritDoc} */
     public boolean isNode() {
         return false;
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void setValue(Value value) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void setValue(Value[] values) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>setValue(getSession().getValueFactory().createValue(value))</code>.
+     * {@inheritDoc}
+     */
     public void setValue(String value) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
-        setValue(new StringValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>setValue(stringValues)</code> with
+     * an array of Values that were created from the given strings by
+     * <code>getSession().getValueFactory().createValue(values[i]))</code>.
+     * {@inheritDoc}
+     */
     public void setValue(String[] values) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
+        ValueFactory factory = getSession().getValueFactory();
         Value[] stringValues = new Value[values.length];
         for (int i = 0; i < values.length; i++) {
-            stringValues[i] = new StringValue(values[i]);
+            stringValues[i] = factory.createValue(values[i]);
         }
         setValue(stringValues);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>setValue(getSession().getValueFactory().createValue(value))</code>.
+     * {@inheritDoc}
+     */
     public void setValue(InputStream value) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
-        setValue(new BinaryValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>setValue(getSession().getValueFactory().createValue(value))</code>.
+     * {@inheritDoc}
+     */
     public void setValue(long value) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
-        setValue(new LongValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>setValue(getSession().getValueFactory().createValue(value))</code>.
+     * {@inheritDoc}
+     */
     public void setValue(double value) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
-        setValue(new DoubleValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>setValue(getSession().getValueFactory().createValue(value))</code>.
+     * {@inheritDoc}
+     */
     public void setValue(Calendar value) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
-        setValue(new DateValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>setValue(getSession().getValueFactory().createValue(value))</code>.
+     * {@inheritDoc}
+     */
     public void setValue(boolean value) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
-        setValue(new BooleanValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>setValue(getSession().getValueFactory().createValue(value))</code>.
+     * {@inheritDoc}
+     */
     public void setValue(Node value) throws ValueFormatException,
             VersionException, LockException, RepositoryException {
-        try {
-            setValue(new ReferenceValue(value));
-        } catch (IllegalArgumentException e) {
-            throw new ValueFormatException("Invalid reference target", e);
-        }
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Value getValue() throws ValueFormatException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Value[] getValues() throws ValueFormatException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getValue().getString()</code>.
+     * {@inheritDoc}
+     */
     public String getString() throws ValueFormatException, RepositoryException {
         return getValue().getString();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getValue().getStream()</code>.
+     * {@inheritDoc}
+     */
     public InputStream getStream() throws ValueFormatException,
             RepositoryException {
         return getValue().getStream();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getValue().getLong()</code>.
+     * {@inheritDoc}
+     */
     public long getLong() throws ValueFormatException, RepositoryException {
         return getValue().getLong();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getValue().getDouble()</code>.
+     * {@inheritDoc}
+     */
     public double getDouble() throws ValueFormatException, RepositoryException {
         return getValue().getDouble();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getValue().getDate()</code>.
+     * {@inheritDoc}
+     */
     public Calendar getDate() throws ValueFormatException, RepositoryException {
         return getValue().getDate();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getValue().getBoolean()</code>.
+     * {@inheritDoc}
+     */
     public boolean getBoolean() throws ValueFormatException,
             RepositoryException {
         return getValue().getBoolean();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling
+     * <code>getSession().getNodeByUUID(getString())</code>.
+     * {@inheritDoc}
+     */
     public Node getNode() throws ValueFormatException, RepositoryException {
         return getSession().getNodeByUUID(getString());
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getType()</code> and returning
+     * <code>-1</code> if type is binary or <code>getString().length()</code>
+     * otherwise.
+     * {@inheritDoc}
+     */
     public long getLength() throws ValueFormatException, RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        if (getType() == PropertyType.BINARY) {
+            return -1;
+        } else {
+            return getString().length();
+        }
     }
 
     /** {@inheritDoc} */
@@ -180,12 +240,15 @@ public class BaseProperty extends BaseItem implements Property {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
-    public PropertyDef getDefinition() throws RepositoryException {
+    /** Not implemented. {@inheritDoc} */
+    public PropertyDefinition getDefinition() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Implemented by calling <code>getValue().getType()</code>.
+     * {@inheritDoc}
+     */
     public int getType() throws RepositoryException {
         return getValue().getType();
     }
