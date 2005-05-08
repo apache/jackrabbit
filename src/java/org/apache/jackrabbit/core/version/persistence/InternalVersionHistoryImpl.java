@@ -298,7 +298,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throws VersionException {
 
         InternalVersion version =
-            (versionName != null) ? version = getVersion(versionName) : null;
+            (versionName != null) ? getVersion(versionName) : null;
         if (versionName != null && version == null) {
             throw new VersionException("Version " + versionName + " does not exist in this version history.");
         }
