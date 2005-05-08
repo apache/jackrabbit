@@ -74,8 +74,7 @@ public class BaseNodeTypeManager implements NodeTypeManager {
             }
         }
 
-        return new ArrayNodeTypeIterator((NodeType[])
-                primaryTypes.toArray(new NodeType[primaryTypes.size()]));
+        return new ArrayNodeTypeIterator(primaryTypes);
     }
 
     /**
@@ -94,8 +93,7 @@ public class BaseNodeTypeManager implements NodeTypeManager {
             }
         }
 
-        return new ArrayNodeTypeIterator((NodeType[])
-                mixinTypes.toArray(new NodeType[mixinTypes.size()]));
+        return new ArrayNodeTypeIterator(mixinTypes);
     }
 
 }
