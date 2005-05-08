@@ -16,9 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NoPrefixDeclaredException;

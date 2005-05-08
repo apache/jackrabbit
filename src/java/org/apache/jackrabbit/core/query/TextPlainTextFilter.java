@@ -19,8 +19,6 @@ package org.apache.jackrabbit.core.query;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.query.lucene.FieldNames;
 
 import javax.jcr.RepositoryException;

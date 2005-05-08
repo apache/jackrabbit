@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;

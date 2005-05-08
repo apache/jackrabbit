@@ -84,8 +84,8 @@ public class BinaryValue extends BaseValue {
         }
         if (obj instanceof BinaryValue) {
             BinaryValue other = (BinaryValue) obj;
-            if (text == other.text && stream == other.stream &&
-                    streamData == other.streamData) {
+            if (text == other.text && stream == other.stream
+                    && streamData == other.streamData) {
                 return true;
             }
             // stream, streamData and text are mutually exclusive,

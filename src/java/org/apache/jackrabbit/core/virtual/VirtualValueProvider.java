@@ -30,6 +30,6 @@ public interface VirtualValueProvider {
      * @param propName the name of the property
      * @return the values
      */
-    public InternalValue[] getVirtualValues(QName propName);
+    InternalValue[] getVirtualValues(QName propName);
 
 }

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
