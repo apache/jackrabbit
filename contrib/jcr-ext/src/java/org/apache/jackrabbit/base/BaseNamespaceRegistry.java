@@ -22,38 +22,35 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
 /**
- * General base class for implementing the JCR NamespaceRegistry interface.
+ * NamespaceRegistry base class.
  */
 public class BaseNamespaceRegistry implements NamespaceRegistry {
 
-    /**
-     * The default constructor is protected to signify that this
-     * class needs to be subclassed to be of any real use.
-     */
+    /** Protected constructor. This class is only useful when extended. */
     protected BaseNamespaceRegistry() {
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void registerNamespace(String prefix, String uri)
             throws NamespaceException, UnsupportedRepositoryOperationException,
             RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void unregisterNamespace(String prefix) throws NamespaceException,
             UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String[] getPrefixes() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
     /**
-     * Implemented by mapping all prefixes returned by
-     * <code>getPrefixes()</code> into namespace URIs using
+     * Implemented by calling <code>getPrefixes()</code> and
+     * mapping all returned prefixes into namespace URIs using
      * <code>getURI(prefix)</code>.
      * {@inheritDoc}
      */
@@ -66,15 +63,15 @@ public class BaseNamespaceRegistry implements NamespaceRegistry {
         return uris;
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String getURI(String prefix) throws NamespaceException,
             RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
     /**
-     * Implemented by iterating over the prefixes returned by
-     * <code>getPrefixes()</code> and selecting the prefix for which
+     * Implemented by calling <code>getPrefixes()</code> and iterating
+     * over the returned prefixes to find the prefix for which
      * <code>getURI(prefix)</code> returns the given namespace URI.
      * {@inheritDoc}
      */
@@ -86,8 +83,7 @@ public class BaseNamespaceRegistry implements NamespaceRegistry {
                 return prefixes[i];
             }
         }
-        throw new NamespaceException(
-                "Namespace URI " + uri + " is not registered.");
+        throw new NamespaceException("Namespace URI not registered: " + uri);
     }
 
 }

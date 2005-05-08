@@ -47,28 +47,28 @@ import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.ContentHandler;
 
 /**
- * General base class for implementing the JCR Workspace interface.
+ * Workspace base class.
  */
 public class BaseWorkspace implements Workspace {
 
-    /**
-     * The default constructor is protected to signify that this
-     * class needs to be subclassed to be of any real use.
-     */
+    /** Protected constructor. This class is only useful when extended. */
     protected BaseWorkspace() {
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public Session getSession() {
         throw new UnsupportedOperationException();
     }
 
-    /** Unsupported operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String getName() {
         throw new UnsupportedOperationException();
     }
 
-    /** Calls <code>copy(getName(), srcAbsPath, destAbsPath). {@inheritDoc} */
+    /**
+     * Implemented by calling <code>copy(getName(), srcAbsPath, destAbsPath).
+     * {@inheritDoc}
+     */
     public void copy(String srcAbsPath, String destAbsPath)
             throws ConstraintViolationException, VersionException,
             AccessDeniedException, PathNotFoundException, ItemExistsException,
@@ -76,7 +76,7 @@ public class BaseWorkspace implements Workspace {
         copy(getName(), srcAbsPath, destAbsPath);
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void copy(String srcWorkspace, String srcAbsPath, String destAbsPath)
             throws NoSuchWorkspaceException, ConstraintViolationException,
             VersionException, AccessDeniedException, PathNotFoundException,
@@ -84,7 +84,7 @@ public class BaseWorkspace implements Workspace {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void clone(String srcWorkspace, String srcAbsPath,
             String destAbsPath, boolean removeExisting)
             throws NoSuchWorkspaceException, ConstraintViolationException,
@@ -93,7 +93,7 @@ public class BaseWorkspace implements Workspace {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void move(String srcAbsPath, String destAbsPath)
             throws ConstraintViolationException, VersionException,
             AccessDeniedException, PathNotFoundException, ItemExistsException,
@@ -101,7 +101,7 @@ public class BaseWorkspace implements Workspace {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public void restore(Version[] versions, boolean removeExisting)
             throws ItemExistsException,
             UnsupportedRepositoryOperationException, VersionException,
@@ -109,33 +109,33 @@ public class BaseWorkspace implements Workspace {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public QueryManager getQueryManager() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public NodeTypeManager getNodeTypeManager() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public ObservationManager getObservationManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public String[] getAccessibleWorkspaceNames() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
-    /** Unsupported repository operation. {@inheritDoc} */
+    /** Not implemented. {@inheritDoc} */
     public ContentHandler getImportContentHandler(String parentAbsPath,
             int uuidBehavior) throws PathNotFoundException,
             ConstraintViolationException, VersionException, LockException,
@@ -144,7 +144,7 @@ public class BaseWorkspace implements Workspace {
     }
 
     /**
-     * Calls
+     * Implemented by calling
      * <code>transformer.transform(new StreamSource(in), new SAXResult(handler))</code>
      * with an identity {@link Transformer Transformer} and a
      * {@link ContentHandler ContentHandler} instance created by calling
@@ -167,7 +167,7 @@ public class BaseWorkspace implements Workspace {
             transformer.transform(new StreamSource(in), new SAXResult(handler));
         } catch (TransformerConfigurationException e) {
             throw new IOException(
-                    "Unable to deserialize a SAX stream: " + e.getMessage());
+                    "Unable to configure a SAX transformer: " + e.getMessage());
         } catch (TransformerException e) {
             throw new IOException(
                     "Unable to deserialize a SAX stream: " + e.getMessage());
