@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,41 +17,68 @@
 package org.apache.jackrabbit.name;
 
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 
 /**
- * TODO
+ * Named path element.
  */
-class NamedElement implements PathElement {
+final class NamedElement implements PathElement {
 
+    /** Path element name */
     private final Name name;
 
+    /**
+     * Creates a named path element instance.
+     *
+     * @param name path element name
+     */
     public NamedElement(Name name) {
         this.name = name;
     }
 
-    /** {@inheritDoc} */
-    public Item step(Item item) throws ItemNotFoundException,
-            RepositoryException {
+    /**
+     * Resolves the given item to the named property or child node.
+     *
+     * @param item context item
+     * @return named property or child node
+     * @throws PathNotFoundException if the path resolution fails
+     * @throws RepositoryException   if another error occurs
+     * @see PathElement#resolve(Item)
+     */
+    public Item resolve(Item item)
+            throws PathNotFoundException, RepositoryException {
         if (item.isNode()) {
+            Node node = (Node) item;
+
+            /* Note: JCR names can not contain special pattern characters */
             String pattern = name.toJCRName(item.getSession());
 
-            PropertyIterator properties = ((Node) item).getProperties(pattern);
+            PropertyIterator properties = node.getProperties(pattern);
             if (properties.hasNext()) {
                 return properties.nextProperty();
             }
 
-            NodeIterator nodes = ((Node) item).getNodes(pattern);
+            NodeIterator nodes = node.getNodes(pattern);
             if (nodes.hasNext()) {
                 return nodes.nextNode();
             }
         }
+        throw new PathNotFoundException("Path name not found: " + this);
+    }
 
-        throw new ItemNotFoundException("Invalid item path " + name);
+    /**
+     * Returns the string representation of this path element.
+     *
+     * @return string representation of the path element name
+     * @see Object#toString()
+     * @see Name#toString()
+     */
+    public String toString() {
+        return name.toString();
     }
 
 }

@@ -16,39 +16,70 @@
  */
 package org.apache.jackrabbit.name;
 
+import java.util.NoSuchElementException;
+
 import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
- * TODO
+ * Indexed path element.
  */
-class IndexedElement implements PathElement {
+final class IndexedElement implements PathElement {
 
+    /** Path element name */
     private final Name name;
 
+    /** Path element index */
     private final int index;
 
+    /**
+     * Creates an indexed path element instance.
+     *
+     * @param name  path element name
+     * @param index path element index
+     */
     public IndexedElement(Name name, int index) {
         this.name = name;
         this.index = index;
     }
 
-    /** {@inheritDoc} */
-    public Item step(Item item) throws ItemNotFoundException,
-            RepositoryException {
+    /**
+     * Resolves the given item to the named child node with the
+     * specified index.
+     *
+     * @param item context item
+     * @return indexed child node
+     * @throws PathNotFoundException if the path resolution fails
+     * @throws RepositoryException   if another error occurs
+     * @see PathElement#resolve(Item)
+     */
+    public Item resolve(Item item)
+            throws PathNotFoundException, RepositoryException {
         if (item.isNode()) {
             String pattern = name.toJCRName(item.getSession());
             NodeIterator nodes = ((Node) item).getNodes(pattern);
-            if (index <= nodes.getSize()) {
+            try {
                 nodes.skip(index - 1);
                 return nodes.nextNode();
+            } catch (NoSuchElementException e) {
+                // fall through
             }
         }
-
-        throw new ItemNotFoundException("Invalid item path " + name);
+        throw new PathNotFoundException(
+                "Path name or index not found: " + this);
     }
 
+    /**
+     * Returns the string representation of this path element.
+     *
+     * @return string representation of the path element name and index
+     * @see Object#toString()
+     * @see Name#toString()
+     */
+    public String toString() {
+        return name + "[" + index + "]";
+    }
 }
