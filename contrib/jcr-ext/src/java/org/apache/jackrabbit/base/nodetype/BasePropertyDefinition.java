@@ -18,29 +18,34 @@ package org.apache.jackrabbit.base.nodetype;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
-import javax.jcr.nodetype.PropertyDef;
+import javax.jcr.nodetype.PropertyDefinition;
 
 /**
- * TODO
+ * Property definition base class.
  */
-public class BasePropertyDef extends BaseItemDef implements PropertyDef {
+public class BasePropertyDefinition extends BaseItemDefinition
+        implements PropertyDefinition {
 
-    /** {@inheritDoc} */
+    /** Protected constructor. This class is only useful when extended. */
+    protected BasePropertyDefinition() {
+    }
+
+    /** Always returns <code>PropertyType.UNDEFINED</code>. {@inheritDoc} */
     public int getRequiredType() {
         return PropertyType.UNDEFINED;
     }
 
-    /** {@inheritDoc} */
+    /** Always returns <code>null</code>. {@inheritDoc} */
     public String[] getValueConstraints() {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /** Always returns <code>null</code>. {@inheritDoc} */
     public Value[] getDefaultValues() {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /** Always returns <code>false</code>. {@inheritDoc} */
     public boolean isMultiple() {
         return false;
     }
