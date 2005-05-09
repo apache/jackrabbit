@@ -25,7 +25,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
-import org.apache.jackrabbit.rmi.remote.SerialValue;
+import org.apache.jackrabbit.value.SerialValueFactory;
 
 /**
  * Local adapter for the JCR-RMI
@@ -148,7 +148,7 @@ public class ClientNodeType extends ClientObject implements NodeType {
     /** {@inheritDoc} */
     public boolean canSetProperty(String name, Value value) {
         try {
-            return remote.canSetProperty(name, new SerialValue(value));
+            return remote.canSetProperty(name, SerialValueFactory.makeSerialValue(value));
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }
@@ -157,7 +157,7 @@ public class ClientNodeType extends ClientObject implements NodeType {
     /** {@inheritDoc} */
     public boolean canSetProperty(String name, Value[] values) {
         try {
-            Value[] serials = SerialValue.makeSerialValueArray(values);
+            Value[] serials = SerialValueFactory.makeSerialValueArray(values);
             return remote.canSetProperty(name, serials);
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);

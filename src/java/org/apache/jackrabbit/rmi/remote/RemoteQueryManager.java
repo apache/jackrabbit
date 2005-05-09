@@ -64,8 +64,10 @@ public interface RemoteQueryManager extends Remote {
      *
      * See {@link Query}.
      * @return An string array.
+     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    String[] getSupportedQueryLanguages() throws RemoteException;
+    String[] getSupportedQueryLanguages() 
+            throws RepositoryException, RemoteException;
 
 }

@@ -82,7 +82,7 @@ public class ClientQueryManager extends ClientObject implements QueryManager {
     }
 
     /** {@inheritDoc} */
-    public String[] getSupportedQueryLanguages() {
+    public String[] getSupportedQueryLanguages() throws RepositoryException {
         try {
             return remote.getSupportedQueryLanguages();
         } catch (RemoteException ex) {
