@@ -41,7 +41,10 @@ public class ItemDefinitionState {
     /** The Protected item definition property. */
     private boolean isProtected; // avoid the reserved word "protected"
 
-    /** Creates an empty item definition state instance. */
+    /**
+     * Creates an empty item definition state instance. This constructor
+     * is protected because this class must only be used through subclasses.
+     */
     protected ItemDefinitionState() {
         name = null;
         autoCreated = false;

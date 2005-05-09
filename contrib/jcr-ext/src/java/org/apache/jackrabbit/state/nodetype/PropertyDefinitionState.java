@@ -38,6 +38,7 @@ public class PropertyDefinitionState extends ItemDefinitionState {
 
     /** Creates an empty property definition state instance. */
     public PropertyDefinitionState() {
+        super();
         requiredType = PropertyType.UNDEFINED;
         valueConstraints = new Vector();
         multiple = false;

@@ -86,7 +86,7 @@ public class NodeDefinitionState extends ItemDefinitionState {
      *
      * @return AllowsSameNameSiblings property value
      */
-    public boolean isAllowsSameNameSiblings() {
+    public boolean allowsSameNameSiblings() {
         return allowsSameNameSiblings;
     }
 
