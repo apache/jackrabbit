@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -33,6 +36,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * Document walker class. This class provides an intuitive
@@ -41,8 +45,10 @@ import org.w3c.dom.NodeList;
 public final class DOMWalker {
 
     /** Static factory for creating stream to DOM transformers. */
-    private static final TransformerFactory factory =
-        TransformerFactory.newInstance();
+//    private static final TransformerFactory factory =
+//        TransformerFactory.newInstance();
+    private static final DocumentBuilderFactory factory =
+        DocumentBuilderFactory.newInstance();
 
     /** The DOM document being traversed by this walker. */
     private final Document document;
@@ -60,13 +66,13 @@ public final class DOMWalker {
      */
     public DOMWalker(InputStream xml) throws IOException {
         try {
-            DOMResult result = new DOMResult();
-            Transformer transformer = factory.newTransformer();
-            transformer.transform(new StreamSource(xml), result);
-            document = (Document) result.getNode();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            document = builder.parse(xml);
             current = document.getDocumentElement();
-        } catch (TransformerException e) {
-            throw new IOException(e.getMessage());
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw (IOException)new IOException(e.getMessage()).initCause(e);
         }
     }
 
