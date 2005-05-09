@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.value;
 
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.Calendar;
 
 import javax.jcr.Node;
