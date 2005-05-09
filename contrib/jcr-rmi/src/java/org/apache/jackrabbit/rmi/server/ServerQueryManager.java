@@ -80,8 +80,13 @@ public class ServerQueryManager extends ServerObject
     }
 
     /** {@inheritDoc} */
-    public String[] getSupportedQueryLanguages() throws RemoteException {
+    public String[] getSupportedQueryLanguages()
+            throws RepositoryException, RemoteException {
+        try {
         return manager.getSupportedQueryLanguages();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+    }
     }
 
 }

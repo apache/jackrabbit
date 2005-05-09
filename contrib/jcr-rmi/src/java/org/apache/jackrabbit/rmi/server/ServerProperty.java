@@ -24,7 +24,7 @@ import javax.jcr.Value;
 
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
-import org.apache.jackrabbit.rmi.remote.SerialValue;
+import org.apache.jackrabbit.value.SerialValueFactory;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.Property Property}
@@ -58,7 +58,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
     /** {@inheritDoc} */
     public Value getValue() throws RepositoryException, RemoteException {
         try {
-            return new SerialValue(property.getValue());
+            return SerialValueFactory.makeSerialValue(property.getValue());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -67,7 +67,7 @@ public class ServerProperty extends ServerItem implements RemoteProperty {
     /** {@inheritDoc} */
     public Value[] getValues() throws RepositoryException, RemoteException {
         try {
-            return SerialValue.makeSerialValueArray(property.getValues());
+            return SerialValueFactory.makeSerialValueArray(property.getValues());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

@@ -23,7 +23,7 @@ import javax.jcr.Value;
 import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
-import org.apache.jackrabbit.rmi.remote.SerialValue;
+import org.apache.jackrabbit.value.SerialValueFactory;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.query.Row Row} interface.
@@ -61,6 +61,6 @@ public class ServerRow extends ServerObject implements RemoteRow {
     /** {@inheritDoc} */
     public Value getValue(String propertyName)
             throws RepositoryException, RemoteException {
-        return new SerialValue(row.getValue(propertyName));
+        return SerialValueFactory.makeSerialValue(row.getValue(propertyName));
     }
 }
