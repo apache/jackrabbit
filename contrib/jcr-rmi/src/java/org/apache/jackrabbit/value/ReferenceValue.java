@@ -29,7 +29,8 @@ import javax.jcr.ValueFormatException;
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
-public class ReferenceValue extends BaseNonStreamValue {
+public class ReferenceValue extends BaseNonStreamValue
+        implements StatefullValue {
 
     /** The reference value */
     private final String value;
