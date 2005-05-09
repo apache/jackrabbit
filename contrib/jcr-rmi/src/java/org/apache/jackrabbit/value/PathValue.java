@@ -28,7 +28,7 @@ import javax.jcr.ValueFormatException;
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
-public class PathValue extends BaseNonStreamValue {
+public class PathValue extends BaseNonStreamValue implements StatefullValue {
 
     /** The path value. */
     private final String value;

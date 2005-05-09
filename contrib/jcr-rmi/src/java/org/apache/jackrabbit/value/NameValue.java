@@ -28,7 +28,7 @@ import javax.jcr.ValueFormatException;
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
-public class NameValue extends BaseNonStreamValue {
+public class NameValue extends BaseNonStreamValue implements StatefullValue {
 
     /** The name value. */
     private final String value;
