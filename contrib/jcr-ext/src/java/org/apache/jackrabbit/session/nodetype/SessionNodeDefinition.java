@@ -35,7 +35,7 @@ import org.apache.jackrabbit.state.nodetype.NodeDefinitionState;
  * this class intentionally makes it impossible for a JCR client to modify
  * node definition information.
  */
-public class SessionNodeDefinition extends SessionItemDefinition
+final class SessionNodeDefinition extends SessionItemDefinition
         implements NodeDefinition {
 
     /** Helper for accessing the current session. */
@@ -43,12 +43,6 @@ public class SessionNodeDefinition extends SessionItemDefinition
 
     /** The underlying node definition state. */
     private final NodeDefinitionState state;
-
-    /** Memorized default primary node type. Initially <code>null</code>. */
-    private NodeType defaultPrimaryType;
-
-    /** Memorized set of required node types. Initially <code>null</code>. */
-    private Set requiredPrimaryTypes;
 
     /**
      * Creates a node definition frontend that is bound to the
@@ -63,27 +57,18 @@ public class SessionNodeDefinition extends SessionItemDefinition
         super(helper, type, state);
         this.helper = helper;
         this.state = state;
-        this.defaultPrimaryType = null;
-        this.requiredPrimaryTypes = null;
     }
 
     /**
      * Returns the default primary type of the defined node. The returned
      * node type is retrieved from the node type manager of the current
      * session using the node type name stored in the underlying state.
-     * <p>
-     * The return value is memorized to improve performance, and will
-     * therefore not change even if the underlying state changes!
      *
      * @return default primary type
      * @see NodeDefinition#getDefaultPrimaryType()
      */
     public NodeType getDefaultPrimaryType() {
-        if (defaultPrimaryType == null) {
-            defaultPrimaryType =
-                helper.getNodeType(state.getDefaultPrimaryTypeName());
-        }
-        return defaultPrimaryType;
+        return helper.getNodeType(state.getDefaultPrimaryTypeName());
     }
 
     /**
@@ -93,24 +78,17 @@ public class SessionNodeDefinition extends SessionItemDefinition
      * <p>
      * The returned array is freshly instantiated and not a part of the
      * underlying state, so it can be freely modified.
-     * <p>
-     * The set of required primary types is memorized to improve performance,
-     * and will therefore not change even if the underlying state changes!
      *
      * @return required primary types
      * @see NodeDefinition#getRequiredPrimaryTypes()
      */
     public NodeType[] getRequiredPrimaryTypes() {
-        if (requiredPrimaryTypes == null) {
-            Set types = new HashSet();
-            Name[] names = state.getRequiredPrimaryTypeNames();
-            for (int i = 0; i < names.length; i++) {
-                types.add(helper.getNodeType(names[i]));
-            }
-            requiredPrimaryTypes = types;
+        Set types = new HashSet();
+        Name[] names = state.getRequiredPrimaryTypeNames();
+        for (int i = 0; i < names.length; i++) {
+            types.add(helper.getNodeType(names[i]));
         }
-        return (NodeType[]) requiredPrimaryTypes.toArray(
-                new NodeType[requiredPrimaryTypes.size()]);
+        return (NodeType[]) types.toArray(new NodeType[types.size()]);
     }
 
     /**
@@ -118,11 +96,11 @@ public class SessionNodeDefinition extends SessionItemDefinition
      * The returned value is retrieved from the underlying node definition
      * state.
      *
-     * @return AlloswSameNameSiblings property value
+     * @return AllowsSameNameSiblings property value
      * @see NodeDefinition#allowsSameNameSiblings()
      */
     public boolean allowsSameNameSiblings() {
-        return state.isAllowsSameNameSiblings();
+        return state.allowsSameNameSiblings();
     }
 
 }

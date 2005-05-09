@@ -28,7 +28,7 @@ import org.apache.jackrabbit.name.Name;
  * Helper class for accessing the namespaces and node types associated
  * with a JCR Session.
  */
-public class SessionHelper {
+public final class SessionHelper {
 
     /** The session to which this frontend instance is bound. */
     private final Session session;
@@ -77,7 +77,7 @@ public class SessionHelper {
      * @param name qualified node type name
      * @return named node type
      * @throws IllegalStateException if the named node type does not exist
-     * @throws RuntimeException if a repository error occurs
+     * @throws RuntimeException      if a repository error occurs
      */
     public NodeType getNodeType(Name name)
             throws IllegalStateException, RuntimeException {
@@ -94,7 +94,7 @@ public class SessionHelper {
      * @param name node type name
      * @return named node type
      * @throws IllegalStateException if the named node type does not exist
-     * @throws RuntimeException if a repository error occurs
+     * @throws RuntimeException      if a repository error occurs
      */
     public NodeType getNodeType(String name)
             throws IllegalStateException, RuntimeException {
@@ -106,6 +106,36 @@ public class SessionHelper {
         } catch (RepositoryException e) {
             throw new RuntimeException("Unexpected repository error", e);
         }
+    }
+
+    /**
+     * Compares session helpers for equality. Two session helpers are equal
+     * if they refer to the same session.
+     *
+     * @param that the object to compare this one to
+     * @return <code>true</code> if the objects are equal,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
+     */
+    public boolean equals(Object that) {
+        if (this == that) {
+            return true;
+        } else if (that instanceof SessionHelper) {
+            return session.equals(((SessionHelper) that).session);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Calculates the session helper hash code. This method simply returns
+     * the hash code of the underlying session.
+     *
+     * @return session hash code
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return session.hashCode();
     }
 
 }

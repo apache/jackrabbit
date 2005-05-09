@@ -19,11 +19,10 @@ package org.apache.jackrabbit.session.nodetype;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 
+import org.apache.jackrabbit.base.nodetype.BaseNodeTypeManager;
 import org.apache.jackrabbit.iterator.ArrayNodeTypeIterator;
 import org.apache.jackrabbit.session.SessionHelper;
 import org.apache.jackrabbit.state.nodetype.NodeTypeManagerState;
@@ -38,22 +37,14 @@ import org.apache.jackrabbit.state.nodetype.NodeTypeState;
  * this class intentionally makes it impossible for a JCR client to modify
  * node type information.
  */
-public class SessionNodeTypeManager implements NodeTypeManager {
+public final class SessionNodeTypeManager extends BaseNodeTypeManager
+        implements NodeTypeManager {
 
     /** Helper for accessing the current session. */
     private final SessionHelper helper;
 
     /** The underlying node type manager state instance. */
     private final NodeTypeManagerState state;
-
-    /** Memorized set of all node types. Initially <code>null</code>. */
-    private NodeType[] allTypes;
-
-    /** Memorized set of primary node types. Initially <code>null</code>. */
-    private NodeType[] primaryTypes;
-
-    /** Memorized set of mixin node types. Initially <code>null</code>. */
-    private NodeType[] mixinTypes;
 
     /**
      * Creates a node type manager frontend that is bound to the
@@ -66,109 +57,65 @@ public class SessionNodeTypeManager implements NodeTypeManager {
             SessionHelper helper, NodeTypeManagerState state) {
         this.helper = helper;
         this.state = state;
-        this.allTypes = null;
-        this.primaryTypes = null;
-        this.mixinTypes = null;
-    }
-
-    /**
-     * Returns the named node type. This implementation iterates through
-     * all the available node types and returns the one that matches the
-     * given name. If no matching node type is found, then a
-     * NoSuchNodeTypeException is thrown.
-     *
-     * @param name node type name
-     * @return named node type
-     * @throws NoSuchNodeTypeException if the named node type does not exist
-     * @see NodeTypeManager#getNodeType(String)
-     */
-    public NodeType getNodeType(String name) throws NoSuchNodeTypeException {
-        NodeTypeIterator iterator = getAllNodeTypes();
-        while (iterator.hasNext()) {
-            NodeType type = iterator.nextNodeType();
-            if (name.equals(type.getName())) {
-                return type;
-            }
-        }
-        throw new NoSuchNodeTypeException("Node type " + name + " not found");
     }
 
     /**
      * Returns all available node types. The returned node types are
      * SessionNodeTypes instantiated using the node type states returned
      * by the underlying node type manager state.
-     * <p>
-     * The set of all node types is memorized to improve performance,
-     * and will therefore not change even if the underlying state changes!
      *
      * @return all node types
      * @see SessionNodeType
      * @see NodeTypeManager#getAllNodeTypes()
+     * @see NodeTypeManagerState#getNodeTypeStates()
      */
     public NodeTypeIterator getAllNodeTypes() {
-        if (allTypes == null) {
-            Set types = new HashSet();
-            NodeTypeState[] states = state.getNodeTypeStates();
-            for (int i = 0; i < states.length; i++) {
-                types.add(new SessionNodeType(helper, states[i]));
-            }
-            allTypes = (NodeType[]) types.toArray(new NodeType[types.size()]);
+        Set types = new HashSet();
+        NodeTypeState[] states = state.getNodeTypeStates();
+        for (int i = 0; i < states.length; i++) {
+            types.add(new SessionNodeType(helper, states[i]));
         }
-        return new ArrayNodeTypeIterator(allTypes);
+        return new ArrayNodeTypeIterator(types);
     }
 
     /**
-     * Returns all primary node types. This method is implemented by
-     * listing all available node types and selecting only the primary
-     * node types.
+     * Compares objects for equality. Returns <code>true</code> if the
+     * given object is a SessionNodeTypeManager with the same underlying node
+     * type manager state and session.
      * <p>
-     * The set of primary node types is memorized to improve performance,
-     * and will therefore not change even if the underlying state changes!
+     * Note that the node type manager state class does not override the
+     * equals method and thus the mutable state instances are compared for
+     * reference equality.
      *
-     * @return primary node types
-     * @see NodeTypeManager#getPrimaryNodeTypes()
+     * @param that the object to compare this object with
+     * @return <code>true</code> if the objects are equal,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
      */
-    public NodeTypeIterator getPrimaryNodeTypes() {
-        if (primaryTypes == null) {
-            Set types = new HashSet();
-            NodeTypeIterator iterator = getAllNodeTypes();
-            while (iterator.hasNext()) {
-                NodeType type = iterator.nextNodeType();
-                if (!type.isMixin()) {
-                    types.add(type);
-                }
-            }
-            primaryTypes =
-                (NodeType[]) types.toArray(new NodeType[types.size()]);
+    public boolean equals(Object that) {
+        if (this == that) {
+            return true;
+        } else if (that instanceof SessionNodeTypeManager) {
+            return state.equals(((SessionNodeTypeManager) that).state)
+                && helper.equals(((SessionNodeTypeManager) that).helper);
+        } else {
+            return false;
         }
-        return new ArrayNodeTypeIterator(primaryTypes);
     }
 
     /**
-     * Returns all mixin node types. This method is implemented by
-     * listing all available node types and selecting only the mixin
-     * node types.
-     * <p>
-     * The set of mixin node types is memorized to improve performance,
-     * and will therefore not change even if the underlying state changes!
+     * Returns a hash code for this object. To satisfy the equality
+     * constraints the returned hash code is a combination of the
+     * hash codes of the underlying node type manager state and session.
      *
-     * @return mixin node types
-     * @see NodeTypeManager#getMixinNodeTypes()
+     * @return hash code
+     * @see Object#hashCode()
      */
-    public NodeTypeIterator getMixinNodeTypes() {
-        if (mixinTypes == null) {
-            Set types = new HashSet();
-            NodeTypeIterator iterator = getAllNodeTypes();
-            while (iterator.hasNext()) {
-                NodeType type = iterator.nextNodeType();
-                if (type.isMixin()) {
-                    types.add(type);
-                }
-            }
-            mixinTypes =
-                (NodeType[]) types.toArray(new NodeType[types.size()]);
-        }
-        return new ArrayNodeTypeIterator(mixinTypes);
+    public int hashCode() {
+        int code = 17;
+        code = code * 37 + state.hashCode();
+        code = code * 37 + helper.hashCode();
+        return code;
     }
 
 }

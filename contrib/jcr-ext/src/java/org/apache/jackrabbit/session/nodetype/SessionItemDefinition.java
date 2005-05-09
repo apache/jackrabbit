@@ -25,13 +25,13 @@ import org.apache.jackrabbit.state.nodetype.ItemDefinitionState;
 /**
  * Immutable and session-bound item definition frontend. An instance
  * of this class presents the underlying item definition state using
- * the JCR ItemDef interface.
+ * the JCR ItemDefinition interface.
  * <p>
  * By not exposing the setter methods of the underlying state instance,
  * this class intentionally makes it impossible for a JCR client to modify
  * item definition information.
  */
-public class SessionItemDefinition implements ItemDefinition {
+class SessionItemDefinition implements ItemDefinition {
 
     /** Helper for accessing the current session. */
     private final SessionHelper helper;
@@ -125,6 +125,49 @@ public class SessionItemDefinition implements ItemDefinition {
      */
     public boolean isProtected() {
         return state.isProtected();
+    }
+
+    /**
+     * Compares objects for equality. Returns <code>true</code> if the
+     * given object is a SessionItemDefinition with the same underlying item
+     * definition state, session, and declaring node type.
+     * <p>
+     * Note that the item definition state class does not override the equals
+     * method and thus the mutable state instances are compared for
+     * reference equality.
+     *
+     * @param that the object to compare this object with
+     * @return <code>true</code> if the objects are equal,
+     *         <code>false</code> otherwise
+     * @see Object#equals(Object)
+     */
+    public boolean equals(Object that) {
+        if (this == that) {
+            return true;
+        } else if (that instanceof SessionItemDefinition) {
+            return state.equals(((SessionItemDefinition) that).state)
+                && helper.equals(((SessionItemDefinition) that).helper)
+                && type.equals(((SessionItemDefinition) that).type);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns a hash code for this object. To satisfy the equality
+     * constraints the returned hash code is a combination of the
+     * hash codes of the underlying node type state, session, and declaring
+     * node type.
+     *
+     * @return hash code
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        int code = 17;
+        code = code * 37 + state.hashCode();
+        code = code * 37 + helper.hashCode();
+        code = code * 37 + type.hashCode();
+        return code;
     }
 
 }
