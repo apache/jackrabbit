@@ -124,10 +124,6 @@ public interface JcrConstants {
      */
     public static final String JCR_ONPARENTVERSION = "jcr:onParentVersion";
     /**
-     * jcr:path
-     */
-    public static final String JCR_PATH = "jcr:path";
-    /**
      * jcr:predecessors
      */
     public static final String JCR_PREDECESSORS = "jcr:predecessors";
@@ -203,6 +199,16 @@ public interface JcrConstants {
      * jcr:versionableUuid
      */
     public static final String JCR_VERSIONABLEUUID = "jcr:versionableUuid";
+
+    /**
+     * Pseudo property jcr:path used with query results
+     */
+    public static final String JCR_PATH = "jcr:path";
+    /**
+     * Pseudo property jcr:score used with query results
+     */
+    public static final String JCR_SCORE = "jcr:score";
+
     /**
      * mix:lockable
      */

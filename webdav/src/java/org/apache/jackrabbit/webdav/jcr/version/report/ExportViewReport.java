@@ -37,8 +37,8 @@ import java.io.*;
 /**
  * <code>ExportViewReport</code> handles REPORT requests for the 'exportview'
  * report. The 'exportview' report is used to export
- * {@link Session#exportDocView(String, java.io.OutputStream, boolean, boolean) DocView}
- * and {@link Session#exportSysView(String, java.io.OutputStream, boolean, boolean) SysView}
+ * {@link Session#exportDocumentView(String, java.io.OutputStream, boolean, boolean) DocView}
+ * and {@link Session#exportSystemView(String, java.io.OutputStream, boolean, boolean) SysView}
  * of the {@link javax.jcr.Item item} represented by the requested resource.
  * <p/>
  * The request body must contain a jcr:exportview element:

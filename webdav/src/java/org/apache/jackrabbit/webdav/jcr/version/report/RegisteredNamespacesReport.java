@@ -31,18 +31,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <code>NodeTypesReport</code> allows to retrieve the definition of a single
- * or multiple node types. The request body must be a 'jcr:nodetypes' element:
+ * <code>RegisteredNamespacesReport</code> let the client retrieve the namespaces
+ * registered on the repository.<p/>
+ *
+ * Request body:
  * <pre>
- * &lt;!ELEMENT nodetypes ( nodetype+ | all-nodetypes | mixin-nodetypes | primary-nodetypes ) &gt;
- *
- * &lt;!ELEMENT nodetype ( nodetype-name ) &gt;
- * &lt;!ELEMENT nodetype-name (#PCDATA) &gt;
- *
- * &lt;!ELEMENT all-nodetypes EMPTY &gt;
- * &lt;!ELEMENT mixin-nodetypes EMPTY &gt;
- * &lt;!ELEMENT primary-nodetypes EMPTY &gt;
+ * &lt;!ELEMENT registerednamespaces EMPTY &gt;
  * </pre>
+ *
+ * Response body:
+ * <pre>
+ * &lt;!ELEMENT registerednamespaces-report (namespace)* &gt;
+ * &lt;!ELEMENT namespace (prefix, uri) &gt;
+ * &lt;!ELEMENT prefix (#PCDATA) &gt;
+ * &lt;!ELEMENT uri (#PCDATA) &gt;
+ * </pre>
+ *
+ * @see javax.jcr.Workspace#getNamespaceRegistry() 
  */
 public class RegisteredNamespacesReport implements Report, ItemResourceConstants {
 
@@ -117,8 +122,8 @@ public class RegisteredNamespacesReport implements Report, ItemResourceConstants
 	    List namespaceList = new ArrayList();
 	    for (int i = 0; i < prefixes.length; i++) {
 		Element elem = new Element(XML_NAMESPACE, NAMESPACE);
-		elem.addContent(new Element(XML_NSPREFIX, NAMESPACE).setText(prefixes[i]));
-		elem.addContent(new Element(XML_NSURI, NAMESPACE).setText(nsReg.getURI(prefixes[i])));
+		elem.addContent(new Element(XML_PREFIX, NAMESPACE).setText(prefixes[i]));
+		elem.addContent(new Element(XML_URI, NAMESPACE).setText(nsReg.getURI(prefixes[i])));
 		namespaceList.add(elem);
 	    }
 	    Element report = new Element("registerednamespaces-report", NAMESPACE).addContent(namespaceList);

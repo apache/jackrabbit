@@ -18,10 +18,7 @@ package org.apache.jackrabbit.webdav.jcr;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.ExportViewReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.*;
 import org.apache.jackrabbit.webdav.transaction.TxLockEntry;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
@@ -237,7 +234,8 @@ abstract class AbstractItemResource extends AbstractResource implements
                 NodeTypesReport.NODETYPES_REPORT,
                 ExportViewReport.EXPORTVIEW_REPORT,
                 LocateByUuidReport.LOCATE_BY_UUID_REPORT,
-		RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT
+                RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT,
+                RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT
             });
         }
     }

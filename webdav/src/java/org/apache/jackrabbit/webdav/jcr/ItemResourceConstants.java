@@ -63,8 +63,13 @@ public interface ItemResourceConstants {
     // xml elements used to reflect the workspaces ns-registry
     // TODO: to be review...
     public static final String XML_NAMESPACE = "namespace";
-    public static final String XML_NSPREFIX = "nsPrefix";
-    public static final String XML_NSURI = "nsURI";
+    public static final String XML_PREFIX = "prefix";
+    public static final String XML_URI = "uri";
+
+    // xml elements used for repository-descritors report
+    public static final String XML_DESCRIPTOR = "descriptor";
+    public static final String XML_DESCRIPTORKEY = "descriptorkey";
+    public static final String XML_DESCRIPTORVALUE = "descriptorvalue";
 
     /**
      * Extension to the WebDAV 'exclusive' lock, that allows to distinguish
@@ -108,6 +113,7 @@ public interface ItemResourceConstants {
     public static final DavPropertyName JCR_MIXINNODETYPES = DavPropertyName.create("mixinnodetypes", NAMESPACE);
     public static final DavPropertyName JCR_INDEX = DavPropertyName.create("index", NAMESPACE);
     public static final DavPropertyName JCR_REFERENCES = DavPropertyName.create("references", NAMESPACE);
+    public static final DavPropertyName JCR_UUID = DavPropertyName.create("uuid", NAMESPACE);
     public static final DavPropertyName JCR_PRIMARYITEM = DavPropertyName.create("primaryitem", NAMESPACE);
 
     // property names used for resources representing jcr-properties
