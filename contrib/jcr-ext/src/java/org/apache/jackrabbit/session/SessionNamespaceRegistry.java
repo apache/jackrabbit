@@ -111,6 +111,13 @@ public final class SessionNamespaceRegistry implements NamespaceRegistry {
         }
     }
 
+    /**
+     * Not implemented. It is not possible to unregister namespaces from
+     * a session, you need to access the global namespace registry directly.
+     *
+     * @param prefix namespace prefix
+     * @throws UnsupportedRepositoryOperationException always thrown
+     */
     public void unregisterNamespace(String prefix)
             throws UnsupportedRepositoryOperationException {
         throw new UnsupportedRepositoryOperationException();
