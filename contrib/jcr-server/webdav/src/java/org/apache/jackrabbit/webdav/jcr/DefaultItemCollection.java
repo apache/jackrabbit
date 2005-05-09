@@ -224,7 +224,15 @@ public class DefaultItemCollection extends AbstractItemResource
                     n.addNode(resource.getDisplayName());
                 } else {
                     // MKCOL, which is not allowed for existing resources
+                    if (getTransactionId() == null) {
+                        // if not part of a transaction directely import on workspace
+                        // since changes would be explicitely saved in the
+                        // complete-call.
+                        getRepositorySession().getWorkspace().importXML(getResourcePath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+                    } else {
+                        // changes will not be persisted unless the tx is completed.
                     getRepositorySession().importXML(getResourcePath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+                }
                 }
             } else {
                 if (in == null) {
@@ -671,6 +679,9 @@ public class DefaultItemCollection extends AbstractItemResource
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
                 properties.add(new DefaultDavProperty(JCR_INDEX, new Integer(n.getIndex())));
 		addHrefProperty(JCR_REFERENCES, n.getReferences(), false);
+                if (n.isNodeType(JcrConstants.MIX_REFERENCEABLE)) {
+                    properties.add(new DefaultDavProperty(JCR_UUID, n.getUUID()));
+                }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve primary nodetype property: " + e.getMessage());
             }

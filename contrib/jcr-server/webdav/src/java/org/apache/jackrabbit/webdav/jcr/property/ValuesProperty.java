@@ -93,7 +93,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
 
     /**
      * Converts the value of this property to a {@link javax.jcr.Value value array}.
-     * Please note, that the convertion is done by using the {@link org.apache.jackrabbit.core.util.ValueHelper}
+     * Please note, that the convertion is done by using the {@link org.apache.jackrabbit.core.value.ValueHelper}
      * class that is not part of the JSR170 API.
      *
      * @return Array of Value objects
