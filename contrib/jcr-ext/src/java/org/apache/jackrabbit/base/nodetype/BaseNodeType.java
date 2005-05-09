@@ -79,19 +79,18 @@ public class BaseNodeType implements NodeType {
     }
 
     /**
-     * Implemented by calling <code>getName()</code> on this node type and
-     * all supertypes returned by <code>getSupertypes()</code>. Returns
-     * <code>true</code> if any of the names equals the given node type name.
-     * Returns <code>false</code> otherwise.
+     * Implemented by calling <code>getName()</code> and comparing the
+     * result to the given node type name. If the match fails, recursively
+     * checks all declared supertypes.
      * {@inheritDoc}
      */
     public boolean isNodeType(String nodeTypeName) {
         if (nodeTypeName.equals(getName())) {
             return true;
         } else {
-            NodeType[] types = getSupertypes();
+            NodeType[] types = getDeclaredSupertypes();
             for (int i = 0; i < types.length; i++) {
-                if (nodeTypeName.equals(types[i].getName())) {
+                if (types[i].isNodeType(nodeTypeName)) {
                     return true;
                 }
             }
