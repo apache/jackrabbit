@@ -24,14 +24,14 @@ import javax.jcr.Session;
 import javax.jcr.Workspace;
 
 /**
- * Factory interface for creating decorator instances.
- * 
- * @author Jukka Zitting
+ * Factory interface for creating decorator instances. The decorator
+ * classes create new decorator instances using a factory to make it
+ * easier to customize the behaviour of a decorator layer. 
  */
 public interface DecoratorFactory {
 
     /**
-     * Creates a {@link Repository Repository} decorator.
+     * Creates a repository decorator.
      *  
      * @param repository the underlying repository instance
      * @return decorator for the given repository
@@ -39,20 +39,64 @@ public interface DecoratorFactory {
     public Repository getRepositoryDecorator(Repository repository);
     
     /**
-     * Creates a {@link Session Session} decorator. 
-     *  
-     * @param repository the repository decorator 
-     * @param session the underlying session instance
+     * Creates a session decorator. The created session decorator will
+     * return the given repository (decorator) instance from the
+     * {@link Session#getRepository() getRepository()} method to avoid
+     * breaking the decorator layer.
+     * <p>
+     * The following example code illustrates how this method should be
+     * used to implement the repository login methods.
+     * <pre>
+     *     DecoratorFactory factory = ...; // The decorator factory
+     *     Session session = ...;          // The underlying session instance
+     *     return factory.getSessionDecorator(this, session);
+     * </pre>
+     *
+     * @param repository the repository (decorator) instance used to create
+     *                   the session decorator
+     * @param session    the underlying session instance
      * @return decorator for the given session
      */
     public Session getSessionDecorator(Repository repository, Session session);
-    
+
+    /**
+     * Creates a workspace decorator.
+     *
+     * @param session   the session (decorator) instance used to create the
+     *                  workspace decorator
+     * @param workspace the underlying workspace instance
+     * @return workspace decorator
+     */
     public Workspace getWorkspaceDecorator(Session session, Workspace workspace);
     
+    /**
+     * Creates a node decorator.
+     *
+     * @param session the session (decorator) instance used to create the
+     *                node decorator
+     * @param node    the underlying node instance
+     * @return node decorator
+     */
     public Node getNodeDecorator(Session session, Node node);
     
+    /**
+     * Creates a property decorator.
+     *
+     * @param session  the session (decorator) instance used to create the
+     *                 property decorator
+     * @param property the underlying property instance
+     * @return property decorator
+     */
     public Property getPropertyDecorator(Session session, Property property);
     
+    /**
+     * Creates an item decorator.
+     *
+     * @param session the session (decorator) instance used to create the
+     *                item decorator
+     * @param item    the underlying item instance
+     * @return item decorator
+     */
     public Item getItemDecorator(Session session, Item item);
     
 }

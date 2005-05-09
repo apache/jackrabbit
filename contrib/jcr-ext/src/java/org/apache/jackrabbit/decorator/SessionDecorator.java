@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,6 +36,8 @@ import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -70,8 +72,8 @@ public class SessionDecorator implements Session {
     /**
      * Forwards the method call to the underlying session.
      */
-    public String getUserId() {
-        return session.getUserId();
+    public String getUserID() {
+        return session.getUserID();
     }
 
     /**
@@ -157,7 +159,7 @@ public class SessionDecorator implements Session {
     /**
      * Forwards the method call to the underlying session.
      */
-    public boolean itemExists(String path) {
+    public boolean itemExists(String path) throws RepositoryException {
         return session.itemExists(path);
     }
 
@@ -197,65 +199,71 @@ public class SessionDecorator implements Session {
      * Forwards the method call to the underlying session.
      */
     public void checkPermission(String absPath, String actions)
-            throws AccessControlException {
+            throws AccessControlException, RepositoryException {
         session.checkPermission(absPath, actions);
     }
 
     /**
      * Forwards the method call to the underlying session.
      */
-    public ContentHandler getImportContentHandler(String parentAbsPath)
+    public ContentHandler getImportContentHandler(
+            String parentAbsPath, int uuidBehaviour)
             throws PathNotFoundException, ConstraintViolationException,
             VersionException, LockException, RepositoryException {
-        return session.getImportContentHandler(parentAbsPath);
+        return session.getImportContentHandler(parentAbsPath, uuidBehaviour);
     }
 
     /**
      * Forwards the method call to the underlying session.
      */
-    public void importXML(String parentAbsPath, InputStream in) throws
-            IOException, PathNotFoundException, ItemExistsException,
+    public void importXML(
+            String parentAbsPath, InputStream in, int uuidBehaviour)
+            throws IOException, PathNotFoundException, ItemExistsException,
             ConstraintViolationException, VersionException,
             InvalidSerializedDataException, LockException, RepositoryException {
-        session.importXML(parentAbsPath, in);
+        session.importXML(parentAbsPath, in, uuidBehaviour);
     }
 
     /**
      * Forwards the method call to the underlying session.
      */
-    public void exportSysView(String absPath, ContentHandler contentHandler,
-            boolean binaryAsLink, boolean noRecurse) throws
-            PathNotFoundException, SAXException, RepositoryException {
-        session.exportSysView(absPath, contentHandler, binaryAsLink, noRecurse);
+    public void exportSystemView(
+            String absPath, ContentHandler contentHandler,
+            boolean binaryAsLink, boolean noRecurse)
+            throws PathNotFoundException, SAXException, RepositoryException {
+        session.exportSystemView(
+                absPath, contentHandler, binaryAsLink, noRecurse);
     }
 
     /**
      * Forwards the method call to the underlying session.
      */
-    public void exportSysView(String absPath, OutputStream out,
-            boolean binaryAsLink, boolean noRecurse) throws IOException,
-            PathNotFoundException, RepositoryException {
-        session.exportDocView(absPath, out, binaryAsLink, noRecurse);
+    public void exportSystemView(
+            String absPath, OutputStream out,
+            boolean binaryAsLink, boolean noRecurse)
+            throws IOException, PathNotFoundException, RepositoryException {
+        session.exportSystemView(absPath, out, binaryAsLink, noRecurse);
     }
 
     /**
      * Forwards the method call to the underlying session.
      */
-    public void exportDocView(String absPath, ContentHandler contentHandler,
-            boolean binaryAsLink, boolean noRecurse) throws 
-            InvalidSerializedDataException, PathNotFoundException,
-            SAXException, RepositoryException {
-        session.exportDocView(absPath, contentHandler, binaryAsLink, noRecurse);
+    public void exportDocumentView(
+            String absPath, ContentHandler contentHandler,
+            boolean binaryAsLink, boolean noRecurse)
+            throws PathNotFoundException, SAXException, RepositoryException {
+        session.exportDocumentView(
+                absPath, contentHandler, binaryAsLink, noRecurse);
     }
 
     /**
      * Forwards the method call to the underlying session.
      */
-    public void exportDocView(String absPath, OutputStream out,
-            boolean binaryAsLink, boolean noRecurse) throws 
-            InvalidSerializedDataException, IOException, PathNotFoundException,
-            RepositoryException {
-        session.exportDocView(absPath, out, binaryAsLink, noRecurse);
+    public void exportDocumentView(
+            String absPath, OutputStream out,
+            boolean binaryAsLink, boolean noRecurse) 
+            throws IOException, PathNotFoundException, RepositoryException {
+        session.exportDocumentView(absPath, out, binaryAsLink, noRecurse);
     }
 
     /**
@@ -317,4 +325,12 @@ public class SessionDecorator implements Session {
         session.removeLockToken(lt);
     }
 
+    public ValueFactory getValueFactory()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        return session.getValueFactory();
+    }
+
+    public boolean isLive() {
+        return session.isLive();
+    }
 }
