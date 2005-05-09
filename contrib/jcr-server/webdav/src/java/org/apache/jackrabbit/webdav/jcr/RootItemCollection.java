@@ -95,8 +95,8 @@ public class RootItemCollection extends VersionControlledItemCollection {
 	    Element[] nsElems = new Element[prefixes.length];
 	    for (int i = 0; i < prefixes.length; i++) {
 		Element elem = new Element(XML_NAMESPACE, NAMESPACE);
-		elem.addContent(new Element(XML_NSPREFIX).setText(prefixes[i]));
-		elem.addContent(new Element(XML_NSURI)).setText(nsReg.getURI(prefixes[i]));
+                elem.addContent(new Element(XML_PREFIX).setText(prefixes[i]));
+                elem.addContent(new Element(XML_URI)).setText(nsReg.getURI(prefixes[i]));
 		nsElems[i] = elem;
 	    }
 	    properties.add(new DefaultDavProperty(ItemResourceConstants.JCR_NAMESPACES, nsElems, false));

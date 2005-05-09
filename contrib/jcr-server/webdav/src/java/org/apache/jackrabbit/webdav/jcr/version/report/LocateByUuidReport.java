@@ -112,7 +112,7 @@ public class LocateByUuidReport implements Report {
             DavResource res = resource.getFactory().createResource(loc, session);
 
             MultiStatus ms = new MultiStatus();
-            ms.addResourceProperties(res, propNameSet, 0);
+            ms.addResourceProperties(res, propNameSet, info.getDepth());
             return ms.toXml();
 
         } catch (RepositoryException e) {

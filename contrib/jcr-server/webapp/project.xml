@@ -90,7 +90,6 @@
         </dependency>
         <dependency>
             <id>jcr-rmi</id>
-<!-- TODO: change to 0.16.4.1 as soon as available -->
             <version>0.16.4</version>
             <properties>
                 <war.bundle>false</war.bundle>

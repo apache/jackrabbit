@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 
@@ -177,7 +178,8 @@ public class RootCollection extends AbstractResource implements DavResource {
             supportedReports = new SupportedReportSetProperty(new ReportType[] {
 	    ReportType.EXPAND_PROPERTY,
 	    NodeTypesReport.NODETYPES_REPORT,
-	    RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT
+                RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT,
+                RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT
             });
         }
     }
