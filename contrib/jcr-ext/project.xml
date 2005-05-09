@@ -21,7 +21,7 @@
   <pomVersion>3</pomVersion>
   <id>jcr-ext</id>
   <name>JCR extras</name>
-  <currentVersion>0.16.2-dev</currentVersion>
+  <currentVersion>0.16.4.1</currentVersion>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.*</package>
   <shortDescription>Utilities for JCR implementations</shortDescription>
