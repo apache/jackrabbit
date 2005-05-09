@@ -84,13 +84,13 @@ import org.xml.sax.helpers.AttributesImpl;
  * <h2>Implementing the standard export methods</h2>
  * <p>
  * The following is an example of the
- * Session.exportDocView(String, ContentHandler, boolean, boolean)
+ * Session.exportDocumentView(String, ContentHandler, boolean, boolean)
  * method implemented in terms of this exporter class:
  * <pre>
- *     public void exportDocView(String absPath, ContentHandler handler,
- *             boolean skipBinary, boolean noRecurse) throws
- *             InvalidSerializedDataException, PathNotFoundException,
- *             SAXException, RepositoryException {
+ *     public void exportDocumentView(
+ *             String absPath, ContentHandler handler,
+ *             boolean skipBinary, boolean noRecurse)
+ *             throws PathNotFoundException, SAXException, RepositoryException {
  *         Item item = getItem(absPath);
  *         if (item.isNode()) {
  *             item.accept(new DocumentViewExportVisitor(
@@ -102,32 +102,32 @@ import org.xml.sax.helpers.AttributesImpl;
  * </pre>
  * <p>
  * The companion method
- * Session.exportDocView(String, OutputStream, boolean, boolean)
+ * Session.exportDocumentView(String, OutputStream, boolean, boolean)
  * can be implemented in terms of the above method and the XMLSerializer
  * class from the Xerces library:
  * <pre>
  * import org.apache.xml.serialize.XMLSerializer;
  * import org.apache.xml.serialize.OutputFormat;
  *
- *     public void exportDocView(String absPath, OutputStream output,
- *             boolean skipBinary, boolean noRecurse) throws
- *             InvalidSerializedDataException, PathNotFoundException,
- *             IOException, RepositoryException {
+ *     public void exportDocumentView(
+ *             String absPath, OutputStream output,
+ *             boolean skipBinary, boolean noRecurse)
+ *             throws PathNotFoundException, IOException, RepositoryException {
  *         try {
  *             XMLSerializer serializer =
  *                 new XMLSerializer(output, new OutputFormat());
- *             exportDocView(absPath, serializer.asContentHandler(),
+ *             exportDocView(
+ *                     absPath, serializer.asContentHandler(),
  *                     binaryAsLink, noRecurse);
- *         } catch (SAXException ex) {
- *             throw new IOException(ex.getMessage());
+ *         } catch (SAXException e) {
+ *             throw new IOException(e.getMessage());
  *         }
  *     }
  * </pre>
  *
- * @author Jukka Zitting
  * @see ItemVisitor
- * @see Session#exportDocView(String, ContentHandler, boolean, boolean)
- * @see Session#exportDocView(String, java.io.OutputStream, boolean, boolean)
+ * @see Session#exportDocumentView(String, ContentHandler, boolean, boolean)
+ * @see Session#exportDocumentView(String, java.io.OutputStream, boolean, boolean)
  */
 public class DocumentViewExportVisitor implements ItemVisitor {
 
@@ -140,17 +140,17 @@ public class DocumentViewExportVisitor implements ItemVisitor {
     /**
      * The SAX content handler for the serialized XML stream.
      */
-    private ContentHandler handler;
+    private final ContentHandler handler;
 
     /**
      * Flag to skip all binary properties.
      */
-    private boolean skipBinary;
+    private final boolean skipBinary;
 
     /**
      * Flag to only serialize the selected node.
      */
-    private boolean noRecurse;
+    private final boolean noRecurse;
 
     /**
      * The root node of the serialization tree. This is the node that
@@ -178,9 +178,11 @@ public class DocumentViewExportVisitor implements ItemVisitor {
 
     /**
      * Ignored. Properties are included as attributes of node elements.
-     * {@inheritDoc}
+     *
+     * @param property ignored property
+     * @see ItemVisitor#visit(Property)
      */
-    public void visit(Property property) throws RepositoryException {
+    public void visit(Property property) {
     }
 
     /**
@@ -194,6 +196,9 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      *
      * @param node the node to visit
      * @throws RepositoryException on repository errors
+     * @see ItemVisitor#visit(Node)
+     * @see #includeProperty(Property)
+     * @see #includeNode(Node)
      */
     public void visit(Node node) throws RepositoryException {
         try {
@@ -223,8 +228,8 @@ public class DocumentViewExportVisitor implements ItemVisitor {
             if (root == node) {
                 handler.endDocument();
             }
-        } catch (SAXException ex) {
-            throw new RepositoryException(ex);
+        } catch (SAXException e) {
+            throw new RepositoryException(e);
         }
     }
 
@@ -378,7 +383,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
         if (name.length() == 0) {
             name = "jcr:root";
         }
-        return Name.parseJCRName(item.getSession(), name);
+        return Name.fromJCRName(item.getSession(), name);
     }
 
     /**
