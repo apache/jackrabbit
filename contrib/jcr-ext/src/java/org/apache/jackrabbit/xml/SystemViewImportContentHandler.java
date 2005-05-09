@@ -37,36 +37,36 @@ import org.xml.sax.SAXException;
 public class SystemViewImportContentHandler implements ContentHandler {
 
     private Session session;
-    
+
     private Stack stack;
-    
+
     private Node node;
-    
+
     private StringBuffer text;
-    
+
     private int type;
-    
+
     private List values;
-    
+
     public SystemViewImportContentHandler(Node parent) throws RepositoryException {
         this.session = parent.getSession();
         this.stack = new Stack();
         this.node = parent;
         this.text = new StringBuffer();
     }
-    
+
     private String getName(String uri, String local, String qname)
             throws RepositoryException {
         if (uri == null || uri.length() == 0) {
             return local;
         }
-        
+
         try {
             return session.getNamespacePrefix(uri) + ":" + local;
         } catch (NamespaceException ex) {
             // fall through
         }
-        
+
         int i = qname.indexOf(':');
         String prefix = (i != -1) ? qname.substring(0, i) : "ext";
         try {
@@ -82,12 +82,12 @@ public class SystemViewImportContentHandler implements ContentHandler {
             .registerNamespace(prefix, uri);
         return getName(uri, local, qname);
     }
-    
+
     public void startElement(String uri, String localName, String qName,
             Attributes atts) throws SAXException {
         try {
             importText();
-            
+
             stack.push(node);
 
             node = node.addNode(getName(uri, localName, qName));
@@ -154,14 +154,14 @@ public class SystemViewImportContentHandler implements ContentHandler {
     /**
      * Appends the received characters to the current text buffer.
      * The accumulated contents of the text buffer is written to an
-     * jcr:xmltext node when an element boundary is reached.  
+     * jcr:xmltext node when an element boundary is reached.
      * {@inheritDoc}
      */
     public void characters(char[] ch, int start, int length)
             throws SAXException {
         text.append(ch, start, length);
     }
-    
+
     /**
      * Imports the accumulated XML character data as an jcr:xmltext node.
      * The character data is stored as a jcr:xmlcharacters string property
@@ -169,8 +169,8 @@ public class SystemViewImportContentHandler implements ContentHandler {
      * <p>
      * This method does nothing if the character data buffer is empty, and
      * can therefore be invoked whenever an element boundary is reached to
-     * handle the importing of any accumulated character data.   
-     * 
+     * handle the importing of any accumulated character data.
+     *
      * @throws RepositoryException
      */
     private void importText() throws RepositoryException {
@@ -190,30 +190,27 @@ public class SystemViewImportContentHandler implements ContentHandler {
     }
 
     /** Ignored. */
-    public void endDocument() throws SAXException {
+    public void endDocument() {
     }
 
     /** Ignored. */
-    public void startPrefixMapping(String prefix, String uri)
-            throws SAXException {
+    public void startPrefixMapping(String prefix, String uri) {
     }
 
     /** Ignored. */
-    public void endPrefixMapping(String prefix) throws SAXException {
-    }
-    
-    /** Ignored. */
-    public void ignorableWhitespace(char[] ch, int start, int length)
-            throws SAXException {
+    public void endPrefixMapping(String prefix) {
     }
 
     /** Ignored. */
-    public void processingInstruction(String target, String data)
-            throws SAXException {
+    public void ignorableWhitespace(char[] ch, int start, int length) {
     }
 
     /** Ignored. */
-    public void skippedEntity(String name) throws SAXException {
+    public void processingInstruction(String target, String data) {
+    }
+
+    /** Ignored. */
+    public void skippedEntity(String name) {
     }
 
 }
