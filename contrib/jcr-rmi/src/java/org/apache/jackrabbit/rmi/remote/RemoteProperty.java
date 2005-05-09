@@ -39,13 +39,12 @@ import javax.jcr.Value;
  * <p>
  * Note that only the generic getValue and setValue methods are included
  * in this interface. Clients should implement the type-specific value
- * getters and setters wrapping using the generic methods. Note also that
- * the Value objects must be serializable and implemented using classes
+ * getters and setters wrapping using the generic methods. Note also that the
+ * Value objects must be serializable and implemented using classes
  * available on both the client and server side. The
- * {@link org.apache.jackrabbit.rmi.remote.SerialValue SerialValue}
- * decorator utility provides a convenient way to satisfy these
- * requirements.
- *
+ * {@link org.apache.jackrabbit.value.SerialValueFactory SerialValueFactory}
+ * class provides two convenience methods to satisfy these requirements.
+ * 
  * @author Jukka Zitting
  * @see javax.jcr.Property
  * @see org.apache.jackrabbit.rmi.client.ClientProperty

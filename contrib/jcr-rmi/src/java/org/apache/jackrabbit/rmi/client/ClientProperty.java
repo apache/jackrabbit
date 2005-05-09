@@ -20,23 +20,16 @@ import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.Calendar;
 
-import javax.jcr.BinaryValue;
-import javax.jcr.BooleanValue;
-import javax.jcr.DateValue;
-import javax.jcr.DoubleValue;
 import javax.jcr.ItemVisitor;
-import javax.jcr.LongValue;
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.ReferenceValue;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.StringValue;
 import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.SerialValue;
+import org.apache.jackrabbit.value.SerialValueFactory;
 
 /**
  * Local adapter for the JCR-RMI
@@ -163,7 +156,7 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(boolean value) throws RepositoryException {
-        setValue(new BooleanValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
     /**
@@ -173,7 +166,7 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(Calendar value) throws RepositoryException {
-        setValue(new DateValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
     /**
@@ -183,7 +176,7 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(double value) throws RepositoryException {
-        setValue(new DoubleValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
     /**
@@ -193,7 +186,7 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(InputStream value) throws RepositoryException {
-        setValue(new BinaryValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
     /**
@@ -203,7 +196,7 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(long value) throws RepositoryException {
-        setValue(new LongValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
     /**
@@ -213,7 +206,7 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(Node value) throws RepositoryException {
-        setValue(new ReferenceValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
     /**
@@ -223,7 +216,7 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(String value) throws RepositoryException {
-        setValue(new StringValue(value));
+        setValue(getSession().getValueFactory().createValue(value));
     }
 
     /**
@@ -235,7 +228,7 @@ public class ClientProperty extends ClientItem implements Property {
     public void setValue(String[] strings) throws RepositoryException {
         Value[] values = new Value[strings.length];
         for (int i = 0; i < strings.length; i++) {
-            values[i] = new StringValue(strings[i]);
+            values[i] = getSession().getValueFactory().createValue(strings[i]);
         }
         setValue(values);
     }
@@ -243,7 +236,7 @@ public class ClientProperty extends ClientItem implements Property {
     /** {@inheritDoc} */
     public void setValue(Value value) throws RepositoryException {
         try {
-            remote.setValue(new SerialValue(value));
+            remote.setValue(SerialValueFactory.makeSerialValue(value));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -252,7 +245,7 @@ public class ClientProperty extends ClientItem implements Property {
     /** {@inheritDoc} */
     public void setValue(Value[] values) throws RepositoryException {
         try {
-            remote.setValue(SerialValue.makeSerialValueArray(values));
+            remote.setValue(SerialValueFactory.makeSerialValueArray(values));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

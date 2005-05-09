@@ -30,6 +30,7 @@ import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -42,6 +43,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.xml.SessionImportContentHandler;
+import org.apache.jackrabbit.value.SerialValueFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -205,6 +207,15 @@ public class ClientSession extends ClientObject implements Session {
         }
     }
 
+    /**
+     * Returns the {@link SerialValueFactory#getInstance()}.
+     *  
+     * {@inheritDoc}
+     */
+    public ValueFactory getValueFactory() {
+        return SerialValueFactory.getInstance();
+    }
+    
     /** {@inheritDoc} */
     public void checkPermission(String path, String actions)
             throws AccessControlException, RepositoryException {
