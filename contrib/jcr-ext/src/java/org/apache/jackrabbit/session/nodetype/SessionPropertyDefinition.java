@@ -32,7 +32,7 @@ import org.apache.jackrabbit.state.nodetype.PropertyDefinitionState;
  * this class intentionally makes it impossible for a JCR client to modify
  * property definition information.
  */
-public class SessionPropertyDefinition extends SessionItemDefinition
+final class SessionPropertyDefinition extends SessionItemDefinition
         implements PropertyDefinition {
 
     /** The underlying property definition state. */
@@ -87,11 +87,9 @@ public class SessionPropertyDefinition extends SessionItemDefinition
     public boolean isMultiple() {
         return state.isMultiple();
     }
-    
-    /**
-     * Not implemented.
-     */
+
+    /** Not implemented. */
     public Value[] getDefaultValues() {
-        return null;
+        return null; // TODO
     }
 }
