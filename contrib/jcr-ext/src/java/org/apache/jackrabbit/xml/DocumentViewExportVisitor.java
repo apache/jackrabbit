@@ -66,11 +66,7 @@ import org.xml.sax.helpers.AttributesImpl;
  *
  *             protected boolean includeProperty(Property property)
  *                     throws RepositoryException {
- *                 if (property.getName().equals("title")) {
- *                     return super.includeProperty(property);
- *                 } else {
- *                     return false;
- *                 }
+ *                 return property.getName().equals("title");
  *             }
  *
  *             protected boolean includeNode(Node node)
@@ -131,11 +127,14 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public class DocumentViewExportVisitor implements ItemVisitor {
 
+    /** The JCR namespace URI. */
+    private static final String JCR_URI = "http://www.jcp.org/jcr/1.0";
+
     /** The special jcr:xmltext property name. */
-    private static final String XMLTEXT = "jcr:xmltext";
+    private static final Name XMLTEXT = new Name(JCR_URI, "xmltext");
 
     /** The special jcr:xmlcharacters property name. */
-    private static final String XMLCHARACTERS = "jcr:xmlcharacters";
+    private static final Name XMLCHARACTERS = new Name(JCR_URI, "xmlcharacters");
 
     /**
      * The SAX content handler for the serialized XML stream.
@@ -182,7 +181,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @param property ignored property
      * @see ItemVisitor#visit(Property)
      */
-    public void visit(Property property) {
+    public final void visit(Property property) {
     }
 
     /**
@@ -200,7 +199,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @see #includeProperty(Property)
      * @see #includeNode(Node)
      */
-    public void visit(Node node) throws RepositoryException {
+    public final void visit(Node node) throws RepositoryException {
         try {
             // start document
             if (root == null) {
@@ -235,14 +234,9 @@ public class DocumentViewExportVisitor implements ItemVisitor {
 
     /**
      * Checks whether the given property should be included in the XML
-     * serialization. By default this method returns false for the special
-     * "jcr:xmlcharacters" properties and for binary properties if the
-     * skipBinary flag is set. Subclasses can extend this behaviour to
-     * implement more selective XML serialization.
-     * <p>
-     * To avoid losing the default behaviour described above, subclasses
-     * should always call super.includeProperty(property) instead of
-     * simply returning true for a property.
+     * serialization. This method returns <code>true</code> by default,
+     * but subclasses can override this method to implement more selective
+     * XML serialization.
      *
      * @param property the property to check
      * @return true if the property should be included, false otherwise
@@ -250,14 +244,14 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      */
     protected boolean includeProperty(Property property)
             throws RepositoryException {
-        return !property.getName().equals(XMLCHARACTERS)
-            && (!skipBinary || property.getType() != PropertyType.BINARY);
+        return true;
     }
 
     /**
      * Checks whether the given node should be included in the XML
-     * serialization. This method returns true by default, but subclasses
-     * can extend this behaviour to implement selective XML serialization.
+     * serialization. This method returns <code>true</code> by default,
+     * but subclasses override this method to implement selective
+     * XML serialization.
      * <p>
      * Note that this method is only called for the descendants of the
      * root node of the serialized tree. Also, this method is never called
@@ -285,7 +279,8 @@ public class DocumentViewExportVisitor implements ItemVisitor {
     private void exportText(Node node)
             throws SAXException, RepositoryException {
         try {
-            Property property = node.getProperty(XMLCHARACTERS);
+            Property property =
+                node.getProperty(XMLCHARACTERS.toJCRName(node.getSession()));
             char[] characters = property.getString().toCharArray();
             handler.characters(characters, 0, characters.length);
         } catch (PathNotFoundException ex) {
@@ -307,15 +302,15 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      */
     private void exportNode(Node node)
             throws SAXException, RepositoryException {
-        Name qname = getQName(node);
-        String localName = escapeName(qname.getLocalPart());
+        Name name = getName(node);
+        String localName = escapeName(name.getLocalPart());
         String prefixedName =
-            node.getSession().getNamespacePrefix(qname.getNamespaceURI())
+            node.getSession().getNamespacePrefix(name.getNamespaceURI())
             + ":" + localName;
 
         // Start element
         handler.startElement(
-                qname.getNamespaceURI(), localName, prefixedName,
+                name.getNamespaceURI(), localName, prefixedName,
                 getAttributes(node));
 
         // Visit child nodes (unless denied by the noRecurse flag)
@@ -331,7 +326,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
 
         // End element
         handler.endElement(
-                qname.getNamespaceURI(), qname.getLocalPart(), node.getName());
+                name.getNamespaceURI(), name.getLocalPart(), node.getName());
     }
 
     /**
@@ -349,12 +344,17 @@ public class DocumentViewExportVisitor implements ItemVisitor {
         PropertyIterator properties = node.getProperties();
         while (properties.hasNext()) {
             Property property = properties.nextProperty();
+            /*
+            return !property.getName().equals(XMLCHARACTERS)
+            && (!skipBinary || property.getType() != PropertyType.BINARY);
+            */
             if (includeProperty(property)) {
-                Name qname = getQName(property);
-                String value = getValue(property);
-                attributes.addAttribute(qname.getNamespaceURI(),
-                        qname.getLocalPart(), property.getName(),
-                        "CDATA", value);
+                Name name = getName(property);
+                attributes.addAttribute(
+                        name.getNamespaceURI(),
+                        escapeName(name.getLocalPart()),
+                        escapeName(name.toJCRName(property.getSession())),
+                        "CDATA", escapeValue(property));
             }
         }
 
@@ -378,12 +378,26 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @throws RepositoryException on repository errors
      * @see Name
      */
-    private Name getQName(Item item) throws RepositoryException {
+    private Name getName(Item item) throws RepositoryException {
         String name = item.getName();
-        if (name.length() == 0) {
-            name = "jcr:root";
+        if (name.length() > 0) {
+            return Name.fromJCRName(item.getSession(), name);
+        } else {
+            return new Name("http://www.jcp.org/jcr/1.0", "root");
         }
-        return Name.fromJCRName(item.getSession(), name);
+    }
+
+    /**
+     * Escapes the given character into a hex escape sequence
+     * <code>_xXXXX_</code> where <code>XXXX</code> is the (uppercase)
+     * hexadecimal representation of the given character.
+     *
+     * @param ch character to be escaped
+     * @return escape string
+     */
+    private static String escapeChar(char ch) {
+        String hex = "000" + Integer.toHexString((int) ch).toUpperCase();
+        return "_x" + hex.substring(hex.length() - 4) + "_";
     }
 
     /**
@@ -393,7 +407,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @param name original name or prefix
      * @return escaped name or prefix
      */
-    private String escapeName(String name) {
+    private static String escapeName(String name) {
         if (name.length() == 0) {
             return name;
         }
@@ -401,12 +415,11 @@ public class DocumentViewExportVisitor implements ItemVisitor {
         StringBuffer buffer = new StringBuffer();
 
         // First character
-        if (!XMLChar.isNameStart(name.charAt(0)) || name.startsWith("_x")
-                || (name.length() >= 3
-                        && "xml".equalsIgnoreCase(name.substring(0, 3)))) {
-            String hex =
-                "000" + Integer.toHexString(name.charAt(0)).toUpperCase();
-            buffer.append("_x" + hex.substring(hex.length() - 4) + "_");
+        if (!XMLChar.isNameStart(name.charAt(0))
+            || name.startsWith("_x")
+            || (name.length() >= 3
+                && "xml".equalsIgnoreCase(name.substring(0, 3)))) {
+            buffer.append(escapeChar(name.charAt(0)));
         } else {
             buffer.append(name.charAt(0));
         }
@@ -414,9 +427,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
         // Rest of the characters
         for (int i = 1; i < name.length(); i++) {
             if (!XMLChar.isName(name.charAt(i)) || name.startsWith("_x", i)) {
-                String hex =
-                    "000" + Integer.toHexString(name.charAt(0)).toUpperCase();
-                buffer.append("_x" + hex.substring(hex.length() - 4) + "_");
+                buffer.append(escapeChar(name.charAt(i)));
             } else {
                 buffer.append(name.charAt(i));
             }
@@ -432,7 +443,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @param value original value
      * @return escaped value
      */
-    private String escapeValue(String value) {
+    private static String escapeValue(String value) {
         StringBuffer buffer = new StringBuffer();
 
         for (int i = 1; i < value.length(); i++) {
@@ -459,7 +470,8 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @return document view representation of the property value
      * @throws RepositoryException on repository errors
      */
-    private String getValue(Property property) throws RepositoryException {
+    private static String escapeValue(Property property)
+            throws RepositoryException {
         try {
             if (property.getDefinition().isMultiple()) {
                 StringBuffer buffer = new StringBuffer();
@@ -467,7 +479,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
                 Value[] values = property.getValues();
                 for (int i = 0; i < values.length; i++) {
                     if (i > 0) {
-                        buffer.append(" ");
+                        buffer.append(' ');
                     }
                     if (values[i].getType() == PropertyType.BINARY) {
                         buffer.append(encodeValue(values[i].getStream()));
@@ -494,7 +506,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @return Base64-encoded value
      * @throws IOException on IO errors
      */
-    private String encodeValue(InputStream input) throws IOException {
+    private static String encodeValue(InputStream input) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] bytes = new byte[4096];
         for (int n = input.read(bytes); n != -1; n = input.read(bytes)) {

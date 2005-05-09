@@ -19,12 +19,11 @@ package org.apache.jackrabbit.xml;
 import java.util.List;
 import java.util.Stack;
 
-import javax.jcr.BooleanValue;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -38,6 +37,8 @@ public class SystemViewImportContentHandler implements ContentHandler {
 
     private Session session;
 
+    private ValueFactory factory;
+
     private Stack stack;
 
     private Node node;
@@ -50,6 +51,7 @@ public class SystemViewImportContentHandler implements ContentHandler {
 
     public SystemViewImportContentHandler(Node parent) throws RepositoryException {
         this.session = parent.getSession();
+        this.factory = session.getValueFactory();
         this.stack = new Stack();
         this.node = parent;
         this.text = new StringBuffer();
@@ -107,42 +109,12 @@ public class SystemViewImportContentHandler implements ContentHandler {
      */
     public void endElement(String uri, String localName, String qName)
             throws SAXException {
-        if (uri.equals("SV") && localName.equals("value")) {
-            String value = text.toString();
-            switch (type) {
-            case PropertyType.BINARY:
-                // TODO values.add(new BinaryValue());
-                break;
-            case PropertyType.BOOLEAN:
-                values.add(new BooleanValue(Boolean.valueOf(value)));
-                break;
-            case PropertyType.DATE:
-                values.add(new BooleanValue(Boolean.valueOf(value)));
-                break;
-            case PropertyType.DOUBLE:
-                values.add(new BooleanValue(Boolean.valueOf(value)));
-                break;
-            case PropertyType.LONG:
-                values.add(new BooleanValue(Boolean.valueOf(value)));
-                break;
-            case PropertyType.NAME:
-                values.add(new BooleanValue(Boolean.valueOf(value)));
-                break;
-            case PropertyType.PATH:
-                values.add(new BooleanValue(Boolean.valueOf(value)));
-                break;
-            case PropertyType.REFERENCE:
-                values.add(new BooleanValue(Boolean.valueOf(value)));
-                break;
-            case PropertyType.STRING:
-                values.add(new BooleanValue(Boolean.valueOf(value)));
-                break;
-            default:
-            }
-            
-            text.setLength(0);
-        }
         try {
+            if (uri.equals("SV") && localName.equals("value")) {
+                String value = text.toString();
+                values.add(factory.createValue(value, type));
+                text.setLength(0);
+            }
             importText();
             
             node = (Node) stack.pop();
