@@ -279,7 +279,7 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests if <code>Property.getNodes()</code> returns an array that is a copy
+     * Tests if <code>Property.getValues()</code> returns an array that is a copy
      * of the stored values, so changes to it are not reflected in internal storage.
      */
     public void testGetValueCopyStoredValues()
@@ -296,7 +296,6 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
             throw new NotExecutableException("No testable propery found.");
         }
         values[0] = session.getValueFactory().createValue(values[0].getString() + "abc");
-        prop.getParent().save();
 
         // re-acquire the values and compare the zeroth values
         Value[] values2 = prop.getValues();
