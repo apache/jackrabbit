@@ -784,7 +784,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             } else if (literal.indexOf(':') > -1) {
                 // might be a name
                 try {
-                    values.add(QName.fromJCRName(literal, session.getNamespaceResolver()));
+                    values.add(nsMappings.translatePropertyName(literal, session.getNamespaceResolver()));
                     log.debug("Coerced " + literal + " into NAME.");
                 } catch (Exception e) {
                     // not a name

@@ -290,8 +290,12 @@ class DerefQuery extends Query {
                 hits.clear();
                 for (Iterator it = uuids.iterator(); it.hasNext();) {
                     TermDocs node = reader.termDocs(new Term(FieldNames.UUID, (String) it.next()));
-                    while (node.next()) {
-                        hits.set(node.doc());
+                    try {
+                        while (node.next()) {
+                            hits.set(node.doc());
+                        }
+                    } finally {
+                        node.close();
                     }
                 }
                 // filter out the target nodes that do not match the name test
