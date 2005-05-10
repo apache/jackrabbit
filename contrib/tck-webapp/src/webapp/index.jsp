@@ -31,22 +31,30 @@ if (repSession == null) {
     return;
 }
 
+// load download id from file
+Properties props = new Properties();
+InputStream is = RepositoryStub.class.getClassLoader().getResourceAsStream("/download.id");
+String did;
+
+if (is != null) {
+    try {
+        props.load(is);
+        did = props.getProperty("download.id", "undefined");
+    } catch (IOException e) {
+        did = "undefined";
+    }
+} else {
+    did = "undefined";
+}
+
 // copy download id into repo
 if (!repSession.getRootNode().hasNode("licNode")) {
-    Properties props = new Properties();
-    InputStream is = RepositoryStub.class.getClassLoader().getResourceAsStream("/download.id");
-    if (is != null) {
-        try {
-            props.load(is);
-            String did = props.getProperty("download.id");
-            Node licNode = repSession.getRootNode().addNode("licNode", "nt:unstructured");
-            licNode.setProperty("key", did);
-            repSession.getRootNode().save();
-        } catch (IOException e) {
-            throw new RepositoryStubException("Exception reading "
-                    + "/download.id" + ": " + e.toString());
-        }
-    }
+    Node licNode = repSession.getRootNode().addNode("licNode", "nt:unstructured");
+    licNode.setProperty("key", did);
+    repSession.getRootNode().save();
+} else if (!repSession.getRootNode().getNode("licNode").getProperty("key").equals(did)) {
+    repSession.getRootNode().getNode("licNode").setProperty("key", did);
+    repSession.getRootNode().save();
 }
 
 String parent = request.getRequestURI();
@@ -120,9 +128,9 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
                         <td id="technavcell" colspan="2">
                             <table width="100%">
                                 <tr>
-                                    <td width="10%"><input type="button" value="Start" class="submit" onclick="startTest('<%= RepositoryServlet.getExcludeListUrl() %>','<%= excludeListVersion %>', document.getElementById('excudelist').checked)"></td>
+                                    <td width="10%"><input type="button" value="Start" class="submit" onclick="startTest('<%= RepositoryServlet.getExcludeListUrl() %>','<%= excludeListVersion %>', document.getElementById('excudelist').checked, document.getElementById('autoupdate').checked)"></td>
                                     <td width="20%">Start Test</td>
-                                    <td width="40%" align="center"><input type="checkbox" id="excudelist" checked>Exclude List</td>
+                                    <td width="40%" align="center"><input type="checkbox" id="excudelist" checked>Exclude List&nbsp;<input type="checkbox" id="autoupdate" checked>Auto Update</td>
                                     <td width="20%" align="right">Submit Test Data</td>
                                     <td width="10%" align="right"><input type="button" value="Submit" class="submit" onclick="var strwin = window.open('submit_result.jsp','SubmitTestResult', 'width=500,height=400');strwin.focus()"></td>
                                 </tr>

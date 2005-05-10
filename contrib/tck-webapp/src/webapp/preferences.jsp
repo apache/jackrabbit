@@ -24,21 +24,46 @@ Session repSession = RepositoryServlet.getSession();
 if (repSession == null) {
     return;
 }
-
-String alertBox = "";
+Node rootNode = repSession.getRootNode();
 
 // save download key if needed
 String key = request.getParameter("key");
 if (key != null) {
     // save
-    Node lk = repSession.getRootNode().getNode("licNode");
+    Node lk = rootNode.getNode("licNode");
     if (!key.equals(lk.getProperty("key").getString())) {
         lk.setProperty("key", key);
-        repSession.getRootNode().save();
+        rootNode.save();
     }
 }
 
-Node rootNode = repSession.getRootNode();
+// save exclude list
+String vers =  request.getParameter("version");
+String list =  request.getParameter("excludeList");
+if (vers != null && list != null) {
+    Node excludeListNode = (rootNode.hasNode("excludeList")) ?
+            rootNode.getNode("excludeList") :
+            rootNode.addNode("excludeList", "nt:unstructured");
+
+    excludeListNode.setProperty("version", vers);
+
+    // replace cr's with ","
+    list = list.replaceAll("\r\n", ",");
+    excludeListNode.setProperty("list", list);
+    rootNode.save();
+}
+
+// load exclude list
+String version = "";
+String excludeList = "";
+if (rootNode.hasNode("excludeList")) {
+    Node excludeListNode = rootNode.getNode("excludeList");
+    version = excludeListNode.getProperty("version").getString();
+    excludeList = excludeListNode.getProperty("list").getString();
+
+    // list is comma separated... make it better readable
+    excludeList = excludeList.replace(',', '\n');
+}
 
 %>
 <html>
@@ -46,11 +71,20 @@ Node rootNode = repSession.getRootNode();
         <link rel="stylesheet" href="docroot/ui/default.css" type="text/css" title="style" />
     </head>
     <body style="margin-top:0px;border-width:0px">
-        <%= alertBox %>
         <form name="prefsform" action="preferences.jsp" method="post">
             <table width="100%">
-                <tr><td class="content">Licence Key</td><td class="content"><input name="key" value="<%= rootNode.getNode("licNode").getProperty("key").getString() %>"></td></tr>
+                <tr><th class="content" colspan="2">Download ID</th></tr>
+                <tr><td class="content">ID</td><td class="content"><input name="key" value="<%= rootNode.getNode("licNode").getProperty("key").getString() %>"></td></tr>
                 <tr><td colspan="2"><input type="submit" value="Save" class="submit"></td></tr>
+            </table>
+        </form>
+
+        <form name="excludelistform" aczion="preferences.jsp" method="post">
+            <table width="100%">
+                <tr><th class="content" colspan="2">ExcludeList</th></tr>
+                <tr><td class="content">Version</td><td class="content"><input name="version" value="<%= version %>"></td></tr>
+                <tr><td class="content">List</td><td class="content"><textarea name="excludeList"><%= excludeList %></textarea></td></tr>
+                <tr><td colspan="2"><input type="submit" value="Save List" class="submit"></td></tr>
             </table>
         </form>
     </body>

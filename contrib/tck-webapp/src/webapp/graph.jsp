@@ -153,15 +153,17 @@ String mode = request.getParameter("mode");
         t.run();
 
         // saving test results
-        out.write("<script>parent.statuswin.document.write('" + String.valueOf(t.getNumberOfExecutedTests()) + " tests got executed<br>')</script>'");
+        out.write("<script>parent.statuswin.document.write('" + String.valueOf(t.getNumberOfExecutedTests()) + " tests got executed<br>')</script>");
         out.write("<script>parent.statuswin.document.write('Saving test results...<br>')</script>");
+
         Node results = testResNode.addNode(String.valueOf(startMillies));
         testResNode.save();
         t.storeResults(results);
 
         // test summary
-        out.write("<script>parent.statuswin.document.write('Generating test summary...<br>')</script>'");
+        out.write("<script>parent.statuswin.document.write('Generating test summary...<br>')</script>");
         out.write("<script>parent.statuswin.scrollBy(0,30);</script>");
+
         Map summary = buildSummary(results, repSession);
 
         out.write("<table width=\"100%\">");

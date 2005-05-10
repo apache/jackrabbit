@@ -66,7 +66,7 @@ Node rootNode = repSession.getRootNode();
                 properties += propertyNames[i] + "=" + pval + "\n";
             }
 
-            properties = "#repository properties\n";
+            properties += "#repository properties\n";
             RepositoryHelper helper = new RepositoryHelper(WebAppTestConfig.getCurrentConfig());
             String dkeys[] = helper.getRepository().getDescriptorKeys();
             for (int i = 0; i < dkeys.length; i++) {
@@ -76,13 +76,13 @@ Node rootNode = repSession.getRootNode();
             
             // license info
             Node lk = repSession.getRootNode().getNode("licNode");
-            String lickey = lk.getProperty("key").getString();
+            String did = lk.getProperty("key").getString();
             String installid = lk.getUUID();
             %>
             <table width="100%">
                 <tr>
                     <td colspan="2">
-                         <iframe name="userinfo" style="margin-top: 0px;border-top: 1px solid #000000;" src="http://www.day.com" height="200" width="450" frameborder="0"></iframe>
+                         <iframe name="userinfo" style="margin-top: 0px;border-top: 1px solid #000000;" src="<%= RepositoryServlet.getSubmitUrl() %>?downloadidinfo=<%= did %>" height="200" width="450" frameborder="0"></iframe>
                     </td>
                 </tr>
                 <tr>
@@ -120,7 +120,7 @@ Node rootNode = repSession.getRootNode();
                 </tr>
                 <tr>
                     <td colspan="2">
-                        &nbsp;<input type="hidden" name="properties" value="<%= properties %>"><input type="hidden" name="resultxml"><input type="hidden" name="licencekey" value="<%= lickey %>"><input type="hidden" name="istallid" value="<%= installid %>">
+                        &nbsp;<input type="hidden" name="properties" value="<%= properties %>"><input type="hidden" name="resultxml"><input type="hidden" name="downloadid" value="<%= did %>"><input type="hidden" name="installid" value="<%= installid %>">
                     </td>
                 </tr>
                 <tr><td><input type="submit" value="Send" class="submit"></td><td align="right"><input type="button" value="Cancel" class="submit" onclick="window.close();"></td></tr>
