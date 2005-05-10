@@ -50,7 +50,7 @@
 
         <init-param>
             <param-name>submit-url</param-name>
-            <param-value>http://www.day.com</param-value>
+            <param-value>http://www.day.com/en/product/jsr_170/tck_submit.html</param-value>
             <description>Url pointing to test result submit receiver</description>
         </init-param>
 
@@ -62,7 +62,7 @@
 
         <init-param>
             <param-name>exclude-list-url</param-name>
-            <param-value>excludelisttest.jsp</param-value>
+            <param-value>http://www.day.com/en/product/jsr_170/exclude_list.html</param-value>
             <description>Url pointing to exclude list provider</description>
         </init-param>
 

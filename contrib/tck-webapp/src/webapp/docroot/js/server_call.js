@@ -1,7 +1,11 @@
 var IFrameObj; // our IFrame object
 var IFrameDoc;
 var successfull = false;
+var baseHref;
+
 function callToServer(url) {
+  baseHref = document.location.href.substring(0, document.location.href.lastIndexOf("/"));
+
   if (!document.createElement) {
     return true
   }
@@ -16,6 +20,7 @@ function callToServer(url) {
       tempIFrame.style.border='0px';
       tempIFrame.style.width='0px';
       tempIFrame.style.height='0px';
+      tempIFrame.setAttribute('src','excludelisttest.jsp');
       IFrameObj = document.body.appendChild(tempIFrame);
 
       if (document.frames) {
@@ -45,11 +50,13 @@ function callToServer(url) {
   return successfull;
 }
 
-function startTest(url, currentVersion, useExcludeList) {
+function startTest(url, currentVersion, useExcludeList, autoupdate) {
     if (!useExcludeList) {
         window.graph.document.location.href="graph.jsp?mode=testnow&useExcludeList=no";
+    } else if (autoupdate){
+        callToServer(url + "?Show=1&checkVersion=" + currentVersion);
     } else {
-        callToServer(url + "?checkVersion=" + currentVersion);
+        window.graph.document.location.href="graph.jsp?mode=testnow&useExcludeList=yes";
     }
 }
 
@@ -57,11 +64,11 @@ function checkAndUpdate(doc) {
         if (!excludeListIsUpToDate(doc)) {
         	// start update process
         	alert("The Exclude List is no more valid.\nGoing to download the the latest version");
-        	updateExcludeList("update_exclude_list.jsp?action=update", doc);
+        	updateExcludeList(baseHref + "/update_exclude_list.jsp?action=update", doc);
         	alert("The Exclude List is update.\nGoing to start the test.");
      	}
 
-     	window.graph.document.location.href="graph.jsp?mode=testnow";
+     	window.graph.document.location.href=baseHref+"/graph.jsp?mode=testnow";
 }
 
 function excludeListIsUpToDate(doc) {

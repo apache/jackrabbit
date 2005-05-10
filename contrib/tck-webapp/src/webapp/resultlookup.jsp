@@ -33,7 +33,7 @@ if (sampleDate != null && repSession.getRootNode().hasNode("testing/" + sampleDa
     // build xml
     Node testroot = repSession.getRootNode().getNode("testing/" + sampleDate);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    repSession.exportSysView(testroot.getPath(), baos, false, false);
+    repSession.exportSystemView(testroot.getPath(), baos, false, false);
     %><%= baos.toString() %><%
     }
 %>
