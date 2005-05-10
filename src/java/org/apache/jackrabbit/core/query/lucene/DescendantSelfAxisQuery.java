@@ -252,13 +252,17 @@ class DescendantSelfAxisQuery extends Query {
                 while (parentUUID != null && !contextUUIDs.contains(parentUUID)) {
                     // traverse
                     TermDocs ancestor = reader.termDocs(new Term(FieldNames.UUID, parentUUID));
-                    if (ancestor.next()) {
-                        parentUUID = reader.document(ancestor.doc()).get(FieldNames.PARENT);
-                        if (parentUUID.length() == 0) {
+                    try {
+                        if (ancestor.next()) {
+                            parentUUID = reader.document(ancestor.doc()).get(FieldNames.PARENT);
+                            if (parentUUID.length() == 0) {
+                                parentUUID = null;
+                            }
+                        } else {
                             parentUUID = null;
                         }
-                    } else {
-                        parentUUID = null;
+                    } finally {
+                        ancestor.close();
                     }
                 }
                 if (parentUUID != null) {

@@ -166,23 +166,20 @@ class ChildAxisQuery extends Query {
          * {@inheritDoc}
          */
         public float getValue() {
-            // @todo implement properly
-            return 0;
+            return 1.0f;
         }
 
         /**
          * {@inheritDoc}
          */
         public float sumOfSquaredWeights() throws IOException {
-            // @todo implement properly
-            return 0;
+            return 1.0f;
         }
 
         /**
          * {@inheritDoc}
          */
         public void normalize(float norm) {
-            // @todo implement properly
         }
 
         /**
@@ -293,7 +290,6 @@ class ChildAxisQuery extends Query {
                 uuids = new ArrayList();
                 contextScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
-                        // @todo maintain cache of doc id hierarchy
                         hits.set(doc);
                     }
                 });
@@ -319,8 +315,12 @@ class ChildAxisQuery extends Query {
                 hits.clear();
                 for (Iterator it = uuids.iterator(); it.hasNext();) {
                     TermDocs children = reader.termDocs(new Term(FieldNames.PARENT, (String) it.next()));
-                    while (children.next()) {
-                        hits.set(children.doc());
+                    try {
+                        while (children.next()) {
+                            hits.set(children.doc());
+                        }
+                    } finally {
+                        children.close();
                     }
                 }
                 // filter out the child nodes that do not match the name test

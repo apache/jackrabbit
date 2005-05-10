@@ -843,7 +843,13 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         SimpleNode child = (SimpleNode) node.jjtGetChild(0);
         OrderQueryNode.OrderSpec spec = null;
         try {
-            QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
+            String propName = child.getValue();
+            if (child.getId() == JJTQNAMELPAR) {
+                // function name
+                // cut off left parenthesis at end
+                propName.substring(0, propName.length() - 1);
+            }
+            QName name = ISO9075.decode(QName.fromJCRName(propName, resolver));
             spec = new OrderQueryNode.OrderSpec(name, true);
             queryNode.addOrderSpec(spec);
         } catch (IllegalNameException e) {
