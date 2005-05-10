@@ -33,7 +33,7 @@ if (repSession == null) {
 
 // load download id from file
 Properties props = new Properties();
-InputStream is = RepositoryStub.class.getClassLoader().getResourceAsStream("/download.id");
+InputStream is = getServletConfig().getServletContext().getResource("/download.id").openStream();
 String did;
 
 if (is != null) {
