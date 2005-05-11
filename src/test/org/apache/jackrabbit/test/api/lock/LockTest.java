@@ -29,16 +29,16 @@ import javax.jcr.lock.Lock;
 /**
  * <code>LockTest</code> contains the test cases for the lock support in
  * the JCR specification.
- * <p/>
- * @tck.config testroot must allow child nodes of type <code>nodetype</code>
- * @tck.config nodetype nodetype which is lockable or allows to add mix:lockable.
- * The node must also allow child nodes with the same node type as itself. 
- * @tck.config nodename1 name of a lockable child node of type <code>nodetype</code>.
  *
  * @test
  * @sources LockTest.java
  * @executeClass org.apache.jackrabbit.test.api.lock.LockTest
  * @keywords locking
+ *
+ * @tck.config testroot must allow child nodes of type <code>nodetype</code>
+ * @tck.config nodetype nodetype which is lockable or allows to add mix:lockable.
+ * The node must also allow child nodes with the same node type as itself.
+ * @tck.config nodename1 name of a lockable child node of type <code>nodetype</code>.
  */
 public class LockTest extends AbstractJCRTest {
 
