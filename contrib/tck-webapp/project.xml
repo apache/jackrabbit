@@ -81,8 +81,8 @@
         <dependency>
             <groupId>cqfs</groupId>
             <artifactId>cqfs-jackrabbit</artifactId>
-            <version>3.5.6</version>
-            <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6.jar</url>
+            <version>3.5.6-SNAPSHOT</version>
+            <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6-SNAPSHOT.jar</url>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
@@ -90,7 +90,7 @@
 
         <dependency>
             <id>cqfs</id>
-            <version>3.5.6</version>
+            <version>3.5.6-SNAPSHOT</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>

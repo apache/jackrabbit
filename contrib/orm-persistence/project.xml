@@ -166,14 +166,14 @@
     <dependency>
       <groupId>cqfs</groupId>
       <artifactId>cqfs-jackrabbit</artifactId>
-      <version>3.5.6</version>
-      <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6.jar</url>
+      <version>3.5.6-SNAPSHOT</version>
+      <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6-SNAPSHOT.jar</url>
     </dependency>
     <dependency>
       <groupId>cqfs</groupId>
       <artifactId>cqfs</artifactId>
-      <version>3.5.6</version>
-      <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6.jar</url>
+      <version>3.5.6-SNAPSHOT</version>
+      <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6-SNAPSHOT.jar</url>
     </dependency>
     
   </dependencies>
