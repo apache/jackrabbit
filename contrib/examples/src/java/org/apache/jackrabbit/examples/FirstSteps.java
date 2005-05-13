@@ -27,7 +27,6 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.StringValue;
 import javax.jcr.Value;
 
 /**
@@ -43,8 +42,6 @@ public class FirstSteps {
 
     /**
      * Run the First Steps example.
-     *
-     * @param args command line arguments (ignored)
      */
     public void run() {
         try {
@@ -58,7 +55,7 @@ public class FirstSteps {
             if (!root.hasNode("testnode")) {
                 System.out.println("creating testnode");
                 Node node = root.addNode("testnode", "nt:unstructured");
-                node.setProperty("testprop", new StringValue("Hello, World."));
+                node.setProperty("testprop", session.getValueFactory().createValue("Hello, World."));
                 session.save();
             }
 
