@@ -19,7 +19,8 @@
     default="jar:jar"
     xmlns:deploy="deploy"
     xmlns:j="jelly:core"
-    xmlns:ant="jelly:ant">
+    xmlns:ant="jelly:ant"
+    xmlns:maven="jelly:maven">
 
     <postGoal name="ant:generate-build">
         <attainGoal name="jackrabbit:post-ant"/>
@@ -67,25 +68,20 @@
     <postGoal name="java:prepare-filesystem">
         <ant:condition property="sqlparser_stale">
             <ant:not>
-                <ant:uptodate targetfile="src/java/org/apache/jackrabbit/core/query/sql/JCRSQLParser.java">
-                    <ant:srcfiles dir="src/grammar/sql">
+                <ant:uptodate targetfile="${maven.gen.src}/java/org/apache/jackrabbit/core/query/sql/JCRSQLParser.java">
+                    <ant:srcfiles dir="${maven.src.dir}/grammar/sql">
                         <ant:include name="JCRSQL.jjt"/>
                     </ant:srcfiles>
                 </ant:uptodate>
             </ant:not>
         </ant:condition>
-        <j:choose>
-            <j:when test="${sqlparser_stale == 'true'}">
-                <attainGoal name="jackrabbit:generate-sql-parser"/>
-            </j:when>
-            <j:otherwise>
-                <ant:echo>SQL Parser up-to-date</ant:echo>
-            </j:otherwise>
-        </j:choose>
+        <j:if test="${sqlparser_stale == 'true'}">
+            <attainGoal name="jackrabbit:generate-sql-parser"/>
+        </j:if>
         <ant:condition property="xpathparser_stale">
             <ant:not>
-                <ant:uptodate targetfile="src/java/org/apache/jackrabbit/core/query/xpath/XPath.java">
-                    <ant:srcfiles dir="src/grammar/xpath">
+                <ant:uptodate targetfile="${maven.gen.src}/java/org/apache/jackrabbit/core/query/xpath/XPath.java">
+                    <ant:srcfiles dir="${maven.src.dir}/grammar/xpath">
                         <ant:include name="javacc.xsl"/>
                         <ant:include name="jjtree.xsl"/>
                         <ant:include name="jjtree-jackrabbit.xsl"/>
@@ -95,72 +91,65 @@
                 </ant:uptodate>
             </ant:not>
         </ant:condition>
-        <j:choose>
-            <j:when test="${xpathparser_stale == 'true'}">
-                <attainGoal name="jackrabbit:generate-xpath-parser"/>
-            </j:when>
-            <j:otherwise>
-                <ant:echo>XPath Parser up-to-date</ant:echo>
-            </j:otherwise>
-        </j:choose>
+        <j:if test="${xpathparser_stale == 'true'}">
+            <attainGoal name="jackrabbit:generate-xpath-parser"/>
+        </j:if>
+        <ant:path id="jackrabbit.generated.src"
+                  location="${maven.gen.src}/java"/>
+        <maven:addPath id="maven.compile.src.set"
+                       refid="jackrabbit.generated.src"/>
     </postGoal>
 
     <!-- Generates the SQL Parser -->
     <goal name="jackrabbit:generate-sql-parser">
-        <ant:java classname="jjtree" fork="true">
-            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/query/sql"/>
-            <arg value="src/grammar/sql/JCRSQL.jjt"/>
-            <classpath>
-                <fileset dir="${maven.repo.local}/javacc/jars">
-                    <include name="javacc-3.2.jar"/>
-                </fileset>
-            </classpath>
-        </ant:java>
-        <ant:java classname="javacc" fork="true">
-            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/query/sql"/>
-            <arg value="src/java/org/apache/jackrabbit/core/query/sql/JCRSQL.jj"/>
-            <classpath>
-                <fileset dir="${maven.repo.local}/javacc/jars">
-                    <include name="javacc-3.2.jar"/>
-                </fileset>
-            </classpath>
-        </ant:java>
+        <j:set var="maven.javacc.jjtree.package"
+               value="org.apache.jackrabbit.core.query.sql"/>
+        <j:set var="maven.javacc.javacc.package"
+               value="${maven.javacc.jjtree.package}"/>
+        <j:set var="maven.javacc.jjtree.grammar"
+               value="${maven.src.dir}/grammar/sql/JCRSQL.jjt"/>
+        <attainGoal name="javacc"/>
+        <!-- Remove files that have been customized in Jackrabbit. -->
+        <ant:delete>
+          <ant:fileset dir="${maven.gen.src}/java/org/apache/jackrabbit/core/query/sql">
+            <ant:include name="ASTLiteral.java"/>
+            <ant:include name="ASTContainsExpression.java"/>
+            <ant:include name="ASTPredicate.java"/>
+            <ant:include name="ASTIdentifier.java"/>
+          </ant:fileset>
+        </ant:delete>
     </goal>
 
     <!-- Generates the XPath Parser -->
     <goal name="jackrabbit:generate-xpath-parser">
+        <!-- Generate the JavaCC grammar file using XSLT -->
+        <ant:mkdir dir="${maven.gen.src}/javacc"/>
         <!-- The following is a hack to get xslt work with maven (See: http://maven.apache.org/faq.html#BadXSLT ) -->
         ${systemScope.setProperty('javax.xml.transform.TransformerFactory','org.apache.xalan.processor.TransformerFactoryImpl')}
-        <ant:xslt style="src/grammar/xpath/strip.xsl"
-            in="src/grammar/xpath/xpath-grammar.xml"
-            out="src/grammar/xpath/stripped-xpath-grammar.xml"
+        <ant:xslt style="${maven.src.dir}/grammar/xpath/strip.xsl"
+            in="${maven.src.dir}/grammar/xpath/xpath-grammar.xml"
+            out="${maven.gen.src}/javacc/stripped-xpath-grammar.xml"
             force="yes">
         </ant:xslt>
-        <ant:xslt style="src/grammar/xpath/jjtree-jackrabbit.xsl"
-            in="src/grammar/xpath/stripped-xpath-grammar.xml"
-            out="src/grammar/xpath/XPath.jjt"
+        <ant:xslt style="${maven.src.dir}/grammar/xpath/jjtree-jackrabbit.xsl"
+            in="${maven.gen.src}/javacc/stripped-xpath-grammar.xml"
+            out="${maven.gen.src}/javacc/XPath.jjt"
             force="yes">
         </ant:xslt>
-
-        <ant:java classname="jjtree" fork="true">
-            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/query/xpath"/>
-            <arg value="src/grammar/xpath/XPath.jjt"/>
-            <classpath>
-                <fileset dir="${maven.repo.local}/javacc/jars">
-                    <include name="javacc-3.2.jar"/>
-                </fileset>
-            </classpath>
-        </ant:java>
-        <ant:java classname="javacc" fork="true">
-            <arg value="-OUTPUT_DIRECTORY=src/java/org/apache/jackrabbit/core/query/xpath"/>
-            <arg value="-UNICODE_INPUT=true"/>
-            <arg value="src/java/org/apache/jackrabbit/core/query/xpath/XPath.jj"/>
-            <classpath>
-                <fileset dir="${maven.repo.local}/javacc/jars">
-                    <include name="javacc-3.2.jar"/>
-                </fileset>
-            </classpath>
-        </ant:java>
+        <!-- Generate the XPath parser using JavaCC -->
+        <j:set var="maven.javacc.jjtree.package"
+               value="org.apache.jackrabbit.core.query.xpath"/>
+        <j:set var="maven.javacc.javacc.package"
+               value="${maven.javacc.jjtree.package}"/>
+        <j:set var="maven.javacc.jjtree.grammar"
+               value="${maven.gen.src}/javacc/XPath.jjt"/>
+        <attainGoal name="javacc"/>
+        <!-- Remove files that have been customized in Jackrabbit. -->
+        <ant:delete>
+          <ant:fileset dir="${maven.gen.src}/java/org/apache/jackrabbit/core/query/xpath">
+            <ant:include name="SimpleNode.java"/>
+          </ant:fileset>
+        </ant:delete>
     </goal>
 
     <!--
