@@ -1742,8 +1742,8 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                 for (int i = 0; i < values.length; i++) {
                     newValues[i] = values[i].createCopy();
                 }
+                newState.setValues(newValues);
             }
-            newState.setValues(values);
         }
         return newState;
     }
