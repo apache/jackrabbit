@@ -22,14 +22,15 @@ import javax.jcr.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Calendar;
 
+import sun.net.www.MimeTable;
+
 /**
- * The File System import example class.
+ * The First Steps example class.
  */
 public class FSImport {
 
@@ -85,13 +86,14 @@ public class FSImport {
      *
      * @param parentnode Parent Repository Node
      * @param file File to be imported
-     * @throws RepositoryException, IOException on errors
+     * @throws RepositoryException on repository errors, IOException on io errors
      */
 
     public static void importFile(Node parentnode, File file) throws RepositoryException, IOException {
 
-        // add some other means to extract mime type from filename
-        String mimeType = "application/octet-stream";
+        MimeTable mt = MimeTable.getDefaultTable();
+        String mimeType = mt.getContentTypeFor(file.getName());
+        if (mimeType==null) mimeType="application/octet-stream";
 
         Node fileNode = parentnode.addNode(file.getName(), "nt:file");
         Node resNode = fileNode.addNode("jcr:content", "nt:resource");
@@ -110,11 +112,11 @@ public class FSImport {
      *
      * @param parentnode Parent Repository Node
      * @param directory Directory to be traversed
-     * @throws RepositoryException, IOException on errors
+     * @throws RepositoryException on repository errors, IOException on io errors
      */
 
     private static void importFolder(Node parentnode, File directory) throws RepositoryException, IOException  {
-        File[] direntries =directory.listFiles();
+        File[] direntries = directory.listFiles();
         System.out.println(parentnode.getPath());
         for (int i=0; i<direntries.length; i++) {
             File direntry = direntries[i];
@@ -165,5 +167,4 @@ public class FSImport {
             dump(child);
         }
     }
-
 }
