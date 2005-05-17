@@ -238,8 +238,8 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             throw new ItemNotFoundException(msg);
         } catch (ItemStateException ise) {
             String msg = "failed to retrieve item state of " + id;
-            log.debug(msg);
-            throw new RepositoryException(msg);
+            log.error(msg);
+            throw new RepositoryException(msg, ise);
         }
     }
 
@@ -507,18 +507,19 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
     }
 
     //-------------------------------------------------< item factory methods >
-    private ItemImpl createItemInstance(ItemId id) throws ItemNotFoundException, RepositoryException {
+    private ItemImpl createItemInstance(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
         // create instance of item using its state object
         ItemImpl item;
         ItemState state;
         try {
             state = itemStateProvider.getItemState(id);
-        } catch (NoSuchItemStateException ise) {
+        } catch (NoSuchItemStateException nsise) {
             throw new ItemNotFoundException(id.toString());
         } catch (ItemStateException ise) {
             String msg = "failed to retrieve item state of item " + id;
-            log.debug(msg);
-            throw new RepositoryException(msg);
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
         }
 
         if (state.isNode()) {
