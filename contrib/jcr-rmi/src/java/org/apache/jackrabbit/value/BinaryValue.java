@@ -48,7 +48,7 @@ import javax.jcr.ValueFormatException;
  * 
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public class BinaryValue implements StatefullValue {
+public class BinaryValue implements StatefulValue {
 
     /** The <code>InputStream</code> providing the value */
     private InputStream stream;
