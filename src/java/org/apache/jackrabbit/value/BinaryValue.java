@@ -17,7 +17,11 @@
 package org.apache.jackrabbit.value;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 
@@ -33,6 +37,10 @@ import javax.jcr.ValueFormatException;
  * created through the {@link #getStream()} method but does not close the
  * stream. It is the sole responsibility of the user of this value to close the
  * stream if not needed anymore to prevent memory loss.
+ * <p>
+ * This class implements {@link #readObject(ObjectInputStream)} and
+ * {@link #writeObject(ObjectOutputStream)} methods to (de-)serialize the
+ * data.
  * 
  * @version $Revision$, $Date$
  * @author Jukka Zitting
@@ -43,7 +51,7 @@ import javax.jcr.ValueFormatException;
 public class BinaryValue implements StatefullValue {
 
     /** The <code>InputStream</code> providing the value */
-    private final InputStream stream;
+    private InputStream stream;
 
     /**
      * Creates an instance on the given <code>InputStream</code>. This exact
@@ -157,4 +165,51 @@ public class BinaryValue implements StatefullValue {
     public boolean getBoolean() {
         throw new IllegalStateException("Stream already retrieved");
     }
+
+    /**
+     * Writes the contents of the underlying stream to the
+     * <code>ObjectOutputStream</code> by first copying to an internal byte
+     * array.
+     *
+     * @param out The <code>ObjectOutputStream</code> to where the binary
+     *      data is copied.
+     *
+     * @throws IOException If an error occurrs writing the binary data.
+     * @throws OutOfMemoryError If not enouhg memory is available to store the
+     *      binary data in the internal byte array.
+     */
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        // read the input into a byte array - limited by memory available !!
+        ByteArrayOutputStream bos = 
+            new ByteArrayOutputStream(stream.available());
+        byte[] buf = new byte[2048];
+        int rd = 0;
+        while ((rd = stream.read(buf)) >= 0) {
+            bos.write(buf, 0, rd);
+        }
+        
+        // stream the data to the object output
+        out.writeInt(bos.size());
+        out.write(bos.toByteArray());
+    }
+    
+    /**
+     * Reads the binary data from the <code>ObjectInputStream</code> into an
+     * internal byte array, which is then provided through a
+     * <code>ByteArrayInputStream</code>.
+     *
+     * @param in The <code>ObjectInputStream</code> from where to get the
+     *      binary data.
+     *
+     * @throws IOException If an error occurrs reading the binary data.
+     * @throws OutOfMemoryError If not enouhg memory is available to store the
+     *      binary data in the internal byte array.
+     */
+    private void readObject(ObjectInputStream in) throws IOException {
+        int size = in.readInt();
+        byte[] buf = new byte[size];
+        in.readFully(buf);
+        stream = new ByteArrayInputStream(buf);
+    }
+
 }
