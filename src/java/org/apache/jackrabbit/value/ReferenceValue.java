@@ -30,7 +30,7 @@ import javax.jcr.ValueFormatException;
  * @since 0.16.4.1
  */
 public class ReferenceValue extends BaseNonStreamValue
-        implements StatefullValue {
+        implements StatefulValue {
 
     /** The reference value */
     private final String value;

@@ -41,7 +41,7 @@ import javax.jcr.ValueFormatException;
  * 
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public class DateValue extends BaseNonStreamValue implements StatefullValue {
+public class DateValue extends BaseNonStreamValue implements StatefulValue {
 
     /** The <code>Calendar</code> value */
     private final Calendar value;

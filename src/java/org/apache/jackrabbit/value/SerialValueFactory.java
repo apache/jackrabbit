@@ -99,7 +99,7 @@ public class SerialValueFactory implements ValueFactory {
         }
 
         // convert to a general vaule
-        return new SerialValue(new StatefullValueAdapter(value));
+        return new SerialValue(new StatefulValueAdapter(value));
     }
 
     /**
@@ -115,7 +115,7 @@ public class SerialValueFactory implements ValueFactory {
 
     /** {@inheritDoc} */
     public final Value createValue(String value, int type) throws ValueFormatException {
-        StatefullValue intValue;
+        StatefulValue intValue;
         switch (type) {
             case PropertyType.BINARY:
                 intValue = createBinaryValue(value);

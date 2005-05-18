@@ -51,7 +51,7 @@ final class SerialValue implements Value, Serializable {
      * The underlying value instance. This is the state reference that
      * changes during state transitions.
      */
-    private StatefullValue value;
+    private StatefulValue value;
 
     /**
      * Creates a generic value instance.  A new InitialValue instance
@@ -61,7 +61,7 @@ final class SerialValue implements Value, Serializable {
      *
      * @param value underlying static value instance
      */
-    SerialValue(StatefullValue value) {
+    SerialValue(StatefulValue value) {
         this.type = value.getType();
         this.value = new InitialValue(this, value);
     }
@@ -72,7 +72,7 @@ final class SerialValue implements Value, Serializable {
      *
      * @param value new value state
      */
-    void setValue(StatefullValue value) {
+    void setValue(StatefulValue value) {
         this.value = value;
     }
 

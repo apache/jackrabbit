@@ -32,7 +32,7 @@ import javax.jcr.ValueFormatException;
  * 
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public class DoubleValue extends BaseNonStreamValue implements StatefullValue {
+public class DoubleValue extends BaseNonStreamValue implements StatefulValue {
 
     /** The double value */
     private final double value;

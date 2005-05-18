@@ -39,13 +39,13 @@ import javax.jcr.ValueFormatException;
  *
  * @see SerialValue
  */
-final class InitialValue implements StatefullValue {
+final class InitialValue implements StatefulValue {
 
     /** The containing general value instance. */
     private final SerialValue general;
 
     /** The underlying concrete value instance. */
-    private final StatefullValue value;
+    private final StatefulValue value;
 
     /**
      * Creates an initial value state instance.
@@ -53,7 +53,7 @@ final class InitialValue implements StatefullValue {
      * @param general containing general value
      * @param value   underlying concrete value
      */
-    InitialValue(SerialValue general, StatefullValue value) {
+    InitialValue(SerialValue general, StatefulValue value) {
         this.general = general;
         this.value = value;
     }
@@ -99,7 +99,7 @@ final class InitialValue implements StatefullValue {
      * @return stream value
      */
     public InputStream getStream() throws ValueFormatException, RepositoryException {
-        StatefullValue realValue;
+        StatefulValue realValue;
         if (getType() != PropertyType.BINARY) {
             realValue = SerialValueFactory.getInstance().createBinaryValue(value.getString());
         } else {
@@ -124,7 +124,7 @@ final class InitialValue implements StatefullValue {
      * @see Value#getString()
      */
     public String getString() throws ValueFormatException, RepositoryException {
-        StatefullValue realValue;
+        StatefulValue realValue;
         if (getType() == PropertyType.BINARY) {
             realValue = new StringValue(toString(value.getStream()));
         } else {
@@ -148,7 +148,7 @@ final class InitialValue implements StatefullValue {
      * @see Value#getLong()
      */
     public long getLong() throws ValueFormatException, RepositoryException {
-        StatefullValue realValue;
+        StatefulValue realValue;
         if (getType() == PropertyType.BINARY) {
             realValue = SerialValueFactory.getInstance().createLongValue(toString(value.getStream()));
         } else {
@@ -172,7 +172,7 @@ final class InitialValue implements StatefullValue {
      * @see Value#getDouble()
      */
     public double getDouble() throws ValueFormatException, RepositoryException {
-        StatefullValue realValue;
+        StatefulValue realValue;
         if (getType() == PropertyType.BINARY) {
             realValue = SerialValueFactory.getInstance().createDoubleValue(toString(value.getStream()));
         } else {
@@ -196,7 +196,7 @@ final class InitialValue implements StatefullValue {
      * @see Value#getDate()
      */
     public Calendar getDate() throws  ValueFormatException, RepositoryException {
-        StatefullValue realValue;
+        StatefulValue realValue;
         if (getType() == PropertyType.BINARY) {
             realValue = SerialValueFactory.getInstance().createDateValue(toString(value.getStream()));
         } else {
@@ -220,7 +220,7 @@ final class InitialValue implements StatefullValue {
      * @see Value#getBoolean()
      */
     public boolean getBoolean() throws ValueFormatException, RepositoryException {
-        StatefullValue realValue;
+        StatefulValue realValue;
         if (getType() == PropertyType.BINARY) {
             realValue = SerialValueFactory.getInstance().createBooleanValue(toString(value.getStream()));
         } else {
