@@ -16,16 +16,10 @@
  */
 package org.apache.jackrabbit.value;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Calendar;
 
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -35,8 +29,9 @@ import javax.jcr.ValueFormatException;
  * part of the State design pattern (GoF) used for managing the JCR Value
  * states.
  * <p>
- * Instances of this class are issued by the {@link org.apache.jackrabbit.value.SerialValueFactory}
- * and are <code>Serializable</code>.
+ * Instances of this class are issued by the
+ * {@link org.apache.jackrabbit.value.SerialValueFactory} and are
+ * <code>Serializable</code>.
  *
  * @see org.apache.jackrabbit.value.SerialValueFactory
  */
@@ -187,118 +182,5 @@ final class SerialValue implements Value, Serializable {
      */
     public int getType() {
         return type;
-    }
-
-    //---------- Serializable interface support --------------------------------
-
-    /**
-     * Serializes the underlying Value object. Instead of using
-     * the normal serialization mechanism, the essential state
-     * of the Value object is extracted and written to the serialization
-     * stream as a type-value pair.
-     *
-     * @param out the serialization stream
-     * @throws IOException on IO errors
-     */
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        try {
-            // write real type
-            out.writeInt(type);
-
-            switch (type) {
-                case PropertyType.BINARY:
-                    InputStream data = value.getStream();
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    byte[] bytes = new byte[4096];
-                    for (int n = data.read(bytes); n != -1; n = data
-                        .read(bytes)) {
-                        buffer.write(bytes, 0, n);
-                    }
-                    out.writeInt(buffer.size());
-                    buffer.writeTo(out);
-                    break;
-                case PropertyType.BOOLEAN:
-                    out.writeBoolean(value.getBoolean());
-                    break;
-                case PropertyType.DATE:
-                    out.writeObject(value.getDate());
-                    break;
-                case PropertyType.DOUBLE:
-                    out.writeDouble(value.getDouble());
-                    break;
-                case PropertyType.LONG:
-                    out.writeLong(value.getLong());
-                    break;
-                case PropertyType.NAME:
-                case PropertyType.PATH:
-                case PropertyType.REFERENCE:
-                case PropertyType.STRING:
-                    out.writeUTF(value.getString());
-                    break;
-                default:
-                    throw new IOException("Unknown value type");
-            }
-        } catch (RepositoryException ex) {
-            throw new IOException(ex.getMessage());
-        }
-    }
-
-    /**
-     * Deserializes the underlying Value object. A new Value object
-     * is created based on the type and state data read fro the
-     * serialization stream.
-     *
-     * @param in the serialization stream
-     * @throws IOException on IO errors
-     */
-    private void readObject(ObjectInputStream in) throws IOException {
-        try {
-            SerialValueFactory factory = SerialValueFactory.getInstance();
-            StatefullValue realValue;
-            int type = in.readInt();
-            switch (type) {
-                case PropertyType.BINARY:
-                    byte[] bytes = new byte[in.readInt()];
-                    in.readFully(bytes);
-                    ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-                    realValue = factory.createBinaryValue(bin);
-                    break;
-                case PropertyType.BOOLEAN:
-                    realValue = factory.createBooleanValue(in.readBoolean());
-                    break;
-                case PropertyType.DATE:
-                    realValue = factory.createDateValue((Calendar) in.readObject());
-                    break;
-                case PropertyType.DOUBLE:
-                    realValue = factory.createDoubleValue(in.readDouble());
-                    break;
-                case PropertyType.LONG:
-                    realValue = factory.createLongValue(in.readLong());
-                    break;
-                case PropertyType.NAME:
-                    realValue = factory.createNameValue(in.readUTF());
-                    break;
-                case PropertyType.PATH:
-                    realValue = factory.createPathValue(in.readUTF());
-                    break;
-                case PropertyType.REFERENCE:
-                    realValue = factory.createReferenceValue(in.readUTF());
-                    break;
-                case PropertyType.STRING:
-                    realValue = factory.createStringValue(in.readUTF());
-                    break;
-                default:
-                    throw new IllegalStateException("Illegal serial value type");
-            }
-
-            // now we set the fields
-            this.type = type;
-            this.value = new InitialValue(this, realValue);
-
-        } catch (ValueFormatException vfe) {
-            throw new IOException(vfe.getMessage());
-        } catch (ClassNotFoundException ex) {
-            throw new IOException(ex.getMessage());
-        }
     }
 }
