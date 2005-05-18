@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.state.xml;
 
-import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
@@ -38,6 +36,9 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.DOMWalker;
+import org.apache.jackrabbit.core.util.Text;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
@@ -510,7 +511,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         + UUID_ATTRIBUTE + "=\"" + state.getUUID() + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentUUID() == null ? "" : state.getParentUUID()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
-                        + NODETYPE_ATTRIBUTE + "=\"" + state.getNodeTypeName() + "\">\n");
+                        + NODETYPE_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString()) + "\">\n");
                 // parents
                 writer.write("\t<" + PARENTS_ELEMENT + ">\n");
                 Iterator iter = state.getParentUUIDs().iterator();
@@ -525,7 +526,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 iter = state.getMixinTypeNames().iterator();
                 while (iter.hasNext()) {
                     writer.write("\t\t<" + MIXINTYPE_ELEMENT + " "
-                            + NAME_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
+                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(iter.next().toString()) + "\"/>\n");
                 }
                 writer.write("\t</" + MIXINTYPES_ELEMENT + ">\n");
 
@@ -535,7 +536,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 while (iter.hasNext()) {
                     NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
                     writer.write("\t\t<" + PROPERTY_ELEMENT + " "
-                            + NAME_ATTRIBUTE + "=\"" + entry.getName() + "\">\n");
+                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(entry.getName().toString()) + "\">\n");
                     // @todo serialize type, definition id and values
                     writer.write("\t\t</" + PROPERTY_ELEMENT + ">\n");
                 }
@@ -547,7 +548,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 while (iter.hasNext()) {
                     NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
                     writer.write("\t\t<" + NODE_ELEMENT + " "
-                            + NAME_ATTRIBUTE + "=\"" + entry.getName() + "\" "
+                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(entry.getName().toString()) + "\" "
                             + UUID_ATTRIBUTE + "=\"" + entry.getUUID() + "\">\n");
                     writer.write("\t\t</" + NODE_ELEMENT + ">\n");
                 }
@@ -601,7 +602,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + PROPERTY_ELEMENT + " "
-                        + NAME_ATTRIBUTE + "=\"" + state.getName() + "\" "
+                        + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getName().toString()) + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentUUID() + "\" "
                         + MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
@@ -644,23 +645,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                     blobVal = null; // gc hint
                                 }
                             } else {
-                                // escape '<' and '&'
-                                char[] chars = val.toString().toCharArray();
-                                int j = 0, last = 0;
-                                while (j < chars.length) {
-                                    char c = chars[j];
-                                    if (c == '<') {
-                                        writer.write(chars, last, j - last);
-                                        writer.write("&lt;");
-                                        last = j + 1;
-                                    } else if (c == '&') {
-                                        writer.write(chars, last, j - last);
-                                        writer.write("&amp;");
-                                        last = j + 1;
-                                    }
-                                    j++;
-                                }
-                                writer.write(chars, last, j - last);
+                                writer.write(Text.encodeIllegalXMLCharacters(val.toString()));
                             }
                         }
                         writer.write("</" + VALUE_ELEMENT + ">\n");
