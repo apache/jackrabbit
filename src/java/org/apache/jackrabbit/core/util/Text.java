@@ -26,8 +26,11 @@ import java.util.ArrayList;
  */
 public class Text {
 
-    /** Hidden constructor. */
-    private Text() { }
+    /**
+     * Hidden constructor.
+     */
+    private Text() {
+    }
 
     /**
      * used for the md5
@@ -134,7 +137,7 @@ public class Text {
         }
 
         ArrayList strings = new ArrayList();
-        int pos = 0;
+        int pos;
         int lastpos = 0;
 
         // add snipples
@@ -186,4 +189,58 @@ public class Text {
         return sb.toString();
     }
 
+    /**
+     * Replaces illegal XML characters in the given string by their corresponding
+     * predefined entity references.
+     *
+     * @param text text to be escaped
+     * @return a string
+     */
+    public static String encodeIllegalXMLCharacters(String text) {
+        if (text == null) {
+            throw new IllegalArgumentException("null argument");
+        }
+        StringBuffer buf = null;
+        int length = text.length();
+        int pos = 0;
+        for (int i = 0; i < length; i++) {
+            int ch = text.charAt(i);
+            switch (ch) {
+                case '<':
+                case '>':
+                case '&':
+                case '"':
+                case '\'':
+                    if (buf == null) {
+                        buf = new StringBuffer();
+                    }
+                    if (i > 0) {
+                        buf.append(text.substring(pos, i));
+                    }
+                    pos = i + 1;
+                    break;
+                default:
+                    continue;
+            }
+            if (ch == '<') {
+                buf.append("&lt;");
+            } else if (ch == '>') {
+                buf.append("&gt;");
+            } else if (ch == '&') {
+                buf.append("&amp;");
+            } else if (ch == '"') {
+                buf.append("&quot;");
+            } else if (ch == '\'') {
+                buf.append("&apos;");
+            }
+        }
+        if (buf == null) {
+            return text;
+        } else {
+            if (pos < length) {
+                buf.append(text.substring(pos));
+            }
+            return buf.toString();
+        }
+    }
 }
