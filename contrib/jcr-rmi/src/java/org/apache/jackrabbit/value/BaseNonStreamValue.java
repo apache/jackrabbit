@@ -39,7 +39,7 @@ import javax.jcr.ValueFormatException;
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
-public abstract class BaseNonStreamValue implements StatefullValue {
+public abstract class BaseNonStreamValue implements StatefulValue {
 
     /**
      * Default constructor with no special tasks.

@@ -46,7 +46,7 @@ import javax.jcr.ValueFormatException;
  * 
  * @see SerialValue
  */
-final class StatefullValueAdapter implements StatefullValue {
+final class StatefulValueAdapter implements StatefulValue {
 
     /** The delegatee value. */
     private Value delegatee;
@@ -57,7 +57,7 @@ final class StatefullValueAdapter implements StatefullValue {
      * 
      * @param delegatee The JCR <code>Value</code> providing the value date.
      */
-    StatefullValueAdapter(Value delegatee) {
+    StatefulValueAdapter(Value delegatee) {
         this.delegatee = delegatee;
     }
 
@@ -112,7 +112,7 @@ final class StatefullValueAdapter implements StatefullValue {
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
         // if the delegatee value is a StatefullValue or SerialValue, serialize it
-        if (delegatee instanceof StatefullValue ||
+        if (delegatee instanceof StatefulValue ||
                 delegatee instanceof SerialValue) {
             out.writeObject(delegatee);
             return;

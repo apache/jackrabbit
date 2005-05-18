@@ -29,7 +29,7 @@ import javax.jcr.PropertyType;
  * 
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public class BooleanValue extends BaseNonStreamValue implements StatefullValue {
+public class BooleanValue extends BaseNonStreamValue implements StatefulValue {
 
     /** The boolean value */
     private final boolean value;

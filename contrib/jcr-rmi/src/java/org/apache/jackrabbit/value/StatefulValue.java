@@ -40,5 +40,5 @@ import javax.jcr.Value;
  *
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public interface StatefullValue extends Value, Serializable {
+public interface StatefulValue extends Value, Serializable {
 }
