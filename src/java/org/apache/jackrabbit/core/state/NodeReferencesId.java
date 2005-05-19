@@ -69,7 +69,7 @@ public class NodeReferencesId extends NodeId {
      * {@inheritDoc}
      */
     public int hashCode() {
-        // use hash code of nodeid
+        // use hash code of node id
         return super.hashCode();
     }
 
