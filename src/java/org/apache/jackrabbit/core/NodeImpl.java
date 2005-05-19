@@ -284,7 +284,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /**
      * Computes the values of well-known system (i.e. protected) properties.
-     * todo: duplicate code in WorkspaceImporter: consolidate and delegate to NodeTypeInstanceHandler
+     * todo: duplicate code in BatchedItemOperations: consolidate and delegate to NodeTypeInstanceHandler
      *
      * @param name
      * @param def
@@ -1692,15 +1692,14 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         // check if root node
-        NodeState thisState = (NodeState) state;
-        if (thisState.getParentUUID() == null) {
+        String parentUUID = state.getParentUUID();
+        if (parentUUID == null) {
             String msg = "root node doesn't have a parent";
             log.debug(msg);
             throw new ItemNotFoundException(msg);
         }
 
-        Path path = getPrimaryPath();
-        return (Node) getAncestor(path.getAncestorCount() - 1);
+        return (Node) itemMgr.getItem(new NodeId(parentUUID));
     }
 
     //-----------------------------------------------------------------< Node >

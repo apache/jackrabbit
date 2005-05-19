@@ -40,8 +40,8 @@ public interface Importer {
      * @param nsContext prefix mappings of current context
      * @throws RepositoryException
      */
-    void startNode(NodeInfo nodeInfo, List propInfos,
-                          NamespaceResolver nsContext) throws RepositoryException;
+    void startNode(NodeInfo nodeInfo, List propInfos, NamespaceResolver nsContext)
+            throws RepositoryException;
 
     /**
      * @param nodeInfo

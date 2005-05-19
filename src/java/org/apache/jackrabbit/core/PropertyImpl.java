@@ -199,8 +199,10 @@ public class PropertyImpl extends ItemImpl implements Property {
             throws ValueFormatException, VersionException,
             LockException, ConstraintViolationException,
             RepositoryException {
+        NodeImpl parent = (NodeImpl) getParent();
+
         // verify that parent node is checked-out
-        if (!((NodeImpl) getParent()).internalIsCheckedOut()) {
+        if (!parent.internalIsCheckedOut()) {
             throw new VersionException("cannot set the value of a property of a checked-in node "
                     + safeGetJCRPath());
         }
@@ -225,7 +227,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         }
 
         // check lock status
-        ((NodeImpl) getParent()).checkLock();
+        parent.checkLock();
     }
 
     /**
@@ -1122,7 +1124,6 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        PropertyState thisState = (PropertyState) state;
-        return (Node) itemMgr.getItem(new NodeId(thisState.getParentUUID()));
+        return (Node) itemMgr.getItem(new NodeId(state.getParentUUID()));
     }
 }
