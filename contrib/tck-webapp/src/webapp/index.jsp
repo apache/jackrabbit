@@ -31,6 +31,9 @@ if (repSession == null) {
     return;
 }
 
+// checker intervall
+long checkerIntervall = 3600;
+
 // load download id from file
 Properties props = new Properties();
 InputStream is = getServletConfig().getServletContext().getResource("/download.id").openStream();
@@ -56,7 +59,61 @@ if (!repSession.getRootNode().hasNode("licNode")) {
     repSession.getRootNode().getNode("licNode").setProperty("key", did);
     repSession.getRootNode().save();
 }
+// quick and dirty check
+if (repSession.getRootNode().getNode("licNode").canAddMixin("mix:referenceable")) {
+    repSession.getRootNode().getNode("licNode").addMixin("mix:referenceable");
+    repSession.getRootNode().save();
+}
 
+// last version checker time
+long lastChecked = (repSession.getRootNode().hasNode("lastChecked")) ? repSession.getRootNode().getNode("lastChecked").getProperty("time").getLong() : 0;
+long currentTime = System.currentTimeMillis();
+boolean checkIt = ((lastChecked + checkerIntervall * 1000) < currentTime) || lastChecked == 0;
+boolean isUpToDate = (repSession.getRootNode().hasNode("lastChecked")) ? repSession.getRootNode().getNode("lastChecked").getProperty("uptodate").getBoolean() : true;
+
+// load version
+String cVersion;
+is = getServletConfig().getServletContext().getResource("/version.id").openStream();
+
+if (is != null) {
+    try {
+        props.load(is);
+        cVersion = props.getProperty("version.id", "undefined");
+    } catch (IOException e) {
+        cVersion = "undefined";
+    }
+} else {
+    cVersion = "undefined";
+}
+
+// build check version url
+StringBuffer snippet = new StringBuffer(256);
+snippet.append(RepositoryServlet.getTckVersionCheckerPath());
+// install id
+snippet.append("?s=" + repSession.getRootNode().getNode("licNode").getUUID());
+// version
+snippet.append("&v=" + cVersion);
+// download id
+snippet.append("&d=" + repSession.getRootNode().getNode("licNode").getProperty("key").getString());
+// java version
+snippet.append("&j");
+String vendor = System.getProperty("java.vendor");
+if (vendor != null) {
+    int end = vendor.indexOf(' ');
+    if (end != -1) {
+        vendor = vendor.substring(0, end);
+    }
+    snippet.append(vendor);
+    snippet.append(' ');
+}
+snippet.append(System.getProperty("java.version"));
+// os
+snippet.append("&o=" + System.getProperty("os.name") +
+        " " + System.getProperty("os.version"));
+
+String checkVersionUrl = snippet.toString();
+
+// get parent handle
 String parent = request.getRequestURI();
 if (parent.length() > 1) {
     parent = parent.substring(0,parent.lastIndexOf('/'));
@@ -81,9 +138,54 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
             }
         }
 
+        function setGreen() {
+            var img = document.getElementById('vcheckpic');
+            img.src = "docroot/imgs/green.png";
+            img.setAttribute("title", "The Tck web application is up to date.");
+            // tell server that a check got performed (perform in 24h again)
+            tellChecked(<%= currentTime %>, true);
+        }
+
+        function setRed() {
+            var img = document.getElementById('vcheckpic');
+            img.src = "docroot/imgs/red.png";
+            img.setAttribute("title", "A new Tck version is available.");
+            var link = document.getElementById('vcheckpic_href');
+            link.setAttribute("href", "http://localhost:4302/update.html?did=<%= did %>");
+            link.setAttribute("target", "_new");
+            // tell server that a check got performed (perform in 24h again)
+            tellChecked(<%= currentTime %>, false);
+        }
+
+        function tellChecked(currTime, upToDate) {
+            var httpcon = document.all ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
+            if (httpcon) {
+                var url = "set_checktime.jsp?time=" + currTime + "&upToDate=" + upToDate;
+                httpcon.open('GET', url, false);
+                httpcon.send(null);
+            }
+        }
+
+        function checkVersion(checkerurl) {
+            <%
+            if (checkIt) {%>
+                var tester = new Image();
+                tester.onload = setGreen;
+                tester.onerror = setRed;
+                tester.src = checkerurl;
+                <%
+            } else {
+                if (isUpToDate) {
+                    %>setGreen();<%
+                } else {
+                    %>setRed();<%
+                }
+            }%>
+        }
+
     </script>
     </head>
-    <body onload="setImage('logo', 'http://jsr170tools.day.com/crx/crx_main_files/banner_right.gif');">
+    <body onload="setImage('logo', 'http://jsr170tools.day.com/crx/crx_main_files/banner_right.gif');checkVersion('<%= checkVersionUrl %>');">
         <center>
             <table cellpadding="0" cellspacing="0" border="0" id="maintable">
                 <!-- banner -->
@@ -91,25 +193,28 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
                     <td class="leadcell"><span class="leadcelltext">TCK for JSR 170<br>Content Repository for Java Technology API</span></td><td class="logocell"><a target="_blank" href="http://www.day.com" title="www.day.com"><img id="logo" border="0"></td>
                 </tr>
                 <tr>
-                    <td colspan="2" id="technavcell">
-                    <div id="technav">
-                    <%
-                    if (mode.equals("test")) {
-                        %><span class="technavat">Test</span><a href="index.jsp?mode=view">View Results</a>
-                        <a href="index.jsp?mode=config">Test Config</a><a href="index.jsp?mode=preferences">Preferences</a><%
-                    } else if (mode.equals("view")){
-                        %><a href="index.jsp?mode=">Test</a><span class="technavat">View Results</span></a>
-                        <a href="index.jsp?mode=config">Test Config</a><a href="index.jsp?mode=preferences">Preferences</a><%
-                    } else if (mode.equals("config")){
-                        %><a href="index.jsp?mode=">Test</a><a href="index.jsp?mode=view">View Results</a>
-                        <span class="technavat">Test Config</span><a href="index.jsp?mode=preferences">Preferences</a><%
-                    } else {
-                        %><a href="index.jsp?mode=">Test</a><a href="index.jsp?mode=view">View Results</a>
-                        <a href="index.jsp?mode=config">Test Config</a><span class="technavat">Preferences</span><%
-                    }
-                    %>
-                    </div>
-                </td>
+                    <td id="technavcell">
+                        <div id="technav">
+                        <%
+                        if (mode.equals("test")) {
+                            %><span class="technavat">Test</span><a href="index.jsp?mode=view">View Results</a>
+                            <a href="index.jsp?mode=config">Test Config</a><a href="index.jsp?mode=preferences">Preferences</a><%
+                        } else if (mode.equals("view")){
+                            %><a href="index.jsp?mode=">Test</a><span class="technavat">View Results</span></a>
+                            <a href="index.jsp?mode=config">Test Config</a><a href="index.jsp?mode=preferences">Preferences</a><%
+                        } else if (mode.equals("config")){
+                            %><a href="index.jsp?mode=">Test</a><a href="index.jsp?mode=view">View Results</a>
+                            <span class="technavat">Test Config</span><a href="index.jsp?mode=preferences">Preferences</a><%
+                        } else {
+                            %><a href="index.jsp?mode=">Test</a><a href="index.jsp?mode=view">View Results</a>
+                            <a href="index.jsp?mode=config">Test Config</a><span class="technavat">Preferences</span><%
+                        }
+                        %>
+                        </div>
+                    </td>
+                    <td align="right" id="technavcell">
+                        <a href="javascript:void(0);" id="vcheckpic_href"><img src="docroot/imgs/green.png" id="vcheckpic" border="0"></a>
+                    </td>
                 </tr>
                 <%
                 if (mode.equals("test")) {
@@ -128,11 +233,11 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
                         <td id="technavcell" colspan="2">
                             <table width="100%">
                                 <tr>
-                                    <td width="10%"><input type="button" value="Start" class="submit" onclick="startTest('<%= RepositoryServlet.getExcludeListUrl() %>','<%= excludeListVersion %>', document.getElementById('excudelist').checked, document.getElementById('autoupdate').checked)"></td>
+                                    <td width="10%"><input type="button" value="Start" class="submit" onclick="startTest('<%= RepositoryServlet.getExcludeListUrl() %>','<%= RepositoryServlet.getExcludeListCheckerPath() %>','<%= excludeListVersion %>', document.getElementById('excudelist').checked)"></td>
                                     <td width="20%">Start Test</td>
-                                    <td width="40%" align="center"><input type="checkbox" id="excudelist" checked>Exclude List&nbsp;<input type="checkbox" id="autoupdate" checked>Auto Update</td>
+                                    <td width="40%" align="center"><input type="checkbox" id="excudelist" checked>Exclude List&nbsp;</td>
                                     <td width="20%" align="right">Submit Test Data</td>
-                                    <td width="10%" align="right"><input type="button" value="Submit" class="submit" onclick="var strwin = window.open('submit_result.jsp','SubmitTestResult', 'width=500,height=400');strwin.focus()"></td>
+                                    <td width="10%" align="right"><input type="button" value="Submit" class="submit" onclick="var strwin = window.open('submit_result.jsp','SubmitTestResult', 'width=470,height=350');strwin.focus()"></td>
                                 </tr>
                             </table>
                         </td>
@@ -167,14 +272,12 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
                                                 NodeIterator tests = rootNode.getNode("testing").getNodes();
 
                                                 ArrayList al = new ArrayList();
-                                                //hack : todo??
                                                 while (tests.hasNext()) {
                                                     al.add(tests.nextNode());
                                                 }
 
                                                 Collections.reverse(al);
                                                 Iterator itr = al.iterator();
-                                                // eoh
 
                                                 while (itr.hasNext()) {
                                                     Node n = (Node) itr.next();

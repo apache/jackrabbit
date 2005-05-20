@@ -66,6 +66,18 @@
             <description>Url pointing to exclude list provider</description>
         </init-param>
 
+        <init-param>
+            <param-name>check-tck-version-gif</param-name>
+            <param-value>http://dev.day.com/tck.gif</param-value>
+            <description>Url pointing to the tck version checker</description>
+        </init-param>
+
+        <init-param>
+            <param-name>check-excludelist-version-gif</param-name>
+            <param-value>http://dev.day.com/excludelist.gif</param-value>
+            <description>Url pointing to the excludelist version checker</description>
+        </init-param>
+
         <load-on-startup>1</load-on-startup>
     </servlet>
 </web-app>

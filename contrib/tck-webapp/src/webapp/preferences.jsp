@@ -18,7 +18,13 @@ limitations under the License.
                      javax.jcr.Node,
                      javax.jcr.RepositoryException,
                      java.util.HashMap,
-                     java.io.IOException"
+                     java.io.IOException,
+                     java.util.List,
+                     org.apache.commons.fileupload.FileUpload,
+                     org.apache.commons.fileupload.DiskFileUpload,
+                     org.apache.commons.fileupload.FileItem,
+                     java.util.Iterator,
+                     java.util.Properties"
 %><%@page session="false" %><%
 Session repSession = RepositoryServlet.getSession();
 if (repSession == null) {
@@ -38,20 +44,34 @@ if (key != null) {
 }
 
 // save exclude list
-String vers =  request.getParameter("version");
-String list =  request.getParameter("excludeList");
-if (vers != null && list != null) {
-    Node excludeListNode = (rootNode.hasNode("excludeList")) ?
+if(request.getMethod().toLowerCase().equals("post")) {
+    DiskFileUpload upload = new DiskFileUpload();
+
+    // Parse the request
+    List items = upload.parseRequest(request);
+
+    // Process the uploaded items
+    Iterator iter = items.iterator();
+    while (iter.hasNext()) {
+        FileItem item = (FileItem) iter.next();
+        if (!item.isFormField() && item.getFieldName().equals("elfile")) {
+            Node excludeListNode = (rootNode.hasNode("excludeList")) ?
             rootNode.getNode("excludeList") :
             rootNode.addNode("excludeList", "nt:unstructured");
 
-    excludeListNode.setProperty("version", vers);
-
-    // replace cr's with ","
-    list = list.replaceAll("\r\n", ",");
-    excludeListNode.setProperty("list", list);
-    rootNode.save();
+            Properties props = new Properties();
+            try {
+                props.load(item.getInputStream());
+                excludeListNode.setProperty("version", props.getProperty("version"));
+                excludeListNode.setProperty("list", props.getProperty("list"));
+                rootNode.save();
+            } catch (IOException e) {
+                %><script>window.alert("Unable to upload file");</script><%
+            }
+        }
+    }
 }
+
 
 // load exclude list
 String version = "";
@@ -71,7 +91,7 @@ if (rootNode.hasNode("excludeList")) {
         <link rel="stylesheet" href="docroot/ui/default.css" type="text/css" title="style" />
     </head>
     <body style="margin-top:0px;border-width:0px">
-        <form name="prefsform" action="preferences.jsp" method="post">
+        <form name="prefsform" action="preferences.jsp" method="get">
             <table width="100%">
                 <tr><th class="content" colspan="2">Download ID</th></tr>
                 <tr><td class="content">ID</td><td class="content"><input name="key" value="<%= rootNode.getNode("licNode").getProperty("key").getString() %>"></td></tr>
@@ -79,12 +99,13 @@ if (rootNode.hasNode("excludeList")) {
             </table>
         </form>
 
-        <form name="excludelistform" aczion="preferences.jsp" method="post">
+        <form name="excludelistform" action="preferences.jsp" method="post" enctype="multipart/form-data">
             <table width="100%">
                 <tr><th class="content" colspan="2">ExcludeList</th></tr>
-                <tr><td class="content">Version</td><td class="content"><input name="version" value="<%= version %>"></td></tr>
-                <tr><td class="content">List</td><td class="content"><textarea name="excludeList"><%= excludeList %></textarea></td></tr>
-                <tr><td colspan="2"><input type="submit" value="Save List" class="submit"></td></tr>
+                <tr><td class="content">Exclude List File</td><td class="content"><input name="elfile" type="file"></td></tr>
+                <tr></tr><td class="content">Version</td><td class="content"><%= version %></td></tr>
+                <tr><td class="content">List</td><td class="content"><textarea name="excludeList" readonly><%= excludeList %></textarea></td></tr>
+                <tr><td colspan="2"><input type="submit" value="Upload" class="submit"></td></tr>
             </table>
         </form>
     </body>

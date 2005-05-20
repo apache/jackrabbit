@@ -58,6 +58,12 @@ public class RepositoryServlet extends HttpServlet {
     /** exclude list url name */
     public static final String  EXCLUDE_LIST_URL = "exclude-list-url";
 
+    /** tck version checker gif path */
+    public static final String  CHECK_TCK_VERSION_GIF_PATH = "check-tck-version-gif";
+
+    /** exclude list version checker gif path */
+    public static final String  CHECK_EXCLUDELIST_VERSION_GIF_PATH = "check-excludelist-version-gif";
+
     /** tck webapp jar path name */
     public static final String  TCK_WEBAPP_JAR_PATH = "tck-webapp-jar-path";
 
@@ -81,6 +87,12 @@ public class RepositoryServlet extends HttpServlet {
 
     /** the exclude list url */
     private static String excludeListUrl;
+
+    /** tck version checker path */
+    private static String tckVersionCheckerPath;
+
+    /** the exclude list checker url */
+    private static String excludeListCheckerPath;
 
     /**
      * The init method starts the repository to read/write test results and configuration,
@@ -170,6 +182,12 @@ public class RepositoryServlet extends HttpServlet {
             // set exclude list url
             excludeListUrl = getServletConfig().getInitParameter(EXCLUDE_LIST_URL);
 
+            // set the tck version checker gif path
+            tckVersionCheckerPath = getServletConfig().getInitParameter(CHECK_TCK_VERSION_GIF_PATH);
+
+            // set the exclude list checker path
+            excludeListCheckerPath = getServletConfig().getInitParameter(CHECK_EXCLUDELIST_VERSION_GIF_PATH);
+
         } catch (RepositoryException e) {
             log_info("Unable to initialize repository: " + e.toString(), e);
             throw new ServletException("Unable to initialize repository: " + e.toString(), e);
@@ -249,7 +267,30 @@ public class RepositoryServlet extends HttpServlet {
         return tckWebappJarPath;
     }
 
+    /**
+     * Returns the exclude list url
+     *
+     * @return exclude list provider url
+     */
     public static String getExcludeListUrl() {
         return excludeListUrl;
+    }
+
+    /**
+     * Returns the tck version checker path.
+     *
+     * @return tck version checker path
+     */
+    public static String getTckVersionCheckerPath() {
+        return tckVersionCheckerPath;
+    }
+
+    /**
+     * Returns the excludelist checker url
+     *
+     * @return exclude list checker url
+     */
+    public static String getExcludeListCheckerPath() {
+        return excludeListCheckerPath;
     }
 }
