@@ -160,7 +160,7 @@ class NodeIteratorImpl implements NodeIterator {
             return (NodeImpl) itemMgr.getItem(new NodeId(uuids[pos++]));
         } catch (RepositoryException e) {
             log.error("Exception retrieving Node with UUID: "
-                    + uuids[pos] + ": " + e.toString());
+                    + uuids[pos - 1] + ": " + e.toString());
             throw new NoSuchElementException();
         }
     }
