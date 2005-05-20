@@ -66,8 +66,7 @@ String mode = request.getParameter("mode");
             String key = (String) tests.next();
             TestSuite t = (TestSuite) tf.getSuites().get(key);
             Enumeration members = t.tests();
-            out.write("<tr><th class=\"content\">" + t.toString() + "</th><th style=\"text-align: right;\" colspan=\"2\" " +
-                    "class=\"content\"><a href=\"javascript:showConfig('" + key + "');\">Config</a></th></tr>");
+            out.write("<tr><th class=\"content\" colspan=\"3\">" + t.toString() + "</th></tr>");
 
             // list tests ordered by key (level1, level2, ....)
             while (members.hasMoreElements()) {

@@ -102,6 +102,13 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
+        <dependency>
+            <id>commons-fileupload</id>
+            <version>1.0</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
     <!-- -->
     
     <!-- own dependencies (build only) -->

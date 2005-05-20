@@ -71,7 +71,7 @@ Node rootNode = repSession.getRootNode();
             String dkeys[] = helper.getRepository().getDescriptorKeys();
             for (int i = 0; i < dkeys.length; i++) {
                 String dval = helper.getRepository().getDescriptor(dkeys[i]);
-                properties += dkeys[i] + "\t" + dval + "\n";
+                properties += dkeys[i] + "=" + dval + "\n";
             }
             
             // license info
@@ -119,11 +119,16 @@ Node rootNode = repSession.getRootNode();
                         </select></td>
                 </tr>
                 <tr>
-                    <td colspan="2">
+                    <td colspan="2" class="content">
                         &nbsp;<input type="hidden" name="properties" value="<%= properties %>"><input type="hidden" name="resultxml"><input type="hidden" name="downloadid" value="<%= did %>"><input type="hidden" name="installid" value="<%= installid %>">
                     </td>
                 </tr>
-                <tr><td><input type="submit" value="Send" class="submit"></td><td align="right"><input type="button" value="Cancel" class="submit" onclick="window.close();"></td></tr>
+                <tr>
+                    <td colspan="2" class="content"><input type="checkbox" name="publishresults" checked>Publishing test results allowed</td>
+                </tr>
+                <tr>
+                    <td class="content"><input type="submit" value="Send" class="submit"></td><td align="right" class="content"><input type="button" value="Cancel" class="submit" onclick="window.close();"></td>
+                </tr>
             </table>
             <%
         } else {

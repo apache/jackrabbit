@@ -21,7 +21,8 @@ limitations under the License.
                      java.io.IOException,
                      java.io.ByteArrayOutputStream,
                      org.apache.jackrabbit.tck.TestResultParser,
-                     java.util.Map"
+                     java.util.Map,
+                     java.util.Iterator"
 %><%@page session="false" %><%
 Session repSession = RepositoryServlet.getSession();
 if (repSession == null) {
@@ -34,6 +35,25 @@ if (sampleDate != null && repSession.getRootNode().hasNode("testing/" + sampleDa
     Node testroot = repSession.getRootNode().getNode("testing/" + sampleDate);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     repSession.exportSystemView(testroot.getPath(), baos, false, false);
-    %><%= baos.toString() %><%
+    String results = baos.toString();
+
+    // create summary
+    TestResultParser parser = new TestResultParser();
+    Map summary = parser.interpretResult(baos.toString());
+    %><summary><%
+    Iterator itr = summary.keySet().iterator();
+    String sep = "";
+    while (itr.hasNext()) {
+        String key = (String) itr.next();
+        Boolean passed = (Boolean) summary.get(key);
+
+        String res = (passed.booleanValue()) ? "pass" : "failure";
+
+        %><%= sep %><%= key %>=<%= res %><%
+        sep = ",";
+    }
+    %></summary><%
+    // whole xml results document
+    %><%= results %><%
     }
 %>
