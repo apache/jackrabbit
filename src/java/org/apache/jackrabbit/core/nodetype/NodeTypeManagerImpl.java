@@ -188,7 +188,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         synchronized (pdCache) {
             Iterator iter = pdCache.values().iterator();
             while (iter.hasNext()) {
-                PropDefImpl pd = (PropDefImpl) iter.next();
+                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) iter.next();
                 if (ntName.equals(pd.getDeclaringNodeType())) {
                     iter.remove();
                 }
@@ -197,7 +197,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         synchronized (ndCache) {
             Iterator iter = ndCache.values().iterator();
             while (iter.hasNext()) {
-                NodeDefImpl nd = (NodeDefImpl) iter.next();
+                NodeDefinitionImpl nd = (NodeDefinitionImpl) iter.next();
                 if (ntName.equals(nd.getDeclaringNodeType())) {
                     iter.remove();
                 }
@@ -214,7 +214,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         synchronized (pdCache) {
             Iterator iter = pdCache.values().iterator();
             while (iter.hasNext()) {
-                PropDefImpl pd = (PropDefImpl) iter.next();
+                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) iter.next();
                 if (ntName.equals(pd.getDeclaringNodeType())) {
                     iter.remove();
                 }
@@ -223,7 +223,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         synchronized (ndCache) {
             Iterator iter = ndCache.values().iterator();
             while (iter.hasNext()) {
-                NodeDefImpl nd = (NodeDefImpl) iter.next();
+                NodeDefinitionImpl nd = (NodeDefinitionImpl) iter.next();
                 if (ntName.equals(nd.getDeclaringNodeType())) {
                     iter.remove();
                 }
