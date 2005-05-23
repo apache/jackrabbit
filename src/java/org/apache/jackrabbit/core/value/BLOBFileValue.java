@@ -145,6 +145,19 @@ public class BLOBFileValue implements Value {
     }
 
     /**
+     * Creates a new <code>BLOBFileValue</code> instance from a
+     * <code>byte[]</code> array.
+     *
+     * @param bytes byte buffer to be represented as a <code>BLOBFileValue</code> instance
+     */
+    public BLOBFileValue(byte[] bytes) {
+        this.buffer = bytes;
+        this.file = null;
+        this.fsResource = null;
+        this.tmpFile = true;
+    }
+
+    /**
      * Creates a new <code>BLOBFileValue</code> instance from a <code>File</code>.
      *
      * @param file file to be represented as a <code>BLOBFileValue</code> instance
