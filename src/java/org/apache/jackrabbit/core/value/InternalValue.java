@@ -196,6 +196,14 @@ public class InternalValue {
     /**
      * @param value
      * @return
+     */
+    public static InternalValue create(byte[] value) {
+        return new InternalValue(new BLOBFileValue(value));
+    }
+
+    /**
+     * @param value
+     * @return
      * @throws IOException
      */
     public static InternalValue create(InputStream value) throws IOException {
