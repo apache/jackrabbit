@@ -422,6 +422,16 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
 
         boolean renameOnly = srcParent.getUUID().equals(destParent.getUUID());
 
+        // remove from old parent
+        if (!renameOnly) {
+            target.removeParentUUID(srcParent.getUUID());
+        }
+        int srcNameIndex = srcName.getIndex();
+        if (srcNameIndex == 0) {
+            srcNameIndex = 1;
+        }
+        srcParent.removeChildNodeEntry(srcName.getName(), srcNameIndex);
+
         // add to new parent
         if (!renameOnly) {
             target.addParentUUID(destParent.getUUID());
@@ -433,17 +443,6 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                 findApplicableNodeDefinition(destName.getName(),
                         target.getNodeTypeName(), destParent);
         target.setDefinitionId(newTargetDef.getId());
-
-        // remove from old parent
-        if (!renameOnly) {
-            target.removeParentUUID(srcParent.getUUID());
-        }
-
-        int srcNameIndex = srcName.getIndex();
-        if (srcNameIndex == 0) {
-            srcNameIndex = 1;
-        }
-        srcParent.removeChildNodeEntry(srcName.getName(), srcNameIndex);
 
         // store states
         stateMgr.store(target);
