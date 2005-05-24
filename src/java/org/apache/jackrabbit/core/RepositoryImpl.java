@@ -586,6 +586,7 @@ public class RepositoryImpl implements Repository, SessionListener,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
         SessionImpl ses = createSessionInstance(loginContext, wspInfo.getConfig());
+        ses.addListener(this);
         activeSessions.put(ses, ses);
         return ses;
     }
@@ -608,6 +609,7 @@ public class RepositoryImpl implements Repository, SessionListener,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
         SessionImpl ses = createSessionInstance(subject, wspInfo.getConfig());
+        ses.addListener(this);
         activeSessions.put(ses, ses);
         return ses;
     }
