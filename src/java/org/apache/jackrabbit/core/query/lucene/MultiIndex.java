@@ -245,7 +245,7 @@ class MultiIndex {
         multiReader = null;
         volatileIndex.addDocument(doc);
         if (volatileIndex.getRedoLog().getSize() >= mergeSize) {
-            log.info("Commiting in-memory index");
+            log.info("Committing in-memory index");
             commit();
         }
     }
