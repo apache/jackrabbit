@@ -911,24 +911,21 @@ public class SessionImpl implements Session, Constants {
         }
 
         // check lock status
+
         srcParentNode.checkLock();
         destParentNode.checkLock();
 
+        // do move operation
+
         String targetUUID = ((NodeState) targetNode.getItemState()).getUUID();
+        // add target to new parent
+        destParentNode.createChildNodeLink(destName.getName(), targetUUID);
+        // remove target from old parent
         int index = srcName.getIndex();
         if (index == 0) {
             index = 1;
         }
-
-        if (srcParentNode.isSame(destParentNode)) {
-            // do rename
-            destParentNode.renameChildNodeLink(srcName.getName(), index, targetUUID, destName.getName());
-        } else {
-            // do move
-            destParentNode.createChildNodeLink(destName.getName(), targetUUID);
-            srcParentNode.removeChildNode(srcName.getName(), index);
-        }
-
+        srcParentNode.removeChildNode(srcName.getName(), index);
         // change definition of target if necessary
         NodeDefinitionImpl oldTargetDef = (NodeDefinitionImpl) targetNode.getDefinition();
         NodeDefId oldTargetDefId = oldTargetDef.unwrap().getId();
