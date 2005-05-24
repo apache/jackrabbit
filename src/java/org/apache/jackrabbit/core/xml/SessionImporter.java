@@ -245,13 +245,7 @@ public class SessionImporter implements Importer {
             // multi- or single-valued property?
             if (tva.length == 1) {
                 // could be single- or multi-valued (n == 1)
-                try {
-                    // try single-valued
-                    def = ent.getApplicablePropertyDef(propName, type, false);
-                } catch (ConstraintViolationException cve) {
-                    // try multi-valued
-                    def = ent.getApplicablePropertyDef(propName, type, true);
-                }
+                def = ent.getApplicablePropertyDef(propName, type);
             } else {
                 // can only be multi-valued (n == 0 || n > 1)
                 def = ent.getApplicablePropertyDef(propName, type, true);

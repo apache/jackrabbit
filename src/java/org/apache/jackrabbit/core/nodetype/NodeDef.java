@@ -27,6 +27,8 @@ import org.apache.jackrabbit.core.QName;
  */
 public interface NodeDef extends ItemDef {
 
+    public static final NodeDef[] EMPTY_ARRAY = new NodeDef[0];
+
     /**
      * Returns an identifier for this node definition.
      *

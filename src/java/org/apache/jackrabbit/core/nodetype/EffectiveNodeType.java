@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
@@ -127,7 +127,7 @@ public class EffectiveNodeType implements Cloneable {
                         if (cnda[i].isAutoCreated() || def.isAutoCreated()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '"
-                                + name + "' in node type '" + ntName + "'";
+                                    + name + "' in node type '" + ntName + "'";
                             log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }
@@ -159,7 +159,7 @@ public class EffectiveNodeType implements Cloneable {
                         if (pda[i].isAutoCreated() || def.isAutoCreated()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '"
-                                + name + "' in node type '" + ntName + "'";
+                                    + name + "' in node type '" + ntName + "'";
                             log.debug(msg);
                             throw new NodeTypeConflictException(msg);
                         }
@@ -201,25 +201,40 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     public ItemDef[] getAllItemDefs() {
+        if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
+            return ItemDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
         Iterator iter = namedItemDefs.values().iterator();
         while (iter.hasNext()) {
             defs.addAll((List) iter.next());
         }
         defs.addAll(unnamedItemDefs);
+        if (defs.size() == 0) {
+            return ItemDef.EMPTY_ARRAY;
+        }
         return (ItemDef[]) defs.toArray(new ItemDef[defs.size()]);
     }
 
     public ItemDef[] getNamedItemDefs() {
+        if (namedItemDefs.size() == 0) {
+            return ItemDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size());
         Iterator iter = namedItemDefs.values().iterator();
         while (iter.hasNext()) {
             defs.addAll((List) iter.next());
         }
+        if (defs.size() == 0) {
+            return ItemDef.EMPTY_ARRAY;
+        }
         return (ItemDef[]) defs.toArray(new ItemDef[defs.size()]);
     }
 
     public ItemDef[] getUnnamedItemDefs() {
+        if (unnamedItemDefs.size() == 0) {
+            return ItemDef.EMPTY_ARRAY;
+        }
         return (ItemDef[]) unnamedItemDefs.toArray(new ItemDef[unnamedItemDefs.size()]);
     }
 
@@ -229,13 +244,16 @@ public class EffectiveNodeType implements Cloneable {
 
     public ItemDef[] getNamedItemDefs(QName name) {
         List defs = (List) namedItemDefs.get(name);
-        if (defs == null) {
-            return null;
+        if (defs == null || defs.size() == 0) {
+            return ItemDef.EMPTY_ARRAY;
         }
         return (ItemDef[]) defs.toArray(new ItemDef[defs.size()]);
     }
 
     public NodeDef[] getAllNodeDefs() {
+        if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
         Iterator iter = unnamedItemDefs.iterator();
         while (iter.hasNext()) {
@@ -255,10 +273,16 @@ public class EffectiveNodeType implements Cloneable {
                 }
             }
         }
+        if (defs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
     }
 
     public NodeDef[] getNamedNodeDefs() {
+        if (namedItemDefs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size());
         Iterator iter = namedItemDefs.values().iterator();
         while (iter.hasNext()) {
@@ -271,10 +295,35 @@ public class EffectiveNodeType implements Cloneable {
                 }
             }
         }
+        if (defs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
+        return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
+    }
+
+    public NodeDef[] getNamedNodeDefs(QName name) {
+        List list = (List) namedItemDefs.get(name);
+        if (list == null || list.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
+        ArrayList defs = new ArrayList(list.size());
+        Iterator iter = list.iterator();
+        while (iter.hasNext()) {
+            ItemDef def = (ItemDef) iter.next();
+            if (def.definesNode()) {
+                defs.add(def);
+            }
+        }
+        if (defs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
     }
 
     public NodeDef[] getUnnamedNodeDefs() {
+        if (unnamedItemDefs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(unnamedItemDefs.size());
         Iterator iter = unnamedItemDefs.iterator();
         while (iter.hasNext()) {
@@ -283,12 +332,18 @@ public class EffectiveNodeType implements Cloneable {
                 defs.add(def);
             }
         }
+        if (defs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
     }
 
     public NodeDef[] getAutoCreateNodeDefs() {
         // since auto-create items must have a name,
         // we're only searching the named item definitions
+        if (namedItemDefs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size());
         Iterator iter = namedItemDefs.values().iterator();
         while (iter.hasNext()) {
@@ -301,10 +356,16 @@ public class EffectiveNodeType implements Cloneable {
                 }
             }
         }
+        if (defs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
     }
 
     public PropDef[] getAllPropDefs() {
+        if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
         Iterator iter = unnamedItemDefs.iterator();
         while (iter.hasNext()) {
@@ -324,10 +385,16 @@ public class EffectiveNodeType implements Cloneable {
                 }
             }
         }
+        if (defs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getNamedPropDefs() {
+        if (namedItemDefs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size());
         Iterator iter = namedItemDefs.values().iterator();
         while (iter.hasNext()) {
@@ -340,10 +407,35 @@ public class EffectiveNodeType implements Cloneable {
                 }
             }
         }
+        if (defs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
+        return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
+    }
+
+    public PropDef[] getNamedPropDefs(QName name) {
+        List list = (List) namedItemDefs.get(name);
+        if (list == null || list.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
+        ArrayList defs = new ArrayList(list.size());
+        Iterator iter = list.iterator();
+        while (iter.hasNext()) {
+            ItemDef def = (ItemDef) iter.next();
+            if (!def.definesNode()) {
+                defs.add(def);
+            }
+        }
+        if (defs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getUnnamedPropDefs() {
+        if (unnamedItemDefs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(unnamedItemDefs.size());
         Iterator iter = unnamedItemDefs.iterator();
         while (iter.hasNext()) {
@@ -352,12 +444,18 @@ public class EffectiveNodeType implements Cloneable {
                 defs.add(def);
             }
         }
+        if (defs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getAutoCreatePropDefs() {
         // since auto-create items must have a name,
         // we're only searching the named item definitions
+        if (namedItemDefs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size());
         Iterator iter = namedItemDefs.values().iterator();
         while (iter.hasNext()) {
@@ -370,12 +468,18 @@ public class EffectiveNodeType implements Cloneable {
                 }
             }
         }
+        if (defs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getMandatoryPropDefs() {
         // since mandatory items must have a name,
         // we're only searching the named item definitions
+        if (namedItemDefs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size());
         Iterator iter = namedItemDefs.values().iterator();
         while (iter.hasNext()) {
@@ -388,12 +492,18 @@ public class EffectiveNodeType implements Cloneable {
                 }
             }
         }
+        if (defs.size() == 0) {
+            return PropDef.EMPTY_ARRAY;
+        }
         return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
     }
 
     public NodeDef[] getMandatoryNodeDefs() {
         // since mandatory items must have a name,
         // we're only searching the named item definitions
+        if (namedItemDefs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
+        }
         ArrayList defs = new ArrayList(namedItemDefs.size());
         Iterator iter = namedItemDefs.values().iterator();
         while (iter.hasNext()) {
@@ -405,6 +515,9 @@ public class EffectiveNodeType implements Cloneable {
                     defs.add(def);
                 }
             }
+        }
+        if (defs.size() == 0) {
+            return NodeDef.EMPTY_ARRAY;
         }
         return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
     }
@@ -577,7 +690,13 @@ public class EffectiveNodeType implements Cloneable {
 
     /**
      * Returns the applicable property definition for a property with the
-     * specified name, type and multiValued characteristic.
+     * specified name, type and multiValued characteristic. If there more than
+     * one applicable definitions then the following rules are applied:
+     * <ul>
+     * <li>named definitions are preferred to residual definitions</li>
+     * <li>definitions with specific required type are preferred to definitions
+     * with required type UNDEFINED</li>
+     * </ul>
      *
      * @param name
      * @param type
@@ -590,48 +709,130 @@ public class EffectiveNodeType implements Cloneable {
                                             boolean multiValued)
             throws ConstraintViolationException {
         // try named property definitions first
-        ItemDef[] defs = getNamedItemDefs(name);
-        if (defs != null) {
-            for (int i = 0; i < defs.length; i++) {
-                ItemDef def = defs[i];
-                if (!def.definesNode()) {
-                    PropDef pd = (PropDef) def;
-                    int reqType = pd.getRequiredType();
-                    // property definition with that name exists
-                    // match type
-                    if (reqType == PropertyType.UNDEFINED
-                            || type == PropertyType.UNDEFINED
-                            || reqType == type) {
-                        // match multiValued flag
-                        if (multiValued == pd.isMultiple()) {
-                            // found match
+        PropDef match =
+                getMatchingPropDef(getNamedPropDefs(name), type, multiValued);
+        if (match != null) {
+            return match;
+        }
+
+        // no item with that name defined;
+        // try residual property definitions
+        match = getMatchingPropDef(getUnnamedPropDefs(), type, multiValued);
+        if (match != null) {
+            return match;
+        }
+
+        // no applicable definition found
+        throw new ConstraintViolationException("no matching property definition found for " + name);
+    }
+
+    /**
+     * Returns the applicable property definition for a property with the
+     * specified name and type. The multiValued flag is not taken into account
+     * in the selection algorithm. Other than
+     * <code>{@link #getApplicablePropertyDef(QName, int, boolean)}</code>
+     * this method does not take the multiValued flag into account in the
+     * selection algorithm. If there more than one applicable definitions then
+     * the following rules are applied:
+     * <ul>
+     * <li>named definitions are preferred to residual definitions</li>
+     * <li>definitions with specific required type are preferred to definitions
+     * with required type UNDEFINED</li>
+     * <li>single-value definitions are preferred to multiple-value definitions</li>
+     * </ul>
+     *
+     * @param name
+     * @param type
+     * @return
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     */
+    public PropDef getApplicablePropertyDef(QName name, int type)
+            throws ConstraintViolationException {
+        // try named property definitions first
+        PropDef match = getMatchingPropDef(getNamedPropDefs(name), type);
+        if (match != null) {
+            return match;
+        }
+
+        // no item with that name defined;
+        // try residual property definitions
+        match = getMatchingPropDef(getUnnamedPropDefs(), type);
+        if (match != null) {
+            return match;
+        }
+
+        // no applicable definition found
+        throw new ConstraintViolationException("no matching property definition found for " + name);
+    }
+
+    private PropDef getMatchingPropDef(PropDef[] defs, int type) {
+        PropDef match = null;
+        for (int i = 0; i < defs.length; i++) {
+            ItemDef def = defs[i];
+            if (!def.definesNode()) {
+                PropDef pd = (PropDef) def;
+                int reqType = pd.getRequiredType();
+                // match type
+                if (reqType == PropertyType.UNDEFINED
+                        || type == PropertyType.UNDEFINED
+                        || reqType == type) {
+                    if (match == null) {
+                        match = pd;
+                    } else {
+                        // check if this definition is a better match than
+                        // the one we've already got
+                        if (match.getRequiredType() != pd.getRequiredType()) {
+                            if (match.getRequiredType() == PropertyType.UNDEFINED) {
+                                // found better match
+                                match = pd;
+                            }
+                        } else {
+                            if (match.isMultiple() && !pd.isMultiple()) {
+                                // found better match
+                                match = pd;
+                            }
+                        }
+                    }
+                    if (match.getRequiredType() != PropertyType.UNDEFINED
+                            && !match.isMultiple()) {
+                        // found best possible match, get outta here
+                        return match;
+                    }
+                }
+            }
+        }
+        return match;
+    }
+
+    private PropDef getMatchingPropDef(PropDef[] defs, int type,
+                                       boolean multiValued) {
+        PropDef match = null;
+        for (int i = 0; i < defs.length; i++) {
+            ItemDef def = defs[i];
+            if (!def.definesNode()) {
+                PropDef pd = (PropDef) def;
+                int reqType = pd.getRequiredType();
+                // match type
+                if (reqType == PropertyType.UNDEFINED
+                        || type == PropertyType.UNDEFINED
+                        || reqType == type) {
+                    // match multiValued flag
+                    if (multiValued == pd.isMultiple()) {
+                        // found match
+                        if (pd.getRequiredType() != PropertyType.UNDEFINED) {
+                            // found best possible match, get outta here
                             return pd;
+                        } else {
+                            if (match == null) {
+                                match = pd;
+                            }
                         }
                     }
                 }
             }
         }
-
-        // no item with that name defined;
-        // try residual property definitions
-        PropDef[] pda = getUnnamedPropDefs();
-        for (int i = 0; i < pda.length; i++) {
-            PropDef pd = pda[i];
-            int reqType = pd.getRequiredType();
-            // match type
-            if (reqType == PropertyType.UNDEFINED
-                    || type == PropertyType.UNDEFINED
-                    || reqType == type) {
-                // match multiValued flag
-                if (multiValued == pd.isMultiple()) {
-                    // found match
-                    return pd;
-                }
-            }
-        }
-
-        // no applicable definition found
-        throw new ConstraintViolationException("no matching property definition found for " + name);
+        return match;
     }
 
     /**

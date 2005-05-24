@@ -28,6 +28,8 @@ import org.apache.jackrabbit.core.QName;
  */
 public interface ItemDef {
 
+    public static final ItemDef[] EMPTY_ARRAY = new ItemDef[0];
+
     /**
      * '*' denoting residual child item definition
      */
