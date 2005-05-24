@@ -899,7 +899,13 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
     /**
      * Helper method that finds the applicable definition for a property with
      * the given name, type and multiValued characteristic in the parent node's
-     * node type and mixin types.
+     * node type and mixin types. If there more than one applicable definitions
+     * then the following rules are applied:
+     * <ul>
+     * <li>named definitions are preferred to residual definitions</li>
+     * <li>definitions with specific required type are preferred to definitions
+     * with required type UNDEFINED</li>
+     * </ul>
      *
      * @param name
      * @param type
@@ -917,6 +923,36 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
             throws RepositoryException, ConstraintViolationException {
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
         return entParent.getApplicablePropertyDef(name, type, multiValued);
+    }
+
+    /**
+     * Helper method that finds the applicable definition for a property with
+     * the given name, type in the parent node's node type and mixin types.
+     * Other than <code>{@link #findApplicablePropertyDefinition(QName, int, boolean, NodeState)}</code>
+     * this method does not take the multiValued flag into account in the
+     * selection algorithm. If there more than one applicable definitions then
+     * the following rules are applied:
+     * <ul>
+     * <li>named definitions are preferred to residual definitions</li>
+     * <li>definitions with specific required type are preferred to definitions
+     * with required type UNDEFINED</li>
+     * <li>single-value definitions are preferred to multiple-value definitions</li>
+     * </ul>
+     *
+     * @param name
+     * @param type
+     * @param parentState
+     * @return a <code>PropDef</code>
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     * @throws RepositoryException          if another error occurs
+     */
+    public PropDef findApplicablePropertyDefinition(QName name,
+                                                    int type,
+                                                    NodeState parentState)
+            throws RepositoryException, ConstraintViolationException {
+        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
+        return entParent.getApplicablePropertyDef(name, type);
     }
 
     //--------------------------------------------< low-level item operations >

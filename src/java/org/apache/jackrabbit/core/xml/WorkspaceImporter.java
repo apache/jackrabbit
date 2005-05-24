@@ -492,15 +492,8 @@ public class WorkspaceImporter implements Importer, Constants {
                     // multi- or single-valued property?
                     if (tva.length == 1) {
                         // could be single- or multi-valued (n == 1)
-                        try {
-                            // try single-valued
-                            def = itemOps.findApplicablePropertyDefinition(propName,
-                                    type, false, node);
-                        } catch (ConstraintViolationException cve) {
-                            // try multi-valued
-                            def = itemOps.findApplicablePropertyDefinition(propName,
-                                    type, true, node);
-                        }
+                        def = itemOps.findApplicablePropertyDefinition(propName,
+                                type, node);
                     } else {
                         // can only be multi-valued (n == 0 || n > 1)
                         def = itemOps.findApplicablePropertyDefinition(propName,
