@@ -153,12 +153,11 @@ public class BLOBFileValue implements Value {
      * instance
      */
     public BLOBFileValue(byte[] bytes) {
-        buffer = new byte[bytes.length];
-        System.arraycopy(bytes, 0, buffer, 0, bytes.length);
+        buffer = bytes;
         file = null;
         fsResource = null;
-        // this instance is backed by a temporarily allocated buffer
-        temp = true;
+        // this instance is not backed by a temporarily allocated buffer
+        temp = false;
     }
 
     /**
