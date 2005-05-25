@@ -202,6 +202,9 @@ public class NodeState extends ItemState {
      * @see #removeParentUUID
      */
     public synchronized void addParentUUID(String uuid) {
+        if (parentUUIDs.isEmpty()) {
+            parentUUID = uuid;
+        }
         parentUUIDs.add(uuid);
     }
 
@@ -242,6 +245,11 @@ public class NodeState extends ItemState {
     public synchronized void setParentUUIDs(List uuids) {
         parentUUIDs.clear();
         parentUUIDs.addAll(uuids);
+        if (!parentUUIDs.isEmpty()) {
+            parentUUID = (String) parentUUIDs.iterator().next();
+        } else {
+            parentUUID = null;
+        }
     }
 
     /**

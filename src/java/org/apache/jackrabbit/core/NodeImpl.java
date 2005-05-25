@@ -553,7 +553,10 @@ public class NodeImpl extends ItemImpl implements Node {
         thisState.removeChildNodeEntry(oldName, index);
         thisState.addChildNodeEntry(newName, uuid);
 
-        return (NodeImpl) itemMgr.getItem(new NodeId(uuid));
+        // create transient state of target, so that it gets modified.
+        NodeImpl target = (NodeImpl) itemMgr.getItem(new NodeId(uuid));
+        target.getOrCreateTransientItemState();
+        return target;
     }
 
 
