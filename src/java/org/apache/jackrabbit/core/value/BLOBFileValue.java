@@ -39,7 +39,7 @@ import java.util.Calendar;
 
 /**
  * <code>BLOBFileValue</code> represents a binary <code>Value</code> that
- * is backed by a file. Unlike <code>BinaryValue</code> it has no
+ * is backed by a resource or . Unlike <code>BinaryValue</code> it has no
  * state, i.e. the <code>getStream()</code> method always returns a fresh
  * <code>InputStream</code> instance.
  */
@@ -71,9 +71,9 @@ public class BLOBFileValue implements Value {
     private final File file;
 
     /**
-     * flag indicating if this instance is backed by a temp file
+     * flag indicating if this instance is backed by a temporarily allocated resource/buffer
      */
-    private final boolean tmpFile;
+    private final boolean temp;
 
     /**
      * buffer for small-sized data
@@ -141,20 +141,24 @@ public class BLOBFileValue implements Value {
         // init vars
         file = spoolFile;
         fsResource = null;
-        tmpFile = true;
+        // this instance is backed by a temporarily allocated resource/buffer
+        temp = true;
     }
 
     /**
      * Creates a new <code>BLOBFileValue</code> instance from a
      * <code>byte[]</code> array.
      *
-     * @param bytes byte buffer to be represented as a <code>BLOBFileValue</code> instance
+     * @param bytes byte array to be represented as a <code>BLOBFileValue</code>
+     * instance
      */
     public BLOBFileValue(byte[] bytes) {
-        this.buffer = bytes;
-        this.file = null;
-        this.fsResource = null;
-        this.tmpFile = true;
+        buffer = new byte[bytes.length];
+        System.arraycopy(bytes, 0, buffer, 0, bytes.length);
+        file = null;
+        fsResource = null;
+        // this instance is backed by a temporarily allocated buffer
+        temp = true;
     }
 
     /**
@@ -174,8 +178,8 @@ public class BLOBFileValue implements Value {
         this.file = file;
         // this instance is backed by a 'real' file; set virtual fs resource to null
         fsResource = null;
-
-        tmpFile = false;
+        // this instance is not backed by temporarily allocated resource/buffer
+        temp = false;
     }
 
     /**
@@ -199,8 +203,8 @@ public class BLOBFileValue implements Value {
         this.fsResource = fsResource;
         // set 'real' file to null
         file = null;
-
-        tmpFile = false;
+        // this instance is not backed by temporarily allocated resource/buffer
+        temp = false;
     }
 
     /**
@@ -258,26 +262,45 @@ public class BLOBFileValue implements Value {
     }
 
     /**
-     * Returns <code>true</code> it this <code>BLOBFileValue</code> is backed
-     * by a temporary file.
+     * Frees temporarily allocated resources such as temporary file, buffer, etc.
+     * If this <code>BLOBFileValue</code> is backed by a persistent resource
+     * calling this method will have no effect.
      *
-     * @return <code>true</code> it this <code>BLOBFileValue</code> is backed
-     *         by a temporary file.
+     * @see #delete()
+     * @see #delete(boolean)
      */
-    public boolean isTempFile() {
-        return tmpFile;
+    public void discard() {
+        if (!temp) {
+            // do nothing if this instance is not backed by temporarily
+            // allocated resource/buffer
+            return;
+        }
+        if (file != null) {
+            // this instance is backed by a temp file
+            file.delete();
+        } else if (buffer != null) {
+            // this instance is backed by a in-memory buffer
+            buffer = EMPTY_BYTE_ARRAY;
+        }
     }
 
     /**
-     * Deletes the file backing this <code>BLOBFileValue</code>.
+     * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
      * Same as <code>{@link #delete(false)}</code>.
+     * <p/>
+     * If this <code>BLOBFileValue</code> is <i>not</i> backed by a persistent
+     * resource calling this method will have no effect.
+     *
+     * @see #discard()
      */
     public void delete() {
-        delete(false);
+        if (!temp) {
+            delete(false);
+        }
     }
 
     /**
-     * Deletes the file backing this <code>BLOBFileValue</code>.
+     * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
      *
      * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories
      *                             will automatically be deleted
