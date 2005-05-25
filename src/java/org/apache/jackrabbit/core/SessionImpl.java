@@ -929,13 +929,8 @@ public class SessionImpl implements Session, Constants {
             srcParentNode.removeChildNode(srcName.getName(), index);
         }
 
-        // change definition of target if necessary
-        NodeDefinitionImpl oldTargetDef = (NodeDefinitionImpl) targetNode.getDefinition();
-        NodeDefId oldTargetDefId = oldTargetDef.unwrap().getId();
-        NodeDefId newTargetDefId = newTargetDef.unwrap().getId();
-        if (!oldTargetDefId.equals(newTargetDefId)) {
-            targetNode.onRedefine(newTargetDefId);
-        }
+        // change definition of target
+        targetNode.onRedefine(newTargetDef.unwrap().getId());
     }
 
     /**

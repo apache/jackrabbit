@@ -546,19 +546,14 @@ public class NodeImpl extends ItemImpl implements Node {
         return (NodeImpl) itemMgr.getItem(targetId);
     }
 
-    protected NodeImpl renameChildNodeLink(QName oldName, int index, String uuid, QName newName)
+    protected void renameChildNodeLink(QName oldName, int index, String uuid,
+                                       QName newName)
             throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         thisState.removeChildNodeEntry(oldName, index);
         thisState.addChildNodeEntry(newName, uuid);
-
-        // create transient state of target, so that it gets modified.
-        NodeImpl target = (NodeImpl) itemMgr.getItem(new NodeId(uuid));
-        target.getOrCreateTransientItemState();
-        return target;
     }
-
 
     protected void removeChildProperty(String propName) throws RepositoryException {
         QName qName;
