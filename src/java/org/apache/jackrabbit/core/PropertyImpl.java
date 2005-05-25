@@ -264,7 +264,8 @@ public class PropertyImpl extends ItemImpl implements Property {
                 if (old != null && old.getType() == PropertyType.BINARY) {
                     // BINARY value
                     BLOBFileValue blob = (BLOBFileValue) old.internalValue();
-                    blob.delete();
+                    blob.discard();
+                    blob = null; // gc hint
                 }
             }
         }

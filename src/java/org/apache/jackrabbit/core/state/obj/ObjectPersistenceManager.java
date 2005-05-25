@@ -310,10 +310,8 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
                 // replace value instance with value
                 // backed by resource in blob store and delete temp file
                 values[i] = InternalValue.create(blobStore.get(blobId));
-                if (blobVal.isTempFile()) {
-                    blobVal.delete();
-                    blobVal = null; // gc hint
-                }
+                blobVal.discard();
+                blobVal = null; // gc hint
             } else {
                 /**
                  * because writeUTF(String) has a size limit of 65k,

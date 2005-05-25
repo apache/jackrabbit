@@ -640,10 +640,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                 // replace value instance with value
                                 // backed by internal file and delete temp file
                                 values[i] = InternalValue.create(internalBlobFile);
-                                if (blobVal.isTempFile()) {
-                                    blobVal.delete();
-                                    blobVal = null; // gc hint
-                                }
+                                blobVal.discard();
+                                blobVal = null; // gc hint
                             } else {
                                 writer.write(Text.encodeIllegalXMLCharacters(val.toString()));
                             }
