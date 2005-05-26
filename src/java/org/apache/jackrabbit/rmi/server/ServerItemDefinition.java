@@ -19,6 +19,7 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 
 import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
@@ -58,7 +59,12 @@ public class ServerItemDefinition extends ServerObject implements RemoteItemDefi
 
     /** {@inheritDoc} */
     public RemoteNodeType getDeclaringNodeType() throws RemoteException {
-        return getFactory().getRemoteNodeType(def.getDeclaringNodeType());
+        NodeType nt = def.getDeclaringNodeType();
+        if (nt == null) {
+            return null;
+        } else {
+            return getFactory().getRemoteNodeType(nt);
+        }
     }
 
     /** {@inheritDoc} */
