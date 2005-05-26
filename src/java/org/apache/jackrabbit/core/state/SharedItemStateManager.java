@@ -548,8 +548,13 @@ public class SharedItemStateManager extends ItemStateCache
             local.push();
 
             /* Store items in the underlying persistence manager */
+            long t0 = System.currentTimeMillis();
             persistMgr.store(shared);
             succeeded = true;
+            long t1 = System.currentTimeMillis();
+            if (log.isInfoEnabled()) {
+                log.info("persisting change log " + shared + " took " + (t1 - t0) + "ms");
+            }
 
         } finally {
 
