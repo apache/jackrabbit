@@ -269,26 +269,44 @@ public class QName implements Cloneable, Comparable, Serializable {
      *
      * @param resolver namespace resolver
      * @return prefixed name
-     * @throws NoPrefixDeclaredException if the namespace fails to resolve
+     * @throws NoPrefixDeclaredException if the namespace can not be resolved
      */
-    public String toJCRName(NamespaceResolver resolver) throws NoPrefixDeclaredException {
+    public String toJCRName(NamespaceResolver resolver)
+            throws NoPrefixDeclaredException {
         StringBuffer sb = new StringBuffer();
+        toJCRName(resolver, sb);
+        return sb.toString();
+    }
+
+    /**
+     * Appends the qualified name in the prefixed JCR name format to the given
+     * string buffer. The namespace URI is mapped to a prefix using the given
+     * namespace resolver.
+     *
+     * @param resolver namespace resolver
+     * @param buf      string buffer where the prefixed JCR name should be
+     *                 appended to
+     * @throws NoPrefixDeclaredException if the namespace can not be resolved
+     * @see #toJCRName(NamespaceResolver)
+     */
+    public void toJCRName(NamespaceResolver resolver, StringBuffer buf)
+            throws NoPrefixDeclaredException {
         // prefix
         String prefix;
         try {
             prefix = resolver.getPrefix(namespaceURI);
         } catch (NamespaceException nse) {
-            throw new NoPrefixDeclaredException("no prefix declared for URI: " + namespaceURI);
+            throw new NoPrefixDeclaredException("no prefix declared for URI: "
+                    + namespaceURI);
         }
         if (prefix.length() == 0) {
             // default prefix (empty string)
         } else {
-            sb.append(prefix);
-            sb.append(':');
+            buf.append(prefix);
+            buf.append(':');
         }
         // name
-        sb.append(localName);
-        return sb.toString();
+        buf.append(localName);
     }
 
     /**

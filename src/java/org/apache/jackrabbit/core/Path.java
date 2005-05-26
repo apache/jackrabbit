@@ -110,11 +110,11 @@ public final class Path {
      * </ul>
      */
     private static final Pattern PATH_ELEMENT_PATTERN =
-        Pattern.compile("(\\.)|"
-                + "(\\.\\.)|"
-                + "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
-                + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)"
-                + "(\\[([1-9]\\d*)\\])?");
+            Pattern.compile("(\\.)|"
+            + "(\\.\\.)|"
+            + "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
+            + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)"
+            + "(\\[([1-9]\\d*)\\])?");
 
     /**
      * the elements of this path
@@ -386,8 +386,7 @@ public final class Path {
                         // check if the prefix is a valid XML prefix
                         if (!XMLChar.isValidNCName(prefix)) {
                             // illegal syntax for prefix
-                            throw new MalformedPathException(
-                                    "'" + jcrPath + "' is not a valid path: '"
+                            throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '"
                                     + elem + "' specifies an illegal namespace prefix");
                         }
                     } else {
@@ -413,8 +412,7 @@ public final class Path {
                         nsURI = resolver.getURI(prefix);
                     } catch (NamespaceException nse) {
                         // unknown prefix
-                        throw new MalformedPathException(
-                                "'" + jcrPath + "' is not a valid path: '"
+                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '"
                                 + elem + "' specifies an unmapped namespace prefix");
                     }
 
@@ -429,14 +427,12 @@ public final class Path {
                 }
             } else {
                 // illegal syntax for path element
-                throw new MalformedPathException(
-                        "'" + jcrPath + "' is not a valid path: '"
+                throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '"
                         + elem + "' is not a legal path element");
             }
         }
         if (resolver != null) {
-            return new Path(
-                    (PathElement[]) list.toArray(new PathElement[list.size()]),
+            return new Path((PathElement[]) list.toArray(new PathElement[list.size()]),
                     isNormalized);
         } else {
             return null;
@@ -804,11 +800,15 @@ public final class Path {
     }
 
     /**
-     * @param resolver
-     * @return
-     * @throws NoPrefixDeclaredException
+     * Returns a string representation of this <code>Path</code> in the
+     * JCR path format.
+     *
+     * @param resolver namespace resolver
+     * @return JCR path
+     * @throws NoPrefixDeclaredException if a namespace can not be resolved
      */
-    public String toJCRPath(NamespaceResolver resolver) throws NoPrefixDeclaredException {
+    public String toJCRPath(NamespaceResolver resolver)
+            throws NoPrefixDeclaredException {
         if (denotesRoot()) {
             // shortcut
             return "/";
@@ -820,7 +820,7 @@ public final class Path {
             }
             PathElement element = elements[i];
             // name
-            sb.append(element.toJCRName(resolver));
+            element.toJCRName(resolver, sb);
         }
         return sb.toString();
     }
@@ -1190,12 +1190,14 @@ public final class Path {
      * Object representation of a single JCR path element. A PathElement
      * object contains the qualified name and optional index of a single
      * JCR path element.
-     * <p>
+     * <p/>
      * Once created, a PathElement object is immutable.
      */
     public static class PathElement {
 
-        /** Qualified name of the path element. */
+        /**
+         * Qualified name of the path element.
+         */
         private final QName name;
 
         /**
@@ -1209,7 +1211,7 @@ public final class Path {
          * The created path element does not contain an explicit index.
          *
          * @param namespaceURI namespace URI
-         * @param localName local name
+         * @param localName    local name
          */
         private PathElement(String namespaceURI, String localName) {
             this(new QName(namespaceURI, localName));
@@ -1219,8 +1221,8 @@ public final class Path {
          * Creates a path element with the given qualified name and index.
          *
          * @param namespaceURI namespace URI
-         * @param localName local name
-         * @param index index
+         * @param localName    local name
+         * @param index        index
          */
         private PathElement(String namespaceURI, String localName, int index) {
             this(new QName(namespaceURI, localName), index);
@@ -1244,7 +1246,7 @@ public final class Path {
         /**
          * Creates a path element with the given qualified name and index.
          *
-         * @param name qualified name
+         * @param name  qualified name
          * @param index index
          * @throws IllegalArgumentException if the name is <code>null</code>
          */
@@ -1333,10 +1335,28 @@ public final class Path {
          * @throws NoPrefixDeclaredException if the namespace of the path
          *                                   element name can not be resolved
          */
-        public String toJCRName(NamespaceResolver resolver) throws NoPrefixDeclaredException {
+        public String toJCRName(NamespaceResolver resolver)
+                throws NoPrefixDeclaredException {
             StringBuffer sb = new StringBuffer();
+            toJCRName(resolver, sb);
+            return sb.toString();
+        }
+
+        /**
+         * Appends the JCR name representation of this path element to the
+         * given string buffer.
+         *
+         * @param resolver namespace resolver
+         * @param buf      string buffer where the JCR name representation
+         *                 should be appended to
+         * @throws NoPrefixDeclaredException if the namespace of the path
+         *                                   element name can not be resolved
+         * @see #toJCRName(NamespaceResolver)
+         */
+        public void toJCRName(NamespaceResolver resolver, StringBuffer buf)
+                throws NoPrefixDeclaredException {
             // name
-            sb.append(name.toJCRName(resolver));
+            name.toJCRName(resolver, buf);
             // index
             int index = getIndex();
             /**
@@ -1345,11 +1365,10 @@ public final class Path {
              */
             //if (index > 0) {
             if (index > 1) {
-                sb.append('[');
-                sb.append(index);
-                sb.append(']');
+                buf.append('[');
+                buf.append(index);
+                buf.append(']');
             }
-            return sb.toString();
         }
 
         /**

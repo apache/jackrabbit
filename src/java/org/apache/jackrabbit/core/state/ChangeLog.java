@@ -301,4 +301,21 @@ public class ChangeLog {
         }
         reset();
     }
+
+    /**
+     * Returns a string representation of this change log for diagnostic
+     * purposes.
+     *
+     * @return a string representation of this change log
+     */
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+        buf.append("{");
+        buf.append("#addedStates=" + addedStates.size());
+        buf.append(", #modifiedStates=" + modifiedStates.size());
+        buf.append(", #deletedStates=" + deletedStates.size());
+        buf.append(", #modifiedRefs=" + modifiedRefs.size());
+        buf.append("}");
+        return buf.toString();
+    }
 }
