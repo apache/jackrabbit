@@ -22,6 +22,7 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
+import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 
 /**
  * Local adapter for the JCR-RMI
@@ -61,7 +62,12 @@ public class ClientNodeDefinition extends ClientItemDefinition implements NodeDe
     /** {@inheritDoc} */
     public NodeType getDefaultPrimaryType() {
         try {
-            return getFactory().getNodeType(remote.getDefaultPrimaryType());
+            RemoteNodeType nt = remote.getDefaultPrimaryType();
+            if (nt == null) {
+                return null;
+            } else {
+                return getFactory().getNodeType(nt);
+            }
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }
