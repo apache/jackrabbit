@@ -54,6 +54,11 @@ public class ObservationManagerImpl implements ObservationManager {
      */
     private final ObservationManagerFactory obsMgrFactory;
 
+    static {
+        // preload EventListenerIteratorImpl to prevent classloader issues during shutdown
+        EventListenerIteratorImpl.class.hashCode();
+    }
+
     /**
      * Creates an <code>ObservationManager</code> instance.
      *
