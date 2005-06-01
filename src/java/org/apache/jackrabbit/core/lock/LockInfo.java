@@ -27,7 +27,7 @@ import javax.jcr.lock.LockException;
 
 /**
  * Contains information about a lock and gets placed inside the child
- * information of a {@link PathMap}.
+ * information of a {@link org.apache.jackrabbit.core.PathMap}.
  */
 class LockInfo implements SessionListener {
 

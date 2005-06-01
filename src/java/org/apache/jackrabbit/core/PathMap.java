@@ -14,16 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.lock;
+package org.apache.jackrabbit.core;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.QName;
-
 
 /**
  * Generic path map that associates information with the individual path elements
@@ -34,7 +30,7 @@ public class PathMap {
     /**
      * Root element
      */
-    private final Child root = new Child(null, Path.ROOT.getNameElement());
+    private final Child root = new Child(Path.ROOT.getNameElement());
 
     /**
      * Map a path to a child. If <code>exact</code> is <code>false</code>,
@@ -67,33 +63,43 @@ public class PathMap {
      * @param path path to child
      * @param obj object to store at destination
      */
-    public void put(Path path, Object obj) {
+    public Child put(Path path, Object obj) {
+        Child child = put(path);
+        child.obj = obj;
+        return child;
+    }
+
+    /**
+     * Create an empty child given by its path.
+     * @param path path to child
+     */
+    public Child put(Path path) {
         Path.PathElement[] elements = path.getElements();
         Child current = root;
 
         for (int i = 1; i < elements.length; i++) {
             current = current.getChild(elements[i], true);
         }
-        current.obj = obj;
+        return current;
     }
 
     /**
-     * Ressurrect a child previously removed, given by its new path and the
-     * child structure.
-     * @param path path to child
+     * Ressurrect a child previously removed, given by its path and the
+     * child structure. If an item at path already exists, nothing happens.
+     * @param path new path to child
      * @param zombie previously removed child object to store at destination
      */
     public void resurrect(Path path, Child zombie) {
         Path.PathElement[] elements = path.getElements();
-        Child current = root;
+        Path.PathElement name = path.getNameElement();
+        Child parent = root;
 
-        for (int i = 1; i < elements.length; i++) {
-            current = current.getChild(elements[i], true);
+        if (map(path, true) == null) {
+            for (int i = 1; i < elements.length - 1; i++) {
+                parent = parent.getChild(elements[i], true);
+            }
+            parent.setChild(name, zombie);
         }
-
-        current.children = zombie.children;
-        current.childrenCount = zombie.childrenCount;
-        current.obj = zombie.obj;
     }
 
     /**
@@ -116,7 +122,7 @@ public class PathMap {
         /**
          * Parent child
          */
-        private final Child parent;
+        private Child parent;
 
         /**
          * Map of immediate children of this child.
@@ -144,25 +150,18 @@ public class PathMap {
         private int index;
 
         /**
-         * Create a new instance of this class.
-         * @param parent parent of this child
+         * Create a new instance of this class with a path element.
          * @param element path element of this child
-         * @param obj associated object
          */
-        Child(Child parent, Path.PathElement element, Object obj) {
-            this.parent = parent;
+        Child(Path.PathElement element) {
             this.name = element.getName();
             this.index = element.getIndex();
-            this.obj = obj;
         }
 
         /**
          * Create a new instance of this class.
-         * @param parent parent of this child
-         * @param element path element of this child
          */
-        Child(Child parent, Path.PathElement element) {
-            this(parent, element, null);
+        Child() {
         }
 
         /**
@@ -205,6 +204,7 @@ public class PathMap {
                     }
                     Child child = (Child) list.remove(index);
                     if (child != null) {
+                        child.parent = null;
                         childrenCount--;
                     }
                     if (obj == null && childrenCount == 0) {
@@ -217,7 +217,7 @@ public class PathMap {
         }
 
         /**
-         * Return a child matching a path element. If a child doesn not exist
+         * Return a child matching a path element. If a child does not exist
          * at that position and <code>create</code> is <code>true</code> a
          * new child will be created.
          * @param element child's path element
@@ -235,22 +235,41 @@ public class PathMap {
                 }
             }
             if (child == null && create) {
-                if (children == null) {
-                    children = new HashMap();
-                }
-                ArrayList list = (ArrayList) children.get(element.getName());
-                if (list == null) {
-                    list = new ArrayList();
-                    children.put(element.getName(), list);
-                }
-                while (list.size() < index) {
-                    list.add(null);
-                }
-                child = new Child(this, element);
-                list.add(child);
-                childrenCount++;
+                child = new Child();
+                setChild(element, child);
             }
             return child;
+        }
+
+        /**
+         * Add a child.
+         * @param element child's path element
+         * @param child child to add
+         */
+        private void setChild(Path.PathElement element, Child child) {
+            int index = getOneBasedIndex(element) - 1;
+            if (children == null) {
+                children = new HashMap();
+            }
+            ArrayList list = (ArrayList) children.get(element.getName());
+            if (list == null) {
+                list = new ArrayList();
+                children.put(element.getName(), list);
+            }
+            while (list.size() < index) {
+                list.add(null);
+            }
+            if (list.size() == index) {
+                list.add(child);
+            } else {
+                list.set(index, child);
+            }
+
+            child.parent = this;
+            child.name = element.getName();
+            child.index = element.getIndex();
+
+            childrenCount++;
         }
 
         /**
@@ -283,6 +302,22 @@ public class PathMap {
         }
 
         /**
+         * Return the name of this child
+         * @return name
+         */
+        public QName getName() {
+            return name;
+        }
+
+        /**
+         * Return the index of this child
+         * @return index
+         */
+        public int getIndex() {
+            return index;
+        }
+
+        /**
          * Return a path element pointing to this child
          * @return path element
          */
@@ -291,8 +326,45 @@ public class PathMap {
         }
 
         /**
-         * Checks whether this child has the specified path
-         * @return path path to compare to
+         * Return the path of this element.
+         * @return path
+         * @throws MalformedPathException if building the path fails
+         */
+        public Path getPath() throws MalformedPathException {
+            if (parent == null) {
+                return Path.ROOT;
+            }
+
+            Path.PathBuilder builder = new Path.PathBuilder();
+            getPath(builder);
+            return builder.getPath();
+        }
+
+        /**
+         * Internal implementation of {@link #getPath()} that populates entries
+         * in a builder. On exit, <code>builder</code> contains the path
+         * of this element
+         */
+        private void getPath(Path.PathBuilder builder) {
+            if (parent == null) {
+                builder.addRoot();
+                return;
+            }
+            parent.getPath(builder);
+            if (index == 0 || index == 1) {
+                builder.addLast(name);
+            } else {
+                builder.addLast(name, index);
+            }
+        }
+
+        /**
+         * Checks whether this child has the specified path. Introduced to
+         * avoid catching a <code>MalformedPathException</code> for simple
+         * path comparisons.
+         * @param path path to compare to
+         * @return <code>true</code> if this child has the path
+         *         <code>path</code>, <code>false</code> otherwise
          */
         public boolean hasPath(Path path) {
             return hasPath(path.getElements(), path.getLength());
@@ -330,6 +402,10 @@ public class PathMap {
 
         /**
          * Recursively invoked traversal method.
+         * @param visitor visitor to invoke
+         * @param includeEmpty if <code>true</code> invoke call back on every
+         *        child regardless, whether the associated object is empty
+         *        or not; otherwise call back on non-empty children only
          */
         public void traverse(ChildVisitor visitor, boolean includeEmpty) {
             if (children != null) {
@@ -349,6 +425,41 @@ public class PathMap {
             }
         }
 
+        /**
+         * Return the depth of this child. Defined to be <code>0</code> for the
+         * root node and <code>n + 1</code> for some child if the depth of its
+         * parent is <code>n</code>.
+         */
+        public int getDepth() {
+            if (parent != null) {
+                return parent.getDepth() + 1;
+            }
+            return 0;
+        }
+
+        /**
+         * Return a flag indicating whether the specified node is a
+         * child of this node.
+         * @param other node to check
+         */
+        public boolean isAncestorOf(Child other) {
+            Child parent = other.parent;
+            while (parent != null) {
+                if (parent == this) {
+                    return true;
+                }
+                parent = parent.parent;
+            }
+            return false;
+        }
+
+        /**
+         * Return the parent of this child
+         * @return parent or <code>null</code> if this is the root node
+         */
+        public Child getParent() {
+            return parent;
+        }
     }
 
     /**

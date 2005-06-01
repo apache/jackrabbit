@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.MalformedPathException;
+import org.apache.jackrabbit.core.PathMap;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.log4j.Logger;
