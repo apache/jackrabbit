@@ -93,7 +93,10 @@ class LockToken {
             }
         }
 
-        int rem = 37 - (result % 37);
+        int rem = result % 37;
+        if (rem != 0) {
+            rem = 37 - rem;
+        }
         if (rem >= 0 && rem <= 9) {
             return (char) ('0' + rem);
         } else if (rem >= 10 && rem <= 35) {
