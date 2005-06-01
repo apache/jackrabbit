@@ -30,6 +30,11 @@ public class FileSystemResource {
 
     protected final String path;
 
+    static {
+        // preload FileSystemPathUtil to prevent classloader issues during shutdown
+        FileSystemPathUtil.class.hashCode();
+    }
+
     /**
      * Creates a new <code>FileSystemResource</code>
      *
