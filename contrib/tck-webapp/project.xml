@@ -22,7 +22,7 @@
     <id>tck-webapp</id>
     <!-- <type>war</type> -->
     <name>Day TCK web application</name>
-    <currentVersion>0.16.4.1</currentVersion>
+    <currentVersion>1.0</currentVersion>
 
 
     <!-- ====================================================================== -->
@@ -66,8 +66,7 @@
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
-            <version>0.16.4.1</version>
-            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.jar</url>
+            <version>1.0</version>
         </dependency>
         <!-- dependencies from jcr that we want to bundle -->
         <dependency>
