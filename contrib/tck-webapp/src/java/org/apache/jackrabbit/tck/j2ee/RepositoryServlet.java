@@ -64,6 +64,9 @@ public class RepositoryServlet extends HttpServlet {
     /** exclude list version checker gif path */
     public static final String  CHECK_EXCLUDELIST_VERSION_GIF_PATH = "check-excludelist-version-gif";
 
+    /** exclude list version checker gif path */
+    public static final String  TCK_UPDATE_URL = "tck-update-page";
+
     /** tck webapp jar path name */
     public static final String  TCK_WEBAPP_JAR_PATH = "tck-webapp-jar-path";
 
@@ -93,6 +96,9 @@ public class RepositoryServlet extends HttpServlet {
 
     /** the exclude list checker url */
     private static String excludeListCheckerPath;
+
+    /** the update url */
+    private static String tckUpdateUrl;
 
     /**
      * The init method starts the repository to read/write test results and configuration,
@@ -187,6 +193,9 @@ public class RepositoryServlet extends HttpServlet {
 
             // set the exclude list checker path
             excludeListCheckerPath = getServletConfig().getInitParameter(CHECK_EXCLUDELIST_VERSION_GIF_PATH);
+
+            // set the tck update page url
+            tckUpdateUrl = getServletConfig().getInitParameter(TCK_UPDATE_URL);
 
         } catch (RepositoryException e) {
             log_info("Unable to initialize repository: " + e.toString(), e);
@@ -292,5 +301,14 @@ public class RepositoryServlet extends HttpServlet {
      */
     public static String getExcludeListCheckerPath() {
         return excludeListCheckerPath;
+    }
+
+    /**
+     * Returns the tck update url
+     *
+     * @return url pointing to update page
+     */
+    public static String getTckUpdateUrl() {
+        return tckUpdateUrl;
     }
 }
