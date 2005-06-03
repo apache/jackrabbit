@@ -32,7 +32,7 @@ if (repSession == null) {
 }
 
 // checker intervall
-long checkerIntervall = 3600;
+long CHECKER_INTERVALL = 24 * 60 * 60 * 1000;
 
 // load download id from file
 Properties props = new Properties();
@@ -68,7 +68,7 @@ if (repSession.getRootNode().getNode("licNode").canAddMixin("mix:referenceable")
 // last version checker time
 long lastChecked = (repSession.getRootNode().hasNode("lastChecked")) ? repSession.getRootNode().getNode("lastChecked").getProperty("time").getLong() : 0;
 long currentTime = System.currentTimeMillis();
-boolean checkIt = ((lastChecked + checkerIntervall * 1000) < currentTime) || lastChecked == 0;
+boolean checkIt = ((lastChecked + CHECKER_INTERVALL) < currentTime) || lastChecked == 0;
 boolean isUpToDate = (repSession.getRootNode().hasNode("lastChecked")) ? repSession.getRootNode().getNode("lastChecked").getProperty("uptodate").getBoolean() : true;
 
 // load version
@@ -121,6 +121,17 @@ if (parent.length() > 1) {
 String mode = request.getParameter("mode");
 mode = (mode == null || mode.equals("")) ? "test" : mode;
 
+String exludeListTestMethod = "";
+
+if (mode.equals("test")) {
+    // get exclude list version currently stored in the tck repository
+    String excludeListVersion = "";
+    if (repSession.getRootNode().hasNode("excludelist")) {
+        Node excludeListNode = repSession.getRootNode().getNode("excludelist");
+        excludeListVersion = excludeListNode.getProperty("version").getString();
+    }
+    exludeListTestMethod = (mode.equals("test")) ? "excludeListIsUpToDate('" + RepositoryServlet.getExcludeListCheckerPath() + "?v=" + excludeListVersion + "');" : "";
+}
 %><html>
     <head><title>TCK for JSR170</title>
     <link rel="stylesheet" href="docroot/ui/default.css" type="text/css" title="style" />
@@ -138,23 +149,27 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
             }
         }
 
-        function setGreen() {
+        function setGreen(doNotTell) {
             var img = document.getElementById('vcheckpic');
             img.src = "docroot/imgs/green.png";
             img.setAttribute("title", "The Tck web application is up to date.");
             // tell server that a check got performed (perform in 24h again)
-            tellChecked(<%= currentTime %>, true);
+            if (!doNotTell) {
+                tellChecked(<%= currentTime %>, true);
+            }
         }
 
-        function setRed() {
+        function setRed(doNotTell) {
             var img = document.getElementById('vcheckpic');
             img.src = "docroot/imgs/red.png";
             img.setAttribute("title", "A new Tck version is available.");
             var link = document.getElementById('vcheckpic_href');
-            link.setAttribute("href", "http://localhost:4302/update.html?did=<%= did %>");
+            link.setAttribute("href", "<%= RepositoryServlet.getTckUpdateUrl() %>");
             link.setAttribute("target", "_new");
             // tell server that a check got performed (perform in 24h again)
-            tellChecked(<%= currentTime %>, false);
+            if (!doNotTell) {
+                tellChecked(<%= currentTime %>, false);
+            }
         }
 
         function tellChecked(currTime, upToDate) {
@@ -176,16 +191,16 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
                 <%
             } else {
                 if (isUpToDate) {
-                    %>setGreen();<%
+                    %>setGreen(true);<%
                 } else {
-                    %>setRed();<%
+                    %>setRed(true);<%
                 }
             }%>
         }
 
     </script>
     </head>
-    <body onload="setImage('logo', 'http://jsr170tools.day.com/crx/crx_main_files/banner_right.gif');checkVersion('<%= checkVersionUrl %>');">
+    <body onload="setImage('logo', 'http://jsr170tools.day.com/crx/crx_main_files/banner_right.gif');checkVersion('<%= checkVersionUrl %>');<%= exludeListTestMethod %>">
         <center>
             <table cellpadding="0" cellspacing="0" border="0" id="maintable">
                 <!-- banner -->
@@ -218,12 +233,6 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
                 </tr>
                 <%
                 if (mode.equals("test")) {
-                    // get exclude list version currently stored in the tck repository
-                    String excludeListVersion = "";
-                    if (repSession.getRootNode().hasNode("excludelist")) {
-                        Node excludeListNode = repSession.getRootNode().getNode("excludelist");
-                        excludeListVersion = excludeListNode.getProperty("version").getString();
-                    }
                     %><tr>
                         <td colspan="2">
                             <iframe name="graph" src="graph.jsp" height="600" width="960" frameborder="0"></iframe>
@@ -233,7 +242,7 @@ mode = (mode == null || mode.equals("")) ? "test" : mode;
                         <td id="technavcell" colspan="2">
                             <table width="100%">
                                 <tr>
-                                    <td width="10%"><input type="button" value="Start" class="submit" onclick="startTest('<%= RepositoryServlet.getExcludeListUrl() %>','<%= RepositoryServlet.getExcludeListCheckerPath() %>','<%= excludeListVersion %>', document.getElementById('excudelist').checked)"></td>
+                                    <td width="10%"></script><input type="button" value="Start" class="submit" onclick="startTest('<%= RepositoryServlet.getExcludeListUrl() %>', document.getElementById('excudelist').checked)"></td>
                                     <td width="20%">Start Test</td>
                                     <td width="40%" align="center"><input type="checkbox" id="excudelist" checked>Exclude List&nbsp;</td>
                                     <td width="20%" align="right">Submit Test Data</td>

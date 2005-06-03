@@ -50,19 +50,19 @@
 
         <init-param>
             <param-name>submit-url</param-name>
-            <param-value>http://www.day.com/en/product/jsr_170/tck_submit.html</param-value>
+            <param-value>http://www.day.com/en/product/jsr_170/tck/tck_submit.html</param-value>
             <description>Url pointing to test result submit receiver</description>
         </init-param>
 
         <init-param>
             <param-name>tck-webapp-jar-path</param-name>
-            <param-value>/WEB-INF/lib/tck-webapp-0.16.4.1.jar</param-value>
+            <param-value>/WEB-INF/lib/tck-webapp-1.0.jar</param-value>
             <description>Path to the tck webapp jar, where the test sources reside</description>
         </init-param>
 
         <init-param>
             <param-name>exclude-list-url</param-name>
-            <param-value>http://www.day.com/en/product/jsr_170/exclude_list.html</param-value>
+            <param-value>http://www.day.com/en/product/jsr_170/tck/excludelist</param-value>
             <description>Url pointing to exclude list provider</description>
         </init-param>
 
@@ -76,6 +76,12 @@
             <param-name>check-excludelist-version-gif</param-name>
             <param-value>http://dev.day.com/excludelist.gif</param-value>
             <description>Url pointing to the excludelist version checker</description>
+        </init-param>
+
+        <init-param>
+            <param-name>tck-update-page</param-name>
+            <param-value>http://www.day.com/en/product/jsr_170/tck/tckupdate</param-value>
+            <description>Url pointing to the tck update page</description>
         </init-param>
 
         <load-on-startup>1</load-on-startup>

@@ -120,11 +120,13 @@ Node rootNode = repSession.getRootNode();
                 </tr>
                 <tr>
                     <td colspan="2" class="content">
-                        &nbsp;<input type="hidden" name="properties" value="<%= properties %>"><input type="hidden" name="resultxml"><input type="hidden" name="downloadid" value="<%= did %>"><input type="hidden" name="installid" value="<%= installid %>">
+                        &nbsp;<input type="hidden" name="publishresults" id="publishresults" value="yes"><input type="hidden" name="properties" value="<%= properties %>"><input type="hidden" name="resultxml"><input type="hidden" name="downloadid" value="<%= did %>"><input type="hidden" name="installid" value="<%= installid %>">
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="2" class="content"><input type="checkbox" name="publishresults" checked>Publishing test results allowed</td>
+                    <td colspan="2" class="content">
+                        <input type="checkbox" name="publishresultscb" checked onclick="if (this.checked) {document.getElementById('publishresults').value='yes';}else{document.getElementById('publishresults').value='';}">Publishing test results allowed
+                    </td>
                 </tr>
                 <tr>
                     <td class="content"><input type="submit" value="Send" class="submit"></td><td align="right" class="content"><input type="button" value="Cancel" class="submit" onclick="window.close();"></td>
