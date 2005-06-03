@@ -31,8 +31,8 @@ the Java Community Process as
 has licensed an initial implementation of the JCR reference implementation for
 use as seed code for this project.  JCR specifies an API for application
 developers (and application frameworks) to use for interaction with modern
-content repositories -- content management systems that provide content
-services such as versioning, transactions, indexing, workflow, etc.
+content repositories that provide content services such as searching, versioning, 
+transactions, etc.
 </p>
 <p>
 Jackrabbit's implementation began as a proposal within the
