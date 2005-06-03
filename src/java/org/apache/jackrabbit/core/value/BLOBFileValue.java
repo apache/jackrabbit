@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.value;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.ISO8601;
+import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -44,6 +45,11 @@ import java.util.Calendar;
  * <code>InputStream</code> instance.
  */
 public class BLOBFileValue implements Value {
+
+    /**
+     * The default logger
+     */
+    private static Logger log = Logger.getLogger(BLOBFileValue.class);
 
     /**
      * the property type
@@ -321,6 +327,7 @@ public class BLOBFileValue implements Value {
                 fsResource.delete(pruneEmptyParentDirs);
             } catch (FileSystemException fse) {
                 // ignore
+                log.warn("Error while deleting BLOBFileValue: " + fse.getMessage());
             }
         } else {
             // this instance is backed by a in-memory buffer
