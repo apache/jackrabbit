@@ -202,7 +202,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
                 InternalValue.create(OnParentVersionAction.nameFromValue(propDef.getOnParentVersion())));
         pState.setPropertyValue(JCR_PROTECTED, InternalValue.create(propDef.isProtected()));
         pState.setPropertyValue(JCR_MULTIPLE, InternalValue.create(propDef.isMultiple()));
-        pState.setPropertyValue(JCR_REQUIREDTYPE, InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType())));
+        pState.setPropertyValue(JCR_REQUIREDTYPE, InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType()).toUpperCase()));
         pState.setPropertyValues(JCR_DEFAULTVALUES, PropertyType.STRING, propDef.getDefaultValues());
         ValueConstraint[] vc = propDef.getValueConstraints();
         InternalValue[] vals = new InternalValue[vc.length];
