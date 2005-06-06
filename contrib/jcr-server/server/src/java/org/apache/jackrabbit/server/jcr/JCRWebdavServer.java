@@ -1,27 +1,28 @@
 /*
- * Copyright 2005 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright 2005 The Apache Software Foundation.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.apache.jackrabbit.server.jcr;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.jackrabbit.client.RepositoryAccessServlet;
+import org.apache.jackrabbit.server.SessionProvider;
 
 import javax.jcr.*;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.HashSet;
 /**
@@ -38,13 +39,17 @@ public class JCRWebdavServer implements DavSessionProvider {
     /** the jcr repository */
     private final Repository repository;
 
+    /** the provider for the credentials */
+    private final SessionProvider sessionProvider;
+
     /**
      * Creates a new JCRWebdavServer that operates on the given repository.
      *
      * @param repository
      */
-    public JCRWebdavServer(Repository repository) {
-	this.repository = repository;
+    public JCRWebdavServer(Repository repository, SessionProvider sessionProvider) {
+        this.repository = repository;
+        this.sessionProvider = sessionProvider;
     }
 
     //---------------------------------------< DavSessionProvider interface >---
@@ -55,12 +60,13 @@ public class JCRWebdavServer implements DavSessionProvider {
      *
      * @param request
      * @throws DavException if no session could be obtained.
-     * @see DavSessionProvider#acquireSession(org.apache.jackrabbit.webdav.WebdavRequest)
+     * @see DavSessionProvider#attachSession(org.apache.jackrabbit.webdav.WebdavRequest)
      */
-    public void acquireSession(WebdavRequest request)
-            throws DavException {
+    public boolean attachSession(WebdavRequest request)
+        throws DavException {
         DavSession session = cache.get(request);
-	request.setDavSession(session);
+        request.setDavSession(session);
+        return true;
     }
 
     /**
@@ -72,12 +78,12 @@ public class JCRWebdavServer implements DavSessionProvider {
      * @see DavSessionProvider#releaseSession(org.apache.jackrabbit.webdav.WebdavRequest)
      */
     public void releaseSession(WebdavRequest request) {
-	DavSession session = request.getDavSession();
-	if (session != null) {
-	    session.removeReference(request);
-	}
-	// remove the session from the request
-	request.setDavSession(null);
+        DavSession session = request.getDavSession();
+        if (session != null) {
+            session.removeReference(request);
+        }
+        // remove the session from the request
+        request.setDavSession(null);
     }
 
     //--------------------------------------------------------------------------
@@ -86,7 +92,7 @@ public class JCRWebdavServer implements DavSessionProvider {
      */
     private class DavSessionImpl implements DavSession {
 
-	/** the underlaying jcr session */
+        /** the underlaying jcr session */
         private final Session session;
 
         /**
@@ -98,8 +104,7 @@ public class JCRWebdavServer implements DavSessionProvider {
         private DavSessionImpl(DavServletRequest request) throws DavException {
             try {
                 String workspaceName = request.getRequestLocator().getWorkspaceName();
-		Credentials creds = RepositoryAccessServlet.getCredentialsFromHeader(request.getHeader(DavConstants.HEADER_AUTHORIZATION));
-                session = repository.login(creds, workspaceName);
+                session = sessionProvider.getSession(request, repository, workspaceName);
             } catch (LoginException e) {
                 // LoginException results in UNAUTHORIZED,
                 throw new JcrDavException(e);
@@ -107,8 +112,8 @@ public class JCRWebdavServer implements DavSessionProvider {
                 // RepositoryException results in FORBIDDEN
                 throw new JcrDavException(e);
             } catch (ServletException e) {
-		throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-	    }
+                throw new DavException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         }
 
         /**
@@ -139,26 +144,26 @@ public class JCRWebdavServer implements DavSessionProvider {
             return session;
         }
 
-	/**
-	 * @see DavSession#addLockToken(String)
-	 */
-	public void addLockToken(String token) {
-	    session.addLockToken(token);
-	}
+        /**
+         * @see DavSession#addLockToken(String)
+         */
+        public void addLockToken(String token) {
+            session.addLockToken(token);
+        }
 
-	/**
-	 * @see DavSession#getLockTokens()
-	 */
-	public String[] getLockTokens() {
-	    return session.getLockTokens();
-	}
+        /**
+         * @see DavSession#getLockTokens()
+         */
+        public String[] getLockTokens() {
+            return session.getLockTokens();
+        }
 
-	/**
-	 * @see DavSession#removeLockToken(String)
-	 */
-	public void removeLockToken(String token) {
-	    session.removeLockToken(token);
-	}
+        /**
+         * @see DavSession#removeLockToken(String)
+         */
+        public void removeLockToken(String token) {
+            session.removeLockToken(token);
+        }
     }
 
     /**
@@ -179,7 +184,7 @@ public class JCRWebdavServer implements DavSessionProvider {
          * @throws DavException
          */
         private DavSession get(WebdavRequest request)
-                throws DavException {
+            throws DavException {
             String txId = request.getTransactionId();
             String subscriptionId = request.getSubscriptionId();
             String lockToken = request.getLockToken();

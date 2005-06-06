@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.webdav;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.util.Text;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.lock.Scope;
@@ -29,6 +28,7 @@ import org.apache.jackrabbit.webdav.ordering.*;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.header.IfHeader;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
+import org.apache.jackrabbit.util.Text;
 import org.jdom.input.SAXBuilder;
 import org.jdom.JDOMException;
 import org.jdom.Document;
@@ -252,9 +252,9 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 requestDocument = builder.build(in);
             }
         } catch (IOException e) {
-            log.warn("Error while reading the request body: " + e.getMessage());
+            log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
         } catch (JDOMException e) {
-            log.warn("Error while building xml document from request body: " + e.getMessage());
+            log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
         }
         return requestDocument;
     }

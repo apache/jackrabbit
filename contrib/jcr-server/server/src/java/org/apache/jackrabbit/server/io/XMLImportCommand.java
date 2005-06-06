@@ -18,6 +18,7 @@ package org.apache.jackrabbit.server.io;
 
 import javax.jcr.Node;
 import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.RepositoryException;
 import java.io.InputStream;
 import java.util.Calendar;
 
@@ -38,6 +39,11 @@ public class XMLImportCommand extends AbstractImportCommand {
     public static final String XML_CONTENT_TYPE = "text/xml";
 
     /**
+     * the node type for the jcr:content node
+     */
+    private String contentNodeType = NT_UNSTRUCTURED;
+
+    /**
      * Imports the resource by deseriaizing the xml.
      * @param ctx
      * @param parentNode
@@ -50,13 +56,21 @@ public class XMLImportCommand extends AbstractImportCommand {
             throws Exception {
         Node content = parentNode.hasNode(JCR_CONTENT)
                 ? parentNode.getNode(JCR_CONTENT)
-                : parentNode.addNode(JCR_CONTENT, NT_UNSTRUCTURED);
-        content.setProperty(JCR_MIMETYPE, ctx.getContentType());
+                : parentNode.addNode(JCR_CONTENT, contentNodeType);
+        try {
+            content.setProperty(JCR_MIMETYPE, ctx.getContentType());
+        } catch (RepositoryException e) {
+            // ignore, since given nodetype could not allow mimetype
+        }
         Calendar lastMod = Calendar.getInstance();
         if (ctx.getModificationTime() != 0) {
             lastMod.setTimeInMillis(ctx.getModificationTime());
         }
-        content.setProperty(JCR_LASTMODIFIED, lastMod);
+        try {
+            content.setProperty(JCR_LASTMODIFIED, lastMod);
+        } catch (RepositoryException e) {
+            // ignore
+        }
         parentNode.getSession().importXML(content.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         return true;
     }
@@ -69,5 +83,22 @@ public class XMLImportCommand extends AbstractImportCommand {
      */
     public boolean canHandle(String contentType) {
         return XML_CONTENT_TYPE.equals(contentType);
+    }
+
+    /**
+     * Returns the nodetype for the jcr:content node
+     * @return
+     */
+    public String getContentNodeType() {
+        return contentNodeType;
+    }
+
+    /**
+     * Sets the nodetype for the jcr:content node.
+     *
+     * @param contentNodeType
+     */
+    public void setContentNodeType(String contentNodeType) {
+        this.contentNodeType = contentNodeType;
     }
 }

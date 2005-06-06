@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.commons.chain.Command;
-import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.webdav.util.Text;
-import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Node;
 import javax.jcr.Repository;
@@ -28,18 +25,27 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.FileInputStream;
+import java.util.HashSet;
 
 /**
  * This Class implements a collection export command that produces a HTML
- * directory listing of all child nodes. All child nodes having the
- * {@link #getCollectionNodeType()} result in a directory link.
+ * directory listing of all child nodes. If {@link #isCollectionNodeType(String)}
+ * returns true, when passed the primary node type of a child node, the result
+ * will be a directory link.<p/>
+ * The corresponding mapping is retrieved from the catalog. By default if no
+ * behaviour is specified, nodes are displayed as directories.
  */
-public class DirListingExportCommand implements Command, JcrConstants {
+public class DirListingExportCommand extends AbstractCommand {
 
     /**
-     * the node type of a collection
+     * define which node types define collection resources
      */
-    private String collectionNodeType = NT_FOLDER;
+    private HashSet collectionNodeTypes = new HashSet();
+
+    /**
+     * define which node types don't define collection resources
+     */
+    private HashSet nonCollectionNodeTypes = new HashSet();
 
     /**
      * Creates a DirListingExportCommand
@@ -48,31 +54,45 @@ public class DirListingExportCommand implements Command, JcrConstants {
     }
 
     /**
-     * Creates a DirListingExportCommand with the given collection node type.
+     * Returns true if the given the node type name denotes a collection.
      *
-     * @param collectionNodeType
+     * @return true if the given the node type name denotes a collection node.
      */
-    public DirListingExportCommand(String collectionNodeType) {
-        this.collectionNodeType = collectionNodeType;
+    public boolean isCollectionNodeType(String nodeTypeName) {
+        if (nonCollectionNodeTypes.isEmpty()) {
+            // check collection-set
+            return collectionNodeTypes.contains(nodeTypeName);
+        } else {
+            // check non-collection-set
+            return !nonCollectionNodeTypes.contains(nodeTypeName);
+        }
     }
 
     /**
-     * Returns the node type of a collection node.
+     * Defines the given node type names to represent collection nodes.
+     * Child nodes having this node type result in a directory link.
      *
-     * @return the node type of a collection node.
+     * @param nodeTypeNames comma separated String value
      */
-    public String getCollectionNodeType() {
-        return collectionNodeType;
+    public void setCollectionNodeTypes(String nodeTypeNames) {
+        String[] names = nodeTypeNames.split(",");
+        for (int i = 0; i < names.length; i++) {
+            collectionNodeTypes.add(names[i].trim());
+        }
     }
 
     /**
-     * Sets the node type of collection nodes. child nodes having this node
-     * type result in a directory link.
+     * Defines the given node type names to represent non-collection nodes.
+     * Child nodes having this node type will never result in a directory
+     * link.
      *
-     * @param collectionNodeType
+     * @param nodeTypeNames comma separated String value
      */
-    public void setCollectionNodeType(String collectionNodeType) {
-        this.collectionNodeType = collectionNodeType;
+    public void setNonCollectionNodeTypes(String nodeTypeNames) {
+        String[] names = nodeTypeNames.split(",");
+        for (int i = 0; i < names.length; i++) {
+             nonCollectionNodeTypes.add(names[i].trim());
+        }
     }
 
     /**
@@ -83,7 +103,7 @@ public class DirListingExportCommand implements Command, JcrConstants {
      * @return <code>false</code>.
      * @throws Exception if an error occurrs.
      */
-    public boolean execute(Context context) throws Exception {
+    public boolean execute(AbstractContext context) throws Exception {
         if (context instanceof ExportContext) {
             return execute((ExportContext) context);
         } else {
@@ -125,7 +145,7 @@ public class DirListingExportCommand implements Command, JcrConstants {
             String label = Text.getLabel(child.getPath());
             writer.print("<li><a href=\"");
             writer.print(Text.escape(label));
-            if (child.getPrimaryNodeType().getName().equals(collectionNodeType)) {
+            if (isCollectionNodeType(child.getPrimaryNodeType().getName())) {
                 writer.print("/");
             }
             writer.print("\">");

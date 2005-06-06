@@ -45,9 +45,8 @@ public class ImportResourceChain extends ChainBase implements JcrConstants {
     public ImportResourceChain() {
         super();
         addCommand(new SetContentTypeCommand());
-        addCommand(new AddNodeCommand(NT_FILE));
-        addCommand(new AddMixinCommand(MIX_VERSIONABLE));
         addCommand(new FileImportCommand());
+        addCommand(new AddMixinCommand(MIX_VERSIONABLE));
     }
 
     /**

@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.util.Text;
+import org.apache.jackrabbit.util.Text;
 
 /**
  * Simple manager for webdav locks.<br>

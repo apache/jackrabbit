@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.commons.chain.impl.ContextBase;
-
 import javax.jcr.Node;
 import java.io.InputStream;
 
@@ -33,7 +31,7 @@ import java.io.InputStream;
  * information is not needed in any of the known import commands but leaves this
  * I/O framework more generic.
  */
-public class ImportContext extends ContextBase {
+public class ImportContext extends AbstractContext {
 
     /**
      * The import root node, i.e. the parent node of the new content.
@@ -71,10 +69,29 @@ public class ImportContext extends ContextBase {
      * @param importRoot the import root node
      */
     public ImportContext(Node importRoot) {
+        this(null, importRoot);
+    }
+
+    /**
+     * Creats a new import context with the given root node and property defaults.
+     * @param base
+     * @param importRoot
+     */
+    public ImportContext(ImportContext base, Node importRoot) {
+        super(base);
         if (importRoot == null) {
             throw new IllegalArgumentException("importRoot can not be null.");
         }
         this.importRoot = importRoot;
+    }
+
+    /**
+     * Creates a new sub context which bases on this contexts properties
+     * @param importRoot
+     * @return
+     */
+    public ImportContext createSubContext(Node importRoot) {
+        return new ImportContext(this, importRoot);
     }
 
     /**
@@ -170,4 +187,5 @@ public class ImportContext extends ContextBase {
     public void setModificationTime(long modificationTime) {
         this.modificationTime = modificationTime;
     }
+
 }

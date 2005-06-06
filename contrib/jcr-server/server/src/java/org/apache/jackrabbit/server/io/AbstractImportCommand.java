@@ -16,17 +16,21 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.commons.chain.Command;
-import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import java.io.InputStream;
 
 /**
  * This Class implements an abstract import command for a nc-resource.
  */
-public abstract class AbstractImportCommand implements Command, JcrConstants {
+public abstract class AbstractImportCommand extends AbstractCommand {
+
+    /**
+     * the nodetype for the node
+     */
+    private String nodeType = "nt:file";
 
     /**
      * Executes this command by calling {@link #importResource} if
@@ -36,7 +40,7 @@ public abstract class AbstractImportCommand implements Command, JcrConstants {
      * @return the return value of the delegated method or false;
      * @throws Exception in an error occurrs
      */
-    public boolean execute(Context context) throws Exception {
+    public boolean execute(AbstractContext context) throws Exception {
         if (context instanceof ImportContext) {
             return execute((ImportContext) context);
         } else {
@@ -64,10 +68,52 @@ public abstract class AbstractImportCommand implements Command, JcrConstants {
             // ignore imports
             return false;
         }
-        if (importResource(context, parentNode, in)) {
+        // check 'file' node
+        Node fileNode = parentNode.hasNode(context.getSystemId())
+            ? parentNode.getNode(context.getSystemId())
+            : parentNode.addNode(context.getSystemId(), nodeType);
+
+        if (importResource(context, fileNode, in)) {
             context.setInputStream(null);
         }
+        // set current node
+        context.setNode(fileNode);
         return false;
+    }
+
+    /**
+     * Creates collection recursively.
+     *
+     * @param root
+     * @param relPath
+     * @return
+     * @throws RepositoryException
+     */
+    static public Node mkDirs(ImportContext context, Node root, String relPath)
+            throws RepositoryException {
+        String[] seg = Text.explode(relPath, '/');
+        for (int i=0; i< seg.length; i++) {
+            if (!root.hasNode(seg[i])) {
+                // not quite correct
+                ImportContext subctx = context.createSubContext(root);
+                subctx.setSystemId(seg[i]);
+                try {
+                    ImportCollectionChain.getChain().execute(subctx);
+                } catch (Exception e) {
+                    throw new RepositoryException(e);
+                }
+            }
+            root = root.getNode(seg[i]);
+        }
+        return root;
+    }
+
+    /**
+     * Sets the node type
+     * @param nodeType
+     */
+    public void setNodeType(String nodeType) {
+        this.nodeType = nodeType;
     }
 
     /**

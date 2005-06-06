@@ -14,7 +14,7 @@
             If you already have the repository registered in this appservers JNDI context,
             or if its accessible via RMI, you do not need to use this servlet.
         </description>
-        <servlet-class>org.apache.jackrabbit.server.RepositoryStartupServlet</servlet-class>
+        <servlet-class>org.apache.jackrabbit.j2ee.RepositoryStartupServlet</servlet-class>
 
         <init-param>
             <param-name>log4j-config</param-name>
@@ -77,7 +77,7 @@
             This servlet provides other servlets and jsps a common way to access
             the repository. The repository can be accessed via JNDI, RMI or Webdav.
         </description>
-        <servlet-class>org.apache.jackrabbit.client.RepositoryAccessServlet</servlet-class>
+        <servlet-class>org.apache.jackrabbit.j2ee.RepositoryAccessServlet</servlet-class>
 
         <init-param>
             <param-name>log4j-config</param-name>
@@ -126,11 +126,13 @@
         <!--
             RMI url, if RMI remoting is needed
         -->
+        <!--
         <init-param>
             <param-name>rmi-uri</param-name>
             <param-value>///jackrabbit.repository</param-value>
             <description>The URI for the RMI connection.</description>
         </init-param>
+        -->
 
         <load-on-startup>2</load-on-startup>
     </servlet>
@@ -143,7 +145,7 @@
         <description>
             The webdav servlet that connects HTTP request to the repository.
         </description>
-        <servlet-class>org.apache.jackrabbit.server.simple.WebdavServlet</servlet-class>
+        <servlet-class>org.apache.jackrabbit.j2ee.SimpleWebdavServlet</servlet-class>
 
         <init-param>
             <param-name>resource-path-prefix</param-name>
@@ -152,6 +154,18 @@
                 defines the prefix for spooling resources out of the repository.
             </description>
         </init-param>
+        <!--
+            Optional parameter to define the value of the 'WWW-Authenticate' header
+        -->
+        <!--
+        <init-param>
+            <param-name>authenticate-header</param-name>
+            <param-value>Basic Realm=Jackrabbit Webdav Server</param-value>
+            <description>
+                Defines the value of the 'WWW-Authenticate' header.
+            </description>
+        </init-param>
+        -->
         <init-param>
             <param-name>chain-catalog</param-name>
             <param-value>/WEB-INF/catalog.xml</param-value>
@@ -170,7 +184,7 @@
         <description>
             The webdav servlet that connects HTTP request to the repository.
         </description>
-        <servlet-class>org.apache.jackrabbit.server.jcr.JCRWebdavServerServlet</servlet-class>
+        <servlet-class>org.apache.jackrabbit.j2ee.JCRWebdavServerServlet</servlet-class>
 
         <init-param>
             <param-name>resource-path-prefix</param-name>

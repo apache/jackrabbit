@@ -16,10 +16,9 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.commons.chain.impl.ContextBase;
-
 import javax.jcr.Node;
 import java.io.InputStream;
+import java.util.Properties;
 
 /**
  * This Class implements a export context which is passed to the respective
@@ -30,7 +29,7 @@ import java.io.InputStream;
  * information is not needed in any of the known export commands but leaves this
  * I/O framework more generic.
  */
-public class ExportContext extends ContextBase {
+public class ExportContext extends AbstractContext {
 
     /**
      * the node to be exported
@@ -65,11 +64,34 @@ public class ExportContext extends ContextBase {
     /**
      * Creates a new ExportContext for the given node
      *
-     * @param node
+     * @param exportRoot
      */
-    public ExportContext(Node node) {
-        this.node = node;
+    public ExportContext(Node exportRoot) {
+        this(null, exportRoot);
     }
+
+    /**
+     * Creats a new import context with the given root node and property defaults.
+     * @param props
+     * @param exportRoot
+     */
+    public ExportContext(Properties props, Node exportRoot) {
+        super(props);
+        if (exportRoot == null) {
+            throw new IllegalArgumentException("exportRoot can not be null.");
+        }
+        this.node = exportRoot;
+    }
+
+    /**
+     * Creates a new sub context which bases on this contexts properties
+     * @param node
+     * @return
+     */
+    public ExportContext createSubContext(Node node) {
+        return new ExportContext(this, node);
+    }
+
 
     /**
      * Returns the input stream
