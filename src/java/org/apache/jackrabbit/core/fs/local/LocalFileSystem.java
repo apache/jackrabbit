@@ -23,13 +23,13 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.io.FileInputStream;
 
 /**
  * A <code>LocalFileSystem</code> ...
@@ -39,6 +39,8 @@ public class LocalFileSystem implements FileSystem {
     private static Logger log = Logger.getLogger(LocalFileSystem.class);
 
     private File root;
+
+    private HandleMonitor monitor = null;
 
     /**
      * Default constructor
@@ -127,6 +129,10 @@ public class LocalFileSystem implements FileSystem {
                 throw new FileSystemException(msg);
             }
         }
+        log.info("LocaaFileSystem initialized on " + root.getPath());
+        if (monitor != null) {
+            log.info("LocalFileSystem using handle monitor");
+        }
     }
 
     /**
@@ -181,6 +187,11 @@ public class LocalFileSystem implements FileSystem {
             FileUtil.delete(f);
         } catch (IOException ioe) {
             String msg = "failed to delete " + f.getPath();
+            if (monitor != null && monitor.isOpen(f)) {
+                log.error("Unable to delete. Still open streams");
+                monitor.dump(f);
+            }
+
             throw new FileSystemException(msg, ioe);
         }
     }
@@ -218,7 +229,11 @@ public class LocalFileSystem implements FileSystem {
     public InputStream getInputStream(String filePath) throws FileSystemException {
         File f = new File(root, osPath(filePath));
         try {
-            return new FileInputStream(f);
+            if (monitor == null) {
+                return new FileInputStream(f);
+            } else {
+                return monitor.open(f);
+            }
         } catch (FileNotFoundException fnfe) {
             String msg = f.getPath() + " does not denote an existing file";
             log.debug(msg);
@@ -415,5 +430,37 @@ public class LocalFileSystem implements FileSystem {
             throw new FileSystemException(msg, ioe);
         }
 */
+    }
+
+    /**
+     * Enables the usage of the handle monitor.
+     *
+     * @param enable
+     */
+    public void setEnableHandleMonitor(String enable) {
+        setEnableHandleMonitor(Boolean.valueOf(enable).booleanValue());
+    }
+
+
+    /**
+     * Returns if the handle monitor is enabled
+     */
+    public String getEnableHandleMonitor() {
+        return monitor == null ? "false" : "true";
+    }
+
+
+    /**
+     * Enables the usage of the handle monitor.
+     *
+     * @param enable
+     */
+    public void setEnableHandleMonitor(boolean enable) {
+        if (enable && monitor == null) {
+            monitor = new HandleMonitor();
+        }
+        if (!enable && monitor != null) {
+            monitor = null;
+        }
     }
 }
