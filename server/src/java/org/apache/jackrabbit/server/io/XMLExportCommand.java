@@ -91,6 +91,10 @@ public class XMLExportCommand extends AbstractExportCommand {
      * @throws Exception if an error occurrs.
      */
     public boolean exportNode(ExportContext context, Node content) throws Exception {
+        // first child of content is document root
+        if (content.getNodes().hasNext()) {
+            content = content.getNodes().nextNode();
+        }
         File tmpfile = File.createTempFile("__webdav", ".xml");
         FileOutputStream out = new FileOutputStream(tmpfile);
         if (mode.equals(MODE_DOCVIEW)) {

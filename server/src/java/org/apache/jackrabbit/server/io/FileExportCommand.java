@@ -74,7 +74,7 @@ public class FileExportCommand extends AbstractExportCommand {
      */
     public boolean canHandle(Node node) {
         try {
-            return node.hasNode(JCR_CONTENT) && node.getNode(JCR_CONTENT).isNodeType(NT_RESOURCE);
+            return node.isNodeType(NT_RESOURCE) || node.hasNode(JCR_CONTENT) && node.getNode(JCR_CONTENT).isNodeType(NT_RESOURCE);
         } catch (RepositoryException e) {
             return false;
         }

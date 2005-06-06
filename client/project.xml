@@ -23,34 +23,39 @@
     <id>jcr-client</id>
     <groupId>jcr-server</groupId>
     <type>jar</type>
-    <name>Client Library</name>
+    <name>JCRWebdavServer Client Library</name>
 
     <!-- ====================================================================== -->
     <!-- D E P E N D E N C I E S                                                -->
     <!-- ====================================================================== -->
     <dependencies>
+        <!-- internal dependencies -->
         <dependency>
             <artifactId>jcr-webdav</artifactId>
             <groupId>jcr-server</groupId>
             <version>${pom.currentVersion}</version>
         </dependency>
+        
+        <!-- external dependencies -->
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
-            <version>0.16.4.1</version>
-            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
+            <version>${jackrabbit.build.version.jcr}</version>
         </dependency>
         <dependency>
             <id>jackrabbit</id>
-            <version>0.16.4.1-dev</version>
+            <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
-        <dependency>
-            <id>jcr-rmi</id>
-            <version>0.16.4.1</version>
-        </dependency>
+        
+        <!-- non-jackrabbit dependencies -->
         <dependency>
             <id>jdom</id>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.6.2</version>
         </dependency>
         <dependency>
             <id>log4j</id>
@@ -67,6 +72,15 @@
         <dependency>
           <id>commons-collections</id>
           <version>3.1</version>
+        </dependency>
+        <dependency>
+          <id>commons-logging</id>
+          <version>1.0</version>
+        </dependency>
+        <dependency>
+          <groupId>xml-apis</groupId>
+          <artifactId>xmlParserAPIs</artifactId>
+          <version>2.0.2</version>
         </dependency>
     </dependencies>
 

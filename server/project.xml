@@ -29,29 +29,26 @@
     <!-- D E P E N D E N C I E S                                                -->
     <!-- ====================================================================== -->
     <dependencies>
+        <!-- internal dependencies -->
         <dependency>
             <artifactId>jcr-webdav</artifactId>
             <groupId>jcr-server</groupId>
             <version>${pom.currentVersion}</version>
         </dependency>
         <dependency>
-            <artifactId>jcr-client</artifactId>
+            <artifactId>commons-jcr</artifactId>
             <groupId>jcr-server</groupId>
             <version>${pom.currentVersion}</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
         </dependency>
+
+        <!-- external dependencies -->
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
-            <version>0.16.4.1</version>
-            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
+            <version>${jackrabbit.build.version.jcr}</version>
         </dependency>
-        <dependency>
-            <id>jackrabbit</id>
-            <version>0.16.4.1-dev</version>
-        </dependency>
+        
+        <!-- non-jackrabbit dependencies -->
         <dependency>
             <id>jdom</id>
             <version>1.0</version>
@@ -63,10 +60,6 @@
         <dependency>
             <id>servletapi</id>
             <version>2.3</version>
-        </dependency>
-        <dependency>
-            <id>jcr-rmi</id>
-            <version>0.16.4.1</version>
         </dependency>
         <dependency>
             <id>commons-chain</id>

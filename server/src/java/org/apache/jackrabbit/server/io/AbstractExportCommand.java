@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.commons.chain.Command;
-import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.JcrConstants;
-
 import javax.jcr.Node;
 
 /**
@@ -35,7 +31,7 @@ import javax.jcr.Node;
  * <li>jcr:mimeType
  * <ul>
  */
-public abstract class AbstractExportCommand implements Command, JcrConstants {
+public abstract class AbstractExportCommand extends AbstractCommand {
 
     /**
      * Executes this command by calling {@link #execute(ExportContext)} if
@@ -45,7 +41,7 @@ public abstract class AbstractExportCommand implements Command, JcrConstants {
      * @return the return value of the delegated method or false;
      * @throws Exception in an error occurrs
      */
-    public boolean execute(Context context) throws Exception {
+    public boolean execute(AbstractContext context) throws Exception {
         if (context instanceof ExportContext) {
             return execute((ExportContext) context);
         } else {

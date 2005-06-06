@@ -23,12 +23,13 @@
     <id>jackrabbit-server</id>
     <groupId>jcr-server</groupId>
     <type>war</type>
-    <name>Jackrabbit-Server WebApplication</name>
+    <name>JCRWebdavServer WebApplication</name>
     
     <!-- ====================================================================== -->
     <!-- D E P E N D E N C I E S                                                -->
     <!-- ====================================================================== -->
     <dependencies>
+        <!-- internal dependencies -->
         <dependency>
             <artifactId>jcr-server</artifactId>
             <groupId>jcr-server</groupId>
@@ -53,23 +54,31 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
-
+        <dependency>
+            <artifactId>commons-jcr</artifactId>
+            <groupId>jcr-server</groupId>
+            <version>${pom.currentVersion}</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        
+        <!-- external dependencies -->
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
-            <version>0.16.4.1</version>
-            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
+            <version>${jackrabbit.build.version.jcr}</version>
         </dependency>
         <dependency>
             <id>jackrabbit</id>
-            <version>0.16.4.1-dev</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
+            <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
+        <dependency>
+            <id>jcr-rmi</id>
+            <version>${jackrabbit.build.version.jcr.rmi}</version>
+        </dependency>
+        
+        <!-- non-jackrabbit dependencies -->
         <dependency>
             <id>jdom</id>
             <version>1.0</version>
@@ -89,12 +98,18 @@
             <version>3.8.1</version>
         </dependency>
         <dependency>
-            <id>jcr-rmi</id>
-            <version>0.16.4.1</version>
-            <properties>
-                <war.bundle>false</war.bundle>
-            </properties>
+            <id>commons-chain</id>
+            <version>1.0</version>
         </dependency>
+        <dependency>
+            <id>commons-digester</id>
+            <version>1.6</version>
+        </dependency>
+        <dependency>
+            <id>commons-beanutils</id>
+            <version>1.7.0</version>
+        </dependency>
+
         <!-- dependencies of jackrabbit -->
         <dependency>
           <id>concurrent</id>
@@ -134,6 +149,7 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
+
         <!--
           cqfs-jackrabbit and cqfs are optional runtime dependencies 
           (an alternative FileSystem implementation); 
@@ -142,8 +158,8 @@
         <dependency>
           <groupId>cqfs</groupId>
           <artifactId>cqfs-jackrabbit</artifactId>
-          <version>3.5.6-SNAPSHOT</version>
-          <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6-SNAPSHOT.jar</url>
+          <version>3.5.6</version>
+          <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6.jar</url>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
@@ -151,8 +167,8 @@
         <dependency>
           <groupId>cqfs</groupId>
           <artifactId>cqfs</artifactId>
-          <version>3.5.6-SNAPSHOT</version>
-          <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6-SNAPSHOT.jar</url>
+          <version>3.5.6</version>
+          <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6.jar</url>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>

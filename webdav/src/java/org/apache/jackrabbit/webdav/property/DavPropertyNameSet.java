@@ -22,6 +22,7 @@ import org.jdom.Element;
 import java.util.HashSet;
 import java.util.Collection;
 import java.util.List;
+import java.util.Iterator;
 
 /**
  * <code>DavPropertyNameSet</code> represents a Set of {@link DavPropertyName}
@@ -99,5 +100,25 @@ public class DavPropertyNameSet extends HashSet {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Returns the xml representation of this property name set with the
+     * following format:
+     * <pre>
+     * &lt;!ELEMENT prop (ANY) &gt;
+     * where ANY consists of a list of elements each reflecting the xml
+     * representation of an entry in this set.
+     * </pre>
+     *
+     * @return xml representation
+     */
+    public Element toXml() {
+        Element prop = new Element(DavConstants.XML_PROP, DavConstants.NAMESPACE);
+        Iterator it = super.iterator();
+        while (it.hasNext()) {
+            prop.addContent(((DavPropertyName)it.next()).toXml());
+        }
+        return prop;
     }
 }

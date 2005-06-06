@@ -21,7 +21,6 @@ import java.util.*;
 import java.io.*;
 
 import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.util.Text;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.lock.*;
@@ -30,6 +29,7 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.server.io.ImportContext;
 import org.apache.jackrabbit.server.io.ImportResourceChain;
 import org.apache.jackrabbit.server.io.ImportCollectionChain;
+import org.apache.jackrabbit.util.Text;
 import org.apache.log4j.Logger;
 
 /**
