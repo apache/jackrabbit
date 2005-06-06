@@ -299,7 +299,7 @@ public class InternalValue {
             throws RepositoryException {
         switch (type) {
             case PropertyType.BINARY:
-                return (BLOBFileValue) val;
+                return new BinaryValue(((BLOBFileValue) val).getStream());
             case PropertyType.BOOLEAN:
                 return new BooleanValue(((Boolean) val));
             case PropertyType.DATE:
