@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.fs.local;
 
 import org.apache.log4j.Logger;
+import org.apache.jackrabbit.core.util.LazyFileInputStream;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,8 +25,7 @@ import java.util.HashSet;
 import java.io.InputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.FileDescriptor;
 
 /**
  * This Class implements a very simple open handle monitor for the local
@@ -185,12 +185,7 @@ public class HandleMonitor {
          * Delegating input stream that registers/unregisters itself from the
          * handle.
          */
-        private class MonitoredInputStream extends InputStream {
-
-            /**
-             * the underlying input stream
-             */
-            private final FileInputStream in;
+        private class MonitoredInputStream extends LazyFileInputStream {
 
             /**
              * throwable of the time, the stream was created
@@ -198,12 +193,37 @@ public class HandleMonitor {
             private final Throwable throwable;
 
             /**
-             * Creates a new stream
-             * @param file
-             * @throws FileNotFoundException
+             * {@inheritDoc}
              */
             public MonitoredInputStream(File file) throws FileNotFoundException {
-                in = new FileInputStream(file);
+                super(file);
+                // register the throwable
+                try {
+                    throw new Exception();
+                } catch (Exception e) {
+                    throwable = e;
+                }
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            public MonitoredInputStream(FileDescriptor fdObj) {
+                super(fdObj);
+                // register the throwable
+                try {
+                    throw new Exception();
+                } catch (Exception e) {
+                    throwable = e;
+                }
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            public MonitoredInputStream(String name) throws FileNotFoundException {
+                super(name);
+                // register the throwable
                 try {
                     throw new Exception();
                 } catch (Exception e) {
@@ -218,69 +238,6 @@ public class HandleMonitor {
                 log.info("- opened by : ", throwable);
             }
 
-            /**
-             * {@inheritDoc}
-             */
-            public int available() throws IOException {
-                return in.available();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public void close() throws IOException {
-                in.close();
-                Handle.this.close(this);
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public synchronized void reset() throws IOException {
-                in.reset();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public boolean markSupported() {
-                return in.markSupported();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public synchronized void mark(int readlimit) {
-                in.mark(readlimit);
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public long skip(long n) throws IOException {
-                return in.skip(n);
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public int read(byte b[]) throws IOException {
-                return in.read(b);
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public int read(byte b[], int off, int len) throws IOException {
-                return in.read(b, off, len);
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public int read() throws IOException {
-                return in.read();
-            }
         }
     }
 
