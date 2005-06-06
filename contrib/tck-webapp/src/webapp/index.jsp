@@ -154,7 +154,7 @@ if (mode.equals("test")) {
             img.src = "docroot/imgs/green.png";
             img.setAttribute("title", "The Tck web application is up to date.");
             // tell server that a check got performed (perform in 24h again)
-            if (!doNotTell) {
+            if (doNotTell != true) {
                 tellChecked(<%= currentTime %>, true);
             }
         }
@@ -167,7 +167,7 @@ if (mode.equals("test")) {
             link.setAttribute("href", "<%= RepositoryServlet.getTckUpdateUrl() %>");
             link.setAttribute("target", "_new");
             // tell server that a check got performed (perform in 24h again)
-            if (!doNotTell) {
+            if (doNotTell != true) {
                 tellChecked(<%= currentTime %>, false);
             }
         }
@@ -185,8 +185,8 @@ if (mode.equals("test")) {
             <%
             if (checkIt) {%>
                 var tester = new Image();
-                tester.onload = setGreen;
-                tester.onerror = setRed;
+                tester.onload = setRed;
+                tester.onerror = setGreen;
                 tester.src = checkerurl;
                 <%
             } else {
