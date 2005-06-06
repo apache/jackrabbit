@@ -26,8 +26,8 @@ function isOutOfDate() {
 
 function excludeListIsUpToDate(url) {
     var tester = new Image();
-    tester.onload = isUpToDate;
-    tester.onerror = isOutOfDate;
+    tester.onload = isOutOfDate;
+    tester.onerror = isUpToDate;
     tester.src = url;
 }
 
