@@ -47,9 +47,9 @@ public class ReportType implements DeltaVConstants {
      * @see #register(String, Namespace, Class)
      */
     private ReportType(String name, Namespace namespace, Class reportClass) {
-	this.name = name;
-	this.namespace = namespace;
-	this.reportClass = reportClass;
+        this.name = name;
+        this.namespace = namespace;
+        this.reportClass = reportClass;
     }
 
     /**
@@ -59,21 +59,22 @@ public class ReportType implements DeltaVConstants {
      * @throws DavException
      */
     public Report createReport() throws DavException {
-	try {
-	    return (Report) reportClass.getConstructor(new Class[0]).newInstance(new Object[0]);
-	} catch (Exception e) {
-	    // should never occur
-	    throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register Report.");
-	}
-    }    
+        try {
+            return (Report) reportClass.getConstructor(new Class[0]).newInstance(new Object[0]);
+        } catch (Exception e) {
+            // should never occur
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register Report.");
+        }
+    }
 
     /**
-     * Returns an Xml element representing this report type
+     * Returns an Xml element representing this report type. It may be used to
+     * build the body for a REPORT request.
      *
      * @return Xml representation
      */
     public Element toXml() {
-	return new Element(name, namespace);
+        return new Element(name, namespace);
     }
 
     /**
@@ -84,13 +85,13 @@ public class ReportType implements DeltaVConstants {
      * @return
      */
     public boolean isRequestedReportType(ReportInfo reqInfo) {
-	if (reqInfo != null) {
-	    Element elem = reqInfo.getReportElement();
-	    if (elem != null) {
-		return name.equals(elem.getName()) && namespace.equals(elem.getNamespace());
-	    }
-	}
-	return false;
+        if (reqInfo != null) {
+            Element elem = reqInfo.getReportElement();
+            if (elem != null) {
+                return name.equals(elem.getName()) && namespace.equals(elem.getNamespace());
+            }
+        }
+        return false;
     }
 
     /**
@@ -106,34 +107,34 @@ public class ReportType implements DeltaVConstants {
      * it does not provide an empty constructor.
      */
     public static ReportType register(String name, Namespace namespace, Class reportClass) {
-	if (name == null || namespace == null || reportClass == null) {
-	    throw new IllegalArgumentException("A ReportType cannot be registered with a null name, namespace or report class");
-	}
+        if (name == null || namespace == null || reportClass == null) {
+            throw new IllegalArgumentException("A ReportType cannot be registered with a null name, namespace or report class");
+        }
 
-	String key = buildKey(namespace, name);
-	if (types.containsKey(key)) {
-	    return (ReportType) types.get(key);
-	} else {
-	    // test if this report class has an empty constructor and implements Report interface
-	    boolean isValidClass = false;
-	    Class[] interfaces = reportClass.getInterfaces();
-	    for (int i = 0; i < interfaces.length && !isValidClass; i++) {
-		isValidClass = (interfaces[i] == Report.class);
-	    }
-	    if (!isValidClass) {
-		throw new IllegalArgumentException("The specified report class must implement the Report interface.");
-	    }
+        String key = buildKey(namespace, name);
+        if (types.containsKey(key)) {
+            return (ReportType) types.get(key);
+        } else {
+            // test if this report class has an empty constructor and implements Report interface
+            boolean isValidClass = false;
+            Class[] interfaces = reportClass.getInterfaces();
+            for (int i = 0; i < interfaces.length && !isValidClass; i++) {
+                isValidClass = (interfaces[i] == Report.class);
+            }
+            if (!isValidClass) {
+                throw new IllegalArgumentException("The specified report class must implement the Report interface.");
+            }
 
-	    try {
-		reportClass.getConstructor(new Class[0]);
-	    } catch (NoSuchMethodException e) {
-		throw new IllegalArgumentException("The specified report class must provide a default constructor.");
-	    }
+            try {
+                reportClass.getConstructor(new Class[0]);
+            } catch (NoSuchMethodException e) {
+                throw new IllegalArgumentException("The specified report class must provide a default constructor.");
+            }
 
-	    ReportType type = new ReportType(name, namespace, reportClass);
-	    types.put(key, type);
-	    return type;
-	}
+            ReportType type = new ReportType(name, namespace, reportClass);
+            types.put(key, type);
+            return type;
+        }
     }
 
     /**
@@ -145,15 +146,15 @@ public class ReportType implements DeltaVConstants {
      * if the requested report type has not been registered yet.
      */
     public static ReportType getType(ReportInfo reportInfo) {
-	if (reportInfo == null) {
-	    throw new IllegalArgumentException("ReportInfo must not be null.");
-	}
-	String key = buildKey(reportInfo.getReportElement().getNamespace(), reportInfo.getReportElement().getName());
-	if (types.containsKey(key)) {
-	    return (ReportType) types.get(key);
-	} else {
-	    throw new IllegalArgumentException("The request report '"+key+"' has not been registered yet.");
-	}
+        if (reportInfo == null) {
+            throw new IllegalArgumentException("ReportInfo must not be null.");
+        }
+        String key = buildKey(reportInfo.getReportElement().getNamespace(), reportInfo.getReportElement().getName());
+        if (types.containsKey(key)) {
+            return (ReportType) types.get(key);
+        } else {
+            throw new IllegalArgumentException("The request report '"+key+"' has not been registered yet.");
+        }
     }
 
     /**
@@ -164,6 +165,6 @@ public class ReportType implements DeltaVConstants {
      * @return key identifying the report with the given namespace and name
      */
     private static String buildKey(Namespace namespace, String name) {
-	return "{" + namespace.getURI() + "}" + name;
+        return "{" + namespace.getURI() + "}" + name;
     }
 }

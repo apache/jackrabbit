@@ -20,16 +20,17 @@ import org.apache.commons.chain.impl.ChainBase;
 import org.apache.commons.chain.impl.CatalogFactoryBase;
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Catalog;
-import org.apache.jackrabbit.JcrConstants;
 
 /**
  * This Class implements a default chain for exporting collection resources.
  * It adds the following commands:
  * <ul>
- * <li>{@link DirListingExportCommand}("nt:folder").
+ * <li>{@link DirListingExportCommand}()
  * </ul>
+ *
+ * @see DirListingExportCommand
  */
-public class ExportCollectionChain extends ChainBase implements JcrConstants {
+public class ExportCollectionChain extends ChainBase {
 
     /**
      * the name of this chain
@@ -41,7 +42,7 @@ public class ExportCollectionChain extends ChainBase implements JcrConstants {
      */
     public ExportCollectionChain() {
         super();
-        addCommand(new DirListingExportCommand(NT_FOLDER));
+        addCommand(new DirListingExportCommand());
     }
 
     /**

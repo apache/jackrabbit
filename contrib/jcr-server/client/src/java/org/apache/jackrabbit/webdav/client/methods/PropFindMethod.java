@@ -17,19 +17,10 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.jdom.Element;
 import org.jdom.Document;
-import org.jdom.JDOMException;
-import org.xml.sax.ContentHandler;
-
-import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * <code>PropFindMethod</code>...
@@ -39,47 +30,46 @@ public class PropFindMethod extends DavMethodBase {
     private static Logger log = Logger.getLogger(PropFindMethod.class);
 
     public PropFindMethod(String uri) {
-	this(uri, PROPFIND_ALL_PROP, new DavPropertyNameSet(), DEPTH_INFINITY);
+        this(uri, PROPFIND_ALL_PROP, new DavPropertyNameSet(), DEPTH_INFINITY);
     }
 
     public PropFindMethod(String uri, DavPropertyNameSet propNameSet, int depth) {
-	this(uri, PROPFIND_BY_PROPERTY, propNameSet, depth);
+        this(uri, PROPFIND_BY_PROPERTY, propNameSet, depth);
     }
 
     public PropFindMethod(String uri, int propfindType, int depth) {
-	this(uri, propfindType, new DavPropertyNameSet(), depth);
+        this(uri, propfindType, new DavPropertyNameSet(), depth);
     }
 
     private PropFindMethod(String uri, int propfindType, DavPropertyNameSet propNameSet, int depth) {
         super(uri);
 
-	DepthHeader dh = new DepthHeader(depth);
-	setRequestHeader(dh.getHeaderName(), dh.getHeaderValue());
-	setRequestHeader("Content-Type","text/xml; charset=UTF-8");
+        DepthHeader dh = new DepthHeader(depth);
+        setRequestHeader(dh.getHeaderName(), dh.getHeaderValue());
+        setRequestHeader("Content-Type","text/xml; charset=UTF-8");
 
-	// build the request body
-	Element propfind = new Element(XML_PROPFIND, NAMESPACE);
-	switch (propfindType) {
-	    case PROPFIND_ALL_PROP:
-		propfind.addContent(new Element(XML_ALLPROP, NAMESPACE));
-		break;
-	    case PROPFIND_PROPERTY_NAMES:
-		propfind.addContent(new Element(XML_PROPNAME, NAMESPACE));
-		break;
-	    default:
-		Element prop = new Element(XML_PROP, NAMESPACE);
-		propfind.addContent(prop);
-		Iterator it = propNameSet.iterator();
-		while (it.hasNext()) {
-		    prop.addContent(((DavPropertyName)it.next()).toXml());
-		}
-		break;
-	}
-	Document propfindBody = new Document(propfind);
-	setRequestBody(propfindBody);
+        // build the request body
+        Element propfind = new Element(XML_PROPFIND, NAMESPACE);
+        switch (propfindType) {
+            case PROPFIND_ALL_PROP:
+                propfind.addContent(new Element(XML_ALLPROP, NAMESPACE));
+                break;
+            case PROPFIND_PROPERTY_NAMES:
+                propfind.addContent(new Element(XML_PROPNAME, NAMESPACE));
+                break;
+            default:
+                if (propNameSet == null) {
+                    propfind.addContent(new Element(XML_PROP, NAMESPACE));
+                } else {
+                    propfind.addContent(propNameSet.toXml());
+                }
+                break;
+        }
+        Document propfindBody = new Document(propfind);
+        setRequestBody(propfindBody);
     }
 
     public String getName() {
-	return DavMethods.METHOD_PROPFIND;
+        return DavMethods.METHOD_PROPFIND;
     }
 }

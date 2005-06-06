@@ -16,17 +16,13 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.commons.chain.Command;
-import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.JcrConstants;
-
 import javax.jcr.Node;
 
 /**
  * This Class implements a import command that adds a mixin node type to the
  * current node.
  */
-public class AddNodeCommand implements Command, JcrConstants {
+public class AddNodeCommand extends AbstractCommand {
 
     /**
      * the nodetype to be added.
@@ -74,7 +70,7 @@ public class AddNodeCommand implements Command, JcrConstants {
      * @return <code>false</code>.
      * @throws Exception if an error occurrs.
      */
-    public boolean execute(Context context) throws Exception {
+    public boolean execute(AbstractContext context) throws Exception {
         if (context instanceof ImportContext) {
             return execute((ImportContext) context);
         } else {

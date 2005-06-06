@@ -16,17 +16,13 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.commons.chain.Command;
-import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.JcrConstants;
-
 import javax.jcr.Node;
 
 /**
  * This Class implements a import command that adds a mixin node type to the
  * current node.
  */
-public class AddMixinCommand implements Command, JcrConstants {
+public class AddMixinCommand extends AbstractCommand {
 
     /**
      * the mixin node type to add
@@ -74,7 +70,7 @@ public class AddMixinCommand implements Command, JcrConstants {
      * @return <code>false</code>.
      * @throws Exception if an error occurrs.
      */
-    public boolean execute(Context context) throws Exception {
+    public boolean execute(AbstractContext context) throws Exception {
         if (context instanceof ImportContext) {
             return execute((ImportContext) context);
         } else {
@@ -94,7 +90,9 @@ public class AddMixinCommand implements Command, JcrConstants {
         if (nodeType == null) {
             throw new IllegalArgumentException("AddMixinCommand needs 'nodeType' attribute.");
         }
-        parentNode.addMixin(nodeType);
+        if (!parentNode.isNodeType(nodeType)) {
+            parentNode.addMixin(nodeType);
+        }
         return false;
     }
 }

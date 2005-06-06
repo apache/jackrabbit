@@ -20,15 +20,36 @@ import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.jackrabbit.client.RepositoryAccessServlet;
+import org.apache.jackrabbit.server.CredentialsProvider;
+import org.apache.jackrabbit.server.SessionProvider;
 
 /**
  * Simple implementation of the {@link DavSessionProvider}
- * interface that uses the {@link RepositoryAccessServlet} to locate
+ * interface that uses a {@link CredentialsProvider} to locate
  * credentials in the request, log into the respository, and provide
  * a {@link DavSession} to the request.
  */
 public class DavSessionProviderImpl implements DavSessionProvider {
+
+    /**
+     * the repository
+     */
+    private final Repository repository;
+
+    /**
+     * the credentials provider
+     */
+    private final SessionProvider sesProvider;
+
+    /**
+     * Creates a new DavSessionProviderImpl
+     * @param rep
+     * @param sesProvider
+     */
+    public DavSessionProviderImpl(Repository rep, SessionProvider sesProvider) {
+        this.repository = rep;
+        this.sesProvider = sesProvider;
+    }
 
     /**
      * Acquires a DavSession. Upon success, the WebdavRequest will
@@ -38,20 +59,18 @@ public class DavSessionProviderImpl implements DavSessionProvider {
      *
      * @param request
      * @throws DavException if a problem occurred while obtaining the session
-     * @see DavSessionProvider#acquireSession(org.apache.jackrabbit.webdav.WebdavRequest)
+     * @see DavSessionProvider#attachSession(org.apache.jackrabbit.webdav.WebdavRequest)
      */
-    public void acquireSession(WebdavRequest request) throws DavException {
+    public boolean attachSession(WebdavRequest request) throws DavException {
         try {
-            // extract credentials from the auth header. depending of the
-            // configuration of the RepositoryAccessServlet, this could also
-            // throw a login excetpion.
-            Credentials creds = RepositoryAccessServlet.getCredentialsFromHeader(
-                    request.getHeader(DavConstants.HEADER_AUTHORIZATION));
-
             // login to repository
-            Session repSession = RepositoryAccessServlet.getRepository().login(creds);
+            Session repSession = sesProvider.getSession(request, repository, null);
+            if (repSession == null) {
+                return false;
+            }
             DavSession ds = new DavSessionImpl(repSession);
             request.setDavSession(ds);
+            return true;
         } catch (LoginException e) {
 	    throw new JcrDavException(e);
         } catch (RepositoryException e) {

@@ -17,13 +17,9 @@
 package org.apache.jackrabbit.server.io;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.util.Text;
-import org.apache.jackrabbit.JcrConstants;
-import org.apache.commons.chain.Context;
-import org.apache.commons.chain.Command;
+import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import java.io.InputStream;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;
@@ -32,7 +28,7 @@ import java.util.zip.ZipEntry;
  * This Class implements an import command that reads entries from a zip input
  * stream and delegates the extracted file back to the import chain.
  */
-public class ZIPImportCommand implements Command, JcrConstants {
+public class ZIPImportCommand extends AbstractCommand {
 
     /** the default logger */
     private static final Logger log = Logger.getLogger(ZIPImportCommand.class);
@@ -43,6 +39,11 @@ public class ZIPImportCommand implements Command, JcrConstants {
     public static final String ZIP_CONTENT_TYPE = "application/zip";
 
     /**
+     * flag, indicating if zip should be extracted recusively
+     */
+    private boolean recursive = false;
+            
+    /**
      * Executes this command by calling {@link #importResource} if
      * the given context is of the correct class.
      *
@@ -50,7 +51,7 @@ public class ZIPImportCommand implements Command, JcrConstants {
      * @return the return value of the delegated method or false;
      * @throws Exception in an error occurrs
      */
-    public boolean execute(Context context) throws Exception {
+    public boolean execute(AbstractContext context) throws Exception {
         if (context instanceof ImportContext) {
             return execute((ImportContext) context);
         } else {
@@ -59,28 +60,30 @@ public class ZIPImportCommand implements Command, JcrConstants {
     }
 
     /**
-     * Executes this command. It checks if this command can handle the content
-     * type and delegates it to {@link #importResource}. If the import is
-     * successfull, the input stream of the importcontext is cleared.
-     *
-     * @param context the import context
-     * @return false
-     * @throws Exception if an error occurrs
+     * Override default behaviour and abort chain if input is processed.
+     * @param context
+     * @return
+     * @throws Exception
      */
     public boolean execute(ImportContext context) throws Exception {
+        if (!canHandle(context.getContentType())) {
+            // ignore imports
+            return false;
+        }
+        // disable this command for further subcommands if recursive is false
+        context.enableCommand(getId(), recursive);
+
         Node parentNode = context.getNode();
         InputStream in = context.getInputStream();
         if (in == null) {
             // assume already consumed
             return false;
         }
-        if (!canHandle(context.getContentType())) {
-            // ignore imports
-            return false;
+        if (importResource(context, parentNode, in)) {
+            context.setInputStream(null);
+            return true;
         }
-        importResource(parentNode, in);
-        context.setInputStream(null);
-        return true;
+        return false;
     }
 
     /**
@@ -91,7 +94,8 @@ public class ZIPImportCommand implements Command, JcrConstants {
      * @param in the input stream
      * @throws Exception in an error occurrs
      */
-    private void importResource(Node parentNode, InputStream in)
+
+    public boolean importResource(ImportContext context, Node parentNode, InputStream in)
             throws Exception {
 
         // assuming zip content
@@ -100,19 +104,19 @@ public class ZIPImportCommand implements Command, JcrConstants {
         while ((entry=zin.getNextEntry())!=null) {
             log.info("entry: " + entry.getName() + " size: " + entry.getSize());
             if (entry.isDirectory()) {
-                mkDirs(parentNode, Text.makeValidJCRPath(entry.getName()));
+                AbstractImportCommand.mkDirs(context, parentNode, Text.makeValidJCRPath(entry.getName()));
                 zin.closeEntry();
             } else {
                 String path = Text.makeValidJCRPath(entry.getName());
                 if (path.charAt(0)!='/') {
                     path  = "/" + path;
                 }
-                Node parent = mkDirs(parentNode, Text.getRelativeParent(path, 1));
+                Node parent = AbstractImportCommand.mkDirs(context, parentNode, Text.getRelativeParent(path, 1));
 
                 BoundedInputStream bin = new BoundedInputStream(zin);
                 bin.setPropagateClose(false);
 
-                ImportContext subctx = new ImportContext(parent);
+                ImportContext subctx = context.createSubContext(parent);
                 subctx.setInputStream(bin);
                 subctx.setSystemId(Text.getLabel(path));
                 subctx.setModificationTime(entry.getTime());
@@ -121,32 +125,7 @@ public class ZIPImportCommand implements Command, JcrConstants {
             }
         }
         zin.close();
-    }
-
-    /**
-     * Creates collection recursively.
-     *
-     * @param root
-     * @param relPath
-     * @return
-     * @throws RepositoryException
-     */
-    private Node mkDirs(Node root, String relPath) throws RepositoryException {
-        String[] seg = Text.explode(relPath, '/');
-        for (int i=0; i< seg.length; i++) {
-            if (!root.hasNode(seg[i])) {
-                // not quite correct
-                ImportContext subctx = new ImportContext(root);
-                subctx.setSystemId(seg[i]);
-                try {
-                    ImportCollectionChain.getChain().execute(subctx);
-                } catch (Exception e) {
-                    throw new RepositoryException(e);
-                }
-            }
-            root = root.getNode(seg[i]);
-        }
-        return root;
+        return true;
     }
 
     /**
@@ -157,5 +136,13 @@ public class ZIPImportCommand implements Command, JcrConstants {
      */
     public boolean canHandle(String contentType) {
         return ZIP_CONTENT_TYPE.equals(contentType);
+    }
+
+    /**
+     * Sets if the zips should be extracted again
+     * @param recursive
+     */
+    public void setRecursive(boolean recursive) {
+        this.recursive = recursive;
     }
 }

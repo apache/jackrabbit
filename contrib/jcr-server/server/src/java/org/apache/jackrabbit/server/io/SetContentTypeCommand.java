@@ -16,16 +16,18 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.commons.chain.Command;
-import org.apache.commons.chain.Context;
-
 /**
  * This Class implements...
  *
  * @author tripod
  * @version $Revision:$, $Date:$
  */
-public class SetContentTypeCommand implements Command {
+public class SetContentTypeCommand extends AbstractCommand {
+
+    /**
+     * the mime resolver
+     */
+    private MimeResolver resolver = new MimeResolver();
 
     /**
      * Executes this command by calling {@link #execute(ImportContext)} if
@@ -35,7 +37,7 @@ public class SetContentTypeCommand implements Command {
      * @return the return value of the delegated method or false;
      * @throws Exception in an error occurrs
      */
-    public boolean execute(Context context) throws Exception {
+    public boolean execute(AbstractContext context) throws Exception {
         if (context instanceof ImportContext) {
             return execute((ImportContext) context);
         } else {
@@ -54,14 +56,7 @@ public class SetContentTypeCommand implements Command {
     public boolean execute(ImportContext context) throws Exception {
         if (context.getContentType() == null) {
             String name = context.getSystemId();
-            // todo: add extensible list
-            if (name.endsWith(".xml")) {
-                context.setContentType("text/xml");
-            } else if (name.endsWith(".zip")) {
-                context.setContentType("application/zip");
-            } else {
-                context.setContentType("application/octet-stream");
-            }
+            context.setContentType(resolver.getMimeType(name));
         }
         return false;
     }

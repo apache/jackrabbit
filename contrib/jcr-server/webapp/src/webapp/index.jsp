@@ -1,13 +1,13 @@
-<%@ page import="org.apache.jackrabbit.server.simple.WebdavServlet,
+<%@ page import="org.apache.jackrabbit.j2ee.SimpleWebdavServlet,
 		 javax.jcr.Repository,
-		 org.apache.jackrabbit.client.RepositoryAccessServlet"%><%
+		 org.apache.jackrabbit.j2ee.RepositoryAccessServlet"%><%
 %><html>
 <head>
 <title>Jackrabbit Examples</title>
 </head>
 <body>
 <ul>
-<li><a href="<%= request.getContextPath() %><%= WebdavServlet.getPathPrefix() %>/">Repository Browser</a></li>
+<li><a href="<%= request.getContextPath() %><%= SimpleWebdavServlet.getPathPrefix() %>/">Repository Browser</a></li>
 <%--
 <li><a href="<%= request.getContextPath() %>/example.jsp">Repository Servlet Example</a></li>
 --%>
