@@ -250,13 +250,22 @@ public class WorkspaceImpl implements Workspace, Constants {
             throw new RepositoryException(msg, mpe);
         }
 
-        boolean succeeded = false;
         BatchedItemOperations ops =
                 new BatchedItemOperations(stateMgr, rep.getNodeTypeRegistry(),
                         getLockManager(), session, hierMgr,
                         session.getNamespaceResolver());
+
         try {
             ops.edit();
+        } catch (IllegalStateException e) {
+            String msg = "unable to start edit operation";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        boolean succeeded = false;
+
+        try {
             ops.copy(srcPath, srcWsp.getItemStateManager(),
                     srcWsp.getHierarchyManager(),
                     ((SessionImpl) srcWsp.getSession()).getAccessManager(),
@@ -462,13 +471,22 @@ public class WorkspaceImpl implements Workspace, Constants {
             throw new RepositoryException(msg, mpe);
         }
 
-        boolean succeeded = false;
         BatchedItemOperations ops =
                 new BatchedItemOperations(stateMgr, rep.getNodeTypeRegistry(),
                         getLockManager(), session, hierMgr,
                         session.getNamespaceResolver());
+
         try {
             ops.edit();
+        } catch (IllegalStateException e) {
+            String msg = "unable to start edit operation";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        boolean succeeded = false;
+
+        try {
             ops.move(srcPath, destPath);
             ops.update();
             succeeded = true;
