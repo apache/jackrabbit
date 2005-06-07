@@ -236,9 +236,15 @@ public class NativePVM implements PersistentVersionManager, Constants {
             return hist;
         }
 
-        boolean succeeded = false;
         try {
             stateMgr.edit();
+        } catch (IllegalStateException e) {
+            throw new RepositoryException("Unable to start edit operation", e);
+        }
+
+        boolean succeeded = false;
+
+        try {
 
             // create deep path
             String uuid = UUID.randomUUID().toString();
@@ -467,9 +473,15 @@ public class NativePVM implements PersistentVersionManager, Constants {
             } while (history.hasVersion(new QName("", versionName)));
         }
 
-        boolean succeeded = false;
         try {
             stateMgr.edit();
+        } catch (IllegalStateException e) {
+            throw new RepositoryException("Unable to start edit operation.");
+        }
+
+        boolean succeeded = false;
+
+        try {
             InternalVersionImpl v = history.checkin(new QName("", versionName), node);
             stateMgr.update();
             succeeded = true;

@@ -227,7 +227,7 @@ public class LocalItemStateManager extends ItemStateCache
     /**
      * {@inheritDoc}
      */
-    public void edit() throws IllegalStateException {
+    public synchronized void edit() throws IllegalStateException {
         if (editMode) {
             throw new IllegalStateException("Already in edit mode");
         }

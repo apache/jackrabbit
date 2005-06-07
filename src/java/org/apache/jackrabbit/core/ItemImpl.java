@@ -1266,10 +1266,19 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 Collection dirtyRefs =
                         checkReferences(dirty.iterator(), removed.iterator());
 
-                boolean succeeded = false;
+
+                // start the update operation
                 try {
-                    // start the update operation
                     stateMgr.edit();
+                } catch (IllegalStateException e) {
+                    String msg = "Unable to start edit operation";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, e);
+                }
+
+                boolean succeeded = false;
+
+                try {
 
                     // process transient items marked as 'removed'
                     removeTransientItems(removed.iterator());

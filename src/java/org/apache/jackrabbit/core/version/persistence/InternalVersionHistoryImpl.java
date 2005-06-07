@@ -253,10 +253,17 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
 
         try {
-            boolean succeeded = false;
             UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
+
             try {
                 stateMgr.edit();
+            } catch (IllegalStateException e) {
+                throw new VersionException("Unable to start edit operation", e);
+            }
+
+            boolean succeeded = false;
+
+            try {
 
                 // remove from persistance state
                 node.removeNode(v.getNode().getName());
@@ -320,7 +327,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         UpdatableItemStateManager stateMgr = getVersionManager().getItemStateMgr();
         try {
             stateMgr.edit();
+        } catch (IllegalStateException e) {
+            throw new VersionException("Unable to start edit operation", e);
+        }
 
+        try {
             if (prev != null) {
                 labelNode.removeNode(label);
             }
