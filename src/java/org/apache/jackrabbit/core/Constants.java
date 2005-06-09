@@ -92,6 +92,21 @@ public interface Constants {
     QName JCR_LASTMODIFIED = new QName(NS_JCR_URI, "lastModified");
 
     /**
+     * jcr:encoding
+     */
+    QName JCR_ENCODING = new QName(NS_JCR_URI, "encoding");
+
+    /**
+     * jcr:mimeType
+     */
+    QName JCR_MIMETYPE = new QName(NS_JCR_URI, "mimeType");
+
+    /**
+     * jcr:data
+     */
+    QName JCR_DATA = new QName(NS_JCR_URI, "data");
+
+    /**
      * jcr:content
      */
     QName JCR_CONTENT = new QName(NS_JCR_URI, "content");
