@@ -23,6 +23,7 @@ package org.apache.jackrabbit.core;
 public interface Constants {
 
     //------------------------------------------< namespace related constants >
+
     // default namespace (empty uri)
     String NS_EMPTY_PREFIX = "";
     String NS_DEFAULT_URI = "";
@@ -53,7 +54,7 @@ public interface Constants {
     String NS_XMLNS_PREFIX = "xmlns";
     String NS_XMLNS_URI = "http://www.w3.org/2000/xmlns/";
 
-    //----------------------------------------< general item name constants >---
+    //------------------------------------------< general item name constants >
 
     /**
      * jcr:system
@@ -90,7 +91,12 @@ public interface Constants {
      */
     QName JCR_LASTMODIFIED = new QName(NS_JCR_URI, "lastModified");
 
-    //------------------------------------< xml related item name constants >---
+    /**
+     * jcr:content
+     */
+    QName JCR_CONTENT = new QName(NS_JCR_URI, "content");
+
+    //--------------------------------------< xml related item name constants >
 
     /**
      * jcr:root (dummy name for root node used in XML serialization)
@@ -107,7 +113,7 @@ public interface Constants {
      */
     QName JCR_XMLCHARACTERS = new QName(NS_JCR_URI, "xmlcharacters");
 
-    //----------------------------------------< locking item name constants >---
+    //----------------------------------< locking related item name constants >
 
     /**
      * jcr:lockOwner
@@ -119,7 +125,7 @@ public interface Constants {
      */
     QName JCR_LOCKISDEEP = new QName(NS_JCR_URI, "lockIsDeep");
 
-    //-------------------------------------< versioning item name constants >---
+    //-------------------------------< versioning related item name constants >
 
     /**
      * jcr:versionStorage
@@ -196,7 +202,7 @@ public interface Constants {
      */
     QName JCR_VERSIONABLEUUID = new QName(NS_JCR_URI, "versionableUuid");
 
-    //--------------------------------------< node type item name constants >---
+    //--------------------------------< node type related item name constants >
 
     /**
      * jcr:nodeTypeName
@@ -293,7 +299,7 @@ public interface Constants {
      */
     QName JCR_REQUIREDPRIMARYTYPES = new QName(NS_JCR_URI, "requiredPrimaryTypes");
 
-    //-------------------------------------------< node type name constants >---
+    //---------------------------------------------< node type name constants >
 
     /**
      * rep:root
@@ -334,6 +340,16 @@ public interface Constants {
      * nt:resource
      */
     QName NT_RESOURCE = new QName(NS_NT_URI, "resource");
+
+    /**
+     * nt:file
+     */
+    QName NT_FILE = new QName(NS_NT_URI, "file");
+
+    /**
+     * nt:folder
+     */
+    QName NT_FOLDER = new QName(NS_NT_URI, "folder");
 
     /**
      * nt:query
