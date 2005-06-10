@@ -56,8 +56,7 @@ public class BindableRepositoryFactory implements ObjectFactory {
             synchronized (cache) {
                 if (cache.containsKey(ref)) {
                     return cache.get(ref);
-                }
-                if (ref.getClassName().equals(BindableRepository.class.getName())) {
+                } else {
                     String configFilePath =
                             (String) ref.get(BindableRepository.CONFIGFILEPATH_ADDRTYPE).getContent();
                     String repHomeDir =
