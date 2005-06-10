@@ -142,17 +142,6 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         this.state.addListener(this);
     }
 
-    protected void finalize() throws Throwable {
-        if (state != null) {
-            try {
-                state.removeListener(this);
-            } catch (Throwable t) {
-                // ignore
-            }
-        }
-        super.finalize();
-    }
-
     /**
      * Performs a sanity check on this item and the associated session.
      *
