@@ -163,7 +163,77 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
 
-        FileSystemResource uuidFile = new FileSystemResource(metaDataStore, "rootUUID");
+        // init root node uuid
+        rootNodeUUID = loadRootNodeUUID(metaDataStore);
+
+        // load repository properties
+        repProps = new Properties();
+        loadRepProps();
+        nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
+        propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
+
+        // create registries
+        nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
+        ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
+
+        // init workspace configs
+        Iterator iter = repConfig.getWorkspaceConfigs().iterator();
+        while (iter.hasNext()) {
+            WorkspaceConfig config = (WorkspaceConfig) iter.next();
+            WorkspaceInfo info = new WorkspaceInfo(config);
+            wspInfos.put(config.getName(), info);
+        }
+
+        // init version manager
+        VersioningConfig vConfig = repConfig.getVersioningConfig();
+        PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
+                vConfig.getFileSystem(),
+                vConfig.getPersistenceManagerConfig(),
+                rootNodeUUID,
+                nsReg,
+                ntReg);
+        pvMgr = new NativePVM(pm, getNodeTypeRegistry());
+        vMgr = new VersionManagerImpl(pvMgr, ntReg, delegatingDispatcher,
+                VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
+
+        // init virtual nodetype manager
+        virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
+                delegatingDispatcher, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
+
+        // initialize workspaces
+        try {
+            iter = wspInfos.keySet().iterator();
+            while (iter.hasNext()) {
+                String wspName = (String) iter.next();
+                initWorkspace(wspName);
+            }
+        } catch (RepositoryException e) {
+            // if any workspace failed to initialize, shutdown again
+            log.error("Unable to start repository. forcing shutdown.");
+            shutdown();
+            throw e;
+        }
+
+        // after the workspaces are initialized, we setup a system session for
+        // the virtual nodetype manager
+        virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
+
+        // finally register shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                shutdown();
+            }
+        });
+    }
+
+    /**
+     * Returns the root node uuid.
+     * @param fs
+     * @return
+     * @throws RepositoryException
+     */
+    protected String loadRootNodeUUID(FileSystem fs) throws RepositoryException {
+        FileSystemResource uuidFile = new FileSystemResource(fs, "rootUUID");
         try {
             if (uuidFile.exists()) {
                 try {
@@ -195,7 +265,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                             // ignore
                         }
                     }
-                    rootNodeUUID = new UUID(new String(chars)).toString();
+                    return new UUID(new String(chars)).toString();
                 } catch (Exception e) {
                     String msg = "failed to load persisted repository state";
                     log.debug(msg);
@@ -213,7 +283,6 @@ public class RepositoryImpl implements Repository, SessionListener,
                  * hard-coded uuid makes it easier to copy/move entire
                  * workspaces from one repository instance to another.
                  */
-                rootNodeUUID = ROOT_NODE_UUID;
                 try {
                     // persist uuid of the repository's root node
                     OutputStream out = uuidFile.getOutputStream();
@@ -232,7 +301,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                     // store uuid in text format for better readability
                     OutputStreamWriter writer = new OutputStreamWriter(out);
                     try {
-                        writer.write(rootNodeUUID);
+                        writer.write(ROOT_NODE_UUID);
                     } finally {
                         try {
                             writer.close();
@@ -240,6 +309,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                             // ignore
                         }
                     }
+                    return ROOT_NODE_UUID;
                 } catch (Exception e) {
                     String msg = "failed to persist repository state";
                     log.debug(msg);
@@ -251,58 +321,6 @@ public class RepositoryImpl implements Repository, SessionListener,
             log.debug(msg);
             throw new RepositoryException(msg, fse);
         }
-
-        // load repository properties
-        repProps = new Properties();
-        loadRepProps();
-        nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
-        propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
-
-        // workspaces
-        Iterator iter = repConfig.getWorkspaceConfigs().iterator();
-        while (iter.hasNext()) {
-            WorkspaceConfig config = (WorkspaceConfig) iter.next();
-            WorkspaceInfo info = new WorkspaceInfo(config);
-            wspInfos.put(config.getName(), info);
-        }
-
-        nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
-
-        ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
-
-        // init version manager
-        VersioningConfig vConfig = repConfig.getVersioningConfig();
-        PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
-                vConfig.getFileSystem(),
-                vConfig.getPersistenceManagerConfig(),
-                rootNodeUUID,
-                nsReg,
-                ntReg);
-        pvMgr = new NativePVM(pm, getNodeTypeRegistry());
-        vMgr = new VersionManagerImpl(pvMgr, ntReg, delegatingDispatcher,
-                VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
-
-        // init virtual nodetype manager
-        virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
-                delegatingDispatcher, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
-
-        // initialize workspaces
-        iter = wspInfos.keySet().iterator();
-        while (iter.hasNext()) {
-            String wspName = (String) iter.next();
-            initWorkspace(wspName);
-        }
-
-        // after the workspaces are initialized, we setup a system session for
-        // the virtual nodetype manager
-        virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
-
-        // finally register shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                shutdown();
-            }
-        });
     }
 
     /**
