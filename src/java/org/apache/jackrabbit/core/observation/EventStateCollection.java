@@ -378,7 +378,8 @@ public final class EventStateCollection {
             throws ItemStateException {
         try {
             return session.getNodeTypeManager().getNodeType(node.getNodeTypeName());
-        } catch (NoSuchNodeTypeException e) {
+        } catch (Exception e) {
+            // also catch eventual runtime exceptions here
             // should never happen actually
             String msg = "Item " + node.getId() + " has unknown node type: " + node.getNodeTypeName();
             log.error(msg);
