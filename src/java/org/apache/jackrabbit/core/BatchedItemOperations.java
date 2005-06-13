@@ -420,23 +420,25 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
 
         // 3. do move operation (modify and store affected states)
 
+
         boolean renameOnly = srcParent.getUUID().equals(destParent.getUUID());
 
-        // remove from old parent
-        if (!renameOnly) {
-            target.removeParentUUID(srcParent.getUUID());
-        }
         int srcNameIndex = srcName.getIndex();
         if (srcNameIndex == 0) {
             srcNameIndex = 1;
         }
-        srcParent.removeChildNodeEntry(srcName.getName(), srcNameIndex);
 
-        // add to new parent
-        if (!renameOnly) {
+        // remove from old parent
+        if (renameOnly) {
+            destParent.renameChildNodeEntry(srcName.getName(), srcNameIndex,
+                    destName.getName());
+        } else {
+            target.removeParentUUID(srcParent.getUUID());
             target.addParentUUID(destParent.getUUID());
+
+            destParent.addChildNodeEntry(destName.getName(), target.getUUID());
+            srcParent.removeChildNodeEntry(srcName.getName(), srcNameIndex);
         }
-        destParent.addChildNodeEntry(destName.getName(), target.getUUID());
 
         // change definition (id) of target node
         NodeDef newTargetDef =

@@ -1047,6 +1047,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                      * if necessary
                      */
                     state.removeListener(this);
+                    persistentState.addListener(this);
+                    stateMgr.disconnectTransientItemState(state);
                     state = persistentState;
                     state.addListener(this);
 

@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections.MapIterator;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -30,8 +32,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.Map;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -62,6 +64,12 @@ public class NodeState extends ItemState {
     protected List propertyEntries = new ArrayList();
 
     /**
+     * Listeners (weak references)
+     */
+    private final transient ReferenceMap listeners =
+            new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+
+    /**
      * Constructor
      *
      * @param overlayedState the backing node state being overlayed
@@ -70,8 +78,9 @@ public class NodeState extends ItemState {
      */
     public NodeState(NodeState overlayedState, int initialStatus,
                      boolean isTransient) {
-        super(overlayedState, initialStatus, isTransient);
+        super(initialStatus, isTransient);
 
+        connect(overlayedState);
         pull();
     }
 
@@ -400,7 +409,30 @@ public class NodeState extends ItemState {
      * @return the newly added <code>ChildNodeEntry<code>
      */
     public synchronized ChildNodeEntry addChildNodeEntry(QName nodeName, String uuid) {
-        return childNodeEntries.add(nodeName, uuid);
+        ChildNodeEntry entry = childNodeEntries.add(nodeName, uuid);
+        notifyNodeAdded(entry);
+        return entry;
+    }
+
+    /**
+     * Renames a new <code>ChildNodeEntry<code>.
+     *
+     * @param oldName <code>QName<code> object specifying the entry's old name
+     * @param index 1-based index if there are same-name child node entries
+     * @param newName <code>QName<code> object specifying the entry's new name
+     * @return <code>true</code> if the entry was sucessfully renamed;
+     *         otherwise <code>false</code>
+     */
+    public synchronized boolean renameChildNodeEntry(QName oldName, int index,
+                                                     QName newName) {
+        ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
+        if (oldEntry != null) {
+            ChildNodeEntry newEntry = addChildNodeEntry(newName, oldEntry.getUUID());
+            notifyNodeAdded(newEntry);
+            notifyNodeRemoved(oldEntry);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -412,7 +444,11 @@ public class NodeState extends ItemState {
      *         in the list of child node entries and could be removed.
      */
     public synchronized boolean removeChildNodeEntry(QName nodeName, int index) {
-        return childNodeEntries.remove(nodeName, index);
+        ChildNodeEntry entry = childNodeEntries.remove(nodeName, index);
+        if (entry != null) {
+            notifyNodeRemoved(entry);
+        }
+        return entry != null;
     }
 
     /**
@@ -429,6 +465,7 @@ public class NodeState extends ItemState {
     public synchronized void setChildNodeEntries(List nodeEntries) {
         childNodeEntries.removeAll();
         childNodeEntries.addAll(nodeEntries);
+        notifyNodesReplaced();
     }
 
     /**
@@ -715,6 +752,85 @@ public class NodeState extends ItemState {
         this.parentUUID = parentUUID;
     }
 
+    /**
+     * @see ItemState#addListener
+     *
+     * If the listener passed is at the same time a <code>NodeStateListener</code>
+     * we add it to our list of specialized listeners.
+     */
+    public void addListener(ItemStateListener listener) {
+        if (listener instanceof NodeStateListener) {
+            synchronized (listeners) {
+                if (!listeners.containsKey(listener)) {
+                    listeners.put(listener, listener);
+                }
+            }
+        }
+        super.addListener(listener);
+    }
+
+    /**
+     * @see ItemState#removeListener
+     *
+     * If the listener passed is at the same time a <code>NodeStateListener</code>
+     * we remove it from our list of specialized listeners.
+     */
+    public void removeListener(ItemStateListener listener) {
+        if (listener instanceof NodeStateListener) {
+            synchronized (listeners) {
+                listeners.remove(listener);
+            }
+        }
+        super.removeListener(listener);
+    }
+
+    /**
+     * Notify the listeners that some child node was added
+     */
+    protected void notifyNodeAdded(ChildNodeEntry added) {
+        synchronized (listeners) {
+            MapIterator iter = listeners.mapIterator();
+            while (iter.hasNext()) {
+                NodeStateListener l = (NodeStateListener) iter.next();
+                if (l != null) {
+                    l.nodeAdded(this, added.getName(),
+                            added.getIndex(), added.getUUID());
+                }
+            }
+        }
+    }
+
+    /**
+     * Notify the listeners that the children nodes were replaced
+     */
+    protected void notifyNodesReplaced() {
+        synchronized (listeners) {
+            MapIterator iter = listeners.mapIterator();
+            while (iter.hasNext()) {
+                NodeStateListener l = (NodeStateListener) iter.next();
+                if (l != null) {
+                    l.nodesReplaced(this);
+                }
+            }
+        }
+    }
+
+    /**
+     * Notify the listeners that some child node was removed
+     */
+    protected void notifyNodeRemoved(ChildNodeEntry removed) {
+        synchronized (listeners) {
+            MapIterator iter = listeners.mapIterator();
+            while (iter.hasNext()) {
+                NodeStateListener l = (NodeStateListener) iter.next();
+                if (l != null) {
+                    l.nodeRemoved(this, removed.getName(),
+                            removed.getIndex(), removed.getUUID());
+                }
+            }
+        }
+    }
+
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
         // delegate to default implementation
@@ -776,19 +892,19 @@ public class NodeState extends ItemState {
         }
 
         public boolean remove(ChildNodeEntry entry) {
-            return remove(entry.getName(), entry.getIndex());
+            return remove(entry.getName(), entry.getIndex()) != null;
         }
 
-        public boolean remove(QName nodeName, int index) {
+        public ChildNodeEntry remove(QName nodeName, int index) {
             if (index < 1) {
                 throw new IllegalArgumentException("index is 1-based");
             }
             List siblings = (List) names.get(nodeName);
             if (siblings == null) {
-                return false;
+                return null;
             }
             if (index > siblings.size()) {
-                return false;
+                return null;
             }
             // remove from siblings list
             ChildNodeEntry removedEntry = (ChildNodeEntry) siblings.remove(index - 1);
@@ -798,7 +914,7 @@ public class NodeState extends ItemState {
             if (siblings.size() == 0) {
                 // short cut
                 names.remove(nodeName);
-                return true;
+                return removedEntry;
             }
 
             // update indices of subsequent same-name siblings
@@ -811,7 +927,7 @@ public class NodeState extends ItemState {
                 entries.set(entries.indexOf(oldEntry), newEntry);
             }
 
-            return true;
+            return removedEntry;
         }
 
         List get(QName nodeName) {

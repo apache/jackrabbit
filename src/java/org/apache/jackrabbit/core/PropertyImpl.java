@@ -105,8 +105,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         PropertyState persistentState = (PropertyState) transientState.getOverlayedState();
         if (persistentState == null) {
             // this property is 'new'
-            persistentState = stateMgr.createNew(transientState.getName(),
-                    transientState.getParentUUID());
+            persistentState = stateMgr.createNew(transientState);
         }
         // copy state from transient state
         persistentState.setDefinitionId(transientState.getDefinitionId());
@@ -119,6 +118,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         transientState.removeListener(this);
         // add listener to persistent state
         persistentState.addListener(this);
+        // tell state manager to disconnect item state
+        stateMgr.disconnectTransientItemState(transientState);
         // swap transient state with persistent state
         state = persistentState;
         // reset status
