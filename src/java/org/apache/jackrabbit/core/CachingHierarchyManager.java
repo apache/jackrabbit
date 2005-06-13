@@ -42,7 +42,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Default upper limit of cached states
      */
-    public static final int DEFAULT_UPPER_LIMIT = 100;
+    public static final int DEFAULT_UPPER_LIMIT = 10000;
 
     /**
      * Logger instance
