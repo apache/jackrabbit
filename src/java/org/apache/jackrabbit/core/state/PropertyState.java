@@ -56,8 +56,9 @@ public class PropertyState extends ItemState {
      */
     public PropertyState(PropertyState overlayedState, int initialStatus,
                          boolean isTransient) {
-        super(overlayedState, initialStatus, isTransient);
+        super(initialStatus, isTransient);
 
+        connect(overlayedState);
         pull();
     }
 

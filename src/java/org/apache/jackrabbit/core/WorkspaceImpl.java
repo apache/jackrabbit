@@ -128,7 +128,7 @@ public class WorkspaceImpl implements Workspace, Constants {
         this.wspConfig = wspConfig;
         this.rep = rep;
         this.stateMgr = new TransactionalItemStateManager(stateMgr, this);
-        this.hierMgr = new HierarchyManagerImpl(rep.getRootNodeUUID(),
+        this.hierMgr = new CachingHierarchyManager(rep.getRootNodeUUID(),
                 this.stateMgr, session.getNamespaceResolver());
         this.session = session;
     }

@@ -90,7 +90,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     /**
      * Listeners (weak references)
      */
-    protected final transient Map listeners =
+    private final transient Map listeners =
             Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     // the backing persistent item state (may be null)
@@ -127,12 +127,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     /**
      * Protected constructor
      *
-     * @param overlayedState backing persistent item state
      * @param initialStatus  the initial status of the new <code>ItemState</code> instance
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(ItemState overlayedState, int initialStatus,
-                        boolean isTransient) {
+    protected ItemState(int initialStatus, boolean isTransient) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_EXISTING_MODIFIED:
@@ -144,8 +142,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
-        this.overlayedState = overlayedState;
-        this.overlayedState.addListener(this);
         this.isTransient = isTransient;
     }
 

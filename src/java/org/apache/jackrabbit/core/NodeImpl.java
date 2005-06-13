@@ -551,8 +551,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        thisState.removeChildNodeEntry(oldName, index);
-        thisState.addChildNodeEntry(newName, uuid);
+        thisState.renameChildNodeEntry(oldName, index, newName);
     }
 
     protected void removeChildProperty(String propName) throws RepositoryException {
@@ -902,8 +901,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState persistentState = (NodeState) transientState.getOverlayedState();
         if (persistentState == null) {
             // this node is 'new'
-            persistentState = stateMgr.createNew(transientState.getUUID(),
-                    transientState.getNodeTypeName(), transientState.getParentUUID());
+            persistentState = stateMgr.createNew(transientState);
         }
         // copy state from transient state:
         // parent uuid's
@@ -924,6 +922,8 @@ public class NodeImpl extends ItemImpl implements Node {
         transientState.removeListener(this);
         // add listener to persistent state
         persistentState.addListener(this);
+        // tell state manager to disconnect item state
+        stateMgr.disconnectTransientItemState(transientState);
         // swap transient state with persistent state
         state = persistentState;
         // reset status

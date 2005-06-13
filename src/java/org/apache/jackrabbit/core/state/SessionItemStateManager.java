@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NamespaceResolver;
@@ -63,7 +62,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     /**
      * Hierarchy manager
      */
-    private HierarchyManager hierMgr;
+    private CachingHierarchyManager hierMgr;
 
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
@@ -81,33 +80,18 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         // create transient item state manager
         transientStateMgr = new TransientItemStateManager();
         // create hierarchy manager that uses both transient and persistent state
-        hierMgr = new HierarchyManagerImpl(rootNodeUUID, this, nsResolver,
-                transientStateMgr.getAttic());
+        hierMgr = new CachingHierarchyManager(rootNodeUUID, this,
+                nsResolver, transientStateMgr.getAttic());
     }
 
     /**
      * En-/Disable chaching of path values.
      * <p/>
-     * Please keep in mind that the cache of <code>Path</code>s is not automatically
-     * updated when the underlying hierarchy is changing. Therefore it should only be
-     * turned on with caution and in special situations (usually only locally
-     * within a narrow scope) where the underlying hierarchy is not expected to
-     * change.
-     *
-     * @param enable
+     * Paths are always cached, therefore this method has no implementation.
+     * @param enable <code>true</code> to enable caching;
+     *               <code>false</code> to disable
      */
     public void enablePathCaching(boolean enable) {
-        if (enable) {
-            if (!(hierMgr instanceof CachingHierarchyManager)) {
-                hierMgr = new CachingHierarchyManager(hierMgr);
-            }
-        } else {
-            if (hierMgr instanceof CachingHierarchyManager) {
-                CachingHierarchyManager chm = (CachingHierarchyManager) hierMgr;
-                chm.clearCache();
-                hierMgr = chm.unwrap();
-            }
-        }
     }
 
     /**
@@ -231,12 +215,40 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     }
 
     /**
+     * Customized variant of {@link #createNew(String, QName, String)} that
+     * connects the newly created persistent state with the transient state.
+     */
+    public NodeState createNew(NodeState transientState)
+            throws IllegalStateException {
+
+        NodeState persistentState = createNew(transientState.getUUID(),
+                transientState.getNodeTypeName(),
+                transientState.getParentUUID());
+        transientState.connect(persistentState);
+        return persistentState;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public PropertyState createNew(QName propName, String parentUUID)
             throws IllegalStateException {
         return persistentStateMgr.createNew(propName, parentUUID);
     }
+
+    /**
+     * Customized variant of {@link #createNew(String, QName, String)} that
+     * connects the newly created persistent state with the transient state.
+     */
+    public PropertyState createNew(PropertyState transientState)
+            throws IllegalStateException {
+
+        PropertyState persistentState = createNew(transientState.getName(),
+                transientState.getParentUUID());
+        transientState.connect(persistentState);
+        return persistentState;
+    }
+
 
     /**
      * {@inheritDoc}
@@ -566,7 +578,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
      */
     public NodeState createTransientNodeState(NodeState overlayedState, int initialStatus)
             throws ItemStateException {
-        return transientStateMgr.createNodeState(overlayedState, initialStatus);
+
+        NodeState state = transientStateMgr.createNodeState(
+                overlayedState, initialStatus);
+        hierMgr.stateOverlaid(state);
+        return state;
     }
 
     /**
@@ -589,7 +605,22 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
      */
     public PropertyState createTransientPropertyState(PropertyState overlayedState, int initialStatus)
             throws ItemStateException {
-        return transientStateMgr.createPropertyState(overlayedState, initialStatus);
+
+        PropertyState state = transientStateMgr.createPropertyState(
+                overlayedState, initialStatus);
+        hierMgr.stateOverlaid(state);
+        return state;
+    }
+
+    /**
+     * Disconnect a transient item state from its underlying persistent state.
+     * Notifies the <code>HierarchyManager</code> about the changed identity.
+     * @param state the transient <code>ItemState</code> instance that should
+     *              be disconnected
+     */
+    public void disconnectTransientItemState(ItemState state) {
+        hierMgr.stateUncovered(state);
+        state.disconnect();
     }
 
     /**

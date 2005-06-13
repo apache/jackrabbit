@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.PathMap;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.log4j.Logger;
+import org.apache.commons.collections.SequencedHashMap;
 
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
@@ -37,9 +38,8 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.io.File;
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -77,12 +77,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * Name space resolver
      */
     private final NamespaceResolver nsResolver;
-
-    /**`
-     * Map of nodes that been removed and may be re-added as result
-     * of a move operation
-     */
-    private final Map zombieNodes = new HashMap();
 
     /**
      * Create a new instance of this class.
@@ -178,9 +172,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     private void save() throws IOException {
         final ArrayList list = new ArrayList();
 
-        lockMap.traverse(new PathMap.ChildVisitor() {
-            public void childVisited(PathMap.Child child) {
-                LockInfo info = (LockInfo) child.get();
+        lockMap.traverse(new PathMap.ElementVisitor() {
+            public void elementVisited(PathMap.Element element) {
+                LockInfo info = (LockInfo) element.get();
                 if (!info.sessionScoped) {
                     list.add(info);
                 }
@@ -222,17 +216,17 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         // check whether node is already locked
         Path path = node.getPrimaryPath();
-        PathMap.Child child = lockMap.map(path, false);
+        PathMap.Element element = lockMap.map(path, false);
 
-        LockInfo other = (LockInfo) child.get();
+        LockInfo other = (LockInfo) element.get();
         if (other != null) {
-            if (child.hasPath(path)) {
+            if (element.hasPath(path)) {
                 throw new LockException("Node already locked: " + node.safeGetJCRPath());
             } else if (other.deep) {
                 throw new LockException("Parent node has deep lock.");
             }
         }
-        if (info.deep && child.hasPath(path)) {
+        if (info.deep && element.hasPath(path)) {
             throw new LockException("Some child node is locked.");
         }
 
@@ -273,9 +267,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                     new NodeId(info.getUUID()));
             Path path = node.getPrimaryPath();
 
-            PathMap.Child child = lockMap.map(path, true);
-            if (child != null) {
-                child.set(null);
+            PathMap.Element element = lockMap.map(path, true);
+            if (element != null) {
+                element.set(null);
             }
 
             // set live flag to false
@@ -317,12 +311,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         Path path = node.getPrimaryPath();
 
-        PathMap.Child child = lockMap.map(path, false);
-        LockInfo info = (LockInfo) child.get();
+        PathMap.Element element = lockMap.map(path, false);
+        LockInfo info = (LockInfo) element.get();
         if (info == null) {
             throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
-        if (child.hasPath(path) || info.deep) {
+        if (element.hasPath(path) || info.deep) {
             SessionImpl session = (SessionImpl) node.getSession();
             Node lockHolder = (Node) session.getItemManager().getItem(
                     new NodeId(info.getUUID()));
@@ -341,12 +335,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         // check whether node is locked by this session
         Path path = node.getPrimaryPath();
 
-        PathMap.Child child = lockMap.map(path, true);
-        if (child == null) {
+        PathMap.Element element = lockMap.map(path, true);
+        if (element == null) {
             throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
 
-        LockInfo info = (LockInfo) child.get();
+        LockInfo info = (LockInfo) element.get();
         if (info == null) {
             throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
@@ -355,7 +349,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         }
 
         // remove lock in path map
-        child.set(null);
+        element.set(null);
         info.setLive(false);
 
         // remove properties in content
@@ -368,11 +362,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * {@inheritDoc}
      */
     public synchronized boolean holdsLock(NodeImpl node) throws RepositoryException {
-        PathMap.Child child = lockMap.map(node.getPrimaryPath(), true);
-        if (child == null) {
+        PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
+        if (element == null) {
             return false;
         }
-        return child.get() != null;
+        return element.get() != null;
     }
 
     /**
@@ -381,12 +375,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     public synchronized boolean isLocked(NodeImpl node) throws RepositoryException {
         Path path = node.getPrimaryPath();
 
-        PathMap.Child child = lockMap.map(path, false);
-        LockInfo info = (LockInfo) child.get();
+        PathMap.Element element = lockMap.map(path, false);
+        LockInfo info = (LockInfo) element.get();
         if (info == null) {
             return false;
         }
-        if (child.hasPath(path)) {
+        if (element.hasPath(path)) {
             return true;
         } else {
             return info.deep;
@@ -408,10 +402,10 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     public void checkLock(Path path, Session session)
             throws LockException, RepositoryException {
 
-        PathMap.Child child = lockMap.map(path, false);
-        LockInfo info = (LockInfo) child.get();
+        PathMap.Element element = lockMap.map(path, false);
+        LockInfo info = (LockInfo) element.get();
         if (info != null) {
-            if (child.hasPath(path) || info.deep) {
+            if (element.hasPath(path) || info.deep) {
                 if (!session.equals(info.getLockHolder())) {
                     throw new LockException("Node locked.");
                 }
@@ -428,9 +422,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
             NodeImpl node = (NodeImpl) session.getItemManager().
                     getItem(new NodeId(lockToken.uuid));
-            PathMap.Child child = lockMap.map(node.getPrimaryPath(), true);
-            if (child != null) {
-                LockInfo info = (LockInfo) child.get();
+            PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
+            if (element != null) {
+                LockInfo info = (LockInfo) element.get();
                 if (info != null) {
                     if (info.getLockHolder() == null) {
                         info.setLockHolder(session);
@@ -457,9 +451,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
             NodeImpl node = (NodeImpl) session.getItemManager().
                     getItem(new NodeId(lockToken.uuid));
-            PathMap.Child child = lockMap.map(node.getPrimaryPath(), true);
-            if (child != null) {
-                LockInfo info = (LockInfo) child.get();
+            PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
+            if (element != null) {
+                LockInfo info = (LockInfo) element.get();
                 if (info != null) {
                     if (session.equals(info.getLockHolder())) {
                         info.setLockHolder(null);
@@ -480,84 +474,210 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     //----------------------------------------------< SynchronousEventListener >
 
     /**
+     * Internal event class that holds old and new paths for moved nodes
+     */
+    private class HierarchyEvent {
+
+        /**
+         * UUID recorded in event
+         */
+        public final String uuid;
+
+        /**
+         * Path recorded in event
+         */
+        public final Path path;
+
+        /**
+         * Old path in move operation
+         */
+        private Path oldPath;
+
+        /**
+         * New path in move operation
+         */
+        private Path newPath;
+
+        /**
+         * Event type, may be {@link Event#NODE_ADDED},
+         * {@link Event#NODE_REMOVED} or a combination of both
+         */
+        private int type;
+
+        /**
+         * Create a new instance of this class.
+         * @param uuid uuid
+         * @param path path
+         * @param type event type
+         */
+        public HierarchyEvent(String uuid, Path path, int type) {
+            this.uuid = uuid;
+            this.path = path;
+            this.type = type;
+        }
+
+        /**
+         * Merge this event with another event. The result will be stored in
+         * this event
+         * @param event other event to merge with
+         */
+        public void merge(HierarchyEvent event) {
+            type |= event.type;
+            if (event.type == Event.NODE_ADDED) {
+                newPath = event.path;
+                oldPath = path;
+            } else {
+                oldPath = event.path;
+                newPath = path;
+            }
+        }
+
+        /**
+         * Return the event type. May be {@link Event#NODE_ADDED},
+         * {@link Event#NODE_REMOVED} or a combination of both.\
+         * @return event type
+         */
+        public int getType() {
+            return type;
+        }
+
+        /**
+         * Return the old path if this is a move operation
+         * @return old path
+         */
+        public Path getOldPath() {
+            return oldPath;
+        }
+
+        /**
+         * Return the new path if this is a move operation
+         * @return new path
+         */
+        public Path getNewPath() {
+            return newPath;
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void onEvent(EventIterator events) {
-        while (events.hasNext()) {
-            EventImpl event = (EventImpl) events.nextEvent();
-            switch (event.getType()) {
+        Iterator iter = consolidateEvents(events);
+        while (iter.hasNext()) {
+            HierarchyEvent event = (HierarchyEvent) iter.next();
+            switch (event.type) {
                 case Event.NODE_ADDED:
-                    try {
-                        nodeAdded(event.getChildUUID(),
-                                Path.create(event.getPath(), nsResolver, true));
-                    } catch (MalformedPathException e) {
-                        log.info("Unable to get event's path: " + e.getMessage());
-                    } catch (RepositoryException e) {
-                        log.info("Unable to get event's path: " + e.getMessage());
-                    }
+                    nodeAdded(event.path);
                     break;
                 case Event.NODE_REMOVED:
-                    try {
-                        nodeRemoved(event.getChildUUID(),
-                                Path.create(event.getPath(), nsResolver, true));
-                    } catch (MalformedPathException e) {
-                        log.info("Unable to get event's path: " + e.getMessage());
-                    } catch (RepositoryException e) {
-                        log.info("Unable to get event's path: " + e.getMessage());
-                    }
+                    nodeRemoved(event.path);
+                    break;
+                case Event.NODE_ADDED | Event.NODE_REMOVED:
+                    nodeMoved(event.getOldPath(), event.getNewPath());
                     break;
             }
         }
     }
 
     /**
-     * Invoked when some node has been added. Relink the child inside our
-     * zombie map to the new parent. Revitalize all locks inside the
-     * zombie child hierarchy.
+     * Consolidate an event iterator obtained from observation, merging
+     * add and remove operations on nodes with the same UUID into a move
+     * operation.
      */
-    private synchronized void nodeAdded(String uuid, Path path) {
-        try {
-            PathMap.Child parent = lockMap.map(path.getAncestor(1), true);
-            if (parent != null) {
-                parent.insertChild(path.getNameElement());
+    private Iterator consolidateEvents(EventIterator events) {
+        SequencedHashMap eventMap = new SequencedHashMap();
+
+        while (events.hasNext()) {
+            EventImpl event = (EventImpl) events.nextEvent();
+            HierarchyEvent he;
+
+            try {
+                he = new HierarchyEvent(event.getChildUUID(),
+                        Path.create(event.getPath(), nsResolver, true),
+                        event.getType());
+            } catch (MalformedPathException e) {
+                log.info("Unable to get event's path: " + e.getMessage());
+                continue;
+            } catch (RepositoryException e) {
+                log.info("Unable to get event's path: " + e.getMessage());
+                continue;
             }
-            PathMap.Child zombie = (PathMap.Child) zombieNodes.remove(uuid);
-            if (zombie != null) {
-                zombie.traverse(new PathMap.ChildVisitor() {
-                    public void childVisited(PathMap.Child child) {
-                        LockInfo info = (LockInfo) child.get();
-                        info.setLive(true);
-                    }
-                }, false);
-                lockMap.resurrect(path, zombie);
+
+            HierarchyEvent heExisting = (HierarchyEvent) eventMap.get(he.uuid);
+            if (heExisting != null) {
+                heExisting.merge(he);
+            } else {
+                eventMap.put(he.uuid, he);
+            }
+        }
+        return eventMap.values().iterator();
+    }
+
+    /**
+     * Invoked when some node has been added. If the parent of that node
+     * exists, shift all name siblings of the new node having an index greater
+     * or equal.
+     * @param path path of added node
+     */
+    private synchronized void nodeAdded(Path path) {
+        try {
+            PathMap.Element parent = lockMap.map(path.getAncestor(1), true);
+            if (parent != null) {
+                parent.insert(path.getNameElement());
             }
         } catch (PathNotFoundException e) {
-            log.warn("Added node does not have parent, ignoring event.");
+            log.warn("Unable to determine path of added node's parent.", e);
+            return;
         }
     }
 
     /**
-     * Invoked when some node has been removed. Unlink the child inside
-     * our path map corresponding to that node. Disable all locks contained
-     * in that subtree.
+     * Invoked when some node has been moved. Relink the child inside our
+     * map to the new parent.
+     * @param oldPath old path
      */
-    private synchronized void nodeRemoved(String uuid, Path path) {
+    private synchronized void nodeMoved(Path oldPath, Path newPath) {
+        PathMap.Element element = lockMap.map(oldPath, true);
+        if (element != null) {
+            element.remove();
+        }
+
         try {
-            PathMap.Child parent = lockMap.map(path.getAncestor(1), true);
+            PathMap.Element parent = lockMap.map(newPath.getAncestor(1), true);
             if (parent != null) {
-                PathMap.Child child = parent.removeChild(path.getNameElement());
-                if (child != null) {
-                    child.traverse(new PathMap.ChildVisitor() {
-                        public void childVisited(PathMap.Child child) {
-                            LockInfo info = (LockInfo) child.get();
+                parent.insert(newPath.getNameElement());
+            }
+            if (element != null) {
+                lockMap.put(newPath, element);
+            }
+        } catch (PathNotFoundException e) {
+            log.warn("Unable to determine path of moved node's parent.", e);
+            return;
+        }
+    }
+
+    /**
+     * Invoked when some node has been removed. Remove the child from our
+     * path map. Disable all locks contained in that subtree.
+     * @param path path of removed node
+     */
+    private synchronized void nodeRemoved(Path path) {
+        try {
+            PathMap.Element parent = lockMap.map(path.getAncestor(1), true);
+            if (parent != null) {
+                PathMap.Element element = parent.remove(path.getNameElement());
+                if (element != null) {
+                    element.traverse(new PathMap.ElementVisitor() {
+                        public void elementVisited(PathMap.Element element) {
+                            LockInfo info = (LockInfo) element.get();
                             info.setLive(false);
                         }
                     }, false);
-                    zombieNodes.put(uuid, child);
                 }
             }
         } catch (PathNotFoundException e) {
-            log.warn("Removed node does not have parent, ignoring event.");
+            log.warn("Unable to determine path of moved node's parent.", e);
+            return;
         }
     }
 }
