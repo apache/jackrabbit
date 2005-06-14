@@ -118,8 +118,15 @@ public class NodeImpl extends ItemImpl implements Node {
                        ItemLifeCycleListener[] listeners)
             throws RepositoryException {
         super(itemMgr, session, id, state, listeners);
-        nodeType = session.getNodeTypeManager().getNodeType(state.getNodeTypeName());
         this.definition = definition;
+        NodeTypeImpl nt;
+        try {
+            nt = session.getNodeTypeManager().getNodeType(state.getNodeTypeName());
+        } catch (NoSuchNodeTypeException e) {
+            log.warn("Fallback to nt:unstructured for unknown node type '" + state.getNodeTypeName() + "' of node " +safeGetJCRPath());
+            nt = session.getNodeTypeManager().getNodeType(NT_UNSTRUCTURED);
+        }
+        this.nodeType = nt;
     }
 
     /**
