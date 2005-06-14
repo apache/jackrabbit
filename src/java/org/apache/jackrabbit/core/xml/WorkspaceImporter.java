@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.util.uuid.UUID;
@@ -115,7 +116,7 @@ public class WorkspaceImporter implements Importer, Constants {
 
         // perform preliminary checks
         itemOps.verifyCanWrite(parentPath);
-        this.importTarget = itemOps.getNodeState(parentPath);
+        importTarget = itemOps.getNodeState(parentPath);
 
         this.wsp = wsp;
         this.ntReg = ntReg;
@@ -404,6 +405,35 @@ public class WorkspaceImporter implements Importer, Constants {
                         succeeded = true;
                         log.debug("skipping protected node " + nodeName);
                         return;
+                    }
+
+                    if (parent.hasPropertyEntry(nodeName)) {
+                        /**
+                         * a property with the same name already exists; if this property
+                         * has been imported as well (e.g. through document view import
+                         * where an element can have the same name as one of the attributes
+                         * of its parent element) we have to rename the onflicting property;
+                         *
+                         * see http://issues.apache.org/jira/browse/JCR-61
+                         */
+                        PropertyId propId = new PropertyId(parent.getUUID(), nodeName);
+                        PropertyState conflicting = itemOps.getPropertyState(propId);
+                        if (conflicting.getStatus() == ItemState.STATUS_NEW) {
+                            // assume this property has been imported as well;
+                            // rename conflicting property
+                            // @todo use better reversible escaping scheme to create unique name
+                            QName newName = new QName(nodeName.getNamespaceURI(), nodeName.getLocalName() + "_");
+                            if (parent.hasPropertyEntry(newName)) {
+                                newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
+                            }
+                            PropertyState newProp =
+                                    itemOps.createPropertyState(parent, newName,
+                                            conflicting.getType(), conflicting.getValues().length);
+                            newProp.setValues(conflicting.getValues());
+                            parent.removePropertyEntry(nodeName);
+                            itemOps.store(parent);
+                            itemOps.destroy(conflicting);
+                        }
                     }
 
                     // check if new node can be added (check access rights &
