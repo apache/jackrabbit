@@ -1271,6 +1271,21 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
     }
 
     /**
+     * Retrieves the state of the property with the given id.
+     * <p/>
+     * Note that access rights are <b><i>not</i></b> enforced!
+     *
+     * @param id
+     * @return
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    public PropertyState getPropertyState(PropertyId id)
+            throws ItemNotFoundException, RepositoryException {
+        return (PropertyState) getItemState(stateMgr, id);
+    }
+
+    /**
      * Retrieves the state of the item with the given id.
      * <p/>
      * Note that access rights are <b><i>not</i></b> enforced!

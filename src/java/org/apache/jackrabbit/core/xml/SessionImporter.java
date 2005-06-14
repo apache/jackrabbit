@@ -92,6 +92,35 @@ public class SessionImporter implements Importer {
                                   String uuid)
             throws RepositoryException {
         NodeImpl node;
+
+        if (parent.hasProperty(nodeName)) {
+            /**
+             * a property with the same name already exists; if this property
+             * has been imported as well (e.g. through document view import
+             * where an element can have the same name as one of the attributes
+             * of its parent element) we have to rename the onflicting property;
+             *
+             * see http://issues.apache.org/jira/browse/JCR-61
+             */
+            Property conflicting = parent.getProperty(nodeName);
+            if (conflicting.isNew()) {
+                // assume this property has been imported as well;
+                // rename conflicting property
+                // @todo use better reversible escaping scheme to create unique name
+                QName newName = new QName(nodeName.getNamespaceURI(), nodeName.getLocalName() + "_");
+                if (parent.hasProperty(newName)) {
+                    newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
+                }
+
+                if (conflicting.getDefinition().isMultiple()) {
+                    parent.setProperty(newName, conflicting.getValues());
+                } else {
+                    parent.setProperty(newName, conflicting.getValue());
+                }
+                conflicting.remove();
+            }
+        }
+
         // add node
         node = parent.addNode(nodeName, nodeTypeName, uuid);
         // add mixins
