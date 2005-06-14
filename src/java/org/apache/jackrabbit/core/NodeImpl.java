@@ -123,7 +123,12 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             nt = session.getNodeTypeManager().getNodeType(state.getNodeTypeName());
         } catch (NoSuchNodeTypeException e) {
-            log.warn("Fallback to nt:unstructured for unknown node type '" + state.getNodeTypeName() + "' of node " +safeGetJCRPath());
+            /**
+             * todo need proper way of handling inconsistent/corrupt node type references
+             * e.g. 'flag' nodes that refer to non-registered node types
+             */
+            log.warn("Fallback to nt:unstructured due to unknown node type '"
+                    + state.getNodeTypeName() + "' of node " + safeGetJCRPath());
             nt = session.getNodeTypeManager().getNodeType(NT_UNSTRUCTURED);
         }
         this.nodeType = nt;

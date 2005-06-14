@@ -175,7 +175,12 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         NodeDefId defId = state.getDefinitionId();
         NodeDefinitionImpl def = session.getNodeTypeManager().getNodeDefinition(defId);
         if (def == null) {
-            log.warn("node at " + safeGetJCRPath(state.getId()) + " has invalid definitionId (" + defId + ")");
+            /**
+             * todo need proper way of handling inconsistent/corrupt definition
+             * e.g. 'flag' items that refer to non-existent definitions
+             */
+            log.warn("node at " + safeGetJCRPath(state.getId())
+                    + " has invalid definitionId (" + defId + ")");
 
             // fallback: try finding applicable definition
             NodeId parentId = new NodeId(state.getParentUUID());
@@ -193,7 +198,12 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         PropDefId defId = state.getDefinitionId();
         PropertyDefinitionImpl def = session.getNodeTypeManager().getPropertyDefinition(defId);
         if (def == null) {
-            log.warn("property at " + safeGetJCRPath(state.getId()) + " has invalid definitionId (" + defId + ")");
+            /**
+             * todo need proper way of handling inconsistent/corrupt definition
+             * e.g. 'flag' items that refer to non-existent definitions
+             */
+            log.warn("property at " + safeGetJCRPath(state.getId())
+                    + " has invalid definitionId (" + defId + ")");
 
             // fallback: try finding applicable definition
             NodeId parentId = new NodeId(state.getParentUUID());
