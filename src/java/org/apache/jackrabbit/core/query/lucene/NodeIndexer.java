@@ -260,17 +260,22 @@ public class NodeIndexer {
                 // don't know how to index
                 return;
             }
-            if (node.hasPropertyEntry(JCR_ENCODING)
-                    && node.hasPropertyEntry(JCR_MIMETYPE)) {
+            if (node.hasPropertyEntry(JCR_MIMETYPE)) {
                 PropertyState dataProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_DATA));
                 PropertyState mimeTypeProp =
                     (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_MIMETYPE));
-                PropertyState encodingProp =
-                    (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
+
+                // jcr:encoding is not mandatory
+                String encoding = null;
+                if (node.hasPropertyEntry(JCR_ENCODING)) {
+                    PropertyState encodingProp =
+                        (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
+                    encodingProp.getValues()[0].internalValue().toString();
+                }
 
                 Map fields = TextFilterService.extractText(dataProp,
                         mimeTypeProp.getValues()[0].internalValue().toString(),
-                        encodingProp.getValues()[0].internalValue().toString());
+                        encoding);
                 for (Iterator it = fields.keySet().iterator(); it.hasNext();) {
                     String field = (String) it.next();
                     Reader r = (Reader) fields.get(field);
