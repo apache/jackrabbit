@@ -80,6 +80,8 @@ public class TextFilterService {
      *
      * @param data     the binary data
      * @param mimeType the mime type
+     * @param encoding the encoding of the binary data or <code>null</code> if
+     *   the data does not have an encoding or it is unknown.
      * @return the extracted content
      * @throws RepositoryException if an error occurs while creating the index
      *                             layout. This includes the case where
