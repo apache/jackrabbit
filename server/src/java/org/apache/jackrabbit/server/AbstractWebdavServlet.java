@@ -107,7 +107,14 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      *
      * @return the session provider
      */
-    abstract public DavSessionProvider getSessionProvider();
+    abstract public DavSessionProvider getDavSessionProvider();
+
+    /**
+     * Returns the <code>DavSessionProvider</code>.
+     *
+     * @param davSessionProvider
+     */
+    abstract public void setDavSessionProvider(DavSessionProvider davSessionProvider);
 
     /**
      * Returns the <code>DavLocatorFactory</code>.
@@ -117,11 +124,25 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     abstract public DavLocatorFactory getLocatorFactory();
 
     /**
+     * Sets the <code>DavLocatorFactory</code>.
+     *
+     * @param locatorFactory
+     */
+    abstract public void setLocatorFactory(DavLocatorFactory locatorFactory);
+
+    /**
      * Returns the <code>DavResourceFactory</code>.
      *
      * @return the resource factory
      */
     abstract public DavResourceFactory getResourceFactory();
+
+    /**
+     * Sets the <code>DavResourceFactory</code>.
+     *
+     * @param resourceFactory
+     */
+    abstract public void setResourceFactory(DavResourceFactory resourceFactory);
 
     /**
      * Returns the value of the 'WWW-Authenticate' header, that is returned in
@@ -146,7 +167,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         WebdavResponse webdavResponse = new WebdavResponseImpl(response);
         try {
             // make sure there is a authenticated user
-            if (!getSessionProvider().attachSession(webdavRequest)) {
+            if (!getDavSessionProvider().attachSession(webdavRequest)) {
                 return;
             }
 
@@ -170,7 +191,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 webdavResponse.sendErrorResponse(e);
             }
         } finally {
-            getSessionProvider().releaseSession(webdavRequest);
+            getDavSessionProvider().releaseSession(webdavRequest);
         }
     }
 

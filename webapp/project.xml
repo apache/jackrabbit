@@ -68,14 +68,23 @@
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
             <version>${jackrabbit.build.version.jcr}</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
         </dependency>
         <dependency>
             <id>jackrabbit</id>
             <version>${jackrabbit.build.version.jackrabbit}</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
         </dependency>
         <dependency>
             <id>jcr-rmi</id>
             <version>${jackrabbit.build.version.jcr.rmi}</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
         </dependency>
         
         <!-- non-jackrabbit dependencies -->
@@ -100,14 +109,23 @@
         <dependency>
             <id>commons-chain</id>
             <version>1.0</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
         </dependency>
         <dependency>
             <id>commons-digester</id>
             <version>1.6</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
         </dependency>
         <dependency>
             <id>commons-beanutils</id>
             <version>1.7.0</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
         </dependency>
 
         <!-- dependencies of jackrabbit -->

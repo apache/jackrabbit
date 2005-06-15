@@ -98,9 +98,14 @@ public class RepositoryStartupServlet extends HttpServlet {
 	} else {
 	    log.info("RepositoryStartupServlet shutting down...");
 	}
+        shutdownRepository();
 	unregisterRMI();
 	unregisterJNDI();
-	log("RepositoryStartupServlet shut down.");
+        if (log == null) {
+            log("RepositoryStartupServlet shut down.");
+        } else {
+            log.info("RepositoryStartupServlet shut down.");
+        }
     }
 
     /**
@@ -179,6 +184,12 @@ public class RepositoryStartupServlet extends HttpServlet {
 	}
     }
 
+    private void shutdownRepository() {
+        if (repository instanceof RepositoryImpl) {
+            ((RepositoryImpl) repository).shutdown();
+            repository = null;
+        }
+    }
     /**
      * Creates the repository for the given config and homedir.
      *

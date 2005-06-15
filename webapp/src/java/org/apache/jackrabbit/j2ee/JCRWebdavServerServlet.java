@@ -47,6 +47,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
      */
     public static final String INIT_PARAM_PREFIX = "resource-path-prefix";
 
+    private String pathPrefix;
     private JCRWebdavServer server;
     private DavResourceFactory resourceFactory;
     private DavLocatorFactory locatorFactory;
@@ -66,7 +67,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
         super.init();
 
 	// set resource path prefix
-	String pathPrefix = getInitParameter(INIT_PARAM_PREFIX);
+	pathPrefix = getInitParameter(INIT_PARAM_PREFIX);
 	log.debug(INIT_PARAM_PREFIX + " = " + pathPrefix);
 
 	Repository repository = RepositoryAccessServlet.getRepository();
@@ -89,10 +90,14 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
     }
 
     /**
+     * Returns true if the preconditions are met. This includes validation of
+     * {@link WebdavRequest#matchesIfHeader(DavResource) If header} and validation
+     * of {@link org.apache.jackrabbit.webdav.transaction.TransactionConstants#HEADER_TRANSACTIONID
+     * TransactionId header}. This method will also return false if the requested
+     * resource lays within a differenct workspace as is assigned to the repository
+     * session attached to the given request.
      *
-     * @param request
-     * @param resource
-     * @return
+     * @see AbstractWebdavServlet#isPreconditionValid(WebdavRequest, DavResource)
      */
     protected boolean isPreconditionValid(WebdavRequest request, DavResource resource) {
         // first check matching If header
@@ -117,24 +122,64 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the <code>DavSessionProvider</code>
+     *
+     * @return server
+     * @see AbstractWebdavServlet#getDavSessionProvider()
      */
-    public DavSessionProvider getSessionProvider() {
+    public DavSessionProvider getDavSessionProvider() {
         return server;
     }
 
     /**
-     * {@inheritDoc}
+     * Throws <code>UnsupportedOperationException</code>.
+     *
+     * @see AbstractWebdavServlet#setDavSessionProvider(DavSessionProvider)
+     */
+    public void setDavSessionProvider(DavSessionProvider davSessionProvider) {
+        throw new UnsupportedOperationException("Not implemented. DavSession(s) are provided by the 'JCRWebdavServer'");
+    }
+
+    /**
+     * Returns the <code>DavLocatorFactory</code>
+     *
+     * @see AbstractWebdavServlet#getLocatorFactory()
      */
     public DavLocatorFactory getLocatorFactory() {
+        if (locatorFactory == null) {
+            locatorFactory = new DavLocatorFactoryImpl(pathPrefix);
+        }
         return locatorFactory;
     }
 
     /**
-     * {@inheritDoc}
+     * Sets the <code>DavLocatorFactory</code>
+     *
+     * @see AbstractWebdavServlet#setLocatorFactory(DavLocatorFactory)
+     */
+    public void setLocatorFactory(DavLocatorFactory locatorFactory) {
+        this.locatorFactory = locatorFactory;
+    }
+
+    /**
+     * Returns the <code>DavResourceFactory</code>. 
+     *
+     * @see AbstractWebdavServlet#getResourceFactory()
      */
     public DavResourceFactory getResourceFactory() {
+        if (resourceFactory == null) {
+            resourceFactory = new DavResourceFactoryImpl(txMgr, subscriptionMgr);
+        }
         return resourceFactory;
+    }
+
+    /**
+     * Sets the <code>DavResourceFactory</code>.
+     *
+     * @see AbstractWebdavServlet#setResourceFactory(org.apache.jackrabbit.webdav.DavResourceFactory)
+     */
+    public void setResourceFactory(DavResourceFactory resourceFactory) {
+        this.resourceFactory = resourceFactory;
     }
 
     /**

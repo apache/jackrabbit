@@ -16,10 +16,15 @@
  */
 package org.apache.jackrabbit.server.io;
 
+import org.apache.log4j.Logger;
+
 import javax.jcr.Node;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.RepositoryException;
 import java.io.InputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.util.Calendar;
 
 /**
@@ -31,7 +36,12 @@ import java.util.Calendar;
  * <li>jcr:lastModified (from current time)
  * </ul>
  */
-public class XMLImportCommand extends AbstractImportCommand {
+public class XMLImportCommand extends AbstractCommand {
+
+    /**
+     * the default logger
+     */
+    private static Logger log = Logger.getLogger(XMLImportCommand.class);
 
     /**
      * the xml content type
@@ -44,6 +54,100 @@ public class XMLImportCommand extends AbstractImportCommand {
     private String contentNodeType = NT_UNSTRUCTURED;
 
     /**
+     * the nodetype for the node
+     */
+    private String nodeType = "nt:file";
+
+    /**
+     * Executes this command by calling {@link #importResource} if
+     * the given context is of the correct class.
+     *
+     * @param context the (import) context.
+     * @return the return value of the delegated method or false;
+     * @throws Exception in an error occurrs
+     */
+    public boolean execute(AbstractContext context) throws Exception {
+        if (context instanceof ImportContext) {
+            return execute((ImportContext) context);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Executes this command. It checks if this command can handle the content
+     * type and delegates it to {@link #importResource}. If the import is
+     * successfull, the input stream of the importcontext is cleared.
+     *
+     * @param context the import context
+     * @return false
+     * @throws Exception if an error occurrs
+     */
+    public boolean execute(ImportContext context) throws Exception {
+        Node parentNode = context.getNode();
+        InputStream in = context.getInputStream();
+        if (in == null) {
+            // assume already consumed
+            return false;
+        }
+        if (!canHandle(context.getContentType())) {
+            // ignore imports
+            return false;
+        }
+
+        // we need a tmp file, since the import could fail
+        File tmpFile = File.createTempFile("__xmlimport", "xml");
+        FileOutputStream out = new FileOutputStream(tmpFile);
+        byte[] buffer = new byte[8192];
+        boolean first = true;
+        boolean isSysView = false;
+        int read;
+        while ((read=in.read(buffer))>0) {
+            out.write(buffer, 0, read);
+            if (first) {
+                first = false;
+                // could be too less information. is a bit a lazy test
+                isSysView = new String(buffer, 0, read).indexOf("<sv:node") >= 0;
+            }
+        }
+        out.close();
+        in.close();
+        in = new FileInputStream(tmpFile);
+        context.setInputStream(in);
+
+        if (isSysView) {
+            // just import sys view
+            try {
+                parentNode.getSession().importXML(parentNode.getPath(), in,
+                        ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING);
+                context.setInputStream(null);
+                // no further processing
+                return true;
+            } catch (RepositoryException e) {
+                // if error occurrs, reset input stream
+                context.setInputStream(new FileInputStream(tmpFile));
+                log.error("Unable to import sysview. will store as normal file: " + e.toString());
+                parentNode.refresh(false);
+            } finally {
+                in.close();
+            }
+        } else {
+            // check 'file' node
+            Node fileNode = parentNode.hasNode(context.getSystemId())
+                    ? parentNode.getNode(context.getSystemId())
+                    : parentNode.addNode(context.getSystemId(), nodeType);
+            if (importResource(context, fileNode, in)) {
+                context.setInputStream(null);
+                // set current node
+                context.setNode(fileNode);
+            } else {
+                context.setInputStream(new FileInputStream(tmpFile));
+            }
+        }
+        return false;
+    }
+
+    /**
      * Imports the resource by deseriaizing the xml.
      * @param ctx
      * @param parentNode
@@ -54,6 +158,7 @@ public class XMLImportCommand extends AbstractImportCommand {
     public boolean importResource(ImportContext ctx, Node parentNode,
                                   InputStream in)
             throws Exception {
+
         Node content = parentNode.hasNode(JCR_CONTENT)
                 ? parentNode.getNode(JCR_CONTENT)
                 : parentNode.addNode(JCR_CONTENT, contentNodeType);
@@ -71,7 +176,17 @@ public class XMLImportCommand extends AbstractImportCommand {
         } catch (RepositoryException e) {
             // ignore
         }
-        parentNode.getSession().importXML(content.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        try {
+            parentNode.getSession().importXML(content.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        } catch (RepositoryException e) {
+            // if this fails, we ignore import and pass to next command
+            if (content.isNew()) {
+                content.remove();
+            }
+            return false;
+        } finally {
+            in.close();
+        }
         return true;
     }
 
@@ -101,4 +216,13 @@ public class XMLImportCommand extends AbstractImportCommand {
     public void setContentNodeType(String contentNodeType) {
         this.contentNodeType = contentNodeType;
     }
+
+    /**
+     * Sets the node type
+     * @param nodeType
+     */
+    public void setNodeType(String nodeType) {
+        this.nodeType = nodeType;
+    }
+
 }

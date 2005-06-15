@@ -23,8 +23,6 @@ import org.apache.jackrabbit.util.Text;
 
 /**
  * Simple manager for webdav locks.<br>
- * NOTE: the timeout requested is always replace by a infinite timeout and
- * expiration of locks is not checked.
  */
 public class SimpleLockManager implements LockManager {
 
@@ -55,33 +53,37 @@ public class SimpleLockManager implements LockManager {
      * @param resource
      * @return lock that applies to the given resource or <code>null</code>.
      */
-    public ActiveLock getLock(Type type, Scope scope, DavResource resource) {
+    public synchronized ActiveLock getLock(Type type, Scope scope, DavResource resource) {
 	if (!(Type.WRITE.equals(type) && Scope.EXCLUSIVE.equals(scope))) {
 	    return null;
 	}
-	String key = resource.getResourcePath();
-	ActiveLock lock = (locks.containsKey(key)) ? (ActiveLock)locks.get(key) : null;
+        return getLock(resource.getResourcePath());
+    }
 
-	// look for an inherited lock
-	if (lock == null) {
-	    // cut path instead of retrieving the parent resource
-	    String parentPath = Text.getRelativeParent(key, 1);
-	    boolean found = false;
-	    /* stop as soon as parent lock is found:
-	    if the lock is deep or the parent is a collection the lock
-	    applies to the given resource. */
-	    while (!"/".equals(parentPath) && !(found = locks.containsKey(parentPath))) {
-		parentPath = Text.getRelativeParent(parentPath, 1);
-	    }
-	    if (found) {
-		ActiveLock parentLock = (ActiveLock)locks.get(parentPath);
-		if (parentLock.isDeep()) {
-		    lock = parentLock;
-		}
-	    }
-	}
-	// since locks have infinite timeout, check for expired lock is omitted.
-	return lock;
+    /**
+     * Recursivly tries to find the lock
+     *
+     * @param path
+     * @return
+     */
+    private ActiveLock getLock(String path) {
+	ActiveLock lock = (ActiveLock) locks.get(path);
+        if (lock != null) {
+            // check if not expired
+            if (lock.isExpired()) {
+                lock = null;
+            }
+        }
+        if (lock == null) {
+            // check, if child of deep locked parent
+            if (!path.equals("/")) {
+                ActiveLock parentLock = getLock(Text.getRelativeParent(path, 1));
+                if (parentLock != null && parentLock.isDeep()) {
+                    lock = parentLock;
+                }
+            }
+        }
+        return lock;
     }
 
     /**
@@ -90,7 +92,8 @@ public class SimpleLockManager implements LockManager {
      * @param lockInfo
      * @param resource being the lock holder
      */
-    public synchronized ActiveLock createLock(LockInfo lockInfo, DavResource resource)
+    public synchronized ActiveLock createLock(LockInfo lockInfo,
+                                              DavResource resource)
 	    throws DavException {
 	if (lockInfo == null || resource == null) {
 	    throw new IllegalArgumentException("Neither lockInfo nor resource must be null.");
@@ -98,7 +101,12 @@ public class SimpleLockManager implements LockManager {
 
 	String resourcePath = resource.getResourcePath();
 	// test if there is already a lock present on this resource
-	if (locks.containsKey(resourcePath)) {
+        ActiveLock lock = (ActiveLock) locks.get(resourcePath);
+        if (lock != null && lock.isExpired()) {
+            locks.remove(resourcePath);
+            lock = null;
+        }
+        if (lock != null) {
 	    throw new DavException(DavServletResponse.SC_LOCKED, "Resource '" + resource.getResourcePath() + "' already holds a lock.");
 	}
 	// test if the new lock would conflict with any lock inherited from the
@@ -119,10 +127,7 @@ public class SimpleLockManager implements LockManager {
 
 	    }
 	}
-	ActiveLock lock = new DefaultActiveLock(lockInfo);
-	// Lazy: reset the timeout to 'Infinite', in order to omit the tests for
-	// lock expiration.
-	lock.setTimeout(DavConstants.INFINITE_TIMEOUT);
+	lock = new DefaultActiveLock(lockInfo);
 	locks.put(resource.getResourcePath(), lock);
 	return lock;
     }
@@ -138,13 +143,13 @@ public class SimpleLockManager implements LockManager {
      */
     public ActiveLock refreshLock(LockInfo lockInfo, String lockToken, DavResource resource)
 	    throws DavException {
-	// timeout is always infinite > no test for expiration or adjusting timeout needed.
 	ActiveLock lock = getLock(lockInfo.getType(), lockInfo.getScope(), resource);
 	if (lock == null) {
 	    throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
 	} else if (!lock.getToken().equals(lockToken)) {
 	    throw new DavException(DavServletResponse.SC_LOCKED);
 	}
+        lock.setTimeout(lockInfo.getTimeout());
 	return lock;
     }
 
@@ -159,8 +164,6 @@ public class SimpleLockManager implements LockManager {
 	if (!locks.containsKey(resource.getResourcePath())) {
 	    throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
 	}
-	// since locks have infinite timeout, check for expiration is omitted.
-
 	ActiveLock lock = (ActiveLock) locks.get(resource.getResourcePath());
 	if (lock.getToken().equals(lockToken)) {
 	    locks.remove(resource.getResourcePath());
