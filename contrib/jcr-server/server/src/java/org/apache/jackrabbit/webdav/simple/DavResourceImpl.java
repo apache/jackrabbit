@@ -587,6 +587,14 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
+     * Returns the node that is wrapped by this resource.
+     * @return
+     */
+    protected Node getNode() {
+        return node;
+    }
+    
+    /**
      * Returns true, if this webdav resource allows for locking without checking
      * its current lock status.
      *

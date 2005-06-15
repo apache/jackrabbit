@@ -118,12 +118,12 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     private Repository repository;
 
     /**
-     * the session provider
+     * the webdav session provider
      */
     private DavSessionProvider davSessionProvider;
 
     /**
-     * the session provider
+     * the repository session provider
      */
     private SessionProvider sessionProvider;
 
@@ -145,11 +145,6 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
         }
         log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = '" + resourcePathPrefix + "'");
 
-        // init repository
-        repository = RepositoryAccessServlet.getRepository();
-        if (repository == null) {
-            throw new ServletException("Repository could not be retrieved. Check config of 'RepositoryAccessServlet'.");
-        }
         try {
             String chain = getInitParameter(INIT_PARAM_CHAIN_CATALOG);
             URL chainUrl = getServletContext().getResource(chain);
@@ -276,12 +271,23 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * returned.
      *
      * @return the locator factory
+     * @see AbstractWebdavServlet#getLocatorFactory()
      */
     public DavLocatorFactory getLocatorFactory() {
         if (locatorFactory == null) {
             locatorFactory = new LocatorFactoryImpl(resourcePathPrefix);
         }
         return locatorFactory;
+    }
+
+    /**
+     * Sets the <code>DavLocatorFactory</code>.
+     *
+     * @param locatorFactory
+     * @see AbstractWebdavServlet#setLocatorFactory(DavLocatorFactory)
+     */
+    public void setLocatorFactory(DavLocatorFactory locatorFactory) {
+        this.locatorFactory = locatorFactory;
     }
 
     /**
@@ -299,11 +305,21 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     }
 
     /**
+     * Sets the <code>LockManager</code>.
+     *
+     * @param lockManager
+     */
+    public void setLockManager(LockManager lockManager) {
+        this.lockManager = lockManager;
+    }
+
+    /**
      * Returns the <code>DavResourceFactory</code>. If no request factory has
      * been set or created a new instance of {@link ResourceFactoryImpl} is
      * returned.
      *
      * @return the resource factory
+     * @see org.apache.jackrabbit.server.AbstractWebdavServlet#getResourceFactory()
      */
     public DavResourceFactory getResourceFactory() {
         if (resourceFactory == null) {
@@ -313,23 +329,25 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Returns the header value retrieved from the {@link #INIT_PARAM_AUTHENTICATE_HEADER}
-     * init parameter. If the parameter is missing, the value defaults to
-     * {@link #DEFAULT_AUTHENTICATE_HEADER}.
+     * Sets the <code>DavResourceFactory</code>.
      *
-     * @return the header value retrieved from the corresponding init parameter
-     * or {@link #DEFAULT_AUTHENTICATE_HEADER}.
+     * @param resourceFactory
+     * @see AbstractWebdavServlet#setResourceFactory(org.apache.jackrabbit.webdav.DavResourceFactory)
      */
-    public String getAuthenticateHeaderValue() {
-        return authenticate_header;
+    public void setResourceFactory(DavResourceFactory resourceFactory) {
+        this.resourceFactory = resourceFactory;
     }
 
     /**
-     * Returns the <code>DavSessionProvider</code>.
+     * Returns the <code>SessionProvider</code>. If no session provider has been
+     * set or created a new instance of {@link SessionProviderImpl} that extracts
+     * credentials from the request's <code>Authorization</code> header is
+     * returned.
      *
      * @return the session provider
+     * @see RepositoryAccessServlet#getCredentialsFromHeader(String)
      */
-    public synchronized SessionProvider getRepositorySessionProvider() {
+    public synchronized SessionProvider getSessionProvider() {
         if (sessionProvider == null) {
             CredentialsProvider cp = new CredentialsProvider() {
                 public Credentials getCredentials(HttpServletRequest request) throws LoginException, ServletException {
@@ -342,16 +360,77 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Returns the <code>DavSessionProvider</code>.
+     * Sets the <code>SessionProvider</code>.
+     *
+     * @param sessionProvider
+     */
+    public synchronized void setSessionProvider(SessionProvider sessionProvider) {
+        this.sessionProvider = sessionProvider;
+    }
+
+    /**
+     * Returns the <code>DavSessionProvider</code>. If no session provider has
+     * been set or created a new instance of {@link DavSessionProviderImpl}
+     * is returned.
      *
      * @return the session provider
+     * @see org.apache.jackrabbit.server.AbstractWebdavServlet#getDavSessionProvider()
      */
-    public synchronized DavSessionProvider getSessionProvider() {
+    public synchronized DavSessionProvider getDavSessionProvider() {
         if (davSessionProvider == null) {
             davSessionProvider =
-                    new DavSessionProviderImpl(repository, getRepositorySessionProvider());
+                new DavSessionProviderImpl(getRepository(), getSessionProvider());
         }
         return davSessionProvider;
     }
 
+    /**
+     * Sets the <code>DavSessionProvider</code>.
+     *
+     * @param sessionProvider
+     * @see AbstractWebdavServlet#setDavSessionProvider(org.apache.jackrabbit.webdav.DavSessionProvider)
+     */
+    public synchronized void setDavSessionProvider(DavSessionProvider sessionProvider) {
+        this.davSessionProvider = sessionProvider;
+    }
+
+    /**
+     * Returns the header value retrieved from the {@link #INIT_PARAM_AUTHENTICATE_HEADER}
+     * init parameter. If the parameter is missing, the value defaults to
+     * {@link #DEFAULT_AUTHENTICATE_HEADER}.
+     *
+     * @return the header value retrieved from the corresponding init parameter
+     * or {@link #DEFAULT_AUTHENTICATE_HEADER}.
+     * @see org.apache.jackrabbit.server.AbstractWebdavServlet#getAuthenticateHeaderValue()
+     */
+    public String getAuthenticateHeaderValue() {
+        return authenticate_header;
+    }
+
+    /**
+     * Returns the <code>Repository</code>. If no repository has been set or
+     * created the repository initialized by <code>RepositoryAccessServlet</code>
+     * is returned.
+     *
+     * @return repository
+     * @see RepositoryAccessServlet#getRepository()
+     */
+    public Repository getRepository() {
+        if (repository == null) {
+            repository = RepositoryAccessServlet.getRepository();
+            if (repository == null) {
+                throw new IllegalStateException("Repository could not be retrieved. Check config of 'RepositoryAccessServlet'.");
+            }
+        }
+        return repository;
+    }
+
+    /**
+     * Sets the <code>Repository</code>.
+     *
+     * @param repository
+     */
+    public void setRepository(Repository repository) {
+        this.repository = repository;
+    }
 }
