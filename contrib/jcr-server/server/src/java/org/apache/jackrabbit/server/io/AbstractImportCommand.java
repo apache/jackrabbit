@@ -75,9 +75,9 @@ public abstract class AbstractImportCommand extends AbstractCommand {
 
         if (importResource(context, fileNode, in)) {
             context.setInputStream(null);
+            // set current node
+            context.setNode(fileNode);
         }
-        // set current node
-        context.setNode(fileNode);
         return false;
     }
 
