@@ -56,7 +56,7 @@ public class TextPlainTextFilter implements TextFilter {
      */
     public Map doFilter(PropertyState data, String encoding) throws RepositoryException {
         InternalValue[] values = data.getValues();
-        if (values.length > 0) {
+        if (values.length == 1) {
             BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
             try {
                 Reader reader;
