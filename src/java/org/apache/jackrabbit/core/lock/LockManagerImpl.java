@@ -151,7 +151,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      */
     private void reapplyLock(LockToken lockToken) {
         try {
-            NodeImpl node = (NodeImpl) session.getNodeByUUID(lockToken.uuid);
+            NodeId id = new NodeId(lockToken.uuid);
+
+            NodeImpl node = (NodeImpl) session.getItemManager().getItem(id);
             Path path = node.getPrimaryPath();
 
             LockInfo info = new LockInfo(this, lockToken, false,
@@ -241,9 +243,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         SessionImpl session = (SessionImpl) node.getSession();
         info.setLockHolder(session);
         info.setLive(true);
-        if (info.sessionScoped) {
-            session.addListener(info);
-        }
+        session.addListener(info);
         session.addLockToken(info.lockToken.toString(), false);
         lockMap.put(path, info);
         return new LockImpl(info, node);
