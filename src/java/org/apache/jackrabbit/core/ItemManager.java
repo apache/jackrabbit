@@ -275,9 +275,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             // check privileges
             if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
                 // clear cache
-                if (isCached(id)) {
-                    evictItem(id);
-                }
+                evictItem(id);
                 // item exists but the session has not been granted read access
                 return false;
             }
@@ -310,9 +308,7 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             // check privileges
             if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
                 // clear cache
-                if (isCached(id)) {
-                    evictItem(id);
-                }
+                evictItem(id);
                 // item exists but the session has not been granted read access
                 return false;
             }
@@ -362,24 +358,22 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         // check privileges
         if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
             // clear cache
-            if (isCached(id)) {
-                evictItem(id);
-            }
+            evictItem(id);
             throw new AccessDeniedException("cannot read item " + id);
         }
 
         // check cache
-        if (isCached(id)) {
-            return retrieveItem(id);
+        ItemImpl item = retrieveItem(id);
+        if (item == null) {
+            // shortcut
+            if (id.denotesNode() && id.equals(rootNodeId)) {
+                item = getRoot();
+            } else {
+                // create instance of item using its state object
+                item = createItemInstance(id);
+            }
         }
-
-        // shortcut
-        if (id.denotesNode() && id.equals(rootNodeId)) {
-            return getRoot();
-        }
-
-        // create instance of item using its state object
-        return createItemInstance(id);
+        return item;
     }
 
     /**
@@ -592,15 +586,6 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
     }
 
     //---------------------------------------------------< item cache methods >
-    /**
-     * Checks if there's a cache entry for the specified id.
-     *
-     * @param id the id to be checked
-     * @return true if there's a corresponding cache entry, otherwise false.
-     */
-    private boolean isCached(ItemId id) {
-        return itemCache.containsKey(id);
-    }
 
     /**
      * Returns an item reference from the cache.

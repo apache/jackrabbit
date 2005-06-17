@@ -254,14 +254,16 @@ public class SharedItemStateManager extends ItemStateCache
 
         // check cache. synchronized to ensure an entry is not created twice.
         synchronized (cacheMonitor) {
-            if (isCached(id)) {
-                return retrieve(id);
+            ItemState state = retrieve(id);
+            if (state == null) {
+                // regular behaviour
+                if (id.denotesNode()) {
+                    state = getNodeState((NodeId) id);
+                } else {
+                    state = getPropertyState((PropertyId) id);
+                }
             }
-            if (id.denotesNode()) {
-                return getNodeState((NodeId) id);
-            } else {
-                return getPropertyState((PropertyId) id);
-            }
+            return state;
         }
     }
 
