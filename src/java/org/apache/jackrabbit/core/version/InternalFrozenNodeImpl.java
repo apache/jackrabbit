@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version.persistence;
+package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -25,11 +25,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.version.InternalFreeze;
-import org.apache.jackrabbit.core.version.InternalFrozenNode;
-import org.apache.jackrabbit.core.version.InternalVersionItem;
-import org.apache.jackrabbit.core.version.PersistentVersionManager;
-import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
@@ -43,9 +38,9 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- *
+ * Implements a <code>InternalFrozenNode</code>
  */
-class InternalFrozenNodeImpl extends InternalFreezeImpl
+public class InternalFrozenNodeImpl extends InternalFreezeImpl
         implements InternalFrozenNode, Constants {
 
     /**
@@ -67,7 +62,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * the underlying persistance node
      */
-    private PersistentNode node;
+    private NodeStateEx node;
 
     /**
      * the list of frozen properties
@@ -95,9 +90,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @param node
      * @throws javax.jcr.RepositoryException
      */
-    protected InternalFrozenNodeImpl(PersistentVersionManager vMgr,
-                                     PersistentNode node,
-                                     InternalVersionItem parent) throws RepositoryException {
+    public InternalFrozenNodeImpl(VersionManagerImpl vMgr, NodeStateEx node,
+                                  InternalVersionItem parent)
+            throws RepositoryException {
         super(vMgr, parent);
         this.node = node;
 
@@ -146,32 +141,18 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         if (frozenPrimaryType == null) {
             throw new RepositoryException("Illegal frozen node. Must have 'frozenPrimaryType'");
         }
-        // init the frozen child nodes
-        /*
-        PersistentNode[] childNodes = node.getChildNodes();
-        frozenChildNodes = new InternalFreeze[childNodes.length];
-        for (int i = 0; i < childNodes.length; i++) {
-        if (childNodes[i].hasProperty(JCR_FROZEN_PRIMARY_TYPE)) {
-        frozenChildNodes[i] = new InternalFrozenNode(this, childNodes[i]);
-        } else if (childNodes[i].hasProperty(JCR_VERSION_HISTORY)) {
-        frozenChildNodes[i] = new InternalFrozenVersionHistory(this, childNodes[i]);
-        } else {
-        // unkown ?
-        }
-        }
-        */
-
     }
 
     /**
-     * Returns the name of this frozen node
-     *
-     * @return
+     * {@inheritDoc}
      */
     public QName getName() {
         return node.getName();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getId() {
         return node.getUUID();
     }
@@ -212,36 +193,28 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     }
 
     /**
-     * Returns the list of frozen properties
-     *
-     * @return
+     * {@inheritDoc}
      */
     public PropertyState[] getFrozenProperties() {
         return frozenProperties;
     }
 
     /**
-     * Returns the frozen UUID
-     *
-     * @return
+     * {@inheritDoc}
      */
     public String getFrozenUUID() {
         return frozenUUID;
     }
 
     /**
-     * Returns the frozen primary type
-     *
-     * @return
+     * {@inheritDoc}
      */
     public QName getFrozenPrimaryType() {
         return frozenPrimaryType;
     }
 
     /**
-     * Returns the list of the frozen mixin types
-     *
-     * @return
+     * {@inheritDoc}
      */
     public QName[] getFrozenMixinTypes() {
         return frozenMixinTypes;
@@ -260,7 +233,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @return
      * @throws RepositoryException
      */
-    protected static PersistentNode checkin(PersistentNode parent, QName name,
+    protected static NodeStateEx checkin(NodeStateEx parent, QName name,
                                             NodeImpl src)
             throws RepositoryException {
         return checkin(parent, name, src, MODE_VERSION);
@@ -279,12 +252,12 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @return
      * @throws RepositoryException
      */
-    private static PersistentNode checkin(PersistentNode parent, QName name,
+    private static NodeStateEx checkin(NodeStateEx parent, QName name,
                                             NodeImpl src, int mode)
             throws RepositoryException {
 
         // create new node
-        PersistentNode node = parent.addNode(name, NativePVM.NT_REP_FROZEN, null);
+        NodeStateEx node = parent.addNode(name, NT_FROZENNODE, null, true);
 
         // initialize the internal properties
         if (src.isNodeType(MIX_REFERENCEABLE)) {
@@ -346,7 +319,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                 case OnParentVersionAction.VERSION:
                     if (child.isNodeType(MIX_VERSIONABLE)) {
                         // create frozen versionable child
-                        PersistentNode newChild = node.addNode(child.getQName(), NativePVM.NT_REP_FROZEN_HISTORY, null);
+                        NodeStateEx newChild = node.addNode(child.getQName(), NT_VERSIONEDCHILD, null, false);
                         newChild.setPropertyValue(JCR_VERSIONHISTORY,
                                 InternalValue.create(child.getVersionHistory().getUUID()));
                         newChild.setPropertyValue(JCR_BASEVERSION,

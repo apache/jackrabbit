@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.QName;
 
 import javax.jcr.version.VersionException;
-import javax.jcr.RepositoryException;
 import java.util.Iterator;
 
 /**
@@ -75,37 +74,6 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @see javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)
      */
     InternalVersion getVersionByLabel(QName label);
-
-    /**
-     * Removes the indicated version from this VersionHistory. If the specified
-     * vesion does not exist, if it specifies the root version or if it is
-     * referenced by any node e.g. as base version, a VersionException is thrown.
-     * <p/>
-     * all successors of the removed version become successors of the
-     * predecessors of the removed version and vice versa. then, the entire
-     * version node and all its subnodes are removed.
-     *
-     * @param versionName the name of the version to be removed
-     * @throws RepositoryException if an error occurrs.
-     */
-    void removeVersion(QName versionName) throws RepositoryException;
-
-    /**
-     * Sets the version <code>label</code> to the given <code>version</code>.
-     * If the label is already assigned to another version, a VersionException is
-     * thrown unless <code>move</code> is <code>true</code>. If <code>version</code>
-     * is <code>null</code>, the label is removed from the respective version.
-     * In either case, the version the label was previously assigned to is returned,
-     * or <code>null</code> of the label was not moved.
-     *
-     * @param version the name of the version
-     * @param label the label to assgign
-     * @param move  flag what to do by collisions
-     * @return the version that was previously assigned by this label or <code>null</code>.
-     * @throws VersionException
-     */
-    InternalVersion setVersionLabel(QName version, QName label, boolean move)
-            throws VersionException;
 
     /**
      * Returns an iterator over all versions (not ordered yet), including the

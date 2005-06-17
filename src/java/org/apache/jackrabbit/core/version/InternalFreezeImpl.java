@@ -14,24 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version.persistence;
-
-import org.apache.jackrabbit.core.version.InternalFreeze;
-import org.apache.jackrabbit.core.version.InternalVersionItem;
-import org.apache.jackrabbit.core.version.PersistentVersionManager;
+package org.apache.jackrabbit.core.version;
 
 /**
- *
+ * Implements a <code>InternalFreeze</code>
  */
-abstract class InternalFreezeImpl extends InternalVersionItemImpl implements InternalFreeze {
+abstract class InternalFreezeImpl extends InternalVersionItemImpl
+        implements InternalFreeze {
 
+    /**
+     * The parent item
+     */
     private final InternalVersionItem parent;
 
-    protected InternalFreezeImpl(PersistentVersionManager vMgr, InternalVersionItem parent) {
+    /**
+     * Creates a new <code>InternalFreezeImpl</code>
+     *
+     * @param vMgr
+     * @param parent
+     */
+    protected InternalFreezeImpl(VersionManagerImpl vMgr, InternalVersionItem parent) {
         super(vMgr);
         this.parent = parent;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public InternalVersionItem getParent() {
         return parent;
     }

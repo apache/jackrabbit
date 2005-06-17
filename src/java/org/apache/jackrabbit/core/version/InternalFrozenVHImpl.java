@@ -14,49 +14,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version.persistence;
+package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
-import org.apache.jackrabbit.core.version.InternalVersion;
-import org.apache.jackrabbit.core.version.InternalVersionHistory;
-import org.apache.jackrabbit.core.version.InternalVersionItem;
-import org.apache.jackrabbit.core.version.PersistentVersionManager;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
 
 /**
- *
+ * Implements a <code>InternalFrozenVersionHistory</code>
  */
-class InternalFrozenVHImpl extends InternalFreezeImpl implements InternalFrozenVersionHistory {
+public class InternalFrozenVHImpl extends InternalFreezeImpl
+        implements InternalFrozenVersionHistory {
 
     /**
      * the underlying persistence node
      */
-    private PersistentNode node;
+    private NodeStateEx node;
 
     /**
      * Creates a new frozen version history.
      *
      * @param node
      */
-    protected InternalFrozenVHImpl(PersistentVersionManager vMgr, PersistentNode node,
-                                   InternalVersionItem parent) {
+    public InternalFrozenVHImpl(VersionManagerImpl vMgr, NodeStateEx node,
+                                InternalVersionItem parent) {
         super(vMgr, parent);
         this.node = node;
     }
 
+
     /**
-     * Returns the name of this frozen version history
-     *
-     * @return
+     * {@inheritDoc}
      */
     public QName getName() {
         return node.getName();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getId() {
         return node.getUUID();
     }
@@ -93,7 +91,8 @@ class InternalFrozenVHImpl extends InternalFreezeImpl implements InternalFrozenV
     public InternalVersion getBaseVesion()
             throws VersionException {
         try {
-            return getVersionManager().getVersion(getVersionHistoryId(), getBaseVersionId());
+            InternalVersionHistory history = getVersionManager().getVersionHistory(getVersionHistoryId());
+            return history.getVersion(getBaseVersionId());
         } catch (RepositoryException e) {
             throw new VersionException(e);
         }

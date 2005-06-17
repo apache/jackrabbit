@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 
@@ -26,22 +25,20 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * This interface defines the version manager. It gives access to the underlying
  * persistence layer of the versioning.
  */
 public interface VersionManager {
+
     /**
      * returns the virtual item state provider that exposes the internal versions
      * as items.
      *
-     * @param base
      * @return
      */
-    VirtualItemStateProvider getVirtualItemStateProvider(ItemStateManager base);
+    VirtualItemStateProvider getVirtualItemStateProvider();
 
     /**
      * Creates a new version history. This action is needed either when creating
@@ -52,7 +49,8 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    VersionHistory createVersionHistory(Session session, NodeState node) throws RepositoryException;
+    VersionHistory createVersionHistory(Session session, NodeState node)
+            throws RepositoryException;
 
     /**
      * invokes the checkin() on the persistent version manager and remaps the
@@ -88,10 +86,9 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    Version setVersionLabel(VersionHistory history, QName version, QName label, boolean move)
+    Version setVersionLabel(VersionHistory history, QName version, QName label,
+                            boolean move)
             throws RepositoryException;
-
-    //-----------------------------------------------------< internal stuff >---
 
     /**
      * Checks if the version history with the given id exists
@@ -108,23 +105,8 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    InternalVersionHistory getVersionHistory(String id) throws RepositoryException;
-
-    /**
-     * Returns the number of version histories
-     *
-     * @return
-     * @throws RepositoryException
-     */
-    int getNumVersionHistories() throws RepositoryException;
-
-    /**
-     * Returns an iterator over all ids of {@link InternalVersionHistory}s.
-     *
-     * @return
-     * @throws RepositoryException
-     */
-    Iterator getVersionHistoryIds() throws RepositoryException;
+    InternalVersionHistory getVersionHistory(String id)
+            throws RepositoryException;
 
     /**
      * Checks if the version with the given id exists
@@ -142,44 +124,6 @@ public interface VersionManager {
      * @throws RepositoryException
      */
     InternalVersion getVersion(String id) throws RepositoryException;
-
-    /**
-     * checks, if the node with the given id exists
-     * todo: move probably to VersionManagerImpl
-     *
-     * @param id
-     * @return
-     */
-    boolean hasItem(String id);
-
-    /**
-     * Returns the version item with the given id
-     * todo: move probably to VersionManagerImpl
-     *
-     * @param id
-     * @return
-     * @throws RepositoryException
-     */
-    InternalVersionItem getItem(String id) throws RepositoryException;
-
-    /**
-     * Returns the references that exist to this version item
-     * todo: move probably to VersionManagerImpl
-     *
-     * @param item
-     * @return a collection of property ids
-     */
-    List getItemReferences(InternalVersionItem item);
-
-    /**
-     * Informs this version manager that the references to one of its
-     * items has changed.
-     * todo: move probably to VersionManagerImpl
-     *
-     * @param item the version item that is referenced
-     * @param references the collection of PropertyIds that references the item
-     */
-    void setItemReferences(InternalVersionItem item, List references);
 
     /**
      * Close this version manager. After having closed a persistence

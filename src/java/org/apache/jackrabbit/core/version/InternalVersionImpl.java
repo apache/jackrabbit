@@ -14,17 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version.persistence;
+package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.InternalFrozenNode;
-import org.apache.jackrabbit.core.version.InternalVersion;
-import org.apache.jackrabbit.core.version.InternalVersionHistory;
-import org.apache.jackrabbit.core.version.InternalVersionItem;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -34,9 +30,9 @@ import java.util.Calendar;
 import java.util.HashSet;
 
 /**
- *
+ * Implements a <code>InternalVersion</code>
  */
-class InternalVersionImpl extends InternalVersionItemImpl
+public class InternalVersionImpl extends InternalVersionItemImpl
         implements InternalVersion, Constants {
 
     /**
@@ -52,7 +48,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * the underlying persistance node of this version
      */
-    private PersistentNode node;
+    private NodeStateEx node;
 
     /**
      * the date when this version was created
@@ -86,7 +82,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      *
      * @param node
      */
-    InternalVersionImpl(InternalVersionHistoryImpl vh, PersistentNode node, QName name) {
+    public InternalVersionImpl(InternalVersionHistoryImpl vh, NodeStateEx node, QName name) {
         super(vh.getVersionManager());
         this.versionHistory = vh;
         this.node = node;
@@ -100,31 +96,29 @@ class InternalVersionImpl extends InternalVersionItemImpl
         isRoot = name.equals(JCR_ROOTVERSION);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getId() {
         return node.getUUID();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public InternalVersionItem getParent() {
         return versionHistory;
     }
 
     /**
-     * Returns the name of this version
-     *
-     * @return
+     * {@inheritDoc}
      */
     public QName getName() {
         return name;
     }
 
-    protected PersistentNode getNode() {
-        return node;
-    }
-
     /**
-     * Returns the frozen node
-     *
-     * @return
+     * {@inheritDoc}
      */
     public InternalFrozenNode getFrozenNode() {
         // get frozen node
@@ -136,30 +130,6 @@ class InternalVersionImpl extends InternalVersionItemImpl
             return (InternalFrozenNode) getVersionManager().getItem(entry.getUUID());
         } catch (RepositoryException e) {
             throw new IllegalStateException("unable to retrieve frozen node: " + e);
-        }
-    }
-
-    /**
-     * adds a successor version to the internal cache
-     *
-     * @param successor
-     */
-    private void addSuccessor(InternalVersion successor) {
-        successors.add(successor);
-    }
-
-    /**
-     * resolves the predecessors property and indirectly adds it self to their
-     * successor list.
-     */
-    void resolvePredecessors() {
-        InternalValue[] values = node.getPropertyValues(JCR_PREDECESSORS);
-        if (values != null) {
-            for (int i = 0; i < values.length; i++) {
-                InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(values[i].internalValue().toString());
-                predecessors.add(v);
-                v.addSuccessor(this);
-            }
         }
     }
 
@@ -182,6 +152,71 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     public InternalVersion[] getPredecessors() {
         return (InternalVersionImpl[]) predecessors.toArray(new InternalVersionImpl[predecessors.size()]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isMoreRecent(InternalVersion v) {
+        for (int i = 0; i < predecessors.size(); i++) {
+            InternalVersion pred = (InternalVersion) predecessors.get(i);
+            if (pred.equals(v) || pred.isMoreRecent(v)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalVersionHistory getVersionHistory() {
+        return versionHistory;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasLabel(QName label) {
+        return internalHasLabel(label);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public QName[] getLabels() {
+        return internalGetLabels();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isRootVersion() {
+        return isRoot;
+    }
+
+    /**
+     * resolves the predecessors property and indirectly adds it self to their
+     * successor list.
+     */
+    void resolvePredecessors() {
+        InternalValue[] values = node.getPropertyValues(JCR_PREDECESSORS);
+        if (values != null) {
+            for (int i = 0; i < values.length; i++) {
+                InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(values[i].internalValue().toString());
+                predecessors.add(v);
+                v.addSuccessor(this);
+            }
+        }
+    }
+
+    /**
+     * adds a successor version to the internal cache
+     *
+     * @param successor
+     */
+    private void addSuccessor(InternalVersion successor) {
+        successors.add(successor);
     }
 
     /**
@@ -264,40 +299,12 @@ class InternalVersionImpl extends InternalVersionItemImpl
     }
 
     /**
-     * Checks if this version is more recent than the given version <code>v</code>.
-     * A version is more recent if and only if it is a successor (or a successor
-     * of a successor, etc., to any degree of separation) of the compared one.
-     *
-     * @param v the version to check
-     * @return <code>true</code> if the version is more recent;
-     *         <code>false</code> otherwise.
-     */
-    public boolean isMoreRecent(InternalVersion v) {
-        for (int i = 0; i < predecessors.size(); i++) {
-            InternalVersion pred = (InternalVersion) predecessors.get(i);
-            if (pred.equals(v) || pred.isMoreRecent(v)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * returns the internal version history of this version
-     *
-     * @return
-     */
-    public InternalVersionHistory getVersionHistory() {
-        return versionHistory;
-    }
-
-    /**
      * adds a label to the label cache. does not affect storage
      *
      * @param label
      * @return
      */
-    protected boolean internalAddLabel(QName label) {
+    boolean internalAddLabel(QName label) {
         if (labelCache == null) {
             labelCache = new HashSet();
         }
@@ -310,7 +317,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param label
      * @return
      */
-    protected boolean internalRemoveLabel(QName label) {
+    boolean internalRemoveLabel(QName label) {
         if (labelCache == null) {
             return false;
         } else {
@@ -324,7 +331,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param label
      * @return
      */
-    protected boolean internalHasLabel(QName label) {
+    boolean internalHasLabel(QName label) {
         if (labelCache == null) {
             return false;
         } else {
@@ -333,40 +340,15 @@ class InternalVersionImpl extends InternalVersionItemImpl
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public boolean hasLabel(QName label) {
-        return internalHasLabel(label);
-    }
-
-    /**
      * returns the array of the cached labels
      *
      * @return
      */
-    protected QName[] internalGetLabels() {
+    QName[] internalGetLabels() {
         if (labelCache == null) {
             return new QName[0];
         } else {
             return (QName[]) labelCache.toArray(new QName[labelCache.size()]);
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName[] getLabels() {
-        return internalGetLabels();
-    }
-
-    /**
-     * checks if this is the root version.
-     *
-     * @return <code>true</code> if this version is the root version;
-     *         <code>false</code> otherwise.
-     */
-    public boolean isRootVersion() {
-        return isRoot;
-    }
-
 }
