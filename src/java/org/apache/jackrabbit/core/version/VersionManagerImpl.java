@@ -353,9 +353,17 @@ public class VersionManagerImpl implements VersionManager,
      * @return
      * @throws RepositoryException
      */
-    public Version checkin(NodeImpl node) throws RepositoryException {
+    public synchronized Version checkin(NodeImpl node) throws RepositoryException {
         SessionImpl session = (SessionImpl) node.getSession();
         InternalVersion version = internalCheckin(node);
+        // need to recalc successor prop
+        InternalVersion[] preds = version.getPredecessors();
+        for (int i=0; i<preds.length; i++) {
+            ItemState state = (ItemState) items.remove(new PropertyId(preds[i].getId(), JCR_SUCCESSORS));
+            if (state != null) {
+                state.discard();
+            }
+        }
         invalidateItem(new NodeId(version.getVersionHistory().getId()), true);
         VersionImpl v = (VersionImpl) session.getNodeByUUID(version.getId());
 
@@ -687,21 +695,19 @@ public class VersionManagerImpl implements VersionManager,
      * @param id
      */
     private void invalidateItem(ItemId id, boolean recursive) {
-        ItemState state = (ItemState) items.remove(id);
+        ItemState state = (ItemState) items.get(id);
         if (state != null) {
-            if (recursive) {
-                if (state instanceof NodeState) {
-                    NodeState nState = (NodeState) state;
-                    Iterator iter = nState.getPropertyEntries().iterator();
-                    while (iter.hasNext()) {
-                        NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
-                        invalidateItem(new PropertyId(nState.getUUID(), pe.getName()), false);
-                    }
-                    iter = nState.getChildNodeEntries().iterator();
-                    while (iter.hasNext()) {
-                        NodeState.ChildNodeEntry pe = (NodeState.ChildNodeEntry) iter.next();
-                        invalidateItem(new NodeId(pe.getUUID()), true);
-                    }
+            if (recursive && state instanceof NodeState) {
+                NodeState nState = (NodeState) state;
+                Iterator iter = nState.getPropertyEntries().iterator();
+                while (iter.hasNext()) {
+                    NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
+                    invalidateItem(new PropertyId(nState.getUUID(), pe.getName()), false);
+                }
+                iter = nState.getChildNodeEntries().iterator();
+                while (iter.hasNext()) {
+                    NodeState.ChildNodeEntry pe = (NodeState.ChildNodeEntry) iter.next();
+                    invalidateItem(new NodeId(pe.getUUID()), true);
                 }
             }
             state.notifyStateUpdated();

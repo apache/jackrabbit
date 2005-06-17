@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -320,10 +321,12 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
                     if (child.isNodeType(MIX_VERSIONABLE)) {
                         // create frozen versionable child
                         NodeStateEx newChild = node.addNode(child.getQName(), NT_VERSIONEDCHILD, null, false);
-                        newChild.setPropertyValue(JCR_VERSIONHISTORY,
-                                InternalValue.create(child.getVersionHistory().getUUID()));
+                        newChild.setPropertyValue(JCR_CHILDVERSIONHISTORY,
+                                InternalValue.create(new UUID(child.getVersionHistory().getUUID())));
+                        /*
                         newChild.setPropertyValue(JCR_BASEVERSION,
                                 InternalValue.create(child.getBaseVersion().getUUID()));
+                        */
                         break;
                     }
                     // else copy but do not recurse
