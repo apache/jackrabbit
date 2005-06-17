@@ -174,12 +174,21 @@ class LockInfo implements SessionListener {
     /**
      * {@inheritDoc}
      * <p/>
-     * When the owning session is logging out, we should unlock the node on
-     * behalf of the user currently holding it.
+     * When the owning session is logging out, we have to perform some
+     * operations depending on the lock type.
+     * (1) If the lock was session-scoped, we unlock the node.
+     * (2) If the lock was open-scoped, we remove the lock token
+     *     from the session.
      */
     public void loggingOut(SessionImpl session) {
         if (live) {
-            lockMgr.unlock(this);
+            if (sessionScoped) {
+                lockMgr.unlock(this);
+            } else {
+                if (session.equals(lockHolder)) {
+                    lockHolder = null;
+                }
+            }
         }
     }
 
