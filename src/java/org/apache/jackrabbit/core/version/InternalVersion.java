@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.QName;
 
+import javax.jcr.version.Version;
 import java.util.Calendar;
 
 /**

@@ -369,6 +369,11 @@ commented out by default.
                 <requiredPrimaryType>nt:versionHistory</requiredPrimaryType>
             </requiredPrimaryTypes>
         </childNodeDefinition>
+        <childNodeDefinition name="*" defaultPrimaryType="rep:versionStorage" autoCreated="false" mandatory="false" onParentVersion="ABORT" protected="true" sameNameSiblings="true">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:versionStorage</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
     </nodeType>
     <nodeType name="rep:nodeTypes" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
         <supertypes>
@@ -379,33 +384,6 @@ commented out by default.
                 <requiredPrimaryType>nt:nodeType</requiredPrimaryType>
             </requiredPrimaryTypes>
         </childNodeDefinition>
-    </nodeType>
-
-    <!-- internal node types for persistent version manager -->
-    <nodeType name="rep:versionHistory" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
-        <supertypes>
-            <supertype>nt:unstructured</supertype>
-        </supertypes>
-    </nodeType>
-    <nodeType name="rep:versionLabels" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
-        <supertypes>
-            <supertype>nt:unstructured</supertype>
-        </supertypes>
-    </nodeType>
-    <nodeType name="rep:version" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
-        <supertypes>
-            <supertype>nt:unstructured</supertype>
-        </supertypes>
-    </nodeType>
-    <nodeType name="rep:frozen" isMixin="false" hasOrderableChildNodes="true" primaryItemName="">
-        <supertypes>
-            <supertype>nt:unstructured</supertype>
-        </supertypes>
-    </nodeType>
-    <nodeType name="rep:frozenVersionHistory" isMixin="false" hasOrderableChildNodes="true" primaryItemName="">
-        <supertypes>
-            <supertype>nt:unstructured</supertype>
-        </supertypes>
     </nodeType>
 
 </nodeTypes>

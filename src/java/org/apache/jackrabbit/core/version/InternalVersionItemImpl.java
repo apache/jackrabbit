@@ -14,27 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version.persistence;
-
-import org.apache.jackrabbit.core.version.InternalVersionItem;
-import org.apache.jackrabbit.core.version.PersistentVersionManager;
+package org.apache.jackrabbit.core.version;
 
 /**
- *
+ * Implements a <code>InternalVersionItem</code>.
  */
 abstract class InternalVersionItemImpl implements InternalVersionItem {
 
     /**
      * the version manager
      */
-    private final PersistentVersionManager vMgr;
+    private final VersionManagerImpl vMgr;
 
     /**
      * Creates a new Internal version item impl
      *
      * @param vMgr
      */
-    protected InternalVersionItemImpl(PersistentVersionManager vMgr) {
+    protected InternalVersionItemImpl(VersionManagerImpl vMgr) {
         this.vMgr = vMgr;
     }
 
@@ -43,7 +40,7 @@ abstract class InternalVersionItemImpl implements InternalVersionItem {
      *
      * @return
      */
-    protected PersistentVersionManager getVersionManager() {
+    protected VersionManagerImpl getVersionManager() {
         return vMgr;
     }
 

@@ -65,10 +65,8 @@ import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PersistenceManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.uuid.UUID;
-import org.apache.jackrabbit.core.version.PersistentVersionManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.core.version.persistence.NativePVM;
 import org.apache.log4j.Logger;
 
 /**
@@ -104,7 +102,6 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     private final NamespaceRegistryImpl nsReg;
     private final NodeTypeRegistry ntReg;
-    private final PersistentVersionManager pvMgr;
     private final VersionManager vMgr;
     private final VirtualNodeTypeStateManager virtNTMgr;
 
@@ -192,8 +189,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                 rootNodeUUID,
                 nsReg,
                 ntReg);
-        pvMgr = new NativePVM(pm, getNodeTypeRegistry());
-        vMgr = new VersionManagerImpl(pvMgr, ntReg, delegatingDispatcher,
+        vMgr = new VersionManagerImpl(pm, ntReg, delegatingDispatcher,
                 VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
 
         // init virtual nodetype manager
@@ -663,11 +659,6 @@ public class RepositoryImpl implements Repository, SessionListener,
          * todo further cleanup tasks, free resources, etc.
          */
         try {
-            pvMgr.close();
-        } catch (Exception e) {
-            log.error("Error while closing Persistent Version Manager.", e);
-        }
-        try {
             vMgr.close();
         } catch (Exception e) {
             log.error("Error while closing Version Manager.", e);
@@ -1108,7 +1099,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                             getPersistenceManager(config.getPersistenceManagerConfig()),
                             rootNodeUUID, ntReg);
                     try {
-                        itemStateMgr.addVirtualItemStateProvider(vMgr.getVirtualItemStateProvider(itemStateMgr));
+                        itemStateMgr.addVirtualItemStateProvider(vMgr.getVirtualItemStateProvider());
                         itemStateMgr.addVirtualItemStateProvider(virtNTMgr.getVirtualItemStateProvider());
                     } catch (Exception e) {
                         log.error("Unable to add vmgr: " + e.toString(), e);

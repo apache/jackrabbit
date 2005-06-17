@@ -25,6 +25,7 @@ import javax.jcr.version.VersionHistory;
  * given some hints and a version history
  */
 public interface VersionSelector {
+    
     /**
      * Selects a version of the given version history. If this VersionSelector
      * is unable to select one, it can return <code>null</code>.
