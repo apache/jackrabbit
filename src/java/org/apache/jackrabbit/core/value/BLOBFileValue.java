@@ -202,7 +202,7 @@ public class BLOBFileValue implements Value {
             }
         } catch (FileSystemException fse) {
             throw new IOException(fsResource.getPath()
-                    + ": the specified resource does not exist");
+                    + ": Error while creating value: " + fse.toString());
         }
         // this instance is backed by a resource in the virtual file system
         this.fsResource = fsResource;
