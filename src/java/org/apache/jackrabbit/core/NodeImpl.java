@@ -543,23 +543,8 @@ public class NodeImpl extends ItemImpl implements Node {
         return node;
     }
 
-    protected NodeImpl createChildNodeLink(QName nodeName, String targetUUID)
-            throws RepositoryException {
-        // modify the state of 'this', i.e. the parent node
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
-
-        NodeId targetId = new NodeId(targetUUID);
-        NodeImpl targetNode = (NodeImpl) itemMgr.getItem(targetId);
-        // notify target of link
-        targetNode.onLink(thisState);
-
-        thisState.addChildNodeEntry(nodeName, targetUUID);
-
-        return (NodeImpl) itemMgr.getItem(targetId);
-    }
-
-    protected void renameChildNodeLink(QName oldName, int index, String uuid,
-                                       QName newName)
+    protected void renameChildNode(QName oldName, int index, String uuid,
+                                   QName newName)
             throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
@@ -613,18 +598,18 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(msg);
         }
 
-        NodeId childId = new NodeId(entry.getUUID());
-        NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
-        // notify target of removal/unlink
-        childNode.onUnlink(thisState);
-
-        // remove child entry
+        // remove the child node entry
         if (!thisState.removeChildNodeEntry(nodeName, index)) {
             String msg = "failed to remove child " + nodeName + " of "
                     + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg);
         }
+
+        // notify target of removal
+        NodeId childId = new NodeId(entry.getUUID());
+        NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
+        childNode.onRemove();
     }
 
     protected void onRedefine(NodeDefId defId) throws RepositoryException {
@@ -637,51 +622,41 @@ public class NodeImpl extends ItemImpl implements Node {
         definition = newDef;
     }
 
-    protected void onLink(NodeState parentState) throws RepositoryException {
-        // modify the state of 'this', i.e. the target node
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        // add uuid of this node to target's parent list
-        thisState.addParentUUID(parentState.getUUID());
-    }
-
-    protected void onUnlink(NodeState parentState) throws RepositoryException {
+    protected void onRemove() throws RepositoryException {
         // modify the state of 'this', i.e. the target node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
 
-        // check if this node would be orphaned after unlinking it from parent
-        ArrayList parentUUIDs = new ArrayList(thisState.getParentUUIDs());
-        parentUUIDs.remove(parentState.getUUID());
-        boolean orphaned = parentUUIDs.isEmpty();
-
-        if (orphaned) {
-            // remove child nodes (recursive)
-            // use temp array to avoid ConcurrentModificationException
-            ArrayList tmp = new ArrayList(thisState.getChildNodeEntries());
-            // remove from tail to avoid problems with same-name siblings
-            for (int i = tmp.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry =
-                        (NodeState.ChildNodeEntry) tmp.get(i);
-                removeChildNode(entry.getName(), entry.getIndex());
-            }
-
-            // remove properties
-            // use temp array to avoid ConcurrentModificationException
-            tmp = new ArrayList(thisState.getPropertyEntries());
-            for (int i = 0; i < tmp.size(); i++) {
-                NodeState.PropertyEntry entry =
-                        (NodeState.PropertyEntry) tmp.get(i);
-                removeChildProperty(entry.getName());
-            }
+        // remove child nodes
+        // use temp array to avoid ConcurrentModificationException
+        ArrayList tmp = new ArrayList(thisState.getChildNodeEntries());
+        // remove from tail to avoid problems with same-name siblings
+        for (int i = tmp.size() - 1; i >= 0; i--) {
+            NodeState.ChildNodeEntry entry =
+                    (NodeState.ChildNodeEntry) tmp.get(i);
+            // remove the child node entry
+            thisState.removeChildNodeEntry(entry.getName(), entry.getIndex());
+            // recursively remove child node
+            NodeId childId = new NodeId(entry.getUUID());
+            NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
+            childNode.onRemove();
         }
 
-        // now actually do unlink this node from specified parent node
-        // (i.e. remove uuid of parent node from this node's parent list)
-        thisState.removeParentUUID(parentState.getUUID());
-
-        if (orphaned) {
-            // remove this node
-            itemMgr.getItem(id).setRemoved();
+        // remove properties
+        // use temp array to avoid ConcurrentModificationException
+        tmp = new ArrayList(thisState.getPropertyEntries());
+        for (int i = 0; i < tmp.size(); i++) {
+            NodeState.PropertyEntry entry =
+                    (NodeState.PropertyEntry) tmp.get(i);
+            // remove the property entry
+            thisState.removePropertyEntry(entry.getName());
+            // remove property
+            PropertyId propId = new PropertyId(thisState.getUUID(), entry.getName());
+            itemMgr.getItem(propId).setRemoved();
         }
+
+        // finally remove this node
+        thisState.setParentUUID(null);
+        itemMgr.getItem(id).setRemoved();
     }
 
     protected NodeImpl internalAddNode(String relPath, NodeTypeImpl nodeType)
@@ -918,7 +893,6 @@ public class NodeImpl extends ItemImpl implements Node {
         // copy state from transient state:
         // parent uuid's
         persistentState.setParentUUID(transientState.getParentUUID());
-        persistentState.setParentUUIDs(transientState.getParentUUIDs());
         // mixin types
         persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
         // id of definition
@@ -1222,7 +1196,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             EffectiveNodeType ent = ntReg.getEffectiveNodeType((QName[]) mixinNames.toArray(new QName[mixinNames.size()]));
             return ent.includesNodeType(ntName);
-        } catch (NodeTypeConflictException ntce) {
+        } catch  (NodeTypeConflictException ntce) {
             String msg = "internal error: invalid mixin node type(s)";
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
@@ -3712,7 +3686,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public Lock lock(boolean isDeep, boolean isSessionScoped)
+        public Lock lock(boolean isDeep, boolean isSessionScoped)
             throws UnsupportedRepositoryOperationException, LockException,
             AccessDeniedException, InvalidItemStateException,
             RepositoryException {

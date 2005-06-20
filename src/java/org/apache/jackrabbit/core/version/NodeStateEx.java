@@ -90,8 +90,7 @@ class NodeStateEx implements Constants {
             try {
                 String parentId = nodeState.getParentUUID();
                 NodeState parent = (NodeState) stateMgr.getItemState(new NodeId(parentId));
-                name = ((NodeState.ChildNodeEntry)
-                        parent.getChildNodeEntries(nodeState.getUUID()).get(0)).getName();
+                name = parent.getChildNodeEntry(nodeState.getUUID()).getName();
             } catch (ItemStateException e) {
                 // should never occurr
                 throw new IllegalStateException(e.toString());

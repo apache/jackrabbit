@@ -221,6 +221,7 @@ public class WorkspaceImporter implements Importer, Constants {
             }
             // remove conflicting:
             // check if conflicting can be removed
+            // (access rights, node type constraints, locking & versioning status)
             itemOps.checkRemoveNode(conflicting,
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.commons.collections.ReferenceMap;
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;

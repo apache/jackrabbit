@@ -42,7 +42,7 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.security.auth.Subject;
 
-import org.apache.commons.collections.ReferenceMap;
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;

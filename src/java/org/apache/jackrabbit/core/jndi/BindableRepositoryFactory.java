@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.jndi;
 
-import org.apache.commons.collections.ReferenceMap;
+import org.apache.commons.collections.map.ReferenceMap;
 
 import javax.naming.Context;
 import javax.naming.Name;

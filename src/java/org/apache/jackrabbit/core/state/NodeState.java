@@ -40,18 +40,7 @@ import java.util.Map;
  */
 public class NodeState extends ItemState {
 
-    static final long serialVersionUID = -1785389681811057946L;
-
-    /**
-     * List of parent UUIDs: there's <i>one</i> entry for every parent although
-     * a parent might have more than one child entries refering to <i>this</i>
-     * node state.
-     * <p/>
-     * Furthermore:
-     * <p/>
-     * <code>parentUUIDs.contains(super.parentUUID) == true</code>
-     */
-    protected List parentUUIDs = new ArrayList();
+    static final long serialVersionUID = -3210487938753054604L;
 
     protected String uuid;
     protected QName nodeTypeName;
@@ -97,9 +86,6 @@ public class NodeState extends ItemState {
                      int initialStatus, boolean isTransient) {
         super(parentUUID, new NodeId(uuid), initialStatus, isTransient);
 
-        if (parentUUID != null) {
-            parentUUIDs.add(parentUUID);
-        }
         this.nodeTypeName = nodeTypeName;
         this.uuid = uuid;
     }
@@ -116,8 +102,6 @@ public class NodeState extends ItemState {
         mixinTypeNames.addAll(nodeState.getMixinTypeNames());
         defId = nodeState.getDefinitionId();
         uuid = nodeState.getUUID();
-        parentUUIDs.clear();
-        parentUUIDs.addAll(nodeState.getParentUUIDs());
         propertyEntries.clear();
         propertyEntries.addAll(nodeState.getPropertyEntries());
         childNodeEntries.removeAll();
@@ -188,77 +172,6 @@ public class NodeState extends ItemState {
      */
     public String getUUID() {
         return uuid;
-    }
-
-    /**
-     * Returns the UUIDs of the parent <code>NodeState</code>s or <code>null</code>
-     * if either this item state represents the root node or this item state is
-     * 'free floating', i.e. not attached to the repository's hierarchy.
-     *
-     * @return the UUIDs of the parent <code>NodeState</code>s
-     * @see #addParentUUID
-     * @see #removeParentUUID
-     */
-    public synchronized List getParentUUIDs() {
-        return Collections.unmodifiableList(parentUUIDs);
-    }
-
-    /**
-     * Adds the specified UUID to the list of parent UUIDs of this node state.
-     *
-     * @param uuid the UUID of the parent node
-     * @see #getParentUUIDs
-     * @see #removeParentUUID
-     */
-    public synchronized void addParentUUID(String uuid) {
-        if (parentUUIDs.isEmpty()) {
-            parentUUID = uuid;
-        }
-        parentUUIDs.add(uuid);
-    }
-
-    /**
-     * Removes the specified UUID from the list of parent UUIDs of this node state.
-     *
-     * @param uuid the UUID of the parent node
-     * @return <code>true</code> if the specified UUID was contained in the set
-     *         of parent UUIDs and could be removed.
-     * @see #getParentUUIDs
-     * @see #addParentUUID
-     */
-    public synchronized boolean removeParentUUID(String uuid) {
-        if (parentUUID.equals(uuid)) {
-            parentUUID = null;
-        }
-        boolean removed = parentUUIDs.remove(uuid);
-        if (parentUUID == null) {
-            // change primary parent
-            if (!parentUUIDs.isEmpty()) {
-                parentUUID = (String) parentUUIDs.iterator().next();
-            }
-        }
-        return removed;
-    }
-
-    /**
-     * Removes all parent UUIDs of this node state.
-     */
-    public synchronized void removeAllParentUUIDs() {
-        parentUUIDs.clear();
-        parentUUID = null;
-    }
-
-    /**
-     * Sets the UUIDs of the parent <code>NodeState</code>s.
-     */
-    public synchronized void setParentUUIDs(List uuids) {
-        parentUUIDs.clear();
-        parentUUIDs.addAll(uuids);
-        if (!parentUUIDs.isEmpty()) {
-            parentUUID = (String) parentUUIDs.iterator().next();
-        } else {
-            parentUUID = null;
-        }
     }
 
     /**
@@ -365,6 +278,20 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * Returns the <code>ChildNodeEntry</code> with the specified uuid or
+     * <code>null</code> if there's no such entry.
+     *
+     * @param uuid UUID of a child node state.
+     * @return the <code>ChildNodeEntry</code> with the specified uuid or
+     *         <code>null</code> if there's no such entry.
+     * @see #addChildNodeEntry
+     * @see #removeChildNodeEntry
+     */
+    public synchronized ChildNodeEntry getChildNodeEntry(String uuid) {
+        return childNodeEntries.get(uuid);
+    }
+
+    /**
      * Returns a list of <code>ChildNodeEntry</code> objects denoting the
      * child nodes of this node.
      *
@@ -374,19 +301,6 @@ public class NodeState extends ItemState {
      */
     public synchronized List getChildNodeEntries() {
         return childNodeEntries.entries();
-    }
-
-    /**
-     * Returns a list of <code>ChildNodeEntry</code> objects denoting the
-     * child nodes of this node that refer to the specified UUID.
-     *
-     * @param uuid UUID of a child node state.
-     * @return list of <code>ChildNodeEntry</code> objects
-     * @see #addChildNodeEntry
-     * @see #removeChildNodeEntry
-     */
-    public synchronized List getChildNodeEntries(String uuid) {
-        return childNodeEntries.get(uuid);
     }
 
     /**
@@ -402,24 +316,25 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Adds a new <code>ChildNodeEntry<code>.
+     * Adds a new <code>ChildNodeEntry</code>.
      *
-     * @param nodeName <code>QName<code> object specifying the name of the new entry.
+     * @param nodeName <code>QName</code> object specifying the name of the new entry.
      * @param uuid     UUID the new entry is refering to.
-     * @return the newly added <code>ChildNodeEntry<code>
+     * @return the newly added <code>ChildNodeEntry</code>
      */
-    public synchronized ChildNodeEntry addChildNodeEntry(QName nodeName, String uuid) {
+    public synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
+                                                         String uuid) {
         ChildNodeEntry entry = childNodeEntries.add(nodeName, uuid);
         notifyNodeAdded(entry);
         return entry;
     }
 
     /**
-     * Renames a new <code>ChildNodeEntry<code>.
+     * Renames a new <code>ChildNodeEntry</code>.
      *
-     * @param oldName <code>QName<code> object specifying the entry's old name
+     * @param oldName <code>QName</code> object specifying the entry's old name
      * @param index 1-based index if there are same-name child node entries
-     * @param newName <code>QName<code> object specifying the entry's new name
+     * @param newName <code>QName</code> object specifying the entry's new name
      * @return <code>true</code> if the entry was sucessfully renamed;
      *         otherwise <code>false</code>
      */
@@ -427,7 +342,8 @@ public class NodeState extends ItemState {
                                                      QName newName) {
         ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
         if (oldEntry != null) {
-            ChildNodeEntry newEntry = addChildNodeEntry(newName, oldEntry.getUUID());
+            ChildNodeEntry newEntry =
+                    addChildNodeEntry(newName, oldEntry.getUUID());
             notifyNodeAdded(newEntry);
             notifyNodeRemoved(oldEntry);
             return true;
@@ -452,10 +368,29 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Removes all <code>ChildNodeEntry<code>s.
+     * Removes a <code>ChildNodeEntry</code>.
+     *
+     * @param uuid UUID of the entry to be removed
+     * @return <code>true</code> if the specified child node entry was found
+     *         in the list of child node entries and could be removed.
+     */
+    public synchronized boolean removeChildNodeEntry(String uuid) {
+        ChildNodeEntry entry = childNodeEntries.remove(uuid);
+        if (entry != null) {
+            notifyNodeRemoved(entry);
+        }
+        return entry != null;
+    }
+
+    /**
+     * Removes all <code>ChildNodeEntry</code>s.
      */
     public synchronized void removeAllChildNodeEntries() {
-        childNodeEntries.removeAll();
+        Iterator iter = childNodeEntries.entries().iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            removeChildNodeEntry(entry.getUUID());
+        }
     }
 
     /**
@@ -481,9 +416,9 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Adds a <code>PropertyEntry<code>.
+     * Adds a <code>PropertyEntry</code>.
      *
-     * @param propName <code>QName<code> object specifying the property name
+     * @param propName <code>QName</code> object specifying the property name
      */
     public synchronized void addPropertyEntry(QName propName) {
         PropertyEntry entry = new PropertyEntry(propName);
@@ -491,9 +426,9 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Removes a <code>PropertyEntry<code>.
+     * Removes a <code>PropertyEntry</code>.
      *
-     * @param propName <code>QName<code> object specifying the property name
+     * @param propName <code>QName</code> object specifying the property name
      * @return <code>true</code> if the specified property entry was found
      *         in the list of property entries and could be removed.
      */
@@ -509,7 +444,7 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Removes all <code>PropertyEntry<code>s.
+     * Removes all <code>PropertyEntry</code>s.
      */
     public synchronized void removeAllPropertyEntries() {
         propertyEntries.clear();
@@ -535,23 +470,6 @@ public class NodeState extends ItemState {
     }
 
     //---------------------------------------------------------< diff methods >
-    /**
-     * Returns a list of parent UUID's, that do not exist in the overlayed node
-     * state but have been added to <i>this</i> node state.
-     *
-     * @return list of added parent UUID's
-     */
-    public synchronized List getAddedParentUUIDs() {
-        if (!hasOverlayedState()) {
-            return Collections.EMPTY_LIST;
-        }
-
-        NodeState other = (NodeState) getOverlayedState();
-        ArrayList list = new ArrayList(parentUUIDs);
-        list.removeAll(other.parentUUIDs);
-        return list;
-    }
-
     /**
      * Returns a list of property entries, that do not exist in the overlayed
      * node state but have been added to <i>this</i> node state.
@@ -582,23 +500,6 @@ public class NodeState extends ItemState {
 
         NodeState other = (NodeState) getOverlayedState();
         return childNodeEntries.removeAll(other.childNodeEntries);
-    }
-
-    /**
-     * Returns a list of parent UUID's, that exist in the overlayed node state
-     * but have been removed from <i>this</i> node state.
-     *
-     * @return list of removed parent UUID's
-     */
-    public synchronized List getRemovedParentUUIDs() {
-        if (!hasOverlayedState()) {
-            return Collections.EMPTY_LIST;
-        }
-
-        NodeState other = (NodeState) getOverlayedState();
-        ArrayList list = new ArrayList(other.parentUUIDs);
-        list.removeAll(parentUUIDs);
-        return list;
     }
 
     /**
@@ -634,7 +535,7 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns a list of child node entries, that exist both in <i>this</i> node
+     * Returns a list of child node entries that exist both in <i>this</i> node
      * state and in the overlayed node state, but have been reordered.
      * <p/>
      * The list may include only the minimal set of nodes that have been
@@ -737,23 +638,7 @@ public class NodeState extends ItemState {
 
     //--------------------------------------------------< ItemState overrides >
     /**
-     * Sets the UUID of the parent <code>NodeState</code>.
-     *
-     * @param parentUUID the parent <code>NodeState</code>'s UUID or
-     *                   <code>null</code> if either this item state should
-     *                   represent the root node or this item state should
-     *                   be 'free floating', i.e. detached from the repository's
-     *                   hierarchy.
-     */
-    public synchronized void setParentUUID(String parentUUID) {
-        if (parentUUID != null && !parentUUIDs.contains(parentUUID)) {
-            parentUUIDs.add(parentUUID);
-        }
-        this.parentUUID = parentUUID;
-    }
-
-    /**
-     * @see ItemState#addListener
+     * {@inheritDoc}
      *
      * If the listener passed is at the same time a <code>NodeStateListener</code>
      * we add it to our list of specialized listeners.
@@ -770,7 +655,7 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * @see ItemState#removeListener
+     * {@inheritDoc}
      *
      * If the listener passed is at the same time a <code>NodeStateListener</code>
      * we remove it from our list of specialized listeners.
@@ -784,6 +669,7 @@ public class NodeState extends ItemState {
         super.removeListener(listener);
     }
 
+    //-------------------------------------------------< misc. helper methods >
     /**
      * Notify the listeners that some child node was added
      */
@@ -891,8 +777,8 @@ public class NodeState extends ItemState {
             entries.clear();
         }
 
-        public boolean remove(ChildNodeEntry entry) {
-            return remove(entry.getName(), entry.getIndex()) != null;
+        public ChildNodeEntry remove(ChildNodeEntry entry) {
+            return remove(entry.getName(), entry.getIndex());
         }
 
         public ChildNodeEntry remove(QName nodeName, int index) {
@@ -939,35 +825,26 @@ public class NodeState extends ItemState {
             }
         }
 
-        boolean remove(QName nodeName, String uuid) {
-            List siblings = (List) names.get(nodeName);
-            if (siblings == null || siblings.isEmpty()) {
-                return false;
-            }
-
-            Iterator iter = siblings.iterator();
+        ChildNodeEntry remove(String uuid) {
+            Iterator iter = entries.iterator();
             while (iter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                 if (entry.getUUID().equals(uuid)) {
                     return remove(entry);
                 }
             }
-            return false;
+            return null;
         }
 
-        List get(String uuid) {
-            if (entries.isEmpty()) {
-                return Collections.EMPTY_LIST;
-            }
-            ArrayList list = new ArrayList();
+        ChildNodeEntry get(String uuid) {
             Iterator iter = entries.iterator();
             while (iter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                 if (entry.getUUID().equals(uuid)) {
-                    list.add(entry);
+                    return entry;
                 }
             }
-            return Collections.unmodifiableList(list);
+            return null;
         }
 
         Iterator iterator() {

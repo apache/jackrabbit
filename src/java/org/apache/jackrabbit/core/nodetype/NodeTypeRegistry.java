@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.commons.collections.ReferenceMap;
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.value.InternalValue;

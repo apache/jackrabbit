@@ -16,10 +16,9 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.ReferenceMap;
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
@@ -922,11 +921,21 @@ public class SessionImpl implements Session, Constants {
 
         if (srcParentNode.isSame(destParentNode)) {
             // do rename
-            destParentNode.renameChildNodeLink(srcName.getName(), index, targetUUID, destName.getName());
+            destParentNode.renameChildNode(srcName.getName(), index, targetUUID, destName.getName());
         } else {
-            // do move
-            destParentNode.createChildNodeLink(destName.getName(), targetUUID);
-            srcParentNode.removeChildNode(srcName.getName(), index);
+            // do move:
+            // 1. remove child node entry from old parent
+            NodeState srcParentState =
+                    (NodeState) srcParentNode.getOrCreateTransientItemState();
+            srcParentState.removeChildNodeEntry(srcName.getName(), index);
+            // 2. re-parent target node
+            NodeState targetState =
+                    (NodeState) targetNode.getOrCreateTransientItemState();
+            targetState.setParentUUID(destParentNode.internalGetUUID());
+            // 3. add child node entry to new parent
+            NodeState destParentState =
+                    (NodeState) destParentNode.getOrCreateTransientItemState();
+            destParentState.addChildNodeEntry(destName.getName(), targetUUID);
         }
 
         // change definition of target

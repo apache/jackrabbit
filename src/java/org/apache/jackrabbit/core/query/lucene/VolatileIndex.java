@@ -22,7 +22,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.commons.collections.SequencedHashMap;
+import org.apache.commons.collections.map.LinkedMap;
 
 import java.io.IOException;
 import java.util.Map;
@@ -42,7 +42,7 @@ class VolatileIndex extends AbstractIndex {
     private final RedoLog redoLog;
 
     /** Map of pending documents to add to the index */
-    private final Map pending = new SequencedHashMap();
+    private final Map pending = new LinkedMap();
 
     /**
      * Number of documents that are buffered before they are added to the index.

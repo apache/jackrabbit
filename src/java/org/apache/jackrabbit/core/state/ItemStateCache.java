@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.ReferenceMap;
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.log4j.Logger;
 
@@ -60,9 +60,9 @@ public abstract class ItemStateCache {
      *
      * @param keyType   the type of reference to use for keys (i.e. the item paths)
      * @param valueType the type of reference to use for values (i.e. the item-datas)
-     * @see org.apache.commons.collections.ReferenceMap#HARD
-     * @see org.apache.commons.collections.ReferenceMap#SOFT
-     * @see org.apache.commons.collections.ReferenceMap#WEAK
+     * @see ReferenceMap#HARD
+     * @see ReferenceMap#SOFT
+     * @see ReferenceMap#WEAK
      */
     protected ItemStateCache(int keyType, int valueType) {
         cache = new ReferenceMap(keyType, valueType);

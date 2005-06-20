@@ -28,7 +28,7 @@ import org.apache.jackrabbit.core.PathMap;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.log4j.Logger;
-import org.apache.commons.collections.SequencedHashMap;
+import org.apache.commons.collections.map.LinkedMap;
 
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
@@ -585,7 +585,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * operation.
      */
     private Iterator consolidateEvents(EventIterator events) {
-        SequencedHashMap eventMap = new SequencedHashMap();
+        LinkedMap eventMap = new LinkedMap();
 
         while (events.hasNext()) {
             EventImpl event = (EventImpl) events.nextEvent();

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.CachingHierarchyManager;
-import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.MalformedPathException;
@@ -25,6 +24,7 @@ import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.InvalidItemStateException;
@@ -34,7 +34,6 @@ import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.TreeMap;
 
 /**
@@ -80,18 +79,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         // create transient item state manager
         transientStateMgr = new TransientItemStateManager();
         // create hierarchy manager that uses both transient and persistent state
-        hierMgr = new CachingHierarchyManager(rootNodeUUID, this,
-                nsResolver, transientStateMgr.getAttic());
-    }
-
-    /**
-     * En-/Disable chaching of path values.
-     * <p/>
-     * Paths are always cached, therefore this method has no implementation.
-     * @param enable <code>true</code> to enable caching;
-     *               <code>false</code> to disable
-     */
-    public void enablePathCaching(boolean enable) {
+        hierMgr = new CachingHierarchyManager(rootNodeUUID, this, nsResolver);
     }
 
     /**
@@ -322,7 +310,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
      */
     public Iterator getDescendantTransientItemStates(NodeId parentId)
             throws InvalidItemStateException, RepositoryException {
-        // @todo need a more efficient way to find descendents in cache (e.g. using hierarchical index)
         if (!transientStateMgr.hasAnyItemStates()) {
             return Collections.EMPTY_LIST.iterator();
         }
@@ -360,9 +347,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             return descendants.values().iterator();
         }
 
-        Path[] parentPaths;
+        Path parentPath;
         try {
-            parentPaths = hierMgr.getAllPaths(parentId);
+            parentPath = hierMgr.getPath(parentId);
         } catch (ItemNotFoundException infe) {
             String msg = parentId + ": the item has been removed externally.";
             log.debug(msg);
@@ -378,9 +365,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 ItemId id = state.getId();
-                Path[] paths;
+                Path path;
                 try {
-                    paths = hierMgr.getAllPaths(id);
+                    path = hierMgr.getPath(id);
                 } catch (ItemNotFoundException infe) {
                     /**
                      * one of the parents of the specified item has been
@@ -398,94 +385,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
                     log.debug(msg);
                     throw new InvalidItemStateException(msg);
                 }
-                boolean isDescendant = false;
-                /**
-                 * check if any of the paths to the transient state
-                 * is a descendant of any of the specified parentId's paths
-                 */
-                for (int i = 0; i < paths.length; i++) {
-                    Path p0 = paths[i]; // path to transient state
-                    // walk through array of the specified parentId's paths
-                    for (int j = 0; j < parentPaths.length; j++) {
-                        Path p1 = parentPaths[j]; // path to specified parentId
-                        if (p0.isDescendantOf(p1)) {
-                            // this is a descendant, add it to the list and
-                            // continue with next transient state
-                            descendants.put(p0, state);
-                            isDescendant = true;
-                            break;
-                        }
-                    }
-                    if (isDescendant) {
-                        break;
-                    }
-                }
-                if (!isDescendant && id.denotesNode()) {
-                    /**
-                     * finally check if transient state has been unlinked
-                     * from a parent node (but is not orphaned yet, i.e. is
-                     * still linked to at least one other parent node);
-                     * if that's the case, check if that parent is a
-                     * descendant of/identical with any of the specified
-                     * parentId's paths.
-                     */
-                    NodeState nodeState = (NodeState) state;
-                    Iterator iterUUIDs = nodeState.getRemovedParentUUIDs().iterator();
-                    while (iterUUIDs.hasNext()) {
-                        /**
-                         * check if any of the paths to the removed parent
-                         * is a descendant of/identical with any of the
-                         * specified parentId's paths.
-                         */
-                        String uuid = (String) iterUUIDs.next();
-                        Path[] pa;
-                        try {
-                            pa = hierMgr.getAllPaths(new NodeId(uuid));
-                        } catch (ItemNotFoundException infe) {
-                            /**
-                             * one of the parents of the specified item has been
-                             * removed externally; as we don't know its path,
-                             * we can't determine if it is a descendant;
-                             * ItemNotFoundException should only be thrown if
-                             * a descendant is affected;
-                             * => log warning and ignore for now
-                             * todo FIXME
-                             */
-                            log.warn(id + ": inconsistent hierarchy state", infe);
-                            continue;
-                        }
 
-                        for (int k = 0; k < pa.length; k++) {
-                            Path p0 = pa[k];   // path to removed parent
-                            // walk through array of the specified parentId's paths
-                            for (int j = 0; j < parentPaths.length; j++) {
-                                Path p1 = parentPaths[j]; // path to specified parentId
-                                if (p0.equals(p1) || p0.isDescendantOf(p1)) {
-                                    // this is a descendant, add it to the list and
-                                    // continue with next transient state
-
-                                    /**
-                                     * FIXME need to create dummy path by
-                                     * appending a random integer in order to
-                                     * avoid potential conflicts
-                                     */
-                                    QName dummyName = new QName(Constants.NS_DEFAULT_URI, Integer.toString(new Random().nextInt()));
-                                    Path dummy = Path.create(p0, Path.create(dummyName, 0), true);
-                                    descendants.put(dummy, state);
-                                    isDescendant = true;
-                                    break;
-                                }
-                            }
-                            if (isDescendant) {
-                                break;
-                            }
-                        }
-                        if (isDescendant) {
-                            break;
-                        }
-                    }
+                if (path.isDescendantOf(parentPath)) {
+                    // this is a descendant, add it to the list
+                    descendants.put(path, state);
                 }
-                // continue with next transient state
             }
         } catch (MalformedPathException mpe) {
             String msg = "inconsistent hierarchy state";
@@ -505,15 +409,22 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
      * @return an iterator over descendant transient item state instances in the attic
      */
     public Iterator getDescendantTransientItemStatesInAttic(NodeId parentId) {
-        // @todo need a more efficient way to find descendents in attic (e.g. using hierarchical index)
         if (!transientStateMgr.hasAnyItemStatesInAttic()) {
             return Collections.EMPTY_LIST.iterator();
         }
         // collection of descendant transient states in attic:
         // the path serves as key and sort criteria
+
+        // we have to use a special attic-aware hierarchy manager
+        ZombieHierarchyManager zombieHierMgr =
+                new ZombieHierarchyManager(hierMgr.getRootNodeId().getUUID(),
+                        this,
+                        transientStateMgr.getAttic(),
+                        hierMgr.getNamespaceResolver());
+
         TreeMap descendants = new TreeMap(new PathComparator());
         try {
-            Path[] parentPaths = hierMgr.getAllPaths(parentId, true);
+            Path parentPath = zombieHierMgr.getPath(parentId);
             /**
              * walk through list of transient states in attic and check if
              * they are descendants of the specified parent
@@ -522,28 +433,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 ItemId id = state.getId();
-                Path[] paths = hierMgr.getAllPaths(id, true);
-                boolean isDescendant = false;
-                /**
-                 * check if any of the paths to the transient state
-                 * is a descendant of any of the specified parentId's paths
-                 */
-                for (int i = 0; i < paths.length; i++) {
-                    Path p0 = paths[i]; // path to transient state in attic
-                    // walk through array of the specified parentId's paths
-                    for (int j = 0; j < parentPaths.length; j++) {
-                        Path p1 = parentPaths[j]; // path to specified parentId
-                        if (p0.isDescendantOf(p1)) {
-                            // this is a descendant, add it to the list and
-                            // continue with next transient state
-                            descendants.put(p0, state);
-                            isDescendant = true;
-                            break;
-                        }
-                    }
-                    if (isDescendant) {
-                        break;
-                    }
+                Path path = zombieHierMgr.getPath(id);
+                if (path.isDescendantOf(parentPath)) {
+                    // this is a descendant, add it to the list
+                    descendants.put(path, state);
                 }
                 // continue with next transient state
             }
@@ -579,8 +472,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     public NodeState createTransientNodeState(NodeState overlayedState, int initialStatus)
             throws ItemStateException {
 
-        NodeState state = transientStateMgr.createNodeState(
-                overlayedState, initialStatus);
+        NodeState state = transientStateMgr.createNodeState(overlayedState, initialStatus);
         hierMgr.stateOverlaid(state);
         return state;
     }
@@ -606,8 +498,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     public PropertyState createTransientPropertyState(PropertyState overlayedState, int initialStatus)
             throws ItemStateException {
 
-        PropertyState state = transientStateMgr.createPropertyState(
-                overlayedState, initialStatus);
+        PropertyState state = transientStateMgr.createPropertyState(overlayedState, initialStatus);
         hierMgr.stateOverlaid(state);
         return state;
     }
@@ -615,6 +506,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     /**
      * Disconnect a transient item state from its underlying persistent state.
      * Notifies the <code>HierarchyManager</code> about the changed identity.
+     *
      * @param state the transient <code>ItemState</code> instance that should
      *              be disconnected
      */

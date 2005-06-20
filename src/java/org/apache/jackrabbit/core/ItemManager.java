@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.ReferenceMap;
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
@@ -186,7 +186,8 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             NodeId parentId = new NodeId(state.getParentUUID());
             NodeImpl parent = (NodeImpl) getItem(parentId);
             NodeState parentState = (NodeState) parent.getItemState();
-            NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) parentState.getChildNodeEntries(state.getUUID()).get(0);
+            NodeState.ChildNodeEntry cne =
+                    (NodeState.ChildNodeEntry) parentState.getChildNodeEntry(state.getUUID());
             def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
             state.setDefinitionId(def.unwrap().getId());
         }
