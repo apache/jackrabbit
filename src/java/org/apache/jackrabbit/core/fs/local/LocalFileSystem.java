@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.io.FileInputStream;
 
 /**
  * A <code>LocalFileSystem</code> ...
@@ -70,6 +69,39 @@ public class LocalFileSystem implements FileSystem {
 
     public void setRoot(File root) {
         this.root = root;
+    }
+
+    /**
+     * Enables/Disables the use of the handle monitor.
+     *
+     * @param enable
+     */
+    public void setEnableHandleMonitor(String enable) {
+        setEnableHandleMonitor(Boolean.valueOf(enable).booleanValue());
+    }
+
+    /**
+     * Enables/Disables the use of the handle monitor.
+     *
+     * @param enable flag
+     */
+    public void setEnableHandleMonitor(boolean enable) {
+        if (enable && monitor == null) {
+            monitor = new HandleMonitor();
+        }
+        if (!enable && monitor != null) {
+            monitor = null;
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if use of the handle monitor is currently
+     * enabled, otherwise returns <code>false</code>.
+     *
+     * @see #setEnableHandleMonitor(boolean)
+     */
+    public String getEnableHandleMonitor() {
+        return monitor == null ? "false" : "true";
     }
 
     private String osPath(String genericPath) {
@@ -130,7 +162,7 @@ public class LocalFileSystem implements FileSystem {
                 throw new FileSystemException(msg);
             }
         }
-        log.info("LocaaFileSystem initialized on " + root.getPath());
+        log.info("LocalFileSystem initialized at path " + root.getPath());
         if (monitor != null) {
             log.info("LocalFileSystem using handle monitor");
         }
@@ -146,13 +178,15 @@ public class LocalFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public void copy(String srcPath, String destPath) throws FileSystemException {
+    public void copy(String srcPath, String destPath)
+            throws FileSystemException {
         File src = new File(root, osPath(srcPath));
         File dest = new File(root, osPath(destPath));
         try {
             FileUtil.copy(src, dest);
         } catch (IOException ioe) {
-            String msg = "copying " + src.getPath() + " to " + dest.getPath() + " failed";
+            String msg = "copying " + src.getPath() + " to "
+                    + dest.getPath() + " failed";
             log.debug(msg);
             throw new FileSystemException(msg, ioe);
         }
@@ -189,7 +223,7 @@ public class LocalFileSystem implements FileSystem {
         } catch (IOException ioe) {
             String msg = "failed to delete " + f.getPath();
             if (monitor != null && monitor.isOpen(f)) {
-                log.error("Unable to delete. Still open streams");
+                log.error("Unable to delete. There are still open streams.");
                 monitor.dump(f);
             }
 
@@ -227,7 +261,8 @@ public class LocalFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public InputStream getInputStream(String filePath) throws FileSystemException {
+    public InputStream getInputStream(String filePath)
+            throws FileSystemException {
         File f = new File(root, osPath(filePath));
         try {
             if (monitor == null) {
@@ -245,7 +280,8 @@ public class LocalFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public OutputStream getOutputStream(String filePath) throws FileSystemException {
+    public OutputStream getOutputStream(String filePath)
+            throws FileSystemException {
         File f = new File(root, osPath(filePath));
         try {
             return new FileOutputStream(f);
@@ -391,7 +427,8 @@ public class LocalFileSystem implements FileSystem {
     /**
      * {@inheritDoc}
      */
-    public void move(String srcPath, String destPath) throws FileSystemException {
+    public void move(String srcPath, String destPath)
+            throws FileSystemException {
         File src = new File(root, osPath(srcPath));
         File dest = new File(root, osPath(destPath));
 
@@ -400,7 +437,8 @@ public class LocalFileSystem implements FileSystem {
             try {
                 FileUtil.delete(dest);
             } catch (IOException ioe) {
-                String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
+                String msg = "moving " + src.getPath() + " to "
+                        + dest.getPath() + " failed";
                 log.debug(msg);
                 throw new FileSystemException(msg, ioe);
             }
@@ -409,7 +447,8 @@ public class LocalFileSystem implements FileSystem {
         if (!destParent.exists()) {
             // create destination parent folder first
             if (!destParent.mkdirs()) {
-                String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
+                String msg = "moving " + src.getPath() + " to "
+                        + dest.getPath() + " failed";
                 log.debug(msg);
                 throw new FileSystemException(msg);
             }
@@ -417,51 +456,10 @@ public class LocalFileSystem implements FileSystem {
 
         // now we're ready to move/rename the file/folder
         if (!src.renameTo(dest)) {
-            String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
+            String msg = "moving " + src.getPath() + " to "
+                    + dest.getPath() + " failed";
             log.debug(msg);
             throw new FileSystemException(msg);
-        }
-/*
-        try {
-            FileUtil.copy(src, dest);
-            FileUtil.delete(src);
-        } catch (IOException ioe) {
-            String msg = "moving " + src.getPath() + " to " + dest.getPath() + " failed";
-            log.debug(msg);
-            throw new FileSystemException(msg, ioe);
-        }
-*/
-    }
-
-    /**
-     * Enables the usage of the handle monitor.
-     *
-     * @param enable
-     */
-    public void setEnableHandleMonitor(String enable) {
-        setEnableHandleMonitor(Boolean.valueOf(enable).booleanValue());
-    }
-
-
-    /**
-     * Returns if the handle monitor is enabled
-     */
-    public String getEnableHandleMonitor() {
-        return monitor == null ? "false" : "true";
-    }
-
-
-    /**
-     * Enables the usage of the handle monitor.
-     *
-     * @param enable
-     */
-    public void setEnableHandleMonitor(boolean enable) {
-        if (enable && monitor == null) {
-            monitor = new HandleMonitor();
-        }
-        if (!enable && monitor != null) {
-            monitor = null;
         }
     }
 }
