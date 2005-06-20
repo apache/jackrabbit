@@ -49,6 +49,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.RangeQuery;
 import org.apache.lucene.search.TermQuery;
+import org.apache.xerces.util.XMLChar;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -518,12 +519,14 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 stringValues[0] = LongField.longToString(node.getLongValue());
                 break;
             case QueryConstants.TYPE_STRING:
-                if (node.getOperation() == QueryConstants.OPERATION_LIKE
-                        || node.getOperation() == QueryConstants.OPERATION_NULL
-                        || node.getOperation() == QueryConstants.OPERATION_NOT_NULL) {
-                    stringValues[0] = node.getStringValue();
-                } else {
+                if (node.getOperation() == QueryConstants.OPERATION_EQ_GENERAL
+                        || node.getOperation() == QueryConstants.OPERATION_EQ_VALUE
+                        || node.getOperation() == QueryConstants.OPERATION_NE_GENERAL
+                        || node.getOperation() == QueryConstants.OPERATION_NE_VALUE) {
+                    // only use coercing on non-range operations
                     stringValues = getStringValues(node.getProperty(), node.getStringValue());
+                } else {
+                    stringValues[0] = node.getStringValue();
                 }
                 break;
             case QueryConstants.TYPE_POSITION:
@@ -781,19 +784,22 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 } catch (Exception e) {
                     // not a path
                 }
-            } else if (literal.indexOf(':') > -1) {
+            } else if (XMLChar.isValidName(literal)) {
                 // might be a name
                 try {
                     values.add(nsMappings.translatePropertyName(literal, session.getNamespaceResolver()));
                     log.debug("Coerced " + literal + " into NAME.");
+                    // also add literal as string value as is
+                    values.add(literal);
                 } catch (Exception e) {
                     // not a name
-                    // is it a date?
-                    Calendar c = ISO8601.parse(literal);
-                    if (c != null) {
-                        values.add(DateField.timeToString(c.getTimeInMillis()));
-                        log.debug("Coerced " + literal + " into DATE.");
-                    }
+                }
+            } else if (literal.indexOf(':') > -1) {
+                // is it a date?
+                Calendar c = ISO8601.parse(literal);
+                if (c != null) {
+                    values.add(DateField.timeToString(c.getTimeInMillis()));
+                    log.debug("Coerced " + literal + " into DATE.");
                 }
             } else {
                 // long or double are possible at this point
