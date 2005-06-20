@@ -165,6 +165,7 @@ commented out by default.
                 <valueConstraint>INITIALIZE</valueConstraint>
                 <valueConstraint>COMPUTE</valueConstraint>
                 <valueConstraint>IGNORE</valueConstraint>
+                <valueConstraint>ABORT</valueConstraint>
             </valueConstraints>
         </propertyDefinition>
         <propertyDefinition name="jcr:protected" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
@@ -200,6 +201,7 @@ commented out by default.
                 <valueConstraint>INITIALIZE</valueConstraint>
                 <valueConstraint>COMPUTE</valueConstraint>
                 <valueConstraint>IGNORE</valueConstraint>
+                <valueConstraint>ABORT</valueConstraint>
             </valueConstraints>
         </propertyDefinition>
         <propertyDefinition name="jcr:protected" requiredType="Boolean" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
@@ -349,9 +351,14 @@ commented out by default.
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <childNodeDefinition name="jcr:versionStorage" defaultPrimaryType="nt:unstructured" autoCreated="false" mandatory="true" onParentVersion="ABORT" protected="true" sameNameSiblings="false">
+        <childNodeDefinition name="jcr:versionStorage" defaultPrimaryType="rep:versionStorage" autoCreated="false" mandatory="true" onParentVersion="ABORT" protected="true" sameNameSiblings="false">
             <requiredPrimaryTypes>
-                <requiredPrimaryType>nt:base</requiredPrimaryType>
+                <requiredPrimaryType>rep:versionStorage</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <childNodeDefinition name="jcr:nodeTypes" defaultPrimaryType="rep:nodeTypes" autoCreated="false" mandatory="true" onParentVersion="ABORT" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:nodeTypes</requiredPrimaryType>
             </requiredPrimaryTypes>
         </childNodeDefinition>
         <childNodeDefinition name="*" defaultPrimaryType="nt:unstructured" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="false" sameNameSiblings="true">
