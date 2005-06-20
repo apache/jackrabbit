@@ -20,6 +20,8 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.ZombieHierarchyManager;
+import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -28,6 +30,8 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,6 +45,8 @@ import java.util.Iterator;
  * {@link ItemStateManager}.
  */
 class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
+
+    ZombieHierarchyManager zombieHierMgr;
 
     /**
      * Creates a new <code>ChangeLogBasedHierarchyMgr</code> that overlays
@@ -57,8 +63,24 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
                                NamespaceResolver resolver) {
         super(rootNodeUUID,
                 new ChangeLogItemStateManager(manager, changes),
-                resolver,
-                new AtticItemStateManager(changes));
+                resolver);
+        zombieHierMgr =
+                new ZombieHierarchyManager(rootNodeUUID, provider,
+                        new AtticItemStateManager(changes), resolver);
+    }
+
+    /**
+     * Same as {@link #getPath(ItemId)}} except that the <i>old</i> path is
+     * returned in case of a moved/removed item.
+     *
+     * @param id
+     * @return
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    public Path getZombiePath(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
+        return zombieHierMgr.getPath(id);
     }
 
     /**
@@ -173,7 +195,7 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
         }
 
         /**
-         * Returns an {@link ItemState} it is found in the deleted map of the
+         * Returns an {@link ItemState} if it is found in the deleted map of the
          * {@link ChangeLog}.
          * @param id the id of the {@link ItemState}.
          * @return the deleted {@link ItemState}.

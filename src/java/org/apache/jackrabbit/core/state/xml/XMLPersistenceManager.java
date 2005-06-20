@@ -85,9 +85,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     private static final String PARENTUUID_ATTRIBUTE = "parentUUID";
     private static final String DEFINITIONID_ATTRIBUTE = "definitionId";
 
-    private static final String PARENTS_ELEMENT = "parents";
-    private static final String PARENT_ELEMENT = "parent";
-
     private static final String MIXINTYPES_ELEMENT = "mixinTypes";
     private static final String MIXINTYPE_ELEMENT = "mixinType";
 
@@ -212,18 +209,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         String definitionId = walker.getAttribute(DEFINITIONID_ATTRIBUTE);
         state.setDefinitionId(NodeDefId.valueOf(definitionId));
 
-        // parent uuid's
-        if (walker.enterElement(PARENTS_ELEMENT)) {
-            ArrayList parentUUIDs = new ArrayList();
-            while (walker.iterateElements(PARENT_ELEMENT)) {
-                parentUUIDs.add(walker.getAttribute(UUID_ATTRIBUTE));
-            }
-            if (parentUUIDs.size() > 0) {
-                state.setParentUUIDs(parentUUIDs);
-            }
-            walker.leaveElement();
-        }
-
         // mixin types
         if (walker.enterElement(MIXINTYPES_ELEMENT)) {
             Set mixins = new HashSet();
@@ -306,7 +291,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             while (walker.iterateElements(VALUE_ELEMENT)) {
                 // read serialized value
                 String content = walker.getContent();
-                InternalValue val;
                 if (content.length() > 0) {
                     if (type == PropertyType.BINARY) {
                         // special handling required for binary value:
@@ -512,18 +496,10 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         + PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentUUID() == null ? "" : state.getParentUUID()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
                         + NODETYPE_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString()) + "\">\n");
-                // parents
-                writer.write("\t<" + PARENTS_ELEMENT + ">\n");
-                Iterator iter = state.getParentUUIDs().iterator();
-                while (iter.hasNext()) {
-                    writer.write("\t\t<" + PARENT_ELEMENT + " "
-                            + UUID_ATTRIBUTE + "=\"" + iter.next() + "\"/>\n");
-                }
-                writer.write("\t</" + PARENTS_ELEMENT + ">\n");
 
                 // mixin types
                 writer.write("\t<" + MIXINTYPES_ELEMENT + ">\n");
-                iter = state.getMixinTypeNames().iterator();
+                Iterator iter = state.getMixinTypeNames().iterator();
                 while (iter.hasNext()) {
                     writer.write("\t\t<" + MIXINTYPE_ELEMENT + " "
                             + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(iter.next().toString()) + "\"/>\n");

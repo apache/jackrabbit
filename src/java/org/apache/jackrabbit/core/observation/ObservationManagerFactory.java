@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
-import org.apache.commons.collections.UnboundedFifoBuffer;
+import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;

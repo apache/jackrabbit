@@ -183,8 +183,8 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
      */
     public boolean hasFrozenHistory(String uuid) {
         try {
-            List entries = node.getState().getChildNodeEntries(uuid);
-            if (entries.size() > 0) {
+            NodeState.ChildNodeEntry entry  = node.getState().getChildNodeEntry(uuid);
+            if (entry != null) {
                 return getVersionManager().getItem(uuid) instanceof InternalFrozenVersionHistory;
             }
         } catch (RepositoryException e) {

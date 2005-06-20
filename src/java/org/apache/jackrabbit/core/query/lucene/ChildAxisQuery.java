@@ -361,14 +361,15 @@ class ChildAxisQuery extends Query {
                                 // specified position
                                 if (position == LocationStepQueryNode.LAST) {
                                     // only select last
-                                    List childNodes = state.getChildNodeEntries(uuid);
-                                    if (childNodes.size() == 0) {
+                                    NodeState.ChildNodeEntry entry =
+                                            state.getChildNodeEntry(uuid);
+                                    if (entry == null) {
                                         // no such child node, probably deleted meanwhile
                                         hits.flip(i);
                                     } else {
                                         // only use the last one
-                                        QName name = ((NodeState.ChildNodeEntry) childNodes.get(0)).getName();
-                                        childNodes = state.getChildNodeEntries(name);
+                                        QName name = entry.getName();
+                                        List childNodes = state.getChildNodeEntries(name);
                                         if (childNodes.size() == 0
                                                 || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
                                                     .getUUID().equals(uuid)) {
@@ -376,16 +377,14 @@ class ChildAxisQuery extends Query {
                                         }
                                     }
                                 } else {
-                                    List childNodes = state.getChildNodeEntries(uuid);
-                                    if (childNodes.size() == 0) {
+                                    NodeState.ChildNodeEntry entry =
+                                            state.getChildNodeEntry(uuid);
+                                    if (entry == null) {
                                         // no such child node, probably has been deleted meanwhile
                                         hits.flip(i);
                                     } else {
-                                        for (int j = 0; j < childNodes.size(); j++) {
-                                            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) childNodes.get(j);
-                                            if (entry.getIndex() != position) {
-                                                hits.flip(i);
-                                            }
+                                        if (entry.getIndex() != position) {
+                                            hits.flip(i);
                                         }
                                     }
                                 }

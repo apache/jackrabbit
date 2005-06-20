@@ -138,12 +138,9 @@ public class NodeIndexer {
             } else {
                 doc.add(new Field(FieldNames.PARENT, node.getParentUUID(), true, true, false));
                 NodeState parent = (NodeState) stateProvider.getItemState(new NodeId(node.getParentUUID()));
-                List entries = parent.getChildNodeEntries(node.getUUID());
-                for (Iterator it = entries.iterator(); it.hasNext();) {
-                    NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
-                    String name = child.getName().toJCRName(mappings);
-                    doc.add(new Field(FieldNames.LABEL, name, false, true, false));
-                }
+                NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getUUID());
+                String name = child.getName().toJCRName(mappings);
+                doc.add(new Field(FieldNames.LABEL, name, false, true, false));
             }
         } catch (NoSuchItemStateException e) {
             throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);

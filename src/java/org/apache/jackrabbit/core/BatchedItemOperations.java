@@ -52,7 +52,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -420,7 +419,6 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
 
         // 3. do move operation (modify and store affected states)
 
-
         boolean renameOnly = srcParent.getUUID().equals(destParent.getUUID());
 
         int srcNameIndex = srcName.getIndex();
@@ -428,16 +426,17 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
             srcNameIndex = 1;
         }
 
-        // remove from old parent
         if (renameOnly) {
+            // change child node entry
             destParent.renameChildNodeEntry(srcName.getName(), srcNameIndex,
                     destName.getName());
         } else {
-            target.removeParentUUID(srcParent.getUUID());
-            target.addParentUUID(destParent.getUUID());
-
-            destParent.addChildNodeEntry(destName.getName(), target.getUUID());
+            // remove child node entry from old parent
             srcParent.removeChildNodeEntry(srcName.getName(), srcNameIndex);
+            // re-parent target node
+            target.setParentUUID(destParent.getUUID());
+            // add child node entry to new parent
+            destParent.addChildNodeEntry(destName.getName(), target.getUUID());
         }
 
         // change definition (id) of target node
@@ -487,7 +486,6 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
 
         NodeState target = getNodeState(nodePath);
         NodeId parentId = new NodeId(target.getParentUUID());
-        NodeState parent = getNodeState(parentId);
 
         // 2. check if target state can be removed from parent
 
@@ -495,21 +493,9 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                 CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING
                 | CHECK_CONSTRAINTS | CHECK_REFERENCES);
 
-        // 3. do remove operation (modify and store affected states)
+        // 3. do remove operation
 
-        // unlink node state from its parent
-        unlinkNodeState(target, target.getParentUUID());
-        // remove child node entries
-        // use temp array to avoid ConcurrentModificationException
-        ArrayList tmp =
-                new ArrayList(parent.getChildNodeEntries(target.getUUID()));
-        // remove from tail to avoid problems with same-name siblings
-        for (int i = tmp.size() - 1; i >= 0; i--) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
-            parent.removeChildNodeEntry(entry.getName(), entry.getIndex());
-        }
-        // store parent
-        stateMgr.store(parent);
+        removeNodeState(target);
     }
 
     //--------------------------------------< misc. high-level helper methods >
@@ -634,8 +620,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
     }
 
     /**
-     * Checks if removing the given target node entirely (i.e. unlinking from
-     * all its parents) is allowed in the current context.
+     * Checks if removing the given target node is allowed in the current context.
      *
      * @param targetState
      * @param options     bit-wise OR'ed flags specifying the checks that should be
@@ -665,12 +650,8 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
             throws ConstraintViolationException, AccessDeniedException,
             VersionException, LockException, ItemNotFoundException,
             ReferentialIntegrityException, RepositoryException {
-        List parentUUIDs = targetState.getParentUUIDs();
-        Iterator iter = parentUUIDs.iterator();
-        while (iter.hasNext()) {
-            NodeId parentId = new NodeId((String) iter.next());
-            checkRemoveNode(targetState, parentId, options);
-        }
+        NodeId parentId = new NodeId(targetState.getParentUUID());
+        checkRemoveNode(targetState, parentId, options);
     }
 
     /**
@@ -1204,40 +1185,36 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
     }
 
     /**
-     * Unlinks the specified node state from all its parents and recursively
+     * Unlinks the specified node state from its parent and recursively
      * removes it including its properties and child nodes.
      * <p/>
-     * Note that access rights are <b><i>not</i></b> enforced!
+     * Note that no checks (access rights etc.) are performed on the specified
+     * target node state. Those checks have to be performed beforehand by the
+     * caller. However, the (recursive) removal of target node's child nodes are
+     * subject to the following checks: access rights, locking, versioning.
      *
-     * @param targetState
+     * @param target
      * @throws RepositoryException if an error occurs
      */
-    public void removeNodeState(NodeState targetState)
+    public void removeNodeState(NodeState target)
             throws RepositoryException {
 
-        // copy list to avoid ConcurrentModificationException
-        ArrayList parentUUIDs = new ArrayList(targetState.getParentUUIDs());
-        Iterator iter = parentUUIDs.iterator();
-        while (iter.hasNext()) {
-            String parentUUID = (String) iter.next();
-            NodeId parentId = new NodeId(parentUUID);
-
-            // unlink node state from this parent
-            unlinkNodeState(targetState, parentUUID);
-
-            // remove child node entries
-            NodeState parent = getNodeState(parentId);
-            // use temp array to avoid ConcurrentModificationException
-            ArrayList tmp =
-                    new ArrayList(parent.getChildNodeEntries(targetState.getUUID()));
-            // remove from tail to avoid problems with same-name siblings
-            for (int i = tmp.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
-                parent.removeChildNodeEntry(entry.getName(), entry.getIndex());
-            }
-            // store parent
-            stateMgr.store(parent);
+        String parentUUID = target.getParentUUID();
+        if (parentUUID == null) {
+            String msg = "root node cannot be removed";
+            log.debug(msg);
+            throw new RepositoryException(msg);
         }
+        NodeId parentId = new NodeId(parentUUID);
+
+        NodeState parent = getNodeState(parentId);
+        // remove child node entry from parent
+        parent.removeChildNodeEntry(target.getUUID());
+        // store parent
+        stateMgr.store(parent);
+
+        // remove target
+        recursiveRemoveNodeState(target);
     }
 
     /**
@@ -1503,88 +1480,79 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
     }
 
     /**
-     * Unlinks the given node state from the specified parent i.e. removes
-     * <code>parentUUID</code> from its list of parents. If as a result
-     * the given node state would be orphaned it will be recursively removed
-     * including its properties and child nodes.
+     * Recursively removes the given node state including its properties and
+     * child nodes.
+     * <p/>
+     * The removal of child nodes is subject to the following checks:
+     * access rights, locking & versioning status. Referential integrity
+     * (references) is checked on commit.
      * <p/>
      * Note that the child node entry refering to <code>targetState</code> is
      * <b><i>not</i></b> automatically removed from <code>targetState</code>'s
-     * parent denoted by <code>parentUUID</code>.
+     * parent.
      *
      * @param targetState
-     * @param parentUUID
      * @throws RepositoryException if an error occurs
      */
-    private void unlinkNodeState(NodeState targetState, String parentUUID)
+    private void recursiveRemoveNodeState(NodeState targetState)
             throws RepositoryException {
 
-        // check if this node state would be orphaned after unlinking it from parent
-        ArrayList parentUUIDs = new ArrayList(targetState.getParentUUIDs());
-        parentUUIDs.remove(parentUUID);
-        boolean orphaned = parentUUIDs.isEmpty();
-
-        if (orphaned) {
-            // remove child nodes
-            // use temp array to avoid ConcurrentModificationException
-            ArrayList tmp = new ArrayList(targetState.getChildNodeEntries());
-            // remove from tail to avoid problems with same-name siblings
-            for (int i = tmp.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
-                NodeId nodeId = new NodeId(entry.getUUID());
-                try {
-                    NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
-                    // check if child node can be removed
-                    // (access rights, locking & versioning status)
-                    checkRemoveNode(nodeState, (NodeId) targetState.getId(),
-                            CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING);
-                    // unlink child node (recursive)
-                    unlinkNodeState(nodeState, targetState.getUUID());
-                } catch (ItemStateException ise) {
-                    String msg = "internal error: failed to retrieve state of "
-                            + nodeId;
-                    log.debug(msg);
-                    throw new RepositoryException(msg, ise);
-                }
-                // remove child node entry
-                targetState.removeChildNodeEntry(entry.getName(), entry.getIndex());
+        // remove child nodes
+        // use temp array to avoid ConcurrentModificationException
+        ArrayList tmp = new ArrayList(targetState.getChildNodeEntries());
+        // remove from tail to avoid problems with same-name siblings
+        for (int i = tmp.size() - 1; i >= 0; i--) {
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
+            NodeId nodeId = new NodeId(entry.getUUID());
+            try {
+                NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
+                // check if child node can be removed
+                // (access rights, locking & versioning status);
+                // referential integrity (references) is checked
+                // on commit
+                checkRemoveNode(nodeState, (NodeId) targetState.getId(),
+                        CHECK_ACCESS
+                        | CHECK_LOCK
+                        | CHECK_VERSIONING);
+                // remove child node
+                recursiveRemoveNodeState(nodeState);
+            } catch (ItemStateException ise) {
+                String msg = "internal error: failed to retrieve state of "
+                        + nodeId;
+                log.debug(msg);
+                throw new RepositoryException(msg, ise);
             }
+            // remove child node entry
+            targetState.removeChildNodeEntry(entry.getName(), entry.getIndex());
+        }
 
-            // remove properties
-            // use temp array to avoid ConcurrentModificationException
-            tmp = new ArrayList(targetState.getPropertyEntries());
-            for (int i = 0; i < tmp.size(); i++) {
-                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) tmp.get(i);
-                PropertyId propId =
-                        new PropertyId(targetState.getUUID(), entry.getName());
-                try {
-                    PropertyState propState =
-                            (PropertyState) stateMgr.getItemState(propId);
-                    // remove property entry
-                    targetState.removePropertyEntry(propId.getName());
-                    // destroy property state
-                    stateMgr.destroy(propState);
-                } catch (ItemStateException ise) {
-                    String msg = "internal error: failed to retrieve state of "
-                            + propId;
-                    log.debug(msg);
-                    throw new RepositoryException(msg, ise);
-                }
+        // remove properties
+        // use temp array to avoid ConcurrentModificationException
+        tmp = new ArrayList(targetState.getPropertyEntries());
+        for (int i = 0; i < tmp.size(); i++) {
+            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) tmp.get(i);
+            PropertyId propId =
+                    new PropertyId(targetState.getUUID(), entry.getName());
+            try {
+                PropertyState propState =
+                        (PropertyState) stateMgr.getItemState(propId);
+                // remove property entry
+                targetState.removePropertyEntry(propId.getName());
+                // destroy property state
+                stateMgr.destroy(propState);
+            } catch (ItemStateException ise) {
+                String msg = "internal error: failed to retrieve state of "
+                        + propId;
+                log.debug(msg);
+                throw new RepositoryException(msg, ise);
             }
         }
 
-        // now actually do unlink target state from specified parent state
-        // (i.e. remove uuid of parent state from target state's parent list)
-        targetState.removeParentUUID(parentUUID);
-
-        if (orphaned) {
-            // destroy target state (pass overlayed state since target state
-            // might have been modified during unlinking)
-            stateMgr.destroy(targetState.getOverlayedState());
-        } else {
-            // store target state
-            stateMgr.store(targetState);
-        }
+        // now actually do unlink target state
+        targetState.setParentUUID(null);
+        // destroy target state (pass overlayed state since target state
+        // might have been modified during unlinking)
+        stateMgr.destroy(targetState.getOverlayedState());
     }
 
     /**
@@ -1672,9 +1640,13 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                         }
 
                         // check if existing can be removed
-                        checkRemoveNode(existingState, CHECK_ACCESS | CHECK_LOCK
-                                | CHECK_VERSIONING | CHECK_CONSTRAINTS);
-
+                        // (access rights, locking & versioning status,
+                        // node type constraints)
+                        checkRemoveNode(existingState,
+                                CHECK_ACCESS
+                                | CHECK_LOCK
+                                | CHECK_VERSIONING
+                                | CHECK_CONSTRAINTS);
                         // do remove existing
                         removeNodeState(existingState);
                     }

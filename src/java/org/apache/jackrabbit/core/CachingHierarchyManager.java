@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
 import org.apache.log4j.Logger;
-import org.apache.commons.collections.map.ReferenceMap;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import java.util.List;
-import java.util.Iterator;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -57,8 +57,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Mapping of item ids to <code>LRUEntry</code> in the path map
      */
-    private final ReferenceMap idCache = new ReferenceMap(
-            ReferenceMap.HARD, ReferenceMap.HARD);
+    private final ReferenceMap idCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.HARD);
 
     /**
      * Set of items that were moved
@@ -86,83 +85,23 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     private LRUEntry tail;
 
     /**
-     * Create a new instance of this class. This hierarchy manager will not
-     * check for item states that have been moved into attic space
+     * Create a new instance of this class.
+     *
      * @param rootNodeUUID root node UUID
-     * @param provider item state manager
-     * @param nsResolver namespace resolver
+     * @param provider     item state manager
+     * @param nsResolver   namespace resolver
      */
     public CachingHierarchyManager(String rootNodeUUID,
                                    ItemStateManager provider,
                                    NamespaceResolver nsResolver) {
-        this(rootNodeUUID, provider, nsResolver, null);
+        super(rootNodeUUID, provider, nsResolver);
+        upperLimit = DEFAULT_UPPER_LIMIT;
     }
 
-    /**
-     * Create a new instance of this class.
-     * @param rootNodeUUID root node UUID
-     * @param provider item state manager
-     * @param nsResolver namespace resolver
-     * @param attic item state manager for states in the attic space
-     */
-    public CachingHierarchyManager(String rootNodeUUID,
-                                   ItemStateManager provider,
-                                   NamespaceResolver nsResolver,
-                                   ItemStateManager attic) {
-
-        super(rootNodeUUID, provider, nsResolver, attic);
-
-        this.upperLimit = DEFAULT_UPPER_LIMIT;
-    }
-
-    //-----------------------------------------------------< HierarchyManager >
-
+    //-------------------------------------------------< base class overrides >
     /**
      * {@inheritDoc}
-     *
-     * Check the item indicated inside our path cache first.
-     */
-    public NodeId[] listParents(ItemId id)
-            throws ItemNotFoundException, RepositoryException {
-
-        if (id.denotesNode()) {
-            PathMap.Element element = get(id);
-            if (element != null) {
-                PathMap.Element parent = element.getParent();
-                if (parent != null) {
-                    LRUEntry entry = (LRUEntry) element.get();
-                    if (entry != null) {
-                        return new NodeId[] { (NodeId) entry.getId() };
-                    }
-                }
-            }
-        }
-        return super.listParents(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * Check the path indicated inside our cache first.
-     */
-    public ItemId resolvePath(Path path)
-            throws PathNotFoundException, RepositoryException {
-
-        PathMap.Element element = map(path);
-        if (element == null) {
-            return super.resolvePath(path);
-        }
-        LRUEntry entry = (LRUEntry) element.get();
-        if (element.hasPath(path)) {
-            entry.touch();
-            return entry.getId();
-        }
-        return super.resolvePath(path, entry.getId(), element.getDepth() + 1);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
+     * <p/>
      * Cache the intermediate item inside our cache.
      */
     protected ItemId resolvePath(Path path, ItemState state, int next)
@@ -186,37 +125,13 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
     /**
      * {@inheritDoc}
-     *
-     * Overridden method simply checks whether we have an item matching the id
-     * and returns its path, otherwise calls base implementation.
-     */
-    public synchronized Path getPath(ItemId id)
-            throws ItemNotFoundException, RepositoryException {
-
-        if (id.denotesNode()) {
-            PathMap.Element element = get(id);
-            if (element != null) {
-                try {
-                    return element.getPath();
-                } catch (MalformedPathException mpe) {
-                    String msg = "Failed to build path of " + id;
-                    log.debug(msg);
-                    throw new RepositoryException(msg, mpe);
-                }
-            }
-        }
-        return super.getPath(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
+     * <p/>
      * Overridden method tries to find a mapping for the intermediate item
      * <code>state</code> and add its path elements to the builder currently
      * being used. If no mapping is found, the item is cached instead after
      * the base implementation has been invoked.
      */
-    protected void getPath(Path.PathBuilder builder, ItemState state)
+    protected void buildPath(Path.PathBuilder builder, ItemState state)
             throws ItemStateException, RepositoryException {
 
         if (state.isNode()) {
@@ -236,7 +151,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             }
         }
 
-        super.getPath(builder, state);
+        super.buildPath(builder, state);
 
         if (state.isNode()) {
             try {
@@ -245,6 +160,51 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 log.warn("Failed to build path of " + state.getId());
             }
         }
+    }
+
+    //-----------------------------------------------------< HierarchyManager >
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Check the path indicated inside our cache first.
+     */
+    public ItemId resolvePath(Path path)
+            throws PathNotFoundException, RepositoryException {
+
+        PathMap.Element element = map(path);
+        if (element == null) {
+            return super.resolvePath(path);
+        }
+        LRUEntry entry = (LRUEntry) element.get();
+        if (element.hasPath(path)) {
+            entry.touch();
+            return entry.getId();
+        }
+        return super.resolvePath(path, entry.getId(), element.getDepth() + 1);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overridden method simply checks whether we have an item matching the id
+     * and returns its path, otherwise calls base implementation.
+     */
+    public synchronized Path getPath(ItemId id)
+            throws ItemNotFoundException, RepositoryException {
+
+        if (id.denotesNode()) {
+            PathMap.Element element = get(id);
+            if (element != null) {
+                try {
+                    return element.getPath();
+                } catch (MalformedPathException mpe) {
+                    String msg = "Failed to build path of " + id;
+                    log.debug(msg);
+                    throw new RepositoryException(msg, mpe);
+                }
+            }
+        }
+        return super.getPath(id);
     }
 
     /**
@@ -293,18 +253,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             }
         }
         return super.isAncestor(nodeId, itemId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Path[] getAllPaths(ItemId id, boolean includeZombies)
-            throws ItemNotFoundException, RepositoryException {
-
-        if (!includeZombies) {
-            return new Path[] { getPath(id) };
-        }
-        return super.getAllPaths(id, includeZombies);
     }
 
     //----------------------------------------------------< ItemStateListener >
@@ -357,8 +305,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * state.
      *
      * @param overlayer the <code>ItemState</code> that overlaid another
-     *        item state. To get the overlaid state, invoke
-     *        {@link ItemState#getOverlayedState()}
+     *                  item state. To get the overlaid state, invoke
+     *                  {@link ItemState#getOverlayedState()}
      */
     public void stateUncovered(ItemState overlayer) {
         if (overlayer.isNode()) {
@@ -378,16 +326,16 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             log.warn("Added node does not have parent, ignoring event.");
         } catch (MalformedPathException e) {
             log.warn("Unable to create path of " + uuid, e);
-        } catch(ItemNotFoundException e) {
+        } catch (ItemNotFoundException e) {
             log.warn("Unable to get path of " + state.getId(), e);
-        } catch(RepositoryException e) {
+        } catch (RepositoryException e) {
             log.warn("Unable to get path of " + state.getId(), e);
         }
     }
 
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * Generate subsequent add and remove notifications for every replacement.
      */
     public void nodesReplaced(NodeState state) {
@@ -399,13 +347,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         Iterator iter = entries.iterator();
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry now = (NodeState.ChildNodeEntry) iter.next();
-            NodeState.ChildNodeEntry old = null;
+            NodeState.ChildNodeEntry old =
+                    ((NodeState) state.getOverlayedState()).getChildNodeEntry(now.getUUID());;
 
-            List list = ((NodeState) state.getOverlayedState()).
-                    getChildNodeEntries(now.getUUID());
-            if (list.size() > 0) {
-                old = (NodeState.ChildNodeEntry) list.get(0);
-            }
             if (old == null) {
                 log.warn("Reordered child node not found in old list.");
                 continue;
@@ -427,17 +371,18 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             log.warn("Added node does not have parent, ignoring event.");
         } catch (MalformedPathException e) {
             log.warn("Unable to create path of " + uuid, e);
-        } catch(ItemNotFoundException e) {
+        } catch (ItemNotFoundException e) {
             log.warn("Unable to get path of " + state.getId(), e);
-        } catch(RepositoryException e) {
+        } catch (RepositoryException e) {
             log.warn("Unable to get path of " + state.getId(), e);
         }
     }
 
-    //-------------------------------------------------------< private methods >
+    //------------------------------------------------------< private methods >
 
     /**
      * Return a cached element in the path map, given its id
+     *
      * @param id node id
      * @return cached element, <code>null</code> if not found
      */
@@ -456,6 +401,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * Return the nearest cached element in the path map, given a path.
      * The returned element is guaranteed to have an associated object that
      * is not <code>null</code>.
+     *
      * @param path path
      * @return cached element, <code>null</code> if not found
      */
@@ -477,8 +423,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Cache an item in the hierarchy given its id and path. Adds a listener
      * for this item state to get notified about changes.
+     *
      * @param state item state, may be <code>null</code>
-     * @param path path to item
+     * @param path  path to item
      */
     private void cache(ItemState state, Path path) {
         ItemId id = state.getId();
@@ -520,6 +467,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
     /**
      * Return a flag indicating whether a certain element is cached.
+     *
      * @param id item id
      * @return <code>true</code> if the item is already cached;
      *         <code>false</code> otherwise
@@ -532,6 +480,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
     /**
      * Evict item from cache. Evicts the associated <code>LRUEntry</code>
+     *
      * @param id item id
      */
     private void evict(ItemId id) {
@@ -545,7 +494,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
     /**
      * Evict item from cache
-     * @param entry LRU entry
+     *
+     * @param entry               LRU entry
      * @param removeFromPathCache whether to remove from path cache
      */
     private void evict(LRUEntry entry, boolean removeFromPathCache) {
@@ -564,6 +514,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Evict path map element from cache. This will traverse all children
      * of this element and evict the objects associated with them
+     *
      * @param element path map element
      */
     private void evict(PathMap.Element element) {
@@ -579,8 +530,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Insert a node into the cache. This will automatically shift
      * all indexes of sibling nodes having index greater or equal.
+     *
      * @param path child path
-     * @param id node id
+     * @param id   node id
      */
     private void insert(Path path, ItemId id) throws PathNotFoundException {
         synchronized (cacheMonitor) {
@@ -608,8 +560,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Remove an item from the cache in order to shift the indexes
      * of items following this item.
+     *
      * @param path child path
-     * @param id node id
+     * @param id   node id
      */
     private void remove(Path path, ItemId id) throws PathNotFoundException {
         synchronized (cacheMonitor) {
@@ -654,6 +607,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         /**
          * Create a new instance of this class
+         *
          * @param id item id
          */
         public LRUEntry(ItemId id, PathMap.Element element) {
@@ -706,6 +660,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         /**
          * Return previous LRU entry
+         *
          * @return previous LRU entry
          */
         public LRUEntry getPrevious() {
@@ -714,6 +669,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         /**
          * Return next LRU entry
+         *
          * @return next LRU entry
          */
         public LRUEntry getNext() {
@@ -722,6 +678,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         /**
          * Return item ID
+         *
          * @return item ID
          */
         public ItemId getId() {
@@ -730,6 +687,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         /**
          * Return element in path map
+         *
          * @return element in path map
          */
         public PathMap.Element getElement() {

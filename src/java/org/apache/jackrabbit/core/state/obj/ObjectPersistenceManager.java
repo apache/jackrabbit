@@ -50,11 +50,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -170,14 +168,8 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
         out.writeUTF(state.getParentUUID() == null ? "" : state.getParentUUID());
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
-        // parentUUIDs
-        Collection c = state.getParentUUIDs();
-        out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            out.writeUTF((String) iter.next()); // uuid
-        }
         // mixin types
-        c = state.getMixinTypeNames();
+        Collection c = state.getMixinTypeNames();
         out.writeInt(c.size()); // count
         for (Iterator iter = c.iterator(); iter.hasNext();) {
             out.writeUTF(iter.next().toString());   // name
@@ -231,17 +223,8 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
         // definitionId
         s = in.readUTF();
         state.setDefinitionId(NodeDefId.valueOf(s));
-        // parentUUIDs
-        int count = in.readInt();   // count
-        List list = new ArrayList(count);
-        for (int i = 0; i < count; i++) {
-            list.add(in.readUTF()); // uuid
-        }
-        if (list.size() > 0) {
-            state.setParentUUIDs(list);
-        }
         // mixin types
-        count = in.readInt();   // count
+        int count = in.readInt();   // count
         Set set = new HashSet(count);
         for (int i = 0; i < count; i++) {
             set.add(QName.valueOf(in.readUTF())); // name

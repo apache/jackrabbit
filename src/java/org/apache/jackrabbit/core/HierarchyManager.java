@@ -21,19 +21,22 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
- * <code>HierarchyManager</code> ...
+ * The <code>HierarchyManager</code> interface ...
  */
 public interface HierarchyManager {
 
     /**
+     * Resolves a path into an item id.
      * @param path
      * @return
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    ItemId resolvePath(Path path) throws PathNotFoundException, RepositoryException;
+    ItemId resolvePath(Path path)
+            throws PathNotFoundException, RepositoryException;
 
     /**
+     * Returns the path to the given item.
      * @param id
      * @return
      * @throws ItemNotFoundException
@@ -42,7 +45,8 @@ public interface HierarchyManager {
     Path getPath(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
-     * @param id
+     * Returns the name of the specified item.
+     * @param id id of item whose name should be returned
      * @return
      * @throws ItemNotFoundException
      * @throws RepositoryException
@@ -79,46 +83,4 @@ public interface HierarchyManager {
      */
     boolean isAncestor(NodeId nodeId, ItemId itemId)
             throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * @param id
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    Path[] getAllPaths(ItemId id) throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * @param id
-     * @param includeZombies
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    Path[] getAllPaths(ItemId id, boolean includeZombies)
-            throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * @param id
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    NodeId[] listParents(ItemId id) throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * @param id
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    ItemId[] listChildren(NodeId id) throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * @param id
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    ItemId[] listZombieChildren(NodeId id) throws ItemNotFoundException, RepositoryException;
 }

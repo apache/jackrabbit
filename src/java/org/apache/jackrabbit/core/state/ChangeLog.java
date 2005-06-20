@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.commons.collections.SequencedHashMap;
 
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Registers changes made to states and references and consolidates
@@ -31,25 +31,26 @@ public class ChangeLog {
     /**
      * Added states
      */
-    private final Map addedStates = new SequencedHashMap();
+    private final Map addedStates = new LinkedMap();
 
     /**
      * Modified states
      */
-    private final Map modifiedStates = new SequencedHashMap();
+    private final Map modifiedStates = new LinkedMap();
 
     /**
      * Deleted states
      */
-    private final Map deletedStates = new SequencedHashMap();
+    private final Map deletedStates = new LinkedMap();
 
     /**
      * Modified references
      */
-    private final Map modifiedRefs = new SequencedHashMap();
+    private final Map modifiedRefs = new LinkedMap();
 
     /**
      * A state has been added
+     *
      * @param state state that has been added
      */
     public void added(ItemState state) {
@@ -61,6 +62,7 @@ public class ChangeLog {
      * (not in the collection of added ones), then disconnect
      * the local state from its underlying shared state and add
      * it to the modified states collection.
+     *
      * @param state state that has been modified
      */
     public void modified(ItemState state) {
@@ -76,6 +78,7 @@ public class ChangeLog {
      * the local state from its underlying shared state, remove
      * it from the modified states collection and add it to the
      * deleted states collection.
+     *
      * @param state state that has been deleted
      */
     public void deleted(ItemState state) {
@@ -88,6 +91,7 @@ public class ChangeLog {
 
     /**
      * A references has been modified
+     *
      * @param refs refs that has been modified
      */
     public void modified(NodeReferences refs) {
@@ -99,6 +103,7 @@ public class ChangeLog {
      * if the item state is neither in the added nor in the modified
      * section. Throws a <code>NoSuchItemStateException</code> if
      * the item state is in the deleted section.
+     *
      * @return item state or <code>null</code>
      * @throws NoSuchItemStateException if the item has been deleted
      */
@@ -108,8 +113,7 @@ public class ChangeLog {
             state = (ItemState) modifiedStates.get(id);
             if (state == null) {
                 if (deletedStates.containsKey(id)) {
-                    throw new NoSuchItemStateException(
-                            "State has been marked destroyed: " + id);
+                    throw new NoSuchItemStateException("State has been marked destroyed: " + id);
                 }
             }
         }
@@ -118,6 +122,7 @@ public class ChangeLog {
 
     /**
      * Return a flag indicating whether a given item state exists.
+     *
      * @return <code>true</code> if item state exists within this
      *         log; <code>false</code> otherwise
      */
@@ -132,6 +137,7 @@ public class ChangeLog {
      * Return a node references object given its id. Returns
      * <code>null</code> if the node reference is not in the modified
      * section.
+     *
      * @return node references or <code>null</code>
      */
     public NodeReferences get(NodeReferencesId id) {
@@ -140,6 +146,7 @@ public class ChangeLog {
 
     /**
      * Return an iterator over all added states.
+     *
      * @return iterator over all added states.
      */
     public Iterator addedStates() {
@@ -148,6 +155,7 @@ public class ChangeLog {
 
     /**
      * Return an iterator over all modified states.
+     *
      * @return iterator over all modified states.
      */
     public Iterator modifiedStates() {
@@ -156,6 +164,7 @@ public class ChangeLog {
 
     /**
      * Return an iterator over all deleted states.
+     *
      * @return iterator over all deleted states.
      */
     public Iterator deletedStates() {
@@ -164,6 +173,7 @@ public class ChangeLog {
 
     /**
      * Return an iterator over all modified references.
+     *
      * @return iterator over all modified references.
      */
     public Iterator modifiedRefs() {
@@ -172,6 +182,7 @@ public class ChangeLog {
 
     /**
      * Merge another change log to this change log
+     *
      * @param other other change log
      */
     public void merge(ChangeLog other) {
@@ -272,6 +283,7 @@ public class ChangeLog {
      * Undo changes made to items in the change log. Discards
      * added items, refreshes modified and resurrects deleted
      * items.
+     *
      * @param parent parent manager that will hold current data
      */
     public void undo(ItemStateManager parent) {
