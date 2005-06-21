@@ -29,8 +29,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 
 /**
- * The <code>ServerObservationManager</code> class 
- * 
+ * The <code>ServerObservationManager</code> class
+ *
  * @author Felix Meschberger
  */
 /**
@@ -55,13 +55,13 @@ public class ServerObservationManager extends ServerObject implements
 
     /** The adapted local observation manager. */
     private ObservationManager observationManager;
-    
+
     /**
      * The map of event listener proxies indexed by the unique identifier.
      */
     private Map proxyMap;
-    
-    /** 
+
+    /**
      * The queue to which event listener proxies post events to be reported
      * by the {@link #getNextEvent(long)} method.
      */
@@ -85,23 +85,23 @@ public class ServerObservationManager extends ServerObject implements
     public void addEventListener(long listenerId, int eventTypes,
         String absPath, boolean isDeep, String[] uuid, String[] nodeTypeName,
         boolean noLocal) throws RepositoryException, RemoteException {
-        
+
         // find the proxy or create one
         ServerEventListenerProxy proxy;
         synchronized (this) {
             if (proxyMap == null) {
                 proxyMap = new HashMap();
             }
-            
+
             Long id = new Long(listenerId);
             proxy = (ServerEventListenerProxy) proxyMap.get(id);
             if (proxy == null) {
-                proxy = new ServerEventListenerProxy(getFactory(), listenerId, 
+                proxy = new ServerEventListenerProxy(getFactory(), listenerId,
                     getQueue());
                 proxyMap.put(id, proxy);
             }
         }
-        
+
         // register the proxy with the observation manager
         observationManager.addEventListener(proxy, eventTypes, absPath,
             isDeep, uuid, nodeTypeName, noLocal);
@@ -110,43 +110,45 @@ public class ServerObservationManager extends ServerObject implements
     /** {@inheritDoc} */
     public void removeEventListener(long listenerId)
         throws RepositoryException, RemoteException {
-        
+
         // try to find the proxy in the map
         ServerEventListenerProxy proxy;
         synchronized (this) {
             if (proxyMap == null) {
                 return;
             }
-            
+
             Long id = new Long(listenerId);
             proxy = (ServerEventListenerProxy) proxyMap.remove(id);
             if (proxy == null) {
                 return;
             }
         }
-        
+
         // register the proxy with the observation manager
         observationManager.removeEventListener(proxy);
     }
-    
+
     /** {@inheritDoc} */
     public RemoteEventCollection getNextEvent(long timeout) throws RemoteException {
         // need the queue
         checkQueue();
-        
+
         try {
-            if (timeout < 0) timeout = 0;
+            if (timeout < 0) {
+                timeout = 0;
+            }
             return (RemoteEventCollection) queue.get(timeout);
         } catch (InterruptedException ie) {
             // don't retry, but log
         }
-        
+
         // did not get anything, fall back to nothing
         return null;
     }
-    
+
     //---------- internal ------------------------------------------------------
-    
+
     /**
      * Makes sure, the {@link #queue} field is assigned a value.
      */
@@ -155,9 +157,11 @@ public class ServerObservationManager extends ServerObject implements
             queue = new Queue();
         }
     }
-    
+
     /**
      * Returns the <code>Channel</code> allocating it if required.
+     *
+     * @return queue
      */
     private Queue getQueue() {
         checkQueue();
