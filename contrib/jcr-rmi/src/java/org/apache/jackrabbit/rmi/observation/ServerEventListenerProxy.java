@@ -41,24 +41,24 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  * <p>
  * See the package overview for an explanation of the mechanisms implemented for
  * event dispatching.
- * 
+ *
  * @author Felix Meschberger
  */
 public class ServerEventListenerProxy implements EventListener {
 
     /** logger */
-    private static final Log log = 
+    private static final Log log =
         LogFactory.getLog(ServerEventListenerProxy.class);
-    
+
     /** The factory used to convert event iterators to remote events */
     private final RemoteAdapterFactory factory;
-    
+
     /**
      * The unique indentifier of the client-side event listener on whose
      * behalf this listener proxy is registered.
      */
     private final long listenerId;
-    
+
     /**
      * The queue to which remote events are queue for them to be picked up
      * by calls to the
@@ -66,10 +66,10 @@ public class ServerEventListenerProxy implements EventListener {
      * method.
      */
     private final Queue queue;
-    
+
     /**
      * Creates a new instance of this listener proxy.
-     * 
+     *
      * @param factory The {@link RemoteAdapterFactory} used to convert the
      *      {@link EventIterator} instances to {@link RemoteEventCollection} objects.
      * @param listenerId The unique identifier of the client-side event listener
@@ -77,18 +77,18 @@ public class ServerEventListenerProxy implements EventListener {
      * @param queue The sink to which events to be dispatched to the client are
      *      queued to be picked up.
      */
-    public ServerEventListenerProxy(RemoteAdapterFactory factory, 
+    public ServerEventListenerProxy(RemoteAdapterFactory factory,
             long listenerId, Queue queue) {
         this.factory = factory;
         this.listenerId = listenerId;
         this.queue = queue;
     }
-    
+
     /**
      * Converts the {@link javax.jcr.observation.Event} instances in the given
      * iterator to an instance of {@link RemoteEventCollection} for them to be dispatched
      * to the client-side event listener.
-     * 
+     *
      * @param events The {@link javax.jcr.observation.Event Events} to be
      *      dispatched.
      */
@@ -97,27 +97,29 @@ public class ServerEventListenerProxy implements EventListener {
             RemoteEventCollection remoteEvent = factory.getRemoteEvent(listenerId, events);
             queue.put(remoteEvent);
         } catch (RemoteException re) {
-            Throwable t = (re.getCause() == null) ? re : re.getCause(); 
+            Throwable t = (re.getCause() == null) ? re : re.getCause();
             log.error("Problem creating remote event for " + listenerId, t);
         }
     }
-    
+
     //---------- Object overwrite ----------------------------------------------
-    
+
     /**
      * Returns the client-side listener identifier as its hash code.
+     *
+     * @return hash code
      */
     public int hashCode() {
         return (int) listenerId;
     }
-    
+
     /**
      * Returns <code>true</code> if <code>obj</code> is either the same as this
      * or a proxy for the same client-side listener, which is identicated by the
      * same listener identifier.
-     * 
+     *
      * @param obj The object to compare to.
-     * 
+     *
      * @return <code>true</code> if <code>obj</code> is the same or a proxy for
      *      the same client-side listener.
      */
@@ -130,11 +132,13 @@ public class ServerEventListenerProxy implements EventListener {
             return false;
         }
     }
-    
+
     /**
      * Returns the a string representation of this instance, which is an
      * indication of this class's name and the unique identifier of the real
      * event listener.
+     *
+     * @return string representation
      */
     public String toString() {
         return "EventListenerProxy: listenerId=" + listenerId;

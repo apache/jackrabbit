@@ -162,14 +162,14 @@ public class ClientWorkspace extends ClientObject implements Workspace {
             throws RepositoryException {
         if (observationManager == null) {
             try {
-                observationManager = 
+                observationManager =
                     getFactory().
                         getObservationManager(remote.getObservationManager());
             } catch (RemoteException ex) {
                 throw new RemoteRepositoryException(ex);
             }
         }
-        
+
         return observationManager;
     }
 

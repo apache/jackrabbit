@@ -31,7 +31,7 @@ import javax.jcr.ValueFormatException;
 /**
  * The <code>BinaryValue</code> class implements the committed value state for
  * Binary values as a part of the State design pattern (Gof) used by this
- * package. 
+ * package.
  * <p>
  * NOTE: This class forwards the <code>InputStream</code> from which it was
  * created through the {@link #getStream()} method but does not close the
@@ -41,11 +41,11 @@ import javax.jcr.ValueFormatException;
  * This class implements {@link #readObject(ObjectInputStream)} and
  * {@link #writeObject(ObjectOutputStream)} methods to (de-)serialize the
  * data.
- * 
+ *
  * @version $Revision$, $Date$
  * @author Jukka Zitting
  * @since 0.16.4.1
- * 
+ *
  * @see org.apache.jackrabbit.value.SerialValue
  */
 public class BinaryValue implements StatefulValue {
@@ -57,7 +57,7 @@ public class BinaryValue implements StatefulValue {
      * Creates an instance on the given <code>InputStream</code>. This exact
      * stream will be provided by the {@link #getStream()}, thus care must be
      * taken to not inadvertendly read or close the stream.
-     * 
+     *
      * @param stream The <code>InputStream</code> providing the value.
      */
     protected BinaryValue(InputStream stream) {
@@ -67,10 +67,10 @@ public class BinaryValue implements StatefulValue {
     /**
      * Creates an instance providing the UTF-8 representation of the given
      * string value.
-     * 
+     *
      * @param value The string whose UTF-8 representation is provided as the
      *      value of this instance.
-     * 
+     *
      * @throws ValueFormatException If the platform does not support UTF-8
      *      encoding (which is unlikely as UTF-8 is required to be available
      *      on all platforms).
@@ -82,12 +82,12 @@ public class BinaryValue implements StatefulValue {
     /**
      * Helper method to convert a string value into an <code>InputStream</code>
      * from which the UTF-8 representation can be read.
-     * 
+     *
      * @param value The string value to be made available through a stream.
-     * 
+     *
      * @return The <code>InputStream</code> from which the UTF-8 representation
      *      of the <code>value</code> may be read.
-     * 
+     *
      * @throws ValueFormatException If the platform does not support UTF-8
      *      encoding (which is unlikely as UTF-8 is required to be available
      *      on all platforms).
@@ -104,6 +104,8 @@ public class BinaryValue implements StatefulValue {
     /**
      * Returns the <code>InputStream</code> from which this instance has been
      * created.
+     *
+     * @return value stream
      */
     public InputStream getStream() {
         return stream;
@@ -111,6 +113,8 @@ public class BinaryValue implements StatefulValue {
 
     /**
      * Returns <code>PropertyType.BINARY</code>.
+     *
+     * @return property type
      */
     public int getType() {
         return PropertyType.BINARY;
@@ -119,50 +123,55 @@ public class BinaryValue implements StatefulValue {
     /**
      * Always throws <code>IllegalStateException</code> because only an
      * <code>InputStream</code> is available from this implementation.
-     * 
-     * @throws IllegalStateException as defined above. 
+     *
+     * @return nothing
+     * @throws IllegalStateException as defined above.
      */
-    public String getString() {
+    public String getString() throws IllegalStateException {
         throw new IllegalStateException("Stream already retrieved");
     }
 
     /**
      * Always throws <code>IllegalStateException</code> because only an
      * <code>InputStream</code> is available from this implementation.
-     * 
-     * @throws IllegalStateException as defined above. 
+     *
+     * @return nothing
+     * @throws IllegalStateException as defined above.
      */
-    public long getLong() {
+    public long getLong() throws IllegalStateException {
         throw new IllegalStateException("Stream already retrieved");
     }
 
     /**
      * Always throws <code>IllegalStateException</code> because only an
      * <code>InputStream</code> is available from this implementation.
-     * 
-     * @throws IllegalStateException as defined above. 
+     *
+     * @return nothing
+     * @throws IllegalStateException as defined above.
      */
-    public double getDouble() {
+    public double getDouble() throws IllegalStateException {
         throw new IllegalStateException("Stream already retrieved");
     }
 
     /**
      * Always throws <code>IllegalStateException</code> because only an
      * <code>InputStream</code> is available from this implementation.
-     * 
-     * @throws IllegalStateException as defined above. 
+     *
+     * @return nothing
+     * @throws IllegalStateException as defined above.
      */
-    public Calendar getDate() {
+    public Calendar getDate() throws IllegalStateException {
         throw new IllegalStateException("Stream already retrieved");
     }
 
     /**
      * Always throws <code>IllegalStateException</code> because only an
      * <code>InputStream</code> is available from this implementation.
-     * 
-     * @throws IllegalStateException as defined above. 
+     *
+     * @return nothing
+     * @throws IllegalStateException as defined above.
      */
-    public boolean getBoolean() {
+    public boolean getBoolean() throws IllegalStateException {
         throw new IllegalStateException("Stream already retrieved");
     }
 
@@ -175,24 +184,25 @@ public class BinaryValue implements StatefulValue {
      *      data is copied.
      *
      * @throws IOException If an error occurrs writing the binary data.
-     * @throws OutOfMemoryError If not enouhg memory is available to store the
+     * @throws OutOfMemoryError If not enough memory is available to store the
      *      binary data in the internal byte array.
      */
-    private void writeObject(ObjectOutputStream out) throws IOException {
+    private void writeObject(ObjectOutputStream out)
+            throws IOException, OutOfMemoryError {
         // read the input into a byte array - limited by memory available !!
-        ByteArrayOutputStream bos = 
+        ByteArrayOutputStream bos =
             new ByteArrayOutputStream(stream.available());
         byte[] buf = new byte[2048];
         int rd = 0;
         while ((rd = stream.read(buf)) >= 0) {
             bos.write(buf, 0, rd);
         }
-        
+
         // stream the data to the object output
         out.writeInt(bos.size());
         out.write(bos.toByteArray());
     }
-    
+
     /**
      * Reads the binary data from the <code>ObjectInputStream</code> into an
      * internal byte array, which is then provided through a
@@ -205,7 +215,8 @@ public class BinaryValue implements StatefulValue {
      * @throws OutOfMemoryError If not enouhg memory is available to store the
      *      binary data in the internal byte array.
      */
-    private void readObject(ObjectInputStream in) throws IOException {
+    private void readObject(ObjectInputStream in)
+            throws IOException, OutOfMemoryError {
         int size = in.readInt();
         byte[] buf = new byte[size];
         in.readFully(buf);

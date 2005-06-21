@@ -46,7 +46,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  * implement the <code>Object.hashCode()</code> and <code>Object.equals()</code>
  * contracts for them to be handled correctly by this class.
  * </ol>
- * 
+ *
  * @author Felix Meschberger
  * @see #run()
  */
@@ -54,47 +54,48 @@ public class ClientEventPoll extends Thread {
 
     /** logger */
     private static final Log log = LogFactory.getLog(ClientEventPoll.class);
-    
+
     /**
      * The time in milliseconds the {@link #run()} method should be waiting
      * for remote events.
-     * @see #run()  
+     * @see #run()
      */
     private static final long POLL_TIMEOUT = 5000;
-    
+
     /** The thread name */
     private static final String THREAD_NAME = "Client Event Poller";
-    
+
     /** The primitive unique identifier generator. */
     private static long counter = 0;
-    
+
     /** The {@link RemoteObservationManager} called for the new events. */
     private final RemoteObservationManager remote;
-    
+
     /** The map of locally registered listeners indexed by the unique identifier */
     private Map listenerMap = new HashMap();
-    
+
     /** The map of unique identifieres indexed by the registered listeners */
     private Map idMap = new HashMap();
-    
+
     /**
      * Flag indicating whether the {@link #run()} method should terminate.
      * @see #run()
      */
     private boolean running = true;
-    
+
     /**
      * Creates an instance of this class talking to the given
      * {@link RemoteObservationManager}.
-     * 
+     *
      * @param remote The remote observation manager which is asked for new
      *      events. This must not be <code>null</code>.
-     * 
+     *
      * @throws NullPointerException if <code>remote</code> is <code>null</code>.
      */
-    public ClientEventPoll(RemoteObservationManager remote) {
+    public ClientEventPoll(RemoteObservationManager remote)
+            throws NullPointerException {
         super(THREAD_NAME);
-        
+
         // check remote and assign
         if (remote == null) {
             throw new NullPointerException("remote");
@@ -105,9 +106,9 @@ public class ClientEventPoll extends Thread {
     /**
      * Registers the given local listener with this instance and returns the
      * unique identifier assigned to it.
-     *  
+     *
      * @param listener The <code>EventListener</code> to register.
-     * 
+     *
      * @return The unique identifier assigned to the newly registered event
      *      listener.
      */
@@ -117,13 +118,13 @@ public class ClientEventPoll extends Thread {
         idMap.put(listener, id);
         return id.longValue();
     }
-    
+
     /**
      * Unregisters the given local listener from this instance and returns the
      * unique identifier assigned to it.
-     *  
+     *
      * @param listener The <code>EventListener</code> to unregister.
-     * 
+     *
      * @return The unique identifier assigned to the unregistered event listener
      *      or <code>-1</code> if the listener was not registered.
      */
@@ -133,30 +134,32 @@ public class ClientEventPoll extends Thread {
             listenerMap.remove(key);
             return key.longValue();
         }
-        
+
         return -1;
     }
-    
+
     /**
      * Returns an array of the registered event listeners.
+     *
+     * @return registered event listeners
      */
     public synchronized EventListener[] getListeners() {
         return (EventListener[]) listenerMap.values().toArray(
             new EventListener[(listenerMap.size())]);
     }
-    
+
     /**
      * Indicates to the {@link #run()} method, that asking for events should
      * be terminated.
-     * 
+     *
      * @see #run()
      */
     public void terminate() {
         this.running = false;
     }
-    
+
     //---------- Thread overwrite ---------------------------------------------
-    
+
     /**
      * Checks for remote events and dispatches them to the locally registered
      * event listeners. This is how this method works:
@@ -167,92 +170,96 @@ public class ClientEventPoll extends Thread {
      * waiting for a specified time (5 seconds).
      * <li>If no event was received in the specified time go back to step #1.
      * <li>Extract the unique listener identifier from the remote event and
-     * find it in the list of locally registered event listeners. Go back to 
+     * find it in the list of locally registered event listeners. Go back to
      * step #1 if no such listener exists.
      * <li>Convert the remote event list to an <code>EventIterator</code> and
      * call the <code>EventListener.onEvent()</code> method.
      * <li>Go back to step #1.
-     * </ol> 
+     * </ol>
      */
     public void run() {
         while (running) {
             try {
                 // ask for an event waiting at most POLL_TIMEOUT milliseconds
                 RemoteEventCollection remoteEvent = remote.getNextEvent(POLL_TIMEOUT);
-                
+
                 // poll time out, check running and ask again
                 if (remoteEvent == null) {
                     continue;
                 }
-                
+
                 // extract the listener id from the remote event and find
                 // the locally registered event listener
                 Long id = new Long(remoteEvent.getListenerId());
                 EventListener listener = (EventListener) listenerMap.get(id);
-                
+
                 // if the listener is not registered (anymore), the event is
                 // silently ignored, running is checked and the server asked again
                 if (listener == null) {
                     continue;
                 }
-                
+
                 // otherwise convert the remote events into an EventIterator
                 // and the listener is called
-                RemoteEventCollection.RemoteEvent[] remoteEvents = remoteEvent.getEvents(); 
+                RemoteEventCollection.RemoteEvent[] remoteEvents = remoteEvent.getEvents();
                 EventIterator events = toEvents(remoteEvents);
                 try {
                     listener.onEvent(events);
                 } catch (Exception e) {
                     log.error("Unexpected failure of Listener " + listener, e);
                 }
-                
+
             } catch (RemoteException re) {
                 log.error("Problem handling event. Looking for next one.", re);
             }
         }
     }
-    
+
     //---------- internal -----------------------------------------------------
-    
+
     /**
      * Converts an array of {@link RemoteEventCollection.RemoteEvent} instances to an
      * instance of <code>EventIterator</code> suitable to be sent to the
      * event listener.
+     *
+     * @param remoteEvents array of remote events
+     * @return event iterator
+     * @throws RemoteException on RMI errors
      */
-    private EventIterator toEvents(RemoteEventCollection.RemoteEvent[] remoteEvents) 
+    private EventIterator toEvents(RemoteEventCollection.RemoteEvent[] remoteEvents)
             throws RemoteException {
         Event[] events = new Event[remoteEvents.length];
-        for (int i=0; i < events.length; i++) {
+        for (int i = 0; i < events.length; i++) {
             events[i] = new JCREvent(remoteEvents[i]);
         }
         return new ArrayEventIterator(events);
     }
-    
+
     /**
      * The <code>JCREvent</code> class is a simple implementation of the JCR
      * <code>Event</code> interface to be sent to the locally registered
      * event listeners.
-     * 
+     *
      * @author Felix Meschberger
      */
     private static class JCREvent implements Event {
-        
+
         /** The event type */
         private final int type;
-        
+
         /** The path of the repository item underlying the event */
         private final String path;
-        
+
         /** The user id of the session originating the event */
         private final String userID;
 
         /**
          * Creates an instance of this class from the contents of the given
          * <code>remoteEvent</code>.
-         * 
+         *
          * @param remoteEvent The {@link RemoteEventCollection.RemoteEvent} instance
          *      providing the data for this event.
-         * 
+         *
          * @throws RemoteException if an RMI error occurrs.
          */
         private JCREvent(RemoteEventCollection.RemoteEvent remoteEvent) throws RemoteException {
@@ -260,18 +267,18 @@ public class ClientEventPoll extends Thread {
             path = remoteEvent.getPath();
             userID = remoteEvent.getUserID();
         }
-        
-        /** @inheritDoc */
+
+        /** {@inheritDoc} */
         public int getType() {
             return type;
         }
-        
-        /** @inheritDoc */
+
+        /** {@inheritDoc} */
         public String getPath() {
             return path;
         }
-        
-        /** @inheritDoc */
+
+        /** {@inheritDoc} */
         public String getUserID() {
             return userID;
         }

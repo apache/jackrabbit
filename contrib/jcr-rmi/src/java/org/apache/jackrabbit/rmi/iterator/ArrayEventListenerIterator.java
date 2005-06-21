@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.rmi.iterator;
 
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 
@@ -29,7 +27,7 @@ import javax.jcr.observation.EventListenerIterator;
  *
  * @author Felix Meschberger
  */
-public class ArrayEventListenerIterator extends ArrayIterator 
+public class ArrayEventListenerIterator extends ArrayIterator
         implements EventListenerIterator {
 
     /**

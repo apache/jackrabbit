@@ -19,7 +19,6 @@ package org.apache.jackrabbit.rmi.client;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
@@ -37,14 +36,14 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  * <p>
  * This class does not require the
  * {@link org.apache.jackrabbit.rmi.client.LocalAdapterFactory} and consequently
- * calls the base class constructor with a <code>null</code> factory. 
+ * calls the base class constructor with a <code>null</code> factory.
  * <p>
  * See the <a href="../observation/package.html><code>observation</code></a>
  * package comment for a description on how event listener registration and
- * notification is implemented. 
- * 
+ * notification is implemented.
+ *
  * @author Felix Meschberger
- * 
+ *
  * @see org.apache.jackrabbit.rmi.observation.ClientEventPoll
  */
 public class ClientObservationManager extends ClientObject implements
@@ -52,15 +51,15 @@ public class ClientObservationManager extends ClientObject implements
 
     /** The remote observation manager */
     private final RemoteObservationManager remote;
-    
+
     /** The ClientEventPoll class internally used for event dispatching */
     private ClientEventPoll poller;
-    
+
     /**
      * Creates an instance of this class talking to the given remote observation
      * manager.
-     * 
-     * @param remote The {@link RemoteObservationManager} backing this 
+     *
+     * @param remote The {@link RemoteObservationManager} backing this
      *      client-side observation manager.
      */
     public ClientObservationManager(RemoteObservationManager remote) {
@@ -69,13 +68,13 @@ public class ClientObservationManager extends ClientObject implements
     }
 
     /** {@inheritDoc} */
-    public void addEventListener(EventListener listener, int eventTypes, 
-            String absPath, boolean isDeep, String[] uuid, 
-            String[] nodeTypeName, boolean noLocal) 
+    public void addEventListener(EventListener listener, int eventTypes,
+            String absPath, boolean isDeep, String[] uuid,
+            String[] nodeTypeName, boolean noLocal)
             throws RepositoryException {
         try {
             long listenerId = getClientEventPoll().addListener(listener);
-            remote.addEventListener(listenerId, eventTypes, absPath, 
+            remote.addEventListener(listenerId, eventTypes, absPath,
                 isDeep, uuid, nodeTypeName, noLocal);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
@@ -99,11 +98,13 @@ public class ClientObservationManager extends ClientObject implements
     }
 
     //---------- internal ------------------------------------------------------
-    
+
     /**
      * Returns the {@link ClientEventPoll} instance used by this (client-side)
      * observation manager. This method creates the instance on the first call
      * and starts the poller thread to wait for remote events.
+     *
+     * @return poller instance
      */
     private synchronized ClientEventPoll getClientEventPoll() {
         if (poller == null) {
