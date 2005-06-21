@@ -24,10 +24,12 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
+import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
@@ -43,6 +45,16 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
 
     /** The adapted local workspace. */
     private Workspace workspace;
+
+    /**
+     * The remote observation manager for this workspace. This field is assigned
+     * on demand by the first call to {@link #getObservationManager()}. The
+     * assumption is that there is only one observation manager instance per
+     * workspace and that each call to the
+     * <code>Workspace.getObservationManager()</code> method of a single
+     * workspace will allways return the same object.
+     */
+    private RemoteObservationManager remoteObservationManager;
 
     /**
      * Creates a remote adapter for the given local workspace.
@@ -136,6 +148,22 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
         }
     }
 
+    /** {@inheritDoc} */
+    public RemoteObservationManager getObservationManager()
+            throws RepositoryException, RemoteException {
+        try {
+            if (remoteObservationManager == null) {
+                ObservationManager observationManager = 
+                    workspace.getObservationManager();
+                remoteObservationManager =
+                    getFactory().getRemoteObservationManager(observationManager);
+            }
+            return remoteObservationManager;
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
     /** {@inheritDoc} */
     public String[] getAccessibleWorkspaceNames()
             throws RepositoryException, RemoteException {
