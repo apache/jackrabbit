@@ -31,6 +31,8 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -38,6 +40,7 @@ import javax.jcr.query.Row;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
+import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -46,6 +49,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
+import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
@@ -105,6 +109,17 @@ public interface RemoteAdapterFactory {
      * @throws RemoteException on RMI errors
      */
     RemoteWorkspace getRemoteWorkspace(Workspace workspace)
+            throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local observation manager.
+     *
+     * @param observationManager local observation manager
+     * @return remote observation manager adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteObservationManager getRemoteObservationManager(
+            ObservationManager observationManager)
             throws RemoteException;
 
     /**
@@ -268,4 +283,15 @@ public interface RemoteAdapterFactory {
      */
     RemoteRow getRemoteRow(Row row) throws RemoteException;
 
+    /**
+     * Returns a remote adapter for the given local events.
+     *
+     * @param listenerId The listener identifier to which the events are to be
+     *      dispatched.
+     * @param event the local events
+     * @return remote event iterator adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteEventCollection getRemoteEvent(long listenerId, EventIterator events)
+        throws RemoteException;
 }

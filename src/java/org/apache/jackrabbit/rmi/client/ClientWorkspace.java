@@ -57,6 +57,16 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     private RemoteWorkspace remote;
 
     /**
+     * The adapted observation manager of this workspace. This field is set on
+     * the first call to the {@link #getObservationManager()()} method assuming,
+     * that the observation manager instance is not changing during the lifetime
+     * of a workspace instance, that is, each call to the server-side
+     * <code>Workspace.getObservationManager()</code> allways returns the same
+     * object.
+     */
+    private ObservationManager observationManager;
+
+    /**
      * Creates a client adapter for the given remote workspace.
      *
      * @param session current session
@@ -150,9 +160,17 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     /** {@inheritDoc} */
     public ObservationManager getObservationManager()
             throws RepositoryException {
-        // TODO Auto-generated method stub
-        // return null;
-        throw new UnsupportedRepositoryOperationException();
+        if (observationManager == null) {
+            try {
+                observationManager = 
+                    getFactory().
+                        getObservationManager(remote.getObservationManager());
+            } catch (RemoteException ex) {
+                throw new RemoteRepositoryException(ex);
+            }
+        }
+        
+        return observationManager;
     }
 
     /** {@inheritDoc} */

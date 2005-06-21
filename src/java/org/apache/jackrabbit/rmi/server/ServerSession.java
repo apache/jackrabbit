@@ -45,6 +45,15 @@ public class ServerSession extends ServerObject implements RemoteSession {
 
     /** The adapted local session. */
     private Session session;
+    
+    /**
+     * The server workspace for this session. This field is assigned on demand
+     * by the first call to {@link #getWorkspace()}. The assumption is that
+     * there is only one workspace instance per session and that each call to
+     * the <code>Session.getWorkspace()</code> method of a single session will
+     * allways return the same object.
+     */
+    private RemoteWorkspace remoteWorkspace;
 
     /**
      * Creates a remote adapter for the given local session.
@@ -87,7 +96,12 @@ public class ServerSession extends ServerObject implements RemoteSession {
 
     /** {@inheritDoc} */
     public RemoteWorkspace getWorkspace() throws RemoteException {
-        return getFactory().getRemoteWorkspace(session.getWorkspace());
+        if (remoteWorkspace == null) {
+            remoteWorkspace = 
+                getFactory().getRemoteWorkspace(session.getWorkspace());
+        }
+        
+        return remoteWorkspace;
     }
 
     /** {@inheritDoc} */
