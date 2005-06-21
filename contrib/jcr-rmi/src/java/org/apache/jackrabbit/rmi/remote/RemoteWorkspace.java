@@ -147,6 +147,18 @@ public interface RemoteWorkspace extends Remote {
 
     /**
      * Remote version of the
+     * {@link javax.jcr.Workspace#getObservationManager() Workspace.getObservationManager()}
+     * method.
+     *
+     * @return observation manager
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    RemoteObservationManager getObservationManager()
+            throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
      * {@link javax.jcr.Workspace#getAccessibleWorkspaceNames() Workspace.getAccessibleWorkspaceNames()}
      * method.
      *

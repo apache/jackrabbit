@@ -29,6 +29,7 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -44,6 +45,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
+import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
@@ -97,6 +99,17 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
         return new ClientWorkspace(session, remote, this);
     }
 
+    /**
+     * Creates and returns a
+     * {@link ClientObservationManager ClientObservationManager} instance.
+     *
+     * {@inheritDoc}
+     */
+    public ObservationManager getObservationManager(
+            RemoteObservationManager remote) {
+        return new ClientObservationManager(remote);
+    }
+    
     /**
      * Creates and returns a
      * {@link ClientNamespaceRegistry ClientClientNamespaceRegistry} instance.

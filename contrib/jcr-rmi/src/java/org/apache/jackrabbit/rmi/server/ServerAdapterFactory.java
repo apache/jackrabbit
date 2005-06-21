@@ -17,20 +17,26 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -38,6 +44,7 @@ import javax.jcr.query.Row;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
+import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -46,6 +53,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
+import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
@@ -97,6 +105,16 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
         return new ServerWorkspace(workspace, this);
     }
 
+    /**
+     * Creates a {@link ServerObservationManager ServerObservationManager}
+     * instance.
+     * {@inheritDoc}
+     */
+    public RemoteObservationManager getRemoteObservationManager(
+        ObservationManager observationManager) throws RemoteException {
+        return new ServerObservationManager(observationManager, this);
+    }
+    
     /**
      * Creates a {@link ServerNamespaceRegistry ServerNamespaceRegistry}
      * instance.
@@ -238,4 +256,31 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
         return new ServerRow(row, this);
     }
 
+    /**
+     * Creates a {@link ServerEventCollection ServerEventCollection} instances.
+     * {@inheritDoc}
+     */
+    public RemoteEventCollection getRemoteEvent(long listenerId, EventIterator events)
+            throws RemoteException {
+        RemoteEventCollection.RemoteEvent[] remoteEvents;
+        if (events != null) {
+            List eventList = new ArrayList();
+            for (int i=0; events.hasNext(); i++) {
+                Event event = events.nextEvent();
+                try {
+                    eventList.add(new ServerEventCollection.ServerEvent(event.getType(),
+                        event.getPath(), event.getUserID()));
+                } catch (RepositoryException re) {
+                    throw new RemoteException(re.getMessage(), re);
+                }
+            }
+            remoteEvents = new RemoteEventCollection.RemoteEvent[eventList.size()];
+            eventList.toArray(remoteEvents);
+            
+        } else {
+            remoteEvents = new RemoteEventCollection.RemoteEvent[0]; // for safety
+        }
+        
+        return new ServerEventCollection(listenerId, remoteEvents);
+    }
 }

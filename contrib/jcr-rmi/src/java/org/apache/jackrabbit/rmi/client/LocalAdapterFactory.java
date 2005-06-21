@@ -24,11 +24,12 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -44,6 +45,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
+import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
@@ -102,6 +104,15 @@ public interface LocalAdapterFactory {
      * @return local workspace adapter
      */
     Workspace getWorkspace(Session session, RemoteWorkspace remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote observation
+     * manager.
+     *
+     * @param remote remote observation manager
+     * @return local observation manager adapter
+     */
+    ObservationManager getObservationManager(RemoteObservationManager remote);
 
     /**
      * Factory method for creating a local adapter for a remote namespace
