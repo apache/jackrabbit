@@ -216,6 +216,16 @@
       </roles>
       <timezone>+2</timezone>
     </developer>
+    <developer>
+      <name>Edgar Poce</name>
+      <id>edgarpoce</id>
+      <email>edgarpoce@gmail.com</email>
+      <organization/>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone/>
+    </developer>
   </developers>
   <contributors>
     <contributor>
@@ -235,15 +245,6 @@
         <role>Java Developer</role>
       </roles>
       <timezone>+1</timezone>
-    </contributor>
-    <contributor>
-      <name>Edgar Poce</name>
-      <email>edgarpoce@gmail.com</email>
-      <organization/>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-      <timezone/>
     </contributor>
     <contributor>
       <name>Angela Schreiber</name>
