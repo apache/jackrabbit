@@ -20,10 +20,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventListenerIterator;
-
-import org.apache.jackrabbit.rmi.client.RemoteRepositoryException;
 
 /**
  * Remote version of the JCR {@link javax.jcr.observation.ObservationManager ObservationManager}
@@ -36,19 +32,19 @@ import org.apache.jackrabbit.rmi.client.RemoteRepositoryException;
  * <p>
  * See the <a href="../observation/package.html><code>observation</code></a>
  * package comment for a description on how event listener registration and
- * notification is implemented. 
+ * notification is implemented.
  *
  * @author Felix Meschberger
- * 
+ *
  * @see javax.jcr.observation.ObservationManager
  * @see org.apache.jackrabbit.rmi.client.ClientObservationManager
  * @see org.apache.jackrabbit.rmi.server.ServerObservationManager
  */
 public interface RemoteObservationManager extends Remote {
-    
+
     /**
      * Remote version of the
-     * {@link javax.jcr.observation.ObservationManager#addEventListener(javax.jcr.observation.EventListener, int, java.lang.String, boolean, java.lang.String[], java.lang.String[], boolean) ObservationManager.addEventListener()}
+     * {@link javax.jcr.observation.ObservationManager#addEventListener(javax.jcr.observation.EventListener, int, String, boolean, String[], String[], boolean) ObservationManager.addEventListener()}
      * method. See class comment for an explanation on how the
      * <code>listenerId</code> is used.
      *
@@ -66,13 +62,13 @@ public interface RemoteObservationManager extends Remote {
      *      are to be sent. If <code>null</code> this parameter is ignored.
      * @param noLocal <code>true</code> if only events are to be sent which do
      *      not originate from the session to which this instance belongs.
-     * 
+     *
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    public void addEventListener(long listenerId, int eventTypes, 
-        String absPath, boolean isDeep, String[] uuid, 
-        String[] nodeTypeName, boolean noLocal) 
+    void addEventListener(long listenerId, int eventTypes,
+        String absPath, boolean isDeep, String[] uuid,
+        String[] nodeTypeName, boolean noLocal)
         throws RepositoryException, RemoteException;
 
     /**
@@ -83,28 +79,28 @@ public interface RemoteObservationManager extends Remote {
      *
      * @param listenerId The identification of the listener on the client
      *      side to which events will be directed.
-     * 
+     *
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    public void removeEventListener(long listenerId)
+    void removeEventListener(long listenerId)
         throws RepositoryException, RemoteException;
 
     /**
      * Returns the next event to be dispatched to registered event listeners. If
      * no event is available, this method blocks until one is available or until
      * the given timeout expires.
-     * 
+     *
      * @param timeout The time in milliseconds to wait for the next event
      *      available to be dispatched. If negative or zero, this method waits
      *      for ever.
-     * 
+     *
      * @return The {@link RemoteEventCollection} to be dispatched. <code>null</code> is
      *      returned if the method timed out waiting for an event to be
      *      dispatched.
-     * 
+     *
      * @throws RemoteException on RMI errors
      */
-    public RemoteEventCollection getNextEvent(long timeout) 
+    RemoteEventCollection getNextEvent(long timeout)
         throws RemoteException;
 }

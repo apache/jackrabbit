@@ -64,7 +64,7 @@ public class ClientSession extends ClientObject implements Session {
 
     /** The adapted remote session. */
     private RemoteSession remote;
-    
+
     /**
      * The adapted workspace of this session. This field is set on the first
      * call to the {@link #getWorkspace()} method assuming, that a workspace
@@ -128,13 +128,13 @@ public class ClientSession extends ClientObject implements Session {
     public Workspace getWorkspace() {
         if (workspace == null) {
             try {
-                workspace = 
+                workspace =
                     getFactory().getWorkspace(this, remote.getWorkspace());
             } catch (RemoteException ex) {
                 throw new RemoteRuntimeException(ex);
             }
         }
-        
+
         return workspace;
     }
 
@@ -223,13 +223,13 @@ public class ClientSession extends ClientObject implements Session {
 
     /**
      * Returns the {@link SerialValueFactory#getInstance()}.
-     *  
+     *
      * {@inheritDoc}
      */
     public ValueFactory getValueFactory() {
         return SerialValueFactory.getInstance();
     }
-    
+
     /** {@inheritDoc} */
     public void checkPermission(String path, String actions)
             throws AccessControlException, RepositoryException {

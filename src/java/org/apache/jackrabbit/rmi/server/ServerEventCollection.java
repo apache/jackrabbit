@@ -19,7 +19,6 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
-import org.apache.jackrabbit.rmi.remote.RemoteEventCollection.RemoteEvent;
 
 /**
  * The <code>ServerEventCollection</code> class implemnts the
@@ -35,7 +34,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteEventCollection.RemoteEvent;
  * {@link org.apache.jackrabbit.rmi.server.RemoteAdapterFactory}and
  * consequently calls the base class constructor with a <code>null</code>
  * factory.
- * 
+ *
  * @author Felix Meschberger
  */
 public class ServerEventCollection extends ServerObject implements
@@ -43,26 +42,26 @@ public class ServerEventCollection extends ServerObject implements
 
     /** The unique identifier of the receiving listener */
     private final long listenerId;
-    
+
     /**
      * The list of
      * {@link org.apache.jackrabbit.rmi.remote.RemoteEventCollection.RemoteEvent}.
      */
     private final RemoteEvent[] events;
-    
+
     /**
      * Creates an instance of this class.
-     * 
+     *
      * @param listenerId The unique identifier of the client-side listener to
      *            which the events should be sent.
      * @param events The list of {@link RemoteEvent remote events}.
-     * 
+     *
      * @throws RemoteException on RMI errors
      */
     ServerEventCollection(long listenerId, RemoteEvent[] events)
             throws RemoteException {
         super(null);
-        
+
         this.listenerId = listenerId;
         this.events = events;
     }
@@ -79,24 +78,29 @@ public class ServerEventCollection extends ServerObject implements
 
     /**
      * Server side implementation of the {@link RemoteEvent} interface.
-     * 
+     *
      * {@inheritDoc}
      */
     public static class ServerEvent extends ServerObject implements RemoteEvent {
-        
+
+        /** Event type */
         private final int type;
+
+        /** Item path */
         private final String path;
+
+        /** User identifier */
         private final String userID;
-        
+
         /**
          * Creates an instance of this class.
          * @param type The event type.
          * @param path The absolute path to the underlying item.
          * @param userId The userID of the originating session.
-         * 
+         *
          * @throws RemoteException declared because of the declaration in the
          *      base class constructor called. In fact this exception is never
-         *      thrown. 
+         *      thrown.
          */
         ServerEvent(int type, String path, String userId) throws RemoteException {
             super(null);
@@ -104,7 +108,7 @@ public class ServerEventCollection extends ServerObject implements
             this.path = path;
             this.userID = userId;
         }
-        
+
         /** {@inheritDoc} */
         public String getPath() {
             return path;

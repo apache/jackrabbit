@@ -44,7 +44,7 @@ import javax.jcr.Value;
  * available on both the client and server side. The
  * {@link org.apache.jackrabbit.value.SerialValueFactory SerialValueFactory}
  * class provides two convenience methods to satisfy these requirements.
- * 
+ *
  * @author Jukka Zitting
  * @see javax.jcr.Property
  * @see org.apache.jackrabbit.rmi.client.ClientProperty

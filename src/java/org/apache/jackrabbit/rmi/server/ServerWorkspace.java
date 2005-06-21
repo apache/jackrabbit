@@ -153,7 +153,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throws RepositoryException, RemoteException {
         try {
             if (remoteObservationManager == null) {
-                ObservationManager observationManager = 
+                ObservationManager observationManager =
                     workspace.getObservationManager();
                 remoteObservationManager =
                     getFactory().getRemoteObservationManager(observationManager);
@@ -163,7 +163,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             throw getRepositoryException(ex);
         }
     }
-    
+
     /** {@inheritDoc} */
     public String[] getAccessibleWorkspaceNames()
             throws RepositoryException, RemoteException {

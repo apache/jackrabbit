@@ -34,7 +34,7 @@ import javax.jcr.ValueFormatException;
  * methods as appropriate except for the {@link #getStream()} which must throw
  * an <code>IllegalStateException</code> for this line of committed non-stream
  * states.
- * 
+ *
  * @version $Revision$, $Date$
  * @author Felix Meschberger
  * @since 0.16.4.1
@@ -44,7 +44,8 @@ public abstract class BaseNonStreamValue implements StatefulValue {
     /**
      * Default constructor with no special tasks.
      */
-    protected BaseNonStreamValue() {}
+    protected BaseNonStreamValue() {
+    }
 
     /**
      * Always throws <code>IllegalStateException</code> because only non-stream
@@ -52,17 +53,19 @@ public abstract class BaseNonStreamValue implements StatefulValue {
      * <p>
      * This method is declared final to mark that this line of implementations
      * does not provide access to <code>InputStream</code>s.
-     * 
-     * @throws IllegalStateException as defined above. 
+     *
+     * @return nothing
+     * @throws IllegalStateException as defined above.
      */
-    public final InputStream getStream() {
+    public final InputStream getStream() throws IllegalStateException {
         throw new IllegalStateException("Stream not available");
     }
 
     /**
      * Always throws a <code>ValueFormatException</code>. Implementations should
      * overwrite if conversion to boolean is supported.
-     * 
+     *
+     * @return nothing
      * @throws ValueFormatException If the value cannot be converted to a
      *      boolean.
      */
@@ -73,7 +76,8 @@ public abstract class BaseNonStreamValue implements StatefulValue {
     /**
      * Always throws a <code>ValueFormatException</code>. Implementations should
      * overwrite if conversion to <code>Calender</code> is supported.
-     * 
+     *
+     * @return nothing
      * @throws ValueFormatException If the value cannot be converted to a
      *      <code>Calendar</code> instance.
      */
@@ -84,7 +88,8 @@ public abstract class BaseNonStreamValue implements StatefulValue {
     /**
      * Always throws a <code>ValueFormatException</code>. Implementations should
      * overwrite if conversion to double is supported.
-     * 
+     *
+     * @return nothing
      * @throws ValueFormatException If the value cannot be converted to a
      *      double.
      */
@@ -95,20 +100,22 @@ public abstract class BaseNonStreamValue implements StatefulValue {
     /**
      * Always throws a <code>ValueFormatException</code>. Implementations should
      * overwrite if conversion to long is supported.
-     * 
+     *
+     * @return nothing
      * @throws ValueFormatException If the value cannot be converted to a
      *      long.
      */
     public long getLong() throws ValueFormatException {
         throw getValueFormatException(PropertyType.TYPENAME_LONG);
     }
-    
+
     /**
      * Returns a <code>ValueFormatException</code> with a message indicating
      * what kind of type conversion is not supported.
-     * 
+     *
+     * @return nothing
      * @param destType The name of the value type to which this value cannot
-     *      be converted. 
+     *      be converted.
      */
     protected ValueFormatException getValueFormatException(String destType) {
         return new ValueFormatException("Cannot convert value of type "

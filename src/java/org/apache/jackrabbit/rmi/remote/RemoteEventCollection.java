@@ -19,33 +19,35 @@ package org.apache.jackrabbit.rmi.remote;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import javax.jcr.observation.Event;
-
 /**
  * The <code>RemoteEventCollection</code> class serves as a container for
  * notifications sent to registered event listeners. Instances of this class are
  * created by the server-side event listener proxies and sent to the client-side
  * event poller. On the client-side the enclosed list of events is then sent to
  * the listener identified by the contained listener identifier.
- * 
+ *
  * @author Felix Meschberger
  */
 public interface RemoteEventCollection extends Remote {
 
     /**
      * Returns unique identifier of the client-side listener to which the
-     * enclosed events should be sent. 
+     * enclosed events should be sent.
+     *
+     * @return unique listener identifier
      * @throws RemoteException on RMI errors
      */
     long getListenerId() throws RemoteException;
-    
+
     /**
      * Returns the list of events to be sent to the client-side listener
      * identified by {@link #getListenerId()}.
+     *
+     * @return list of events
      * @throws RemoteException on RMI errors
      */
     RemoteEvent[] getEvents() throws RemoteException;
- 
+
     /**
      * The <code>RemoteEvent</code> class provides an encapsulation of single
      * events in an event list sent to a registered listener.
@@ -53,20 +55,26 @@ public interface RemoteEventCollection extends Remote {
     public static interface RemoteEvent extends Remote {
         /**
          * Returns the event type.
+         *
+         * @return event type
          * @throws RemoteException on RMI errors
-         */ 
+         */
         int getType() throws RemoteException;
 
         /**
          * Returns the absolute path of the underlying item.
+         *
+         * @return item path
          * @throws RemoteException on RMI errors
-         */ 
+         */
         String getPath() throws RemoteException;
 
         /**
          * Returns the userID of the session causing this event.
+         *
+         * @return user identifier
          * @throws RemoteException on RMI errors
-         */ 
+         */
         String getUserID() throws RemoteException;
     }
 

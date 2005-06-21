@@ -288,7 +288,7 @@ public interface RemoteAdapterFactory {
      *
      * @param listenerId The listener identifier to which the events are to be
      *      dispatched.
-     * @param event the local events
+     * @param events the local events
      * @return remote event iterator adapter
      * @throws RemoteException on RMI errors
      */

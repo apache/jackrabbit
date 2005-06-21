@@ -21,15 +21,15 @@ import java.util.LinkedList;
 /**
  * The <code>Queue</code> class is a very simple queue assuming that there is
  * at least one consumer and potentially multiple producers. This class poses
- * no restrictions on the size of the queue. 
- * 
+ * no restrictions on the size of the queue.
+ *
  * @author Felix Meschberger
  */
 public class Queue {
 
     /** The linked list implementing the queue of data */
     private final LinkedList queue;
-    
+
     /**
      * Creates an instance of this queue.
      */
@@ -42,6 +42,8 @@ public class Queue {
      * <p>
      * After appending the element, the queue is notified such that threads
      * waiting to retrieve an element from the queue are woken up.
+     *
+     * @param object the object to be added
      */
     public void put(Object object) {
         synchronized (queue) {
@@ -53,14 +55,14 @@ public class Queue {
     /**
      * Returns the first element from the queue. If the queue is currently empty
      * the method waits at most the given number of milliseconds.
-     * 
+     *
      * @param timeout The maximum number of milliseconds to wait for an entry in
      *      the queue if the queue is empty. If zero, the method waits forever
      *      for an element.
-     * 
+     *
      * @return The first element of the queue or <code>null</code> if the method
      *      timed out waiting for an entry.
-     * 
+     *
      * @throws InterruptedException Is thrown if the current thread is
      *      interrupted while waiting for the queue to get at least one entry.
      */
@@ -70,12 +72,12 @@ public class Queue {
             if (queue.isEmpty()) {
                 queue.wait(timeout);
             }
-            
+
             // return null if queue is (still) empty
             if (queue.isEmpty()) {
                 return null;
             }
-            
+
             // return first if queue has content now
             return queue.removeFirst();
         }

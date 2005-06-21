@@ -114,7 +114,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
         ObservationManager observationManager) throws RemoteException {
         return new ServerObservationManager(observationManager, this);
     }
-    
+
     /**
      * Creates a {@link ServerNamespaceRegistry ServerNamespaceRegistry}
      * instance.
@@ -265,7 +265,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
         RemoteEventCollection.RemoteEvent[] remoteEvents;
         if (events != null) {
             List eventList = new ArrayList();
-            for (int i=0; events.hasNext(); i++) {
+            for (int i = 0; events.hasNext(); i++) {
                 Event event = events.nextEvent();
                 try {
                     eventList.add(new ServerEventCollection.ServerEvent(event.getType(),
@@ -276,11 +276,10 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
             }
             remoteEvents = new RemoteEventCollection.RemoteEvent[eventList.size()];
             eventList.toArray(remoteEvents);
-            
         } else {
             remoteEvents = new RemoteEventCollection.RemoteEvent[0]; // for safety
         }
-        
+
         return new ServerEventCollection(listenerId, remoteEvents);
     }
 }

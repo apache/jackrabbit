@@ -45,7 +45,7 @@ public class ServerSession extends ServerObject implements RemoteSession {
 
     /** The adapted local session. */
     private Session session;
-    
+
     /**
      * The server workspace for this session. This field is assigned on demand
      * by the first call to {@link #getWorkspace()}. The assumption is that
@@ -97,10 +97,10 @@ public class ServerSession extends ServerObject implements RemoteSession {
     /** {@inheritDoc} */
     public RemoteWorkspace getWorkspace() throws RemoteException {
         if (remoteWorkspace == null) {
-            remoteWorkspace = 
+            remoteWorkspace =
                 getFactory().getRemoteWorkspace(session.getWorkspace());
         }
-        
+
         return remoteWorkspace;
     }
 
