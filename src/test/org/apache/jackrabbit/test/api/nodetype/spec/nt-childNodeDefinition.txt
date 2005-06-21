@@ -51,7 +51,7 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:onParentVersion
   RequiredType STRING
-  ValueConstraints [COPY,VERSION,INITIALIZE,COMPUTE,IGNORE]
+  ValueConstraints [COPY,VERSION,INITIALIZE,COMPUTE,IGNORE,ABORT]
   DefaultValues null
   AutoCreated false
   Mandatory true
