@@ -598,6 +598,11 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(msg);
         }
 
+        // notify target of removal
+        NodeId childId = new NodeId(entry.getUUID());
+        NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
+        childNode.onRemove();
+
         // remove the child node entry
         if (!thisState.removeChildNodeEntry(nodeName, index)) {
             String msg = "failed to remove child " + nodeName + " of "
@@ -605,11 +610,6 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-
-        // notify target of removal
-        NodeId childId = new NodeId(entry.getUUID());
-        NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
-        childNode.onRemove();
     }
 
     protected void onRedefine(NodeDefId defId) throws RepositoryException {
@@ -633,12 +633,13 @@ public class NodeImpl extends ItemImpl implements Node {
         for (int i = tmp.size() - 1; i >= 0; i--) {
             NodeState.ChildNodeEntry entry =
                     (NodeState.ChildNodeEntry) tmp.get(i);
-            // remove the child node entry
-            thisState.removeChildNodeEntry(entry.getName(), entry.getIndex());
             // recursively remove child node
             NodeId childId = new NodeId(entry.getUUID());
             NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
             childNode.onRemove();
+
+            // remove the child node entry
+            thisState.removeChildNodeEntry(entry.getName(), entry.getIndex());
         }
 
         // remove properties

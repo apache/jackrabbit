@@ -323,7 +323,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             Path path = Path.create(getPath(state.getId()), name, index, true);
             insert(path, new NodeId(uuid));
         } catch (PathNotFoundException e) {
-            log.warn("Added node does not have parent, ignoring event.");
+            log.warn("Unable to get path of node " + state.getId() +
+                    ", event ignored.");
         } catch (MalformedPathException e) {
             log.warn("Unable to create path of " + uuid, e);
         } catch (ItemNotFoundException e) {
@@ -368,7 +369,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             Path path = Path.create(getPath(state.getId()), name, index, true);
             remove(path, new NodeId(uuid));
         } catch (PathNotFoundException e) {
-            log.warn("Added node does not have parent, ignoring event.");
+            log.warn("Unable to get path of node " + state.getId() +
+                    ", event ignored.");
         } catch (MalformedPathException e) {
             log.warn("Unable to create path of " + uuid, e);
         } catch (ItemNotFoundException e) {
