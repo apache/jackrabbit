@@ -775,6 +775,9 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
             }
         }
         if (values.size() == 0) {
+            // use literal as is then try to guess other types
+            values.add(literal);
+
             // try to guess property type
             if (literal.indexOf('/') > -1) {
                 // might be a path
@@ -784,17 +787,17 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 } catch (Exception e) {
                     // not a path
                 }
-            } else if (XMLChar.isValidName(literal)) {
+            }
+            if (XMLChar.isValidName(literal)) {
                 // might be a name
                 try {
                     values.add(nsMappings.translatePropertyName(literal, session.getNamespaceResolver()));
                     log.debug("Coerced " + literal + " into NAME.");
-                    // also add literal as string value as is
-                    values.add(literal);
                 } catch (Exception e) {
                     // not a name
                 }
-            } else if (literal.indexOf(':') > -1) {
+            }
+            if (literal.indexOf(':') > -1) {
                 // is it a date?
                 Calendar c = ISO8601.parse(literal);
                 if (c != null) {
