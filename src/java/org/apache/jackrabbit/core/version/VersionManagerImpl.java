@@ -54,6 +54,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.PropertyType;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionException;
@@ -133,8 +134,16 @@ public class VersionManagerImpl implements VersionManager,
                 root.setDefinitionId(ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicableChildNodeDef(
                         JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE).getId());
                 root.setNodeTypeName(REP_VERSIONSTORAGE);
+                PropertyState pt = pMgr.createNew(new PropertyId(rootUUID, JCR_PRIMARYTYPE));
+                pt.setDefinitionId(ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicablePropertyDef(
+                        JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
+                pt.setMultiValued(false);
+                pt.setType(PropertyType.NAME);
+                pt.setValues(new InternalValue[]{InternalValue.create(REP_VERSIONSTORAGE)});
+                root.addPropertyEntry(pt.getName());
                 ChangeLog cl = new ChangeLog();
                 cl.added(root);
+                cl.added(pt);
                 pMgr.store(cl);
             }
             SharedItemStateManager sharedStateMgr = new SharedItemStateManager(pMgr, VERSION_STORAGE_NODE_UUID, ntReg);
