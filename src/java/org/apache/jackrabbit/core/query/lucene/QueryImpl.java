@@ -88,6 +88,12 @@ class QueryImpl implements ExecutableQuery {
     private final PropertyTypeRegistry propReg;
 
     /**
+     * If <code>true</code> the default ordering of the result nodes is in
+     * document order.
+     */
+    private boolean documentOrder = true;
+
+    /**
      * Creates a new query instance from a query string.
      *
      * @param session   the session of the user executing this query.
@@ -208,7 +214,34 @@ class QueryImpl implements ExecutableQuery {
                 (Float[]) scores.toArray(new Float[scores.size()]),
                 (QName[]) selectProps.toArray(new QName[selectProps.size()]),
                 session.getNamespaceResolver(),
-                orderNode == null);
+                orderNode == null && documentOrder);
+    }
+
+    /**
+     * If set <code>true</code> the result nodes will be in document order
+     * per default (if no order by clause is specified). If set to
+     * <code>false</code> the result nodes are returned in whatever sequence
+     * the index has stored the nodes. That sequence is stable over multiple
+     * invocations of the same query, but will change when nodes get added or
+     * removed from the index.
+     * <p/>
+     * The default value for this property is <code>true</code>.
+     * @return the current value of this property.
+     */
+    public boolean getRespectDocumentOrder() {
+        return documentOrder;
+    }
+
+    /**
+     * Sets a new value for this property.
+     *
+     * @param documentOrder if <code>true</code> the result nodes are in
+     * document order per default.
+     *
+     * @see #getRespectDocumentOrder()
+     */
+    public void setRespectDocumentOrder(boolean documentOrder) {
+        this.documentOrder = documentOrder;
     }
 
     //-----------------------------< internal >---------------------------------

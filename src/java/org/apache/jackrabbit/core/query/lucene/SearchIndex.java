@@ -67,6 +67,11 @@ public class SearchIndex extends AbstractQueryHandler {
     private final FIFOReadWriteLock readWriteLock = new FIFOReadWriteLock();
 
     /**
+     * Flag indicating whether document order is enable as the default ordering.
+     */
+    private boolean documentOrder = true;
+
+    /**
      * Default constructor.
      */
     public SearchIndex() {
@@ -150,8 +155,10 @@ public class SearchIndex extends AbstractQueryHandler {
                                              String statement,
                                              String language)
             throws InvalidQueryException {
-        return new QueryImpl(session, itemMgr, this,
+        QueryImpl query = new QueryImpl(session, itemMgr, this,
                 getContext().getPropertyTypeRegistry(), statement, language);
+        query.setRespectDocumentOrder(documentOrder);
+        return query;
     }
 
     /**
@@ -275,5 +282,9 @@ public class SearchIndex extends AbstractQueryHandler {
 
     public void setBufferSize(int size) {
         index.setBufferSize(size);
+    }
+
+    public void setRespectDocumentOrder(boolean docOrder) {
+        documentOrder = docOrder;
     }
 }
