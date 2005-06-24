@@ -21,9 +21,9 @@ import java.io.InputStream;
 import java.util.Calendar;
 
 /**
- * This Class implements an import command that creates a "nt:resource" below
- * the current node and a add the resource data as binary property. It further
- * sets the following properties:
+ * This Class implements an import command that creates a "nt:resource" node or
+ * of any other configured nodetype below the current node and adds the resource
+ * data as binary property. It further sets the following properties:
  * <ul>
  * <li>jcr:mimeType (from {@link ImportContext#getContentType()})
  * <li>jcr:lastModified (from current time)
@@ -31,6 +31,11 @@ import java.util.Calendar;
  * </ul>
  */
 public class FileImportCommand extends AbstractImportCommand {
+
+    /**
+     * The name of the nodetype for the resource node. Default: nt:resource
+     */
+    private String resourceNodeType = NT_RESOURCE;
 
     /**
      * Imports a resource by creating a new nt:resource node.
@@ -46,7 +51,7 @@ public class FileImportCommand extends AbstractImportCommand {
             throws Exception {
         Node content = parentNode.hasNode(JCR_CONTENT)
                 ? parentNode.getNode(JCR_CONTENT)
-                : parentNode.addNode(JCR_CONTENT, NT_RESOURCE);
+                : parentNode.addNode(JCR_CONTENT, resourceNodeType);
         content.setProperty(JCR_MIMETYPE, ctx.getContentType());
         content.setProperty(JCR_DATA, in);
         Calendar lastMod = Calendar.getInstance();
@@ -55,6 +60,15 @@ public class FileImportCommand extends AbstractImportCommand {
         }
         content.setProperty(JCR_LASTMODIFIED, lastMod);
         return true;
+    }
+
+    /**
+     * Sets the node type for the resource node.
+     * 
+     * @param nodeType nodetype name.
+     */
+    public void setResourceNodeType(String nodeType) {
+        resourceNodeType = nodeType;
     }
 
     /**
