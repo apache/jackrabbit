@@ -100,23 +100,24 @@ public class XMLImportCommand extends AbstractCommand {
         FileOutputStream out = new FileOutputStream(tmpFile);
         byte[] buffer = new byte[8192];
         boolean first = true;
-        boolean isSysView = false;
+        boolean isGenericXML = true;
         int read;
         while ((read=in.read(buffer))>0) {
             out.write(buffer, 0, read);
             if (first) {
                 first = false;
                 // could be too less information. is a bit a lazy test
-                isSysView = new String(buffer, 0, read).indexOf("<sv:node") >= 0;
+                //isSysView = new String(buffer, 0, read).indexOf("<sv:node") >= 0;
+                isGenericXML = new String(buffer, 0, read).indexOf("jcr:primaryType") < 0;
             }
         }
         out.close();
         in.close();
-        in = new FileInputStream(tmpFile);
-        context.setInputStream(in);
+        context.setInputStream(new FileInputStream(tmpFile));
 
-        if (isSysView) {
-            // just import sys view
+        if (!isGenericXML) {
+            // just import sys/doc view
+            in = context.getInputStream();
             try {
                 parentNode.getSession().importXML(parentNode.getPath(), in,
                         ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING);
@@ -126,23 +127,24 @@ public class XMLImportCommand extends AbstractCommand {
             } catch (RepositoryException e) {
                 // if error occurrs, reset input stream
                 context.setInputStream(new FileInputStream(tmpFile));
-                log.error("Unable to import sysview. will store as normal file: " + e.toString());
+                log.error("Unable to import sys/doc view. will try default xml import: " + e.toString());
                 parentNode.refresh(false);
             } finally {
                 in.close();
             }
+        }
+
+        // check 'file' node
+        in = context.getInputStream();
+        Node fileNode = parentNode.hasNode(context.getSystemId())
+                ? parentNode.getNode(context.getSystemId())
+                : parentNode.addNode(context.getSystemId(), nodeType);
+        if (importResource(context, fileNode, in)) {
+            context.setInputStream(null);
+            // set current node
+            context.setNode(fileNode);
         } else {
-            // check 'file' node
-            Node fileNode = parentNode.hasNode(context.getSystemId())
-                    ? parentNode.getNode(context.getSystemId())
-                    : parentNode.addNode(context.getSystemId(), nodeType);
-            if (importResource(context, fileNode, in)) {
-                context.setInputStream(null);
-                // set current node
-                context.setNode(fileNode);
-            } else {
-                context.setInputStream(new FileInputStream(tmpFile));
-            }
+            context.setInputStream(new FileInputStream(tmpFile));
         }
         return false;
     }
@@ -180,6 +182,7 @@ public class XMLImportCommand extends AbstractCommand {
             parentNode.getSession().importXML(content.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         } catch (RepositoryException e) {
             // if this fails, we ignore import and pass to next command
+            log.error("Error while importing XML. Will pass to next command: " + e.toString());
             if (content.isNew()) {
                 content.remove();
             }
