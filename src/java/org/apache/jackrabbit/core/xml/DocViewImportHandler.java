@@ -102,7 +102,7 @@ class DocViewImportHandler extends TargetImportHandler {
                 String text = textHandler.retrieve();
                 if (text.trim().length() == 0) {
                     // ignore whitespace-only character data
-                    log.debug("ignoring withespace character data: " + text);
+                    log.debug("ignoring whitespace character data: " + text);
                     // reset handler
                     textHandler.dispose();
                     textHandler = null;
