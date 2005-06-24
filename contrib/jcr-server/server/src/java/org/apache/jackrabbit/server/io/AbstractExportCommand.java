@@ -65,7 +65,7 @@ public abstract class AbstractExportCommand extends AbstractCommand {
             return false;
         }
 
-        Node content = node.getPrimaryNodeType().getName().equals(NT_FILE)
+        Node content = node.isNodeType(NT_FILE)
                 ? node.getNode(JCR_CONTENT)
                 : node;
         if (content.hasProperty(JCR_LASTMODIFIED)) {

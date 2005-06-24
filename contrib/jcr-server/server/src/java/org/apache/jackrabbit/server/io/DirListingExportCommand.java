@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.FileInputStream;
+import java.io.Writer;
+import java.io.OutputStreamWriter;
 import java.util.HashSet;
 
 /**
@@ -127,7 +129,7 @@ public class DirListingExportCommand extends AbstractCommand {
         String repName = node.getSession().getRepository().getDescriptor(Repository.REP_NAME_DESC);
         String repURL = node.getSession().getRepository().getDescriptor(Repository.REP_VENDOR_URL_DESC);
         String repVersion = node.getSession().getRepository().getDescriptor(Repository.REP_VERSION_DESC);
-        PrintWriter writer = new PrintWriter(out);
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf8"));
         writer.print("<html><head><title>");
         writer.print(repName);
         writer.print(" ");
@@ -167,7 +169,7 @@ public class DirListingExportCommand extends AbstractCommand {
         context.setInputStream(new FileInputStream(tmpfile));
         context.setContentLength(tmpfile.length());
         context.setModificationTime(tmpfile.lastModified());
-        context.setContentType("text/html");
+        context.setContentType("text/html; charset=utf8");
         tmpfile.deleteOnExit();
 
         return true;

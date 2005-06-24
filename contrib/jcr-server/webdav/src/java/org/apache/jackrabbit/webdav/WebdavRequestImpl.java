@@ -121,9 +121,10 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @see DavServletRequest#getRequestLocator()
      */
     public DavResourceLocator getRequestLocator() {
-        String path = getPathInfo();
-        if (path == null) {
-            path = getServletPath();
+        String path = Text.unescape(getRequestURI());
+        String ctx = getContextPath();
+        if (path.startsWith(ctx)) {
+            path = path.substring(ctx.length());
         }
         return factory.createResourceLocator(hrefPrefix, path);
     }
