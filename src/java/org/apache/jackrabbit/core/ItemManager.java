@@ -462,12 +462,12 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             throw new RepositoryException(msg);
         }
         NodeState nodeState = (NodeState) state;
-        Iterator iter = nodeState.getPropertyEntries().iterator();
+        Iterator iter = nodeState.getPropertyNames().iterator();
 
         while (iter.hasNext()) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
+            QName propName = (QName) iter.next();
 
-            PropertyId id = new PropertyId(parentId.getUUID(), entry.getName());
+            PropertyId id = new PropertyId(parentId.getUUID(), propName);
             // check read access
             if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
                 return true;
@@ -497,11 +497,11 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         }
         NodeState nodeState = (NodeState) state;
         ArrayList childIds = new ArrayList();
-        Iterator iter = nodeState.getPropertyEntries().iterator();
+        Iterator iter = nodeState.getPropertyNames().iterator();
 
         while (iter.hasNext()) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-            PropertyId id = new PropertyId(parentId.getUUID(), entry.getName());
+            QName propName = (QName) iter.next();
+            PropertyId id = new PropertyId(parentId.getUUID(), propName);
             // check read access
             if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
                 childIds.add(id);

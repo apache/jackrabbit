@@ -226,7 +226,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             while (walker.iterateElements(PROPERTY_ELEMENT)) {
                 String propName = walker.getAttribute(NAME_ATTRIBUTE);
                 // @todo deserialize type and values
-                state.addPropertyEntry(QName.valueOf(propName));
+                state.addPropertyName(QName.valueOf(propName));
             }
             walker.leaveElement();
         }
@@ -508,11 +508,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
                 // properties
                 writer.write("\t<" + PROPERTIES_ELEMENT + ">\n");
-                iter = state.getPropertyEntries().iterator();
+                iter = state.getPropertyNames().iterator();
                 while (iter.hasNext()) {
-                    NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
+                    QName propName = (QName) iter.next();
                     writer.write("\t\t<" + PROPERTY_ELEMENT + " "
-                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(entry.getName().toString()) + "\">\n");
+                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(propName.toString()) + "\">\n");
                     // @todo serialize type, definition id and values
                     writer.write("\t\t</" + PROPERTY_ELEMENT + ">\n");
                 }

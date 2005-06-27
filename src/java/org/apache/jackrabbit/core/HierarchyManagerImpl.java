@@ -169,7 +169,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     parentState.getChildNodeEntry(name, index);
             childId = new NodeId(nodeEntry.getUUID());
 
-        } else if (parentState.hasPropertyEntry(name)) {
+        } else if (parentState.hasPropertyName(name)) {
             // property
             if (index > 1) {
                 // properties can't have same name siblings

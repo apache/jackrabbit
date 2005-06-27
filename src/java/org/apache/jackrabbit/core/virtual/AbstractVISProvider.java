@@ -211,7 +211,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, C
 
             // handle some default prop states
             if (parent instanceof VirtualNodeState) {
-                return parent.hasPropertyEntry(id.getName());
+                return parent.hasPropertyName(id.getName());
             }
         } catch (ItemStateException e) {
             // ignore

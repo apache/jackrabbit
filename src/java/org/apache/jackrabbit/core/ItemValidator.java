@@ -115,7 +115,7 @@ public class ItemValidator {
         PropDef[] pda = entPrimaryAndMixins.getMandatoryPropDefs();
         for (int i = 0; i < pda.length; i++) {
             PropDef pd = pda[i];
-            if (!nodeState.hasPropertyEntry(pd.getName())) {
+            if (!nodeState.hasPropertyName(pd.getName())) {
                 String msg = safeGetJCRPath(nodeState.getId())
                         + ": mandatory property " + pd.getName()
                         + " does not exist";
