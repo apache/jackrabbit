@@ -131,11 +131,11 @@ class NodeStateEx implements Constants {
      * @return
      */
     public PropertyState[] getProperties() throws ItemStateException {
-        List list = nodeState.getPropertyEntries();
+        List list = nodeState.getPropertyNames();
         PropertyState[] props = new PropertyState[list.size()];
         for (int i = 0; i < list.size(); i++) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) list.get(i);
-            PropertyId propId = new PropertyId(nodeState.getUUID(), entry.getName());
+            QName propName = (QName) list.get(i);
+            PropertyId propId = new PropertyId(nodeState.getUUID(), propName);
             props[i] = (PropertyState) stateMgr.getItemState(propId);
         }
         return props;
@@ -262,7 +262,7 @@ class NodeStateEx implements Constants {
             propState.setDefinitionId(pd.getId());
 
             // need to store nodestate
-            nodeState.addPropertyEntry(name);
+            nodeState.addPropertyName(name);
             if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
                 nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
             }
@@ -341,7 +341,7 @@ class NodeStateEx implements Constants {
     }
 
     /**
-     * removes the property with the given name and 1-based index
+     * removes the property with the given name
      *
      * @param name
      * @return
@@ -349,14 +349,13 @@ class NodeStateEx implements Constants {
      */
     public boolean removeProperty(QName name) throws RepositoryException {
         try {
-            NodeState.PropertyEntry entry = nodeState.getPropertyEntry(name);
-            if (entry == null) {
+            if (!nodeState.hasPropertyName(name)) {
                 return false;
             } else {
                 PropertyId propId = new PropertyId(nodeState.getUUID(), name);
                 ItemState state = stateMgr.getItemState(propId);
                 stateMgr.destroy(state);
-                nodeState.removePropertyEntry(name);
+                nodeState.removePropertyName(name);
                 nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 return true;
             }
@@ -484,10 +483,10 @@ class NodeStateEx implements Constants {
 
         if (state.getStatus() != ItemState.STATUS_EXISTING) {
             // first store all transient properties
-            List props = state.getPropertyEntries();
+            List props = state.getPropertyNames();
             for (int i = 0; i < props.size(); i++) {
-                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
-                PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
+                QName propName = (QName) props.get(i);
+                PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), propName));
                 if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
                     stateMgr.store(pstate);
                 }
@@ -528,10 +527,10 @@ class NodeStateEx implements Constants {
     private void reload(NodeState state) throws ItemStateException {
         if (state.getStatus() != ItemState.STATUS_EXISTING) {
             // first discard all all transient properties
-            List props = state.getPropertyEntries();
+            List props = state.getPropertyNames();
             for (int i = 0; i < props.size(); i++) {
-                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) props.get(i);
-                PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), entry.getName()));
+                QName propName = (QName) props.get(i);
+                PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), propName));
                 if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
                     pstate.discard();
                 }

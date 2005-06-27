@@ -518,7 +518,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                          */
                         continue;
                     }
-                    if (!nodeState.hasPropertyEntry(pd.getName())) {
+                    if (!nodeState.hasPropertyName(pd.getName())) {
                         String msg = node.safeGetJCRPath()
                                 + ": mandatory property " + pd.getName()
                                 + " does not exist";

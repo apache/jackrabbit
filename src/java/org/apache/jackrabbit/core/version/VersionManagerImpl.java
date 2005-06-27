@@ -140,7 +140,7 @@ public class VersionManagerImpl implements VersionManager,
                 pt.setMultiValued(false);
                 pt.setType(PropertyType.NAME);
                 pt.setValues(new InternalValue[]{InternalValue.create(REP_VERSIONSTORAGE)});
-                root.addPropertyEntry(pt.getName());
+                root.addPropertyName(pt.getName());
                 ChangeLog cl = new ChangeLog();
                 cl.added(root);
                 cl.added(pt);
@@ -708,10 +708,10 @@ public class VersionManagerImpl implements VersionManager,
         if (state != null) {
             if (recursive && state instanceof NodeState) {
                 NodeState nState = (NodeState) state;
-                Iterator iter = nState.getPropertyEntries().iterator();
+                Iterator iter = nState.getPropertyNames().iterator();
                 while (iter.hasNext()) {
-                    NodeState.PropertyEntry pe = (NodeState.PropertyEntry) iter.next();
-                    invalidateItem(new PropertyId(nState.getUUID(), pe.getName()), false);
+                    QName propName = (QName) iter.next();
+                    invalidateItem(new PropertyId(nState.getUUID(), propName), false);
                 }
                 iter = nState.getChildNodeEntries().iterator();
                 while (iter.hasNext()) {

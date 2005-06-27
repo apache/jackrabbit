@@ -165,7 +165,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     }
                     // check if property entry exists
                     NodeState thisState = (NodeState) state;
-                    if (thisState.hasPropertyEntry(pe.getName())) {
+                    if (thisState.hasPropertyName(pe.getName())) {
                         return new PropertyId(thisState.getUUID(), pe.getName());
                     } else {
                         // there's no property with that name
@@ -422,7 +422,7 @@ public class NodeImpl extends ItemImpl implements Node {
         status.clear();
 
         NodeState thisState = (NodeState) state;
-        if (thisState.hasPropertyEntry(name)) {
+        if (thisState.hasPropertyName(name)) {
             /**
              * the following call will throw ItemNotFoundException if the
              * current session doesn't have read access
@@ -481,7 +481,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         // add new property entry
-        thisState.addPropertyEntry(name);
+        thisState.addPropertyName(name);
 
         return prop;
     }
@@ -570,7 +570,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
 
         // remove the property entry
-        if (!thisState.removePropertyEntry(propName)) {
+        if (!thisState.removePropertyName(propName)) {
             String msg = "failed to remove property " + propName + " of "
                     + safeGetJCRPath();
             log.debug(msg);
@@ -626,32 +626,32 @@ public class NodeImpl extends ItemImpl implements Node {
         // modify the state of 'this', i.e. the target node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
 
-        // remove child nodes
-        // use temp array to avoid ConcurrentModificationException
-        ArrayList tmp = new ArrayList(thisState.getChildNodeEntries());
-        // remove from tail to avoid problems with same-name siblings
-        for (int i = tmp.size() - 1; i >= 0; i--) {
-            NodeState.ChildNodeEntry entry =
-                    (NodeState.ChildNodeEntry) tmp.get(i);
-            // recursively remove child node
-            NodeId childId = new NodeId(entry.getUUID());
-            NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
-            childNode.onRemove();
-
-            // remove the child node entry
-            thisState.removeChildNodeEntry(entry.getName(), entry.getIndex());
+        if (thisState.hasChildNodeEntries()) {
+            // remove child nodes
+            // use temp array to avoid ConcurrentModificationException
+            ArrayList tmp = new ArrayList(thisState.getChildNodeEntries());
+            // remove from tail to avoid problems with same-name siblings
+            for (int i = tmp.size() - 1; i >= 0; i--) {
+                NodeState.ChildNodeEntry entry =
+                        (NodeState.ChildNodeEntry) tmp.get(i);
+                // recursively remove child node
+                NodeId childId = new NodeId(entry.getUUID());
+                NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
+                childNode.onRemove();
+                // remove the child node entry
+                thisState.removeChildNodeEntry(entry.getName(), entry.getIndex());
+            }
         }
 
         // remove properties
         // use temp array to avoid ConcurrentModificationException
-        tmp = new ArrayList(thisState.getPropertyEntries());
+        ArrayList tmp = new ArrayList(thisState.getPropertyNames());
         for (int i = 0; i < tmp.size(); i++) {
-            NodeState.PropertyEntry entry =
-                    (NodeState.PropertyEntry) tmp.get(i);
+            QName propName = (QName) tmp.get(i);
             // remove the property entry
-            thisState.removePropertyEntry(entry.getName());
+            thisState.removePropertyName(propName);
             // remove property
-            PropertyId propId = new PropertyId(thisState.getUUID(), entry.getName());
+            PropertyId propId = new PropertyId(thisState.getUUID(), propName);
             itemMgr.getItem(propId).setRemoved();
         }
 
@@ -759,7 +759,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check for name collisions
         NodeState thisState = (NodeState) state;
-        if (thisState.hasPropertyEntry(nodeName)) {
+        if (thisState.hasPropertyName(nodeName)) {
             // there's already a property with that name
             throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
         }
@@ -792,7 +792,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState thisState = (NodeState) state;
         // get or create jcr:mixinTypes property
         PropertyImpl prop;
-        if (thisState.hasPropertyEntry(JCR_MIXINTYPES)) {
+        if (thisState.hasPropertyName(JCR_MIXINTYPES)) {
             prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), JCR_MIXINTYPES));
         } else {
             // find definition for the jcr:mixinTypes property and create property
@@ -901,7 +901,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // child node entries
         persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
         // property entries
-        persistentState.setPropertyEntries(transientState.getPropertyEntries());
+        persistentState.setPropertyNames(transientState.getPropertyNames());
 
         // make state persistent
         stateMgr.store(persistentState);
@@ -1137,18 +1137,18 @@ public class NodeImpl extends ItemImpl implements Node {
         // defined by the specified mixin type
 
         // use temp array to avoid ConcurrentModificationException
-        ArrayList tmp = new ArrayList(thisState.getPropertyEntries());
+        ArrayList tmp = new ArrayList(thisState.getPropertyNames());
         Iterator iter = tmp.iterator();
         while (iter.hasNext()) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-            PropertyImpl prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), entry.getName()));
+            QName propName = (QName) iter.next();
+            PropertyImpl prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), propName));
             // check if property has been defined by mixin type (or one of its supertypes)
             NodeTypeImpl declaringNT = (NodeTypeImpl) prop.getDefinition().getDeclaringNodeType();
             if (!entRemaining.includesNodeType(declaringNT.getQName())) {
                 // the remaining effective node type doesn't include the
                 // node type that declared this property, it is thus safe
                 // to remove it
-                removeChildProperty(entry.getName());
+                removeChildProperty(propName);
             }
         }
         // use temp array to avoid ConcurrentModificationException
@@ -1465,7 +1465,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         NodeState thisState = (NodeState) state;
-        if (!thisState.hasPropertyEntry(name)) {
+        if (!thisState.hasPropertyName(name)) {
             return false;
         }
         PropertyId propId = new PropertyId(thisState.getUUID(), name);

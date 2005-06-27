@@ -151,10 +151,10 @@ public class NodeIndexer {
             // unknown uri<->prefix mappings
         }
 
-        List props = node.getPropertyEntries();
+        List props = node.getPropertyNames();
         for (Iterator it = props.iterator(); it.hasNext();) {
-            NodeState.PropertyEntry prop = (NodeState.PropertyEntry) it.next();
-            PropertyId id = new PropertyId(node.getUUID(), prop.getName());
+            QName propName = (QName) it.next();
+            PropertyId id = new PropertyId(node.getUUID(), propName);
             try {
                 PropertyState propState = (PropertyState) stateProvider.getItemState(id);
                 InternalValue[] values = propState.getValues();
@@ -257,14 +257,14 @@ public class NodeIndexer {
                 // don't know how to index
                 return;
             }
-            if (node.hasPropertyEntry(JCR_MIMETYPE)) {
+            if (node.hasPropertyName(JCR_MIMETYPE)) {
                 PropertyState dataProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_DATA));
                 PropertyState mimeTypeProp =
                     (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_MIMETYPE));
 
                 // jcr:encoding is not mandatory
                 String encoding = null;
-                if (node.hasPropertyEntry(JCR_ENCODING)) {
+                if (node.hasPropertyName(JCR_ENCODING)) {
                     PropertyState encodingProp =
                         (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
                     encodingProp.getValues()[0].internalValue().toString();

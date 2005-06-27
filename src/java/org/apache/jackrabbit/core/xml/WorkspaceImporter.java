@@ -274,7 +274,7 @@ public class WorkspaceImporter implements Importer, Constants {
             VersionHistory hist = session.getVersionManager().createVersionHistory(session, node);
 
             // jcr:versionHistory
-            if (!node.hasPropertyEntry(JCR_VERSIONHISTORY)) {
+            if (!node.hasPropertyName(JCR_VERSIONHISTORY)) {
                 def = itemOps.findApplicablePropertyDefinition(JCR_VERSIONHISTORY,
                         PropertyType.REFERENCE, false, node);
                 prop = itemOps.createPropertyState(node, JCR_VERSIONHISTORY,
@@ -283,7 +283,7 @@ public class WorkspaceImporter implements Importer, Constants {
             }
 
             // jcr:baseVersion
-            if (!node.hasPropertyEntry(JCR_BASEVERSION)) {
+            if (!node.hasPropertyName(JCR_BASEVERSION)) {
                 def = itemOps.findApplicablePropertyDefinition(JCR_BASEVERSION,
                         PropertyType.REFERENCE, false, node);
                 prop = itemOps.createPropertyState(node, JCR_BASEVERSION,
@@ -292,7 +292,7 @@ public class WorkspaceImporter implements Importer, Constants {
             }
 
             // jcr:predecessors
-            if (!node.hasPropertyEntry(JCR_PREDECESSORS)) {
+            if (!node.hasPropertyName(JCR_PREDECESSORS)) {
                 def = itemOps.findApplicablePropertyDefinition(JCR_PREDECESSORS,
                         PropertyType.REFERENCE, true, node);
                 prop = itemOps.createPropertyState(node, JCR_PREDECESSORS,
@@ -301,7 +301,7 @@ public class WorkspaceImporter implements Importer, Constants {
             }
 
             // jcr:isCheckedOut
-            if (!node.hasPropertyEntry(JCR_ISCHECKEDOUT)) {
+            if (!node.hasPropertyName(JCR_ISCHECKEDOUT)) {
                 def = itemOps.findApplicablePropertyDefinition(JCR_ISCHECKEDOUT,
                         PropertyType.BOOLEAN, false, node);
                 prop = itemOps.createPropertyState(node, JCR_ISCHECKEDOUT,
@@ -408,7 +408,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         return;
                     }
 
-                    if (parent.hasPropertyEntry(nodeName)) {
+                    if (parent.hasPropertyName(nodeName)) {
                         /**
                          * a property with the same name already exists; if this property
                          * has been imported as well (e.g. through document view import
@@ -424,14 +424,14 @@ public class WorkspaceImporter implements Importer, Constants {
                             // rename conflicting property
                             // @todo use better reversible escaping scheme to create unique name
                             QName newName = new QName(nodeName.getNamespaceURI(), nodeName.getLocalName() + "_");
-                            if (parent.hasPropertyEntry(newName)) {
+                            if (parent.hasPropertyName(newName)) {
                                 newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
                             }
                             PropertyState newProp =
                                     itemOps.createPropertyState(parent, newName,
                                             conflicting.getType(), conflicting.getValues().length);
                             newProp.setValues(conflicting.getValues());
-                            parent.removePropertyEntry(nodeName);
+                            parent.removePropertyName(nodeName);
                             itemOps.store(parent);
                             itemOps.destroy(conflicting);
                         }
@@ -494,7 +494,7 @@ public class WorkspaceImporter implements Importer, Constants {
                 PropertyState prop = null;
                 PropDef def = null;
 
-                if (node.hasPropertyEntry(propName)) {
+                if (node.hasPropertyName(propName)) {
                     // a property with that name already exists...
                     PropertyId idExisting = new PropertyId(node.getUUID(), propName);
                     PropertyState existing =

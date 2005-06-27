@@ -148,7 +148,7 @@ public class SharedItemStateManager extends ItemStateCache
         rootState.setDefinitionId(nodeDefId);
 
         // create jcr:primaryType property
-        rootState.addPropertyEntry(propDef.getName());
+        rootState.addPropertyName(propDef.getName());
 
         PropertyState prop = createInstance(propDef.getName(), rootNodeUUID);
         prop.setValues(new InternalValue[]{InternalValue.create(Constants.REP_ROOT)});

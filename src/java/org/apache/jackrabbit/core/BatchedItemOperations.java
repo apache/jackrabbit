@@ -583,7 +583,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                             parentState);
 
             // check for name collisions
-            if (parentState.hasPropertyEntry(nodeName)) {
+            if (parentState.hasPropertyName(nodeName)) {
                 // there's already a property with that name
                 throw new ItemExistsException("cannot add child node '"
                         + nodeName.getLocalName() + "' to "
@@ -1003,7 +1003,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
             RepositoryException, IllegalStateException {
 
         // check for name collisions with existing properties
-        if (parent.hasPropertyEntry(nodeName)) {
+        if (parent.hasPropertyName(nodeName)) {
             String msg = "there's already a property with name " + nodeName;
             log.debug(msg);
             throw new RepositoryException(msg);
@@ -1148,9 +1148,8 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
         }
 
         // check for name collisions with existing properties
-        if (parent.hasPropertyEntry(propName)) {
-            PropertyId id = new PropertyId(parent.getUUID(),
-                    parent.getPropertyEntry(propName).getName());
+        if (parent.hasPropertyName(propName)) {
+            PropertyId id = new PropertyId(parent.getUUID(), propName);
             throw new ItemExistsException(safeGetJCRPath(id));
         }
 
@@ -1177,7 +1176,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
         }
 
         // now add new property entry to parent
-        parent.addPropertyEntry(propName);
+        parent.addPropertyName(propName);
         // store parent
         stateMgr.store(parent);
 
@@ -1301,7 +1300,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
          * this would have a negative impact on performance though...
          */
         NodeState nodeState = getNodeState(nodePath);
-        while (!nodeState.hasPropertyEntry(JCR_ISCHECKEDOUT)) {
+        while (!nodeState.hasPropertyName(JCR_ISCHECKEDOUT)) {
             if (nodePath.denotesRoot()) {
                 return;
             }
@@ -1528,16 +1527,16 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
 
         // remove properties
         // use temp array to avoid ConcurrentModificationException
-        tmp = new ArrayList(targetState.getPropertyEntries());
+        tmp = new ArrayList(targetState.getPropertyNames());
         for (int i = 0; i < tmp.size(); i++) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) tmp.get(i);
+            QName propName = (QName) tmp.get(i);
             PropertyId propId =
-                    new PropertyId(targetState.getUUID(), entry.getName());
+                    new PropertyId(targetState.getUUID(), propName);
             try {
                 PropertyState propState =
                         (PropertyState) stateMgr.getItemState(propId);
                 // remove property entry
-                targetState.removePropertyEntry(propId.getName());
+                targetState.removePropertyName(propId.getName());
                 // destroy property state
                 stateMgr.destroy(propState);
             } catch (ItemStateException ise) {
@@ -1684,10 +1683,10 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                 newState.addChildNodeEntry(entry.getName(), newChildState.getUUID());
             }
             // copy properties
-            iter = srcState.getPropertyEntries().iterator();
+            iter = srcState.getPropertyNames().iterator();
             while (iter.hasNext()) {
-                NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-                PropertyId propId = new PropertyId(srcState.getUUID(), entry.getName());
+                QName propName = (QName) iter.next();
+                PropertyId propId = new PropertyId(srcState.getUUID(), propName);
                 if (!srcAccessMgr.isGranted(propId, AccessManager.READ)) {
                     continue;
                 }
@@ -1709,14 +1708,14 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                 }
 
                 PropertyState newChildState =
-                        copyPropertyState(srcChildState, uuid, entry.getName());
+                        copyPropertyState(srcChildState, uuid, propName);
                 if (newChildState.getType() == PropertyType.REFERENCE) {
                     refTracker.processedReference(newChildState);
                 }
                 // store new property
                 stateMgr.store(newChildState);
                 // add new property entry to new node
-                newState.addPropertyEntry(entry.getName());
+                newState.addPropertyName(propName);
             }
             return newState;
         } catch (ItemStateException ise) {

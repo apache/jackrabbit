@@ -412,6 +412,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         if (!transientStateMgr.hasAnyItemStatesInAttic()) {
             return Collections.EMPTY_LIST.iterator();
         }
+
         // collection of descendant transient states in attic:
         // the path serves as key and sort criteria
 
@@ -425,10 +426,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         TreeMap descendants = new TreeMap(new PathComparator());
         try {
             Path parentPath = zombieHierMgr.getPath(parentId);
-            /**
-             * walk through list of transient states in attic and check if
-             * they are descendants of the specified parent
-             */
+             // walk through list of transient states in attic and check if
+             // they are descendants of the specified parent
             Iterator iter = transientStateMgr.getEntriesInAttic();
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
@@ -445,7 +444,17 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         } catch (RepositoryException re) {
             log.warn("inconsistent hierarchy state", re);
         }
-
+/*
+        TreeMap descendants = new TreeMap();
+        Iterator iter = transientStateMgr.getEntriesInAttic();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            int depth = getAncestorCount(state, parentId.getUUID());
+            if (depth >= 0) {
+                descendants.put(new ItemStateKey(state, depth), state);
+            }
+        }
+*/
         return descendants.values().iterator();
     }
 

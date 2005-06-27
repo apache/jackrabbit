@@ -175,11 +175,11 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
             out.writeUTF(iter.next().toString());   // name
         }
         // properties (names)
-        c = state.getPropertyEntries();
+        c = state.getPropertyNames();
         out.writeInt(c.size()); // count
         for (Iterator iter = c.iterator(); iter.hasNext();) {
-            NodeState.PropertyEntry entry = (NodeState.PropertyEntry) iter.next();
-            out.writeUTF(entry.getName().toString());   // name
+            QName propName = (QName) iter.next();
+            out.writeUTF(propName.toString());   // name
         }
         // child nodes (list of name/uuid pairs)
         c = state.getChildNodeEntries();
@@ -235,7 +235,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager
         // properties (names)
         count = in.readInt();   // count
         for (int i = 0; i < count; i++) {
-            state.addPropertyEntry(QName.valueOf(in.readUTF())); // name
+            state.addPropertyName(QName.valueOf(in.readUTF())); // name
         }
         // child nodes (list of name/uuid pairs)
         count = in.readInt();   // count
