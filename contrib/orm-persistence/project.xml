@@ -52,7 +52,7 @@
     <dependency>
         <groupId>jackrabbit</groupId>
         <artifactId>jackrabbit</artifactId>
-        <version>0.16.4-dev</version>
+        <version>0.16.4.1-dev</version>
     </dependency>
     <dependency>
       <id>concurrent</id>
@@ -74,8 +74,8 @@
     <dependency>
       <groupId>jsr170</groupId>
       <artifactId>jcr</artifactId>
-      <version>0.16.4</version>
-      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.jar</url>
+      <version>0.16.4.1</version>
+      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
     </dependency>
     <dependency>
       <id>log4j</id>

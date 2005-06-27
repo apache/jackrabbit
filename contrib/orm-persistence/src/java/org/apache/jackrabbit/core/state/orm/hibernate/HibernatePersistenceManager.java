@@ -23,8 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import javax.jcr.PropertyType;
 
-import org.apache.jackrabbit.core.BLOBFileValue;
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;

@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.test.orm;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import java.io.InputStream;
-import javax.jcr.StringValue;
-import java.io.ByteArrayInputStream;
-import java.io.BufferedInputStream;
+import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
@@ -52,7 +52,8 @@ public class BlobTest extends AbstractJCRTest {
             if (!rn.hasNode("blobnode")) {
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(blobContent);
                 Node n = rn.addNode("blobnode", "nt:unstructured");
-                n.setProperty("testprop", new StringValue("Hello, World."));
+                ValueFactory valueFactory = superuser.getValueFactory();
+                n.setProperty("testprop", valueFactory.createValue("Hello, World."));
                 n.setProperty("blobTest", inputStream);
                 superuser.save();
             }

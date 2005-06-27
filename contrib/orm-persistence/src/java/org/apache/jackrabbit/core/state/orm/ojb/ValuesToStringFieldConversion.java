@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.state.orm.ojb;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.ojb.broker.accesslayer.conversions.ConversionException;
 import org.apache.ojb.broker.accesslayer.conversions.FieldConversion;
 
