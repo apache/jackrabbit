@@ -23,8 +23,8 @@ import java.util.Iterator;
 
 import javax.jcr.PropertyType;
 
-import org.apache.jackrabbit.core.BLOBFileValue;
-import org.apache.jackrabbit.core.InternalValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.QName;
@@ -401,7 +401,7 @@ public class OJBPersistenceManager implements PersistenceManager
     {
         // destroy all the references before saving
         destroy(refs, broker);
-        
+
         Iterator nodeRefPropIdIter = refs.getReferences().iterator();
         while (nodeRefPropIdIter.hasNext())
         {
@@ -420,7 +420,7 @@ public class OJBPersistenceManager implements PersistenceManager
             throws ItemStateException
     {
         log.debug("Deleting node " + state.getId());
-        
+
         // Destroy node
         OJBNodeState nodeState = new OJBNodeState(state.getId());
         QueryByIdentity query = new QueryByIdentity(nodeState);
@@ -489,7 +489,7 @@ public class OJBPersistenceManager implements PersistenceManager
 
     /**
      * @see PersistenceManager#store(ChangeLog)
-     * 
+     *
      * This method ensures that changes are either written completely to the
      * underlying persistence layer, or not at all.
      */
