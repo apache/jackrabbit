@@ -112,6 +112,38 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
+     *
+     * @param state
+     * @return
+     */
+    protected String getParentUUID(ItemState state) {
+        return state.getParentUUID();
+    }
+
+    /**
+     *
+     * @param parent
+     * @return
+     */
+    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+                                                         String uuid) {
+        return parent.getChildNodeEntry(uuid);
+    }
+
+    /**
+     *
+     * @param parent
+     * @param name
+     * @param index
+     * @return
+     */
+    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+                                                         QName name,
+                                                         int index) {
+        return parent.getChildNodeEntry(name, index);
+    }
+
+    /**
      * Resolve a path into an item id. Recursively invoked method that may be
      * overridden by some subclass to either return cached responses or add
      * response to cache.
@@ -166,7 +198,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         if (parentState.hasChildNodeEntry(name, index)) {
             // child node
             NodeState.ChildNodeEntry nodeEntry =
-                    parentState.getChildNodeEntry(name, index);
+                    getChildNodeEntry(parentState, name, index);
             childId = new NodeId(nodeEntry.getUUID());
 
         } else if (parentState.hasPropertyName(name)) {
@@ -201,10 +233,18 @@ public class HierarchyManagerImpl implements HierarchyManager {
     protected void buildPath(Path.PathBuilder builder, ItemState state)
             throws ItemStateException, RepositoryException {
 
-        String parentUUID = state.getParentUUID();
-        if (parentUUID == null) {
+        // shortcut
+        if (state.getId().equals(rootNodeId)) {
             builder.addRoot();
             return;
+        }
+
+        String parentUUID = getParentUUID(state);
+        if (parentUUID == null) {
+            String msg = "failed to build path of " + state.getId()
+                    + ": orphaned item";
+            log.debug(msg);
+            throw new ItemNotFoundException(msg);
         }
 
         NodeState parent = (NodeState) getItemState(new NodeId(parentUUID));
@@ -214,7 +254,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
             String uuid = nodeState.getUUID();
-            NodeState.ChildNodeEntry entry = parent.getChildNodeEntry(uuid);
+            NodeState.ChildNodeEntry entry = getChildNodeEntry(parent, uuid);
             if (entry == null) {
                 String msg = "failed to build path of " + state.getId() + ": "
                         + parent.getUUID() + " has no child entry for "
@@ -301,7 +341,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
             try {
                 NodeState nodeState = (NodeState) getItemState(nodeId);
-                String parentUUID = nodeState.getParentUUID();
+                String parentUUID = getParentUUID(nodeState);
                 if (parentUUID == null) {
                     // this is the root or an orphaned node
                     // FIXME
@@ -315,7 +355,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
 
             NodeState.ChildNodeEntry entry =
-                    parentState.getChildNodeEntry(nodeId.getUUID());
+                    getChildNodeEntry(parentState, nodeId.getUUID());
             if (entry == null) {
                 String msg = "failed to resolve name of " + nodeId;
                 log.debug(msg);
@@ -335,7 +375,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throws ItemNotFoundException, RepositoryException {
         try {
             ItemState state = getItemState(id);
-            String parentUUID = state.getParentUUID();
+            String parentUUID = getParentUUID(state);
             if (parentUUID != null) {
                 return getDepth(new NodeId(parentUUID)) + 1;
             }
@@ -358,7 +398,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throws ItemNotFoundException, RepositoryException {
         try {
             ItemState state = getItemState(itemId);
-            String parentUUID = state.getParentUUID();
+            String parentUUID = getParentUUID(state);
             if (parentUUID != null) {
                 if (parentUUID.equals(nodeId.getUUID())) {
                     return true;

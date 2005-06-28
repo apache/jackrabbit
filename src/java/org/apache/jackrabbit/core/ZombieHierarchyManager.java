@@ -21,18 +21,15 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.log4j.Logger;
 
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
 import java.util.Iterator;
 
 /**
  * <code>HierarchyManager</code> implementation that is also able to
  * build/resolve paths of those items that have been moved or removed
  * (i.e. moved to the attic).
- *
+ * <p/>
  * todo make use of path caching
  */
 public class ZombieHierarchyManager extends HierarchyManagerImpl {
@@ -42,17 +39,17 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
     protected ItemStateManager attic;
 
     public ZombieHierarchyManager(String rootNodeUUID,
-                                 ItemStateManager provider,
-                                 ItemStateManager attic,
-                                 NamespaceResolver nsResolver) {
+                                  ItemStateManager provider,
+                                  ItemStateManager attic,
+                                  NamespaceResolver nsResolver) {
         super(rootNodeUUID, provider, nsResolver);
         this.attic = attic;
     }
 
     /**
      * {@inheritDoc}
-     *
-     * Checks attic first.
+     * <p/>
+     * Delivers state from attic if such exists, otherwise calls base class.
      */
     protected ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -66,8 +63,9 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
 
     /**
      * {@inheritDoc}
-     *
-     * Checks attic first.
+     * <p/>
+     * Returns <code>true</code>  if there's state on the attic for the
+     * requested item; otherwise delegates to base class.
      */
     protected boolean hasItemState(ItemId id) {
         // always check attic first
@@ -80,72 +78,59 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
 
     /**
      * {@inheritDoc}
-     *
-     * Also allows for removed/renamed parent-child links.
+     * <p/>
+     * Also allows for removed items.
      */
-    protected void buildPath(Path.PathBuilder builder, ItemState state)
-            throws ItemStateException, RepositoryException {
-
-        // shortcut
-        if (state.getId().equals(rootNodeId)) {
-            builder.addRoot();
-            return;
-        }
-
-        String parentUUID;
+    protected String getParentUUID(ItemState state) {
         if (state.hasOverlayedState()) {
             // use 'old' parent in case item has been removed
-            parentUUID = state.getOverlayedState().getParentUUID();
-        } else {
-            parentUUID = state.getParentUUID();
+            return state.getOverlayedState().getParentUUID();
         }
-        if (parentUUID == null) {
-            String msg = "failed to build path of " + state.getId() + ": orphaned item";
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
-        }
+        // delegate to base class
+        return super.getParentUUID(state);
+    }
 
-        NodeState parent = (NodeState) getItemState(new NodeId(parentUUID));
-        // recursively build path of parent
-        buildPath(builder, parent);
-
-        if (state.isNode()) {
-            NodeState nodeState = (NodeState) state;
-            String uuid = nodeState.getUUID();
-            NodeState.ChildNodeEntry parentEntry = null;
-            // check removed child node entries first
-            Iterator iter = parent.getRemovedChildNodeEntries().iterator();
-            while (iter.hasNext()) {
-                NodeState.ChildNodeEntry entry =
-                        (NodeState.ChildNodeEntry) iter.next();
-                if (entry.getUUID().equals(uuid)) {
-                    parentEntry = entry;
-                    break;
-                }
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Also allows for removed/renamed child node entries.
+     */
+    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+                                                         QName name,
+                                                         int index) {
+        // check removed child node entries first
+        Iterator iter = parent.getRemovedChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            NodeState.ChildNodeEntry entry =
+                    (NodeState.ChildNodeEntry) iter.next();
+            if (entry.getName().equals(name)
+                    && entry.getIndex() == index) {
+                return entry;
             }
-            if (parentEntry == null) {
-                // no removed child node entry found in parent,
-                // check current child node entries
-                parentEntry = parent.getChildNodeEntry(uuid);
-            }
-            if (parentEntry == null) {
-                String msg = "failed to build path of " + state.getId() + ": "
-                        + parent.getUUID() + " has no child entry for "
-                        + uuid;
-                log.debug(msg);
-                throw new ItemNotFoundException(msg);
-            }
-            // add to path
-            if (parentEntry.getIndex() == 1) {
-                builder.addLast(parentEntry.getName());
-            } else {
-                builder.addLast(parentEntry.getName(), parentEntry.getIndex());
-            }
-        } else {
-            PropertyState propState = (PropertyState) state;
-            QName name = propState.getName();
-            // add to path
-            builder.addLast(name);
         }
+        // no matching removed child node entry found in parent,
+        // delegate to base class
+        return super.getChildNodeEntry(parent, name, index);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Also allows for removed child node entries.
+     */
+    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+                                                         String uuid) {
+        // check removed child node entries first
+        Iterator iter = parent.getRemovedChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            NodeState.ChildNodeEntry entry =
+                    (NodeState.ChildNodeEntry) iter.next();
+            if (entry.getUUID().equals(uuid)) {
+                return entry;
+            }
+        }
+        // no matching removed child node entry found in parent,
+        // delegate to base class
+        return super.getChildNodeEntry(parent, uuid);
     }
 }
