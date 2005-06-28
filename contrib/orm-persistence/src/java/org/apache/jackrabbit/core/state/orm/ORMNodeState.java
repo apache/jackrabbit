@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeState.ChildNodeEntry;
-import org.apache.jackrabbit.core.state.NodeState.PropertyEntry;
 import org.apache.log4j.Logger;
 
 /**
@@ -79,22 +78,17 @@ public abstract class ORMNodeState implements Serializable {
             getChildNodeEntries().add(childNode);
             i++;
         }
-        Iterator propertyEntryIter = state.getPropertyEntries().iterator();
-        while (propertyEntryIter.hasNext()) {
-            PropertyEntry curPropertyEntry = (PropertyEntry) propertyEntryIter.next();
-            log.debug("propertyEntry " + curPropertyEntry.getName());
-            ORMPropertyEntry propertyEntry = new ORMPropertyEntry(this, curPropertyEntry, uuid);
+        Iterator propertyNameIter = state.getPropertyNames().iterator();
+        while (propertyNameIter.hasNext()) {
+            QName curPropertyName = (QName) propertyNameIter.next();
+            log.debug("propertyEntry " + curPropertyName);
+            ORMPropertyEntry propertyEntry = new ORMPropertyEntry(this, curPropertyName, uuid);
             getPropertyEntries().add(propertyEntry);
         }
         Iterator mixinTypeIter = state.getMixinTypeNames().iterator();
         while (mixinTypeIter.hasNext()) {
             QName curName = (QName) mixinTypeIter.next();
             getMixinTypeNames().add(new ORMNodeMixinType(this, uuid, curName.toString()));
-        }
-        Iterator parentIter = state.getParentUUIDs().iterator();
-        while (parentIter.hasNext()) {
-            String parentId = (String) parentIter.next();
-            getParentUUIDs().add(new ORMNodeParent(this, uuid, parentId));
         }
     }
 
@@ -163,7 +157,7 @@ public abstract class ORMNodeState implements Serializable {
         while (propertyEntryIter.hasNext()) {
             ORMPropertyEntry curPropertyEntry = (ORMPropertyEntry) propertyEntryIter.next();
             log.debug("  Loaded property " + QName.valueOf(curPropertyEntry.getName()));
-            state.addPropertyEntry(QName.valueOf(curPropertyEntry.getName()));
+            state.addPropertyName(QName.valueOf(curPropertyEntry.getName()));
         }
         Iterator mixinTypeNameIter = getMixinTypeNames().iterator();
         Set mixinTypeQNames = new HashSet();
@@ -172,13 +166,6 @@ public abstract class ORMNodeState implements Serializable {
             mixinTypeQNames.add(QName.valueOf(curMixinType.getMixinTypeName()));
         }
         state.setMixinTypeNames(mixinTypeQNames);
-        Iterator parentUUIDIter = getParentUUIDs().iterator();
-        List nParentUUIDs = new ArrayList();
-        while (parentUUIDIter.hasNext()) {
-            ORMNodeParent curNodeParent = (ORMNodeParent) parentUUIDIter.next();
-            nParentUUIDs.add(curNodeParent.getParentUUID());
-        }
-        state.setParentUUIDs(nParentUUIDs);
     }
 
     public boolean equals(Object obj) {
