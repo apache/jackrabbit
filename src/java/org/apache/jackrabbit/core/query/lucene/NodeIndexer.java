@@ -16,31 +16,31 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.core.query.TextFilterService;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.query.TextFilterService;
 import org.apache.log4j.Logger;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import java.io.Reader;
 import java.util.Calendar;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.io.Reader;
+import java.util.Set;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -91,8 +91,8 @@ public class NodeIndexer {
      * @param mappings      internal namespace mappings.
      */
     protected NodeIndexer(NodeState node,
-                        ItemStateManager stateProvider,
-                        NamespaceMappings mappings) {
+                          ItemStateManager stateProvider,
+                          NamespaceMappings mappings) {
         this.node = node;
         this.stateProvider = stateProvider;
         this.mappings = mappings;
@@ -151,7 +151,7 @@ public class NodeIndexer {
             // unknown uri<->prefix mappings
         }
 
-        List props = node.getPropertyNames();
+        Set props = node.getPropertyNames();
         for (Iterator it = props.iterator(); it.hasNext();) {
             QName propName = (QName) it.next();
             PropertyId id = new PropertyId(node.getUUID(), propName);
@@ -177,7 +177,8 @@ public class NodeIndexer {
     /**
      * Adds a {@link FieldNames#MVP} field to <code>doc</code> with the resolved
      * <code>name</code> using the internal search index namespace mapping.
-     * @param doc the lucene document.
+     *
+     * @param doc  the lucene document.
      * @param name the name of the multi-value property.
      */
     private void addMVPName(Document doc, QName name) {
@@ -239,14 +240,14 @@ public class NodeIndexer {
 
     /**
      * Adds the binary value to the document as the named field.
-     * <p>
+     * <p/>
      * This implementation checks if this {@link #node} is of type nt:resource
      * and if that is the case, tries to extract text from the data atom using
      * {@link TextFilterService}add a {@link FieldNames#FULLTEXT} field
      * .
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addBinaryValue(Document doc, String fieldName, Object internalValue) {
@@ -260,13 +261,13 @@ public class NodeIndexer {
             if (node.hasPropertyName(JCR_MIMETYPE)) {
                 PropertyState dataProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_DATA));
                 PropertyState mimeTypeProp =
-                    (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_MIMETYPE));
+                        (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_MIMETYPE));
 
                 // jcr:encoding is not mandatory
                 String encoding = null;
                 if (node.hasPropertyName(JCR_ENCODING)) {
                     PropertyState encodingProp =
-                        (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
+                            (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
                     encodingProp.getValues()[0].internalValue().toString();
                 }
 
@@ -292,16 +293,16 @@ public class NodeIndexer {
      * Adds the string representation of the boolean value to the document as
      * the named field.
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addBooleanValue(Document doc, String fieldName, Object internalValue) {
         doc.add(new Field(FieldNames.PROPERTIES,
-            FieldNames.createNamedValue(fieldName, internalValue.toString()),
-            false,
-            true,
-            false));
+                FieldNames.createNamedValue(fieldName, internalValue.toString()),
+                false,
+                true,
+                false));
     }
 
     /**
@@ -309,8 +310,8 @@ public class NodeIndexer {
      * value is converted to an indexable string value using the {@link DateField}
      * class.
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addCalendarValue(Document doc, String fieldName, Object internalValue) {
@@ -327,8 +328,8 @@ public class NodeIndexer {
      * value is converted to an indexable string value using the
      * {@link DoubleField} class.
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addDoubleValue(Document doc, String fieldName, Object internalValue) {
@@ -345,8 +346,8 @@ public class NodeIndexer {
      * value is converted to an indexable string value using the {@link LongField}
      * class.
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addLongValue(Document doc, String fieldName, Object internalValue) {
@@ -363,8 +364,8 @@ public class NodeIndexer {
      * string representation is added as the reference data. Additionally the
      * reference data is stored in the index.
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addReferenceValue(Document doc, String fieldName, Object internalValue) {
@@ -381,8 +382,8 @@ public class NodeIndexer {
      * value is converted to an indexable string value using the name space
      * mappings with which this class has been created.
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addPathValue(Document doc, String fieldName, Object internalValue) {
@@ -404,8 +405,8 @@ public class NodeIndexer {
      * Adds the string value to the document both as the named field and for
      * full text indexing.
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addStringValue(Document doc, String fieldName, Object internalValue) {
@@ -426,7 +427,7 @@ public class NodeIndexer {
         // create fulltext index on property
         int idx = fieldName.indexOf(':');
         fieldName = fieldName.substring(0, idx + 1)
-            + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
+                + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
         doc.add(new Field(fieldName, stringValue,
                 false,
                 true,
@@ -439,8 +440,8 @@ public class NodeIndexer {
      * as a qualified name and mapping the name space using the name space
      * mappings with which this class has been created.
      *
-     * @param doc The document to which to add the field
-     * @param fieldName The name of the field to add
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
     protected void addNameValue(Document doc, String fieldName, Object internalValue) {

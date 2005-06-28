@@ -16,28 +16,27 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.commons.collections.MapIterator;
+import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.commons.collections.map.LinkedMap;
-import org.apache.commons.collections.MapIterator;
-import org.apache.commons.collections.set.ListOrderedSet;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.Map;
-import java.util.Collection;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -45,7 +44,7 @@ import java.util.ListIterator;
 public class NodeState extends ItemState {
 
     /** Serialization UID of this class. */
-    static final long serialVersionUID = 2387880829766640392L;
+    static final long serialVersionUID = -1755253053645185279L;
 
     /** the uuid of this node */
     protected String uuid;
@@ -62,8 +61,8 @@ public class NodeState extends ItemState {
     /** insertion-ordered collection of ChildNodeEntry objects */
     protected ChildNodeEntries childNodeEntries = new ChildNodeEntries();
 
-    /** insertion-ordered set of property names (QName objects) */
-    protected ListOrderedSet propertyNames = new ListOrderedSet();
+    /** set of property names (QName objects) */
+    protected Set propertyNames = new HashSet();
 
     /**
      * Listeners (weak references)
@@ -415,15 +414,15 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns the names of this node's properties as a list of
+     * Returns the names of this node's properties as a set of
      * <code>QNames</code> objects.
      *
-     * @return list of <code>QNames</code> objects
+     * @return set of <code>QNames</code> objects
      * @see #addPropertyName
      * @see #removePropertyName
      */
-    public synchronized List getPropertyNames() {
-        return propertyNames.asList();
+    public synchronized Set getPropertyNames() {
+        return Collections.unmodifiableSet(propertyNames);
     }
 
     /**
@@ -454,10 +453,10 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Sets the list of <code>QName</code> objects denoting the
+     * Sets the set of <code>QName</code> objects denoting the
      * properties of this node.
      */
-    public synchronized void setPropertyNames(List propNames) {
+    public synchronized void setPropertyNames(Set propNames) {
         propertyNames.clear();
         propertyNames.addAll(propNames);
     }
@@ -474,22 +473,22 @@ public class NodeState extends ItemState {
 
     //---------------------------------------------------------< diff methods >
     /**
-     * Returns a list of <code>QName</code>s denoting those properties that
+     * Returns a set of <code>QName</code>s denoting those properties that
      * do not exist in the overlayed node state but have been added to
      * <i>this</i> node state.
      *
-     * @return list of <code>QName</code>s denoting the properties that have
+     * @return set of <code>QName</code>s denoting the properties that have
      *         been added.
      */
-    public synchronized List getAddedPropertyNames() {
+    public synchronized Set getAddedPropertyNames() {
         if (!hasOverlayedState()) {
-            return propertyNames.asList();
+            return Collections.unmodifiableSet(propertyNames);
         }
 
         NodeState other = (NodeState) getOverlayedState();
-        ArrayList list = new ArrayList(propertyNames);
-        list.removeAll(other.propertyNames);
-        return list;
+        HashSet set = new HashSet(propertyNames);
+        set.removeAll(other.propertyNames);
+        return set;
     }
 
     /**
@@ -508,22 +507,22 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns a list of <code>QName</code>s denoting those properties that
+     * Returns a set of <code>QName</code>s denoting those properties that
      * exist in the overlayed node state but have been removed from
      * <i>this</i> node state.
      *
-     * @return list of <code>QName</code>s denoting the properties that have
+     * @return set of <code>QName</code>s denoting the properties that have
      *         been removed.
      */
-    public synchronized List getRemovedPropertyNames() {
+    public synchronized Set getRemovedPropertyNames() {
         if (!hasOverlayedState()) {
-            return Collections.EMPTY_LIST;
+            return Collections.EMPTY_SET;
         }
 
         NodeState other = (NodeState) getOverlayedState();
-        ArrayList list = new ArrayList(other.propertyNames);
-        list.removeAll(propertyNames);
-        return list;
+        HashSet set = new HashSet(other.propertyNames);
+        set.removeAll(propertyNames);
+        return set;
     }
 
     /**
@@ -749,7 +748,7 @@ public class NodeState extends ItemState {
 
         // insertion-ordered map of entries (key=uuid, value=entry)
         LinkedMap entries;
-        // map used for lookup by name (key=uuid, value=1st same-name sibling entry)
+        // map used for lookup by name (key=name, value=1st same-name sibling entry)
         Map nameMap;
 
         ChildNodeEntries() {
