@@ -44,9 +44,9 @@ public class NodeTypeDef implements Cloneable {
     public NodeTypeDef() {
         dependencies = null;
         name = null;
-        nodeDefs = new NodeDef[0];
-        propDefs = new PropDef[0];
-        supertypes = new QName[0];
+        nodeDefs = NodeDef.EMPTY_ARRAY;
+        propDefs = PropDef.EMPTY_ARRAY;
+        supertypes = QName.EMPTY_ARRAY;
         mixin = false;
         orderableChildNodes = false;
     }

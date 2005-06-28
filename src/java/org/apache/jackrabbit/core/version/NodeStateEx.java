@@ -38,6 +38,8 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.List;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.Iterator;
 
 /**
  * This Class provides some basic node operations directly on the node state.
@@ -131,12 +133,13 @@ class NodeStateEx implements Constants {
      * @return
      */
     public PropertyState[] getProperties() throws ItemStateException {
-        List list = nodeState.getPropertyNames();
-        PropertyState[] props = new PropertyState[list.size()];
-        for (int i = 0; i < list.size(); i++) {
-            QName propName = (QName) list.get(i);
+        Set set = nodeState.getPropertyNames();
+        PropertyState[] props = new PropertyState[set.size()];
+        int i = 0;
+        for (Iterator iter = set.iterator(); iter.hasNext();) {
+            QName propName = (QName) iter.next();
             PropertyId propId = new PropertyId(nodeState.getUUID(), propName);
-            props[i] = (PropertyState) stateMgr.getItemState(propId);
+            props[i++] = (PropertyState) stateMgr.getItemState(propId);
         }
         return props;
     }
@@ -483,9 +486,9 @@ class NodeStateEx implements Constants {
 
         if (state.getStatus() != ItemState.STATUS_EXISTING) {
             // first store all transient properties
-            List props = state.getPropertyNames();
-            for (int i = 0; i < props.size(); i++) {
-                QName propName = (QName) props.get(i);
+            Set props = state.getPropertyNames();
+            for (Iterator iter = props.iterator(); iter.hasNext();) {
+                QName propName = (QName) iter.next();
                 PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), propName));
                 if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
                     stateMgr.store(pstate);
@@ -527,9 +530,9 @@ class NodeStateEx implements Constants {
     private void reload(NodeState state) throws ItemStateException {
         if (state.getStatus() != ItemState.STATUS_EXISTING) {
             // first discard all all transient properties
-            List props = state.getPropertyNames();
-            for (int i = 0; i < props.size(); i++) {
-                QName propName = (QName) props.get(i);
+            Set props = state.getPropertyNames();
+            for (Iterator iter = props.iterator(); iter.hasNext();) {
+                QName propName = (QName) iter.next();
                 PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), propName));
                 if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
                     pstate.discard();

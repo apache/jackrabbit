@@ -644,10 +644,10 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // remove properties
-        // use temp array to avoid ConcurrentModificationException
-        ArrayList tmp = new ArrayList(thisState.getPropertyNames());
-        for (int i = 0; i < tmp.size(); i++) {
-            QName propName = (QName) tmp.get(i);
+        // use temp set to avoid ConcurrentModificationException
+        HashSet tmp = new HashSet(thisState.getPropertyNames());
+        for (Iterator iter = tmp.iterator(); iter.hasNext();) {
+            QName propName = (QName) iter.next();
             // remove the property entry
             thisState.removePropertyName(propName);
             // remove property
@@ -1136,10 +1136,9 @@ public class NodeImpl extends ItemImpl implements Node {
         // walk through properties and child nodes and remove those that have been
         // defined by the specified mixin type
 
-        // use temp array to avoid ConcurrentModificationException
-        ArrayList tmp = new ArrayList(thisState.getPropertyNames());
-        Iterator iter = tmp.iterator();
-        while (iter.hasNext()) {
+        // use temp set to avoid ConcurrentModificationException
+        HashSet set = new HashSet(thisState.getPropertyNames());
+        for (Iterator iter = set.iterator(); iter.hasNext();) {
             QName propName = (QName) iter.next();
             PropertyImpl prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), propName));
             // check if property has been defined by mixin type (or one of its supertypes)
@@ -1152,9 +1151,8 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
         // use temp array to avoid ConcurrentModificationException
-        tmp = new ArrayList(thisState.getChildNodeEntries());
-        iter = tmp.iterator();
-        while (iter.hasNext()) {
+        ArrayList list = new ArrayList(thisState.getChildNodeEntries());
+        for (Iterator iter = list.iterator(); iter.hasNext();) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
             NodeImpl node = (NodeImpl) itemMgr.getItem(new NodeId(entry.getUUID()));
             // check if node has been defined by mixin type (or one of its supertypes)

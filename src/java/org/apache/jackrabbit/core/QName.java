@@ -59,6 +59,8 @@ public class QName implements Cloneable, Comparable, Serializable {
     /** Serialization UID of this class. */
     static final long serialVersionUID = -2712313010017755368L;
 
+    public static final QName[] EMPTY_ARRAY = new QName[0];
+
     /**
      * The reqular expression pattern used to validate and parse
      * qualified names.

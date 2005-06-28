@@ -1496,40 +1496,42 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
     private void recursiveRemoveNodeState(NodeState targetState)
             throws RepositoryException {
 
-        // remove child nodes
-        // use temp array to avoid ConcurrentModificationException
-        ArrayList tmp = new ArrayList(targetState.getChildNodeEntries());
-        // remove from tail to avoid problems with same-name siblings
-        for (int i = tmp.size() - 1; i >= 0; i--) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
-            NodeId nodeId = new NodeId(entry.getUUID());
-            try {
-                NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
-                // check if child node can be removed
-                // (access rights, locking & versioning status);
-                // referential integrity (references) is checked
-                // on commit
-                checkRemoveNode(nodeState, (NodeId) targetState.getId(),
-                        CHECK_ACCESS
-                        | CHECK_LOCK
-                        | CHECK_VERSIONING);
-                // remove child node
-                recursiveRemoveNodeState(nodeState);
-            } catch (ItemStateException ise) {
-                String msg = "internal error: failed to retrieve state of "
-                        + nodeId;
-                log.debug(msg);
-                throw new RepositoryException(msg, ise);
+        if (targetState.hasChildNodeEntries()) {
+            // remove child nodes
+            // use temp array to avoid ConcurrentModificationException
+            ArrayList tmp = new ArrayList(targetState.getChildNodeEntries());
+            // remove from tail to avoid problems with same-name siblings
+            for (int i = tmp.size() - 1; i >= 0; i--) {
+                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
+                NodeId nodeId = new NodeId(entry.getUUID());
+                try {
+                    NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
+                    // check if child node can be removed
+                    // (access rights, locking & versioning status);
+                    // referential integrity (references) is checked
+                    // on commit
+                    checkRemoveNode(nodeState, (NodeId) targetState.getId(),
+                            CHECK_ACCESS
+                            | CHECK_LOCK
+                            | CHECK_VERSIONING);
+                    // remove child node
+                    recursiveRemoveNodeState(nodeState);
+                } catch (ItemStateException ise) {
+                    String msg = "internal error: failed to retrieve state of "
+                            + nodeId;
+                    log.debug(msg);
+                    throw new RepositoryException(msg, ise);
+                }
+                // remove child node entry
+                targetState.removeChildNodeEntry(entry.getName(), entry.getIndex());
             }
-            // remove child node entry
-            targetState.removeChildNodeEntry(entry.getName(), entry.getIndex());
         }
 
         // remove properties
-        // use temp array to avoid ConcurrentModificationException
-        tmp = new ArrayList(targetState.getPropertyNames());
-        for (int i = 0; i < tmp.size(); i++) {
-            QName propName = (QName) tmp.get(i);
+        // use temp set to avoid ConcurrentModificationException
+        HashSet tmp = new HashSet(targetState.getPropertyNames());
+        for (Iterator iter = tmp.iterator(); iter.hasNext();) {
+            QName propName = (QName) iter.next();
             PropertyId propId =
                     new PropertyId(targetState.getUUID(), propName);
             try {
