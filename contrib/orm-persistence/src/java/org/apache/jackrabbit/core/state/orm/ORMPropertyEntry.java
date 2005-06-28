@@ -17,8 +17,7 @@
 package org.apache.jackrabbit.core.state.orm;
 
 import java.io.Serializable;
-
-import org.apache.jackrabbit.core.state.NodeState.PropertyEntry;
+import org.apache.jackrabbit.core.QName;
 
 /**
  * <p>This class represents a single entry of a property in a node. This
@@ -34,10 +33,10 @@ public class ORMPropertyEntry
     public ORMPropertyEntry() {
     }
 
-    public ORMPropertyEntry(ORMNodeState parent, PropertyEntry propertyEntry, String parentUUID) {
+    public ORMPropertyEntry(ORMNodeState parent, QName propertyName, String parentUUID) {
         this.parent = parent;
         this.parentUUID = parentUUID;
-        this.name = propertyEntry.getName().toString();
+        this.name = propertyName.toString();
     }
 
     public void setParentUUID(String parentUUID) {
