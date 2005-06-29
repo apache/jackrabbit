@@ -67,6 +67,24 @@ public interface HierarchyManager {
     int getDepth(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
+     * Returns the depth of the specified descendant relative to the given
+     * ancestor. If <code>ancestorId</code> and <code>descendantId</code>
+     * denote the same item 0 is returned. If <code>ancestorId</code> does not
+     * denote an ancestor -1 is returned.
+     *
+     * @param ancestorId ancestor id
+     * @param descendantId descendant id
+     * @return the relative depth; -1 if <code>ancestorId</code> does not
+     *         denote an ancestor of the item denoted by <code>descendantId</code>
+     *         (or itself).
+     * @throws ItemNotFoundException if either of the specified id's does not
+     *                               denote an existing item.
+     * @throws RepositoryException   if another error occurs
+     */
+    int getRelativeDepth(NodeId ancestorId, ItemId descendantId)
+            throws ItemNotFoundException, RepositoryException;
+
+    /**
      * Determines whether the node with the specified <code>nodeId</code>
      * is an ancestor of the item denoted by the given <code>itemId</code>.
      * This is equivalent to

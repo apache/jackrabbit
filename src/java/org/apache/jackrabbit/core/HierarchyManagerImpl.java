@@ -93,10 +93,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     //---------------------------------------------------------< overridables >
     /**
-     * @param id
-     * @return
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
+     * Return an item state, given its item id.
+     * <p/>
+     * Low-level hook provided for specialized derived classes.
+     *
+     * @param id item id
+     * @return item state
+     * @throws NoSuchItemStateException if the item does not exist
+     * @throws ItemStateException       if an error occurs
+     * @see ZombieHierarchyManager#getItemState(ItemId)
      */
     protected ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -104,26 +109,44 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * @param id
-     * @return
+     * Determines whether an item state for a given item id exists.
+     * <p/>
+     * Low-level hook provided for specialized derived classes.
+     *
+     * @param id item id
+     * @return <code>true</code> if an item state exists, otherwise
+     *         <code>false</code>
+     * @see ZombieHierarchyManager#hasItemState(ItemId)
      */
     protected boolean hasItemState(ItemId id) {
         return provider.hasItemState(id);
     }
 
     /**
+     * Returns the <code>parentUUID</code> of the given item.
+     * <p/>
+     * Low-level hook provided for specialized derived classes.
      *
-     * @param state
-     * @return
+     * @param state item state
+     * @return <code>parentUUID</code> of the given item
+     * @see ZombieHierarchyManager#getParentUUID(ItemState)
      */
     protected String getParentUUID(ItemState state) {
         return state.getParentUUID();
     }
 
     /**
+     * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
+     * specified <code>uuid</code> or <code>null</code> if there's no such entry.
+     * <p/>
+     * Low-level hook provided for specialized derived classes.
      *
-     * @param parent
-     * @return
+     * @param parent node state
+     * @param uuid   uuid of child node entry
+     * @return the <code>ChildNodeEntry</code> of <code>parent</code> with
+     *         the specified <code>uuid</code> or <code>null</code> if there's
+     *         no such entry.
+     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, String)
      */
     protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          String uuid) {
@@ -131,11 +154,19 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
+     * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
+     * specified <code>name</code> and <code>index</code> or <code>null</code>
+     * if there's no such entry.
+     * <p/>
+     * Low-level hook provided for specialized derived classes.
      *
-     * @param parent
-     * @param name
-     * @param index
-     * @return
+     * @param parent node state
+     * @param name   name of child node entry
+     * @param index  name of child node entry
+     * @return the <code>ChildNodeEntry</code> of <code>parent</code> with
+     *         the specified <code>name</code> and <code>index</code> or
+     *         <code>null</code> if there's no such entry.
+     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, QName, int)
      */
     protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          QName name,
@@ -149,8 +180,9 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * response to cache.
      *
      * @param path full path of item to resolve
-     * @param id   item id
+     * @param id   intermediate item id
      * @param next next path element index to resolve
+     * @return the id of the item denoted by <code>path</code>
      */
     protected ItemId resolvePath(Path path, ItemId id, int next)
             throws RepositoryException {
@@ -176,6 +208,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @param path  full path of item to resolve
      * @param state intermediate state
      * @param next  next path element index to resolve
+     * @return the id of the item denoted by <code>path</code>
      */
     protected ItemId resolvePath(Path path, ItemState state, int next)
             throws PathNotFoundException, ItemStateException {
@@ -373,13 +406,20 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     public int getDepth(ItemId id)
             throws ItemNotFoundException, RepositoryException {
+        // shortcut
+        if (id.equals(rootNodeId)) {
+            return 0;
+        }
         try {
             ItemState state = getItemState(id);
             String parentUUID = getParentUUID(state);
-            if (parentUUID != null) {
-                return getDepth(new NodeId(parentUUID)) + 1;
+            int depth = 0;
+            while (parentUUID != null) {
+                depth++;
+                state = getItemState(new NodeId(parentUUID));
+                parentUUID = getParentUUID(state);
             }
-            return 0;
+            return depth;
         } catch (NoSuchItemStateException nsise) {
             String msg = "failed to determine depth of " + id;
             log.debug(msg);
@@ -394,17 +434,58 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
+    public int getRelativeDepth(NodeId ancestorId, ItemId descendantId)
+            throws ItemNotFoundException, RepositoryException {
+        if (ancestorId.equals(descendantId)) {
+            return 0;
+        }
+        int depth = 1;
+        try {
+            ItemState state = getItemState(descendantId);
+            String parentUUID = getParentUUID(state);
+            while (parentUUID != null) {
+                if (parentUUID.equals(ancestorId.getUUID())) {
+                    return depth;
+                }
+                depth++;
+                state = getItemState(new NodeId(parentUUID));
+                parentUUID = getParentUUID(state);
+            }
+            // not an ancestor
+            return -1;
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "failed to determine depth of " + descendantId
+                    + " relative to " + ancestorId;
+            log.debug(msg);
+            throw new ItemNotFoundException(msg, nsise);
+        } catch (ItemStateException ise) {
+            String msg = "failed to determine depth of " + descendantId
+                    + " relative to " + ancestorId;
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean isAncestor(NodeId nodeId, ItemId itemId)
             throws ItemNotFoundException, RepositoryException {
+        if (nodeId.equals(itemId)) {
+            // can't be ancestor of self
+            return false;
+        }
         try {
             ItemState state = getItemState(itemId);
             String parentUUID = getParentUUID(state);
-            if (parentUUID != null) {
+            while (parentUUID != null) {
                 if (parentUUID.equals(nodeId.getUUID())) {
                     return true;
                 }
-                return isAncestor(nodeId, new NodeId(parentUUID));
+                state = getItemState(new NodeId(parentUUID));
+                parentUUID = getParentUUID(state);
             }
+            // not an ancestor
             return false;
         } catch (NoSuchItemStateException nsise) {
             String msg = "failed to determine degree of relationship of "

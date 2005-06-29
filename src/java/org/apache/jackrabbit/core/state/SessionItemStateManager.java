@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.log4j.Logger;
+import org.apache.commons.collections.iterators.IteratorChain;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
@@ -35,6 +36,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>SessionItemStateManager</code> ...
@@ -412,11 +415,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         if (!transientStateMgr.hasAnyItemStatesInAttic()) {
             return Collections.EMPTY_LIST.iterator();
         }
-
-        // collection of descendant transient states in attic:
+/*
+        // build ordered collection of descendant transient states in attic:
         // the path serves as key and sort criteria
 
-        // we have to use a special attic-aware hierarchy manager
+        // use a special attic-aware hierarchy manager
         ZombieHierarchyManager zombieHierMgr =
                 new ZombieHierarchyManager(hierMgr.getRootNodeId().getUUID(),
                         this,
@@ -444,18 +447,60 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         } catch (RepositoryException re) {
             log.warn("inconsistent hierarchy state", re);
         }
-/*
-        TreeMap descendants = new TreeMap();
-        Iterator iter = transientStateMgr.getEntriesInAttic();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            int depth = getAncestorCount(state, parentId.getUUID());
-            if (depth >= 0) {
-                descendants.put(new ItemStateKey(state, depth), state);
+        return descendants.values().iterator();
+*/
+        // build ordered collection of descendant transient states in attic
+        // sorted by decreasing relative depth
+
+        // use a special attic-aware hierarchy manager
+        ZombieHierarchyManager zombieHierMgr =
+                new ZombieHierarchyManager(hierMgr.getRootNodeId().getUUID(),
+                        this,
+                        transientStateMgr.getAttic(),
+                        hierMgr.getNamespaceResolver());
+
+        // use an array of lists to group the descendants by relative depth;
+        // the depth is used as array index
+        List[] la = new List[10];
+        try {
+            Iterator iter = transientStateMgr.getEntriesInAttic();
+            while (iter.hasNext()) {
+                ItemState state = (ItemState) iter.next();
+                // determine relative depth: > 0 means it's a descendant
+                int depth = zombieHierMgr.getRelativeDepth(parentId, state.getId());
+                if (depth < 1) {
+                    // not a descendant
+                    continue;
+                }
+
+                // ensure capacity
+                if (depth > la.length) {
+                    List old[] = la;
+                    la = new List[depth + 10];
+                    System.arraycopy(old, 0, la, 0, old.length);
+                }
+
+                List list = la[depth - 1];
+                if (list == null) {
+                    list = new ArrayList();
+                    la[depth - 1] = list;
+                }
+                list.add(state);
+            }
+        } catch (RepositoryException re) {
+            log.warn("inconsistent hierarchy state", re);
+        }
+        // create an iterator over the collected descendants
+        // in decreasing depth order
+        IteratorChain resultIter = new IteratorChain();
+        for (int i = la.length - 1; i >= 0; i--) {
+            List list = la[i];
+            if (list != null) {
+                resultIter.addIterator(list.iterator());
             }
         }
-*/
-        return descendants.values().iterator();
+        return resultIter;
+
     }
 
     //------< methods for creating & discarding transient ItemState instances >
