@@ -162,7 +162,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      *
      * @param parent node state
      * @param name   name of child node entry
-     * @param index  name of child node entry
+     * @param index  index of child node entry
      * @return the <code>ChildNodeEntry</code> of <code>parent</code> with
      *         the specified <code>name</code> and <code>index</code> or
      *         <code>null</code> if there's no such entry.
