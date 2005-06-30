@@ -22,12 +22,6 @@ import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.CharacterData;
@@ -36,7 +30,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * Document walker class. This class provides an intuitive
@@ -45,8 +38,6 @@ import org.xml.sax.SAXException;
 public final class DOMWalker {
 
     /** Static factory for creating stream to DOM transformers. */
-//    private static final TransformerFactory factory =
-//        TransformerFactory.newInstance();
     private static final DocumentBuilderFactory factory =
         DocumentBuilderFactory.newInstance();
 
@@ -192,6 +183,11 @@ public final class DOMWalker {
      *         ...;
      *     }
      * </pre>
+     * <p>
+     * <strong>WARNING:</strong> This method should only be used when
+     * <code>walker.getName()</code> does not equal <code>name</code> when
+     * the while loop is started. Otherwise the walker will not be positioned
+     * at the same node when the while loop ends.
      *
      * @param name name of the iterated elements
      * @return <code>true</code> if another iterated element was entered, or
