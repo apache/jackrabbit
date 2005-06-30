@@ -21,7 +21,7 @@
   <pomVersion>3</pomVersion>
   <id>jcr-ext</id>
   <name>JCR extras</name>
-  <currentVersion>0.16.4.1</currentVersion>
+  <currentVersion>1.0-dev</currentVersion>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.*</package>
   <shortDescription>Utilities for JCR implementations</shortDescription>
@@ -57,8 +57,8 @@
     <dependency>
       <groupId>jsr170</groupId>
       <artifactId>jcr</artifactId>
-      <version>0.16.4.1</version>
-      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
+      <version>1.0</version>
+      <url>http://jcp.org/en/jsr/detail?id=170</url>
     </dependency>
     <dependency>
       <groupId>xerces</groupId>
