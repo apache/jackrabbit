@@ -1195,7 +1195,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             EffectiveNodeType ent = ntReg.getEffectiveNodeType((QName[]) mixinNames.toArray(new QName[mixinNames.size()]));
             return ent.includesNodeType(ntName);
-        } catch  (NodeTypeConflictException ntce) {
+        } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: invalid mixin node type(s)";
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
@@ -3685,7 +3685,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-        public Lock lock(boolean isDeep, boolean isSessionScoped)
+    public Lock lock(boolean isDeep, boolean isSessionScoped)
             throws UnsupportedRepositoryOperationException, LockException,
             AccessDeniedException, InvalidItemStateException,
             RepositoryException {
@@ -3713,8 +3713,6 @@ public class NodeImpl extends ItemImpl implements Node {
             AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        checkLockable();
 
         LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.getLock(this);
@@ -3773,16 +3771,15 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Checks if this node is lockable, i.e. has 'mix:lockable'.
      *
-     * @throws UnsupportedRepositoryOperationException
-     *                             if this node is not lockable
+     * @throws LockException       if this node is not lockable
      * @throws RepositoryException if another error occurs
      */
-    private void checkLockable()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+    private void checkLockable() throws LockException, RepositoryException {
         if (!isNodeType(MIX_LOCKABLE)) {
-            String msg = "Unable to perform locking operation on non-lockable node: " + safeGetJCRPath();
+            String msg = "Unable to perform locking operation on non-lockable node: "
+                    + safeGetJCRPath();
             log.debug(msg);
-            throw new UnsupportedRepositoryOperationException(msg);
+            throw new LockException(msg);
         }
     }
 
