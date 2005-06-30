@@ -218,6 +218,8 @@ public class RemoteAdapterTest extends TestCase {
         ignoreMethod("exportSystemView");        // multiple methods
         ignoreMethod("exportDocumentView");      // multiple method
         ignoreMethod("getValueFactory");         // implemented locally
+        ignoreMethod("logout");                  // local live flag
+        ignoreMethod("isLive");                  // local live flag
 
         Session session = (Session) mock;
         RemoteSession remote = remoteFactory.getRemoteSession(session);
