@@ -282,6 +282,7 @@ public class RemoteAdapterTest extends TestCase {
         ignoreMethod("getStream");   // implemented locally
         ignoreMethod("getNode");     // implemented locally
         ignoreMethod("setValue");    // multiple methods
+        ignoreMethod("getValue");    // no null values for SerialValueFactory
 
         Property property = (Property) mock;
         RemoteProperty remote = remoteFactory.getRemoteProperty(property);
@@ -473,6 +474,7 @@ public class RemoteAdapterTest extends TestCase {
      */
     public void testRow() throws Exception {
         prepareTests(Row.class);
+        ignoreMethod("getValue");    // no null values for SerialValueFactory
 
         Row row = (Row) mock;
         RemoteRow remote = remoteFactory.getRemoteRow(row);
