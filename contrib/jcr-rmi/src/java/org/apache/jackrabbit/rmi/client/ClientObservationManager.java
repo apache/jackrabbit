@@ -19,6 +19,7 @@ package org.apache.jackrabbit.rmi.client;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
@@ -51,7 +52,10 @@ public class ClientObservationManager extends ClientObject implements
 
     /** The remote observation manager */
     private final RemoteObservationManager remote;
-
+    
+    /** The <code>Workspace</code> to which this observation manager belongs. */
+    private final Workspace workspace;
+    
     /** The ClientEventPoll class internally used for event dispatching */
     private ClientEventPoll poller;
 
@@ -61,10 +65,14 @@ public class ClientObservationManager extends ClientObject implements
      *
      * @param remote The {@link RemoteObservationManager} backing this
      *      client-side observation manager.
+     * @param workspace The <code>Workspace</code> instance to which this
+     *      observation manager belongs.
      */
-    public ClientObservationManager(RemoteObservationManager remote) {
+    public ClientObservationManager(Workspace workspace,
+            RemoteObservationManager remote) {
         super(null);
         this.remote = remote;
+        this.workspace = workspace;
     }
 
     /** {@inheritDoc} */
@@ -108,7 +116,7 @@ public class ClientObservationManager extends ClientObject implements
      */
     private synchronized ClientEventPoll getClientEventPoll() {
         if (poller == null) {
-            poller = new ClientEventPoll(remote);
+            poller = new ClientEventPoll(remote, workspace.getSession());
             poller.start();
         }
         return poller;

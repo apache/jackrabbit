@@ -62,6 +62,14 @@ public class ClientSession extends ClientObject implements Session {
     /** The current repository. */
     private Repository repository;
 
+    /**
+     * Flag indicating whether the session is to be considered live of not.
+     * This flag is initially set to <code>true</code> and reset to
+     * <code>false</code> by the {@link #logout()} method. The {@link #isLive()}
+     * method first checks this flag before asking the remote session.
+     */
+    private boolean live = true;
+    
     /** The adapted remote session. */
     private RemoteSession remote;
 
@@ -300,10 +308,19 @@ public class ClientSession extends ClientObject implements Session {
 
     /** {@inheritDoc} */
     public void logout() {
+        
+        // ignore if we are not alive any more.
+        if (!isLive()) {
+            return;
+        }
+        
         try {
             remote.logout();
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
+        } finally {
+            // mark "dead"
+            live = false;
         }
     }
 
@@ -445,7 +462,7 @@ public class ClientSession extends ClientObject implements Session {
      */
     public boolean isLive() {
         try {
-            return remote.isLive();
+            return live && remote.isLive();
         } catch (RemoteException e) {
             throw new RemoteRuntimeException(e);
         }

@@ -20,6 +20,7 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
@@ -70,7 +71,13 @@ public class ClientEventPoll extends Thread {
 
     /** The {@link RemoteObservationManager} called for the new events. */
     private final RemoteObservationManager remote;
-
+    
+    /**
+     * The <code>Session</code> checked by the {@link #run} method whether it
+     * is still alive or the thread should terminate.
+     */
+    private final Session session;
+    
     /** The map of locally registered listeners indexed by the unique identifier */
     private Map listenerMap = new HashMap();
 
@@ -89,18 +96,25 @@ public class ClientEventPoll extends Thread {
      *
      * @param remote The remote observation manager which is asked for new
      *      events. This must not be <code>null</code>.
-     *
-     * @throws NullPointerException if <code>remote</code> is <code>null</code>.
+     * @param session The <code>Session</code> which is asked whether it is
+     *      alive by the {@link #run()} method. This must not be <code>null</code>.
+     * 
+     * @throws NullPointerException if <code>remote</code> or <code>session</code>
+     *      is <code>null</code>.
      */
-    public ClientEventPoll(RemoteObservationManager remote)
-            throws NullPointerException {
+    public ClientEventPoll(RemoteObservationManager remote, Session session) {
         super(THREAD_NAME);
-
-        // check remote and assign
+        
+        // check remote and session
         if (remote == null) {
             throw new NullPointerException("remote");
         }
+        if (session == null) {
+            throw new NullPointerException("session");
+        }
+        
         this.remote = remote;
+        this.session = session;
     }
 
     /**
@@ -165,7 +179,7 @@ public class ClientEventPoll extends Thread {
      * event listeners. This is how this method works:
      * <ol>
      * <li>Continue with next step if {@link #terminate()} has not been called
-     * yet.
+     * yet and the session is still alive.
      * <li>Call the {@link RemoteObservationManager#getNextEvent(long)} method
      * waiting for a specified time (5 seconds).
      * <li>If no event was received in the specified time go back to step #1.
@@ -178,7 +192,7 @@ public class ClientEventPoll extends Thread {
      * </ol>
      */
     public void run() {
-        while (running) {
+        while (running && session.isLive()) {
             try {
                 // ask for an event waiting at most POLL_TIMEOUT milliseconds
                 RemoteEventCollection remoteEvent = remote.getNextEvent(POLL_TIMEOUT);
