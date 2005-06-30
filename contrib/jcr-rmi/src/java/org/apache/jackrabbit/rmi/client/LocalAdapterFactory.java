@@ -109,10 +109,12 @@ public interface LocalAdapterFactory {
      * Factory method for creating a local adapter for a remote observation
      * manager.
      *
+     * @param workspace current workspace
      * @param remote remote observation manager
      * @return local observation manager adapter
      */
-    ObservationManager getObservationManager(RemoteObservationManager remote);
+    ObservationManager getObservationManager(Workspace workspace,
+        RemoteObservationManager remote);
 
     /**
      * Factory method for creating a local adapter for a remote namespace

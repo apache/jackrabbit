@@ -105,11 +105,11 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      *
      * {@inheritDoc}
      */
-    public ObservationManager getObservationManager(
+    public ObservationManager getObservationManager(Workspace workspace,
             RemoteObservationManager remote) {
-        return new ClientObservationManager(remote);
+        return new ClientObservationManager(workspace, remote);
     }
-
+    
     /**
      * Creates and returns a
      * {@link ClientNamespaceRegistry ClientClientNamespaceRegistry} instance.
