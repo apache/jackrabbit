@@ -1301,7 +1301,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    protected Property internalSetProperty(QName name, InternalValue[] values)
+    public Property internalSetProperty(QName name, InternalValue[] values)
             throws ValueFormatException, RepositoryException {
         int type;
         if (values == null || values.length == 0
@@ -1327,7 +1327,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    protected Property internalSetProperty(QName name, InternalValue[] values,
+    public Property internalSetProperty(QName name, InternalValue[] values,
                                            int type)
             throws ValueFormatException, RepositoryException {
         BitSet status = new BitSet();
