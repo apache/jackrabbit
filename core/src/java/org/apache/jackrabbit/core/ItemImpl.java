@@ -349,6 +349,14 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                         throw new InvalidItemStateException(msg);
                     }
 
+                case ItemState.STATUS_UNDEFINED:
+                    {
+                        String msg = safeGetJCRPath()
+                                + ": the item cannot be saved; it seems to have been removed externally.";
+                        log.debug(msg);
+                        throw new InvalidItemStateException(msg);
+                    }
+
                 default:
                     log.debug("unexpected state status (" + state.getStatus() + ")");
                     // ignore
@@ -357,7 +365,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         }
 
         if (isNode()) {
-            // build list of 'new' or 'modified' descendents
+            // build list of 'new' or 'modified' descendants
             Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
@@ -380,6 +388,14 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                         {
                             String msg = transientState.getId()
                                     + ": the item cannot be saved because it has been deleted externally.";
+                            log.debug(msg);
+                            throw new InvalidItemStateException(msg);
+                        }
+
+                    case ItemState.STATUS_UNDEFINED:
+                        {
+                            String msg = safeGetJCRPath()
+                                    + ": the item cannot be saved; it seems to have been removed externally.";
                             log.debug(msg);
                             throw new InvalidItemStateException(msg);
                         }
@@ -1174,7 +1190,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             }
 
             /**
-             * build list of transient descendents in the attic
+             * build list of transient descendants in the attic
              * (i.e. those marked as 'removed')
              */
             Collection removed = getRemovedStates();
@@ -1401,7 +1417,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         }
 
         if (isNode()) {
-            // build list of 'new', 'modified' or 'stale' descendents
+            // build list of 'new', 'modified' or 'stale' descendants
             Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
@@ -1433,7 +1449,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         }
 
         if (isNode()) {
-            // discard all transient descendents in the attic (i.e. those marked
+            // discard all transient descendants in the attic (i.e. those marked
             // as 'removed'); this will resurrect the removed items
             iter = stateMgr.getDescendantTransientItemStatesInAttic((NodeId) id);
             while (iter.hasNext()) {
