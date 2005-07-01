@@ -316,7 +316,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         if (!transientStateMgr.hasAnyItemStates()) {
             return Collections.EMPTY_LIST.iterator();
         }
-        // collection of descendant transient states:
+/*
+        // build ordered collection of descendant transient states:
         // the path serves as key and sort criteria
         TreeMap descendants = new TreeMap(new PathComparator());
 
@@ -362,7 +363,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         /**
          * walk through list of transient states and check if
          * they are descendants of the specified parent
-         */
+         * /
         try {
             Iterator iter = transientStateMgr.getEntries();
             while (iter.hasNext()) {
@@ -380,7 +381,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
                      * a descendant is affected;
                      * => throw InvalidItemStateException for now
                      * todo FIXME
-                     */
+                     * /
                     // unable to build path, assume that it (or any of
                     // its ancestors) has been removed externally
                     String msg = id
@@ -401,6 +402,71 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
         }
 
         return descendants.values().iterator();
+*/
+        // build ordered collection of descendant transient states
+        // sorted by decreasing relative depth
+
+        // use an array of lists to group the descendants by relative depth;
+        // the depth is used as array index
+        List[] la = new List[10];
+        try {
+            Iterator iter = transientStateMgr.getEntries();
+            while (iter.hasNext()) {
+                ItemState state = (ItemState) iter.next();
+                // determine relative depth: > 0 means it's a descendant
+                int depth;
+                try {
+                    depth = hierMgr.getRelativeDepth(parentId, state.getId());
+                } catch (ItemNotFoundException infe) {
+                    /**
+                     * one of the parents of the specified item has been
+                     * removed externally; as we don't know its path,
+                     * we can't determine if it is a descendant;
+                     * InvalidItemStateException should only be thrown if
+                     * a descendant is affected;
+                     * => throw InvalidItemStateException for now
+                     * todo FIXME
+                     */
+                    // unable to determine relative depth, assume that the item
+                    // (or any of its ancestors) has been removed externally
+                    String msg = state.getId()
+                            + ": the item seems to have been removed externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
+                }
+
+                if (depth < 1) {
+                    // not a descendant
+                    continue;
+                }
+
+                // ensure capacity
+                if (depth > la.length) {
+                    List old[] = la;
+                    la = new List[depth + 10];
+                    System.arraycopy(old, 0, la, 0, old.length);
+                }
+
+                List list = la[depth - 1];
+                if (list == null) {
+                    list = new ArrayList();
+                    la[depth - 1] = list;
+                }
+                list.add(state);
+            }
+        } catch (RepositoryException re) {
+            log.warn("inconsistent hierarchy state", re);
+        }
+        // create an iterator over the collected descendants
+        // in decreasing depth order
+        IteratorChain resultIter = new IteratorChain();
+        for (int i = la.length - 1; i >= 0; i--) {
+            List list = la[i];
+            if (list != null) {
+                resultIter.addIterator(list.iterator());
+            }
+        }
+        return resultIter;
     }
 
     /**
@@ -500,7 +566,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
             }
         }
         return resultIter;
-
     }
 
     //------< methods for creating & discarding transient ItemState instances >
