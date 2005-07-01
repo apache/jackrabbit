@@ -18,18 +18,14 @@ package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
 
 import javax.jcr.Session;
 import javax.jcr.Property;
-import javax.jcr.PropertyType;
 import javax.jcr.Node;
 import javax.jcr.Value;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.nodetype.NodeType;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.util.Calendar;
@@ -261,6 +257,9 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
     /**
      * Tests if setValue(Node) throws a VersionException immediately
      * or on save if the parent node of this property is checked-in.
+     * @tck.config nodetype2 name of a node type with a reference property
+     * @tck.config propertyname3 name of a single value reference property
+     *   declared in nodetype2
      */
     public void testNode()
         throws NotExecutableException, RepositoryException {
@@ -269,14 +268,10 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         Node referenceableNode = testRootNode.addNode(nodeName3);
         referenceableNode.addMixin(mixReferenceable);
 
-        // create a node with a reference property
-        PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.REFERENCE, false, false, false, false);
-        if (propDef == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-        NodeType nodeType = propDef.getDeclaringNodeType();
-        Node node = testRootNode.addNode(nodeName4, nodeType.getName());
+        String refPropName = getProperty("propertyname3");
+        String nodeType = getProperty("nodetype2");
+
+        Node node = testRootNode.addNode(nodeName4, nodeType);
 
         // try to make it versionable if it is not
         if (!node.isNodeType(mixVersionable)) {
@@ -287,7 +282,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
             }
         }
 
-        Property property = node.setProperty(propDef.getName(), referenceableNode);
+        Property property = node.setProperty(refPropName, referenceableNode);
 
         testRootNode.save();
 
