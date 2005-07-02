@@ -276,8 +276,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             info.setLive(false);
 
             // remove properties in content
-            node.internalSetProperty(Constants.JCR_LOCKOWNER, null);
-            node.internalSetProperty(Constants.JCR_LOCKISDEEP, null);
+            node.internalSetProperty(Constants.JCR_LOCKOWNER, (InternalValue) null);
+            node.internalSetProperty(Constants.JCR_LOCKISDEEP, (InternalValue) null);
             node.save();
 
         } catch (RepositoryException e) {
@@ -353,8 +353,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         info.setLive(false);
 
         // remove properties in content
-        node.internalSetProperty(Constants.JCR_LOCKOWNER, null);
-        node.internalSetProperty(Constants.JCR_LOCKISDEEP, null);
+        node.internalSetProperty(Constants.JCR_LOCKOWNER, (InternalValue) null);
+        node.internalSetProperty(Constants.JCR_LOCKISDEEP, (InternalValue) null);
         node.save();
     }
 
