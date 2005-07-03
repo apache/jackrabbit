@@ -1,0 +1,15 @@
+This product includes software developed by
+The Apache Software Foundation (http://www.apache.org/).
+
+Based on source code originally developed by
+Day Software (http://www.day.com).
+
+This product contains a preliminary implementation of the
+Content Repository for Java Technology API, as specified by
+
+    http://www.jcp.org/en/jsr/detail?id=170
+
+that is not in final form and will change in the future.
+Implementations prior to final publication of JSR 170
+are not considered compliant with JSR 170 and cannot be
+advertised as such.

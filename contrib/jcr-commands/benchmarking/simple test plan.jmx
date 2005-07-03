@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+<testelement class="org.apache.jmeter.testelement.TestPlan">
+<testelement class="org.apache.jmeter.config.Arguments" name="TestPlan.user_defined_variables">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.config.gui.ArgumentsPanel</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.config.Arguments</property>
+<collection class="java.util.ArrayList" propType="org.apache.jmeter.testelement.property.CollectionProperty" name="Arguments.arguments"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">User Defined Variables</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.control.gui.TestPlanGui</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestPlan.serialize_threadgroups">false</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.testelement.TestPlan</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">Jackrabbit test plan</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestPlan.functional_mode">false</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestPlan.comments"/>
+</testelement>
+<node>
+<testelement class="org.apache.jmeter.threads.ThreadGroup">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.LongProperty" name="ThreadGroup.start_time">1120257177000</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.threads.ThreadGroup</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="ThreadGroup.delay"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="ThreadGroup.duration"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="ThreadGroup.num_threads">2</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="ThreadGroup.scheduler">false</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.threads.gui.ThreadGroupGui</property>
+<testelement class="org.apache.jmeter.control.LoopController" name="ThreadGroup.main_controller">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.control.gui.LoopControlPanel</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.IntegerProperty" name="LoopController.loops">-1</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.control.LoopController</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">Loop Controller</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="LoopController.continue_forever">false</property>
+</testelement>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">Thread Group</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.LongProperty" name="ThreadGroup.end_time">1120257177000</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="ThreadGroup.on_sample_error">continue</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="ThreadGroup.ramp_time">1</property>
+</testelement>
+<node>
+<testelement class="org.apache.jmeter.protocol.java.sampler.ChainSampler">
+<testelement class="org.apache.jmeter.config.Arguments" name="arguments">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.config.gui.ArgumentsPanel</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.config.Arguments</property>
+<collection class="java.util.ArrayList" propType="org.apache.jmeter.testelement.property.CollectionProperty" name="Arguments.arguments">
+<testelement class="org.apache.jmeter.config.Argument" name="config">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.metadata">=</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.value">C:\temp\repository\repository.xml</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.name">config</property>
+</testelement>
+<testelement class="org.apache.jmeter.config.Argument" name="home">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.metadata">=</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.value">C:\temp\repository</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.name">home</property>
+</testelement>
+</collection>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="classname">org.apache.jackrabbit.chain.command.StartOrGetJackrabbitSingleton</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.protocol.java.control.gui.ChainTestSamplerGui</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.protocol.java.sampler.ChainSampler</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">startup</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+</node>
+<node>
+<testelement class="org.apache.jmeter.protocol.java.sampler.ChainSampler">
+<testelement class="org.apache.jmeter.config.Arguments" name="arguments">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.config.gui.ArgumentsPanel</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.config.Arguments</property>
+<collection class="java.util.ArrayList" propType="org.apache.jmeter.testelement.property.CollectionProperty" name="Arguments.arguments">
+<testelement class="org.apache.jmeter.config.Argument" name="password">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.metadata">=</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.value">user1</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.name">password</property>
+</testelement>
+<testelement class="org.apache.jmeter.config.Argument" name="user">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.metadata">=</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.value">psw1</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.name">user</property>
+</testelement>
+<testelement class="org.apache.jmeter.config.Argument" name="workspace">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.metadata">=</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.value"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.name">workspace</property>
+</testelement>
+</collection>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="classname">org.apache.jackrabbit.chain.command.Login</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.protocol.java.control.gui.ChainTestSamplerGui</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.protocol.java.sampler.ChainSampler</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">login</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+</node>
+<node>
+<testelement class="org.apache.jmeter.protocol.java.sampler.ChainSampler">
+<testelement class="org.apache.jmeter.config.Arguments" name="arguments">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.config.gui.ArgumentsPanel</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.config.Arguments</property>
+<collection class="java.util.ArrayList" propType="org.apache.jmeter.testelement.property.CollectionProperty" name="Arguments.arguments">
+<testelement class="org.apache.jmeter.config.Argument" name="name">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.metadata">=</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.value">test</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="Argument.name">name</property>
+</testelement>
+</collection>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="classname">org.apache.jackrabbit.chain.command.AddNode</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.protocol.java.control.gui.ChainTestSamplerGui</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.protocol.java.sampler.ChainSampler</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">add node</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+</node>
+<node>
+<testelement class="org.apache.jmeter.protocol.java.sampler.ChainSampler">
+<testelement class="org.apache.jmeter.config.Arguments" name="arguments">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.config.gui.ArgumentsPanel</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.config.Arguments</property>
+<collection class="java.util.ArrayList" propType="org.apache.jmeter.testelement.property.CollectionProperty" name="Arguments.arguments"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="classname">org.apache.jackrabbit.chain.command.Save</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.protocol.java.control.gui.ChainTestSamplerGui</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.protocol.java.sampler.ChainSampler</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">save</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+</node>
+<node>
+<testelement class="org.apache.jmeter.protocol.java.sampler.ChainSampler">
+<testelement class="org.apache.jmeter.config.Arguments" name="arguments">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.config.gui.ArgumentsPanel</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.config.Arguments</property>
+<collection class="java.util.ArrayList" propType="org.apache.jmeter.testelement.property.CollectionProperty" name="Arguments.arguments"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="classname">org.apache.jackrabbit.chain.command.Logout</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.protocol.java.control.gui.ChainTestSamplerGui</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.protocol.java.sampler.ChainSampler</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">logout</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+</testelement>
+</node>
+<node>
+<testelement class="org.apache.jmeter.reporters.ResultCollector">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.visualizers.GraphVisualizer</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.reporters.ResultCollector</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">Graph Results</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="filename"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="ResultCollector.error_logging">false</property>
+</testelement>
+</node>
+<node>
+<testelement class="org.apache.jmeter.reporters.ResultCollector">
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.gui_class">org.apache.jmeter.visualizers.StatVisualizer</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.test_class">org.apache.jmeter.reporters.ResultCollector</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="TestElement.name">Aggregate Report</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="TestElement.enabled">true</property>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.StringProperty" name="filename"/>
+<property xml:space="preserve" propType="org.apache.jmeter.testelement.property.BooleanProperty" name="ResultCollector.error_logging">false</property>
+</testelement>
+</node>
+</node>
+</node>
