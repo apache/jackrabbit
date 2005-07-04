@@ -30,7 +30,7 @@ import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.core.value.ValueFactoryImpl;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
