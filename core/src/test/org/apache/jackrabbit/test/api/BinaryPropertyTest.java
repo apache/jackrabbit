@@ -92,7 +92,13 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
     public void testValue() throws IOException, RepositoryException {
         Value val = PropertyUtil.getValue(prop);
         InputStream in = val.getStream();
-        InputStream in2 = prop.getStream();
+        InputStream in2;
+        if (prop.getDefinition().isMultiple()) {
+            // prop has at least one value (checked in #setUp())
+            in2 = prop.getValues()[0].getStream();
+        } else {
+            in2 = prop.getStream();
+        }
         int b = in.read();
         while (b != -1) {
             int b2 = in2.read();
